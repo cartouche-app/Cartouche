@@ -11,7 +11,8 @@
 //  It updates itself (Updater) and sends its measures (BuilderTelemetry):
 //  what it built, how long it took and what failed, never a name or a path.
 //  The games built for this Mac are played from it, their saves kept in
-//  step with the iPhone's (MacGames).
+//  step with the iPhone's (MacGames), and from Cartouche's console, the
+//  window's other interface (ConsoleWindow.swift).
 //
 
 import AppKit
@@ -55,9 +56,15 @@ enum AppSettings {
     /// The saves of the games played on this Mac are kept in step with the
     /// iPhone's, in the saves folder.
     static let macSavesKey = "macSaves"
+    /// What the window shows: "console" or "builder", the console until
+    /// the player chooses.
+    static let interfaceKey = "interface"
 
     static var menuBar: Bool { UserDefaults.standard.object(forKey: menuBarKey) as? Bool ?? true }
     static var macSaves: Bool { UserDefaults.standard.object(forKey: macSavesKey) as? Bool ?? true }
+    static var interface: AppInterface {
+        UserDefaults.standard.string(forKey: interfaceKey).flatMap(AppInterface.init(rawValue:)) ?? .console
+    }
 }
 
 struct Banner: Identifiable, Equatable {
@@ -87,6 +94,9 @@ final class AppModel: ObservableObject {
     let macGames: MacGames
     let sample: Bool
 
+    /// What the window shows: Cartouche's console or the builder, as the
+    /// player chose last.
+    @Published private(set) var interface = AppSettings.interface
     @Published var section: AppSection = .library
     @Published var selection: String?
     @Published var banner: Banner?
@@ -186,6 +196,7 @@ final class AppModel: ObservableObject {
         // At once, before the library: its first check fetches nxnative.
         showSetup = needsSetup
         bridge.attach(model: self)
+        ConsoleLink.start(self)
         startMacGames()
         let checked = library?.checked.flatMap(ISODate.parse)
         let stale = checked.map { Date().timeIntervalSince($0) > AppModel.checkInterval } ?? true
@@ -330,6 +341,7 @@ final class AppModel: ObservableObject {
             L10n.use(fresh.language)
             engine?.language = L10n.code
             telemetry.language = L10n.code
+            ConsoleLink.speak()
         }
         config = fresh
         bridge.update(games: fresh.games)
@@ -782,6 +794,7 @@ final class AppModel: ObservableObject {
             L10n.use(changed.language)
             engine?.language = L10n.code
             telemetry.language = L10n.code
+            ConsoleLink.speak()
             objectWillChange.send()
         }
         guard let engine else {
@@ -981,6 +994,7 @@ final class AppModel: ObservableObject {
             macGames.preview(apps: apps)
         } else {
             macGames.use(apps: apps)
+            ConsoleLink.show(games: apps.map(\.url))
         }
     }
 
@@ -1075,6 +1089,68 @@ final class AppModel: ObservableObject {
     /// the NAS.
     var gamesOnShare: Bool { library?.folders?.games?.isShare ?? false }
 
+    // MARK: Cartouche's console
+
+    /// Shows INTERFACE, which the window opens on from then on.
+    func show(_ interface: AppInterface) {
+        guard interface != self.interface else { return }
+        self.interface = interface
+        guard !sample else { return }
+        UserDefaults.standard.set(interface.rawValue, forKey: AppSettings.interfaceKey)
+    }
+
+    /// The builder, on SECTION when there is one: where the console's
+    /// Import and System lead.
+    func showBuilder(_ section: AppSection?) {
+        if let section { self.section = section }
+        show(.builder)
+    }
+
+    /// The game whose app on this Mac is APP, as the console knows a game.
+    private func game(ofApp app: URL) -> Game? {
+        let path = app.standardizedFileURL.path
+        return game(macGames.apps.values.first { $0.url.standardizedFileURL.path == path }?.titleID)
+    }
+
+    /// The console's Play, and Game settings: nxnative's settings window
+    /// first.
+    func play(app: URL, settings: Bool) {
+        guard let game = self.game(ofApp: app) else { return }
+        play(game, settings: settings)
+    }
+
+    /// The console's Quit, once the player said so, as the console asks on
+    /// the iPhone.
+    func askToQuit(app: URL) {
+        guard !sample, let game = self.game(ofApp: app), macGames.isPlaying(game.titleID) else { return }
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = tr("Quit \(game.name)?", "Quitter \(game.name) ?")
+        alert.informativeText = tr("Progress since the game last saved will be lost.",
+                                   "La progression depuis la dernière sauvegarde du jeu sera perdue.")
+        alert.addButton(withTitle: tr("Quit the game", "Quitter le jeu")).hasDestructiveAction = true
+        alert.addButton(withTitle: tr("Cancel", "Annuler"))
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        macGames.quit(game.titleID)
+    }
+
+    /// The console's Remove from this Mac, once the player said so: the
+    /// game's app goes to the Trash, and the game is built for this Mac no
+    /// longer (removeMacApp).
+    func askToRemove(app: URL) {
+        guard !sample, let game = self.game(ofApp: app), let built = game.mac?.app else { return }
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = tr("Remove \(game.name) from this Mac?", "Retirer \(game.name) de ce Mac ?")
+        alert.informativeText = tr("Its app goes to the Trash, and the builder no longer builds it for this Mac. Its saves stay on this Mac and in the saves folder.",
+                                   "Son app va à la Corbeille, et le Builder ne le construit plus pour ce Mac. Ses sauvegardes restent sur ce Mac et dans le dossier des sauvegardes.")
+        alert.addButton(withTitle: tr("Move to the Trash", "Mettre à la Corbeille")).hasDestructiveAction = true
+        alert.addButton(withTitle: tr("Cancel", "Annuler"))
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        removeMacApp(MacAppCopy(path: built.path, titleID: game.titleID, name: game.name, size: built.size,
+                                on: game.platforms?.mac ?? true))
+    }
+
     private func heard(_ news: MacGamesNews) {
         switch news {
         case .started:
@@ -1150,6 +1226,8 @@ final class AppModel: ObservableObject {
                         unbuilt: [String: UnbuiltGame] = [:]) -> AppModel {
         let home = BuilderHome(FileManager.default.temporaryDirectory.appendingPathComponent("cartouche-builder-gallery"))
         let model = AppModel(home: home, sample: true)
+        // The builder's pages, unless the gallery shows the console.
+        model.interface = .builder
         model.library = library
         model.unbuilt = unbuilt
         model.status = status

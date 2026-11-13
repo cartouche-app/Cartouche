@@ -146,7 +146,9 @@ enum Gallery {
         case .settings, .settingsBuilds:
             controller = settings(model, open: page == .settingsBuilds ? .builds : .general)
         case .console, .consoleLibrary:
-            controller = ConsoleGallery.controller(library: page == .consoleLibrary, language: L10n.code)
+            ConsoleGallery.prepare(language: L10n.code)
+            model.show(.console)
+            controller = hosted(MainView(showingLibrary: page == .consoleLibrary), model)
         case .menubar, .menubarBuilding:
             let panel = hosted(MenuBarView().background(Color(nsColor: .windowBackgroundColor)), model)
             size.height = ceil(panel.sizeThatFits(in: CGSize(width: size.width, height: 2000)).height)
@@ -160,7 +162,9 @@ enum Gallery {
                                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous)),
                                     model, bridged: false)
             } else {
-                controller = hosted(ContentView(), model)
+                // The window as the app shows it: the builder, below the
+                // switch to the console.
+                controller = hosted(MainView(), model)
             }
         }
         let frame = CGRect(origin: CGPoint(x: 80, y: 80), size: size)

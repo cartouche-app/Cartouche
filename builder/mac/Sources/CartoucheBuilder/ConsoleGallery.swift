@@ -4,17 +4,17 @@
 //
 //  Cartouche's console in the gallery (Gallery.swift): its home with the
 //  sheet of the game in focus beside it, and every game, as the console
-//  shows the games built for this Mac. The games are real ones nxnative
-//  builds, with their covers from IGDB as the console shows them; their
-//  apps are the gallery's own, empty, in a temporary folder, and nothing
-//  of the player's is read: no data folder of nxnative's, no question to
-//  Cartouche's server. The console is imported here alone, so that its
-//  names never meet CartoucheCore's (ConsoleView.swift).
+//  shows the games built for this Mac, in the window as the app shows it
+//  (MainView). The games are real ones nxnative builds, with their covers
+//  from IGDB as the console shows them; their apps are the gallery's own,
+//  empty, in a temporary folder, and nothing of the player's is read: no
+//  data folder of nxnative's, no question to Cartouche's server. Like
+//  ConsoleWindow.swift, this file imports the console and not
+//  CartoucheCore, whose names it shares.
 //
 
 import AppKit
 import CartoucheConsole
-import SwiftUI
 
 @MainActor
 enum ConsoleGallery {
@@ -28,16 +28,15 @@ enum ConsoleGallery {
 
     private static var folder: URL?
 
-    /// The console's page in LANGUAGE ("fr" or "en"): its home, or every game.
-    static func controller(library: Bool, language: String) -> NSViewController {
-        prepare()
+    /// The console with the gallery's games, speaking LANGUAGE ("fr" or "en").
+    static func prepare(language: String) {
+        show()
         CartoucheMacConsole.shared.speak(language)
-        return NSHostingController(rootView: CartoucheMacConsoleView(showingLibrary: library))
     }
 
     /// The games' apps, made once, shown by the console, and their covers
     /// loaded, a minute at most.
-    private static func prepare() {
+    private static func show() {
         guard folder == nil else { return }
         let folder = FileManager.default.temporaryDirectory
             .appendingPathComponent("cartouche-gallery-\(UUID().uuidString)", isDirectory: true)
