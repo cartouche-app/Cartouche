@@ -4,7 +4,7 @@ version = "0.2.1"
 description = "Installs Cartouche on an iPhone from a Mac or a PC"
 authors = ["Cartouche contributors", "nab138 (iloader)"]
 license = "MIT"
-repository = "https://github.com/clabeuhtegrite/Cartouche"
+repository = "https://github.com/cartouche-app/Cartouche"
 edition = "2024"
 
 # A fork of iloader (https://github.com/nab138/iloader, MIT), which does the

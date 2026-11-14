@@ -1,7 +1,7 @@
 import type { TFunction } from "i18next";
 
 /// Where players report what goes wrong: Cartouche's issues.
-export const ISSUES_URL = "https://github.com/clabeuhtegrite/Cartouche/issues";
+export const ISSUES_URL = "https://github.com/cartouche-app/Cartouche/issues";
 
 export const errorSuggestionKeys = {
   underage: ["error.suggestions.underage"],

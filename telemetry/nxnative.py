@@ -359,9 +359,9 @@ def page(catalog: Catalog, sessions: list[dict], events: list[dict], first: dt.d
     lines = [
         "# nxnative's games on players' iPhones",
         "",
-        f"What the players of [Cartouche](https://github.com/clabeuhtegrite/Cartouche) measured of nxnative's games "
+        f"What the players of [Cartouche](https://github.com/cartouche-app/Cartouche) measured of nxnative's games "
         f"from {since} to {last}, summed up for nxnative's developers each Thursday. How, and what is left out: "
-        "[telemetry/README.md](https://github.com/clabeuhtegrite/Cartouche/blob/main/telemetry/README.md#nxnatives-page).",
+        "[telemetry/README.md](https://github.com/cartouche-app/Cartouche/blob/main/telemetry/README.md#nxnatives-page).",
         "",
         f"{len(sessions)} game sessions from {installs_text(len(installs))}, {hours:,.1f} hours of play. "
         f"{named} of the {len(kept)} sessions that count name their nxnative commit. "
@@ -406,7 +406,7 @@ def page(catalog: Catalog, sessions: list[dict], events: list[dict], first: dt.d
         "of the log or a later one, which leaves such a stretch out, and shows – before. Stutters and the shader "
         "stall are per minute of the whole session.",
         "- The figures come from the lines nxnative writes in `log.txt`, which Cartouche reads after each session "
-        "([CartoucheGameLog.swift](https://github.com/clabeuhtegrite/Cartouche/blob/main/launcher/Sources/"
+        "([CartoucheGameLog.swift](https://github.com/cartouche-app/Cartouche/blob/main/launcher/Sources/"
         "CartoucheGameLog.swift)): the `[nvn]` timing, on-screen and power lines, `[longframe]`, `pipeline prepare`, "
         "the memory and thermal lines, `CRASH sig=` and `[RED] boot:`. "
         "A session's commit is the first 12 digits of `DMCommit` in the game's `Info.plist`; Cartouche 0.11.2 and "
