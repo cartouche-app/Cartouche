@@ -342,6 +342,7 @@ final class AppModel: ObservableObject {
             engine?.language = L10n.code
             telemetry.language = L10n.code
             ConsoleLink.speak()
+            showConsoleGames()
         }
         config = fresh
         bridge.update(games: fresh.games)
@@ -795,6 +796,7 @@ final class AppModel: ObservableObject {
             engine?.language = L10n.code
             telemetry.language = L10n.code
             ConsoleLink.speak()
+            showConsoleGames()
             objectWillChange.send()
         }
         guard let engine else {
@@ -994,8 +996,27 @@ final class AppModel: ObservableObject {
             macGames.preview(apps: apps)
         } else {
             macGames.use(apps: apps)
-            ConsoleLink.show(games: apps.map(\.url))
+            showConsoleGames()
         }
+    }
+
+    /// Cartouche's console shows the games with an app on this Mac, and
+    /// those the games folder keeps in one file (a NAS's) and has not
+    /// installed here, with Install, as the iPhone's console shows the IPAs
+    /// of its games folder: in the app's words for where they are.
+    private func showConsoleGames() {
+        guard !sample else { return }
+        let games = library?.games ?? []
+        let apps = games.compactMap { game -> URL? in
+            guard let app = game.mac?.app, app.present else { return nil }
+            return URL(fileURLWithPath: app.path)
+        }
+        let kept = games.filter { game in
+            guard let mac = game.mac else { return false }
+            return mac.playable && !mac.hasApp
+        }
+        ConsoleLink.show(games: apps, kept: kept,
+                         keptIn: gamesOnShare ? tr("the NAS", "le NAS") : tr("the games folder", "le dossier des jeux"))
     }
 
     /// The saves folder of the bridge, the iPhone's, or none when the
@@ -1136,19 +1157,37 @@ final class AppModel: ObservableObject {
 
     /// The console's Remove from this Mac, once the player said so: the
     /// game's app goes to the Trash, and the game is built for this Mac no
-    /// longer (removeMacApp).
+    /// longer (removeMacApp); this Mac's copy of an app the games folder
+    /// keeps in one file (a NAS's) goes alone, the game installed again the
+    /// next time it is played.
     func askToRemove(app: URL) {
         guard !sample, let game = self.game(ofApp: app), let built = game.mac?.app else { return }
+        let packed = game.mac?.packed ?? false
         let alert = NSAlert()
         alert.alertStyle = .warning
         alert.messageText = tr("Remove \(game.name) from this Mac?", "Retirer \(game.name) de ce Mac ?")
-        alert.informativeText = tr("Its app goes to the Trash, and the builder no longer builds it for this Mac. Its saves stay on this Mac and in the saves folder.",
-                                   "Son app va à la Corbeille, et le Builder ne le construit plus pour ce Mac. Ses sauvegardes restent sur ce Mac et dans le dossier des sauvegardes.")
+        if !packed {
+            alert.informativeText = tr("Its app goes to the Trash, and the builder no longer builds it for this Mac. Its saves stay on this Mac and in the saves folder.",
+                                       "Son app va à la Corbeille, et le Builder ne le construit plus pour ce Mac. Ses sauvegardes restent sur ce Mac et dans le dossier des sauvegardes.")
+        } else if gamesOnShare {
+            alert.informativeText = tr("Its app goes to the Trash. The NAS keeps it: it is installed again when you play the game. Its saves stay on this Mac and in the saves folder.",
+                                       "Son app va à la Corbeille. Le NAS la garde : elle se réinstalle quand vous jouez au jeu. Ses sauvegardes restent sur ce Mac et dans le dossier des sauvegardes.")
+        } else {
+            alert.informativeText = tr("Its app goes to the Trash. The games folder keeps it: it is installed again when you play the game. Its saves stay on this Mac and in the saves folder.",
+                                       "Son app va à la Corbeille. Le dossier des jeux la garde : elle se réinstalle quand vous jouez au jeu. Ses sauvegardes restent sur ce Mac et dans le dossier des sauvegardes.")
+        }
         alert.addButton(withTitle: tr("Move to the Trash", "Mettre à la Corbeille")).hasDestructiveAction = true
         alert.addButton(withTitle: tr("Cancel", "Annuler"))
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         removeMacApp(MacAppCopy(path: built.path, titleID: game.titleID, name: game.name, size: built.size,
-                                on: game.platforms?.mac ?? true))
+                                on: game.platforms?.mac ?? true, packed: packed))
+    }
+
+    /// The console's Install, on a game the games folder keeps in one file
+    /// (a NAS's): installs it on this Mac, as the game page's button does.
+    func install(titleID: String) {
+        guard let game = self.game(titleID) else { return }
+        installOnThisMac(game)
     }
 
     private func heard(_ news: MacGamesNews) {

@@ -31,6 +31,10 @@ final class CartoucheGameActions: ObservableObject {
 
     /// The game running, started from this Mac.
     @Published var running: CartoucheRunningGame?
+    /// A game the Builder installs on this Mac from its games folder, and
+    /// how far it is, over the console as the iPhone shows an install
+    /// (CartoucheMacConsole.showInstall).
+    @Published var work: CartoucheGameWork?
     /// What the app does when the console asks it.
     var onQuit: (LCAppModel) -> Void = { _ in }
 

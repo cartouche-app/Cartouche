@@ -6,9 +6,12 @@
 //  of the game in focus beside them, as the iPhone Duo unfolded shows them
 //  (launcher/Sources/CartoucheGamesView.swift). The screens are the
 //  iPhone's own (Shared/); the app gives the console the games nxnative
-//  built for this Mac, by their apps, and does what the player asks of
-//  them: Play starts a game's app, Game settings starts it on nxnative's
-//  settings window, Import and System lead to the app's own pages.
+//  built for this Mac, by their apps, and those its games folder keeps on
+//  a NAS without having installed them here, as the iPhone's console knows
+//  the IPAs of its games folder; it does what the player asks of them:
+//  Play starts a game's app, Game settings starts it on nxnative's
+//  settings window, Install installs a game from the NAS, how far it is
+//  over the console, Import and System lead to the app's own pages.
 //
 //  This is the console's only public part: the app imports it in one file,
 //  so that its names never meet those of the launcher's other library,
@@ -16,6 +19,27 @@
 //
 
 import SwiftUI
+
+/// A game the Builder keeps for this Mac in its games folder, in one file
+/// on a NAS, and has not installed on this Mac: the console shows it as the
+/// iPhone's shows an IPA of its games folder, with Install.
+public struct CartoucheMacKeptGame: Equatable, Sendable {
+    public let titleID: String
+    public let name: String
+    /// Its file in the games folder.
+    public let file: String
+    public let size: UInt64
+    /// When it was built.
+    public let built: Date?
+
+    public init(titleID: String, name: String, file: String, size: UInt64, built: Date?) {
+        self.titleID = titleID
+        self.name = name
+        self.file = file
+        self.size = size
+        self.built = built
+    }
+}
 
 /// The console's games, and what the app does for it.
 @MainActor
@@ -25,6 +49,9 @@ public final class CartoucheMacConsole: ObservableObject {
     /// The games' apps, as the console's screens know a game.
     @Published private(set) var apps: [LCAppModel] = []
     private var models: [String: LCAppModel] = [:]
+    /// The games the Builder keeps for this Mac and has not installed here,
+    /// as the console's screens know an IPA of the games folder.
+    @Published private(set) var stored: [CartoucheStoredGame] = []
 
     /// Starts the game's app, on nxnative's settings window first when
     /// SHOWINGSETTINGS, or brings it to the front if it runs.
@@ -38,6 +65,9 @@ public final class CartoucheMacConsole: ObservableObject {
     public var onSystem: () -> Void = {}
     /// Removes the game from this Mac; the app asks the player first.
     public var onUninstall: (_ game: URL) -> Void = { _ in }
+    /// Install, on a game the Builder keeps on a NAS: the app installs it
+    /// on this Mac, by its title ID (showInstall says how far it is).
+    public var onInstall: (_ titleID: String) -> Void = { _ in }
     /// Whether the console asks Cartouche's server for newer covers and
     /// for what IGDB has of the games it does not know, as the iPhone's
     /// does: not for the app's gallery, which shows the covers it carries.
@@ -54,9 +84,12 @@ public final class CartoucheMacConsole: ObservableObject {
         set { CartoucheGameActions.shared.dataRoot = newValue }
     }
 
-    /// The games built for this Mac, by their apps. A game the console
-    /// showed already stays the same game, its focus and its sheet with it.
-    public func show(games: [URL]) {
+    /// The games built for this Mac, by their apps, and KEPT, those the
+    /// Builder keeps in its games folder and has not installed here, in
+    /// PLACE, the app's words for where they are ("the NAS"). A game the
+    /// console showed already stays the same game, its focus and its sheet
+    /// with it.
+    public func show(games: [URL], kept keptGames: [CartoucheMacKeptGame] = [], keptIn place: String = "") {
         var kept: [String: LCAppModel] = [:]
         var shown: [LCAppModel] = []
         for url in games {
@@ -70,6 +103,40 @@ public final class CartoucheMacConsole: ObservableObject {
         apps = shown
         if let running = CartoucheGameActions.shared.running, !shown.contains(where: { $0 === running.app }) {
             CartoucheGameActions.shared.running = nil
+        }
+        // As Cartouche on the iPhone reads them from an IPA's Info.plist.
+        let stored = keptGames.map { game in
+            CartoucheStoredGame(path: game.file, size: game.size, modified: game.built,
+                                bundleId: "org.nxnative." + game.titleID.lowercased(), displayName: game.name,
+                                titleId: game.titleID.uppercased(), isGame: true)
+        }
+        if stored != self.stored { self.stored = stored }
+        let folder = CartoucheStoredGames.shared
+        if folder.games != stored || folder.serverName != place {
+            folder.showForMac(stored, server: place)
+        }
+    }
+
+    /// Install, on a game of the games folder.
+    func install(_ game: CartoucheStoredGame) {
+        guard let titleID = game.titleId else { return }
+        onInstall(titleID)
+    }
+
+    /// The game NAME the app installs on this Mac, at STEP, in its words,
+    /// over the console as the iPhone shows an install; nil once it is over.
+    public func showInstall(_ name: String?, step: String) {
+        let actions = CartoucheGameActions.shared
+        guard let name else {
+            if actions.work != nil { actions.work = nil }
+            return
+        }
+        if var work = actions.work, work.kind == .installing, work.name == name {
+            work.step = step
+            if work != actions.work { actions.work = work }
+        } else {
+            actions.work = CartoucheGameWork(kind: .installing, name: name, step: step,
+                                             place: CartoucheStoredGames.shared.serverName)
         }
     }
 
@@ -111,7 +178,7 @@ public final class CartoucheMacConsole: ObservableObject {
     /// of EVERYGAME's covers too: the gallery waits for them before it
     /// takes its pictures.
     public func loadCovers(everyGame: Bool) async {
-        let entries = CartoucheCatalog.shared.entries(for: apps)
+        let entries = CartoucheCatalog.shared.entries(for: apps, stored: stored)
         var arts = entries.owned.flatMap { [$0.coverArt, $0.backdrop].compactMap { $0 } }
         if everyGame {
             arts += entries.others.compactMap(\.coverArt)
@@ -145,7 +212,7 @@ public struct CartoucheMacConsoleView: View {
     }
 
     public var body: some View {
-        let entries = catalog.entries(for: console.apps)
+        let entries = catalog.entries(for: console.apps, stored: console.stored)
         HStack(spacing: 0) {
             home(entries)
                 .frame(minWidth: 480, maxWidth: .infinity, maxHeight: .infinity)
@@ -157,6 +224,15 @@ public struct CartoucheMacConsoleView: View {
                     .transition(.move(edge: .trailing).combined(with: .opacity))
             }
         }
+        // A game the Builder installs from the NAS, over the console, as
+        // the iPhone's shows an install.
+        .overlay {
+            if let work = actions.work {
+                CartoucheGameWorkView(work: work)
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: actions.work)
         // Another language: every word again.
         .id(console.language ?? "")
         .animation(.easeInOut(duration: 0.25), value: entries.owned.isEmpty)
@@ -170,7 +246,7 @@ public struct CartoucheMacConsoleView: View {
         // those it does not know.
         .onChange(of: CartoucheCatalog.wanted(among: entries)) { _, _ in
             guard console.asksServer else { return }
-            catalog.lookUpGamesIfDue(among: catalog.entries(for: console.apps))
+            catalog.lookUpGamesIfDue(among: catalog.entries(for: console.apps, stored: console.stored))
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
             CartoucheGameStats.shared.cameBack(console.apps)
@@ -188,6 +264,7 @@ public struct CartoucheMacConsoleView: View {
                 isActive: path.isEmpty,
                 onPlay: { play($0) },
                 onImport: { console.onImport() },
+                onInstall: { console.install($0) },
                 onUninstall: { console.onUninstall($0.appInfo.url) },
                 onSheet: { focus($0) },
                 onLibrary: { path.append(.library) },
@@ -226,7 +303,8 @@ public struct CartoucheMacConsoleView: View {
                 onPlay: { play($0) },
                 onSettings: { play($0, showingSettings: true) },
                 onImport: { console.onImport() },
-                onUninstall: { console.onUninstall($0.appInfo.url) })
+                onUninstall: { console.onUninstall($0.appInfo.url) },
+                onInstallStored: { console.install($0) })
                 .id(entry.id)
         }
     }

@@ -95,6 +95,14 @@ struct MainView: View {
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didActivateApplicationNotification)) { _ in
             ConsoleLink.showRunning(model.macGames.playing)
         }
+        // A game installed from the NAS, how far it is, over the console.
+        .onChange(of: model.installing) { _, _ in showInstall() }
+        .onChange(of: model.installMessage) { _, _ in showInstall() }
+    }
+
+    private func showInstall() {
+        let name = model.installing.map { model.game($0)?.name ?? $0 }
+        ConsoleLink.showInstall(name, step: model.installMessage)
     }
 
     /// What went wrong, above the console as above the builder's pages: a
@@ -139,12 +147,25 @@ enum ConsoleLink {
         console.onImport = { [weak model] in model?.showBuilder(.library) }
         console.onSystem = { [weak model] in model?.showBuilder(nil) }
         console.onUninstall = { [weak model] game in model?.askToRemove(app: game) }
+        console.onInstall = { [weak model] titleID in model?.install(titleID: titleID) }
         speak()
     }
 
-    /// The games built for this Mac, by their apps.
-    static func show(games: [URL]) {
-        CartoucheMacConsole.shared.show(games: games)
+    /// The games built for this Mac, by their apps, and KEPT, the games
+    /// the games folder keeps in one file (a NAS's) and has not installed
+    /// on this Mac, in PLACE, the app's words for where they are.
+    static func show(games: [URL], kept: [Game], keptIn place: String) {
+        let keptGames = kept.compactMap { game -> CartoucheMacKeptGame? in
+            guard let file = game.mac?.library else { return nil }
+            return CartoucheMacKeptGame(titleID: game.titleID, name: game.name, file: file.path, size: file.size,
+                                        built: game.mac?.build.flatMap { ISODate.parse($0.builtAt) })
+        }
+        CartoucheMacConsole.shared.show(games: games, kept: keptGames, keptIn: place)
+    }
+
+    /// The game NAME being installed on this Mac, at STEP; nil once it is.
+    static func showInstall(_ name: String?, step: String) {
+        CartoucheMacConsole.shared.showInstall(name, step: step)
     }
 
     /// Of the games PLAYING, the one started last, and whether its app is
