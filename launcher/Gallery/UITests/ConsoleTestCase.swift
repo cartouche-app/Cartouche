@@ -20,6 +20,10 @@ import XCTest
 /// arguments ask: each is the English of the key beside it in
 /// launcher/Sources/CartoucheText*.swift, or its beginning, which
 /// app/tests/test_launcher_ui_tests.py checks.
+///
+/// The words of a new feature go in an extension of Words in the file of
+/// its tests, which that check reads too, rather than at the end of this
+/// list, where pull requests that each added some met.
 enum Words {
     static let allGames = "All games"                       // home.all
     static let importGame = "Import"                        // dock.import
@@ -101,10 +105,6 @@ enum Words {
     static let updateOffer = "Cartouche %@ is available"    // updates.offer.title
     static let update = "Update"                            // updates.now
     static let later = "Later"                              // updates.later
-    static let updateInstalled = "Cartouche %@ is installed" // updates.installed.title
-    static let whatsNewTitle = "What’s new in Cartouche %@" // whatsNew.title
-    static let whatsNewContinue = "Continue"                // whatsNew.continue
-    static let releaseNotes = "What’s new"                  // system.releaseNotes
     static let lastSync = "Last sync"                       // saves.lastSync
     static let noneYet = "None yet"                         // saves.noCopy
     static let syncNow = "Sync with %@ now"                 // saves.syncNow
@@ -160,16 +160,9 @@ struct Launch {
     var pairingOnly = false
     /// The player's games, installed: none for a player new to Cartouche.
     var owned = Games.owned
-    /// What goes on as the gallery opens (-GalleryWork, GalleryApp.swift):
-    /// "update", a new version of Cartouche on offer; "updated", Cartouche
-    /// opening after an update started from it, from 0.2.0 to the
-    /// gallery's own version, 0.3.0 (project.yml); "paused", the first
-    /// game paused behind the console; "installing" or "install-failed",
-    /// the game of SHEET; "offline", the NAS out of reach; "mac", the
-    /// player's Mac paired; "mac-nearby", "mac-code" or "mac-refused", what
-    /// Add your Mac finds; "saves", the first game's saves and a folder in
-    /// Files as the saves folder; "drive-signed-out", the player's Google
-    /// Drive, whose sign-in Google ended, with two games' saves waiting.
+    /// What goes on as the gallery opens: a value of -GalleryWork, each of
+    /// which GalleryApp.swift says on a line of its own, such as "update",
+    /// a new version of Cartouche on offer.
     var work: String?
     /// The game being installed, or whose install failed.
     var sheet: String?

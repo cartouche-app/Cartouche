@@ -10,6 +10,14 @@
 
 import XCTest
 
+/// What's new's words, and the word an update leaves without it.
+extension Words {
+    static let updateInstalled = "Cartouche %@ is installed" // updates.installed.title
+    static let whatsNewTitle = "What’s new in Cartouche %@" // whatsNew.title
+    static let whatsNewContinue = "Continue"                // whatsNew.continue
+    static let releaseNotes = "What’s new"                  // system.releaseNotes
+}
+
 final class WhatsNewUITests: ConsoleTestCase {
     /// After an update started from Cartouche, from 0.2.0 to the gallery's
     /// version, 0.3.0 (project.yml): What's new in Cartouche 0.3.0 over the

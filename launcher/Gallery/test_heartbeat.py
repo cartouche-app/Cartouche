@@ -73,8 +73,9 @@ DISK_ALONE = r"^disk free \d+\.\d GB$"
 
 def gallery(work):
     """build.sh, project.sh and heartbeat.py copied into WORK, where they
-    live in the repository, beside a catalogue of one game: the gallery's
-    directory."""
+    live in the repository, beside a catalogue of one game and the release
+    notes of one version, which project.sh puts in the gallery: the
+    gallery's directory."""
     found = work / "repository/launcher/Gallery"
     found.mkdir(parents=True)
     for name in ("build.sh", "project.sh", "heartbeat.py"):
@@ -83,6 +84,9 @@ def gallery(work):
     (catalog / "games").mkdir(parents=True)
     for name in ("devices.json", "nxnative.json", "covers.json", "games/0100000000010000.json"):
         (catalog / name).write_text("{}\n")
+    releases = work / "repository/app/releases"
+    releases.mkdir(parents=True)
+    (releases / "0.3.0.md").write_text("What the gallery's version brings.\n\n- Games: one item.\n")
     return found
 
 

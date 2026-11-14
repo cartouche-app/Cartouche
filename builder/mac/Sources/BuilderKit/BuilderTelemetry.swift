@@ -265,7 +265,7 @@ public struct BatchEvent: Equatable, Sendable {
 @MainActor
 public final class BuilderTelemetry: ObservableObject {
     /// Where the docs say what leaves the Mac.
-    public static let privacy = URL(string: "https://github.com/clabeuhtegrite/Cartouche/blob/main/docs/privacy.md#cartouche-builder")!
+    public static let privacy = URL(string: "https://github.com/cartouche-app/Cartouche/blob/main/docs/privacy.md#cartouche-builder")!
     /// A copy of the app takes a new random number after 13 months.
     public static let installLifetime: TimeInterval = 395 * 86_400
 
