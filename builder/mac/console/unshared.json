@@ -99,6 +99,10 @@
       "why": "Cartouche's versions as the built-in SideStore's source lists them: the Mac's app updates itself from its own releases.",
       "mac": "BuilderKit/Updater.swift"
     },
+    "CartoucheReleaseNotes.swift": {
+      "kind": "iphone",
+      "why": "The notes of each version of Cartouche on the iPhone (app/releases), which the iPhone's app carries, and when What's new shows them after its update: the Mac's app updates itself from its own releases."
+    },
     "CartoucheRenewal.swift": {
       "kind": "mac",
       "why": "Renewing the free account's 7-day signature on the iPhone: a Mac app does not expire, and the console's stand-in says that no renewal is ever under way.",
@@ -222,6 +226,10 @@
     "CartoucheVPN.swift": {
       "kind": "iphone",
       "why": "Whether LocalDevVPN is on, which SideStore needs on the iPhone."
+    },
+    "CartoucheWhatsNewView.swift": {
+      "kind": "iphone",
+      "why": "What's new over the iPhone's console after an update of Cartouche on the iPhone, and System › What's new: the Mac's app updates itself from its own releases."
     }
   }
 }
