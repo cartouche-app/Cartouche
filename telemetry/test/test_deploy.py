@@ -141,11 +141,11 @@ class DeployTest(unittest.TestCase):
         self.assertNotIn("github_pat_expired", result.stdout + result.stderr)
 
     def test_a_public_repository_gets_no_problem(self):
-        self.cloudflare.repositories["clabeuhtegrite/Cartouche"] = False
-        result = self.deploy_with_problems(repository="clabeuhtegrite/Cartouche")
+        self.cloudflare.repositories["cartouche-app/Cartouche"] = False
+        result = self.deploy_with_problems(repository="cartouche-app/Cartouche")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual([binding["name"] for binding in self.bindings()], ["DB"])
-        self.assertIn("::error::Problems: clabeuhtegrite/Cartouche is public", result.stdout)
+        self.assertIn("::error::Problems: cartouche-app/Cartouche is public", result.stdout)
 
     def test_the_server_alone_asks_igdb(self):
         with tempfile.TemporaryDirectory() as folder:

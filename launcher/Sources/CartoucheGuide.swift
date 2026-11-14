@@ -211,7 +211,7 @@ final class CartoucheGuide: ObservableObject {
     /// What the Mac's step sends the Mac, by AirDrop or Messages: Cartouche
     /// Builder's part of Cartouche's site, in the language of the Mac's
     /// browser, with its disk image.
-    static let builderPage = URL(string: "https://clabeuhtegrite.github.io/Cartouche/#builder")!
+    static let builderPage = URL(string: "https://cartouche-app.github.io/Cartouche/#builder")!
 
     // MARK: LocalDevVPN
 

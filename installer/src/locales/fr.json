@@ -201,10 +201,10 @@
       ],
       "download": [
         "Vérifiez la connexion à internet de cet ordinateur, puis réessayez.",
-        "Téléchargez Cartouche-<version>.ipa depuis ((link:https://github.com/clabeuhtegrite/Cartouche/releases:les versions de Cartouche)), puis utilisez Installer Cartouche depuis un fichier IPA."
+        "Téléchargez Cartouche-<version>.ipa depuis ((link:https://github.com/cartouche-app/Cartouche/releases:les versions de Cartouche)), puis utilisez Installer Cartouche depuis un fichier IPA."
       ],
       "not_cartouche": [
-        "Choisissez l’IPA de Cartouche elle-même, Cartouche-<version>.ipa depuis ((link:https://github.com/clabeuhtegrite/Cartouche/releases:les versions de Cartouche)). Un jeu s’installe dans Cartouche, avec son Import."
+        "Choisissez l’IPA de Cartouche elle-même, Cartouche-<version>.ipa depuis ((link:https://github.com/cartouche-app/Cartouche/releases:les versions de Cartouche)). Un jeu s’installe dans Cartouche, avec son Import."
       ],
       "cartouche_missing": [
         "Installez d’abord Cartouche, avec le bouton de l’étape 3."

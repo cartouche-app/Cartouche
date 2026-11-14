@@ -1,7 +1,7 @@
 name: Showcase site
 
 # Publishes the showcase page, site/, on GitHub Pages
-# (https://clabeuhtegrite.github.io/Cartouche/). When the page changes on
+# (https://cartouche-app.github.io/Cartouche/). When the page changes on
 # main, it runs the page's tests, then keeps index.html, favicon.svg and the
 # download page alone on the branch gh-pages, which Pages serves: Settings ›
 # Pages › Build and deployment, Deploy from a branch, gh-pages, / (root).
