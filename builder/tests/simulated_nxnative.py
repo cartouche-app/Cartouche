@@ -35,7 +35,20 @@ describes it (docs/frontends.md) and its script does it (seedds/nxnative
   its bundle ID org.nxnative.<title ID>) and the build (DMCommit, "+dirty"
   for a checkout with changes, DMChain, DMLanguage), with the settings list
   dm/launcher.json, and sim/inputs.json: every file it was given, by name,
-  size and SHA-256, for the tests to see what reached nxnative.
+  size and SHA-256, for the tests to see what reached nxnative;
+- with --platform mac-app, the game's Mac app at -o instead, which must end
+  in .app (stages "Mac shaders", "Mac host" and "Mac app" in place of the
+  iOS shaders, the app build and the IPA pack; the extracted files kept
+  whatever it is asked, the app being made of clones of them; the Mac
+  shaders' cache in mac-shaders/b-<chain>): written as
+  nxnative's packer (dm/mac/pack_app.py) writes it, under <app>.partial,
+  then in place of the app there, its reuse key in <app>.key; its
+  Contents/Info.plist says what an IPA's says (DMTitleID, DMCommit, DMChain,
+  DMLanguage, the version, the bundle ID, CFBundleName) and DMSaveSyncChoice,
+  its launcher and host in Contents/MacOS (nxnative, a script that runs
+  as nxnative's launcher does as far as the builder sees it, LAUNCHER, and
+  dmhost), the game's files in Contents/Resources/romfs, sim/inputs.json
+  and sim/args.json in Contents/Resources.
 
 What breaks, breaks as with nxnative. The checkout's own commits can break
 the app build (a file BROKEN at its root: every game's, or those whose title
@@ -52,7 +65,18 @@ the JSON file NXSIM_SCENARIO names, read at each build:
    "quiet": {ID: seconds},  the app build takes that long without a word,
                             as Xcode compiling
    "no_ipa": [ID],          ends well without an IPA
+   "mac_slow": {ID: seconds},
+                            the Mac shaders take that long, with a tool of
+                            their own running meanwhile (tool.pid)
+   "mac_host": [ID],        the Mac host does not build (clang)
+   "mac_room": [ID],        the Mac app's packer finds no room for a copy of
+                            the game's files, as on a disk where it cannot
+                            clone them
    "ipa_bytes": {ID: n},    an IPA of about n bytes
+   "metal": {ID: "27.1"},   this Mac's Metal compiler is that Xcode's, not the
+                            one the shaders were tested with (Xcode 27.2's):
+                            refused after the check of the files, unless
+                            --allow-other-metal
    "refused": [option],     options this nxnative does not take, as one
                             from before or after them ("-l")
    "slack_gb": n}           nxnative's room on top of the game's size (6 GB
@@ -74,6 +98,7 @@ import json
 import os
 import plistlib
 import re
+import shlex
 import shutil
 import signal
 import struct
@@ -418,6 +443,21 @@ def scan(source: Path, keys: Path | None, want: str | None) -> Family:
     return scan_packages(source, keys, want)
 
 
+def other_metal(selected: str) -> str:
+    """nxnative's words for a Metal compiler other than the one its shaders
+    were tested with, as dm/gfx/tools/own_compilers.py words them and the
+    build script raises them (check_metal), the selected Xcode SELECTED."""
+    app = "/Applications/Xcode-27.2.app"
+    return ("this Mac's Metal compiler is not the one the shaders were tested with (dm/gfx/tools/dmsh_chain.lock): "
+            "metal_macosx Apple metal version 32023.620 (metalfe-32023.620) (tested: Apple metal version 32023.850 (metalfe-32023.850)); "
+            "metal_iphoneos Apple metal version 32023.620 (metalfe-32023.620) (tested: Apple metal version 32023.850 (metalfe-32023.850)). "
+            "Untested compilers are unsupported (GitHub issue #242). The Metal compiler is the selected Xcode's"
+            f" (selected: Xcode {selected} in /Applications/Xcode.app/Contents/Developer): install Xcode 27.2 (macOS 26.6 or later) "
+            f"from https://developer.apple.com/download/all/ (beside a newer Xcode, as {app}), select it (sudo xcode-select -s {app}, "
+            f"or DEVELOPER_DIR={app}/Contents/Developer for one build), then download its Metal toolchain "
+            "(xcodebuild -downloadComponent MetalToolchain), or ALLOW_OTHER_METAL = True (--allow-other-metal) to build with this one anyway")
+
+
 def check_files(family: Family, allow: bool) -> None:
     """nxnative's check of a NUP's or a dump's files, which carry no hashes:
     a .zs file must be a zstd stream."""
@@ -518,7 +558,13 @@ def main(args: argparse.Namespace) -> None:
     # For the tests, which stop what a batch killed left running.
     (work / "nxnative.pid").write_text(f"{os.getpid()}\n")
     keep = args.keep_extracted is not False
-    say(f"output IPA: {out}")
+    mac_app = args.platform == "mac-app"
+    if mac_app and out.suffix != ".app":
+        raise BuildError(f"the Mac app (-o / OUT_IPA) must end in .app: {out}")
+    if mac_app and not keep:
+        say("keeping the extracted game files all the same: the game runs from them on the Mac and the app is made of clones of them")
+        keep = True
+    say("Mac app: the Mac shaders and the Mac host, packed into a Mac app; no iOS shaders, Xcode project or IPA" if mac_app else f"output IPA: {out}")
     say(f"work folder (extracted game files in extract/, {'kept for the next build' if keep else 'deleted after the IPA is built'}): {work}")
 
     # The room the build needs, as nxnative counts it: the game's size and some slack.
@@ -547,6 +593,11 @@ def main(args: argparse.Namespace) -> None:
             (extract / "dlc.txt").write_text("\n".join(family.dlc) + "\n")
     if family.kind in ("dump", "nup"):
         check_files(family, args.allow_damaged)
+    # nxnative's check of the Metal compiler, before the shaders: no stage of
+    # its own, the files' check ends where it stops.
+    selected = asked(plan, "metal", title_id)
+    if selected and not args.allow_other_metal:
+        raise BuildError(other_metal(str(selected)))
 
     # The game event, once its name, version and bundle ID are settled.
     values = profile(title_id)
@@ -566,6 +617,9 @@ def main(args: argparse.Namespace) -> None:
     if asked(plan, "crash", title_id):
         modules = {}
         modules["icon"]  # an error of the script's own: KeyError, its traceback on stderr
+    if mac_app:
+        build_mac_app(args, plan, family, work, out, name, version, bundle_id)
+        return
     PROG.stage("iOS shaders", step="checking the inputs")
     current = chain()
     shaders = work / "shaders"
@@ -639,6 +693,138 @@ def main(args: argparse.Namespace) -> None:
     if not keep:
         shutil.rmtree(extract, ignore_errors=True)
     say(f"built {out}")
+
+
+# The launcher of a game's Mac app, a script that runs as nxnative's
+# (dm/mac/launcher.c) does as far as the builder sees it: its log in
+# ~/Library/Logs/nxnative/<ID>.log, the one before kept as <ID>.prev.log,
+# ending with the line saying how the game ended; no settings window with
+# DM_LAUNCHER=0 or --no-launcher; the game's save in DM_SAVE, else in
+# ~/Library/Application Support/nxnative/<ID>/save. The game plays once
+# more: its save's progress.txt gains " +mac". Beside the save, played.txt
+# says what the game found: its window, DM_SAVE_SYNC, the title of the Home
+# button's prompt, its progress. For the tests, NXSIM_LOGS puts the log
+# elsewhere, NXSIM_PLAY makes the game last that many seconds, NXSIM_EXIT
+# is the host's exit code (0, a quit).
+LAUNCHER = """#!/bin/sh
+ID=@ID@
+NAME=@NAME@
+LOGS="${NXSIM_LOGS:-$HOME/Library/Logs/nxnative}"
+SAVE="${DM_SAVE:-$HOME/Library/Application Support/nxnative/$ID/save}"
+mkdir -p "$LOGS" "$SAVE" || exit 1
+[ -f "$LOGS/$ID.log" ] && mv -f "$LOGS/$ID.log" "$LOGS/$ID.prev.log"
+exec >"$LOGS/$ID.log" 2>&1
+echo "launcher: $NAME ($ID), host $(dirname "$0")/dmhost"
+WINDOW=1
+[ "$DM_LAUNCHER" = 0 ] && WINDOW=0
+for ARG in "$@"; do [ "$ARG" = --no-launcher ] && WINDOW=0; done
+[ "$WINDOW" = 0 ] && echo "launcher: no settings window (DM_LAUNCHER=0 or --no-launcher)"
+FOUND=$(cat "$SAVE/progress.txt" 2>/dev/null)
+{
+  echo "window=$WINDOW"
+  echo "save_sync=${DM_SAVE_SYNC-unset}"
+  echo "quit_title=$(printf '%s\\n' "$DM_HOME_QUIT_TEXT" | sed -n 2p)"
+  echo "found=$FOUND"
+} > "$SAVE/../played.txt"
+echo "[host] playing from: $FOUND"
+printf '%s +mac\\n' "$FOUND" > "$SAVE/progress.txt"
+sleep "${NXSIM_PLAY:-0}"
+CODE="${NXSIM_EXIT:-0}"
+echo "launcher: the host exited with $CODE"
+exit "$CODE"
+"""
+
+
+def build_mac_app(args: argparse.Namespace, plan: dict, family: Family, work: Path, out: Path, name: str, version: str, bundle_id: str) -> None:
+    """The stages of --platform mac-app after the rewrite: the Mac shaders,
+    the Mac host and the app, packed as dm/mac/pack_app.py packs it."""
+    title_id = family.title_id
+    logs = work / "logs"
+    PROG.stage("Mac shaders", step="checking the inputs")
+    current = chain()
+    shaders = work / "mac-shaders"
+    for stale in sorted(shaders.glob("b-*")) if shaders.is_dir() else []:
+        if stale.name != f"b-{current}":
+            shutil.rmtree(stale, ignore_errors=True)
+    cache = shaders / f"b-{current}"
+    reused = cache.is_dir()
+    cache.mkdir(parents=True, exist_ok=True)
+    (cache / "cache.bin").write_bytes(b"Mac shaders " + current.encode())
+    slow = asked(plan, "mac_slow", title_id)
+    if slow:
+        run_tool(float(slow), work, "dmsh_xlate")
+    PROG.end("reused" if reused else "3 translated")
+
+    PROG.stage("Mac host", step="building")
+    host_log = logs / "mac_host.log"
+    if asked(plan, "mac_host", title_id):
+        host_log.write_text("dm/host/mac/host.m:12:5: error: use of undeclared identifier 'probe_atrace'\n1 error generated.\n", encoding="utf-8")
+        PROG.end(ok=False)
+        PROG.say(f"---- last lines of {host_log} ----\n" + host_log.read_text(encoding="utf-8").rstrip("\n"))
+        raise BuildError(f"clang exit code 1 (full output: {host_log})")
+    (work / "tools").mkdir(parents=True, exist_ok=True)
+    (work / "tools" / "dmhost").write_bytes(b"\xcf\xfa\xed\xfe simulated Mac host of " + title_id.encode())
+    PROG.end(str(work / "tools" / "dmhost"))
+
+    PROG.stage("Mac app", step="starting")
+    app_log = logs / "mac_app.log"
+    if asked(plan, "mac_room", title_id):
+        app_log.write_text(f"step: checking the room\nthe app needs 12.3 GB on the volume of {out.parent} (no APFS clones from the build there) and 0.4 GB are free\n", encoding="utf-8")
+        PROG.end(ok=False)
+        PROG.say(f"---- last lines of {app_log} ----\n" + app_log.read_text(encoding="utf-8").rstrip("\n"))
+        raise BuildError(f"pack_app.py exit code 1 (full output: {app_log})")
+    commit = git("rev-parse", "--short=12", "HEAD")
+    if git("status", "--porcelain", "--untracked-files=no"):
+        commit += "+dirty"
+    current = chain()
+    info = {
+        "CFBundleName": name,
+        "CFBundleDisplayName": name,
+        "CFBundleIdentifier": bundle_id,
+        "CFBundleShortVersionString": version,
+        "CFBundleVersion": version,
+        "CFBundlePackageType": "APPL",
+        "CFBundleExecutable": "nxnative",
+        "LSApplicationCategoryType": "public.app-category.games",
+        # This launcher is a script, which says no architecture: macOS starts
+        # it natively on Apple silicon, as it does nxnative's own launcher,
+        # instead of asking for Rosetta.
+        "LSArchitecturePriority": ["arm64", "x86_64"],
+        "DMTitleID": title_id,
+        "DMLanguage": args.language or "en-US",
+        "DMSaveSyncChoice": 1,
+        "DMCommit": commit,
+        "DMChain": current,
+    }
+    inputs = [{"name": p.name, "path": str(p), "size": p.stat().st_size, "sha256": hashlib.sha256(p.read_bytes()).hexdigest()} for p in family.files]
+    partial = out.with_name(out.name + ".partial")
+    aside = out.with_name(out.name + ".old")
+    shutil.rmtree(partial, ignore_errors=True)
+    contents = partial / "Contents"
+    (contents / "MacOS").mkdir(parents=True)
+    (contents / "Resources" / "sim").mkdir(parents=True)
+    PROG.step("launcher and host (clones of the game files)")
+    (contents / "Info.plist").write_bytes(plistlib.dumps(info))
+    launcher = contents / "MacOS" / "nxnative"
+    launcher.write_text(LAUNCHER.replace("@ID@", shlex.quote(title_id)).replace("@NAME@", shlex.quote(name)), encoding="utf-8")
+    launcher.chmod(0o755)
+    (contents / "MacOS" / "dmhost").write_bytes((work / "tools" / "dmhost").read_bytes())
+    PROG.step("game files")
+    shutil.copytree(work / "extract", contents / "Resources" / "romfs")
+    (contents / "Resources" / "sim" / "inputs.json").write_text(json.dumps({"kind": family.kind, "files": inputs, "dlc": family.dlc}, indent=1))
+    (contents / "Resources" / "sim" / "args.json").write_text(json.dumps(sys.argv[1:]))
+    # In place of the app there once whole, as RENAME_SWAP or its moves do.
+    if out.exists():
+        shutil.rmtree(aside, ignore_errors=True)
+        os.rename(out, aside)
+    os.rename(partial, out)
+    shutil.rmtree(aside, ignore_errors=True)
+    out.with_name(out.name + ".key").write_text(hashlib.sha256(json.dumps([commit, current, inputs]).encode()).hexdigest() + "\n")
+    if not (out / "Contents" / "MacOS" / "dmhost").is_file():
+        raise BuildError(f"no app at {out}")
+    PROG.end(f"{out.name}, {sum(p.stat().st_size for p in out.rglob('*') if p.is_file()):,} bytes")
+    say(f"done: {out} (0.0 GB); open it from Finder. Its save is in ~/Library/Application Support/nxnative/{title_id}/, "
+        f"its log in ~/Library/Logs/nxnative/{title_id}.log")
 
 
 def stop(sig, frame):
