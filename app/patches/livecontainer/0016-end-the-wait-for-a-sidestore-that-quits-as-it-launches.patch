@@ -1,0 +1,107 @@
+From 61e82b038b667c1a1bfe670884b14e1876367e65 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sat, 14 Nov 2026 14:20:09 +0000
+Subject: [PATCH] End the wait for a SideStore that quits as it launches
+
+RefreshHandler.startRefresh, which runs the built-in SideStore's
+actions in LiveProcess (Cartouche's sign-in, the registration of the
+iPhone alone, its renewal and its updates), waits for SideStore to say
+it has launched before it hands it the action. When the extension's
+process quit before that, its interruption block dropped that wait
+without ending it: the action waited forever, with no error, and the
+five minutes' limit, which looked for the same wait, found none. The
+player saw the sign-in under way until they closed Cartouche, and
+nothing of it reached Cartouche's report or its measurements.
+
+The wait is now Cartouche's CartoucheSideStoreLaunch
+(Cartouche/CartoucheSideStoreLaunch.swift, from the launcher's
+SideStoreSupport folder): each launch's wait ends once, with the first
+of SideStore saying it has launched, its process quitting, or the five
+minutes running out, whether that comes before or after the wait
+starts. A process that quits as it launches ends it with "Built-in
+SideStore quit unexpectedly while starting", which Cartouche tells
+from a SideStore that quit during the action. The five minutes' limit
+ends its own launch's wait alone, and kills that launch's extension
+only when it did, never a later launch's.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01MzPJouaxDEHiaAYJRW7jTY
+---
+ SideStoreSupport/SideStore.swift | 28 +++++++++++++++-------------
+ 1 file changed, 15 insertions(+), 13 deletions(-)
+
+diff --git a/SideStoreSupport/SideStore.swift b/SideStoreSupport/SideStore.swift
+index d92d4a9..3127fa8 100644
+--- a/SideStoreSupport/SideStore.swift
++++ b/SideStoreSupport/SideStore.swift
+@@ -75,7 +75,9 @@ public struct RefreshAllAppsIntent: AppIntent, CustomIntentMigratedAppIntent, Pr
+ 
+ class RefreshHandler: NSObject, RefreshServer {
+     var c: UnsafeContinuation<(), any Error>? = nil
+-    var launchContinuation: UnsafeContinuation<(), any Error>? = nil
++    // Cartouche: the wait for SideStore's launch, which ends even when its
++    // process quits as it launches (Cartouche/CartoucheSideStoreLaunch.swift).
++    let launch = CartoucheSideStoreLaunch()
+     var progress: Progress? = nil
+     var listener: NSXPCListener? = nil
+     var sideStorePid: Int32 = 0
+@@ -105,7 +107,7 @@ class RefreshHandler: NSObject, RefreshServer {
+         }
+ 
+         // launch SideStore if it's not running
+-        if (sideStorePid <= 0 || getpgid(sideStorePid) <= 0) && launchContinuation == nil {
++        if (sideStorePid <= 0 || getpgid(sideStorePid) <= 0) && !launch.isWaiting {
+             let lcHome = String(cString:getenv("LC_HOME_PATH"))
+             let sideStoreHomeURL = URL(fileURLWithPath: lcHome).appendingPathComponent("Documents/SideStore")
+             let bookmarkData = bookmarkForURL(sideStoreHomeURL)!
+@@ -136,27 +138,28 @@ class RefreshHandler: NSObject, RefreshServer {
+                 return
+             }
+             self.ext = ext
++            let launchNumber = launch.begin()
+             
+             ext.setRequestInterruptionBlock { uuid in
+                 self.c?.resume(throwing: NSError(domain: "SideStore", code: 1, userInfo: [NSLocalizedDescriptionKey: "Built-in SideStore quit unexpectedly"]))
+                 self.c = nil
+                 self.sideStorePid = 0
+-                self.launchContinuation = nil
++                // Cartouche: a SideStore that quits before it said it had
++                // launched ends the wait for it, which went on forever.
++                self.launch.end(launchNumber, with: .failure(NSError(domain: "SideStore", code: 1, userInfo: [NSLocalizedDescriptionKey: "Built-in SideStore quit unexpectedly while starting"])))
+             }
+             
+             let uuid = await ext.beginRequest(withInputItems: [extensionItem])
+             sideStorePid = ext.pid(forRequestIdentifier: uuid)
+             
+-            try await withUnsafeThrowingContinuation { c in
+-                self.launchContinuation = c
+-                DispatchQueue.main.asyncAfter(deadline: .now() + 300) {
+-                    if let c = self.launchContinuation {
+-                        c.resume(throwing: NSError(domain: "SideStore", code: 1, userInfo: [NSLocalizedDescriptionKey: "Built-in SideStore failed to start in reasonable time"]))
+-                        self.launchContinuation = nil
+-                        ext._kill(9)
+-                    }
++            // Cartouche: the time limit ends this launch's wait alone, never
++            // a later launch's.
++            DispatchQueue.main.asyncAfter(deadline: .now() + 300) {
++                if self.launch.end(launchNumber, with: .failure(NSError(domain: "SideStore", code: 1, userInfo: [NSLocalizedDescriptionKey: "Built-in SideStore failed to start in reasonable time"]))) {
++                    ext._kill(9)
+                 }
+             }
++            try await launch.wait(for: launchNumber)
+         }
+         self.client?.refreshAllApps(withIdentifier: identifier, mangledTypeName: mangledName)
+         
+@@ -186,8 +189,7 @@ class RefreshHandler: NSObject, RefreshServer {
+     }
+     
+     func finishedLaunching() {
+-        launchContinuation?.resume()
+-        launchContinuation = nil
++        launch.end(with: .success(()))
+     }
+ 
+     func add(_ request: UNNotificationRequest) {
+-- 
+2.43.0
+
