@@ -20,6 +20,10 @@ import XCTest
 /// arguments ask: each is the English of the key beside it in
 /// launcher/Sources/CartoucheText*.swift, or its beginning, which
 /// app/tests/test_launcher_ui_tests.py checks.
+///
+/// The words of a new feature go in an extension of Words in the file of
+/// its tests, which that check reads too, rather than at the end of this
+/// list, where pull requests that each added some met.
 enum Words {
     static let allGames = "All games"                       // home.all
     static let importGame = "Import"                        // dock.import
@@ -107,19 +111,6 @@ enum Words {
     static let putBack = "Put back a copy"                  // saves.putBack
     static let putBackCopy = "Put back the copy of "        // saves.putBack.action
     static let putBackDone = "The copy of "                 // saves.putBack.done
-    static let importCertificate = "Import signing certificate" // signing.title
-    static let certificateStep = "Import your certificate"  // guide.certificate.title
-    static let howOnIPhone = "Choose the certificate (.p12) your signing app signed Cartouche with" // signing.howOnIPhone
-    static let chooseCertificate = "Choose the certificate (.p12)" // signing.chooseCertificate
-    static let chooseProfile = "Choose its profile (.mobileprovision)" // signing.chooseProfile
-    static let certificatePassword = "Certificate password" // signing.password
-    static let useCertificate = "Use this certificate"      // signing.use
-    static let signature = "Your signature"                 // signature.check.title
-    static let memoryLeftOut = "Your signing app left out Increased Memory Limit" // signature.memory.leftOut
-    static let keychainsLeftOut = "Your signing app did not sign in the games’ keychain groups" // signature.keychains.leftOut
-    static let download = "Download"                        // updates.download
-    static let offerOnIPhone = "You have version %@. Download the new one" // updates.offer.onIPhone
-    static let offerOnComputer = "You have version %@. Install the new one from the Cartouche Installer" // updates.offer.onComputer
     static let siriAndHomeScreen = "Siri and Home Screen"   // shortcuts.title
     static let sayToSiri = "Say to Siri"                    // shortcuts.siri
     static let siriPhrase = "“Play %@ in Cartouche”"        // shortcuts.phrase
@@ -169,14 +160,9 @@ struct Launch {
     var pairingOnly = false
     /// The player's games, installed: none for a player new to Cartouche.
     var owned = Games.owned
-    /// What goes on as the gallery opens (-GalleryWork, GalleryApp.swift):
-    /// "update", a new version of Cartouche on offer; "paused", the first
-    /// game paused behind the console; "installing" or "install-failed",
-    /// the game of SHEET; "offline", the NAS out of reach; "mac", the
-    /// player's Mac paired; "mac-nearby", "mac-code" or "mac-refused", what
-    /// Add your Mac finds; "saves", the first game's saves and a folder in
-    /// Files as the saves folder; "drive-signed-out", the player's Google
-    /// Drive, whose sign-in Google ended, with two games' saves waiting.
+    /// What goes on as the gallery opens: a value of -GalleryWork, each of
+    /// which GalleryApp.swift says on a line of its own, such as "update",
+    /// a new version of Cartouche on offer.
     var work: String?
     /// The game being installed, or whose install failed.
     var sheet: String?

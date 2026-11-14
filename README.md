@@ -10,9 +10,9 @@ Cartouche installs, starts and keeps the games [nxnative](https://github.com/see
 It signs, renews and updates itself, and gets your games the memory they need.<br>
 On your Mac, Cartouche Builder builds your games, and builds them again when nxnative improves them.
 
-<a href="https://clabeuhtegrite.github.io/Cartouche/download/#installer-mac"><img src="docs/images/download-mac.png" height="48" alt="Download the Cartouche Installer for Mac"></a>&nbsp;&nbsp;<a href="https://clabeuhtegrite.github.io/Cartouche/download/#installer-windows"><img src="docs/images/download-windows.png" height="48" alt="Download the Cartouche Installer for Windows"></a>
+<a href="https://cartouche-app.github.io/Cartouche/download/#installer-mac"><img src="docs/images/download-mac.png" height="48" alt="Download the Cartouche Installer for Mac"></a>&nbsp;&nbsp;<a href="https://cartouche-app.github.io/Cartouche/download/#installer-windows"><img src="docs/images/download-windows.png" height="48" alt="Download the Cartouche Installer for Windows"></a>
 
-**[Website](https://clabeuhtegrite.github.io/Cartouche/)** · **[Getting started](docs/getting-started.md)** · **[Premiers pas](docs/getting-started.fr.md)** · **[Roadmap](docs/roadmap.md)** · **[Report a problem](https://github.com/clabeuhtegrite/Cartouche/issues/new/choose)**
+**[Website](https://cartouche-app.github.io/Cartouche/)** · **[Getting started](docs/getting-started.md)** · **[Premiers pas](docs/getting-started.fr.md)** · **[Roadmap](docs/roadmap.md)** · **[Report a problem](https://github.com/cartouche-app/Cartouche/issues/new/choose)**
 
 <img src="docs/images/console.png" width="100%" alt="Cartouche's home in landscape on an iPhone: the player's games on one shelf with their covers, and the game in focus with Play and Details">
 
@@ -43,23 +43,23 @@ Cartouche Builder is Cartouche's Mac app. From your own copies, it builds each g
 
 <p align="center"><img src="docs/images/builder.png" width="88%" alt="Cartouche Builder's library on a Mac: the player's games with their covers, two of them improved by nxnative and ready to build again"></p>
 
-<p align="center"><a href="https://clabeuhtegrite.github.io/Cartouche/download/#builder"><img src="docs/images/download-builder.png" height="48" alt="Download Cartouche Builder"></a><br><sub>Free, for a Mac with Apple silicon and macOS 26.6 or later.</sub></p>
+<p align="center"><a href="https://cartouche-app.github.io/Cartouche/download/#builder"><img src="docs/images/download-builder.png" height="48" alt="Download Cartouche Builder"></a><br><sub>Free, for a Mac with Apple silicon and macOS 26.6 or later.</sub></p>
 
 ## Install
 
 Step by step, from nothing to your first game: [docs/getting-started.md](docs/getting-started.md), in French [docs/getting-started.fr.md](docs/getting-started.fr.md). In short:
 
 1. On the iPhone, install [**LocalDevVPN**](https://apps.apple.com/app/localdevvpn/id6755608044) from the App Store: the built-in SideStore needs it to sign in and to renew Cartouche without a computer.
-2. On a Mac or a Windows PC, download the **Cartouche Installer**, [for Mac](https://clabeuhtegrite.github.io/Cartouche/download/#installer-mac) or [for Windows](https://clabeuhtegrite.github.io/Cartouche/download/#installer-windows), plug in the iPhone, sign in with your Apple account (a free one is enough) and install. It puts the latest Cartouche on the iPhone with its certificate, the memory capability and the pairing file ([installer/README.md](installer/README.md)).
+2. On a Mac or a Windows PC, download the **Cartouche Installer**, [for Mac](https://cartouche-app.github.io/Cartouche/download/#installer-mac) or [for Windows](https://cartouche-app.github.io/Cartouche/download/#installer-windows), plug in the iPhone, sign in with your Apple account (a free one is enough) and install. It puts the latest Cartouche on the iPhone with its certificate, the memory capability and the pairing file ([installer/README.md](installer/README.md)).
 3. Open Cartouche: its guide, **Your first game**, takes you from there, and ticks each step by itself.
-4. On a Mac with Apple silicon, [download **Cartouche Builder**](https://clabeuhtegrite.github.io/Cartouche/download/#builder) and drag it onto Applications: it installs the tools nxnative builds with, then builds your game into your games folder ([builder/README.md](builder/README.md#install)).
+4. On a Mac with Apple silicon, [download **Cartouche Builder**](https://cartouche-app.github.io/Cartouche/download/#builder) and drag it onto Applications: it installs the tools nxnative builds with, then builds your game into your games folder ([builder/README.md](builder/README.md#install)).
 5. In Cartouche, **System › Storage › Add your Mac (Cartouche Builder)**, with the code both screens show: Cartouche installs your games from the Mac and keeps your saves there. A NAS, your Google Drive or another storage of yours works too.
 
 **What you need:** iOS 26 or later on an iPhone 15 Pro or newer, or an iPad with an M1 or newer, as nxnative; the bigger games need a 12 GB iPhone. A Mac or a Windows PC, once, to install Cartouche, and a Mac with Apple silicon to build your games.
 
 **Your own signing certificate:** with a `.p12` and its provisioning profile, choose your certificate instead of the Apple Account in the Installer's second step. It signs Cartouche with them, with no Apple account, LocalDevVPN or weekly renewal; games then start in Cartouche's place, and most of them need Increased Memory Limit in the profile ([docs/imported-signing.md](docs/imported-signing.md)).
 
-Cartouche is young and changes often: it offers each new version itself. Something wrong? **Copy the report** under the error, or **System › Report a problem**, and [open an issue](https://github.com/clabeuhtegrite/Cartouche/issues/new/choose).
+Cartouche is young and changes often: it offers each new version itself. Something wrong? **Copy the report** under the error, or **System › Report a problem**, and [open an issue](https://github.com/cartouche-app/Cartouche/issues/new/choose).
 
 ## Questions
 
@@ -114,7 +114,7 @@ Cartouche ships no games, no keys and no firmware, and never downloads them: it 
 | [`catalog/`](catalog/) | What the app knows about games and devices: nxnative's list of games, covers' IDs, compatibility sheets, device memory limits |
 | [`guard/`](guard/) | The publish guard, which refuses to publish anything that looks like game content |
 | [`telemetry/`](telemetry/) | The server Cartouche and Cartouche Builder send their measurements and problem reports to, a Cloudflare Worker, and the project's dashboard beside it |
-| [`site/`](site/) | The showcase page, on [GitHub Pages](https://clabeuhtegrite.github.io/Cartouche/): Cartouche's screens rebuilt in HTML around games of nxnative's list, their covers loaded from IGDB, in French and English |
+| [`site/`](site/) | The showcase page, on [GitHub Pages](https://cartouche-app.github.io/Cartouche/): Cartouche's screens rebuilt in HTML around games of nxnative's list, their covers loaded from IGDB, in French and English |
 | [`docs/`](docs/) | Getting started, architecture, roadmap, decisions, and this page's pictures ([docs/images](docs/images/README.md)) |
 
 ## Building
@@ -122,7 +122,7 @@ Cartouche ships no games, no keys and no firmware, and never downloads them: it 
 The app builds on a Mac with Xcode 27.2 and Homebrew:
 
 ```
-git clone --recursive https://github.com/clabeuhtegrite/Cartouche.git && cd Cartouche
+git clone --recursive https://github.com/cartouche-app/Cartouche.git && cd Cartouche
 brew install ldid
 app/scripts/build.sh          # writes build/app/Cartouche.ipa, unsigned
 ```

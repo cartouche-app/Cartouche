@@ -59,7 +59,7 @@ APP_ENTRY = {
         "renews itself without a computer, and gives them Increased Memory Limit. "
         "It never downloads a game."
     ),
-    "iconURL": "https://raw.githubusercontent.com/clabeuhtegrite/Cartouche/main/app/icon/AppIcon.appiconset/AppIcon1024.png",
+    "iconURL": "https://raw.githubusercontent.com/cartouche-app/Cartouche/main/app/icon/AppIcon.appiconset/AppIcon1024.png",
     "tintColor": "#4F46E5",
     "category": "games",
 }

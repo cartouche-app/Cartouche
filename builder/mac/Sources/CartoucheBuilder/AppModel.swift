@@ -71,7 +71,7 @@ struct Banner: Identifiable, Equatable {
 final class AppModel: ObservableObject {
     static let shared: AppModel = LayoutCheck.requested ? LayoutCheck.model() : AppModel()
     static let mainWindow = "main"
-    static let guide = URL(string: "https://github.com/clabeuhtegrite/Cartouche/blob/main/builder/README.md")!
+    static let guide = URL(string: "https://github.com/cartouche-app/Cartouche/blob/main/builder/README.md")!
     /// How often nxnative is checked while the app runs.
     static let checkInterval: TimeInterval = 6 * 3600
     /// Opened by itself after an update, in the menu bar only.
