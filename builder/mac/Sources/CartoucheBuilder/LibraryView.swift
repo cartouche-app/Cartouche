@@ -59,6 +59,9 @@ struct LibraryView: View {
                     if let problems = model.library?.problems, !problems.isEmpty {
                         ProblemsCard(problems: problems)
                     }
+                    if let shortfall = model.library?.room?.shortfall {
+                        RoomCard(title: shortfall.title, text: shortfall.text)
+                    }
                     if filter == .all || filter == .problems, let issues = model.library?.issues, !issues.isEmpty {
                         IssuesCard(issues: issues, open: model.library?.games.isEmpty ?? true)
                     }
@@ -183,7 +186,7 @@ struct GameCard: View {
                         .padding(5)
                         .background(Circle().fill(.ultraThinMaterial))
                         .padding(8)
-                        .opacity(game.state == .upToDate && progress == nil ? 0 : 1)
+                        .opacity(game.state == .upToDate && game.mac?.failed != true && progress == nil ? 0 : 1)
                 }
                 .overlay(alignment: .bottom) {
                     if let progress, progress.state == "building" {
@@ -397,6 +400,45 @@ struct ProblemsCard: View {
     }
 }
 
+/// Less room on the build folders' disk than the settings keep free: said
+/// before a build is skipped for it, with what makes room (disks.py, room).
+struct RoomCard: View {
+    @EnvironmentObject private var model: AppModel
+    let title: String
+    let text: String
+
+    var body: some View {
+        Card {
+            HStack(alignment: .top, spacing: 14) {
+                Image(systemName: "internaldrive")
+                    .font(.title)
+                    .foregroundStyle(.orange)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(title)
+                        .font(.headline)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(text)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    ViewThatFits(in: .horizontal) {
+                        HStack { buttons }
+                        VStack(alignment: .leading) { buttons }
+                    }
+                    .padding(.top, 4)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private var buttons: some View {
+        Button(tr("Open Storage", "Ouvrir Stockage")) { model.section = .storage }
+        SettingsLink {
+            Text(tr("Settings…", "Réglages…"))
+        }
+    }
+}
+
 /// What the engine left aside in the sources folder, and why, as it says it
 /// (library.py): a file whose name does not say its game while prod.keys
 /// are not chosen, a file cut short, a second copy of a game. Open when no
@@ -540,6 +582,10 @@ struct GameMenu: View {
     let game: Game
 
     var body: some View {
+        if model.canPlay(game) {
+            MacPlayItems(game: game, games: model.macGames)
+            Divider()
+        }
         if game.canBuild {
             if let progress = model.progress(game.titleID) {
                 // In the build running: this game alone, the others go on.
@@ -569,8 +615,30 @@ struct GameMenu: View {
             Divider()
             Button(tr("Show the IPA in the Finder", "Afficher l’IPA dans le Finder")) { model.reveal(ipa.path) }
         }
+        if let app = game.mac?.app, app.present {
+            Button(tr("Show its Mac app in the Finder", "Afficher son app Mac dans le Finder")) { model.reveal(app.path) }
+        }
         if let source = game.source, !source.isEmpty {
             Button(tr("Show its sources in the Finder", "Afficher ses sources dans le Finder")) { model.reveal(source) }
         }
+    }
+}
+
+/// Play and Game settings in a game's menu, as the game is now: Play
+/// brings a game playing to the front.
+struct MacPlayItems: View {
+    @EnvironmentObject private var model: AppModel
+    let game: Game
+    @ObservedObject var games: MacGames
+
+    var body: some View {
+        let playing = games.isPlaying(game.titleID)
+        let installing = model.installing == game.titleID
+        Button(playing ? tr("Show the game", "Afficher le jeu") : installing ? tr("Installing…", "Installation…") : tr("Play on this Mac", "Jouer sur ce Mac")) {
+            model.play(game)
+        }
+        .disabled(installing)
+        Button(tr("Game settings", "Réglages du jeu")) { model.play(game, settings: true) }
+            .disabled(playing || installing || games.preparing.contains(game.titleID))
     }
 }

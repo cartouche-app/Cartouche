@@ -187,7 +187,7 @@ final class CartoucheGameActions: ObservableObject {
 final class CartoucheTelemetry: ObservableObject {
     static let shared = CartoucheTelemetry()
     static let endpoint = URL(string: "https://telemetry.example.workers.dev")
-    static let privacyURL = URL(string: "https://github.com/clabeuhtegrite/Cartouche/blob/main/docs/privacy.md")!
+    static let privacyURL = URL(string: "https://github.com/cartouche-app/Cartouche/blob/main/docs/privacy.md")!
 
     @Published private(set) var isOn = true
     @Published private(set) var lastReport: String? = """

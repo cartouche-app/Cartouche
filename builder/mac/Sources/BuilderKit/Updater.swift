@@ -65,7 +65,7 @@ public enum BuilderVersion {
 }
 
 public enum BuilderReleases {
-    public static let repository = "clabeuhtegrite/Cartouche"
+    public static let repository = "cartouche-app/Cartouche"
     public static let tagPrefix = "builder-v"
 
     public static var api: URL {
@@ -76,11 +76,47 @@ public enum BuilderReleases {
         "Cartouche-Builder-\(version).dmg"
     }
 
+    /// The repository whose releases GitHub answered with, from the address
+    /// the answer came from once URLSession followed GitHub's redirects:
+    /// another than `repository` once the repository has moved, as GitHub
+    /// redirects the API of a repository that moved, whose answer then gives
+    /// the new place's addresses.
+    /// - https://api.github.com/repos/OWNER/NAME/releases names it.
+    /// - https://api.github.com/repositories/ID/releases, where GitHub may
+    ///   send a repository that moved, names it by its number alone: the
+    ///   answer, RELEASES, is that repository's releases, whose pages,
+    ///   https://github.com/OWNER/NAME/releases/tag/TAG, all name it.
+    /// Nil for any other address, or releases that name none or several.
+    public static func answeringRepository(_ address: URL?, releases: Data? = nil) -> String? {
+        guard let address, address.scheme == "https", address.host?.lowercased() == "api.github.com" else { return nil }
+        let path = address.pathComponents.filter { $0 != "/" }
+        if path.count == 4, path[0] == "repos", path[3] == "releases" {
+            return path[1] + "/" + path[2]
+        }
+        guard path.count == 3, path[0] == "repositories", path[2] == "releases",
+              !path[1].isEmpty, path[1].allSatisfy({ $0.isASCII && $0.isNumber }), let releases else { return nil }
+        struct Release: Decodable {
+            var html_url: String
+        }
+        guard let pages = try? JSONDecoder().decode([Release].self, from: releases) else { return nil }
+        let named = pages.map { release -> String? in
+            guard let page = URL(string: release.html_url), page.scheme == "https",
+                  page.host?.lowercased() == "github.com" else { return nil }
+            let parts = page.pathComponents.filter { $0 != "/" }
+            guard parts.count >= 4, parts[2] == "releases" else { return nil }
+            return parts[0] + "/" + parts[1]
+        }
+        guard let first = named.first ?? nil,
+              named.allSatisfy({ $0?.caseInsensitiveCompare(first) == .orderedSame }) else { return nil }
+        return first
+    }
+
     /// The newest release of Cartouche Builder in an answer of GitHub's
     /// releases API: not a draft nor a pre-release, with its disk image and
-    /// its SHA-256 downloaded from the project's releases. Nil when there is
-    /// none.
-    public static func newest(in data: Data) throws -> BuilderRelease? {
+    /// its SHA-256 downloaded from the project's releases, those of
+    /// `repository` or of the repository GitHub answered for (ANSWERING,
+    /// `answeringRepository(_:)`). Nil when there is none.
+    public static func newest(in data: Data, answering: String? = nil) throws -> BuilderRelease? {
         struct Release: Decodable {
             struct Asset: Decodable {
                 var name: String
@@ -95,7 +131,8 @@ public enum BuilderReleases {
             var html_url: String
             var assets: [Asset]
         }
-        let downloads = "https://github.com/\(repository)/releases/download/".lowercased()
+        let repositories: [String] = [repository, answering ?? repository]
+        let downloads = repositories.map { "https://github.com/\($0)/releases/download/".lowercased() }
         var best: BuilderRelease?
         for release in try JSONDecoder().decode([Release].self, from: data)
         where release.draft != true && release.prerelease != true && release.tag_name.hasPrefix(tagPrefix) {
@@ -103,7 +140,7 @@ public enum BuilderReleases {
             guard isVersion(version) else { continue }
             func asset(_ name: String) -> (url: URL, size: UInt64)? {
                 guard let found = release.assets.first(where: { $0.name == name }),
-                      found.browser_download_url.lowercased().hasPrefix(downloads),
+                      downloads.contains(where: { found.browser_download_url.lowercased().hasPrefix($0) }),
                       let url = URL(string: found.browser_download_url) else { return nil }
                 return (url, found.size ?? 0)
             }
@@ -302,7 +339,7 @@ public final class Updater: ObservableObject {
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         let (data, response) = try await URLSession.shared.data(for: request)
         try answered(response)
-        return try BuilderReleases.newest(in: data)
+        return try BuilderReleases.newest(in: data, answering: BuilderReleases.answeringRepository(response.url, releases: data))
     }
 
     // MARK: Downloading

@@ -2,16 +2,19 @@
 
 A disk that fills up shows as an OSError of errno 28 (ENOSPC) in the
 builder's own code, as "No space left on device" in what git, Xcode or
-nxnative's tools say, and as nxnative's own check of the room before it
-unpacks a game ("less than 32 GB free on the volume of ..."). Whatever the
-way, the player reads which disk is full and how much is left on it: "your
-Mac's disk" for the startup disk, which holds the builder's own folder, or
-the disk's name for an external drive or a share (/Volumes/<name>).
+nxnative's tools say, and as nxnative's own checks of the room: before it
+unpacks a game ("less than 32 GB free on the volume of ..."), and before
+its packer copies the game into a Mac app ("the app needs 12.3 GB on the
+volume of ... and 5.0 GB are free"). Whatever the way, the player reads
+which disk is full and how much is left on it: "your Mac's disk" for the
+startup disk, which holds the builder's own folder, or the disk's name for
+an external drive or a share (/Volumes/<name>).
 """
 
 from __future__ import annotations
 
 import errno
+import math
 import re
 import shutil
 from pathlib import Path
@@ -19,21 +22,25 @@ from pathlib import Path
 from .i18n import language, t
 
 # What tools say of a full disk: the C library's words, Python's errno, the
-# errno's name, nxnative's check of the room before it unpacks, and Xcode's.
+# errno's name, nxnative's checks of the room (before it unpacks, and before
+# its packer copies the game into a Mac app), and Xcode's.
 FULL = re.compile(
     r"No space left on device|\[Errno 28\]|\berrno 28\b|\bENOSPC\b|less than \d+ GB free on the volume of"
+    r"|needs [\d.]+ GB on the volume of"
     r"|not enough (?:free )?(?:disk )?space|disk (?:is )?full",
     re.IGNORECASE,
 )
 # The path a message names: Python's "...device: '/path'", nxnative's
-# "... free on the volume of /path", or the first absolute path in it.
+# "... free on the volume of /path", its Mac app packer's "... on the volume
+# of /path (no APFS clones ...", or the first absolute path in it.
 NAMED = (
     re.compile(r"""(?:device|space)[^'"\n]*?: ['"](/[^'"\n]+)['"]"""),
+    re.compile(r"GB on the volume of (/.+?) \(no APFS clones"),
     re.compile(r"free on the volume of (/\S+)"),
     re.compile(r"""['"](/[^'"\n]+)['"]"""),
 )
-# nxnative's check of the room: what it needs.
-NEEDED = re.compile(r"less than (\d+) GB free on the volume of")
+# nxnative's checks of the room: what it needs.
+NEEDED = re.compile(r"(?:less than|needs) ([\d.]+) GB (?:free )?on the volume of")
 # A traceback's frames ('  File "/…/zipfile.py", line 1886, in write') name
 # the code that ran, on the Mac's disk, never the disk that filled up.
 FRAME = re.compile(r'^\s*File "[^"\n]*", line \d+.*$', re.MULTILINE)
@@ -111,7 +118,7 @@ def message(path: Path | None, text: str = "") -> str:
     left = free_bytes(where)
     needed = NEEDED.search(text or "")
     if needed and left is not None:
-        wanted = amount(int(needed.group(1)) * 10**9)
+        wanted = amount(int(float(needed.group(1)) * 10**9))
         if name:
             return t("disk.room_named", name=name, needed=wanted, free=amount(left))
         return t("disk.room_mac", needed=wanted, free=amount(left))
@@ -129,3 +136,38 @@ def describe(error: BaseException, fallback: Path | None = None) -> str:
         return str(error)
     path = Path(error.filename) if isinstance(error, OSError) and isinstance(error.filename, str) and error.filename.startswith("/") else None
     return message(path or fallback, str(error))
+
+
+def disk_name(path: Path | None) -> str:
+    """"your Mac's disk", or "the disk “Games”", for words about PATH's disk."""
+    name = volume(path)
+    return t("room.named", name=name) if name else t("room.mac")
+
+
+def no_room(path: Path, free_gb: float, needed_gb: float, unpacked_gb: float, keep_gb: int) -> str:
+    """The player's words for a game the room kept free on the build
+    folders' disk (PATH) did not let build (batch.py): how much is missing,
+    and what makes room. NEEDED_GB is what the settings keep free (KEEP_GB),
+    and UNPACKED_GB more for a zipped dump. In whole gigabytes, the free
+    room rounded down and what is needed up, so that they add up."""
+    free, needed = math.floor(free_gb), math.ceil(needed_gb)
+    unpack = t("room.unpack", gb=math.ceil(unpacked_gb)) if unpacked_gb > 0 else ""
+    return t("batch.no_room", short=needed - free, needed=needed, free=free, disk=disk_name(path), unpack=unpack, keep=keep_gb)
+
+
+def room(path: Path, keep_gb: int, folders: int) -> dict | None:
+    """The room a build has on the build folders' disk (PATH), before one
+    starts, for the app's card: what is free and what the settings keep
+    free, in whole gigabytes, and when it falls short, the player's words.
+    FOLDERS is how many build folders the builder may remove first. None
+    when the disk cannot be read (a share not connected)."""
+    left = free_bytes(path)
+    if left is None:
+        return None
+    free = math.floor(left / 2**30)
+    found: dict = {"free_gb": free, "keep_gb": keep_gb, "folders": folders}
+    if free < keep_gb:
+        found["title"] = t("room.short_title", short=keep_gb - free)
+        older = t("room.folders", count=folders) if folders else ""
+        found["text"] = t("room.short", keep=keep_gb, free=free, disk=disk_name(path), folders=older)
+    return found

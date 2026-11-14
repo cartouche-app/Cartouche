@@ -154,7 +154,7 @@ final class CartoucheProblemReportTests: XCTestCase {
         let components = try XCTUnwrap(URLComponents(url: url, resolvingAgainstBaseURL: false))
         XCTAssertEqual(components.scheme, "https")
         XCTAssertEqual(components.host, "github.com")
-        XCTAssertEqual(components.path, "/clabeuhtegrite/Cartouche/issues/new")
+        XCTAssertEqual(components.path, "/cartouche-app/Cartouche/issues/new")
         // The IDs of .github/ISSUE_TEMPLATE/bug_report.yml's fields; what
         // the player wrote has its own.
         let logs = report().text.replacingOccurrences(
@@ -286,11 +286,27 @@ final class CartoucheProblemReportTests: XCTestCase {
 
     func testTheRepositoryFollowsCartouchesSource() {
         XCTAssertEqual(CartoucheProblemReport.repository(
-            sourceURL: "https://raw.githubusercontent.com/clabeuhtegrite/Cartouche/main/app/sidestore-source.json"), "clabeuhtegrite/Cartouche")
+            sourceURL: "https://raw.githubusercontent.com/cartouche-app/Cartouche/main/app/sidestore-source.json"), "cartouche-app/Cartouche")
         XCTAssertEqual(CartoucheProblemReport.repository(
             sourceURL: "https://raw.githubusercontent.com/someone/Fork/main/app/sidestore-source.json"), "someone/Fork")
-        XCTAssertEqual(CartoucheProblemReport.repository(sourceURL: nil), "clabeuhtegrite/Cartouche")
-        XCTAssertEqual(CartoucheProblemReport.repository(sourceURL: "https://example.com/source.json"), "clabeuhtegrite/Cartouche")
-        XCTAssertEqual(CartoucheProblemReport.repository(sourceURL: "https://raw.githubusercontent.com/someone"), "clabeuhtegrite/Cartouche")
+        XCTAssertEqual(CartoucheProblemReport.repository(sourceURL: nil), "cartouche-app/Cartouche")
+        XCTAssertEqual(CartoucheProblemReport.repository(sourceURL: "https://example.com/source.json"), "cartouche-app/Cartouche")
+        XCTAssertEqual(CartoucheProblemReport.repository(sourceURL: "https://raw.githubusercontent.com/someone"), "cartouche-app/Cartouche")
+    }
+
+    /// Cartouche's source keeps the address of the repository before it moved
+    /// (decision 111): its reports go to the repository where it is now, not
+    /// through GitHub's redirect.
+    func testTheFormerRepositorysReportsGoWhereItMoved() throws {
+        for source in ["https://raw.githubusercontent.com/clabeuhtegrite/Cartouche/main/app/sidestore-source.json",
+                       "https://raw.githubusercontent.com/CLABEUHTEGRITE/cartouche/main/app/sidestore-source.json"] {
+            XCTAssertEqual(CartoucheProblemReport.repository(sourceURL: source), "cartouche-app/Cartouche", source)
+        }
+        XCTAssertEqual(CartoucheProblemReport.repository(
+            sourceURL: "https://raw.githubusercontent.com/clabeuhtegrite/Cartouche-Fork/main/app/sidestore-source.json"),
+            "clabeuhtegrite/Cartouche-Fork")
+        let url = try XCTUnwrap(report().issueURL(repository: CartoucheProblemReport.repository(
+            sourceURL: "https://raw.githubusercontent.com/clabeuhtegrite/Cartouche/main/app/sidestore-source.json")))
+        XCTAssertTrue(url.absoluteString.hasPrefix("https://github.com/cartouche-app/Cartouche/issues/new?"), url.absoluteString)
     }
 }

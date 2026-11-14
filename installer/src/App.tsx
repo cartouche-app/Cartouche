@@ -31,7 +31,7 @@ import { usePlatform } from "./PlatformContext";
 import { useStore } from "./StoreContext";
 import i18n, { defaultLanguage } from "./i18next";
 
-const REPOSITORY_URL = "https://github.com/clabeuhtegrite/Cartouche";
+const REPOSITORY_URL = "https://github.com/cartouche-app/Cartouche";
 
 /// The newest Cartouche, as its source lists it.
 type Release = {
