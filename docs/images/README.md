@@ -12,4 +12,4 @@ The pictures of the repository's [README](../../README.md), made from the app's 
 
 The screenshots are the ones CI takes of every screen: the Launcher screens workflow, with `"language": "en"` in [`launcher/Gallery/scenarios.json`](../../launcher/Gallery/scenarios.json), for the app, and the Builder workflow for Cartouche Builder. Each phone is drawn around its screenshot on Cartouche's colours, at twice its size in points.
 
-The games show their official covers, as in the app, which loads them from IGDB ([decision 83](../decisions.md)). Never an image from inside a game: no capture of a game running, and no game's screenshot. The download buttons link to the [download page](https://clabeuhtegrite.github.io/Cartouche/download/), which gives the newest file, and say no version.
+The games show their official covers, as in the app, which loads them from IGDB ([decision 83](../decisions.md)). Never an image from inside a game: no capture of a game running, and no game's screenshot. The download buttons link to the [download page](https://cartouche-app.github.io/Cartouche/download/), which gives the newest file, and say no version.

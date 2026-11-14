@@ -8,24 +8,42 @@
 //  the whole screen of the simulator it runs on, such as the iPhone Duo's,
 //  with its own safe area, size classes and system bars.
 //
-//      -GalleryScreen games|library|sheet|settings|gameinfo|gamelog|gamelog-sent|shortcuts|setup|signin|guide|system|storage|storage-mac|storage-drive|storage-drive-guide|telemetry|report|tv
-//                                        library: every game, open over
-//                                        the home; gameinfo: what the
-//                                        player says of the sheet's game;
-//                                        gamelog: the sheet game's log,
-//                                        with work: log; gamelog-sent:
-//                                        what Send to Cartouche sends of
-//                                        it, cleaned;
-//                                        shortcuts: Siri and Home Screen,
-//                                        from the sheet of the player's game;
-//                                        storage-mac: Add your Mac, the
-//                                        form that pairs this iPhone with a
-//                                        Mac nearby; storage-drive: Add
-//                                        Google Drive, with the player's
-//                                        own client; storage-drive-guide:
-//                                        the steps that make that client;
-//                                        tv: the TV while the sheet's game,
-//                                        or the first of the player's, runs
+//  Each value of -GalleryScreen, -GalleryWork and -GalleryCategory is on a
+//  line of its own, in the order of their names, which a pull request that
+//  adds one adds at its place; the gallery's own types for a new scenario go
+//  in a file of their own in Sources/. Pull requests that each add one then
+//  do not meet, as they did in one line or at the end of this file.
+//
+//      -GalleryScreen <screen>           the screen, one of these, the home
+//                                        when none:
+//        gameinfo                        what the player says of the sheet's
+//                                        game
+//        gamelog                         the log of the sheet's game, with
+//                                        -GalleryWork log
+//        gamelog-sent                    what Send to Cartouche sends of that
+//                                        log, cleaned
+//        games                           the home
+//        guide                           Your first game
+//        library                         every game, open over the home
+//        report                          Report a problem
+//        settings                        the settings of the sheet's game,
+//                                        open at -GalleryCategory
+//        setup                           the setup
+//        sheet                           the sheet of -GallerySheet's game
+//        shortcuts                       Siri and Home Screen, from the
+//                                        sheet of the player's game
+//        signin                          the Apple ID sign-in
+//        storage                         the Storage page
+//        storage-drive                   Add Google Drive, with the player's
+//                                        own client
+//        storage-drive-guide             the steps that make that client
+//        storage-mac                     Add your Mac, the form that pairs
+//                                        this iPhone with a Mac nearby
+//        system                          the System page, down to
+//                                        -GalleryCategory
+//        telemetry                       Game measurements
+//        tv                              the TV while the sheet's game, or
+//                                        the first of the player's, runs
 //                                        behind the console, its card where
 //                                        the game leaves its own scene on
 //                                        the TV empty (CartoucheTV.swift)
@@ -47,76 +65,91 @@
 //                                        iPhone, iPhone19,4, CartoucheDevice)
 //      -GallerySheet <title ID>          the game of the sheet, of its
 //                                        settings, or being installed
-//      -GalleryWork installing           a game being installed, over the
-//                                        console; update: a new version of
-//                                        Cartouche on offer; code: Apple
-//                                        asks for a verification code, on
-//                                        the sign-in; too-many: Apple
-//                                        refused the sign-in for too many
-//                                        requests, with the wait under
-//                                        way; vpn-wait: the sign-in waiting
-//                                        for LocalDevVPN; iphone-step: a
-//                                        sign-in Apple accepted that
-//                                        stopped at the step that registers
-//                                        this iPhone, LocalDevVPN being
-//                                        off; device-no-ipsec,
-//                                        device-handshake,
-//                                        device-port-closed: a sign-in that
-//                                        stopped at the check of this
-//                                        iPhone, which minimuxer could not
-//                                        reach, LocalDevVPN connected
-//                                        (deviceChecks); paused: the sheet's
-//                                        game, or the first of the
-//                                        player's, paused behind the console;
-//                                        offline: the player's NAS, out of
-//                                        reach, with a newer build of that
-//                                        game in its games folder and two
-//                                        games' saves waiting for it;
-//                                        mac-nearby: two Macs nearby whose
-//                                        Cartouche Builder shares with
-//                                        Cartouche; mac-code: the same,
-//                                        pairing with the first, with the
-//                                        six digits on both screens;
-//                                        mac-refused: none, iOS refusing
-//                                        Cartouche the local network; mac:
-//                                        the player's Mac, paired, as the
-//                                        games folder and the saves folder;
-//                                        mac-offline: that Mac out of reach,
-//                                        away from home, with two games'
-//                                        saves waiting for it; build-skipped:
-//                                        No thanks said to the guide's Mac
-//                                        step; own-cover: the sheet's game,
-//                                        or the first of the player's, with
-//                                        a cover of the player's own; saves:
-//                                        that game's saves, and a folder in
-//                                        Files as the saves folder, which
-//                                        Cartouche's own sync uses
-//                                        (GallerySaves); drive-signed-out:
-//                                        the player's Google Drive as the
+//      -GalleryWork <work>               what goes on, one of these:
+//        build-skipped                   No thanks said to the guide's Mac
+//                                        step
+//        certificate                     a certificate iOS no longer accepts
+//        code                            Apple asks for a verification code,
+//                                        on the sign-in
+//        device-handshake                a sign-in that stopped at the check
+//                                        of this iPhone, LocalDevVPN
+//                                        connected: a pairing file this
+//                                        iPhone refused (deviceChecks)
+//        device-no-ipsec                 the same: a Lockdown pairing file
+//                                        from iOS 26.4
+//        device-port-closed              the same: minimuxer could not reach
+//                                        this iPhone on its port
+//        drive-signed-out                the player's Google Drive as the
 //                                        games folder and the saves folder,
 //                                        whose sign-in Google ended, as after
-//                                        7 days for a project in testing, with
-//                                        two games' saves waiting for it;
-//                                        not-signed-install: the sheet's
-//                                        game installed but not signed
-//                                        whole, with Sign again and play;
-//                                        not-signed-start: the same, as Play
-//                                        signed it again; signature-refused:
-//                                        its process ended as iOS refused
-//                                        its signature; stopped-on-error:
-//                                        its process ended on another error
-//                                        (CartoucheGameActions failSigning
-//                                        and stoppedOnError);
-//                                        log: the logs of that game's last
+//                                        7 days for a project in testing,
+//                                        with two games' saves waiting for it
+//        install-failed                  the install of the sheet's game,
+//                                        which the network dropped halfway,
+//                                        with its report to copy
+//        installing                      a game being installed, over the
+//                                        console
+//        iphone-step                     a sign-in Apple accepted that
+//                                        stopped at the step that registers
+//                                        this iPhone, LocalDevVPN being off
+//        log                             the logs of the sheet's game's last
 //                                        two sessions, the last ended in a
-//                                        crash (GalleryLogs);
-//                                        on the TV (screen tv), paused: the
-//                                        game paused behind the console,
-//                                        starting: the game starting;
-//                                        renewing: Cartouche renewing itself
-//                                        in its last 3 days, as it came to
-//                                        the front; renewal-failed: that
-//                                        renewal failed, the network gone
+//                                        crash (GalleryLogs.swift)
+//        mac                             the player's Mac, paired, as the
+//                                        games folder and the saves folder
+//        mac-code                        two Macs nearby, pairing with the
+//                                        first, with the six digits on both
+//                                        screens
+//        mac-nearby                      two Macs nearby whose Cartouche
+//                                        Builder shares with Cartouche
+//        mac-offline                     the player's Mac out of reach, away
+//                                        from home, with two games' saves
+//                                        waiting for it
+//        mac-refused                     no Mac nearby, iOS refusing
+//                                        Cartouche the local network
+//        newer-build                     a newer build of the sheet's game,
+//                                        or of the first of the player's, in
+//                                        the games folder
+//        not-signed-install              the sheet's game installed but not
+//                                        signed whole, with Sign again and
+//                                        play
+//        not-signed-start                the same, as Play signed it again
+//        offline                         the player's NAS, out of reach, with
+//                                        a newer build of that game in its
+//                                        games folder and two games' saves
+//                                        waiting for it
+//        own-cover                       the sheet's game, or the first of
+//                                        the player's, with a cover of the
+//                                        player's own
+//        paused                          the sheet's game, or the first of
+//                                        the player's, paused behind the
+//                                        console; on the TV (screen tv), the
+//                                        game paused behind the console
+//        renewal-failed                  Cartouche's renewal in its last 3
+//                                        days, which failed, the network gone
+//        renewing                        Cartouche renewing itself in its
+//                                        last 3 days, as it came to the front
+//        saves                           the saves of the sheet's game, or of
+//                                        the first of the player's, and a
+//                                        folder in Files as the saves folder,
+//                                        which Cartouche's own sync uses
+//                                        (GallerySaves)
+//        sign-in-unfinished              the setup after a sign-in that
+//                                        stopped before the certificate,
+//                                        with why and its report to copy
+//        signature-refused               the sheet's game's process ended as
+//                                        iOS refused its signature
+//                                        (CartoucheGameActions failSigning)
+//        starting                        on the TV (screen tv), the game
+//                                        starting
+//        stopped-on-error                the sheet's game's process ended on
+//                                        another error (CartoucheGameActions
+//                                        stoppedOnError)
+//        too-many                        Apple refused the sign-in for too
+//                                        many requests, with the wait under
+//                                        way
+//        update                          a new version of Cartouche on offer
+//        vpn-wait                        the sign-in waiting for LocalDevVPN
 //      -GalleryOrientation landscape     the gallery turns itself sideways,
 //                                        as a game does; the simulator
 //                                        stays upright
@@ -124,12 +157,15 @@
 //                                        gallery writes
 //                                        tmp/ready-<scenario>.json in its
 //                                        container (Ready below)
-//      -GalleryCategory Controls         the settings page's category, one
-//                                        of nxnative's sections; on the
-//                                        System page, signature: the page
-//                                        scrolled down to its signature; on
-//                                        the sheet, manage: the sheet opened
-//                                        on the game's management
+//      -GalleryCategory <category>       where the screen opens, one of these:
+//        <a section of nxnative's>       on a game's settings, that section,
+//                                        such as Controls
+//        cartouche.saves                 on a game's settings, its cloud
+//                                        saves
+//        manage                          on the sheet, the sheet opened on
+//                                        the game's management
+//        signature                       on the System page, the page
+//                                        scrolled down to its signature
 //
 //  The UI tests (launcher/Gallery/UITests) open the whole console, as
 //  Cartouche shows it, and drive it (GalleryTesting.swift):
@@ -821,87 +857,6 @@ enum GalleryMac {
 
     private static func service(_ name: String) -> NWEndpoint {
         .service(name: name, type: CartoucheBridge.serviceType, domain: "local.", interface: nil)
-    }
-}
-
-/// The logs nxnative wrote of a game of the player's last two sessions, in
-/// the gallery's Application Support (work: log), as a game's data folder
-/// holds them: the last session, a quarter of an hour that ended in a
-/// crash, and the one before. Their paths, folders, data folder and
-/// nickname are made up, for the page of what Send to Cartouche sends to
-/// show them cleaned.
-enum GalleryLogs {
-    /// The game whose logs these are, once the scenario has them.
-    @MainActor private static var titleId: String?
-
-    /// The game's Documents, where nxnative writes its logs.
-    private static var documents: URL {
-        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("GalleryLogs/Game/Documents", isDirectory: true)
-    }
-
-    @MainActor
-    static func prepare(titleId: String) {
-        let manager = FileManager.default
-        try? manager.removeItem(at: documents)
-        do {
-            try manager.createDirectory(at: documents, withIntermediateDirectories: true)
-            let now = Date()
-            let before = documents.appendingPathComponent("log.prev.txt")
-            try Data(session(frames: 54_000, crashed: false).utf8).write(to: before)
-            try manager.setAttributes([.creationDate: now.addingTimeInterval(-3 * 3_600),
-                                       .modificationDate: now.addingTimeInterval(-3 * 3_600 + 31 * 60)], ofItemAtPath: before.path)
-            let last = documents.appendingPathComponent("log.txt")
-            try Data(session(frames: 27_000, crashed: true).utf8).write(to: last)
-            try manager.setAttributes([.creationDate: now.addingTimeInterval(-40 * 60),
-                                       .modificationDate: now.addingTimeInterval(-25 * 60)], ofItemAtPath: last.path)
-            self.titleId = titleId
-        } catch {
-            NSLog("[Gallery] cannot write the logs: %@", String(describing: error))
-        }
-    }
-
-    /// The logs of APP, if it is the scenario's game.
-    @MainActor
-    static func folder(of app: LCAppModel) -> CartoucheGameLogFolder? {
-        guard let titleId, app.appInfo.relativeBundlePath == titleId + ".app" else { return nil }
-        return CartoucheGameLogFolder(game: app.displayName, titleId: titleId,
-                                      build: CartoucheGameBuild(version: "1.0.0", commit: "7bddb8c1e2f3", chain: "adec7d81d970"),
-                                      documents: documents)
-    }
-
-    /// The logs of FOLDER, read, as Send to Cartouche sends them.
-    @MainActor
-    static func share(of folder: CartoucheGameLogFolder) -> CartoucheGameLogShare {
-        let logs = folder.files.compactMap { CartoucheGameLogDigest.read($0, name: $0.lastPathComponent) }
-        var share = CartoucheGameLogView.share(of: folder, logs: logs)
-        share.what = "Crashes at the start of the second race."
-        return share
-    }
-
-    /// A session of FRAMES frames, as nxnative logs one.
-    private static func session(frames: Int, crashed: Bool) -> String {
-        let app = "/private/var/mobile/Containers/Data/Application/0F1E2D3C-4B5A-6978-8796-A5B4C3D2E1F0"
-        var lines = [
-            "boot: game files \(app)/Documents/Data/Application/5A3C1B2D-0E4F-4A6B-8C7D-9E0F1A2B3C4D/Documents/romfs.img",
-            "boot: env DM_NICK=Lou (env.txt)",
-            "boot: cloud saves through /private/var/mobile/Library/Mobile Documents/com~apple~CloudDocs/Saves d'Élodie",
-            "[dm] build: commit 7bddb8c1e2f3, shader chain adec7d81d970, profile mkw, title 0400C3F00006E000",
-            "[RED] [nvn] texture format 0x2b not supported: drawn black",
-        ]
-        for frame in stride(from: 300, through: frames, by: 300) {
-            let slow = (frame / 300) % 7
-            lines.append("[dm] [nvn] frame interval up to frame \(frame): >16.7ms \(slow) / 300 frames, p99 \(30 + slow).40 ms")
-        }
-        if crashed {
-            lines += [
-                "[dm] CRASH sig=11 addr=0x10 pc=main+0x1a2b3c lr=main+0x1a2b00 sp=0x16fdff000",
-                "x0=0x0 x1=0x16fdff120 x2=0x2 x3=0x3 x4=0x4 x5=0x5",
-                "[dm] *x1: 0x16fdff200 main+0x40 0 0x6c6c6548206f6c6c 0x1 0x16fdff300",
-                "[dm] bt: main+0x1a2b00 main+0x1a0000 nnSdk+0x1234",
-            ]
-        }
-        return lines.joined(separator: "\n") + "\n"
     }
 }
 

@@ -14,6 +14,17 @@
 
 import XCTest
 
+/// The words of a game's log, from its sheet (CartoucheGameLogView).
+extension Words {
+    static let shareLog = "Share the log"                   // gameLog.row
+    static let gameLog = "Game log"                         // gameLog.title
+    static let lastSession = "Last session"                 // gameLog.last
+    static let endedInACrash = "Ended in a crash"           // gameLog.crashed
+    static let sendTheLog = "Send the log…"                 // gameLog.share
+    static let sendToCartouche = "Send to Cartouche"        // report.sendToCartouche
+    static let whatCartoucheReceives = "What Cartouche receives" // gameLog.whatIsSent
+}
+
 final class GameUITests: ConsoleTestCase {
     /// The first of the player's games, the one work: paused pauses; the
     /// console opens with another in focus, the first by name.

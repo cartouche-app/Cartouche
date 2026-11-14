@@ -22,7 +22,7 @@ sys.path.insert(0, str(SITE / "tools"))
 
 import downloads  # noqa: E402
 
-BASE = "https://github.com/clabeuhtegrite/Cartouche/releases/download/"
+BASE = "https://github.com/cartouche-app/Cartouche/releases/download/"
 PAGES = [SITE / "index.html", SITE / "download" / "index.html"]
 
 
@@ -117,7 +117,7 @@ class NewestTests(unittest.TestCase):
 class RewriteTests(unittest.TestCase):
     PAGE = (
         '<a class="btn" data-download="builder" href="' + BASE + 'builder-v0.1.0/Cartouche-Builder-0.1.0.dmg">Download</a>'
-        ' <a href="https://github.com/clabeuhtegrite/Cartouche">GitHub</a>'
+        ' <a href="https://github.com/cartouche-app/Cartouche">GitHub</a>'
         ' <a data-download="installer-windows" class="btn"\n   href="#">For Windows</a>'
     )
 
@@ -128,7 +128,7 @@ class RewriteTests(unittest.TestCase):
         html, used = downloads.rewrite(self.PAGE, self.offered)
         self.assertIn('data-download="builder" href="' + BASE + 'builder-v0.3.0/Cartouche-Builder-0.3.0.dmg"', html)
         self.assertIn('class="btn"\n   href="' + BASE + 'installer-v0.2.0/Cartouche-Installer-0.2.0-Windows.exe">For Windows</a>', html)
-        self.assertIn('<a href="https://github.com/clabeuhtegrite/Cartouche">GitHub</a>', html)
+        self.assertIn('<a href="https://github.com/cartouche-app/Cartouche">GitHub</a>', html)
         self.assertEqual(used, ["builder", "installer-windows"])
 
     def test_a_file_no_release_has(self) -> None:
