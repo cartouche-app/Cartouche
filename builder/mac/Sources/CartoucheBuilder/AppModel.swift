@@ -10,6 +10,8 @@
 //  the app checks nxnative every few hours and says when it improved a game.
 //  It updates itself (Updater) and sends its measures (BuilderTelemetry):
 //  what it built, how long it took and what failed, never a name or a path.
+//  The games built for this Mac are played from it, their saves kept in
+//  step with the iPhone's (MacGames).
 //
 
 import AppKit
@@ -50,8 +52,12 @@ enum AppSettings {
     static let bridgeKey = "bridge"
     static let savesKey = "savesFolder"
     static let notifiedKey = "notifiedDue"
+    /// The saves of the games played on this Mac are kept in step with the
+    /// iPhone's, in the saves folder.
+    static let macSavesKey = "macSaves"
 
     static var menuBar: Bool { UserDefaults.standard.object(forKey: menuBarKey) as? Bool ?? true }
+    static var macSaves: Bool { UserDefaults.standard.object(forKey: macSavesKey) as? Bool ?? true }
 }
 
 struct Banner: Identifiable, Equatable {
@@ -77,6 +83,8 @@ final class AppModel: ObservableObject {
     let covers = CoverStore.shared
     let updater: Updater
     let telemetry: BuilderTelemetry
+    /// The games played on this Mac, and their saves.
+    let macGames: MacGames
     let sample: Bool
 
     @Published var section: AppSection = .library
@@ -86,7 +94,9 @@ final class AppModel: ObservableObject {
     /// The step the setup assistant opens at.
     @Published var setupStep: SetupStep = .welcome
     @Published private(set) var engine: Engine?
-    @Published private(set) var library: Library?
+    @Published private(set) var library: Library? {
+        didSet { useMacApps() }
+    }
     @Published private(set) var status: BatchStatus?
     /// The games asked for while a batch runs, not taken by it yet, and those
     /// taken out of it.
@@ -97,10 +107,20 @@ final class AppModel: ObservableObject {
     @Published private(set) var config: BuilderConfig?
     @Published private(set) var info: BuilderInfo?
     @Published private(set) var checking = false
+    /// The games no Mac built (Unbuilt.swift), by title ID: their sheet
+    /// says so, and a build of one asks first (askUnbuilt).
+    @Published var unbuilt: [String: UnbuiltGame] = [:]
+    /// A build asked for that holds games no Mac built: it waits for the
+    /// player's answer (ContentView).
+    @Published var askUnbuilt: UnbuiltAsk?
     @Published private(set) var loadingStorage = false
     @Published private(set) var cleaning = false
     @Published private(set) var bundling = false
     @Published private(set) var bundleMessage = ""
+    /// The game whose app the games folder keeps in one file (a NAS's) is
+    /// being installed on this Mac, and how far it is, in the engine's words.
+    @Published private(set) var installing: String?
+    @Published private(set) var installMessage = ""
     /// A batch asked for, until status.json shows it: a few seconds, or as
     /// long as the engine's look at nxnative holds the batch lock, which the
     /// batch waits for (batch.LOCK_WAIT).
@@ -125,6 +145,7 @@ final class AppModel: ObservableObject {
         self.home = home
         self.sample = sample
         bridge = BridgeController(home: home, sample: sample)
+        macGames = MacGames(store: home.macSaves, scratch: home.savesScratch, sample: sample)
         if sample {
             updater = Updater(app: URL(fileURLWithPath: "/Applications/Cartouche Builder.app"), version: "0.2.0", identifier: Updater.identifier,
                               folder: home.root.appendingPathComponent("Updates"), enabled: false)
@@ -165,6 +186,7 @@ final class AppModel: ObservableObject {
         // At once, before the library: its first check fetches nxnative.
         showSetup = needsSetup
         bridge.attach(model: self)
+        startMacGames()
         let checked = library?.checked.flatMap(ISODate.parse)
         let stale = checked.map { Date().timeIntervalSince($0) > AppModel.checkInterval } ?? true
         // This read is the one the app's coming to the front would ask for.
@@ -172,6 +194,7 @@ final class AppModel: ObservableObject {
         await refreshLibrary(update: stale && setup.ready)
         checkRegularly()
         telemetry.event("builder.opened", fields: openedFields())
+        unbuilt = await UnbuiltGames.load(home)
     }
 
     /// What the app says of this Mac and its setup as it opens: counts and
@@ -231,7 +254,8 @@ final class AppModel: ObservableObject {
     /// Nothing the player would see go: no build, no iPhone connected, no
     /// window open, the app in the background.
     var isIdle: Bool {
-        guard !isBuilding, !bundling, bridge.connected.isEmpty, bridge.request == nil, !NSApp.isActive else { return false }
+        guard !isBuilding, !bundling, bridge.connected.isEmpty, bridge.request == nil, !NSApp.isActive,
+              macGames.playing.isEmpty, macGames.preparing.isEmpty else { return false }
         return !NSApp.windows.contains { $0.isVisible && $0.styleMask.contains(.titled) }
     }
 
@@ -357,13 +381,61 @@ final class AppModel: ObservableObject {
     /// while an IPA is being imported.
     var canBuild: Bool { engine != nil && setup.ready && !bundling }
 
+    /// A build asked for that holds games no Mac built (NEVER): the player
+    /// builds them anyway, the OTHERS alone, or nothing.
+    struct UnbuiltAsk: Identifiable {
+        let id = UUID()
+        /// As build() was asked: the games (what is due when empty), and FORCE.
+        let games: [String]
+        let force: Bool
+        let never: [Game]
+        let others: [String]
+
+        var title: String {
+            never.count == 1 ? tr("Build \(never[0].name) anyway?", "Construire \(never[0].name) quand même ?")
+                : tr("Build these \(never.count) games anyway?", "Construire ces \(never.count) jeux quand même ?")
+        }
+    }
+
+    /// Of GAMES (what is due when empty), those no Mac built that this one
+    /// did not build either.
+    func neverBuilt(_ games: [String]) -> [Game] {
+        let asked = games.isEmpty ? dueOutsideBatch.map(\.titleID) : games
+        return asked.compactMap { titleID in
+            guard unbuilt[titleID] != nil, let game = library?.game(titleID), game.build == nil else { return nil }
+            return game
+        }
+    }
+
+    /// What the question says of each game no Mac built.
+    func unbuiltMessage(_ ask: UnbuiltAsk) -> String {
+        ask.never.map { game in
+            let macs = unbuilt[game.titleID]?.macs ?? 0
+            return tr("No Mac has built \(game.name) yet: its builds failed on \(macs) Macs in the last 4 weeks",
+                      "Aucun Mac n’a encore construit \(game.name) : ses constructions ont échoué sur \(macs) Mac ces 4 dernières semaines")
+                + (unbuilt[game.titleID]?.hours.map { tr(", after about \(UnbuiltGames.hoursText($0)) hours", ", après \(UnbuiltGames.hoursText($0)) h environ") } ?? "")
+                + "."
+        }.joined(separator: "\n")
+    }
+
     /// Builds GAMES (what is due when empty), again with FORCE. While a batch
     /// runs, or starts, they wait their turn in it, built after its own games.
-    func build(_ games: [String] = [], force: Bool = false) {
+    /// Games no Mac built are asked about first, unless CONFIRMED.
+    func build(_ games: [String] = [], force: Bool = false, confirmed: Bool = false) {
         guard !sample, !bundling else { return }
         guard engine != nil else {
             section = .setup
             return
+        }
+        if !confirmed {
+            let never = neverBuilt(games)
+            if !never.isEmpty {
+                let asked = games.isEmpty ? dueOutsideBatch.map(\.titleID) : games
+                let left = Set(never.map(\.titleID))
+                askUnbuilt = UnbuiltAsk(games: games, force: force, never: never, others: asked.filter { !left.contains($0) })
+                showMainWindow()
+                return
+            }
         }
         if status?.running == true || starting != nil || enqueueing {
             let wanted = games.isEmpty ? dueOutsideBatch.map(\.titleID) : games.filter { progress($0) == nil }
@@ -617,6 +689,8 @@ final class AppModel: ObservableObject {
     private func batchEnded(_ status: BatchStatus) {
         let built = status.games.filter { $0.state == "built" }
         let failed = status.games.filter { $0.state == "failed" }
+        // Built, but not for this Mac: its Mac app failed after its IPA.
+        let macFailed = status.games.filter { $0.shownMacError != nil && $0.mac == "failed" }
         report(status)
         if config?.notifications ?? true, !built.isEmpty || !failed.isEmpty {
             var lines: [String] = []
@@ -626,7 +700,10 @@ final class AppModel: ObservableObject {
             if !failed.isEmpty {
                 lines.append(tr("Failed: ", "Échecs : ") + failed.map(\.name).joined(separator: ", "))
             }
-            let title = failed.isEmpty
+            if !macFailed.isEmpty {
+                lines.append(tr("Mac app failed: ", "App Mac en échec : ") + macFailed.map(\.name).joined(separator: ", "))
+            }
+            let title = failed.isEmpty && macFailed.isEmpty
                 ? tr("Your games are ready", "Vos jeux sont prêts")
                 : tr("Builds ended, with failures", "Constructions terminées, avec des échecs")
             notify(title: title, body: lines.joined(separator: "\n"), section: .activity)
@@ -655,6 +732,7 @@ final class AppModel: ObservableObject {
                 try? await Task.sleep(nanoseconds: UInt64(AppModel.checkInterval * 1_000_000_000))
                 guard let self, !Task.isCancelled else { return }
                 if !self.isBuilding, self.setup.ready { await self.refreshLibrary(update: true) }
+                self.unbuilt = await UnbuiltGames.load(self.home)
             }
         }
     }
@@ -722,7 +800,8 @@ final class AppModel: ObservableObject {
             do {
                 let answer = try await engine.setConfig(changes)
                 apply(answer)
-                let refolded = ["sources", "games", "keys", "workspace", "unprofiled", "skip", "aliases", "engine_policy", "refresh_days"]
+                let refolded = ["sources", "games", "keys", "workspace", "unprofiled", "skip", "aliases", "engine_policy", "refresh_days",
+                                "ios", "mac", "skip_ios", "skip_mac", "mac_apps"]
                 if changes.keys.contains(where: refolded.contains) {
                     await refreshLibrary(update: false)
                 }
@@ -746,6 +825,72 @@ final class AppModel: ObservableObject {
             } catch {
                 show(error, origin: "follow")
             }
+        }
+    }
+
+    /// Builds GAME for PLATFORM ("ios", its IPA, or "mac", its app for this
+    /// Mac) again, or no longer; what was built stays where it is.
+    func setPlatform(_ game: Game, _ platform: String, _ on: Bool) {
+        guard !sample, let engine else { return }
+        Task {
+            do {
+                _ = try await engine.platform(game.titleID, platform, on)
+                await loadConfig()
+                await refreshLibrary(update: false)
+                if storage != nil { await loadStorage() }
+            } catch {
+                show(error, origin: "platform")
+            }
+        }
+    }
+
+    /// Puts the game's Mac app in the Trash, never while the game runs from
+    /// it, and builds the game no longer for this Mac (no longer at all,
+    /// when it was built for this Mac alone): its saves stay on the Mac.
+    /// This Mac's copy of an app the games folder keeps in one file (a
+    /// NAS's) goes alone: the game stays built, its file where it is, and
+    /// it is installed again the next time it is played.
+    func removeMacApp(_ app: MacAppCopy) {
+        guard !sample else { return }
+        let url = URL(fileURLWithPath: app.path)
+        if NSWorkspace.shared.runningApplications.contains(where: { $0.bundleURL?.standardizedFileURL == url.standardizedFileURL }) {
+            banner = Banner(kind: .error, text: tr("Quit \(app.name) first: it is open on this Mac.", "Quittez d’abord \(app.name) : il est ouvert sur ce Mac."))
+            return
+        }
+        Task {
+            do {
+                try FileManager.default.trashItem(at: url, resultingItemURL: nil)
+            } catch {
+                show(error, origin: "trash")
+                return
+            }
+            telemetry.event("builder.cleaned", fields: ["what": .text(app.isInstalledCopy ? "mac_copy" : "mac_app"), "items": .count(1),
+                                                        "freedMB": .number((Double(app.size) / 1_000_000).rounded())])
+            if app.isInstalledCopy {
+                banner = Banner(kind: .info, text: gamesOnShare
+                    ? tr("\(app.name) is in the Trash. The NAS keeps its app: it is installed again when you play it.",
+                         "\(app.name) est dans la Corbeille. Le NAS garde son app : elle se réinstalle quand vous y jouez.")
+                    : tr("\(app.name) is in the Trash. The games folder keeps its app: it is installed again when you play it.",
+                         "\(app.name) est dans la Corbeille. Le dossier des jeux garde son app : elle se réinstalle quand vous y jouez."))
+                await loadStorage()
+                await refreshLibrary(update: false)
+                return
+            }
+            if let engine, config?.onMac(app.titleID) ?? app.on {
+                do {
+                    if config?.onIOS(app.titleID) ?? true {
+                        _ = try await engine.platform(app.titleID, "mac", false)
+                    } else {
+                        try await engine.follow(app.titleID, false)
+                    }
+                } catch {
+                    show(error, origin: "platform")
+                }
+            }
+            banner = Banner(kind: .info, text: tr("\(app.name) is in the Trash.", "\(app.name) est dans la Corbeille."))
+            await loadConfig()
+            await loadStorage()
+            await refreshLibrary(update: false)
         }
     }
 
@@ -814,6 +959,141 @@ final class AppModel: ObservableObject {
         }
     }
 
+    // MARK: Playing on this Mac
+
+    private func startMacGames() {
+        macGames.news = { [weak self] news in self?.heard(news) }
+        macGames.language = L10n.code
+        useMacSaves()
+        macGames.start()
+    }
+
+    /// The library's games that have an app on this Mac, as their
+    /// Info.plist names them: their copies' folder is named after it.
+    private func useMacApps() {
+        let apps = (library?.games ?? []).compactMap { game -> MacGameApp? in
+            guard let app = game.mac?.app, app.present else { return nil }
+            let url = URL(fileURLWithPath: app.path)
+            if sample { return MacGameApp(url: url, titleID: game.titleID, name: game.name) }
+            return MacGameApp(url: url) ?? MacGameApp(url: url, titleID: game.titleID, name: game.name)
+        }
+        if sample {
+            macGames.preview(apps: apps)
+        } else {
+            macGames.use(apps: apps)
+        }
+    }
+
+    /// The saves folder of the bridge, the iPhone's, or none when the
+    /// player turned the Mac's saves off.
+    func useMacSaves() {
+        guard !sample else { return }
+        macGames.use(saves: AppSettings.macSaves ? bridge.saves : nil)
+        Task { await macGames.round() }
+    }
+
+    func setMacSaves(_ on: Bool) {
+        UserDefaults.standard.set(on, forKey: AppSettings.macSavesKey)
+        useMacSaves()
+        objectWillChange.send()
+    }
+
+    /// Starts GAME on this Mac: its newest copy of saves first; straight
+    /// into the game, or with nxnative's own settings window (SETTINGS).
+    /// An app the games folder keeps in one file (a NAS's) is installed on
+    /// this Mac first, or its copy here made again of a newer build; when
+    /// that cannot be done, the copy already here plays.
+    func play(_ game: Game, settings: Bool = false) {
+        guard !sample else { return }
+        macGames.language = L10n.code
+        Task {
+            do {
+                if let mac = game.mac, mac.needsInstall, !macGames.isPlaying(game.titleID) {
+                    do {
+                        try await installMac(game)
+                    } catch {
+                        guard mac.hasApp else { throw error }
+                        show(error, origin: "install")
+                        banner = Banner(kind: .error, text: tr("\(game.name) could not be updated on this Mac (\(DiskSpace.words(for: error))): the version already here starts.",
+                                                               "\(game.name) n’a pas pu être mis à jour sur ce Mac (\(DiskSpace.words(for: error))) : la version déjà là démarre."))
+                    }
+                }
+                try await macGames.play(game.titleID, settings: settings)
+            } catch {
+                show(error, origin: "play")
+            }
+        }
+    }
+
+    /// Whether GAME can be played on this Mac now: its app is here, or the
+    /// games folder keeps it in one file, installed when played.
+    func canPlay(_ game: Game) -> Bool {
+        game.mac?.playable ?? false
+    }
+
+    /// Installs on this Mac GAME's app the games folder keeps in one file (a
+    /// NAS's), or makes this Mac's copy of it again of the newest build; how
+    /// far it is shows on the game (installMessage). One at a time.
+    func installMac(_ game: Game) async throws {
+        guard let engine, !sample else { return }
+        guard installing == nil else {
+            throw EngineFailure(kind: "busy", message: tr("Wait for the installation under way to finish.", "Attendez la fin de l’installation en cours."))
+        }
+        installing = game.titleID
+        installMessage = tr("Installing \(game.name) on this Mac…", "Installation de \(game.name) sur ce Mac…")
+        defer {
+            installing = nil
+            installMessage = ""
+        }
+        let titleID = game.titleID
+        let again = game.mac?.hasApp ?? false
+        let started = Date()
+        let answer = try await engine.installMac(titleID) { [weak self] line in
+            Task { @MainActor in
+                if self?.installing == titleID { self?.installMessage = line }
+            }
+        }
+        telemetry.event("builder.macInstalled", game: answer.titleID,
+                        fields: BuilderTelemetry.installedFields(bytes: answer.bytes, seconds: Date().timeIntervalSince(started), again: again))
+        await refreshLibrary(update: false)
+        if storage != nil { await loadStorage() }
+    }
+
+    /// The game page's buttons: installs GAME's app, saying what went wrong.
+    func installOnThisMac(_ game: Game) {
+        guard !sample else { return }
+        Task {
+            do {
+                try await installMac(game)
+            } catch {
+                show(error, origin: "install")
+            }
+        }
+    }
+
+    /// The games folder is on a network share: the player's words call it
+    /// the NAS.
+    var gamesOnShare: Bool { library?.folders?.games?.isShare ?? false }
+
+    private func heard(_ news: MacGamesNews) {
+        switch news {
+        case .started:
+            break
+        case let .ended(run, ending: ending, exit: code, seconds: seconds):
+            telemetry.event("builder.played", game: run.app.titleID,
+                            fields: BuilderTelemetry.playedFields(ended: ending.rawValue, exit: code, seconds: seconds,
+                                                                  fromBuilder: run.fromBuilder, settings: run.settings))
+            if ending == .crashed {
+                let log = "~/Library/Logs/nxnative/\(run.app.titleID).log"
+                banner = Banner(kind: .error, text: tr("\(run.app.name) stopped unexpectedly. Its log: \(log)",
+                                                       "\(run.app.name) s’est arrêté de façon inattendue. Son journal : \(log)"))
+            }
+        case let .saves(titleID: titleID, event: event, onShare: onShare):
+            telemetry.event("builder.saves", game: titleID,
+                            fields: BuilderTelemetry.savesFields(step: event.step, when: event.when.rawValue, onShare: onShare))
+        }
+    }
+
     // MARK: Login item
 
     var opensAtLogin: Bool { SMAppService.mainApp.status == .enabled }
@@ -866,10 +1146,12 @@ final class AppModel: ObservableObject {
     // MARK: The gallery
 
     /// A model with sample games, for the gallery's pictures.
-    static func sampled(library: Library, status: BatchStatus?, storage: StorageReport?, config: BuilderConfig, info: BuilderInfo?) -> AppModel {
+    static func sampled(library: Library, status: BatchStatus?, storage: StorageReport?, config: BuilderConfig, info: BuilderInfo?,
+                        unbuilt: [String: UnbuiltGame] = [:]) -> AppModel {
         let home = BuilderHome(FileManager.default.temporaryDirectory.appendingPathComponent("cartouche-builder-gallery"))
         let model = AppModel(home: home, sample: true)
         model.library = library
+        model.unbuilt = unbuilt
         model.status = status
         model.storage = storage
         model.config = config
