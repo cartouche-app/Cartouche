@@ -201,10 +201,10 @@
       ],
       "download": [
         "Check this computer's internet connection, then try again.",
-        "Download Cartouche-<version>.ipa from ((link:https://github.com/clabeuhtegrite/Cartouche/releases:Cartouche's releases)), then use Install Cartouche from an IPA file."
+        "Download Cartouche-<version>.ipa from ((link:https://github.com/cartouche-app/Cartouche/releases:Cartouche's releases)), then use Install Cartouche from an IPA file."
       ],
       "not_cartouche": [
-        "Pick Cartouche's own IPA, Cartouche-<version>.ipa from ((link:https://github.com/clabeuhtegrite/Cartouche/releases:Cartouche's releases)). A game goes into Cartouche, with its Import."
+        "Pick Cartouche's own IPA, Cartouche-<version>.ipa from ((link:https://github.com/cartouche-app/Cartouche/releases:Cartouche's releases)). A game goes into Cartouche, with its Import."
       ],
       "cartouche_missing": [
         "Install Cartouche first, with the button of step 3."

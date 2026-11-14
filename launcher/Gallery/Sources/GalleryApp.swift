@@ -8,20 +8,38 @@
 //  the whole screen of the simulator it runs on, such as the iPhone Duo's,
 //  with its own safe area, size classes and system bars.
 //
-//      -GalleryScreen games|library|sheet|settings|gameinfo|shortcuts|setup|signin|guide|system|storage|storage-mac|storage-drive|storage-drive-guide|telemetry|report|tv
-//                                        library: every game, open over
-//                                        the home; gameinfo: what the
-//                                        player says of the sheet's game;
-//                                        shortcuts: Siri and Home Screen,
-//                                        from the sheet of the player's game;
-//                                        storage-mac: Add your Mac, the
-//                                        form that pairs this iPhone with a
-//                                        Mac nearby; storage-drive: Add
-//                                        Google Drive, with the player's
-//                                        own client; storage-drive-guide:
-//                                        the steps that make that client;
-//                                        tv: the TV while the sheet's game,
-//                                        or the first of the player's, runs
+//  Each value of -GalleryScreen, -GalleryWork and -GalleryCategory is on a
+//  line of its own, in the order of their names, which a pull request that
+//  adds one adds at its place; the gallery's own types for a new scenario go
+//  in a file of their own in Sources/. Pull requests that each add one then
+//  do not meet, as they did in one line or at the end of this file.
+//
+//      -GalleryScreen <screen>           the screen, one of these, the home
+//                                        when none:
+//        gameinfo                        what the player says of the sheet's
+//                                        game
+//        games                           the home
+//        guide                           Your first game
+//        library                         every game, open over the home
+//        report                          Report a problem
+//        settings                        the settings of the sheet's game,
+//                                        open at -GalleryCategory
+//        setup                           the setup
+//        sheet                           the sheet of -GallerySheet's game
+//        shortcuts                       Siri and Home Screen, from the
+//                                        sheet of the player's game
+//        signin                          the Apple ID sign-in
+//        storage                         the Storage page
+//        storage-drive                   Add Google Drive, with the player's
+//                                        own client
+//        storage-drive-guide             the steps that make that client
+//        storage-mac                     Add your Mac, the form that pairs
+//                                        this iPhone with a Mac nearby
+//        system                          the System page, down to
+//                                        -GalleryCategory
+//        telemetry                       Game measurements
+//        tv                              the TV while the sheet's game, or
+//                                        the first of the player's, runs
 //                                        behind the console, its card where
 //                                        the game leaves its own scene on
 //                                        the TV empty (CartoucheTV.swift)
@@ -43,73 +61,88 @@
 //                                        iPhone, iPhone19,4, CartoucheDevice)
 //      -GallerySheet <title ID>          the game of the sheet, of its
 //                                        settings, or being installed
-//      -GalleryWork installing           a game being installed, over the
-//                                        console; update: a new version of
-//                                        Cartouche on offer; code: Apple
-//                                        asks for a verification code, on
-//                                        the sign-in; too-many: Apple
-//                                        refused the sign-in for too many
-//                                        requests, with the wait under
-//                                        way; vpn-wait: the sign-in waiting
-//                                        for LocalDevVPN; iphone-step: a
-//                                        sign-in Apple accepted that
-//                                        stopped at the step that registers
-//                                        this iPhone, LocalDevVPN being
-//                                        off; device-no-ipsec,
-//                                        device-handshake,
-//                                        device-port-closed: a sign-in that
-//                                        stopped at the check of this
-//                                        iPhone, which minimuxer could not
-//                                        reach, LocalDevVPN connected
-//                                        (deviceChecks); paused: the sheet's
-//                                        game, or the first of the
-//                                        player's, paused behind the console;
-//                                        offline: the player's NAS, out of
-//                                        reach, with a newer build of that
-//                                        game in its games folder and two
-//                                        games' saves waiting for it;
-//                                        mac-nearby: two Macs nearby whose
-//                                        Cartouche Builder shares with
-//                                        Cartouche; mac-code: the same,
-//                                        pairing with the first, with the
-//                                        six digits on both screens;
-//                                        mac-refused: none, iOS refusing
-//                                        Cartouche the local network; mac:
-//                                        the player's Mac, paired, as the
-//                                        games folder and the saves folder;
-//                                        mac-offline: that Mac out of reach,
-//                                        away from home, with two games'
-//                                        saves waiting for it; build-skipped:
-//                                        No thanks said to the guide's Mac
-//                                        step; own-cover: the sheet's game,
-//                                        or the first of the player's, with
-//                                        a cover of the player's own; saves:
-//                                        that game's saves, and a folder in
-//                                        Files as the saves folder, which
-//                                        Cartouche's own sync uses
-//                                        (GallerySaves); drive-signed-out:
-//                                        the player's Google Drive as the
+//      -GalleryWork <work>               what goes on, one of these:
+//        build-skipped                   No thanks said to the guide's Mac
+//                                        step
+//        certificate                     a certificate iOS no longer accepts
+//        code                            Apple asks for a verification code,
+//                                        on the sign-in
+//        device-handshake                a sign-in that stopped at the check
+//                                        of this iPhone, LocalDevVPN
+//                                        connected: a pairing file this
+//                                        iPhone refused (deviceChecks)
+//        device-no-ipsec                 the same: a Lockdown pairing file
+//                                        from iOS 26.4
+//        device-port-closed              the same: minimuxer could not reach
+//                                        this iPhone on its port
+//        drive-signed-out                the player's Google Drive as the
 //                                        games folder and the saves folder,
 //                                        whose sign-in Google ended, as after
-//                                        7 days for a project in testing, with
-//                                        two games' saves waiting for it;
-//                                        not-signed-install: the sheet's
-//                                        game installed but not signed
-//                                        whole, with Sign again and play;
-//                                        not-signed-start: the same, as Play
-//                                        signed it again; signature-refused:
-//                                        its process ended as iOS refused
-//                                        its signature; stopped-on-error:
-//                                        its process ended on another error
-//                                        (CartoucheGameActions failSigning
-//                                        and stoppedOnError);
-//                                        on the TV (screen tv), paused: the
-//                                        game paused behind the console,
-//                                        starting: the game starting;
-//                                        renewing: Cartouche renewing itself
-//                                        in its last 3 days, as it came to
-//                                        the front; renewal-failed: that
-//                                        renewal failed, the network gone
+//                                        7 days for a project in testing,
+//                                        with two games' saves waiting for it
+//        install-failed                  the install of the sheet's game,
+//                                        which the network dropped halfway,
+//                                        with its report to copy
+//        installing                      a game being installed, over the
+//                                        console
+//        iphone-step                     a sign-in Apple accepted that
+//                                        stopped at the step that registers
+//                                        this iPhone, LocalDevVPN being off
+//        mac                             the player's Mac, paired, as the
+//                                        games folder and the saves folder
+//        mac-code                        two Macs nearby, pairing with the
+//                                        first, with the six digits on both
+//                                        screens
+//        mac-nearby                      two Macs nearby whose Cartouche
+//                                        Builder shares with Cartouche
+//        mac-offline                     the player's Mac out of reach, away
+//                                        from home, with two games' saves
+//                                        waiting for it
+//        mac-refused                     no Mac nearby, iOS refusing
+//                                        Cartouche the local network
+//        newer-build                     a newer build of the sheet's game,
+//                                        or of the first of the player's, in
+//                                        the games folder
+//        not-signed-install              the sheet's game installed but not
+//                                        signed whole, with Sign again and
+//                                        play
+//        not-signed-start                the same, as Play signed it again
+//        offline                         the player's NAS, out of reach, with
+//                                        a newer build of that game in its
+//                                        games folder and two games' saves
+//                                        waiting for it
+//        own-cover                       the sheet's game, or the first of
+//                                        the player's, with a cover of the
+//                                        player's own
+//        paused                          the sheet's game, or the first of
+//                                        the player's, paused behind the
+//                                        console; on the TV (screen tv), the
+//                                        game paused behind the console
+//        renewal-failed                  Cartouche's renewal in its last 3
+//                                        days, which failed, the network gone
+//        renewing                        Cartouche renewing itself in its
+//                                        last 3 days, as it came to the front
+//        saves                           the saves of the sheet's game, or of
+//                                        the first of the player's, and a
+//                                        folder in Files as the saves folder,
+//                                        which Cartouche's own sync uses
+//                                        (GallerySaves)
+//        sign-in-unfinished              the setup after a sign-in that
+//                                        stopped before the certificate,
+//                                        with why and its report to copy
+//        signature-refused               the sheet's game's process ended as
+//                                        iOS refused its signature
+//                                        (CartoucheGameActions failSigning)
+//        starting                        on the TV (screen tv), the game
+//                                        starting
+//        stopped-on-error                the sheet's game's process ended on
+//                                        another error (CartoucheGameActions
+//                                        stoppedOnError)
+//        too-many                        Apple refused the sign-in for too
+//                                        many requests, with the wait under
+//                                        way
+//        update                          a new version of Cartouche on offer
+//        vpn-wait                        the sign-in waiting for LocalDevVPN
 //      -GalleryOrientation landscape     the gallery turns itself sideways,
 //                                        as a game does; the simulator
 //                                        stays upright
@@ -117,14 +150,16 @@
 //                                        gallery writes
 //                                        tmp/ready-<scenario>.json in its
 //                                        container (Ready below)
-//      -GalleryCategory Controls         the settings page's category, one
-//                                        of nxnative's sections; on a
-//                                        sheet, results: the testers'
+//      -GalleryCategory <category>       where the screen opens, one of these:
+//        <a section of nxnative's>       on a game's settings, that section,
+//                                        such as Controls
+//        cartouche.saves                 on a game's settings, its cloud
+//                                        saves
+//        results                         on a game's sheet, the testers'
 //                                        results, what they wrote in French
-//                                        as the iPhone translates it; on
-//                                        the System page, signature: the
-//                                        page scrolled down to its
-//                                        signature
+//                                        as the iPhone translates it
+//        signature                       on the System page, the page
+//                                        scrolled down to its signature
 //
 //  The UI tests (launcher/Gallery/UITests) open the whole console, as
 //  Cartouche shows it, and drive it (GalleryTesting.swift):
@@ -795,18 +830,6 @@ struct CartoucheGalleryApp: App {
         settings.category = scenario.category
         return settings
     }
-}
-
-/// What testers wrote on the sheet of Mario Kart World
-/// (catalog/games/0400C3F00006E000.json), as the iPhone translates it into
-/// French.
-enum GalleryTranslations {
-    static let french = [
-        "nxnative main with the switch2ios patches (0d9b6358)":
-            "nxnative main avec les correctifs de switch2ios (0d9b6358)",
-        "Ran smoothly at 1080p in handheld mode. Memory peak not recorded yet.":
-            "A tourné de façon fluide en 1080p en mode portable. Pic de mémoire pas encore enregistré.",
-    ]
 }
 
 /// The player's Mac with Cartouche Builder, as the gallery shows it: found

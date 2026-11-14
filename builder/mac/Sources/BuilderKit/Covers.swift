@@ -13,7 +13,7 @@ import AppKit
 import Foundation
 
 public enum CoverSource {
-    public static let liveList = URL(string: "https://raw.githubusercontent.com/clabeuhtegrite/Cartouche/refs/heads/live-covers/covers.json")!
+    public static let liveList = URL(string: "https://raw.githubusercontent.com/cartouche-app/Cartouche/refs/heads/live-covers/covers.json")!
 
     public static func image(_ cover: String) -> URL? {
         URL(string: "https://images.igdb.com/igdb/image/upload/t_cover_big_2x/\(cover).jpg")
