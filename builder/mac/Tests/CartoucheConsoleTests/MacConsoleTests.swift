@@ -158,6 +158,15 @@ final class MacConsoleTests: XCTestCase {
         XCTAssertTrue(after.owned.allSatisfy { $0.app != nil && $0.stored == nil })
     }
 
+    /// A game the NAS keeps wakes the console's storage settings, which keep
+    /// nothing in the Mac's keychain: an item one build of the app wrote
+    /// there, the next build, signed again, reads only once the player
+    /// allows it in a window of macOS's, which nobody answers on GitHub's
+    /// runners (the gallery waited on it until its job ended).
+    func testTheConsoleKeepsNothingInTheMacsKeychain() {
+        XCTAssertFalse(CartoucheStorageSettings.shared.keepsInKeychain)
+    }
+
     @MainActor
     func testTheConsoleSaysWhichGameRuns() throws {
         let console = CartoucheMacConsole.shared
