@@ -41,6 +41,11 @@ class HarnessCase: XCTestCase {
         certificate = HarnessCertificate(team: "HARNESS001", password: "harness", serial: Int.random(in: 1...Int(Int32.max)))
         HarnessLC.installCertificate(certificate)
         HarnessStorage.warmUp()
+        // Cartouche watches the controllers from the moment its console
+        // opens, long before the player starts a game. The harness has no
+        // console: the first game it started loaded GameController on the
+        // main thread instead, 1.62 s on a busy Mac of the CI's.
+        _ = CartoucheGamepad.shared
         let watchdog = HarnessWatchdog()
         watchdog.start()
         self.watchdog = watchdog
