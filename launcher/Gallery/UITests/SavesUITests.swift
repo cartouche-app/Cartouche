@@ -18,6 +18,30 @@
 
 import XCTest
 
+extension Words {
+    static let switchSaves = "Switch saves"                 // switchSave.title
+    static let chooseExport = "Choose the exported save"    // switchSave.choose
+    static let game = "Game"                                // switchSave.game
+    static let checkedByFiche = "This one, by JKSV’s fiche" // switchSave.game.checked
+    static let continueHere = "Continue this game here"     // switchSave.import.action
+    static let continueQuestion = "Continue this game here?" // switchSave.import.question
+    static let imported = "The game from your Switch is in place" // switchSave.import.done
+    static let putBackImport = "Put back the game from before the import" // switchSave.putBack
+    static let putBackImportQuestion = "Put back the game from before the import?" // switchSave.putBack.question
+    static let putBackImportDone = "The game from before the import is back." // switchSave.putBack.done
+    static let makeZip = "Make the ZIP for JKSV"            // switchSave.send.make
+    static let shareZip = "Share "                          // switchSave.send.share
+}
+
+extension GalleryWords {
+    /// The save JKSV exported on the Switch, in On My iPhone (uitests.sh)
+    /// and in the gallery's folder (GallerySaves), named as JKSV names it,
+    /// the player and the time: FilesPicker.pick taps the
+    /// first element whose label begins as the file's name, so no label on
+    /// the screen under the picker may (Switch saves, for "Switch save").
+    static let switchExport = "Player - 2026-11-13_15-20-00.zip"
+}
+
 final class SavesUITests: ConsoleTestCase {
     /// From the sheet of the game, its saves go to the folder, which then
     /// holds one copy of them; put back after a question, it is back in

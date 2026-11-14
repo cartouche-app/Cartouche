@@ -169,7 +169,7 @@ if [ -n "$LOCAL" ]; then
   echo "   Test Game.ipa in On My iPhone"
   # The save JKSV exported on the Switch, for the saves' test to pick, where
   # a player keeps one too, named as the test has it (GalleryWords.switchExport
-  # in UITests/ConsoleTestCase.swift), of the first of the player's games (Games.owned):
+  # in UITests/SavesUITests.swift), of the first of the player's games (Games.owned):
   # JKSV's fiche, a file and a folder with a file, as the gallery writes it
   # in its own folder (GallerySaves.writeSwitchExport in Sources/GalleryApp.swift),
   # which a Files picker that takes folders as well did not open on a tap.
