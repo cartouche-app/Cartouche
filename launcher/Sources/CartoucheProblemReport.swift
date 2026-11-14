@@ -113,21 +113,27 @@ struct CartoucheProblemReport {
 
     /// The repository whose bug report form a report goes to, when Cartouche
     /// does not say its own.
-    static let repository = "clabeuhtegrite/Cartouche"
+    static let repository = "cartouche-app/Cartouche"
+    /// Where Cartouche's repository was before it moved to its organization
+    /// (decision 111). Cartouche's source keeps that address, which GitHub
+    /// redirects, so that the iPhones it is installed on keep their updates.
+    static let formerRepository = "clabeuhtegrite/Cartouche"
     /// The longest address issueURL makes: GitHub answers 414 URI Too Long
     /// past its server's limit, about 8 KB for the whole request line.
     static let issueURLLimit = 7_000
 
     /// The repository Cartouche's own source is in, from its address on
     /// raw.githubusercontent.com (CartoucheSourceURL, app/config.env), so
-    /// that a fork's reports go to the fork; else `repository`.
+    /// that a fork's reports go to the fork; else `repository`, which is
+    /// also where the former repository's reports go.
     static func repository(sourceURL: String?) -> String {
         guard let sourceURL, let url = URL(string: sourceURL), url.host == "raw.githubusercontent.com" else {
             return Self.repository
         }
         let path = url.pathComponents.filter { $0 != "/" }
         guard path.count >= 2 else { return Self.repository }
-        return path[0] + "/" + path[1]
+        let named = path[0] + "/" + path[1]
+        return named.caseInsensitiveCompare(Self.formerRepository) == .orderedSame ? Self.repository : named
     }
 
     /// What the player wrote, without the blank around it.

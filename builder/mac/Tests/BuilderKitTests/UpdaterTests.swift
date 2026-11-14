@@ -13,7 +13,7 @@ import XCTest
 
 final class UpdaterTests: XCTestCase {
     private func release(_ tag: String, draft: Bool = false, prerelease: Bool = false, files: [String]? = nil,
-                         host: String = "https://github.com/clabeuhtegrite/Cartouche/releases/download") -> [String: Any] {
+                         host: String = "https://github.com/cartouche-app/Cartouche/releases/download") -> [String: Any] {
         let version = tag.hasPrefix("builder-v") ? String(tag.dropFirst("builder-v".count)) : tag
         let names = files ?? ["Cartouche-Builder-\(version).dmg", "Cartouche-Builder-\(version).dmg.sha256"]
         return [
@@ -21,7 +21,7 @@ final class UpdaterTests: XCTestCase {
             "draft": draft,
             "prerelease": prerelease,
             "body": "What \(tag) brings.",
-            "html_url": "https://github.com/clabeuhtegrite/Cartouche/releases/tag/\(tag)",
+            "html_url": "https://github.com/cartouche-app/Cartouche/releases/tag/\(tag)",
             "assets": names.map { ["name": $0, "browser_download_url": "\(host)/\(tag)/\($0)", "size": $0.hasSuffix(".dmg") ? 41_234_567 : 97] },
         ]
     }
@@ -47,7 +47,7 @@ final class UpdaterTests: XCTestCase {
         XCTAssertEqual(newest.size, 41_234_567)
         XCTAssertEqual(newest.image.lastPathComponent, "Cartouche-Builder-0.2.1.dmg")
         XCTAssertEqual(newest.checksum.lastPathComponent, "Cartouche-Builder-0.2.1.dmg.sha256")
-        XCTAssertEqual(newest.page.absoluteString, "https://github.com/clabeuhtegrite/Cartouche/releases/tag/builder-v0.2.1")
+        XCTAssertEqual(newest.page.absoluteString, "https://github.com/cartouche-app/Cartouche/releases/tag/builder-v0.2.1")
 
         XCTAssertNil(try BuilderReleases.newest(in: Data("[]".utf8)))
         XCTAssertThrowsError(try BuilderReleases.newest(in: Data("{\"message\": \"API rate limit exceeded\"}".utf8)))

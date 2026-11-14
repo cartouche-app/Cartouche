@@ -65,7 +65,7 @@ public enum BuilderVersion {
 }
 
 public enum BuilderReleases {
-    public static let repository = "clabeuhtegrite/Cartouche"
+    public static let repository = "cartouche-app/Cartouche"
     public static let tagPrefix = "builder-v"
 
     public static var api: URL {

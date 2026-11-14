@@ -373,9 +373,9 @@ enum Gallery {
                                  name: "MacBook Air", saves: URL(fileURLWithPath: info.home).appendingPathComponent("Saves", isDirectory: true))
             if page == .menubar {
                 let release = BuilderRelease(version: "0.3.0", tag: "builder-v0.3.0", notes: "",
-                                             page: URL(string: "https://github.com/clabeuhtegrite/Cartouche/releases/tag/builder-v0.3.0")!,
-                                             image: URL(string: "https://github.com/clabeuhtegrite/Cartouche/releases/download/builder-v0.3.0/Cartouche-Builder-0.3.0.dmg")!,
-                                             checksum: URL(string: "https://github.com/clabeuhtegrite/Cartouche/releases/download/builder-v0.3.0/Cartouche-Builder-0.3.0.dmg.sha256")!,
+                                             page: URL(string: "https://github.com/cartouche-app/Cartouche/releases/tag/builder-v0.3.0")!,
+                                             image: URL(string: "https://github.com/cartouche-app/Cartouche/releases/download/builder-v0.3.0/Cartouche-Builder-0.3.0.dmg")!,
+                                             checksum: URL(string: "https://github.com/cartouche-app/Cartouche/releases/download/builder-v0.3.0/Cartouche-Builder-0.3.0.dmg.sha256")!,
                                              size: 31_000_000)
                 model.updater.preview(.ready(release))
             } else {
