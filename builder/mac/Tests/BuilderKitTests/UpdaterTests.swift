@@ -13,7 +13,8 @@ import XCTest
 
 final class UpdaterTests: XCTestCase {
     private func release(_ tag: String, draft: Bool = false, prerelease: Bool = false, files: [String]? = nil,
-                         host: String = "https://github.com/cartouche-app/Cartouche/releases/download") -> [String: Any] {
+                         host: String = "https://github.com/cartouche-app/Cartouche/releases/download",
+                         page: String = "https://github.com/cartouche-app/Cartouche") -> [String: Any] {
         let version = tag.hasPrefix("builder-v") ? String(tag.dropFirst("builder-v".count)) : tag
         let names = files ?? ["Cartouche-Builder-\(version).dmg", "Cartouche-Builder-\(version).dmg.sha256"]
         return [
@@ -21,7 +22,7 @@ final class UpdaterTests: XCTestCase {
             "draft": draft,
             "prerelease": prerelease,
             "body": "What \(tag) brings.",
-            "html_url": "https://github.com/cartouche-app/Cartouche/releases/tag/\(tag)",
+            "html_url": "\(page)/releases/tag/\(tag)",
             "assets": names.map { ["name": $0, "browser_download_url": "\(host)/\(tag)/\($0)", "size": $0.hasSuffix(".dmg") ? 41_234_567 : 97] },
         ]
     }
@@ -77,6 +78,43 @@ final class UpdaterTests: XCTestCase {
             XCTAssertNil(BuilderReleases.answeringRepository(URL(string: other)), other)
         }
         XCTAssertNil(BuilderReleases.answeringRepository(nil))
+    }
+
+    func testARedirectToTheRepositorysNumberTakesTheRepositoryItsReleasesName() throws {
+        // GitHub may send the API of a repository that moved to its number,
+        // https://api.github.com/repositories/ID/releases, which names no
+        // repository: its releases' pages name where it is now.
+        let moved = "https://github.com/new-owner/Cartouche"
+        let releases: [[String: Any]] = [
+            release("builder-v0.3.0", host: moved + "/releases/download", page: moved),
+            release("builder-v0.2.0", host: moved + "/releases/download", page: moved),
+        ]
+        let data = try JSONSerialization.data(withJSONObject: releases)
+        let byNumber = URL(string: "https://api.github.com/repositories/123456789/releases?per_page=40")
+        XCTAssertNil(BuilderReleases.answeringRepository(byNumber))
+        XCTAssertNil(try BuilderReleases.newest(in: data, answering: BuilderReleases.answeringRepository(byNumber)))
+
+        let answering = BuilderReleases.answeringRepository(byNumber, releases: data)
+        XCTAssertEqual(answering, "new-owner/Cartouche")
+        let newest = try XCTUnwrap(try BuilderReleases.newest(in: data, answering: answering))
+        XCTAssertEqual(newest.version, "0.3.0")
+        XCTAssertEqual(newest.image.absoluteString, moved + "/releases/download/builder-v0.3.0/Cartouche-Builder-0.3.0.dmg")
+        XCTAssertEqual(BuilderReleases.answeringRepository(BuilderReleases.api, releases: data), BuilderReleases.repository)
+
+        // Releases that name two repositories, or one of them none, name none.
+        for other: [[String: Any]] in [
+            [release("builder-v0.3.0", host: moved + "/releases/download", page: moved), release("builder-v0.2.0")],
+            [release("builder-v0.3.0", host: moved + "/releases/download", page: moved),
+             release("builder-v0.2.0", page: "https://example.com/new-owner/Cartouche")],
+            [],
+        ] {
+            XCTAssertNil(BuilderReleases.answeringRepository(byNumber, releases: try JSONSerialization.data(withJSONObject: other)))
+        }
+        XCTAssertNil(BuilderReleases.answeringRepository(byNumber, releases: Data("{\"message\": \"Not Found\"}".utf8)))
+        for other in ["https://api.github.com/repositories/12ab/releases", "https://api.github.com/repositories/123/tags",
+                      "https://example.com/repositories/123/releases", "http://api.github.com/repositories/123/releases"] {
+            XCTAssertNil(BuilderReleases.answeringRepository(URL(string: other), releases: data), other)
+        }
     }
 
     func testVersions() {

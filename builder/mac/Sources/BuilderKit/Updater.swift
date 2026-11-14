@@ -77,16 +77,38 @@ public enum BuilderReleases {
     }
 
     /// The repository whose releases GitHub answered with, from the address
-    /// the answer came from once URLSession followed GitHub's redirects,
-    /// https://api.github.com/repos/OWNER/NAME/releases: another than
-    /// `repository` once the repository has moved, as GitHub redirects the
-    /// API of a repository that moved to an organization to its new place,
-    /// whose addresses its answer then gives. Nil for any other address.
-    public static func answeringRepository(_ address: URL?) -> String? {
+    /// the answer came from once URLSession followed GitHub's redirects:
+    /// another than `repository` once the repository has moved, as GitHub
+    /// redirects the API of a repository that moved, whose answer then gives
+    /// the new place's addresses.
+    /// - https://api.github.com/repos/OWNER/NAME/releases names it.
+    /// - https://api.github.com/repositories/ID/releases, where GitHub may
+    ///   send a repository that moved, names it by its number alone: the
+    ///   answer, RELEASES, is that repository's releases, whose pages,
+    ///   https://github.com/OWNER/NAME/releases/tag/TAG, all name it.
+    /// Nil for any other address, or releases that name none or several.
+    public static func answeringRepository(_ address: URL?, releases: Data? = nil) -> String? {
         guard let address, address.scheme == "https", address.host?.lowercased() == "api.github.com" else { return nil }
         let path = address.pathComponents.filter { $0 != "/" }
-        guard path.count == 4, path[0] == "repos", path[3] == "releases" else { return nil }
-        return path[1] + "/" + path[2]
+        if path.count == 4, path[0] == "repos", path[3] == "releases" {
+            return path[1] + "/" + path[2]
+        }
+        guard path.count == 3, path[0] == "repositories", path[2] == "releases",
+              !path[1].isEmpty, path[1].allSatisfy({ $0.isASCII && $0.isNumber }), let releases else { return nil }
+        struct Release: Decodable {
+            var html_url: String
+        }
+        guard let pages = try? JSONDecoder().decode([Release].self, from: releases) else { return nil }
+        let named = pages.map { release -> String? in
+            guard let page = URL(string: release.html_url), page.scheme == "https",
+                  page.host?.lowercased() == "github.com" else { return nil }
+            let parts = page.pathComponents.filter { $0 != "/" }
+            guard parts.count >= 4, parts[2] == "releases" else { return nil }
+            return parts[0] + "/" + parts[1]
+        }
+        guard let first = named.first ?? nil,
+              named.allSatisfy({ $0?.caseInsensitiveCompare(first) == .orderedSame }) else { return nil }
+        return first
     }
 
     /// The newest release of Cartouche Builder in an answer of GitHub's
@@ -317,7 +339,7 @@ public final class Updater: ObservableObject {
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
         let (data, response) = try await URLSession.shared.data(for: request)
         try answered(response)
-        return try BuilderReleases.newest(in: data, answering: BuilderReleases.answeringRepository(response.url))
+        return try BuilderReleases.newest(in: data, answering: BuilderReleases.answeringRepository(response.url, releases: data))
     }
 
     // MARK: Downloading
