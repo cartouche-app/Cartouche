@@ -249,6 +249,18 @@ final class BridgeBuildsTests: XCTestCase {
         XCTAssertFalse(BridgeBuilds.dueForMacAppAlone(game("A", .upToDate, reasons: ["mac_new"])))
     }
 
+    func testAGameNoMacBuiltIsLeftAsideFromTheIPhone() {
+        // None: as asked, what is due included.
+        XCTAssertEqual(BridgeBuilds.toBuild([], due: ["A", "B"], never: []), [])
+        XCTAssertEqual(BridgeBuilds.toBuild(["B"], due: ["A", "B"], never: []), ["B"])
+        // What is due: the others, as the nightly run builds them, and
+        // nothing when it is all there is.
+        XCTAssertEqual(BridgeBuilds.toBuild([], due: ["A", "B", "C"], never: ["B"]), ["A", "C"])
+        XCTAssertNil(BridgeBuilds.toBuild([], due: ["B"], never: ["B"]))
+        // The game itself: refused, never asked about on the Mac.
+        XCTAssertNil(BridgeBuilds.toBuild(["B"], due: ["A", "B"], never: ["B"]))
+    }
+
     // MARK: Over a session
 
     private var folder: URL!

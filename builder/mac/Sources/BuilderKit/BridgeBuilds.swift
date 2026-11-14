@@ -136,6 +136,18 @@ public enum BridgeBuilds {
         game.state == .due && !game.reasons.isEmpty && game.reasons.allSatisfy { $0.hasPrefix("mac_") }
     }
 
+    /// What the Mac builds of the games an iPhone asks for, ASKED, what is
+    /// due when empty (DUE). NEVER: those no Mac built that this Mac did not
+    /// build either (Unbuilt.swift), which the Mac's window asks about first
+    /// and an iPhone cannot: left aside, as the nightly run leaves them.
+    /// Empty: what is due, as asked; nil: nothing left, which the iPhone is
+    /// told why.
+    public static func toBuild(_ asked: [String], due: [String], never: Set<String>) -> [String]? {
+        guard !never.isEmpty else { return asked }
+        let others = (asked.isEmpty ? due : asked).filter { !never.contains($0) }
+        return others.isEmpty ? nil : others
+    }
+
     private static func cut(_ text: String) -> String {
         text.count <= errorLength ? text : String(text.prefix(errorLength - 1)) + "…"
     }

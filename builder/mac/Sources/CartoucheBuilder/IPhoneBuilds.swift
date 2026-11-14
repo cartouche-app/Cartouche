@@ -7,7 +7,9 @@
 //  there, as this window's buttons do (BridgeServer's BridgeBuildsSource):
 //  the library, the games building and those waiting their turn, as the
 //  window shows them (BridgeBuilds.swift); a game built, Build what is due,
-//  Stop, Remove from the queue, Stop all, Follow, and the nightly build.
+//  Stop, Remove from the queue, Stop all, Follow, and the nightly build. A
+//  game no Mac built (Unbuilt.swift) is never built from the iPhone, which
+//  cannot answer the window's question: the iPhone says why.
 //
 
 import BuilderKit
@@ -33,6 +35,12 @@ extension BridgeController: BridgeBuildsSource {
         guard model.canBuild else { throw CartoucheBridgeError(.failed, IPhoneBuilds.why(model)) }
         // Building, or waiting its turn already: nothing more to ask.
         guard model.progress(titleID) == nil else { return }
+        // A game no Mac built: the window asks first, which the iPhone
+        // cannot. The iPhone says why, and to build it on the Mac.
+        let never = model.neverBuilt([titleID])
+        guard BridgeBuilds.toBuild([titleID], due: [], never: Set(never.map(\.titleID))) != nil else {
+            throw CartoucheBridgeError(.failed, IPhoneBuilds.unbuilt(never, model))
+        }
         // As its Build button: built again even up to date, unless due; due
         // for its app for this Mac alone, its IPA is built again too.
         model.build([titleID], force: game.state != .due || BridgeBuilds.dueForMacAppAlone(game))
@@ -42,9 +50,16 @@ extension BridgeController: BridgeBuildsSource {
         guard let model else { throw CartoucheBridgeError(.failed, IPhoneBuilds.starting) }
         guard model.canBuild else { throw CartoucheBridgeError(.failed, IPhoneBuilds.why(model)) }
         // Nothing due that the batch does not have: nothing to ask.
-        guard !model.dueOutsideBatch.isEmpty else { return }
-        // As Build what is due, or Add what is due while a batch runs.
-        model.build()
+        let due = model.dueOutsideBatch.map(\.titleID)
+        guard !due.isEmpty else { return }
+        // As Build what is due, or Add what is due while a batch runs; the
+        // games no Mac built left aside, as the nightly run leaves them: the
+        // window asks about them first, which the iPhone cannot.
+        let never = model.neverBuilt(due)
+        guard let games = BridgeBuilds.toBuild([], due: due, never: Set(never.map(\.titleID))) else {
+            throw CartoucheBridgeError(.failed, IPhoneBuilds.unbuilt(never, model))
+        }
+        model.build(games)
     }
 
     func bridgeStop(_ titleID: String?) throws {
@@ -112,6 +127,17 @@ enum IPhoneBuilds {
     static var notAlone: String {
         tr("The Mac cannot take this game out of the queue yet: try again in a moment, or stop every game.",
            "Le Mac ne peut pas encore retirer ce jeu de la file : réessayez dans un instant, ou arrêtez tous les jeux.")
+    }
+
+    /// Why the Mac builds none of NEVER, games no Mac built, for an iPhone:
+    /// what the window's question says of them, and that the Mac builds
+    /// them anyway.
+    @MainActor
+    static func unbuilt(_ never: [Game], _ model: AppModel) -> String {
+        let ask = AppModel.UnbuiltAsk(games: never.map(\.titleID), force: false, never: never, others: [])
+        return model.unbuiltMessage(ask) + " "
+            + (never.count == 1 ? tr("To try it anyway, build it on the Mac.", "Pour l’essayer malgré tout, construisez-le sur le Mac.")
+                : tr("To try them anyway, build them on the Mac.", "Pour les essayer malgré tout, construisez-les sur le Mac."))
     }
 
     /// Whether the iPhone can stop the build of TITLE_ID, the batch going on
