@@ -84,6 +84,133 @@ final class EngineAnswerTests: XCTestCase {
 
         XCTAssertEqual(library.due.map(\.titleID), ["0400C3F00006E000"])
         XCTAssertEqual(library.failed.map(\.titleID), ["0100000000010000"])
+
+        // Each built for the iPhone and for this Mac: Mario Kart World's
+        // Mac app, which failed before, after its IPA; Super Mario Odyssey's,
+        // built before, once its IPA builds again; Hollow Knight, an IPA
+        // alone, has none.
+        XCTAssertEqual(library.games.map(\.platforms), Array(repeating: GamePlatforms(ios: true, mac: true), count: 3))
+        XCTAssertTrue(due.onIOS && due.onMac)
+        let dueMac = try XCTUnwrap(due.mac)
+        XCTAssertEqual(dueMac.reason, "with_ipa")
+        XCTAssertTrue(dueMac.due)
+        XCTAssertFalse(dueMac.alone)
+        XCTAssertFalse(dueMac.hasApp)
+        XCTAssertEqual(dueMac.attempt?.result, "failed")
+        XCTAssertNotNil(dueMac.attempt?.date)
+        XCTAssertFalse(dueMac.detail.isEmpty)
+        XCTAssertFalse(due.hasMacApp)
+        let built = try XCTUnwrap(failed.mac)
+        XCTAssertEqual(built.reason, "after_ipa")
+        XCTAssertFalse(built.due)
+        XCTAssertTrue(built.hasApp)
+        XCTAssertEqual(built.app?.name, "Super Mario Odyssey.app")
+        // In the games folder beside its IPA, on this Mac's own disk: played
+        // from there.
+        XCTAssertEqual(built.app?.path, built.folder + "/Super Mario Odyssey.app")
+        XCTAssertEqual(built.folder, library.folders?.games?.path)
+        XCTAssertFalse(built.packed)
+        XCTAssertEqual(built.library, built.app)
+        XCTAssertFalse(built.behind)
+        XCTAssertTrue(built.kept && built.playable)
+        XCTAssertFalse(built.needsInstall)
+        XCTAssertEqual(built.build?.commit.count, 12)
+        XCTAssertNotNil(built.build?.date)
+        XCTAssertTrue(failed.hasMacApp)
+        XCTAssertEqual(ipaOnly.mac?.reason, "")
+        XCTAssertFalse(ipaOnly.hasMacApp)
+        XCTAssertEqual(Set(library.games.compactMap { $0.mac?.folder }).count, 1)
+    }
+
+    /// A game of an engine older than the Mac's builds: its IPA alone.
+    func testAGameOfAnOlderEngineIsBuiltForTheIPhoneAlone() throws {
+        let game = try JSONDecoder().decode(Game.self, from: Data(#"{"title_id": "0100152000022000", "name": "A game", "state": "up_to_date"}"#.utf8))
+        XCTAssertNil(game.platforms)
+        XCTAssertNil(game.mac)
+        XCTAssertTrue(game.onIOS)
+        XCTAssertFalse(game.onMac)
+        XCTAssertFalse(game.hasMacApp)
+        // Built for this Mac alone.
+        let mac = try JSONDecoder().decode(Game.self, from: Data(#"""
+            {"title_id": "0100152000022000", "name": "A game", "state": "due", "reasons": ["new"], "platforms": {"ios": false, "mac": true},
+             "mac": {"folder": "/Users/player/Applications", "due": true, "alone": true, "reason": "new", "detail": "Never built"}}
+            """#.utf8))
+        XCTAssertFalse(mac.onIOS)
+        XCTAssertTrue(mac.onMac)
+        XCTAssertEqual(mac.mac, GameMac(folder: "/Users/player/Applications", due: true, alone: true, reason: "new", detail: "Never built"))
+        // What is not as the engine writes it reads as nothing.
+        let odd = try JSONDecoder().decode(Game.self, from: Data(#"{"title_id": "0100152000022000", "name": "A game", "state": "due", "platforms": 3, "mac": {"due": "yes"}}"#.utf8))
+        XCTAssertNil(odd.platforms)
+        XCTAssertEqual(odd.mac, GameMac())
+    }
+
+    /// A games folder on a NAS: the game's app kept there in one file, this
+    /// Mac's copy installed from it to be played.
+    func testAMacAppKeptOnANAS() throws {
+        let library = try answer(Library.self, "library-nas")
+        let mac = try XCTUnwrap(library.game("0400C3F00006E000")?.mac)
+        XCTAssertTrue(mac.packed)
+        XCTAssertEqual(mac.library?.name, "Mario Kart World [0400C3F00006E000].app.zip")
+        XCTAssertEqual(mac.library?.path, mac.folder + "/Mario Kart World [0400C3F00006E000].app.zip")
+        XCTAssertEqual(mac.app?.path, mac.installs + "/Mario Kart World.app")
+        XCTAssertTrue(mac.hasApp && mac.kept && mac.playable)
+        XCTAssertFalse(mac.behind)
+        XCTAssertFalse(mac.needsInstall)
+        // Not installed, or of an older build: installed first.
+        var away = mac
+        away.app = nil
+        XCTAssertTrue(away.playable && away.needsInstall)
+        var older = mac
+        older.behind = true
+        XCTAssertTrue(older.needsInstall)
+        // Its file no longer in the games folder: nothing to play until it
+        // is built again.
+        let odyssey = try XCTUnwrap(library.game("0100000000010000")?.mac)
+        XCTAssertTrue(odyssey.packed)
+        XCTAssertFalse(odyssey.kept || odyssey.playable)
+
+        let installed = try answer(MacInstallAnswer.self, "mac-install")
+        XCTAssertEqual(installed.titleID, "0400C3F00006E000")
+        XCTAssertEqual(installed.app.path, mac.app?.path)
+        XCTAssertEqual(installed.bytes, Int64(installed.app.size))
+        XCTAssertNotNil(installed.seconds)
+
+        let storage = try answer(StorageAnswer.self, "storage-nas").storage
+        let copy = try XCTUnwrap(storage.apps.first { $0.titleID == "0400C3F00006E000" })
+        XCTAssertTrue(copy.isInstalledCopy)
+        XCTAssertEqual(copy.path, mac.app?.path)
+        XCTAssertEqual(storage.macAppsDisk?.path, mac.installs)
+        XCTAssertEqual(try answer(ConfigAnswer.self, "config-nas").builder.macPacked, true)
+    }
+
+    /// The room on the build folders' disk, said before a build would be
+    /// skipped for it (disks.py, room): the card only when it falls short.
+    func testTheLibrarySaysTheRoomBeforeABuild() throws {
+        let short = try XCTUnwrap(try answer(Library.self, "library").room)
+        XCTAssertEqual(short.freeGB, 13)
+        XCTAssertEqual(short.keepGB, 20)
+        XCTAssertEqual(short.folders, 2)
+        XCTAssertEqual(short.shortfall?.title, "7 GB missing to build")
+        XCTAssertTrue(short.shortfall?.text.hasPrefix("Cartouche Builder starts a build only with 20 GB free on your Mac's disk") ?? false)
+        let enough = try XCTUnwrap(try answer(Library.self, "library-building").room)
+        XCTAssertNil(enough.shortfall)
+        // A disk that cannot be read (a share not connected), or an engine
+        // older than the card: no card.
+        let line = #"{"api": 1, "games": [], "room": null}"#
+        XCTAssertNil(try Engine.decode(Library.self, from: RunResult(status: 0, output: Data(line.utf8))).room)
+        let odd = #"{"api": 1, "games": [], "room": "13 GB"}"#
+        XCTAssertNil(try Engine.decode(Library.self, from: RunResult(status: 0, output: Data(odd.utf8))).room)
+    }
+
+    /// The Xcode nxnative builds the shaders with, as its checkout says
+    /// (toolchain.py, wanted_xcode): the page "This Mac's tools" asks for it.
+    func testTheDoctorSaysTheXcodeNxnativeWants() throws {
+        let line = #"{"api": 1, "ready": false, "engine": true, "xcode": "27.2", "checks": [{"key": "xcode", "label": "Xcode", "ok": false, "found": "27.1 (27B44)", "fix": "Xcode 27.1 is older than Xcode 27.2.", "command": "", "blocking": true}]}"#
+        let doctor = try Engine.decode(Doctor.self, from: RunResult(status: 0, output: Data(line.utf8)))
+        XCTAssertEqual(doctor.xcode, "27.2")
+        XCTAssertEqual(doctor.checks.first?.blocking, true)
+        let older = #"{"api": 1, "ready": true, "checks": []}"#
+        XCTAssertNil(try Engine.decode(Doctor.self, from: RunResult(status: 0, output: Data(older.utf8))).xcode)
     }
 
     func testAGameBeingBuiltHasItsProgress() throws {
@@ -121,6 +248,64 @@ final class EngineAnswerTests: XCTestCase {
         XCTAssertEqual(building.current.map(\.titleID), ["0400C3F00006E000"])
         XCTAssertTrue(building.queued.isEmpty)
         XCTAssertFalse(building.lines.isEmpty)
+        // Its IPA first, its Mac app waiting.
+        let game = try XCTUnwrap(building.current.first)
+        XCTAssertEqual(game.mac, "waiting")
+        XCTAssertEqual(game.macOnly, false)
+        XCTAssertEqual(game.platform, "ios")
+        XCTAssertTrue(game.buildsMac)
+        XCTAssertFalse(game.onMacNow)
+        XCTAssertNil(game.shownMacError)
+        XCTAssertEqual(failed.mac, "")
+        XCTAssertFalse(failed.buildsMac)
+    }
+
+    /// The Mac apps of a batch: one after its IPA, which failed, the IPA
+    /// staying built; one built for this Mac alone, which failed, its
+    /// error being the game's own; one building now.
+    func testTheMacAppsOfABatch() throws {
+        let json = #"""
+            {"state": "building", "games": [
+               {"title_id": "0100152000022000", "name": "A game", "state": "built", "ipa": "/Volumes/Jeux/A game.ipa", "platform": "mac",
+                "mac": "failed", "mac_only": false, "mac_error": "The disk “Games SSD” is full.", "mac_cause": "no_space", "mac_exit": 1,
+                "mac_duration": 312.4, "mac_log": "/x/mac.log", "mac_failure": {}},
+               {"title_id": "01007EF00011E000", "name": "Another", "state": "failed", "error": "the Mac host did not build", "platform": "mac",
+                "mac": "failed", "mac_only": true, "mac_error": "the Mac host did not build", "mac_cause": "nxnative", "mac_exit": 1},
+               {"title_id": "010093801237C000", "name": "A third", "state": "building", "stage": "Mac shaders", "platform": "mac",
+                "mac": "building", "mac_only": false, "mac_exit": null}]}
+            """#
+        let status = try JSONDecoder().decode(BatchStatus.self, from: Data(json.utf8))
+        XCTAssertEqual(status.games.map(\.buildsMac), [true, true, true])
+        XCTAssertEqual(status.games.map(\.onMacNow), [true, true, true])
+        XCTAssertEqual(status.games.map(\.shownMacError), ["The disk “Games SSD” is full.", nil, nil])
+        XCTAssertEqual(status.games.map(\.shownError), [nil, "the Mac host did not build", nil])
+        XCTAssertEqual(status.games[0].macDuration, 312.4)
+        XCTAssertEqual(status.games[0].macFailure, FailureDetails())
+        XCTAssertEqual(status.current.map(\.titleID), ["010093801237C000"])
+    }
+
+    /// What the activity page says a stage is of, for a game built for the
+    /// iPhone and for this Mac: only when the stage's words do not say it.
+    func testTheStageOfABuildForBothSaysWhatItIsOf() throws {
+        func progress(_ stage: String, on platform: String, mac: String? = "building", macOnly: Bool = false) throws -> GameProgress {
+            var fields: [String: Any] = ["title_id": "0100152000022000", "name": "A game", "state": "building", "stage": stage, "platform": platform,
+                                         "mac_only": macOnly]
+            if let mac { fields["mac"] = mac }
+            return try JSONDecoder().decode(GameProgress.self, from: JSONSerialization.data(withJSONObject: fields))
+        }
+        // Its IPA first: the stages that do not name the iPhone.
+        XCTAssertEqual(try progress("extract", on: "ios").shownPlatform, .iPhone)
+        XCTAssertEqual(try progress("deliver", on: "ios").shownPlatform, .iPhone)
+        XCTAssertEqual(try progress("", on: "ios").shownPlatform, .iPhone)
+        XCTAssertNil(try progress("shaders", on: "ios").shownPlatform)
+        XCTAssertNil(try progress("ipa", on: "ios").shownPlatform)
+        // Then its app for this Mac, whose stages name it but the builder's own.
+        XCTAssertNil(try progress("Mac shaders", on: "mac").shownPlatform)
+        XCTAssertNil(try progress("mac_deliver", on: "mac").shownPlatform)
+        XCTAssertEqual(try progress("deliver", on: "mac").shownPlatform, .mac)
+        // Built for one of the two: nothing to tell apart.
+        XCTAssertNil(try progress("extract", on: "ios", mac: nil).shownPlatform)
+        XCTAssertNil(try progress("extract", on: "mac", macOnly: true).shownPlatform)
     }
 
     /// A batch on the last nxnative commit that built on this Mac, its
@@ -233,6 +418,49 @@ final class EngineAnswerTests: XCTestCase {
         // Settings that do not say it: the setup assistant opens.
         let older = try JSONDecoder().decode(BuilderConfig.self, from: Data(#"{"sources": "/s", "games": "/g"}"#.utf8))
         XCTAssertFalse(older.setupDone)
+        // Each game built for the iPhone and for this Mac, its app in the
+        // Applications folder of the player's session; one of the two off,
+        // for every game or for one.
+        XCTAssertTrue(answer.config.ios)
+        XCTAssertTrue(answer.config.mac)
+        XCTAssertEqual(answer.config.skipIOS, [])
+        XCTAssertEqual(answer.config.skipMac, [])
+        XCTAssertEqual(answer.config.macApps, "")
+        XCTAssertTrue(older.ios && older.mac)
+        XCTAssertEqual(answer.builder.macApps, answer.builder.defaultMacApps)
+        XCTAssertEqual(answer.builder.macApps?.hasSuffix("/Applications"), true)
+        var macOff = answer.config
+        macOff.mac = false
+        macOff.skipIOS = ["0100000000010000"]
+        macOff.macApps = "/Volumes/Games SSD/Apps"
+        XCTAssertEqual(Set(macOff.changes(from: answer.config).keys), ["mac", "skip_ios", "mac_apps"])
+        XCTAssertFalse(macOff.onMac("0400C3F00006E000"))
+        XCTAssertFalse(macOff.onIOS("0100000000010000"))
+        XCTAssertTrue(macOff.onIOS("0400c3f00006e000"))
+
+        // The games' Mac apps: Super Mario Odyssey's, whose game files no
+        // longer share their room with its build folder.
+        XCTAssertEqual(storage.apps.map(\.titleID), ["0100000000010000"])
+        let app = try XCTUnwrap(storage.apps.first)
+        XCTAssertEqual(app.name, "Super Mario Odyssey")
+        XCTAssertTrue(app.on)
+        XCTAssertEqual(app.sharesBuild, false)
+        XCTAssertTrue(app.path.hasSuffix("/Super Mario Odyssey.app"))
+        XCTAssertNotNil(app.date)
+        XCTAssertEqual(storage.total("mac_apps"), app.size)
+        XCTAssertNotNil(storage.macAppsDisk)
+        XCTAssertFalse(app.isInstalledCopy)
+        XCTAssertEqual(answer.builder.macPacked, false)
+        // Of an engine older than the Mac's builds: none.
+        let plain = try JSONDecoder().decode(StorageReport.self, from: Data(#"{"workspace": "/w", "disks": {}, "folders": [], "ipa_copies": [], "totals": {}}"#.utf8))
+        XCTAssertEqual(plain.apps, [])
+        XCTAssertNil(plain.macAppsDisk)
+
+        // A game built for one of the two only.
+        let platform = try self.answer(PlatformAnswer.self, "platform")
+        XCTAssertEqual(platform.titleID, "0100000000010000")
+        XCTAssertEqual(platform.platforms, GamePlatforms(ios: true, mac: false))
+        XCTAssertTrue(platform.followed)
 
         XCTAssertEqual(try self.answer(MountAnswer.self, "mount").folders.sources?.present, true)
         XCTAssertEqual(try self.answer(CleanAnswer.self, "clean").cleaned.freed, 0)

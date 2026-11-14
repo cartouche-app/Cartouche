@@ -132,7 +132,9 @@ struct CartoucheGameSheetView: View {
                             }
                         }
                     }
+                    #if os(iOS)
                     requirements(sheet)
+                    #endif
                 } else {
                     // nxnative refuses this GPU for every game, with a sheet or
                     // without.
@@ -152,9 +154,18 @@ struct CartoucheGameSheetView: View {
                     }
                 }
 
+                // The game's saves, with, on the iPhone, its saves between the
+                // player's Switch and this iPhone; the Mac's come with its
+                // saves page (builder/mac/console/unshared.json).
+                #if os(iOS)
                 if let app = entry.app, let game = switchGame(of: app) {
                     CartoucheSavesSection(target: game.target, isRunning: actions.isRunning(app), switchGame: game)
                 }
+                #else
+                if let app = entry.app, let saves = actions.saves(of: app) {
+                    CartoucheSavesSection(target: saves, isRunning: actions.isRunning(app))
+                }
+                #endif
 
                 if entry.isOwned {
                     infoSection
@@ -197,9 +208,12 @@ struct CartoucheGameSheetView: View {
             #endif
         }
         // The header names the game: the bar above it stays empty.
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 
+    #if os(iOS)
     /// The game's saves, and the game, for its saves between the player's
     /// Switch and this iPhone; nil for an app that is not an nxnative game.
     private func switchGame(of app: LCAppModel) -> CartoucheSwitchSaveGame? {
@@ -211,6 +225,7 @@ struct CartoucheGameSheetView: View {
                                        makeTarget: { actions.savesToImport(of: app) },
                                        isRunningNow: { actions.isRunning(app) })
     }
+    #endif
 
     // MARK: Header
 
