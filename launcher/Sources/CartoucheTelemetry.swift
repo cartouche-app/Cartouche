@@ -46,7 +46,7 @@ final class CartoucheTelemetry: ObservableObject {
     }()
 
     /// Where the docs say what leaves the iPhone.
-    static let privacyURL = URL(string: "https://github.com/clabeuhtegrite/Cartouche/blob/main/docs/privacy.md")!
+    static let privacyURL = URL(string: "https://github.com/cartouche-app/Cartouche/blob/main/docs/privacy.md")!
 
     /// A copy of Cartouche takes a new random number after 13 months.
     static let installLifetime: TimeInterval = 395 * 86_400

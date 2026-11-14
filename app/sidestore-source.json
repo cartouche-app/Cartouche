@@ -3,14 +3,14 @@
   "identifier": "io.github.clabeuhtegrite.cartouche.source",
   "subtitle": "Cartouche itself",
   "description": "The source Cartouche's built-in SideStore reads for Cartouche's own updates. It lists Cartouche and nothing else: Cartouche never lists, hosts or downloads games.",
-  "website": "https://github.com/clabeuhtegrite/Cartouche",
+  "website": "https://github.com/cartouche-app/Cartouche",
   "apps": [
     {
       "name": "Cartouche",
       "developerName": "Cartouche contributors",
       "subtitle": "Play your own games built with nxnative",
       "localizedDescription": "Cartouche runs the games you build with nxnative from your own copies, renews itself without a computer, and gives them Increased Memory Limit. It never downloads a game.",
-      "iconURL": "https://raw.githubusercontent.com/clabeuhtegrite/Cartouche/main/app/icon/AppIcon.appiconset/AppIcon1024.png",
+      "iconURL": "https://raw.githubusercontent.com/cartouche-app/Cartouche/main/app/icon/AppIcon.appiconset/AppIcon1024.png",
       "tintColor": "#4F46E5",
       "category": "games",
       "bundleIdentifier": "io.github.clabeuhtegrite.cartouche",

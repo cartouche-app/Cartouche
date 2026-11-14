@@ -10,6 +10,14 @@
 
 import XCTest
 
+/// Reset Cartouche's words (CartoucheTextReset.swift).
+extension Words {
+    static let resetCartouche = "Reset Cartouche"           // reset.title
+    static let eraseAndRestart = "Erase everything and restart" // reset.erase
+    static let eraseEverything = "Erase everything"         // reset.confirm.erase
+    static let erasing = "Erasing…"                         // reset.erasing
+}
+
 final class SystemUITests: ConsoleTestCase {
     /// Setup, Storage, Renew every night, Game measurements and Report a
     /// problem each open from the System page, with what they are for, and

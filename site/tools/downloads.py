@@ -41,7 +41,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 # The repository whose releases they are, unless --repository says another.
-REPOSITORY = "clabeuhtegrite/Cartouche"
+REPOSITORY = "cartouche-app/Cartouche"
 VERSION = re.compile(r"(\d+)\.(\d+)\.(\d+)")
 
 
