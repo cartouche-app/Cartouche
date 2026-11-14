@@ -50,8 +50,11 @@ struct CartoucheGameSheetView: View {
     @ObservedObject private var actions = CartoucheGameActions.shared
     @ObservedObject private var keeping = CartoucheGameKeeping.shared
     @ObservedObject private var reach = CartoucheStorageReach.shared
-    /// The player's Mac, asked its builds while the sheet shows.
+    #if os(iOS)
+    /// The player's Mac, asked its builds while the sheet shows: on the
+    /// Mac, the console is the app that builds, and its window shows them.
     @StateObject private var macBuilds = CartoucheMacBuildsWatch()
+    #endif
 
     // Written out: the private state above would make the synthesized
     // initializer private.
@@ -105,6 +108,7 @@ struct CartoucheGameSheetView: View {
     /// says of the game changes.
     private static let top = "top"
 
+    #if os(iOS)
     /// The game's title IDs, as the player's Mac may know it: its regions',
     /// and those its copies say.
     private var macTitleIds: [String] {
@@ -112,6 +116,7 @@ struct CartoucheGameSheetView: View {
         let ids = (entry.game?.titleIds ?? []) + [entry.titleId, entry.ownTitleId, entry.stored?.titleId].compactMap { $0 }
         return ids.filter { seen.insert($0.uppercased()).inserted }
     }
+    #endif
 
     var body: some View {
         ScrollViewReader { reader in
@@ -140,7 +145,9 @@ struct CartoucheGameSheetView: View {
                             }
                         }
                     }
+                    #if os(iOS)
                     requirements(sheet)
+                    #endif
                 } else {
                     // nxnative refuses this GPU for every game, with a sheet or
                     // without.
@@ -160,7 +167,9 @@ struct CartoucheGameSheetView: View {
                     }
                 }
 
+                #if os(iOS)
                 CartoucheMacBuildsSection(titleIds: macTitleIds, isOwned: entry.isOwned, watch: macBuilds)
+                #endif
 
                 if let app = entry.app, let saves = actions.saves(of: app) {
                     CartoucheSavesSection(target: saves, isRunning: actions.isRunning(app))
@@ -192,8 +201,10 @@ struct CartoucheGameSheetView: View {
             }
             .scrollContentBackground(.hidden)
             .background(CartoucheStage(key: entry.tileKey, art: entry.backdrop))
+            #if os(iOS)
             .onAppear { macBuilds.start() }
             .onDisappear { macBuilds.stop() }
+            #endif
             #if CARTOUCHE_GALLERY
             // The gallery's sheet on the game's build on the Mac (screen:
             // sheet-mac): the game's build in the middle of the screen.
@@ -215,7 +226,9 @@ struct CartoucheGameSheetView: View {
             }
         }
         // The header names the game: the bar above it stays empty.
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 
     // MARK: Header
