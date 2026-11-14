@@ -10,6 +10,21 @@
 
 import XCTest
 
+/// The words of the page of all the Mac's builds, from System (decision
+/// 96).
+extension Words {
+    static let macBuildsOn = "Builds on %@"                 // mac.builds.title
+    static let buildWhatIsDue = "Build what is due"         // mac.builds.due
+    static let addWhatIsDue = "Add what is due"             // mac.builds.due.add
+    static let stopAll = "Stop all"                         // mac.builds.stopAll
+    static let macGameActions = "What to do with %@"        // mac.builds.game.actions
+    static let follow = "Follow"                            // mac.build.follow
+    static let stopFollowing = "Stop following"             // mac.build.unfollow
+    static let macNotFollowed = "Not followed"              // mac.game.notFollowed
+    static let nightly = "Build what is due every night"    // mac.builds.nightly
+    static let nightlyAt = "Every night at "                // mac.builds.nightly.footer
+}
+
 final class SystemUITests: ConsoleTestCase {
     /// Setup, Storage, Renew every night, Game measurements and Report a
     /// problem each open from the System page, with what they are for, and

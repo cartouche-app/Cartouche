@@ -40,7 +40,7 @@ public struct UnbuiltGame: Codable, Equatable, Sendable {
 }
 
 public enum UnbuiltGames {
-    public static let list = URL(string: "https://raw.githubusercontent.com/clabeuhtegrite/Cartouche/refs/heads/nxnative-measurements/unbuilt.json")!
+    public static let list = URL(string: "https://raw.githubusercontent.com/cartouche-app/Cartouche/refs/heads/nxnative-measurements/unbuilt.json")!
 
     /// Title ID → the game, from an unbuilt.json; nil for a file that is not one.
     public static func parse(_ data: Data) -> [String: UnbuiltGame]? {

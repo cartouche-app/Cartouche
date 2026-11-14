@@ -13,6 +13,21 @@
 
 import XCTest
 
+/// The words of a game's build on the player's Mac, on its sheet, and of
+/// the page of all the Mac's builds it opens (decision 96).
+extension Words {
+    static let macUpToDate = "Up to date on the Mac"        // mac.build.upToDate.built
+    static let macBuilding = "Building on the Mac"          // mac.build.building
+    static let macWaitingAfterOne = "Waiting its turn on the Mac, after 1 game" // mac.build.waiting.one
+    static let addToMacQueue = "Add to the Mac’s queue"     // mac.build.action.queue
+    static let macBuilds = "All the Mac’s builds"           // mac.builds.all
+    static let macImproved = "nxnative improved it"         // mac.build.improved
+    static let stopItsBuild = "Stop its build"              // mac.build.stop
+    static let removeFromQueue = "Remove from the queue"    // mac.build.remove
+    static let macBuildsPage = "Builds"                     // mac.builds.page
+    static let removeGameFromQueue = "Remove %@ from the queue" // mac.builds.remove
+}
+
 final class GameUITests: ConsoleTestCase {
     /// The first of the player's games, the one work: paused pauses; the
     /// console opens with another in focus, the first by name.
