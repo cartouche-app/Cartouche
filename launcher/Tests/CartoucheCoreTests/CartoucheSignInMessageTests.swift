@@ -99,6 +99,12 @@ final class CartoucheSignInMessageTests: XCTestCase {
                        .unreadable(status: nil))
         XCTAssertNil(CartoucheSignInMessage.trouble(in: "Your Apple ID or password is incorrect.",
                                                     failure: CartoucheFailure(.appleCredentials, details: ["kind": .text("incorrectCredentials")])))
+        // The built-in SideStore closed before it finished, as it launched or
+        // on its way: LiveContainer's English words say nothing of what to do.
+        for message in ["Built-in SideStore quit unexpectedly while starting", "Built-in SideStore quit unexpectedly"] {
+            let quit = CartoucheFailure.sideStore(outcome: nil, message: message, fraction: 0, seconds: 1, vpn: true, pairing: true)
+            XCTAssertEqual(CartoucheSignInMessage.trouble(in: message, failure: quit), .sideStoreQuit, message)
+        }
     }
 
     func testTheTroubleWithThisIPhone() {

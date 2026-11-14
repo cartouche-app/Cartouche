@@ -1008,6 +1008,23 @@
       ]
     },
     {
+      "name": "iphone-sign-in-sidestore-quit",
+      "comment": "A sign-in whose built-in SideStore closed as it launched, LocalDevVPN connected: what to do, in Cartouche's words.",
+      "screen": "signin",
+      "work": "sidestore-quit",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-guide-first-launch",
       "screen": "guide",
       "owned": [],

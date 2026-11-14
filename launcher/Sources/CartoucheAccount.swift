@@ -685,5 +685,15 @@ final class CartoucheAccount: ObservableObject {
                                                  vpn: CartoucheVPN.isConnected, pairing: true)
         failed(CartoucheText.sideStoreMessage(message, failure: failure, signIn: true), fraction: 0, failure: failure)
     }
+
+    /// Shows a sign-in whose built-in SideStore quit as it launched, before
+    /// it said it had (app/patches/livecontainer/0016), as the sign-in's end
+    /// does, for the gallery's screens.
+    func showSideStoreQuitForGallery() {
+        let message = "Built-in SideStore quit unexpectedly while starting"
+        let failure = CartoucheFailure.sideStore(outcome: nil, message: message, fraction: 0, seconds: 1,
+                                                 vpn: CartoucheVPN.isConnected, pairing: true)
+        failed(CartoucheText.sideStoreMessage(message, failure: failure, signIn: true), fraction: 0, failure: failure)
+    }
     #endif
 }

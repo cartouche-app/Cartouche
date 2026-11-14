@@ -8093,6 +8093,23 @@
         }
       }
     },
+    "signIn.sideStoreQuit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The built-in SideStore closed before it finished. Restart this iPhone, then try again. If it closes again, install the update offered in Settings › General › Software Update, if there is one."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le SideStore intégré s’est fermé avant d’avoir fini. Redémarrez cet iPhone, puis réessayez. S’il se ferme encore, installez la mise à jour proposée dans Réglages › Général › Mise à jour logicielle, s’il y en a une."
+          }
+        }
+      }
+    },
     "signIn.title" : {
       "extractionState" : "manual",
       "localizations" : {

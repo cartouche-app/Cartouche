@@ -24,14 +24,16 @@ extension CartoucheText {
     /// What Cartouche tells the player of the built-in SideStore's MESSAGE,
     /// FAILURE being what Cartouche told of how its action ended: its own
     /// words when Apple limits the requests or answered with a page, those
-    /// of a SIGN-IN when it is one; SideStore's otherwise, without the App
-    /// Intents error's name.
+    /// of a SIGN-IN when it is one, also when SideStore closed before it
+    /// finished; SideStore's otherwise, without the App Intents error's
+    /// name.
     static func sideStoreMessage(_ message: String, failure: CartoucheFailure, signIn: Bool = false) -> String {
         let readable = CartoucheSignInMessage.readable(message)
         switch CartoucheSignInMessage.trouble(in: readable, failure: failure) {
         case .tooManyRequests?: return signIn ? signInTooManyRequests : appleTooManyRequests
         case .unreadable(let status?)?: return applePage(status)
         case .unreadable(nil)?: return appleUnreadable
+        case .sideStoreQuit?: return signIn ? signInSideStoreQuit : readable
         case nil:
             guard signIn, let trouble = CartoucheSignInMessage.deviceTrouble(in: failure) else { return readable }
             // Before Apple, or once it accepted the account.
@@ -42,6 +44,10 @@ extension CartoucheText {
             }
         }
     }
+
+    // MARK: The built-in SideStore, closed before it finished
+
+    static var signInSideStoreQuit: String { s("signIn.sideStoreQuit", "The built-in SideStore closed before it finished. Restart this iPhone, then try again. If it closes again, install the update offered in Settings › General › Software Update, if there is one.") }
 
     // MARK: This iPhone, through LocalDevVPN
 

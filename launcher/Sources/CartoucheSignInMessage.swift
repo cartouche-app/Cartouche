@@ -123,6 +123,10 @@ enum CartoucheSignInMessage {
         /// Apple's servers answered with an error and nothing Cartouche can
         /// read, such as a page: of that HTTP status, when it is known.
         case unreadable(status: Int?)
+        /// The built-in SideStore's process quit before its action ended,
+        /// as it launched or on its way: LiveContainer's bridge says so in
+        /// English, and says nothing of what to do.
+        case sideStoreQuit
     }
 
     /// Whether MESSAGE holds a page of HTML, as Apple's servers send one for
@@ -150,6 +154,7 @@ enum CartoucheSignInMessage {
     /// its words say it well enough.
     static func trouble(in message: String, failure: CartoucheFailure) -> Trouble? {
         if failure.cause == .tooManyAttempts { return .tooManyRequests }
+        if failure.cause == .sideStoreQuit { return .sideStoreQuit }
         var http: Int?
         if case .number(let number)? = failure.details["http"] { http = Int(number) }
         var kind: String?
