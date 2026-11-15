@@ -85,6 +85,10 @@ final class SignInUITests: ConsoleTestCase {
 
         tap(app.buttons[Words.cancel], "Cancel of the sign-in", in: app)
         expect(waitForGone(app.staticTexts[Words.signInTitle]), "Cancel did not close the sign-in", in: app)
+        // The sign-in stopped before anything went to Apple: its password
+        // stayed in its field (CartoucheSignInMessage.keepsPassword), which
+        // iOS offers to save as the sign-in closes.
+        turnDownSavingThePassword(in: app)
         closeSetup(in: app)
         expectMainThreadAnswered(app)
     }
@@ -135,6 +139,17 @@ final class SignInUITests: ConsoleTestCase {
     @MainActor
     private func type(_ code: String, inCodeOf app: XCUIApplication) {
         type(code, into: app.textFields[Words.code], "the field of the verification code", in: app, timeout: 30)
+    }
+
+    /// Not Now on iOS's offer to save the password typed in the sign-in, as
+    /// a player turns it down, should iOS make it: it shows over the setup,
+    /// which nothing can be tapped behind.
+    @MainActor
+    private func turnDownSavingThePassword(in app: XCUIApplication) {
+        let notNow = app.sheets.buttons["Not Now"]
+        guard notNow.waitForExistence(timeout: 10) else { return }
+        tap(notNow, "Not Now on iOS's offer to save the password", in: app)
+        expect(waitForGone(notNow), "iOS's offer to save the password stayed", in: app)
     }
 
     /// From the setup, back to the System page, then Done: the console.
