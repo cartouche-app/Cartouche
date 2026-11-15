@@ -41,7 +41,10 @@ struct CartoucheReport: Codable, Equatable, Sendable {
         var device: String
         /// The language Cartouche speaks, then the iPhone's: "fr (fr-FR)".
         var language: String
-        /// Memory, free space, setup, signature, storage.
+        /// Memory, free space, setup, signature, storage: Cartouche's own
+        /// words and numbers, never a name of the player's
+        /// (CartoucheReports.environment()), so that a report takes only
+        /// what is shaped like an address out of them (redacted(by:)).
         var facts: [Fact]
     }
 
@@ -168,7 +171,11 @@ extension CartoucheReport {
         report.step = step.map(redact)
         report.error = error.map(redact)
         report.facts = facts.map { Fact($0.name, redact($0.value)) }
-        report.environment.facts = environment.facts.map { Fact($0.name, redact($0.value)) }
+        // Cartouche's own words, which the player's names would take with
+        // them where a name is one of those words: "Storage: games on SMB"
+        // for a player whose user name is games.
+        let shapes = CartoucheRedaction.shapes.redactor()
+        report.environment.facts = environment.facts.map { Fact($0.name, shapes($0.value)) }
         report.journal = journal.map(redact)
         return report
     }

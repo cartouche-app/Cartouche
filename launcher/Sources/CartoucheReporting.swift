@@ -205,6 +205,9 @@ enum CartoucheReports {
         }
         let language = (Bundle.main.preferredLocalizations.first ?? "?") + " (" + (Locale.preferredLanguages.first ?? "?") + ")"
 
+        // Cartouche's words and numbers only, never a name of the player's:
+        // a report takes nothing but addresses out of them
+        // (CartoucheReport.Environment).
         var facts: [CartoucheReport.Fact] = []
         let increased = "Increased Memory Limit " + (CartoucheDevice.hasIncreasedMemoryLimit ? "on" : "off")
         if let memory = CartoucheMemoryReading.now() {

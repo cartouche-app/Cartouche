@@ -7,7 +7,8 @@
 //  certificate, nothing is installed), with nothing left of the test
 //  before, and what the tests wait with. The main thread, where the
 //  console draws, must never be held up long: a test fails when it was
-//  held more than MAINTHREADLIMIT.
+//  held more than MAINTHREADLIMIT, but for the time it waited for
+//  RunningBoard (HarnessWait).
 //
 
 import Combine
@@ -56,10 +57,13 @@ class HarnessCase: XCTestCase {
     override func tearDown() async throws {
         let body = Date().timeIntervalSince(timings.bodyBegan)
         if let watchdog {
-            let hold = watchdog.stop()
-            if hold.seconds > mainThreadLimit {
-                XCTFail(String(format: "The main thread was held up %.2f s, from %@ to %@; %@", hold.seconds, hold.from, hold.to,
-                               hold.stack.isEmpty ? "no sample of it" : "a second in, it was in: " + hold.stack.prefix(30).joined(separator: " < ")))
+            let worst = watchdog.stop()
+            if worst.longest.counted > mainThreadLimit {
+                XCTFail(worst.longest.failure)
+            }
+            // Not the launcher's doing, but said, with where it came from.
+            if worst.longestForRunningBoard.forRunningBoard >= 1 {
+                print("harness: \(name): " + worst.longestForRunningBoard.waitedForRunningBoard)
             }
         }
         watchdog = nil
@@ -389,19 +393,16 @@ struct HarnessTimings {
 }
 
 /// Watches the main thread from another one: how long a block sent to it
-/// waits, at worst, what the launcher was doing as the wait began and as
-/// it ended, and where the main thread was a second into it.
+/// waits, what the launcher was doing as the wait began and as it ended,
+/// and, from a fifth of a second into the wait, where the main thread is,
+/// ten times a second (HarnessWait).
 final class HarnessWatchdog: @unchecked Sendable {
-    struct Hold {
-        var seconds: TimeInterval = 0
-        var from = ""
-        var to = ""
-        var stack: [String] = []
-    }
-
     private let lock = NSLock()
     private var watching = false
-    private var worst = Hold()
+    /// The wait that counted the most, and the one that waited the most for
+    /// RunningBoard.
+    private var longest = HarnessWait()
+    private var longestForRunningBoard = HarnessWait()
 
     /// What the launcher is doing, on the main thread.
     @MainActor
@@ -430,15 +431,20 @@ final class HarnessWatchdog: @unchecked Sendable {
                     stage.value = MainActor.assumeIsolated { Self.step() }
                     answered.signal()
                 }
-                var stack: [String] = []
-                if answered.wait(timeout: .now() + 1) == .timedOut {
-                    stack = HarnessMainThread.sample(main)
-                    answered.wait()
+                var looks: [HarnessWait.Look] = []
+                if answered.wait(timeout: .now() + HarnessWait.lookFrom) == .timedOut {
+                    repeat {
+                        let at = Date().timeIntervalSince(sent)
+                        looks.append(HarnessWait.Look(at: at, stack: HarnessMainThread.sample(main)))
+                    } while answered.wait(timeout: .now() + HarnessWait.lookEvery) == .timedOut
                 }
-                let waited = Date().timeIntervalSince(sent)
+                let wait = HarnessWait(seconds: Date().timeIntervalSince(sent), from: last, to: stage.value, looks: looks)
                 lock.lock()
-                if waited > worst.seconds {
-                    worst = Hold(seconds: waited, from: last, to: stage.value, stack: stack)
+                if wait.counted > longest.counted {
+                    longest = wait
+                }
+                if wait.forRunningBoard > longestForRunningBoard.forRunningBoard {
+                    longestForRunningBoard = wait
                 }
                 lock.unlock()
                 last = stage.value
@@ -449,12 +455,90 @@ final class HarnessWatchdog: @unchecked Sendable {
         thread.start()
     }
 
-    /// The longest wait.
-    func stop() -> Hold {
+    /// The wait that counted the most, and the one that waited the most for
+    /// RunningBoard.
+    func stop() -> (longest: HarnessWait, longestForRunningBoard: HarnessWait) {
         lock.lock()
         defer { lock.unlock() }
         watching = false
-        return worst
+        return (longest, longestForRunningBoard)
+    }
+}
+
+/// A wait of the main thread, as the watchdog saw it: how long, what the
+/// launcher was doing as it began and as it ended, and where the main
+/// thread was, ten times a second from a fifth of a second in.
+///
+/// The time it waited for RunningBoard's answer does not count, each look
+/// that found it there standing for the time until the next look. iOS's
+/// daemon that grants an app's assertions, its time in the background
+/// among them, answers an iPhone at once, and a busy Mac of the CI's after
+/// seconds: 1.88 s once as Cartouche asked for its time in the background
+/// at the start of an install (14 November), 4.17 s once as UIKit told the
+/// keyboard's process of a new key window, which failed UprightTests (run
+/// 43673497623), green when run again. Nothing the launcher does there.
+struct HarnessWait {
+    /// Where the main thread was, AT seconds into the wait: its frames, the
+    /// innermost first.
+    struct Look {
+        var at: TimeInterval
+        var stack: [String]
+    }
+
+    /// From how far into a wait the watchdog looks at where the main thread
+    /// is, and how often.
+    static let lookFrom: TimeInterval = 0.2
+    static let lookEvery: TimeInterval = 0.1
+
+    var seconds: TimeInterval = 0
+    var from = ""
+    var to = ""
+    var looks: [Look] = []
+
+    /// The time the main thread waited for RunningBoard's answer: each look
+    /// that found it there stands for the time until the next one, or until
+    /// the wait ended.
+    var forRunningBoard: TimeInterval {
+        var total: TimeInterval = 0
+        for (index, look) in looks.enumerated() where Self.waitsForRunningBoard(look.stack) {
+            let next = index + 1 < looks.count ? looks[index + 1].at : seconds
+            total += max(0, next - look.at)
+        }
+        return min(total, seconds)
+    }
+
+    /// The part of the wait that counts: the rest.
+    var counted: TimeInterval { seconds - forRunningBoard }
+
+    /// Whether STACK, the innermost frame first, is that of a thread waiting
+    /// for RunningBoard's answer: RunningBoardServices sent it a message
+    /// through XPC, and waits for the reply.
+    static func waitsForRunningBoard(_ stack: [String]) -> Bool {
+        guard let sent = stack.firstIndex(where: { $0.hasSuffix(" xpc_connection_send_message_with_reply_sync") }),
+              sent + 1 < stack.count else { return false }
+        return stack[sent + 1].hasPrefix("RunningBoardServices ")
+    }
+
+    /// Why a test fails: how long the wait counted, and where the main
+    /// thread was, all its frames, the first time the watchdog found it
+    /// elsewhere than waiting for RunningBoard.
+    var failure: String {
+        String(format: "The main thread was held up %.2f s, from %@ to %@%@; %@", counted, from, to,
+               forRunningBoard > 0 ? String(format: " (and %.2f s waiting for RunningBoard, not counted)", forRunningBoard) : "",
+               place { !Self.waitsForRunningBoard($0.stack) })
+    }
+
+    /// What the log says of the time the main thread waited for
+    /// RunningBoard, with where it came from.
+    var waitedForRunningBoard: String {
+        String(format: "the main thread waited %.2f s for RunningBoard, not counted, from %@ to %@; %@", forRunningBoard, from, to,
+               place { Self.waitsForRunningBoard($0.stack) })
+    }
+
+    /// Where the main thread was in the first look that WHICH picks.
+    private func place(_ which: (Look) -> Bool) -> String {
+        guard let look = looks.first(where: which), !look.stack.isEmpty else { return "no look at where it was" }
+        return String(format: "%.1f s in, it was in: ", look.at) + look.stack.joined(separator: " < ")
     }
 }
 
@@ -464,7 +548,9 @@ final class HarnessWatchdog: @unchecked Sendable {
 /// for the thread may hold a lock any other call would wait for; the names
 /// come once it goes on.
 enum HarnessMainThread {
-    private static let capacity = 64
+    /// Enough for all of them: the 30 the watchdog said once stopped short
+    /// of the launcher's.
+    private static let capacity = 256
     private static let frames = UnsafeMutablePointer<UInt>.allocate(capacity: capacity)
     /// The registers, as thread_get_state gives ARM_THREAD_STATE64: x0 to
     /// x28, then fp, lr, sp and pc, 8 bytes each, cpsr and a pad, 4 each.
