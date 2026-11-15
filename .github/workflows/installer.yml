@@ -4,8 +4,11 @@ name: Installer
 # Apple silicon and Intel, in a disk image, and the Windows setup. The builds
 # stay with the run, and the pictures of the window its tests take too and,
 # for a branch of this repository, on the branch installer-captures/<branch>,
-# one commit that each run replaces. Cartouche's source is in the paths, since
-# the installer reads it and its tests read the one on the branch. Run from
+# one commit that each run replaces. A pull request that changes only
+# Cartouche's source (app/sidestore-source.json), as the Release workflow's
+# "Source: Cartouche X" does, builds neither: those builds took 18 minutes
+# there (#227), and the CI's App sources reads the source as the installer
+# does, on every pull request (app/tests/test_installer_source.py). Run from
 # the Actions tab on main with Publish ticked, once the Full test pass has
 # passed on that commit (full-pass.yml), it also publishes them as the
 # release installer-v<version>, the version of
@@ -19,7 +22,7 @@ on:
   # Not on main after a pull request: that one built the same files, and
   # Publish builds them again.
   pull_request:
-    paths: ["installer/**", "app/sidestore-source.json", ".github/workflows/installer.yml"]
+    paths: ["installer/**", ".github/workflows/installer.yml"]
   workflow_dispatch:
     inputs:
       publish:
