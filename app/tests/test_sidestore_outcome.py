@@ -10,6 +10,8 @@ of it (CartoucheSideStoreOutcome, launcher/Sources/CartoucheFailure.swift):
   leaves, and the cases it names are cases of SideStore's errors;
 - the sentences Cartouche tells LiveContainer's bridge failures by, when
   SideStore left nothing, are still LiveContainer's;
+- the case of SideStore's errors for an app group it could not open, which
+  Cartouche tells the player in its own words, is still SideStore's;
 - Apple's HTTP errors without an answer of its own, such as its 429 when it
   limits the sign-ins (app/patches/sidestore/0016), are told apart in the
   sign-in and the developer services, as cases Cartouche names;
@@ -453,6 +455,23 @@ class SideStoreOutcomeTest(unittest.TestCase):
         self.assertEqual(found["operation"], found["minimuxer"])
         self.assertLessEqual(found["cartouche"], cases(mine))
 
+    def test_the_missing_app_group_cartouche_tells_of_is_sidestores(self):
+        # A sign-in whose SideStore found no app group says what the setup
+        # says of the IPA for an Apple ID a signing app signed
+        # (CartoucheSignInMessage.Trouble.noAppGroup): by the kind of
+        # SideStore's error, its database's as it starts, or its
+        # operations'.
+        message = (LAUNCHER / "CartoucheSignInMessage.swift").read_text(encoding="utf-8")
+        trouble = block(message, "static func trouble(", "CartoucheSignInMessage.trouble")
+        told = re.findall(r'if kind == "(\w+)" \{ return \.noAppGroup \}', trouble)
+        self.assertEqual(told, ["missingAppGroup"])
+        database = error_cases(SIDESTORE / "AltStore" / "Core" / "Model" / "DatabaseManager" / "PersistentContainer.swift",
+                               "DatabaseError")
+        operation = error_cases(SIDESTORE / "SideStore" / "Core" / "Operations" / "Errors" / "OperationError.swift",
+                                "OperationError")
+        self.assertIn("missingAppGroup", database)
+        self.assertIn("missingAppGroup", operation)
+
     def test_the_bridges_sentences_are_still_livecontainers(self):
         listed = re.search(r"static let bridgeSentences[^=]*= \[(.*?)\n    \]", FAILURE.read_text(encoding="utf-8"), re.S)
         self.assertIsNotNone(listed, "the bridge's sentences not found")
@@ -487,7 +506,10 @@ class SideStoreOutcomeTest(unittest.TestCase):
         errors = patched("Dependencies/SideSign/Sources/Models/Errors.swift")
         server = cases(block(errors, "enum ServerError:", "SideSign's ServerError").split("var ")[0])
         message = (LAUNCHER / "CartoucheSignInMessage.swift").read_text(encoding="utf-8")
-        named = set(re.findall(r'kind == "(\w+)"', block(message, "static func trouble(", "CartoucheSignInMessage.trouble")))
+        trouble = block(message, "static func trouble(", "CartoucheSignInMessage.trouble")
+        pages = re.search(r"^(.*)\n\s*return \.unreadable\(", trouble, re.M)
+        self.assertIsNotNone(pages, "the condition of an unreadable answer not found")
+        named = set(re.findall(r'kind == "(\w+)"', pages.group(1)))
         self.assertEqual(named, {"httpStatus", "invalidResponseFormat"})
         self.assertLessEqual(named, server)
 

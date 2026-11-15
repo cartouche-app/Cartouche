@@ -8,7 +8,9 @@ new.
   the version brings, a blank line, then one item per line that begins with
   "- ";
 - a translation is in a language of the launcher's, beside its English,
-  with as many items;
+  with as many items, and an item whose English begins with a topic, which
+  What's new shows in bold, begins with one in the translation too, within
+  the app's limits of words and letters;
 - every version from 0.12.2 on has its French, and the version being built
   its English, without which What's new shows nothing after its update;
 - what tells an update from a first install, the preferences an older
@@ -68,6 +70,43 @@ def items(path: Path) -> list[str]:
     return [line for line in path.read_text(encoding="utf-8").split("\n") if line.startswith("- ")]
 
 
+# The spaces CartoucheReleaseNotes.item trims around a topic's colon.
+TOPIC_SPACES = " \u00a0\u202f\t"
+
+
+def topic_limits() -> tuple[int, int]:
+    """The longest topic CartoucheReleaseNotes.item takes, in letters and in
+    words, as the Swift file sets them."""
+    swift = NOTES_SWIFT.read_text(encoding="utf-8")
+    length = re.search(r"static let topicLength = (\d+)", swift)
+    words = re.search(r"static let topicWords = (\d+)", swift)
+    if not length or not words:
+        raise AssertionError("topicLength or topicWords not found in CartoucheReleaseNotes.swift")
+    return int(length.group(1)), int(words.group(1))
+
+
+def topic(item: str, length: int, words: int) -> str | None:
+    """The topic CartoucheReleaseNotes.item finds at the start of ITEM, the
+    text after "- ", as the app reads it: what comes before the first colon
+    followed by a space, when it is short enough and has no end of sentence
+    in it; None otherwise, and the app then shows no topic in bold."""
+    search = 0
+    while (colon := item.find(":", search)) >= 0:
+        after = colon + 1
+        if after >= len(item):
+            return None
+        if item[after] not in TOPIC_SPACES:
+            search = after
+            continue
+        lead = item[:colon].strip(TOPIC_SPACES)
+        rest = item[after:].strip(TOPIC_SPACES)
+        count = len([word for word in re.split("[ \u00a0\u202f]", lead) if word])
+        if not lead or not rest or len(lead) > length or count > words or any(c in ".!?;" for c in lead):
+            return None
+        return item[:after].strip(TOPIC_SPACES)
+    return None
+
+
 class ReleaseNotesTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -106,6 +145,39 @@ class ReleaseNotesTest(unittest.TestCase):
                     self.assertIn(language, self.translations, "the launcher's words are not in that language")
                     self.assertIn(None, languages, f"no English notes, {number}.md, beside it")
                     self.assertEqual(len(items(path)), len(items(languages[None])), "not as many items as the English")
+
+    def test_a_translated_item_has_a_topic_when_its_english_has_one(self):
+        # What's new shows an item's topic in bold, "Renewal:" as "Renouvellement :":
+        # one too long in a translation shows as plain text beside the English in bold,
+        # as "LocalDevVPN se connecte tout seul :" did in 0.13.0's French (5 words).
+        swift = NOTES_SWIFT.read_text(encoding="utf-8")
+        self.assertRegex(swift, r"lead\.count <= topicLength, words\.count <= topicWords",
+                         "CartoucheReleaseNotes.item no longer reads a topic as this test does")
+        self.assertIn('".!?;".contains', swift)
+        length, words = topic_limits()
+        self.assertEqual(topic("Renewal: it renews itself.", length, words), "Renewal:")
+        self.assertEqual(topic("Renouvellement : il se renouvelle.", length, words), "Renouvellement :")
+        self.assertIsNone(topic("LocalDevVPN se connecte tout seul : il revient.", length, words))
+        self.assertIsNone(topic("At 10:30 it renews itself.", length, words))
+        for number, languages in self.notes.items():
+            if None not in languages:
+                continue
+            english = items(languages[None])
+            for language, path in languages.items():
+                if language is None:
+                    continue
+                for index, (source, translated) in enumerate(zip(english, items(path))):
+                    with self.subTest(file=path.name, item=index + 1):
+                        source_topic = topic(source[2:], length, words)
+                        translated_topic = topic(translated[2:], length, words)
+                        if source_topic is not None:
+                            self.assertIsNotNone(translated_topic,
+                                                 f"{source_topic!r} is a topic in {number}.md, but the app finds none in "
+                                                 f"{translated[2:60]!r}…: at most {words} words and {length} letters "
+                                                 "before the colon")
+                        else:
+                            self.assertIsNone(translated_topic,
+                                              f"{translated_topic!r} is a topic in {path.name}, but the English has none")
 
     def test_every_version_from_0_12_2_has_its_french(self):
         for number, languages in self.notes.items():

@@ -428,6 +428,16 @@ final class CartoucheAccount: ObservableObject {
     /// asks to review the account.
     var problemLink: URL? { problem.flatMap(CartoucheSignInMessage.link(in:)) }
 
+    /// The IPA for the player's own certificate of this version, to sign
+    /// instead, when the error is that the built-in SideStore found no app
+    /// group, as the setup offers it for the IPA for an Apple ID that a
+    /// signing app signed (CartoucheText.signInNoAppGroup).
+    var problemIPA: URL? {
+        guard let report = problemReport, let failure = report.failure,
+              CartoucheSignInMessage.trouble(in: report.message, failure: failure) == .noAppGroup else { return nil }
+        return CartoucheImportedSigning.ownCertificateIPA
+    }
+
     // MARK: Waiting for LocalDevVPN
 
     /// Waits for LocalDevVPN, ten minutes at most, then goes on with PENDING.
@@ -625,15 +635,18 @@ final class CartoucheAccount: ObservableObject {
     }
 
     /// Shows the reason of a sign-in that stopped before the certificate,
-    /// the account having one the built-in SideStore does not hold, for the
-    /// gallery's screens.
+    /// the account having one the built-in SideStore does not hold, as the
+    /// sign-in's end tells it, for the gallery's screens.
     func showUnfinishedForGallery() {
+        // SideStore's words (app/patches/sidestore/0012).
         let message = "This Apple account already has a certificate, which signs the apps installed with it. "
             + "This SideStore never revokes it and does not create another one.\n\n"
             + "Install Cartouche again with the Cartouche Installer, over this copy: "
             + "it gives Cartouche the certificate it signs with. Then sign in again."
-        problemReport = CartoucheReports.make(.signIn, CartoucheText.signInFailedTitle, message: message, step: "Signing in",
-                                              failure: CartoucheFailure(.certificateRefused, stage: "certificate", seconds: 23))
+        let failure = CartoucheFailure(.certificateRefused, stage: "certificate", seconds: 23)
+        problemReport = CartoucheReports.make(.signIn, CartoucheText.signInFailedTitle,
+                                              message: CartoucheText.sideStoreMessage(message, failure: failure, signIn: true),
+                                              step: "Signing in", failure: failure)
     }
 
     /// Shows the sign-in Apple refused for too many requests, with the wait
@@ -694,6 +707,24 @@ final class CartoucheAccount: ObservableObject {
     func showSideStoreQuitForGallery() {
         let message = "Built-in SideStore quit unexpectedly while starting"
         let failure = CartoucheFailure.sideStore(outcome: nil, message: message, fraction: 0, seconds: 1,
+                                                 vpn: CartoucheVPN.isConnected, pairing: true)
+        failed(CartoucheText.sideStoreMessage(message, failure: failure, signIn: true), fraction: 0, failure: failure)
+    }
+
+    /// Shows a sign-in whose built-in SideStore found no app group for its
+    /// database, as when a signing app signed Cartouche's IPA for an Apple
+    /// ID, as the sign-in's end does, for the gallery's screens.
+    func showNoAppGroupForGallery() {
+        let left: [String: Any] = [
+            "version": 1, "action": CartoucheSideStoreOutcome.Action.signIn.rawValue, "ok": false,
+            "date": Int(Date().timeIntervalSince1970), "seconds": 0, "stage": "database", "family": "database",
+            "kind": "missingAppGroup", "codes": "io.sidestore.DatabaseError -1003",
+        ]
+        let outcome = (try? JSONSerialization.data(withJSONObject: left))
+            .flatMap { CartoucheSideStoreOutcome(data: $0, expecting: .signIn) }
+        // SideStore's words for its error (PersistentContainer.swift).
+        let message = "App Group Container Inaccessible"
+        let failure = CartoucheFailure.sideStore(outcome: outcome, message: message, fraction: 0, seconds: 0,
                                                  vpn: CartoucheVPN.isConnected, pairing: true)
         failed(CartoucheText.sideStoreMessage(message, failure: failure, signIn: true), fraction: 0, failure: failure)
     }

@@ -26,7 +26,8 @@
 //        guide                           Your first game
 //        library                         every game, open over the home
 //        mac-builds                      all the Mac's builds, as System
-//                                        opens them (work: mac-builds)
+//                                        opens them (work: mac-builds, or
+//                                        mac-too-old)
 //        nightly                         Renew every night, its steps, from
 //                                        the System page
 //        release-notes                   the System page's What's new, the
@@ -42,7 +43,7 @@
 //        sheet                           the sheet of -GallerySheet's game
 //        sheet-mac                       the sheet, scrolled to the game's
 //                                        build on the player's Mac (work:
-//                                        mac-builds)
+//                                        mac-builds, or mac-too-old)
 //        sheet-saves                     the sheet, further down, at its
 //                                        saves
 //        shortcuts                       Siri and Home Screen, from the
@@ -158,9 +159,17 @@
 //                                        waiting for it
 //        mac-refused                     no Mac nearby, iOS refusing
 //                                        Cartouche the local network
+//        mac-too-old                     the player's Mac, paired, whose
+//                                        app is 0.5.0 or older: too old to
+//                                        share its builds, and no longer
+//                                        finding its updates by itself
 //        newer-build                     a newer build of the sheet's game,
 //                                        or of the first of the player's, in
 //                                        the games folder
+//        no-app-group                    a sign-in whose built-in SideStore
+//                                        found no app group, as when a
+//                                        signing app signed the IPA for an
+//                                        Apple ID, LocalDevVPN connected
 //        not-signed-install              the sheet's game installed but not
 //                                        signed whole, with Sign again and
 //                                        play
@@ -196,7 +205,9 @@
 //                                        connected
 //        sign-in-unfinished              the setup after a sign-in that
 //                                        stopped before the certificate,
-//                                        with why and its report to copy
+//                                        the Apple ID having one made
+//                                        elsewhere, with why and its report
+//                                        to copy
 //        signature-refused               the sheet's game's process ended as
 //                                        iOS refused its signature
 //                                        (CartoucheGameActions failSigning)
@@ -410,7 +421,7 @@ struct GalleryScenario {
         GalleryState.appGroupMissing = work == "signed-elsewhere"
         GalleryState.signInUnfinished = work == "sign-in-unfinished"
         GalleryState.sheetSection = screen == "sheet" ? category : nil
-        GalleryState.vpnConnected = work.map { Self.deviceChecks[$0] != nil || $0 == "sidestore-quit" } ?? false
+        GalleryState.vpnConnected = work.map { Self.deviceChecks[$0] != nil || ["sidestore-quit", "no-app-group"].contains($0) } ?? false
         let pairing = GalleryState.documents.appendingPathComponent("SideStore/Documents", isDirectory: true)
         try? FileManager.default.removeItem(at: pairing)
         if setupDone || GalleryState.signInUnfinished {
@@ -528,6 +539,9 @@ struct GalleryScenario {
             if work == "sidestore-quit" {
                 CartoucheAccount.shared.showSideStoreQuitForGallery()
             }
+            if work == "no-app-group" {
+                CartoucheAccount.shared.showNoAppGroupForGallery()
+            }
             if work == "sign-in-unfinished" {
                 CartoucheAccount.shared.showUnfinishedForGallery()
             }
@@ -579,11 +593,12 @@ struct GalleryScenario {
             if work == "erasing" {
                 CartoucheReset.shared.showForGallery(.erasing)
             }
-            if ["mac", "mac-offline", "mac-builds"].contains(work) {
+            if ["mac", "mac-offline", "mac-builds", "mac-too-old"].contains(work) {
                 // The player's Mac, paired, with the games Cartouche Builder
                 // built in its Games folder; offline, away from home, the
                 // saves of two games wait for it; builds, Cartouche Builder
-                // at work, which the games' sheets and System show.
+                // at work, which the games' sheets and System show; too
+                // old, a Cartouche Builder 0.5.0, which shares no builds.
                 let mac = GalleryMac.paired()
                 CartoucheStorageSettings.shared.showForGallery(mac, games: CartoucheBridge.gamesFolder,
                                                                saves: CartoucheBridge.savesFolder)
@@ -594,6 +609,9 @@ struct GalleryScenario {
                 }
                 if work == "mac-builds" {
                     CartoucheMacBuildsWatch.gallery = (mac: mac.name, builds: GalleryMac.builds())
+                }
+                if work == "mac-too-old" {
+                    CartoucheMacBuildsWatch.galleryTooOld = mac.name
                 }
             }
             if work == "drive-signed-out" {

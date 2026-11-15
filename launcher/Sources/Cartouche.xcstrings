@@ -3265,6 +3265,40 @@
         }
       }
     },
+    "mac.builds.link.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit the app on your Mac, then open this disk image and drag the app onto Applications, in place of the old one. It updates itself after that."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quittez l’app sur votre Mac, puis ouvrez cette image disque et glissez l’app sur Applications, à la place de l’ancienne. Elle se met ensuite à jour seule."
+          }
+        }
+      }
+    },
+    "mac.builds.link.subject" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche on your Mac"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche sur votre Mac"
+          }
+        }
+      }
+    },
     "mac.builds.nightly" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3418,6 +3452,23 @@
         }
       }
     },
+    "mac.builds.sendLink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send the link to %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyer le lien à %@"
+          }
+        }
+      }
+    },
     "mac.builds.stopAll" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3452,19 +3503,19 @@
         }
       }
     },
-    "mac.builds.toUpdate" : {
+    "mac.builds.toDownload" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "To update"
+            "value" : "To download again"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "À mettre à jour"
+            "value" : "À retélécharger"
           }
         }
       }
@@ -3475,13 +3526,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Update the app on %@ to see its builds here and start one."
+            "value" : "The app on %@ no longer finds its updates by itself: download it once more on that Mac to see its builds here and start one. It updates itself after that."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mettez à jour l’app de %@ pour voir ses constructions ici et en lancer une."
+            "value" : "L’app de %@ ne trouve plus ses mises à jour seule : retéléchargez-la une fois sur ce Mac pour voir ses constructions ici et en lancer une. Elle se met ensuite à jour seule."
           }
         }
       }
@@ -9058,6 +9109,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ouvrir la page"
+          }
+        }
+      }
+    },
+    "signIn.otherCertificate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Apple ID already has a certificate that Cartouche does not hold, made by another app or computer, and Cartouche never revokes it. If you installed Cartouche with another Apple ID, sign in with that one. Otherwise, install Cartouche again over this copy with the Cartouche Installer on your computer, with this Apple ID: it gives Cartouche its certificate. Then sign in again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cet identifiant Apple a déjà un certificat que Cartouche n’a pas, créé par une autre app ou un autre ordinateur, et Cartouche ne le révoque jamais. Si vous avez installé Cartouche avec un autre identifiant Apple, connectez-vous avec celui-là. Sinon, réinstallez Cartouche par-dessus cette copie avec l’Installeur Cartouche sur votre ordinateur, avec cet identifiant Apple : il donne son certificat à Cartouche. Puis reconnectez-vous."
           }
         }
       }

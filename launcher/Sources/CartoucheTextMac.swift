@@ -44,7 +44,10 @@ extension CartoucheText {
     // MARK: A game's builds on your Mac (CartoucheMacBuildsView.swift)
 
     static func macBuildsTitle(_ mac: String) -> String { f("mac.builds.title", "Builds on %@", mac) }
-    static func macBuildsTooOld(_ mac: String) -> String { f("mac.builds.tooOld", "Update the app on %@ to see its builds here and start one.", mac) }
+    static func macBuildsTooOld(_ mac: String) -> String { f("mac.builds.tooOld", "The app on %@ no longer finds its updates by itself: download it once more on that Mac to see its builds here and start one. It updates itself after that.", mac) }
+    static func macBuildsSendLink(_ mac: String) -> String { f("mac.builds.sendLink", "Send the link to %@", mac) }
+    static var macBuildsLinkSubject: String { s("mac.builds.link.subject", "Cartouche on your Mac") }
+    static var macBuildsLinkMessage: String { s("mac.builds.link.message", "Quit the app on your Mac, then open this disk image and drag the app onto Applications, in place of the old one. It updates itself after that.") }
     static var macBuildsFooter: String { s("mac.builds.footer", "Once built, the game is in the Mac’s games folder, where Cartouche offers to install it or update it.") }
     static func macBuildBuilding(_ percent: String) -> String { f("mac.build.building", "Building on the Mac, %@", percent) }
     static var macBuildBuildingNow: String { s("mac.build.building.now", "Building on the Mac") }
@@ -79,7 +82,7 @@ extension CartoucheText {
     static var macBuildsPage: String { s("mac.builds.page", "Builds") }
     static var macBuildsReaching: String { s("mac.builds.reaching", "Reaching…") }
     static var macBuildsNotAnswering: String { s("mac.builds.notAnswering", "Not answering") }
-    static var macBuildsToUpdate: String { s("mac.builds.toUpdate", "To update") }
+    static var macBuildsToDownload: String { s("mac.builds.toDownload", "To download again") }
     static var macBuildsIdle: String { s("mac.builds.idle", "Nothing building") }
     static var macBuildsNotReady: String { s("mac.builds.notReady", "Not ready") }
     static func macBuildsControlTooOld(_ mac: String) -> String { f("mac.builds.control.tooOld", "Update the app on %@ to stop its builds, build what is due, follow its games and set its nightly build from here.", mac) }

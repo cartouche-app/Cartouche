@@ -80,11 +80,11 @@ final class ResetTests: HarnessCase {
     /// A folder the player picked for their storage, at PATH in Cartouche's
     /// home, as Files shows Cartouche's own space, its Documents: the place
     /// for ROLES.
-    private func picked(_ path: String, for roles: [CartoucheStorageRole]) throws -> URL {
+    private func picked(_ path: String, for roles: [CartoucheStorageRole]) async throws -> URL {
         let url = home.appendingPathComponent(path, isDirectory: true)
         try fileManager.createDirectory(at: url, withIntermediateDirectories: true)
         var server = CartoucheStorageServer(kind: .folder, name: url.lastPathComponent)
-        server.bookmark = try CartoucheFolder.bookmark(of: url)
+        server.bookmark = try await HarnessStorage.bookmark(of: url)
         let settings = CartoucheStorageSettings.shared
         settings.save(server, secret: nil)
         for role in roles {
@@ -165,9 +165,9 @@ final class ResetTests: HarnessCase {
 
         // Their storage: the games folder, the saves folder in Cartouche's
         // own space in Files, and a server with its password.
-        let (_, gamesFolder) = try HarnessStorage.folder("Jeux", for: [.games])
+        let (_, gamesFolder) = try await HarnessStorage.folder("Jeux", for: [.games])
         try write("notes", in: gamesFolder, at: "Notes.txt")
-        let savesFolder = try picked("Documents/Mes sauvegardes", for: [.saves])
+        let savesFolder = try await picked("Documents/Mes sauvegardes", for: [.saves])
         try write("zip", in: savesFolder, at: "Game [0100000000000000]/2026-11-13 18.00.00.zip")
         var nas = CartoucheStorageServer(kind: .smb, name: "NAS")
         nas.host = "nas.harness.invalid"
@@ -387,7 +387,7 @@ final class ResetTests: HarnessCase {
         XCTAssertEqual(reset.savesAtRisk, [game.name])
 
         // A saves folder alone does not hold them yet; sent there, they are.
-        let (_, saves) = try HarnessStorage.folder("Sauvegardes", for: [.saves])
+        let (_, saves) = try await HarnessStorage.folder("Sauvegardes", for: [.saves])
         await reset.checkSaves(of: model.apps)
         XCTAssertEqual(reset.savesAtRisk, [game.name], "not in the saves folder yet")
         await reset.sendSavesAtRisk(of: model.apps)
@@ -408,7 +408,7 @@ final class ResetTests: HarnessCase {
         // with the game.
         HarnessLC.loadApps()
         XCTAssertTrue(model.apps.isEmpty)
-        _ = try HarnessStorage.folder("Sauvegardes", for: [.saves])
+        _ = try await HarnessStorage.folder("Sauvegardes", for: [.saves])
         let again = try await installed(game)
         let back = try dataFolder(of: again).appendingPathComponent("Documents/save/0000000000000001/progress.bin")
         XCTAssertTrue((try? Data(contentsOf: back)) == save, "the saves came back")
