@@ -197,6 +197,9 @@ final class CartoucheStoredGames: ObservableObject {
     #if CARTOUCHE_GALLERY
     private var shownForGallery = false
     #endif
+    #if os(macOS)
+    private var shownForMac = false
+    #endif
 
     init(settings: CartoucheStorageSettings = .shared) {
         self.settings = settings
@@ -252,9 +255,24 @@ final class CartoucheStoredGames: ObservableObject {
     }
     #endif
 
+    #if os(macOS)
+    /// The games Cartouche Builder keeps for the Mac in its games folder
+    /// and has not installed on it, and the words for where they are, for
+    /// Cartouche's console on the Mac (builder/mac/Sources/CartoucheConsole):
+    /// the Builder reads its games folder, never the console.
+    func showForMac(_ stored: [CartoucheStoredGame], server: String) {
+        games = stored
+        serverName = server
+        shownForMac = true
+    }
+    #endif
+
     private func read(evenIfOffline: Bool) async {
         #if CARTOUCHE_GALLERY
         if shownForGallery { return }
+        #endif
+        #if os(macOS)
+        if shownForMac { return }
         #endif
         guard let location = settings.location(.games) else {
             games = []

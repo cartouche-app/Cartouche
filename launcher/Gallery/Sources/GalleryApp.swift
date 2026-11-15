@@ -25,11 +25,14 @@
 //        games                           the home
 //        guide                           Your first game
 //        library                         every game, open over the home
+//        nightly                         Renew every night, its steps, from
+//                                        the System page
 //        report                          Report a problem
 //        settings                        the settings of the sheet's game,
 //                                        open at -GalleryCategory
 //        setup                           the setup
 //        sheet                           the sheet of -GallerySheet's game
+//        sheet-saves                     the same, further down, at its saves
 //        shortcuts                       Siri and Home Screen, from the
 //                                        sheet of the player's game
 //        signin                          the Apple ID sign-in
@@ -39,6 +42,12 @@
 //        storage-drive-guide             the steps that make that client
 //        storage-mac                     Add your Mac, the form that pairs
 //                                        this iPhone with a Mac nearby
+//        storage-smb                     Add a shared folder, with a NAS
+//                                        nearby (GallerySMB)
+//        switch-save                     the saves of the sheet's game
+//                                        between the Switch and this iPhone,
+//                                        with -GalleryWork saves the save
+//                                        JKSV exported, read
 //        system                          the System page, down to
 //                                        -GalleryCategory
 //        telemetry                       Game measurements
@@ -140,6 +149,13 @@
 //        signature-refused               the sheet's game's process ended as
 //                                        iOS refused its signature
 //                                        (CartoucheGameActions failSigning)
+//        smb-no-guests                   on Add a shared folder (screen
+//                                        storage-smb), the NAS refusing a
+//                                        guest, without a user name
+//        smb-refused                     on Add a shared folder (screen
+//                                        storage-smb), the NAS refusing the
+//                                        user name or the password the
+//                                        player signed in with
 //        starting                        on the TV (screen tv), the game
 //                                        starting
 //        stopped-on-error                the sheet's game's process ended on
@@ -383,6 +399,12 @@ struct GalleryScenario {
                 CartoucheStorageReach.shared.showOfflineForGallery([nas.id])
                 CartoucheSaveBackups.shared.showWaitingForGallery(2)
             }
+            // The servers Add a shared folder finds nearby: made-up ones,
+            // never those of the network the gallery runs on.
+            CartoucheSMBBrowser.gallery = screen == "storage-smb" ? GallerySMB.nearby : []
+            if screen == "storage-smb" {
+                CartoucheStorageServerForm.gallery = GallerySMB.signIn(work)
+            }
             if ["mac-nearby", "mac-code", "mac-refused"].contains(work) {
                 let refused = work == "mac-refused"
                 CartoucheMacBrowser.gallery = (found: refused ? [] : GalleryMac.nearby, refused: refused)
@@ -392,6 +414,14 @@ struct GalleryScenario {
             }
             if work == "saves", let titleId = sheet ?? ownedTitles.first {
                 GallerySaves.prepare(titleId: titleId)
+                if screen == "switch-save" {
+                    // The save JKSV exported, picked as the page opens.
+                    CartoucheSwitchSaveView.galleryPick = { await GallerySaves.switchExport() }
+                }
+            }
+            if screen == "sheet-saves" {
+                GallerySaves.bringingDown = true
+                CartoucheGameSheetView.galleryToSaves = { scrollTo in await GallerySaves.bringDown(scrollTo) }
             }
             if work == "log", let titleId = sheet ?? ownedTitles.first {
                 GalleryLogs.prepare(titleId: titleId)
@@ -606,6 +636,10 @@ struct GalleryScenario {
                 }
             }
             try? await Task.sleep(for: .seconds(3))
+            // The sheet on its way down to its saves, for up to 15 s more.
+            for _ in 0..<60 where GallerySaves.bringingDown {
+                try? await Task.sleep(for: .milliseconds(250))
+            }
             // The covers the screen shows, from IGDB, for up to 20 s more.
             for _ in 0..<40 {
                 let pending = await CartoucheCoverStore.shared.pending
@@ -721,7 +755,7 @@ struct CartoucheGalleryApp: App {
             // the sheet of the game in focus on an iPhone Duo unfolded once
             // the player has a game.
             CartoucheGamesView(showingLibrary: true)
-        case "sheet":
+        case "sheet", "sheet-saves":
             if let entry = entries.all.first(where: { $0.titleId == scenario.sheet }) {
                 NavigationStack {
                     CartoucheGameSheetView(entry: entry, memory: CartoucheMemoryReading.now(), onPlay: { _ in },
@@ -786,9 +820,19 @@ struct CartoucheGalleryApp: App {
             }
         case "system":
             CartoucheSystemView()
+        case "nightly":
+            NavigationStack {
+                CartoucheNightlyRenewalView()
+            }
         case "storage":
             NavigationStack {
                 CartoucheStorageView()
+            }
+        case "storage-smb":
+            // As the Storage page opens it, once the player signed in to
+            // list the shared folders of a NAS nearby.
+            NavigationStack {
+                CartoucheStorageServerForm(server: GallerySMB.server(scenario.work))
             }
         case "storage-mac":
             // As the Storage page opens it, for a Mac not paired yet.
@@ -812,6 +856,20 @@ struct CartoucheGalleryApp: App {
         case "report":
             NavigationStack {
                 CartoucheReportView()
+            }
+        case "switch-save":
+            // The game's saves between the Switch and this iPhone, from its
+            // sheet: with work: saves, the save JKSV exported, read.
+            if let entry = entries.owned.first(where: { $0.titleId == (scenario.sheet ?? scenario.ownedTitles.first) }),
+               let app = entry.app {
+                NavigationStack {
+                    CartoucheSwitchSaveView(game: CartoucheSwitchSaveGame(name: entry.name, titleId: entry.titleId, version: "1.0.0",
+                                                                          isSwitch2: entry.platform == "switch2",
+                                                                          target: GallerySaves.target(of: app),
+                                                                          makeTarget: { GallerySaves.target(of: app) },
+                                                                          isRunningNow: { false }),
+                                            isRunning: false)
+                }
             }
         case "root":
             CartoucheRootView()
@@ -879,6 +937,66 @@ enum GalleryMac {
 enum GallerySaves {
     /// The folder's name, as the Storage page and the sheet show it.
     static let folderName = "Gallery saves"
+
+    /// Whether the sheet is on its way down to its saves, which the
+    /// screenshot waits for (GalleryScenario.settle).
+    @MainActor static var bringingDown = false
+
+    /// Brings the sheet down to the row of the Switch saves, in the middle
+    /// of the screen, with SCROLLTO, SwiftUI's scroll to it: a few times, as
+    /// the gallery's first seconds can hold the main thread for a second or
+    /// more; else by hand, down the list until it has laid the row out, then
+    /// to the row. A single scroll half a second after the sheet showed left
+    /// it at its top (run 43548937064).
+    @MainActor
+    static func bringDown(_ scrollTo: @escaping @MainActor () -> Void) async {
+        defer { bringingDown = false }
+        for _ in 0..<5 where !rowInTheMiddle {
+            try? await Task.sleep(for: .milliseconds(300))
+            scrollTo()
+        }
+        for _ in 0..<40 where !rowInTheMiddle {
+            guard let list = collectionView(), list.bounds.height > 0 else { break }
+            let shown = list.convert(list.bounds, to: nil)
+            let by = CartoucheSavesSection.galleryRowFrame.map { $0.midY - shown.midY } ?? list.bounds.height * 0.6
+            let end = max(0, list.contentSize.height + list.adjustedContentInset.bottom - list.bounds.height)
+            let y = min(end, max(-list.adjustedContentInset.top, list.contentOffset.y + by))
+            guard abs(y - list.contentOffset.y) >= 1 else { break }
+            list.setContentOffset(CGPoint(x: list.contentOffset.x, y: y), animated: false)
+            try? await Task.sleep(for: .milliseconds(150))
+        }
+        try? await Task.sleep(for: .milliseconds(300))
+        if !rowInTheMiddle {
+            NSLog("[Gallery] the sheet did not come down to the row of the Switch saves")
+        }
+    }
+
+    /// Whether the row of the Switch saves is in the middle three fifths of
+    /// the list on the screen.
+    @MainActor
+    private static var rowInTheMiddle: Bool {
+        guard let row = CartoucheSavesSection.galleryRowFrame, let list = collectionView() else { return false }
+        let shown = list.convert(list.bounds, to: nil)
+        return row.minY >= shown.minY + shown.height / 5 && row.maxY <= shown.maxY - shown.height / 5
+    }
+
+    /// The collection view of the list on the screen, a SwiftUI list's.
+    @MainActor
+    private static func collectionView() -> UICollectionView? {
+        let scene = UIApplication.shared.connectedScenes.lazy.compactMap { $0 as? UIWindowScene }.first
+        guard let window = scene?.windows.first else { return nil }
+        return collectionView(in: window)
+    }
+
+    @MainActor
+    private static func collectionView(in view: UIView) -> UICollectionView? {
+        if let list = view as? UICollectionView { return list }
+        for subview in view.subviews {
+            if let list = collectionView(in: subview) { return list }
+        }
+        return nil
+    }
+
     /// The game whose saves these are, once the scenario has them.
     @MainActor private static var titleId: String?
 
@@ -911,8 +1029,56 @@ enum GallerySaves {
             let server = CartoucheStorageServer(kind: .folder, name: folderName, bookmark: try CartoucheFolder.bookmark(of: folder))
             CartoucheStorageSettings.shared.showForGallery(server, games: "", saves: "Saves")
             self.titleId = titleId
+            switchExportWritten = Task { await writeSwitchExport(titleId: titleId) }
         } catch {
             NSLog("[Gallery] cannot make the saves and their folder: %@", String(describing: error))
+        }
+    }
+
+    /// The save JKSV exported on the Switch that the gallery offers, a ZIP
+    /// archive of the scenario's game's in its Documents, which the Files
+    /// picker shows under On My iPhone › Gallery; the UI tests pick the same
+    /// that uitests.sh puts in On My iPhone itself. Named as JKSV names its
+    /// exports, the player and the time: no label of the page under the
+    /// picker begins as it does, which the UI tests would tap for the file
+    /// (FilesPicker.pick), as they tapped the page's title, Switch saves,
+    /// for "Switch save.zip".
+    static let switchExportName = "Player - 2026-11-13_15-20-00.zip"
+    @MainActor private static var switchExportWritten: Task<URL?, Never>?
+
+    /// The save JKSV exported, once written.
+    @MainActor
+    static func switchExport() async -> URL? {
+        await switchExportWritten?.value
+    }
+
+    /// Writes a save of the game TITLEID as JKSV exports one: its fiche, a
+    /// file and a folder with a file.
+    private static func writeSwitchExport(titleId: String) async -> URL? {
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let url = documents.appendingPathComponent(switchExportName)
+        var fiche = [UInt8](repeating: 0, count: CartoucheSwitchSaveMeta.size)
+        let id = UInt64(titleId, radix: 16) ?? 0
+        for index in 0 ..< 4 { fiche[index] = UInt8(truncatingIfNeeded: CartoucheSwitchSaveMeta.magic >> (8 * UInt32(index))) }
+        fiche[4] = 1
+        for index in 0 ..< 8 { fiche[5 + index] = UInt8(truncatingIfNeeded: id >> (8 * UInt64(index))) }
+        fiche[37] = 1   // a player's save
+        do {
+            try FileManager.default.createDirectory(at: documents, withIntermediateDirectories: true)
+            let sink = try CartoucheFileSink(url)
+            let writer = CartoucheZipWriter(sink: sink)
+            try await writer.addData(CartoucheSwitchSaveMeta.fileName, Data(fiche))
+            var progress = Data(count: 1 << 20)
+            progress.withUnsafeMutableBytes { arc4random_buf($0.baseAddress, $0.count) }
+            try await writer.addData("progress.bin", progress)
+            try await writer.addFolder("slots/")
+            try await writer.addData("slots/1.bin", Data("slot 1".utf8))
+            try await writer.finish()
+            try sink.close()
+            return url
+        } catch {
+            NSLog("[Gallery] cannot write %@: %@", switchExportName, String(describing: error))
+            return nil
         }
     }
 
