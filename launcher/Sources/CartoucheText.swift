@@ -160,6 +160,7 @@ enum CartoucheText {
     static var noResults: String { s("sheet.results.none", "No result yet.") }
     static var thisModel: String { s("sheet.result.thisModel", "This iPhone model") }
     static func peak(_ amount: String) -> String { f("sheet.result.peak", "Memory peak: %@", amount) }
+    static var resultsTranslated: String { s("sheet.results.translated", "Testers’ notes translated by the iPhone") }
     static var noSheetMessage: String { s("sheet.noSheet.message", "Cartouche has no sheet for this game yet: it can still start it, without checking what the game needs.") }
     static var sheetNxnative: String { s("sheet.nxnative", "In nxnative") }
     static var sheetEngine: String { s("sheet.engine", "Engine") }
@@ -307,7 +308,7 @@ enum CartoucheText {
     static var updatesFooter: String { s("system.updates.footer", "New versions install without a computer, through LocalDevVPN, which Cartouche connects. Cartouche then closes: open it again. Your games and saves stay.") }
     static var updateAvailable: String { s("system.updates.available", "New version") }
     static func updateTo(_ version: String) -> String { f("system.updates.install", "Install Cartouche %@", version) }
-    static var updateNeedsSetup: String { s("system.updates.needsSetup", "Finish setting up Cartouche first.") }
+    static var updateNeedsSetup: String { s("system.updates.needsSetup", "Finish setting up Cartouche first, or install this version from a computer with the Cartouche Installer, over this copy: your games and saves stay.") }
     static var updateNotes: String { s("system.updates.notes", "What’s new") }
     static func updateUpToDate(_ version: String) -> String { f("system.updates.upToDate", "Cartouche %@ is the latest version.", version) }
     static var updateNotChecked: String { s("system.updates.notChecked", "Cartouche has not looked for an update yet.") }
@@ -333,6 +334,12 @@ enum CartoucheText {
     static var updateUnfinishedTitle: String { s("updates.unfinished.title", "The update did not finish") }
     static func updateUnfinished(_ version: String) -> String { f("updates.unfinished.message", "Cartouche closed before version %@ was installed. Try again from the System page.", version) }
     static var updatedMessage: String { s("updates.done.message", "Your games, their saves and Cartouche’s settings are all still here.") }
+
+    // MARK: What's new (CartoucheWhatsNewView.swift)
+
+    static func whatsNewTitle(_ version: String) -> String { f("whatsNew.title", "What’s new in Cartouche %@", version) }
+    static var whatsNewContinue: String { s("whatsNew.continue", "Continue") }
+    static var releaseNotesTitle: String { s("system.releaseNotes", "What’s new") }
 
     // MARK: Renewing every night
 
@@ -483,6 +490,7 @@ enum CartoucheText {
     static var pausedDetail: String { s("running.paused", "Paused behind Cartouche, where you left it.") }
     static var backToCartouche: String { s("running.back", "Back to Cartouche") }
     static var homeButtonHint: String { s("running.homeHint", "The controller’s Home button brings you back to Cartouche.") }
+    static var homeFadesHint: String { s("running.homeFades", "The Home button hides after a few seconds: touch just below to bring it back.") }
     static var turnIPadSideways: String { s("running.turnIPadSideways", "Turn your iPad sideways to play.") }
     static func quitQuestion(_ name: String) -> String { f("running.quit.question", "Quit %@?", name) }
     static var quitGame: String { s("running.quit.confirm", "Quit the game") }
@@ -843,7 +851,7 @@ enum CartoucheText {
     static var telemetryWhat: String { s("telemetry.what", "What is sent") }
     static var telemetryWhatGames: String { s("telemetry.what.games", "For each game session: frame rate, frame and GPU times, stutters and what caused them, shader preparation, memory, heat and power, sound, the screen’s sizes, how the game ended, and the game’s version and settings.") }
     static var telemetryWhatDevice: String { s("telemetry.what.device", "This iPhone’s model, iOS version and memory limit, Cartouche’s version and language, and a random number of this copy of Cartouche.") }
-    static var telemetryWhatEvents: String { s("telemetry.what.events", "Each start of Cartouche, game installs, updates, renewals, Apple ID sign-ins, signing certificates you import, how the Files picker of each import went, and errors, by their codes and the step they stopped at.") }
+    static var telemetryWhatEvents: String { s("telemetry.what.events", "Each start of Cartouche, game installs, updates, renewals, resets, Apple ID sign-ins, signing certificates you import, how the Files picker of each import went, and errors, by their codes and the step they stopped at.") }
     static var telemetryWhatNever: String { s("telemetry.what.never", "Never your Apple ID, your iPhone’s name, your files, the addresses of your storage or the game’s log itself.") }
     static var telemetryLastSent: String { s("telemetry.lastSent", "Last sent") }
     static var telemetryNever: String { s("telemetry.never", "Never") }

@@ -24,6 +24,10 @@
       "en": "On this Mac",
       "fr": "Sur ce Mac"
     },
+    "sheet.results.translated": {
+      "en": "Testers’ notes translated by the Mac",
+      "fr": "Notes des testeurs traduites par le Mac"
+    },
     "summary.credit.translated": {
       "en": "Description: IGDB.com, translated by the Mac",
       "fr": "Description : IGDB.com, traduite par le Mac"

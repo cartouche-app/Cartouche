@@ -217,6 +217,25 @@ final class CartoucheFailureTests: XCTestCase {
         }
     }
 
+    func testASideStoreThatQuitAsItLaunchedStoppedAtItsLaunch() {
+        // The bridge's words since app/patches/livecontainer/0016, when
+        // SideStore's process quit before it said it had launched.
+        let starting = CartoucheFailure.sideStore(outcome: nil, message: "Built-in SideStore quit unexpectedly while starting",
+                                                  fraction: 0, seconds: 1, vpn: true, pairing: true)
+        XCTAssertEqual(starting.cause, .sideStoreQuit)
+        XCTAssertEqual(starting.stage, "launch")
+        XCTAssertEqual(starting.fields["stage"], .text("launch"))
+        let wrapped = CartoucheFailure.sideStore(
+            outcome: nil, message: "LNPerformActionErrorCodeLocalizedStringResource: Built-in SideStore quit unexpectedly while starting",
+            fraction: 0, seconds: 1, vpn: true, pairing: true)
+        XCTAssertEqual(wrapped.stage, "launch")
+        // Once it had launched, the stage stays untold, as SideStore left none.
+        let onItsWay = CartoucheFailure.sideStore(outcome: nil, message: "Built-in SideStore quit unexpectedly",
+                                                  fraction: 0.2, seconds: 9, vpn: true, pairing: true)
+        XCTAssertEqual(onItsWay.cause, .sideStoreQuit)
+        XCTAssertNil(onItsWay.stage)
+    }
+
     func testAnOutcomeThatWentWellYetFailedOnTheWayBack() throws {
         let left = try XCTUnwrap(outcome(["ok": true, "stage": "finish"]))
         let failure = CartoucheFailure.sideStore(outcome: left, message: "Something", fraction: 1, seconds: nil, vpn: nil, pairing: nil)

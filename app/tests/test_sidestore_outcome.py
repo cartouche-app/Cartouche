@@ -96,15 +96,20 @@ def hunks(patch: Path) -> dict:
     return found
 
 
-def patched(path: str) -> str:
+def patched(path: str, submodule: Path = SIDESTORE, patches: Path = PATCHES) -> str:
     """PATH of SideStore's sources as app/scripts/prepare.sh leaves it: the
     submodule's, with every patch applied in name order, each hunk where
-    its lines are, nearest the line it gives, as patch(1) does."""
-    if not (SIDESTORE / "Dependencies" / "SideSign" / "Sources").is_dir():
-        raise AssertionError(f"{SIDESTORE.relative_to(ROOT)} is missing: run git submodule update --init --recursive")
-    original = SIDESTORE / path
+    its lines are, nearest the line it gives, as patch(1) does. Another
+    SUBMODULE's, such as LiveContainer's, with its own PATCHES."""
+    if submodule == SIDESTORE:
+        present = (SIDESTORE / "Dependencies" / "SideSign" / "Sources").is_dir()
+    else:
+        present = submodule.is_dir() and any(submodule.iterdir())
+    if not present:
+        raise AssertionError(f"{submodule.relative_to(ROOT)} is missing: run git submodule update --init --recursive")
+    original = submodule / path
     lines = original.read_text(encoding="utf-8").split("\n") if original.exists() else []
-    for patch in sorted(PATCHES.glob("*.patch")):
+    for patch in sorted(patches.glob("*.patch")):
         shift = drift = 0
         for start, replaced, body in hunks(patch).get(path, []):
             before = [text for tag, text in body if tag != "+"]

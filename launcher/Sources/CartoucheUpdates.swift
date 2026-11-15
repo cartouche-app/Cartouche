@@ -9,13 +9,20 @@
 //  higher version than its own over the console, once a day at most. The
 //  System page always shows it.
 //
+//  Signed with the player's own certificate, Cartouche installs nothing:
+//  it says that the version is out, and, signed on the iPhone, offers the
+//  IPA for the player's own certificate to download, which the player signs
+//  in their signing app as the first time (docs/imported-signing.md).
+//
 //  The built-in SideStore installs it, in LiveProcess, as it renews the
 //  app: its Update Cartouche action (app/patches/sidestore/0010) through
 //  the bridge CartoucheUpdate (launcher/SideStoreSupport). iOS replaces an
 //  app only once it has left the screen, so when SideStore starts the
 //  install it says so with a Darwin notification, and Cartouche goes to the
 //  home screen by itself. iOS closes it and installs the new version; the
-//  player opens Cartouche again, which says how it went.
+//  player opens Cartouche again, which says how it went: What's new, with
+//  the new version's notes (CartoucheWhatsNewView), or a word that it is
+//  installed when the version has none.
 //
 
 import Foundation
@@ -82,6 +89,9 @@ final class CartoucheUpdates: ObservableObject {
 
     private init() {
         observeInstall()
+        // What's new first, while the version this update installed is still
+        // in the preferences: it tells an update from a first install.
+        _ = CartoucheWhatsNew.shared
         reportPendingUpdate()
     }
 
@@ -121,7 +131,25 @@ final class CartoucheUpdates: ObservableObject {
     }
 
     /// Whether this build can update itself.
-    var canUpdate: Bool { !CartoucheImportedSigning.accountSigningDisabled && Self.bridge != nil && Self.sourceURL != nil && Self.bundleIdentifier != nil }
+    var canUpdate: Bool { !CartoucheImportedSigning.accountSigningDisabled && Self.bridge != nil && canCheck }
+
+    /// Whether this build reads its source, to install its updates or, signed
+    /// with the player's own certificate, to say that one is out.
+    var canCheck: Bool {
+        #if CARTOUCHE_GALLERY
+        // The gallery reads no source: its screenshot of the System page's
+        // updates shows them as Cartouche's own build has them.
+        if isOnSystemPageForGallery { return true }
+        #endif
+        return Self.sourceURL != nil && Self.bundleIdentifier != nil
+    }
+
+    /// The IPA of the version on offer that the player downloads, signed on
+    /// the iPhone: the one for the player's own certificate, which the
+    /// player's signing app signs.
+    var download: URL? {
+        CartoucheImportedSigning.isSignedOnIPhone ? available?.ownCertificateURL : nil
+    }
 
     /// Whether the player can start the update now: the built-in SideStore
     /// needs the certificate and the pairing file, as for a renewal.
@@ -191,9 +219,11 @@ final class CartoucheUpdates: ObservableObject {
         return try CartoucheRelease.newest(in: data, bundleIdentifier: bundleIdentifier, systemVersion: systemVersion)
     }
 
-    /// Offered once a day at most, and only once Cartouche is set up.
+    /// Offered once a day at most, and only once Cartouche is set up: with
+    /// the player's own certificate, to say that it is out.
     private func shouldOffer(_ release: CartoucheRelease) -> Bool {
-        guard canUpdate, phase == nil, notice == nil, CartoucheSetup.shared.isComplete else { return false }
+        guard canUpdate || CartoucheImportedSigning.isImportedInstall, phase == nil, notice == nil,
+              CartoucheSetup.shared.isComplete else { return false }
         if defaults.string(forKey: Self.laterVersionKey) == release.version,
            let asked = defaults.object(forKey: Self.laterDateKey) as? Date,
            Date().timeIntervalSince(asked) < 24 * 3600 {
@@ -214,11 +244,43 @@ final class CartoucheUpdates: ObservableObject {
         notice = nil
     }
 
+    /// Opens the IPA for the player's own certificate in Safari, which
+    /// downloads it: the player signs it in their signing app. The console
+    /// asks again tomorrow, as after Later.
+    func openDownload() {
+        guard let download else { return }
+        CartoucheReports.note("Download of Cartouche " + (available?.version ?? "") + " opened")
+        UIApplication.shared.open(download)
+        later()
+    }
+
     #if CARTOUCHE_GALLERY
     /// A version on offer, for the launcher's gallery (launcher/Gallery).
     func offerForGallery(_ release: CartoucheRelease) {
         available = release
         isOffered = true
+    }
+
+    /// What an update started from Cartouche leaves as it opens again, when
+    /// What's new has no notes to show.
+    func showInstalledForGallery() {
+        noteInstalled(Self.runningVersion)
+    }
+
+    /// What an update started from Cartouche leaves before iOS closes it:
+    /// the version it installs, which Cartouche reads as it opens again.
+    static func leavePendingForGallery(_ version: String) {
+        UserDefaults.standard.set(version, forKey: pendingKey)
+    }
+
+    /// Whether the gallery shows a version on the System page, which opens
+    /// on its updates (CartoucheSystemView).
+    private(set) var isOnSystemPageForGallery = false
+
+    /// A version on the System page, for the launcher's gallery.
+    func showOnSystemPageForGallery(_ release: CartoucheRelease) {
+        available = release
+        isOnSystemPageForGallery = true
     }
     #endif
 
@@ -329,8 +391,15 @@ final class CartoucheUpdates: ObservableObject {
             notice = CartoucheGameNotice(title: CartoucheText.updateUnfinishedTitle, message: message, report: report)
         } else {
             CartoucheReports.note("Update to Cartouche " + pending + " installed")
-            notice = CartoucheGameNotice(title: CartoucheText.updateInstalledTitle(running), message: CartoucheText.updatedMessage)
+            // What's new says so, with what the version brings.
+            guard !CartoucheWhatsNew.shared.shows(running) else { return }
+            noteInstalled(running)
         }
+    }
+
+    /// Cartouche opens on version RUNNING, which the update installed.
+    private func noteInstalled(_ running: String) {
+        notice = CartoucheGameNotice(title: CartoucheText.updateInstalledTitle(running), message: CartoucheText.updatedMessage)
     }
 
     // MARK: Leaving the screen for the install

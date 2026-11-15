@@ -123,7 +123,9 @@ final class CartoucheAccount: ObservableObject {
     private var deviceStepIsAutomatic = false
     private var deviceStepWatch = CartoucheDeviceStepWatch()
 
-    private static let pauseKey = "CartoucheSignInPause"
+    /// Where the pause is kept, which a reset of Cartouche keeps while it
+    /// counts (CartoucheReset).
+    static let pauseKey = "CartoucheSignInPause"
     private static let lastSignInKey = "CartoucheLastSignIn"
 
     private init() {
@@ -682,6 +684,16 @@ final class CartoucheAccount: ObservableObject {
             ? "The current pairing file is invalid. Reason: \(sentence)"
             : "VPN Connection Error:\n\(sentence)\n\nPlease make sure LocalDevVPN is connected and running properly."
         let failure = CartoucheFailure.sideStore(outcome: outcome, message: message, fraction: 0, seconds: 0,
+                                                 vpn: CartoucheVPN.isConnected, pairing: true)
+        failed(CartoucheText.sideStoreMessage(message, failure: failure, signIn: true), fraction: 0, failure: failure)
+    }
+
+    /// Shows a sign-in whose built-in SideStore quit as it launched, before
+    /// it said it had (app/patches/livecontainer/0016), as the sign-in's end
+    /// does, for the gallery's screens.
+    func showSideStoreQuitForGallery() {
+        let message = "Built-in SideStore quit unexpectedly while starting"
+        let failure = CartoucheFailure.sideStore(outcome: nil, message: message, fraction: 0, seconds: 1,
                                                  vpn: CartoucheVPN.isConnected, pairing: true)
         failed(CartoucheText.sideStoreMessage(message, failure: failure, signIn: true), fraction: 0, failure: failure)
     }

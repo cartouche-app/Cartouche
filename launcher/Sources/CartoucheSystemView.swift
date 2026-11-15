@@ -4,13 +4,16 @@
 //
 //  What Cartouche has on this iPhone: its setup, and the guide to the
 //  player's first game (CartoucheGuideView), which opens over the console;
-//  the player's storage, where their games and saves are kept; the memory
+//  the player's storage, where their games and saves are kept; the builds
+//  of the player's Mac paired there (CartoucheMacBuildsPage); the memory
 //  limit iOS sets for it, which the games that start in its place share;
 //  whether games run behind the console, and the memory they have there;
 //  when its signature expires, and how it is renewed; the device that the
 //  game sheets are compared with; Cartouche's updates; the game
-//  measurements it sends (CartoucheTelemetryView); and Report a problem
-//  (CartoucheReportView).
+//  measurements it sends (CartoucheTelemetryView); Cartouche's version and
+//  what the last versions brought (CartoucheReleaseNotesView); Report a
+//  problem (CartoucheReportView); and Reset Cartouche (CartoucheResetView),
+//  last.
 //  It opens over the console (CartoucheRootView), and OK or the
 //  controller's Menu button closes it.
 //
@@ -38,6 +41,8 @@ struct CartoucheSystemView: View {
     @ObservedObject private var guide = CartoucheGuide.shared
     @ObservedObject private var storedGames = CartoucheStoredGames.shared
     @EnvironmentObject private var sharedModel: SharedModel
+    /// The player's Mac, asked its builds while their page shows.
+    @StateObject private var macBuilds = CartoucheMacBuildsWatch()
 
     private let catalog = CartoucheCatalog.shared
 
@@ -54,12 +59,23 @@ struct CartoucheSystemView: View {
     /// The first row of the signature's section.
     static let signatureRow = "signature"
 
+    /// The row of a version on offer, in the updates' section.
+    static let updateRow = "update"
+
+    #if CARTOUCHE_GALLERY
+    /// Whether the gallery's page opens on the Mac's builds, as the row
+    /// under Storage opens them (screen: mac-builds).
+    static var opensMacBuilds = false
+    @State private var showsMacBuilds = CartoucheSystemView.opensMacBuilds
+    #endif
+
     var body: some View {
         NavigationStack {
             ScrollViewReader { reader in
                 List {
                     setupSection
                     storageSection
+                    macBuildsSection
                     memorySection
                     playingSection
                     signatureSection
@@ -69,6 +85,7 @@ struct CartoucheSystemView: View {
                     telemetrySection
                     cartoucheSection
                     reportSection
+                    resetSection
                 }
                 .cartoucheStageBackground()
                 .navigationTitle(CartoucheText.systemTab)
@@ -85,6 +102,11 @@ struct CartoucheSystemView: View {
                     try? await Task.sleep(for: .milliseconds(500))
                     reader.scrollTo(section, anchor: UnitPoint(x: 0.5, y: 0.15))
                 }
+                #if CARTOUCHE_GALLERY
+                .navigationDestination(isPresented: $showsMacBuilds) {
+                    CartoucheMacBuildsPage(watch: macBuilds)
+                }
+                #endif
             }
         }
         // Dark like the console under it, whatever the iPhone's appearance.
@@ -185,6 +207,23 @@ struct CartoucheSystemView: View {
                     }
                 } label: {
                     Label(CartoucheText.storageTitle, systemImage: "externaldrive.fill")
+                }
+            }
+        }
+    }
+
+    // MARK: The Mac's builds
+
+    /// The builds of the Mac paired in Storage, to follow and drive from
+    /// here; nothing without a Mac.
+    @ViewBuilder
+    private var macBuildsSection: some View {
+        if let mac = CartoucheMacBuildsWatch.mac(in: storage) {
+            Section {
+                NavigationLink {
+                    CartoucheMacBuildsPage(watch: macBuilds)
+                } label: {
+                    Label(CartoucheText.macBuildsTitle(mac.name), systemImage: "hammer.fill")
                 }
             }
         }
@@ -309,7 +348,8 @@ struct CartoucheSystemView: View {
         } header: {
             Text(CartoucheText.signature)
         } footer: {
-            Text(CartoucheImportedSigning.accountSigningDisabled ? CartoucheText.signingUpdateOnComputer : CartoucheText.signatureFooter)
+            Text(CartoucheImportedSigning.isSignedOnIPhone ? CartoucheText.signingUpdateOnIPhone
+                 : CartoucheImportedSigning.accountSigningDisabled ? CartoucheText.signingUpdateOnComputer : CartoucheText.signatureFooter)
         }
     }
 
@@ -419,17 +459,25 @@ struct CartoucheSystemView: View {
 
     // MARK: Updates
 
+    /// Signed with the player's own certificate, the section says that a
+    /// version is out, which Cartouche does not install by itself.
     @ViewBuilder
     private var updateSection: some View {
-        if updates.canUpdate {
+        if updates.canCheck {
             Section {
                 updateRows
             } header: {
                 Text(CartoucheText.updatesTitle)
             } footer: {
-                Text(CartoucheText.updatesFooter)
+                Text(updatesFooter)
             }
         }
+    }
+
+    private var updatesFooter: String {
+        if CartoucheImportedSigning.isSignedOnIPhone { return CartoucheText.signingUpdateOnIPhone }
+        if CartoucheImportedSigning.isImportedInstall { return CartoucheText.signingUpdateOnComputer }
+        return CartoucheText.updatesFooter
     }
 
     @ViewBuilder
@@ -455,9 +503,14 @@ struct CartoucheSystemView: View {
             .padding(.vertical, 4)
         } else if let available = updates.available {
             LabeledContent(CartoucheText.updateAvailable, value: available.version)
+                .id(Self.updateRow)
             if CartoucheImportedSigning.accountSigningDisabled {
-                Text(CartoucheText.signingUpdateOnComputer)
-                    .font(.footnote).foregroundStyle(.secondary)
+                // Its IPA, signed on the iPhone; the footer says what then.
+                if updates.download != nil {
+                    Button(CartoucheText.updateDownloadVersion(available.version), systemImage: "arrow.down.circle") {
+                        updates.openDownload()
+                    }
+                }
             } else {
                 Button(CartoucheText.updateTo(available.version), systemImage: "arrow.down.circle") {
                     updates.start()
@@ -525,6 +578,15 @@ struct CartoucheSystemView: View {
     private var cartoucheSection: some View {
         Section {
             LabeledContent(CartoucheText.version, value: version)
+            // What the last versions brought, which What's new showed after
+            // their update (CartoucheWhatsNewView).
+            if !CartoucheWhatsNew.carried.isEmpty {
+                NavigationLink {
+                    CartoucheReleaseNotesView(notes: Array(CartoucheWhatsNew.carried.prefix(CartoucheWhatsNew.listed)))
+                } label: {
+                    Text(CartoucheText.releaseNotesTitle)
+                }
+            }
             if let basedOn {
                 LabeledContent(CartoucheText.basedOn, value: basedOn)
             }
@@ -575,6 +637,26 @@ struct CartoucheSystemView: View {
             Text(catalog.device(CartoucheDevice.modelIdentifier) == nil
                  ? CartoucheText.reportFooter + " " + CartoucheText.reportNewDevice
                  : CartoucheText.reportFooter)
+        }
+    }
+
+    // MARK: Reset Cartouche
+
+    /// The reset's row: the gallery opens the page on it, at the page's
+    /// end (openingSection).
+    private static let resetRow = "reset"
+
+    /// Last, apart: what it erases, and the button, are on its own page.
+    private var resetSection: some View {
+        Section {
+            NavigationLink {
+                CartoucheResetView()
+            } label: {
+                Label(CartoucheText.resetTitle, systemImage: "arrow.counterclockwise")
+            }
+            .id(Self.resetRow)
+        } footer: {
+            Text(CartoucheText.resetFooter)
         }
     }
 }

@@ -25,16 +25,31 @@
 //        games                           the home
 //        guide                           Your first game
 //        library                         every game, open over the home
+//        mac-builds                      all the Mac's builds, as System
+//                                        opens them (work: mac-builds)
 //        nightly                         Renew every night, its steps, from
 //                                        the System page
+//        release-notes                   the System page's What's new, the
+//                                        notes of the last versions the
+//                                        gallery carries
 //        report                          Report a problem
+//        reset                           Reset Cartouche's page, as the
+//                                        System page opens it
+//        reset-end                       the same, at its end, on its button
 //        settings                        the settings of the sheet's game,
 //                                        open at -GalleryCategory
 //        setup                           the setup
 //        sheet                           the sheet of -GallerySheet's game
+//        sheet-mac                       the sheet, scrolled to the game's
+//                                        build on the player's Mac (work:
+//                                        mac-builds)
+//        sheet-saves                     the sheet, further down, at its
+//                                        saves
 //        shortcuts                       Siri and Home Screen, from the
 //                                        sheet of the player's game
 //        signin                          the Apple ID sign-in
+//        signing                         the import of the player's own
+//                                        certificate
 //        storage                         the Storage page
 //        storage-drive                   Add Google Drive, with the player's
 //                                        own client
@@ -43,6 +58,10 @@
 //                                        this iPhone with a Mac nearby
 //        storage-smb                     Add a shared folder, with a NAS
 //                                        nearby (GallerySMB)
+//        switch-save                     the saves of the sheet's game
+//                                        between the Switch and this iPhone,
+//                                        with -GalleryWork saves the save
+//                                        JKSV exported, read
 //        system                          the System page, down to
 //                                        -GalleryCategory
 //        telemetry                       Game measurements
@@ -51,6 +70,15 @@
 //                                        behind the console, its card where
 //                                        the game leaves its own scene on
 //                                        the TV empty (CartoucheTV.swift)
+//      -GallerySigning <signing>         Cartouche signed with the player's
+//                                        own certificate, one of these (none:
+//                                        with the player's Apple ID):
+//        installer                       by the Cartouche Installer, with
+//                                        every entitlement
+//        iphone                          by a signing app on the iPhone,
+//                                        which kept the profile's keychain
+//                                        pattern as it is
+//                                        (GalleryScenario.ownSignature)
 //      -GalleryWidth 402 -GalleryHeight 874     (none: the whole screen)
 //      -GalleryInsets 62,0,34,0          top, leading, bottom, trailing
 //      -GalleryWidthClass compact        the width class at a scenario's
@@ -75,6 +103,9 @@
 //        certificate                     a certificate iOS no longer accepts
 //        code                            Apple asks for a verification code,
 //                                        on the sign-in
+//        confirm                         on Reset Cartouche's page, its
+//                                        confirmation, at the page's end,
+//                                        from its button
 //        device-handshake                a sign-in that stopped at the check
 //                                        of this iPhone, LocalDevVPN
 //                                        connected: a pairing file this
@@ -88,9 +119,20 @@
 //                                        whose sign-in Google ended, as after
 //                                        7 days for a project in testing,
 //                                        with two games' saves waiting for it
+//        erasing                         on Reset Cartouche's page, the reset
+//                                        under way
+//        iml-left-out                    signed by a signing app on the
+//                                        iPhone (-GallerySigning iphone),
+//                                        without Increased Memory Limit,
+//                                        which the profile allows
+//        iml-not-in-profile              the same, with a profile that allows
+//                                        neither Increased Memory Limit nor
+//                                        the games' keychain groups
 //        install-failed                  the install of the sheet's game,
 //                                        which the network dropped halfway,
 //                                        with its report to copy
+//        installed                       the word an update leaves when
+//                                        What's new has no notes to show
 //        installing                      a game being installed, over the
 //                                        console
 //        iphone-step                     a sign-in Apple accepted that
@@ -101,6 +143,11 @@
 //                                        crash (GalleryLogs.swift)
 //        mac                             the player's Mac, paired, as the
 //                                        games folder and the saves folder
+//        mac-builds                      that Mac building one game and
+//                                        another waiting its turn, as the
+//                                        games' sheets, System and the
+//                                        Mac's builds show them
+//                                        (GalleryMac.builds)
 //        mac-code                        two Macs nearby, pairing with the
 //                                        first, with the six digits on both
 //                                        screens
@@ -138,12 +185,18 @@
 //                                        folder in Files as the saves folder,
 //                                        which Cartouche's own sync uses
 //                                        (GallerySaves)
+//        sidestore-quit                  a sign-in whose built-in SideStore
+//                                        quit as it launched, LocalDevVPN
+//                                        connected
 //        sign-in-unfinished              the setup after a sign-in that
 //                                        stopped before the certificate,
 //                                        with why and its report to copy
 //        signature-refused               the sheet's game's process ended as
 //                                        iOS refused its signature
 //                                        (CartoucheGameActions failSigning)
+//        signed-elsewhere                the IPA for an Apple ID, signed by a
+//                                        signing app without its app group,
+//                                        which cannot sign in
 //        smb-no-guests                   on Add a shared folder (screen
 //                                        storage-smb), the NAS refusing a
 //                                        guest, without a user name
@@ -159,8 +212,22 @@
 //        too-many                        Apple refused the sign-in for too
 //                                        many requests, with the wait under
 //                                        way
-//        update                          a new version of Cartouche on offer
+//        update                          a new version of Cartouche on offer,
+//                                        over the console, or on the System
+//                                        page (screen system)
+//        updated                         Cartouche opening after an update
+//                                        started from it, from 0.2.0 to the
+//                                        gallery's own version (project.yml),
+//                                        which What's new shows as Cartouche
+//                                        does
 //        vpn-wait                        the sign-in waiting for LocalDevVPN
+//        whats-new                       What's new over the console, as
+//                                        after an update to the newest
+//                                        version the gallery carries notes
+//                                        for (app/releases)
+//        whats-new-several               the same, to the newest two,
+//                                        scrolled to where the older one's
+//                                        notes begin
 //      -GalleryOrientation landscape     the gallery turns itself sideways,
 //                                        as a game does; the simulator
 //                                        stays upright
@@ -175,8 +242,18 @@
 //                                        saves
 //        manage                          on the sheet, the sheet opened on
 //                                        the game's management
+//        nightly                         on the Mac's builds (screen
+//                                        mac-builds), down to the nightly
+//                                        build
+//        reset                           on the System page, the page at its
+//                                        end, on Reset Cartouche
+//        results                         on a game's sheet, the testers'
+//                                        results, what they wrote in French
+//                                        as the iPhone translates it
 //        signature                       on the System page, the page
 //                                        scrolled down to its signature
+//        update                          on the System page, the page
+//                                        scrolled down to its updates
 //
 //  The UI tests (launcher/Gallery/UITests) open the whole console, as
 //  Cartouche shows it, and drive it (GalleryTesting.swift):
@@ -223,6 +300,8 @@ struct GalleryScenario {
     /// The name of the file that says the screen has settled.
     var ready: String?
     var category: String?
+    /// "iphone" or "installer": signed with the player's own certificate.
+    var signing: String?
 
     static func fromArguments() -> GalleryScenario {
         let defaults = UserDefaults.standard
@@ -248,6 +327,7 @@ struct GalleryScenario {
         scenario.landscape = defaults.string(forKey: "GalleryOrientation") == "landscape"
         scenario.ready = defaults.string(forKey: "GalleryReady")
         scenario.category = defaults.string(forKey: "GalleryCategory")
+        scenario.signing = defaults.string(forKey: "GallerySigning")
         return scenario
     }
 
@@ -285,12 +365,43 @@ struct GalleryScenario {
         unknownGames.first { $0.titleId == titleId }?.name ?? CartoucheCatalog.shared.game(titleId: titleId)?.name
     }
 
+    /// What the signature of the player's own certificate gives Cartouche,
+    /// as a signing app on the iPhone signs it: every entitlement of the
+    /// profile, its keychain pattern as it is, which gives the games no
+    /// keychain group; work iml-left-out: without Increased Memory Limit,
+    /// which the profile allows; iml-not-in-profile: a profile that allows
+    /// neither. The Cartouche Installer signs every group in.
+    var ownSignature: CartoucheOwnSignature? {
+        let team = "GALLERY123"
+        let memory = CartoucheOwnSignature.memoryEntitlement
+        let keychain = CartoucheOwnSignature.keychainEntitlement
+        let profile: [String: Any] = [memory: true, keychain: [team + ".*"]]
+        switch (signing, work) {
+        case ("iphone"?, "iml-left-out"?):
+            return CartoucheOwnSignature(signed: [keychain: [team + ".*"]], profile: profile, team: team)
+        case ("iphone"?, "iml-not-in-profile"?):
+            return CartoucheOwnSignature(signed: [keychain: [team + ".io.github.clabeuhtegrite.cartouche"]],
+                                         profile: [keychain: [team + ".io.github.clabeuhtegrite.cartouche"]], team: team)
+        case ("iphone"?, _):
+            return CartoucheOwnSignature(signed: profile, profile: profile, team: team)
+        case ("installer"?, _):
+            return CartoucheOwnSignature(signed: [memory: true, keychain: CartoucheOwnSignature.gameKeychainGroups(team: team)],
+                                         profile: profile, team: team)
+        default:
+            return nil
+        }
+    }
+
     /// Puts the files the stand-ins read where the launcher looks for them.
     func prepare() {
         GalleryState.setupDone = setupDone
+        GalleryState.signing = signing == "iphone" ? .iPhone : signing == "installer" ? .installer : .account
+        GalleryState.ownSignature = ownSignature
         GalleryState.certificateRefused = work == "certificate"
+        GalleryState.appGroupMissing = work == "signed-elsewhere"
         GalleryState.signInUnfinished = work == "sign-in-unfinished"
-        GalleryState.vpnConnected = work.map { Self.deviceChecks[$0] != nil } ?? false
+        GalleryState.sheetSection = screen == "sheet" ? category : nil
+        GalleryState.vpnConnected = work.map { Self.deviceChecks[$0] != nil || $0 == "sidestore-quit" } ?? false
         let pairing = GalleryState.documents.appendingPathComponent("SideStore/Documents", isDirectory: true)
         try? FileManager.default.removeItem(at: pairing)
         if setupDone || GalleryState.signInUnfinished {
@@ -305,8 +416,22 @@ struct GalleryScenario {
             GalleryState.recordSignature(expiringIn: 6 * 86_400 + 3_600, renewedAgo: 86_400)
         }
         MainActor.assumeIsolated {
-            // The System page down to the scenario's section.
+            showTranslations()
+            if work == "updated" {
+                // What an update started from Cartouche leaves as it opens
+                // again, before Cartouche reads it: the version it
+                // installed, and the version whose notes the player saw.
+                UserDefaults.standard.set("0.2.0", forKey: CartoucheWhatsNewRecord.seenKey)
+                CartoucheUpdates.leavePendingForGallery(CartoucheUpdates.runningVersion)
+                // The UI tests' start decides as Cartouche does already.
+                if !GalleryTest.isOn { CartoucheWhatsNew.shared.decideForGallery() }
+            }
+            CartoucheMacBuildsWatch.galleryScrolls = screen == "sheet-mac"
+            // The System page down to the scenario's section, or on the
+            // Mac's builds, down to theirs.
             CartoucheSystemView.openingSection = screen == "system" ? category : nil
+            CartoucheSystemView.opensMacBuilds = screen == "mac-builds"
+            CartoucheMacBuildsPage.openingRow = screen == "mac-builds" && category == "nightly" ? CartoucheMacBuildsPage.nightlyRow : nil
             if work == "renewing" {
                 CartoucheRenewals.shared.showRenewingForGallery(at: 0.4)
             }
@@ -342,8 +467,27 @@ struct GalleryScenario {
                 CartoucheGameActions.shared.notice = notice
             }
             if work == "update" {
-                // A higher version than the gallery's own (project.yml).
-                CartoucheUpdates.shared.offerForGallery(CartoucheRelease(version: "0.4.0", notes: "", size: 36_802_806))
+                // A higher version than the gallery's own (project.yml): on
+                // offer over the console, or on the System page, which opens
+                // on its updates.
+                let release = CartoucheRelease(
+                    version: "0.4.0", notes: "", size: 36_802_806,
+                    ownCertificateURL: URL(string: "https://github.com/clabeuhtegrite/Cartouche/releases/download/v0.4.0/Cartouche-0.4.0-Own-Certificate.ipa"))
+                if screen == "system" {
+                    CartoucheUpdates.shared.showOnSystemPageForGallery(release)
+                } else {
+                    CartoucheUpdates.shared.offerForGallery(release)
+                }
+            }
+            if work == "whats-new" || work == "whats-new-several" {
+                let newest = Array(CartoucheWhatsNew.carried.prefix(work == "whats-new" ? 1 : 2))
+                // After two versions, scrolled to the last item of the newer
+                // one, the older one's name under it.
+                let scrolled = work == "whats-new-several" ? max((newest.first?.items.count ?? 0) - 1, 0) : 0
+                CartoucheWhatsNew.shared.showForGallery(newest, scrolledTo: scrolled)
+            }
+            if work == "installed" {
+                CartoucheUpdates.shared.showInstalledForGallery()
             }
             if work == "code" {
                 CartoucheAccount.shared.requestCodeForGallery(.init(
@@ -361,6 +505,9 @@ struct GalleryScenario {
             if let check = work.flatMap({ Self.deviceChecks[$0] }) {
                 CartoucheAccount.shared.showDeviceCheckForGallery(kind: check.kind, reason: check.reason, detail: check.detail,
                                                                   pairingKind: check.pairingKind, sentence: check.sentence)
+            }
+            if work == "sidestore-quit" {
+                CartoucheAccount.shared.showSideStoreQuitForGallery()
             }
             if work == "sign-in-unfinished" {
                 CartoucheAccount.shared.showUnfinishedForGallery()
@@ -398,14 +545,26 @@ struct GalleryScenario {
             }
             if work == "saves", let titleId = sheet ?? ownedTitles.first {
                 GallerySaves.prepare(titleId: titleId)
+                if screen == "switch-save" {
+                    // The save JKSV exported, picked as the page opens.
+                    CartoucheSwitchSaveView.galleryPick = { await GallerySaves.switchExport() }
+                }
+            }
+            if screen == "sheet-saves" {
+                GallerySaves.bringingDown = true
+                CartoucheGameSheetView.galleryToSaves = { scrollTo in await GallerySaves.bringDown(scrollTo) }
             }
             if work == "log", let titleId = sheet ?? ownedTitles.first {
                 GalleryLogs.prepare(titleId: titleId)
             }
-            if work == "mac" || work == "mac-offline" {
+            if work == "erasing" {
+                CartoucheReset.shared.showForGallery(.erasing)
+            }
+            if ["mac", "mac-offline", "mac-builds"].contains(work) {
                 // The player's Mac, paired, with the games Cartouche Builder
                 // built in its Games folder; offline, away from home, the
-                // saves of two games wait for it.
+                // saves of two games wait for it; builds, Cartouche Builder
+                // at work, which the games' sheets and System show.
                 let mac = GalleryMac.paired()
                 CartoucheStorageSettings.shared.showForGallery(mac, games: CartoucheBridge.gamesFolder,
                                                                saves: CartoucheBridge.savesFolder)
@@ -413,6 +572,9 @@ struct GalleryScenario {
                 if work == "mac-offline" {
                     CartoucheStorageReach.shared.showOfflineForGallery([mac.id])
                     CartoucheSaveBackups.shared.showWaitingForGallery(2)
+                }
+                if work == "mac-builds" {
+                    CartoucheMacBuildsWatch.gallery = (mac: mac.name, builds: GalleryMac.builds())
                 }
             }
             if work == "drive-signed-out" {
@@ -561,6 +723,19 @@ struct GalleryScenario {
         CartoucheGameActions.shared.showRunningForGallery(app)
     }
 
+    /// The iPhone's translations of what testers wrote on the sheet of the
+    /// testers' results, as it makes them in French, which the simulator
+    /// cannot; none kept for the other scenarios.
+    @MainActor
+    private func showTranslations() {
+        try? FileManager.default.removeItem(at: CartoucheTranslations.defaultFile)
+        guard screen == "sheet", category == "results",
+              let language = CartoucheGameSummaryView.language?.minimalIdentifier, language == "fr" else { return }
+        for (text, translation) in GalleryTranslations.french {
+            CartoucheTranslations.shared.keep(translation, of: text, into: language)
+        }
+    }
+
     /// What capture.sh needs to cut the screen out of the simulator's
     /// screenshot, or to turn it the right way up (screenshot.swift).
     struct Ready: Encodable {
@@ -612,6 +787,10 @@ struct GalleryScenario {
                 }
             }
             try? await Task.sleep(for: .seconds(3))
+            // The sheet on its way down to its saves, for up to 15 s more.
+            for _ in 0..<60 where GallerySaves.bringingDown {
+                try? await Task.sleep(for: .milliseconds(250))
+            }
             // The covers the screen shows, from IGDB, for up to 20 s more.
             for _ in 0..<40 {
                 let pending = await CartoucheCoverStore.shared.pending
@@ -727,7 +906,7 @@ struct CartoucheGalleryApp: App {
             // the sheet of the game in focus on an iPhone Duo unfolded once
             // the player has a game.
             CartoucheGamesView(showingLibrary: true)
-        case "sheet":
+        case "sheet", "sheet-mac", "sheet-saves":
             if let entry = entries.all.first(where: { $0.titleId == scenario.sheet }) {
                 NavigationStack {
                     CartoucheGameSheetView(entry: entry, memory: CartoucheMemoryReading.now(), onPlay: { _ in },
@@ -781,6 +960,10 @@ struct CartoucheGalleryApp: App {
             }
         case "signin":
             CartoucheSignInView()
+        case "signing":
+            NavigationStack {
+                CartoucheSigningView()
+            }
         case "guide":
             NavigationStack {
                 CartoucheGuideView(entries: entries, onInstall: { _ in }, onImport: { _ in }, onPlay: { _ in })
@@ -790,7 +973,7 @@ struct CartoucheGalleryApp: App {
                         }
                     }
             }
-        case "system":
+        case "system", "mac-builds":
             CartoucheSystemView()
         case "nightly":
             NavigationStack {
@@ -828,6 +1011,31 @@ struct CartoucheGalleryApp: App {
         case "report":
             NavigationStack {
                 CartoucheReportView()
+            }
+        case "release-notes":
+            // As the System page opens it.
+            NavigationStack {
+                CartoucheReleaseNotesView(notes: Array(CartoucheWhatsNew.carried.prefix(CartoucheWhatsNew.listed)))
+            }
+            .preferredColorScheme(.dark)
+        case "reset", "reset-end":
+            // As the System page opens it, or at its end.
+            NavigationStack {
+                CartoucheResetView(confirming: scenario.work == "confirm", showsEnd: scenario.screen == "reset-end")
+            }
+        case "switch-save":
+            // The game's saves between the Switch and this iPhone, from its
+            // sheet: with work: saves, the save JKSV exported, read.
+            if let entry = entries.owned.first(where: { $0.titleId == (scenario.sheet ?? scenario.ownedTitles.first) }),
+               let app = entry.app {
+                NavigationStack {
+                    CartoucheSwitchSaveView(game: CartoucheSwitchSaveGame(name: entry.name, titleId: entry.titleId, version: "1.0.0",
+                                                                          isSwitch2: entry.platform == "switch2",
+                                                                          target: GallerySaves.target(of: app),
+                                                                          makeTarget: { GallerySaves.target(of: app) },
+                                                                          isRunningNow: { false }),
+                                            isRunning: false)
+                }
             }
         case "root":
             CartoucheRootView()
@@ -882,6 +1090,37 @@ enum GalleryMac {
         CartoucheStorageServer(kind: .mac, name: "MacBook Air", host: "192.168.1.20", port: Int(CartoucheBridge.port), macID: id)
     }
 
+    /// Cartouche Builder at work on the Mac, as it tells Cartouche (work:
+    /// mac-builds): Mario Kart World building, Donkey Kong Bananza waiting
+    /// its turn, Link's Awakening built this morning, and three games the
+    /// player has not installed: one whose last build failed yesterday,
+    /// one nxnative improved since its last build, and one the Mac does
+    /// not follow. What is due built every night at 3:30. Its words in the
+    /// gallery's language, as a Mac in that language says them (stageText
+    /// in the Mac's Theme.swift).
+    static func builds(now: Date = Date()) -> CartoucheBridgeBuilds {
+        let hour: TimeInterval = 3_600
+        let french = CartoucheText.bundle.preferredLocalizations.first == "fr"
+        return CartoucheBridgeBuilds(running: true, games: [
+            .init(id: "0400C3F00006E000", name: "Mario Kart World", state: "building", reasons: ["changes"],
+                  progress: 0.42, step: french ? "Compilation des shaders pour l’iPhone" : "Compiling shaders for the iPhone",
+                  left: 21 * 60, built: now.addingTimeInterval(-3 * 24 * hour), followed: true, stoppable: true, stopping: false),
+            .init(id: "040074A01BF12000", name: "Donkey Kong Bananza", state: "queued", reasons: ["changes"], turn: 1,
+                  built: now.addingTimeInterval(-6 * 24 * hour), followed: true, stoppable: true, stopping: false),
+            .init(id: "01006BB00C6F0000", name: "The Legend of Zelda: Link's Awakening", state: "up_to_date",
+                  built: now.addingTimeInterval(-9 * hour), followed: true),
+            .init(id: "01003FC01670C000", name: "13 Sentinels: Aegis Rim", state: "failed",
+                  failed: now.addingTimeInterval(-26 * hour),
+                  error: french ? "La construction de l’app s’est arrêtée\u{00A0}: Xcode n’a trouvé aucun SDK iOS."
+                                : "Building the app stopped: Xcode found no iOS SDK.",
+                  followed: true),
+            .init(id: "0100B7C00933A000", name: "Pikmin 4", state: "due", reasons: ["changes"],
+                  built: now.addingTimeInterval(-12 * 24 * hour), followed: true),
+            .init(id: "0100000000010000", name: "Super Mario Odyssey", state: "not_followed",
+                  built: now.addingTimeInterval(-20 * 24 * hour), followed: false),
+        ], due: 1, nightly: CartoucheBridgeBuilds.Nightly(on: true, hour: 3, minute: 30))
+    }
+
     private static func service(_ name: String) -> NWEndpoint {
         .service(name: name, type: CartoucheBridge.serviceType, domain: "local.", interface: nil)
     }
@@ -895,6 +1134,66 @@ enum GalleryMac {
 enum GallerySaves {
     /// The folder's name, as the Storage page and the sheet show it.
     static let folderName = "Gallery saves"
+
+    /// Whether the sheet is on its way down to its saves, which the
+    /// screenshot waits for (GalleryScenario.settle).
+    @MainActor static var bringingDown = false
+
+    /// Brings the sheet down to the row of the Switch saves, in the middle
+    /// of the screen, with SCROLLTO, SwiftUI's scroll to it: a few times, as
+    /// the gallery's first seconds can hold the main thread for a second or
+    /// more; else by hand, down the list until it has laid the row out, then
+    /// to the row. A single scroll half a second after the sheet showed left
+    /// it at its top (run 43548937064).
+    @MainActor
+    static func bringDown(_ scrollTo: @escaping @MainActor () -> Void) async {
+        defer { bringingDown = false }
+        for _ in 0..<5 where !rowInTheMiddle {
+            try? await Task.sleep(for: .milliseconds(300))
+            scrollTo()
+        }
+        for _ in 0..<40 where !rowInTheMiddle {
+            guard let list = collectionView(), list.bounds.height > 0 else { break }
+            let shown = list.convert(list.bounds, to: nil)
+            let by = CartoucheSavesSection.galleryRowFrame.map { $0.midY - shown.midY } ?? list.bounds.height * 0.6
+            let end = max(0, list.contentSize.height + list.adjustedContentInset.bottom - list.bounds.height)
+            let y = min(end, max(-list.adjustedContentInset.top, list.contentOffset.y + by))
+            guard abs(y - list.contentOffset.y) >= 1 else { break }
+            list.setContentOffset(CGPoint(x: list.contentOffset.x, y: y), animated: false)
+            try? await Task.sleep(for: .milliseconds(150))
+        }
+        try? await Task.sleep(for: .milliseconds(300))
+        if !rowInTheMiddle {
+            NSLog("[Gallery] the sheet did not come down to the row of the Switch saves")
+        }
+    }
+
+    /// Whether the row of the Switch saves is in the middle three fifths of
+    /// the list on the screen.
+    @MainActor
+    private static var rowInTheMiddle: Bool {
+        guard let row = CartoucheSavesSection.galleryRowFrame, let list = collectionView() else { return false }
+        let shown = list.convert(list.bounds, to: nil)
+        return row.minY >= shown.minY + shown.height / 5 && row.maxY <= shown.maxY - shown.height / 5
+    }
+
+    /// The collection view of the list on the screen, a SwiftUI list's.
+    @MainActor
+    private static func collectionView() -> UICollectionView? {
+        let scene = UIApplication.shared.connectedScenes.lazy.compactMap { $0 as? UIWindowScene }.first
+        guard let window = scene?.windows.first else { return nil }
+        return collectionView(in: window)
+    }
+
+    @MainActor
+    private static func collectionView(in view: UIView) -> UICollectionView? {
+        if let list = view as? UICollectionView { return list }
+        for subview in view.subviews {
+            if let list = collectionView(in: subview) { return list }
+        }
+        return nil
+    }
+
     /// The game whose saves these are, once the scenario has them.
     @MainActor private static var titleId: String?
 
@@ -927,8 +1226,56 @@ enum GallerySaves {
             let server = CartoucheStorageServer(kind: .folder, name: folderName, bookmark: try CartoucheFolder.bookmark(of: folder))
             CartoucheStorageSettings.shared.showForGallery(server, games: "", saves: "Saves")
             self.titleId = titleId
+            switchExportWritten = Task { await writeSwitchExport(titleId: titleId) }
         } catch {
             NSLog("[Gallery] cannot make the saves and their folder: %@", String(describing: error))
+        }
+    }
+
+    /// The save JKSV exported on the Switch that the gallery offers, a ZIP
+    /// archive of the scenario's game's in its Documents, which the Files
+    /// picker shows under On My iPhone › Gallery; the UI tests pick the same
+    /// that uitests.sh puts in On My iPhone itself. Named as JKSV names its
+    /// exports, the player and the time: no label of the page under the
+    /// picker begins as it does, which the UI tests would tap for the file
+    /// (FilesPicker.pick), as they tapped the page's title, Switch saves,
+    /// for "Switch save.zip".
+    static let switchExportName = "Player - 2026-11-13_15-20-00.zip"
+    @MainActor private static var switchExportWritten: Task<URL?, Never>?
+
+    /// The save JKSV exported, once written.
+    @MainActor
+    static func switchExport() async -> URL? {
+        await switchExportWritten?.value
+    }
+
+    /// Writes a save of the game TITLEID as JKSV exports one: its fiche, a
+    /// file and a folder with a file.
+    private static func writeSwitchExport(titleId: String) async -> URL? {
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let url = documents.appendingPathComponent(switchExportName)
+        var fiche = [UInt8](repeating: 0, count: CartoucheSwitchSaveMeta.size)
+        let id = UInt64(titleId, radix: 16) ?? 0
+        for index in 0 ..< 4 { fiche[index] = UInt8(truncatingIfNeeded: CartoucheSwitchSaveMeta.magic >> (8 * UInt32(index))) }
+        fiche[4] = 1
+        for index in 0 ..< 8 { fiche[5 + index] = UInt8(truncatingIfNeeded: id >> (8 * UInt64(index))) }
+        fiche[37] = 1   // a player's save
+        do {
+            try FileManager.default.createDirectory(at: documents, withIntermediateDirectories: true)
+            let sink = try CartoucheFileSink(url)
+            let writer = CartoucheZipWriter(sink: sink)
+            try await writer.addData(CartoucheSwitchSaveMeta.fileName, Data(fiche))
+            var progress = Data(count: 1 << 20)
+            progress.withUnsafeMutableBytes { arc4random_buf($0.baseAddress, $0.count) }
+            try await writer.addData("progress.bin", progress)
+            try await writer.addFolder("slots/")
+            try await writer.addData("slots/1.bin", Data("slot 1".utf8))
+            try await writer.finish()
+            try sink.close()
+            return url
+        } catch {
+            NSLog("[Gallery] cannot write %@: %@", switchExportName, String(describing: error))
+            return nil
         }
     }
 

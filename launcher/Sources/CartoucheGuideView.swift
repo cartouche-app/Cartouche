@@ -3,9 +3,12 @@
 //  Cartouche
 //
 //  The first game's guide (CartoucheGuide), over the console: five steps
-//  from a new install to a game on the iPhone, each ticked from what
-//  Cartouche sees. The step left first is open, with its action; a later
-//  one opens with a tap, for a player who takes them in another order.
+//  from a new install to a game on the iPhone, four with the player's own
+//  certificate, or with the IPA for an Apple ID that a signing app signed,
+//  whose first step is the IPA for the player's own certificate, each
+//  ticked from what Cartouche sees. The step left first
+//  is open, with its action; a later one opens with a tap, for a player
+//  who takes them in another order.
 //  Each action is one Cartouche already has: LocalDevVPN connects and
 //  brings Cartouche back by itself, the sign-in is the setup's own screen,
 //  the games folder the storage page; the Mac's steps go to the Mac as a
@@ -52,6 +55,7 @@ struct CartoucheGuideView: View {
     @State private var opened: Step?
     @State private var signingIn = false
     @State private var showingSetup = false
+    @State private var showingSigning = false
     @State private var showingStorage = false
 
     var body: some View {
@@ -80,6 +84,9 @@ struct CartoucheGuideView: View {
         }
         .navigationDestination(isPresented: $showingStorage) {
             CartoucheStorageView()
+        }
+        .navigationDestination(isPresented: $showingSigning) {
+            CartoucheSigningView()
         }
         .sheet(isPresented: $signingIn) {
             CartoucheSignInView()
@@ -165,6 +172,8 @@ struct CartoucheGuideView: View {
         switch step {
         case .vpn: return CartoucheText.guideVPNTitle
         case .account: return CartoucheText.guideAccountTitle
+        case .certificate:
+            return CartoucheImportedSigning.isSignedElsewhere ? CartoucheText.signedElsewhereTitle : CartoucheText.guideCertificateTitle
         case .build: return CartoucheText.guideBuildTitle
         case .folder: return CartoucheText.guideFolderTitle
         case .play: return CartoucheText.guidePlayTitle
@@ -248,6 +257,8 @@ struct CartoucheGuideView: View {
             detail(progress.vpnConnected ? CartoucheText.guideVPNDone : CartoucheText.guideDone)
         case .account:
             detail(setup.appleID.map(CartoucheText.guideAccountDone) ?? CartoucheText.guideDone)
+        case .certificate:
+            detail(CartoucheText.setupCertificateDone)
         case .build:
             detail(CartoucheText.guideBuildDone)
         case .folder:
@@ -280,6 +291,8 @@ struct CartoucheGuideView: View {
             }
         case .account:
             accountContent(progress)
+        case .certificate:
+            certificateContent
         case .build:
             detail(CartoucheText.guideBuildHow)
             // Side by side where they fit, the one over the other otherwise,
@@ -396,6 +409,43 @@ struct CartoucheGuideView: View {
             }
             action(CartoucheText.guideOpenSetup, systemImage: "checklist", primary: false) {
                 showingSetup = true
+            }
+        }
+    }
+
+    /// The player's own certificate: the import screen, which, signed on
+    /// the iPhone, asks for the certificate and its password alone. The IPA
+    /// for an Apple ID that a signing app signed has no certificate to
+    /// import: the IPA for the player's own certificate, to download and
+    /// sign, takes its place.
+    @ViewBuilder
+    private var certificateContent: some View {
+        let onIPhone = CartoucheImportedSigning.isSignedOnIPhone
+        if CartoucheImportedSigning.isSignedElsewhere {
+            let version = CartoucheImportedSigning.cartoucheVersion
+            detail(CartoucheText.signedElsewhere(version))
+            if let ipa = CartoucheImportedSigning.ownCertificateIPA {
+                action(CartoucheText.updateDownloadVersion(version), systemImage: "arrow.down.circle", primary: true) {
+                    openURL(ipa)
+                }
+            }
+        } else if setup.isImportingSigning || (setup.hasCertificate && setup.certificateWorks == nil) {
+            HStack(spacing: 10) {
+                ProgressView()
+                    .tint(Color.white)
+                detail(CartoucheText.setupCertificateChecking)
+            }
+        } else {
+            detail(setup.certificateRefused ? (onIPhone ? CartoucheText.signingRefusedOnIPhone : CartoucheText.signingRefused)
+                   : onIPhone ? CartoucheText.signingHowOnIPhone : CartoucheText.signingHow)
+            if let problem = setup.signingProblem {
+                Label(problem, systemImage: "exclamationmark.triangle.fill")
+                    .font(.footnote)
+                    .foregroundStyle(CartoucheTheme.danger)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            action(CartoucheText.signingTitle, systemImage: "signature", primary: true) {
+                showingSigning = true
             }
         }
     }

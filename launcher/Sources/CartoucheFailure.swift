@@ -696,6 +696,14 @@ extension CartoucheFailure {
         ("SideStore type is not an AppIntent", .intentMissing),
     ]
 
+    /// The bridge's sentences that also say where SideStore's action
+    /// stopped, when SideStore could leave nothing: `launch`, its process
+    /// quitting before it said it had launched
+    /// (app/patches/livecontainer/0016), rather than on its way.
+    static let bridgeStages: [(prefix: String, stage: String)] = [
+        ("Built-in SideStore quit unexpectedly while starting", "launch"),
+    ]
+
     /// Why an action of the built-in SideStore failed: from the OUTCOME it
     /// left, when it left one, otherwise from the bridge's MESSAGE, matched
     /// against its own sentences. VPN and PAIRING say whether LocalDevVPN was
@@ -725,7 +733,9 @@ extension CartoucheFailure {
         let said = bridgeSentences.first { text.hasPrefix($0.prefix) }?.cause
         guard let outcome else {
             let page: Cause? = pageStatus.map { $0 == 429 ? .tooManyAttempts : .appleServer }
-            return CartoucheFailure(said ?? page ?? .noOutcome, fraction: fraction, seconds: seconds, details: details)
+            let stage = bridgeStages.first { text.hasPrefix($0.prefix) }?.stage
+            return CartoucheFailure(said ?? page ?? .noOutcome, stage: stage, fraction: fraction, seconds: seconds,
+                                    details: details)
         }
         // SideStore's action went well, yet what ran it failed on the way back.
         details["outcomeOK"] = .flag(true)
