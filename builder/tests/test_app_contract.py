@@ -108,8 +108,10 @@ class AppContract(Home):
         self.call("follow", "follow", MKW, "on")
         self.call("error", "config", "--set", json.dumps({"jobs": "two"}))
 
-        # Mario Kart World building, for the three seconds its fake shaders take.
-        os.environ["FAKE_SLEEP"] = "3"
+        # Mario Kart World building, its fake shaders held until the calls
+        # below are made, however long they take on a busy runner.
+        release = self.tmp / "release"
+        os.environ["FAKE_HOLD"] = str(release)
         running = threading.Thread(target=self.build, args=(MKW,))
         running.start()
         try:
@@ -128,6 +130,7 @@ class AppContract(Home):
                 self.call(None, "queue", "remove", HOLLOW)
                 self.call("queue", "queue", "add", "--force", ODYSSEY)
         finally:
+            release.touch()
             running.join()
         self.assertEqual(self.answers["status-building"]["status"]["state"], "building")
         self.assertEqual((self.answers["queue"]["queued"], self.answers["queue"]["queue"]["stop"]), (True, [HOLLOW]))

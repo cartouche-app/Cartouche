@@ -42,9 +42,23 @@ class Queue(Home):
         self.threads = []
 
     def tearDown(self):
+        # A build the test held goes on, whatever failed meanwhile.
+        self.release()
         for thread in self.threads:
             thread.join(60)
         super().tearDown()
+
+    def hold(self, title_id: str | None = None):
+        """Holds the fake build of TITLE_ID (of each game, without one) in its
+        shaders until release(): what the test does meanwhile never races the
+        time a build takes, on a busy runner as on a quiet one."""
+        os.environ["FAKE_HOLD"] = str(self.tmp / "release")
+        if title_id:
+            os.environ["FAKE_SLEEP_ONLY"] = title_id
+
+    def release(self):
+        if hold := os.environ.get("FAKE_HOLD"):
+            Path(hold).touch()
 
     def run_due(self, **kwargs):
         return batch.run_due(batch.context(), python=PYTHON, check_tools=False, **kwargs)
@@ -80,13 +94,14 @@ class Queue(Home):
     def test_a_game_asked_for_is_built_after_the_batchs_own(self):
         self.assertFalse(queues.add(self.paths, [ODYSSEY]))
         self.assertFalse(self.paths.queue.exists(), "nothing waits without a batch")
-        os.environ["FAKE_SLEEP"], os.environ["FAKE_SLEEP_ONLY"] = "2", MKW
+        self.hold(MKW)
         thread = self.start(only={MKW})
         self.wait_for(lambda: self.building(MKW))
         self.assertTrue(queues.add(self.paths, [ODYSSEY]))
         # The game building, asked for again, is built once.
         self.assertTrue(queues.add(self.paths, [MKW, ODYSSEY]))
         self.assertEqual([g["title_id"] for g in queues.read(self.paths)["games"]], [ODYSSEY, MKW])
+        self.release()
         thread.join(60)
         self.assertEqual(self.built(), [MKW, ODYSSEY])
         status = json.loads(self.paths.status.read_text())
@@ -101,16 +116,17 @@ class Queue(Home):
 
     def test_a_game_asked_for_again_is_built_again(self):
         self.run_due(only={MKW})
-        os.environ["FAKE_SLEEP"], os.environ["FAKE_SLEEP_ONLY"] = "2", HOLLOW
+        self.hold(HOLLOW)
         thread = self.start(only={HOLLOW})
         self.wait_for(lambda: self.building(HOLLOW))
         queues.add(self.paths, [MKW], force=True)
+        self.release()
         thread.join(60)
         self.assertEqual(self.built(), [HOLLOW, MKW])
         self.assertEqual((batch.context().workspace.build_folder(MKW) / "runs.txt").read_text().count("run"), 2)
 
     def test_a_game_waiting_can_be_taken_out(self):
-        os.environ["FAKE_SLEEP"] = "2"
+        self.hold()
         thread = self.start(only={MKW, HOLLOW})
         self.wait_for(lambda: "building" in self.states().values())
         first = next(t for t, s in self.states().items() if s == "building")
@@ -119,6 +135,7 @@ class Queue(Home):
         queues.add(self.paths, [ODYSSEY])
         queues.remove(self.paths, [other, ODYSSEY])
         self.assertEqual(queues.read(self.paths), {"version": 1, "games": [], "stop": [other]})
+        self.release()
         thread.join(60)
         self.assertEqual(self.built(), [first])
         self.assertEqual(self.states(), {first: "built"})
@@ -164,12 +181,16 @@ class Queue(Home):
         config = configs.load(self.paths)
         config.jobs = 2
         configs.save(self.paths, config)
-        os.environ["FAKE_SLEEP"], os.environ["FAKE_SLEEP_ONLY"] = "8", MKW
+        # Mario Kart World builds until Hollow Knight, asked for meanwhile, is
+        # built: eight seconds of it were once too few for the whole build of
+        # Hollow Knight on a busy runner (CI of 66c7b67 on main).
+        self.hold(MKW)
         thread = self.start(only={MKW})
         self.wait_for(lambda: self.building(MKW))
         queues.add(self.paths, [HOLLOW])
-        self.wait_for(lambda: self.states().get(HOLLOW) == "built", timeout=15)
+        self.wait_for(lambda: self.states().get(HOLLOW) == "built", timeout=60)
         self.assertEqual(self.states()[MKW], "building")
+        self.release()
         thread.join(60)
         self.assertEqual(self.built(), [HOLLOW, MKW])
 

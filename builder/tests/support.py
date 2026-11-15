@@ -321,6 +321,13 @@ if broken or os.environ.get("FAKE_APP_BUILD") == title_id:
     print("Undefined symbols for architecture arm64: \"_probe_atrace\"", file=sys.stderr, flush=True)
     ev(ev="say", msg="[RED] xcodebuild failed (exit 65): see the app build's log")
     sys.exit(1)
+if os.environ.get("FAKE_HOLD") and os.environ.get("FAKE_SLEEP_ONLY", title_id) == title_id:
+    # Until the test lets the build go on, by the file FAKE_HOLD names,
+    # however long the rest takes on a busy runner; two minutes at most.
+    ev(ev="stage", k=2, n=2, name="shaders", step="")
+    deadline = time.monotonic() + 120
+    while not Path(os.environ["FAKE_HOLD"]).exists() and time.monotonic() < deadline:
+        time.sleep(0.05)
 if os.environ.get("FAKE_SLEEP") and os.environ.get("FAKE_SLEEP_ONLY", title_id) == title_id:
     ev(ev="stage", k=2, n=2, name="shaders", step="")
     for _ in range(int(os.environ["FAKE_SLEEP"]) * 10):
@@ -384,9 +391,9 @@ def make_engine_remote(folder: Path, games: dict[str, str]) -> Path:
     return folder
 
 
-# What makes the fake nxnative fail, sleep or end without an IPA (or a Mac
-# app), for a game.
-FAKES = ("FAKE_FAIL", "FAKE_SLEEP", "FAKE_SLEEP_ONLY", "FAKE_NO_IPA", "FAKE_NO_SPACE", "FAKE_DAMAGED", "FAKE_METAL", "FAKE_XCODE", "FAKE_CRASH",
+# What makes the fake nxnative fail, sleep, wait for the test (FAKE_HOLD) or
+# end without an IPA (or a Mac app), for a game.
+FAKES = ("FAKE_FAIL", "FAKE_SLEEP", "FAKE_SLEEP_ONLY", "FAKE_HOLD", "FAKE_NO_IPA", "FAKE_NO_SPACE", "FAKE_DAMAGED", "FAKE_METAL", "FAKE_XCODE", "FAKE_CRASH",
          "FAKE_APP_BUILD", "FAKE_BROKEN_ONLY", "FAKE_MAC_FAIL", "FAKE_MAC_NO_SPACE", "FAKE_MAC_SLEEP", "FAKE_MAC_NO_APP")
 
 
