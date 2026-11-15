@@ -8,7 +8,9 @@
 //  thousands of programs that end at once, each seen to end. Foundation's
 //  Process.waitUntilExit once waited for good for a program whose output and
 //  errors had ended, and the app's tests with it (the Builder's Mac tests on
-//  CI, 15 November, run 43711191427).
+//  CI, 15 November, run 43711191427). Run.program waited in it then: here,
+//  8 of its first 261 runs never ended, though their programs had (pull
+//  request #214, run 43728948839).
 //
 
 import Foundation
@@ -104,74 +106,6 @@ final class RunTests: XCTestCase {
         XCTAssertEqual(unended, [], "runs that never ended")
         XCTAssertEqual(wrong.current, [])
     }
-
-    #if canImport(Darwin)
-    /// EXPERIMENT, taken out with the fix: Run.program's wait until now, on
-    /// Process itself, ten thousand times; for a program it has not seen end
-    /// 20 s after its output and errors ended, what Process and the kernel
-    /// say of it.
-    func testExperimentProcessWaitUntilExit() {
-        let seen = Locked<[String]>([])
-        let unended = stress(10_000, timeout: 240) { index in
-            await RunTests.waitUntilExit(index, seen: seen)
-        }
-        XCTAssertEqual(unended, [], "runs that never ended")
-        XCTAssertEqual(seen.current, [])
-    }
-
-    private static func waitUntilExit(_ index: Int, seen: Locked<[String]>) async {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/bin/echo")
-        process.arguments = ["\(index)"]
-        let output = Pipe()
-        let errors = Pipe()
-        process.standardOutput = output
-        process.standardError = errors
-        process.standardInput = FileHandle.nullDevice
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            let group = DispatchGroup()
-            group.enter()
-            DispatchQueue.global(qos: .utility).async {
-                _ = output.fileHandleForReading.readDataToEndOfFile()
-                group.leave()
-            }
-            group.enter()
-            DispatchQueue.global(qos: .utility).async {
-                while !errors.fileHandleForReading.availableData.isEmpty {}
-                group.leave()
-            }
-            do {
-                try process.run()
-            } catch {
-                try? output.fileHandleForWriting.close()
-                try? errors.fileHandleForWriting.close()
-                seen.update { $0.append("\(index): \(error)") }
-                continuation.resume()
-                return
-            }
-            group.notify(queue: .global(qos: .utility)) {
-                let pid = process.processIdentifier
-                let late = DispatchWorkItem {
-                    let said = "\(index): pid \(pid), Process says running: \(process.isRunning), the kernel says: \(RunTests.kernel(pid))"
-                    seen.update { $0.append(said) }
-                }
-                DispatchQueue.global().asyncAfter(deadline: .now() + 20, execute: late)
-                process.waitUntilExit()
-                late.cancel()
-                continuation.resume()
-            }
-        }
-    }
-
-    /// What the kernel says of the child PID, leaving it as it is.
-    private static func kernel(_ pid: pid_t) -> String {
-        var info = siginfo_t()
-        if waitid(P_PID, id_t(pid), &info, WEXITED | WNOHANG | WNOWAIT) == -1 {
-            return errno == ECHILD ? "no such child (reaped)" : "waitid: \(String(cString: strerror(errno)))"
-        }
-        return info.si_pid == pid ? "ended, not reaped" : "running"
-    }
-    #endif
 
     /// Runs ONE for each of COUNT indexes, eight at a time, off the test's
     /// thread, and waits TIMEOUT at most for them all: a run that never ends

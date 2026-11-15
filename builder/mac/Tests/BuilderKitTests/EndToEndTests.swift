@@ -222,7 +222,7 @@ final class EndToEndTests: XCTestCase {
             let read = try await client.read("\(CartoucheBridge.gamesFolder)/\(item.name)", at: 0, count: bytes.count)
             XCTAssertEqual(Data(SHA256.hash(data: read)), Data(SHA256.hash(data: bytes)), item.name)
             // What Cartouche reads in it: the game, and the nxnative commit it was built from.
-            let info = try infoPlist(of: local)
+            let info = try await infoPlist(of: local)
             XCTAssertEqual(info["DMCommit"] as? String, commit, item.name)
             XCTAssertTrue(item.name.contains("[\(info["DMTitleID"] as? String ?? "?")]"), item.name)
         }
@@ -424,17 +424,10 @@ final class EndToEndTests: XCTestCase {
     }
 
     /// The app's Info.plist in IPA.
-    private func infoPlist(of ipa: URL) throws -> [String: Any] {
-        let unzip = Process()
-        unzip.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
-        unzip.arguments = ["-p", ipa.path, "Payload/*.app/Info.plist"]
-        let output = Pipe()
-        unzip.standardOutput = output
-        unzip.standardError = FileHandle.nullDevice
-        try unzip.run()
-        let data = output.fileHandleForReading.readDataToEndOfFile()
-        unzip.waitUntilExit()
-        let plist = try PropertyListSerialization.propertyList(from: data, format: nil)
+    private func infoPlist(of ipa: URL) async throws -> [String: Any] {
+        let unzip = try await Run.program("/usr/bin/unzip", ["-p", ipa.path, "Payload/*.app/Info.plist"], timeout: 60)
+        XCTAssertEqual(unzip.status, 0, unzip.errorText)
+        let plist = try PropertyListSerialization.propertyList(from: unzip.output, format: nil)
         return try XCTUnwrap(plist as? [String: Any])
     }
 
