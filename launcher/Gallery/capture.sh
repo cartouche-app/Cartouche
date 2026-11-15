@@ -22,7 +22,9 @@
 # test, which did this before, failed now and then to close the gallery
 # between two scenarios ("Failed to terminate"). The gallery is opened once
 # on each simulator before its scenarios, with more time: its first launch
-# after the install can take minutes.
+# after the install can take minutes. The install itself, right after the
+# iPad's first boot on one of GitHub's Macs, can go unanswered for minutes:
+# it is tried once more a minute later (install.py).
 #
 # A scenario that fails is named, with the screen as it was
 # (failed-<scenario>.png in OUT), the others go on, and the script fails at
@@ -59,6 +61,8 @@ HERE, OUT, BUILD = (Path(path) for path in sys.argv[1:4])
 # When a screen is drawn and still, beside this script.
 sys.path.insert(0, str(HERE))
 import settled  # noqa: E402
+# How the gallery is installed on a simulator just booted.
+import install  # noqa: E402
 BUNDLE = "io.github.clabeuhtegrite.cartouche.gallery"
 APP = BUILD / "DerivedData/Build/Products/Debug-iphonesimulator/CartoucheGallery.app"
 document = json.loads((HERE / "scenarios.json").read_text())
@@ -354,7 +358,7 @@ for device in sorted({s.get("device", "") for s in document["scenarios"]}):
     try:
         run("xcrun", "simctl", "bootstatus", udid, "-b", timeout=900)
         print(f"   booted {time.monotonic() - since:.0f} s after asked", flush=True)
-        run("xcrun", "simctl", "install", udid, str(APP))
+        install.install(run, Failure, udid, APP, name)
     except Failure as error:
         failures.append(f"{name}: {error}")
         continue
