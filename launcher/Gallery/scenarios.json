@@ -535,6 +535,50 @@
       ]
     },
     {
+      "name": "iphone-update-offer-own-certificate",
+      "comment": "Cartouche signed with the player's own certificate by a signing app on the iPhone, from the IPA for the player's own certificate (signing: iphone), with a new version on offer: to download, then sign again in that app.",
+      "screen": "games",
+      "work": "update",
+      "signing": "iphone",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-update-offer-installer",
+      "comment": "Cartouche installed with the player's own certificate by the Cartouche Installer (signing: installer), with a new version on offer: to install from the Installer.",
+      "screen": "games",
+      "work": "update",
+      "signing": "installer",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-home-newer-build",
       "screen": "games",
       "owned": [
@@ -801,6 +845,58 @@
       ]
     },
     {
+      "name": "iphone-setup-own-certificate",
+      "comment": "The setup of a Cartouche signed by a signing app on the iPhone (signing: iphone), the signing app having left Increased Memory Limit out (work: iml-left-out).",
+      "screen": "setup",
+      "signing": "iphone",
+      "work": "iml-left-out",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-signing-own-certificate",
+      "comment": "The import of the certificate a signing app on the iPhone signed Cartouche with (screen: signing, signing: iphone).",
+      "screen": "signing",
+      "signing": "iphone",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-setup-installer",
+      "comment": "The setup of a Cartouche installed by the Cartouche Installer with the player's own certificate (signing: installer).",
+      "screen": "setup",
+      "signing": "installer",
+      "owned": [],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-sign-in",
       "screen": "signin",
       "owned": [],
@@ -956,6 +1052,40 @@
         0
       ],
       "work": "build-skipped"
+    },
+    {
+      "name": "iphone-guide-own-certificate",
+      "comment": "Your first game, in a Cartouche signed by a signing app on the iPhone (signing: iphone).",
+      "screen": "guide",
+      "signing": "iphone",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-guide-installer",
+      "comment": "Your first game, in a Cartouche installed by the Cartouche Installer with the player's own certificate (signing: installer).",
+      "screen": "guide",
+      "signing": "installer",
+      "owned": [],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
     },
     {
       "name": "iphone-system",

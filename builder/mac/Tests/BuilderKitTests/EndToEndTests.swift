@@ -296,9 +296,10 @@ final class EndToEndTests: XCTestCase {
         }
         XCTAssertEqual(heard, ["saves \(titleID) before fetch false", "started \(titleID) builder", "ended \(titleID) quit 0",
                                "saves \(titleID) after send false"])
-        // What the game found: no settings window, nxnative's cloud saves off, its prompt in French, the iPhone's progress.
+        // What the game found: no settings window, the whole screen, nxnative's cloud saves off, its prompt in French,
+        // the iPhone's progress.
         let played = try String(contentsOf: games.appendingPathComponent("\(titleID)/played.txt"), encoding: .utf8)
-        XCTAssertEqual(played, "window=0\nsave_sync=0\nquit_title=Quitter \(app.name) ?\nfound=iPhone 1\n")
+        XCTAssertEqual(played, "window=0\nfullscreen=1\nsave_sync=0\nquit_title=Quitter \(app.name) ?\nfound=iPhone 1\n")
         // The newest copy is the Mac's, as the iPhone reads it.
         let copies = try FileManager.default.contentsOfDirectory(atPath: gameFolder.path).filter { $0.hasSuffix(".zip") }.sorted()
         XCTAssertEqual(copies.count, 2)

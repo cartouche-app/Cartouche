@@ -177,6 +177,10 @@ struct Launch {
     /// process holds the main thread for seconds on a CI Mac
     /// (GalleryKeyboard, GalleryTesting.swift).
     var typing = false
+    /// Cartouche signed with the player's own certificate (-GallerySigning,
+    /// GalleryApp.swift): "iphone", by a signing app on the iPhone, or
+    /// "installer", by the Cartouche Installer.
+    var signing: String?
     /// The title ID of the game Siri asks for as the gallery opens, before
     /// its console shows; and of the one it asks for each time the test
     /// posts GalleryWords.siriAsks (GalleryShortcut, GalleryTesting.swift).
@@ -193,6 +197,7 @@ struct Launch {
         if let sheet { arguments += ["-GallerySheet", sheet] }
         if let holdMainThread { arguments += ["-GalleryHoldMainThread", String(holdMainThread)] }
         if typing { arguments += ["-GalleryKeyboard", "1"] }
+        if let signing { arguments += ["-GallerySigning", signing] }
         if let siri { arguments += ["-GalleryShortcut", siri] }
         if let siriOnPost { arguments += ["-GalleryShortcutOnPost", siriOnPost] }
         if let model { arguments += ["-GalleryModel", model] }

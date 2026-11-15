@@ -367,6 +367,7 @@ public final class MacGames: ObservableObject {
         configuration.arguments = MacPlayEnvironment.arguments(settings: settings)
         let own = games.standardizedFileURL.path == MacSavesFolder.nxnativeFolder.standardizedFileURL.path
         var environment = MacPlayEnvironment.make(app: app, keepsSaves: keeps, language: language,
+                                                  fullscreen: MacPlayEnvironment.fullscreen(settings: settings, of: app, preference: preference),
                                                   documents: own ? nil : games.appendingPathComponent(titleID, isDirectory: true))
         environment.merge(self.environment) { _, extra in extra }
         configuration.environment = environment
