@@ -16,7 +16,7 @@ from unittest import mock
 
 from cartouche_builder import macapps
 
-from support import MKW, ODYSSEY, Home
+from support import MKW, ODYSSEY, UNREADABLE_INFO_PLIST, Home
 
 
 def make_app(path: Path, title_id: str | None = MKW, commit: str = "0123456789ab", **info) -> Path:
@@ -54,6 +54,15 @@ class MacApps(Home):
         broken.mkdir(parents=True)
         (broken / "Info.plist").write_bytes(b"not a plist")
         self.assertIsNone(macapps.read_info(broken.parent))
+        # One macOS reads and Python's XML parser does not, and a date
+        # plistlib cannot read: no game's, whatever plistlib raises.
+        (broken / "Info.plist").write_bytes(UNREADABLE_INFO_PLIST)
+        with self.assertRaises(Exception):
+            plistlib.loads(UNREADABLE_INFO_PLIST)
+        self.assertIsNone(macapps.read_info(broken.parent))
+        self.assertFalse(macapps.is_games(broken.parent, MKW))
+        (broken / "Info.plist").write_bytes(b'<?xml version="1.0"?><plist><dict><key>When</key><date>yesterday</date></dict></plist>')
+        self.assertIsNone(macapps.read_info(broken.parent))
 
     def test_the_games_name_as_nxnative_names_its_app(self):
         self.assertEqual(macapps.clean_name("The Legend of Zelda: Tears of the Kingdom"), "The Legend of Zelda - Tears of the Kingdom")
@@ -86,6 +95,9 @@ class MacApps(Home):
         make_app(self.folder / "Safari.app", None)
         make_app(self.folder / ".Hidden.app", ODYSSEY)
         (self.folder / "Notes.txt").write_text("not an app")
+        # An app whose Info.plist Python cannot read keeps none of them from being found.
+        unreadable = make_app(self.folder / "Some App.app", None)
+        (unreadable / "Contents" / "Info.plist").write_bytes(UNREADABLE_INFO_PLIST)
         self.assertEqual(macapps.index(self.folder), {MKW: self.folder / "A.app", ODYSSEY: self.folder / "Odyssey.app"})
         self.assertEqual(macapps.index(self.tmp / "none"), {})
         self.assertEqual(macapps.index(None), {})

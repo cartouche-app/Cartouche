@@ -709,8 +709,10 @@ struct MacPlayCard: View {
                       "En jeu depuis \(Format.clock(playing.started)). Ses sauvegardes iront dans le dossier des sauvegardes à la fin.")
         }
         guard let event = games.last[game.titleID] else {
-            return tr("Its saves are kept with the iPhone’s in the saves folder, before and after each game.",
-                      "Ses sauvegardes sont tenues en phase avec celles de l’iPhone dans le dossier des sauvegardes, avant et après chaque partie.")
+            // Whichever device played last, an iPhone, an iPad or another
+            // Mac, the newest copy comes: none is named.
+            return tr("Its saves are kept in step through the saves folder, before and after each game.",
+                      "Ses sauvegardes sont mises en phase par le dossier des sauvegardes, avant et après chaque partie.")
         }
         let when = Format.relative(event.at)
         switch event.step {
@@ -720,10 +722,10 @@ struct MacPlayCard: View {
             return tr("This Mac’s saves went to the saves folder \(when), under a newer copy, which comes to this Mac next.",
                       "Les sauvegardes de ce Mac sont parties dans le dossier des sauvegardes \(when), sous une copie plus récente, qui arrive ensuite sur ce Mac.")
         case "fetch":
-            return tr("The newest saves, the iPhone’s, came \(when).", "Les sauvegardes les plus récentes, celles de l’iPhone, sont arrivées \(when).")
+            return tr("The newest saves came from the saves folder \(when).", "Les sauvegardes les plus récentes sont arrivées du dossier des sauvegardes \(when).")
         case "keepAndFetch":
-            return tr("The iPhone’s newer saves came \(when); this Mac’s were kept as a copy.",
-                      "Les sauvegardes plus récentes de l’iPhone sont arrivées \(when) ; celles de ce Mac ont été gardées en copie.")
+            return tr("Newer saves came from the saves folder \(when); this Mac’s were kept as a copy.",
+                      "Des sauvegardes plus récentes sont arrivées du dossier des sauvegardes \(when) ; celles de ce Mac ont été gardées en copie.")
         case "offline":
             return tr("The saves folder could not be reached \(when): this Mac’s saves stay as they are until it can be.",
                       "Le dossier des sauvegardes était injoignable \(when) : celles de ce Mac restent telles quelles en attendant.")

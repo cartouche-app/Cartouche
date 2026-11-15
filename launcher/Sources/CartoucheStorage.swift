@@ -138,7 +138,16 @@ struct CartoucheStorageError: LocalizedError, CustomNSError {
 // MARK: Servers and places
 
 final class CartoucheStorageSettings: ObservableObject {
+    #if os(macOS)
+    /// On the Mac, Cartouche's console has no storage of its own: the
+    /// Builder reads its games folder (CartoucheMacConsole). Nothing of it
+    /// goes to the Mac's keychain, whose item an app signed again by its
+    /// next update reads only once the player allows it, in a window macOS
+    /// shows and waits on.
+    static let shared = CartoucheStorageSettings(keepsInKeychain: false)
+    #else
     static let shared = CartoucheStorageSettings(keepsInKeychain: true)
+    #endif
 
     @Published private(set) var servers: [CartoucheStorageServer] = []
     @Published private(set) var places: [CartoucheStorageRole: CartoucheStoragePlace] = [:]
@@ -151,7 +160,7 @@ final class CartoucheStorageSettings: ObservableObject {
 
     private let defaults: UserDefaults
     /// Whether the keychain keeps the settings too (Kept).
-    private let keepsInKeychain: Bool
+    let keepsInKeychain: Bool
     private static let serversKey = "Cartouche.storage.servers"
     private static let readOnlyServersKey = "Cartouche.storage.readOnly.servers"
     private static let readOnlyFoldersKey = "Cartouche.storage.readOnly.folders"

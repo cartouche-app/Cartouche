@@ -88,6 +88,11 @@ enum Gallery {
     /// Pictures of a window in the background, as macOS kept the app
     /// inactive: its main buttons and its switches come out grey.
     private static var inBackground = 0
+    /// A page takes a few seconds, its covers a minute at most: one still
+    /// not taken after three ends the gallery, which says which, rather than
+    /// hold the Mac until its job ends, as a window of macOS's waiting for
+    /// an answer did once.
+    private static let watchdog = GalleryWatchdog(limit: 180)
 
     static func run(into folder: URL) {
         let app = NSApplication.shared
@@ -110,10 +115,12 @@ enum Gallery {
             for page in Page.allCases where language == "fr" || page.inEnglish {
                 for dark in page.isConsole ? [true] : language == "fr" ? [false, true] : [false] {
                     let file = folder.appendingPathComponent("\(page.rawValue)-\(language)-\(dark ? "dark" : "light").png")
+                    watchdog.watch(file.lastPathComponent)
                     if render(page, samples: samples, dark: dark, to: file) { saved += 1 }
                 }
             }
         }
+        watchdog.watch(nil)
         ConsoleGallery.cleanUp()
         print("gallery: \(saved) pictures in \(folder.path)"
               + (drawnByAppKit > 0 ? ", \(drawnByAppKit) drawn by AppKit without the window server's effects" : "")
@@ -146,7 +153,9 @@ enum Gallery {
         case .settings, .settingsBuilds:
             controller = settings(model, open: page == .settingsBuilds ? .builds : .general)
         case .console, .consoleLibrary:
-            controller = ConsoleGallery.controller(library: page == .consoleLibrary, language: L10n.code)
+            ConsoleGallery.prepare(language: L10n.code)
+            model.show(.console)
+            controller = hosted(MainView(showingLibrary: page == .consoleLibrary), model)
         case .menubar, .menubarBuilding:
             let panel = hosted(MenuBarView().background(Color(nsColor: .windowBackgroundColor)), model)
             size.height = ceil(panel.sizeThatFits(in: CGSize(width: size.width, height: 2000)).height)
@@ -160,7 +169,9 @@ enum Gallery {
                                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous)),
                                     model, bridged: false)
             } else {
-                controller = hosted(ContentView(), model)
+                // The window as the app shows it: the builder, below the
+                // switch to the console.
+                controller = hosted(MainView(), model)
             }
         }
         let frame = CGRect(origin: CGPoint(x: 80, y: 80), size: size)
@@ -649,4 +660,41 @@ enum Gallery {
      "workspace": "/Users/player/Library/Application Support/Cartouche Builder/Builds", "python": "/opt/homebrew/bin/python3.13", "scheduled": true,
      "mac_apps": "/Users/player/Applications", "default_mac_apps": "/Users/player/Applications", "mac_packed": true}
     """
+}
+
+/// The gallery's page being taken, watched from a thread of its own, since
+/// a page that never ends holds the main thread: after LIMIT seconds on one
+/// page, it says which on standard error and ends the gallery.
+private final class GalleryWatchdog: @unchecked Sendable {
+    private let limit: TimeInterval
+    private let lock = NSLock()
+    private var page: String?
+    private var since = Date()
+
+    init(limit: TimeInterval) {
+        self.limit = limit
+        Thread.detachNewThread { [self] in
+            while true {
+                Thread.sleep(forTimeInterval: 5)
+                check()
+            }
+        }
+    }
+
+    /// PAGE is being taken from now on; nil once the pictures are.
+    func watch(_ page: String?) {
+        lock.lock()
+        self.page = page
+        since = Date()
+        lock.unlock()
+    }
+
+    private func check() {
+        lock.lock()
+        let late = page.flatMap { Date().timeIntervalSince(since) > limit ? $0 : nil }
+        lock.unlock()
+        guard let late else { return }
+        FileHandle.standardError.write(Data("gallery: \(late): not taken after \(Int(limit)) s, something holds the main thread; the gallery ends\n".utf8))
+        _exit(1)
+    }
 }

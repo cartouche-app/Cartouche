@@ -17,6 +17,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from . import plists
 from .paths import Paths
 
 LABEL = "io.github.clabeuhtegrite.cartouche-builder"
@@ -84,9 +85,10 @@ def uninstall() -> None:
 
 def installed() -> dict | None:
     try:
-        return plistlib.loads(agent_path().read_bytes())
-    except (OSError, plistlib.InvalidFileException, ValueError):
+        data = plists.loads(agent_path().read_bytes())
+    except OSError:
         return None
+    return data if isinstance(data, dict) else None
 
 
 def sync(paths: Paths, enabled: bool, hour: int, minute: int) -> None:

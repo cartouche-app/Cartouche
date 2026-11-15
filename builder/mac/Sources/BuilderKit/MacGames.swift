@@ -387,6 +387,30 @@ public final class MacGames: ObservableObject {
         return run
     }
 
+    /// Asks TITLE_ID's game to quit, as Cartouche's console does once the
+    /// player said so: its app as macOS asks an app to quit, then, should
+    /// it still run GRACE seconds later, its processes, the game's host
+    /// first, so that its launcher can say how it ended.
+    public func quit(_ titleID: String, grace: TimeInterval = 5) {
+        guard !sample, let run = playing[titleID.uppercased()] else { return }
+        for pid in pids(of: run.app) {
+            _ = NSRunningApplication(processIdentifier: pid)?.terminate()
+        }
+        Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(max(grace, 0) * 1_000_000_000))
+            guard let self, let still = self.playing[run.app.titleID] else { return }
+            let pids = self.pids(of: still.app)
+            let launchers = Set(pids.filter { NSRunningApplication(processIdentifier: $0) != nil })
+            for pid in pids where !launchers.contains(pid) {
+                kill(pid, SIGTERM)
+            }
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            for pid in self.pids(of: still.app) {
+                kill(pid, SIGTERM)
+            }
+        }
+    }
+
     // MARK: Saves
 
     /// Keeps the saves of the games not playing in step: a copy that
