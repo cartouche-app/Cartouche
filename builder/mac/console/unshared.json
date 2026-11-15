@@ -104,6 +104,16 @@
       "kind": "iphone",
       "why": "Cartouche having LocalDevVPN connect, by its link, before the built-in SideStore reaches the iPhone (sign-in, renewal, update): LocalDevVPN is the iPhone's alone, and a Mac signs and installs without it."
     },
+    "CartoucheMacBuildsPage.swift": {
+      "kind": "mac",
+      "why": "All the paired Mac's builds, asked over the bridge from System: on the Mac, the console is the app that builds, and its window's Builds page shows and drives them.",
+      "mac": "CartoucheBuilder/ActivityView.swift"
+    },
+    "CartoucheMacBuildsView.swift": {
+      "kind": "mac",
+      "why": "A game's build on the paired Mac, asked over the bridge from its sheet: on the Mac, the console is the app that builds, and the game's sheet in its window shows its build, Build, Stop and Follow.",
+      "mac": "CartoucheBuilder/GameDetailView.swift"
+    },
     "CartouchePickerMeasures.swift": {
       "kind": "iphone",
       "why": "What Cartouche can measure of iOS's Files picker."
