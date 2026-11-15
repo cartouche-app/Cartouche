@@ -229,7 +229,11 @@ private struct Child {
         try check(posix_spawn_file_actions_adddup2(&actions, output[1], 1))
         try check(posix_spawn_file_actions_adddup2(&actions, errors[1], 2))
         if let directory {
+            #if canImport(Darwin)
+            try check(posix_spawn_file_actions_addchdir(&actions, directory.path))
+            #else
             try check(posix_spawn_file_actions_addchdir_np(&actions, directory.path))
+            #endif
         }
         try check(posix_spawnattr_init(&attributes))
         defer { posix_spawnattr_destroy(&attributes) }
