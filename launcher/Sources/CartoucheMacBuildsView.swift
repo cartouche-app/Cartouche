@@ -79,6 +79,9 @@ final class CartoucheMacBuildsWatch: ObservableObject {
     /// Whether the gallery's sheet opens on the game's build on the Mac
     /// (screen: sheet-mac), its section in the middle of the screen.
     static var galleryScrolls = false
+    /// The name of the Mac the gallery shows with an app too old to share
+    /// its builds, 0.5.0 or older (work: mac-too-old).
+    static var galleryTooOld: String?
     #endif
 
     /// The Mac paired in Storage: that of the games folder, where its
@@ -101,6 +104,10 @@ final class CartoucheMacBuildsWatch: ObservableObject {
             builds = gallery.builds
             reached = true
             canControl = true
+        } else if let mac = Self.galleryTooOld {
+            macName = mac
+            isTooOld = true
+            reached = true
         }
         return
         #else
@@ -415,6 +422,7 @@ struct CartoucheMacBuildsSection: View {
         } else if watch.isTooOld, isOwned {
             Section {
                 note(CartoucheText.macBuildsTooOld(watch.macName), systemImage: "arrow.up.circle")
+                    .id(Self.anchor)
             }
         }
     }
