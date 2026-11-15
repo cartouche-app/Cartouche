@@ -173,7 +173,9 @@
 //                                        after an update to the newest
 //                                        version the gallery carries notes
 //                                        for (app/releases)
-//        whats-new-several               the same, to the newest two
+//        whats-new-several               the same, to the newest two,
+//                                        scrolled to where the older one's
+//                                        notes begin
 //      -GalleryOrientation landscape     the gallery turns itself sideways,
 //                                        as a game does; the simulator
 //                                        stays upright
@@ -368,8 +370,11 @@ struct GalleryScenario {
                 CartoucheUpdates.shared.offerForGallery(CartoucheRelease(version: "0.4.0", notes: "", size: 36_802_806))
             }
             if work == "whats-new" || work == "whats-new-several" {
-                let newest = CartoucheWhatsNew.carried.prefix(work == "whats-new" ? 1 : 2)
-                CartoucheWhatsNew.shared.showForGallery(Array(newest))
+                let newest = Array(CartoucheWhatsNew.carried.prefix(work == "whats-new" ? 1 : 2))
+                // After two versions, scrolled to the last item of the newer
+                // one, the older one's name under it.
+                let scrolled = work == "whats-new-several" ? max((newest.first?.items.count ?? 0) - 1, 0) : 0
+                CartoucheWhatsNew.shared.showForGallery(newest, scrolledTo: scrolled)
             }
             if work == "installed" {
                 CartoucheUpdates.shared.showInstalledForGallery()

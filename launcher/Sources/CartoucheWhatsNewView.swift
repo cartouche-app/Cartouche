@@ -72,8 +72,13 @@ final class CartoucheWhatsNew: ObservableObject {
     }
 
     #if CARTOUCHE_GALLERY
-    /// NOTES over the console, as after an update to the first of them.
-    func showForGallery(_ notes: [CartoucheReleaseNotes]) {
+    /// The line the notes open scrolled to, for a screenshot.
+    private(set) var scrolledForGallery = 0
+
+    /// NOTES over the console, as after an update to the first of them,
+    /// scrolled to line SCROLLED of them.
+    func showForGallery(_ notes: [CartoucheReleaseNotes], scrolledTo scrolled: Int = 0) {
+        scrolledForGallery = scrolled
         shown = notes
     }
 
@@ -95,6 +100,17 @@ struct CartoucheWhatsNewView: View {
     @Environment(\.verticalSizeClass) private var heightClass
     /// The line the controller's D-pad scrolled to.
     @State private var scrolled = 0
+
+    /// How far the notes fade out at the bottom when they scroll: the lines
+    /// cut there say that there are more below.
+    private static let fade: CGFloat = 28
+
+    init(whatsNew: CartoucheWhatsNew) {
+        _whatsNew = ObservedObject(wrappedValue: whatsNew)
+        #if CARTOUCHE_GALLERY
+        _scrolled = State(initialValue: whatsNew.scrolledForGallery)
+        #endif
+    }
 
     /// A line under the title: an item, or the name and summary of each
     /// version before the newest.
@@ -197,17 +213,31 @@ struct CartoucheWhatsNewView: View {
         .frame(maxWidth: .infinity, alignment: Alignment(horizontal: alignment, vertical: .center))
     }
 
-    /// The lines as they are when they fit, scrolled otherwise.
+    /// The lines as they are when they fit, scrolled otherwise, fading out
+    /// at the bottom.
     private func notes(_ lines: [Line]) -> some View {
         ViewThatFits(in: .vertical) {
             list(lines)
             ScrollViewReader { proxy in
                 ScrollView {
+                    // The last line rests above the fade.
                     list(lines)
+                        .padding(.bottom, Self.fade)
                 }
                 .scrollIndicatorsFlash(onAppear: true)
+                .mask {
+                    VStack(spacing: 0) {
+                        Color.black
+                        LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom)
+                            .frame(height: Self.fade)
+                    }
+                }
                 // No taller than that on a large screen.
                 .frame(maxHeight: 560)
+                .onAppear {
+                    // Where the gallery's screenshot opens them.
+                    if scrolled > 0 { proxy.scrollTo(scrolled, anchor: .top) }
+                }
                 .onChange(of: scrolled) { _, line in
                     withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(line, anchor: .top) }
                 }

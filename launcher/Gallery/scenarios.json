@@ -470,7 +470,7 @@
     },
     {
       "name": "iphone-whats-new-several",
-      "comment": "What's new after an update over two versions: the newest two, the older under its name (work: whats-new-several).",
+      "comment": "What's new after an update over two versions: the newest two, the older under its name, scrolled to where the newer one's notes end (work: whats-new-several).",
       "screen": "games",
       "work": "whats-new-several",
       "owned": [
