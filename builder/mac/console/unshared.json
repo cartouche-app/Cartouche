@@ -37,6 +37,21 @@
       "why": "What the player says of a game (its name, genre, summary, cover): with the game's settings on the Mac.",
       "step": 6
     },
+    "CartoucheGameLogShare.swift": {
+      "kind": "later",
+      "why": "A game's log, read, summed up and cleaned for Send to Cartouche, which is a problem report: with the console's reports on the Mac, and the log nxnative's app for the Mac writes.",
+      "step": 8
+    },
+    "CartoucheGameLogView.swift": {
+      "kind": "later",
+      "why": "A game's log, from its sheet: shared as the game wrote it, or sent to Cartouche cleaned, as a problem report; with the console's reports on the Mac. The sheet's row stays the iPhone's meanwhile (#if os(iOS)).",
+      "step": 8
+    },
+    "CartoucheGameLogZip.swift": {
+      "kind": "later",
+      "why": "The zip of a game's logs that the share sheet shares: with the game's log page on the Mac (CartoucheGameLogView.swift).",
+      "step": 8
+    },
     "CartoucheGameNames.swift": {
       "kind": "iphone",
       "why": "The names Siri and Shortcuts know a game of the player's by, its shorter ones among them (CartoucheShortcuts.swift): on the Mac, each game is an app of its own, which Siri, Spotlight and Shortcuts know by its name."

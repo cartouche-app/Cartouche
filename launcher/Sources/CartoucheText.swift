@@ -648,6 +648,12 @@ enum CartoucheText {
     static var storageAccountFooter: String { s("storage.account.footer", "The account of your Mac, PC or NAS. Leave the user name empty to sign in as a guest.") }
     static var storageConnect: String { s("storage.connect", "Sign in and list the shared folders") }
     static var storageNoShares: String { s("storage.noShares", "This account sees no shared folder there.") }
+    /// Why an SMB server did not sign the player in (CartoucheSMBRefusal),
+    /// after storage.signInFailed's colon.
+    static var storageSMBRefused: String { s("storage.smb.refused", "the server refused the user name or the password.") }
+    static var storageSMBNoGuests: String { s("storage.smb.noGuests", "the server does not let guests in. Type the user name and password of your account on it.") }
+    static var storageSMBLocked: String { s("storage.smb.locked", "the server locked this account after too many wrong passwords. Try again later, or unlock it on the server.") }
+    static var storageSMBHeldBack: String { s("storage.smb.heldBack", "the server does not let this account sign in as it is. On the server, turn the account on, or give it a new password.") }
     static var storageShare: String { s("storage.share", "Shared folder") }
     static var storageShareFooter: String { s("storage.share.footer", "On a Mac: System Settings › General › Sharing › File Sharing. On a PC: the folder’s Properties › Sharing.") }
     static var storageNameTitle: String { s("storage.name.title", "Name in Cartouche") }
@@ -884,6 +890,26 @@ enum CartoucheText {
     static var reportSendFooter: String { s("report.send.footer", "Send it by Messages, Mail or AirDrop to whoever helps you. On GitHub, you check it and post it yourself: it is public there.") }
     static var reportContents: String { s("report.contents", "What the report holds") }
     static var reportPrivacy: String { s("report.privacy", "It leaves this iPhone only when you send it, without passwords, server names or addresses, user names, Apple ID or team, even in what you write.") }
+
+    // MARK: A game's log (CartoucheGameLogView)
+
+    static var gameLogRow: String { s("gameLog.row", "Share the log") }
+    static var gameLogTitle: String { s("gameLog.title", "Game log") }
+    static var gameLogLast: String { s("gameLog.last", "Last session") }
+    static var gameLogBefore: String { s("gameLog.before", "Session before") }
+    static var gameLogCrashed: String { s("gameLog.crashed", "Ended in a crash") }
+    static var gameLogNone: String { s("gameLog.none", "The game has not written a log yet.") }
+    static var gameLogFooter: String { s("gameLog.footer", "What the game wrote as it ran: whoever helps you sees in it how it started and how it ended.") }
+    static var gameLogShare: String { s("gameLog.share", "Send the log…") }
+    static var gameLogPreparing: String { s("gameLog.preparing", "Preparing the log…") }
+    static func gameLogZipFailed(_ reason: String) -> String { f("gameLog.zipFailed", "The log could not be prepared: %@", reason) }
+    static var gameLogShareFooter: String { s("gameLog.share.footer", "By Messages, Mail or AirDrop, to whoever helps you: the log goes as the game wrote it, with the names of your folders in it.") }
+    static var gameLogWhatPrompt: String { s("gameLog.what.prompt", "What happened (optional)") }
+    static var gameLogWhatIsSent: String { s("gameLog.whatIsSent", "What Cartouche receives") }
+    static var gameLogSendFooter: String { s("gameLog.send.footer", "Cartouche receives the start and the end of each log, privately and cleaned: without the paths of your folders, addresses, names or identifiers.") }
+    static var gameLogSentFooter: String { s("gameLog.sent.footer", "What is in angle brackets, such as <path> or <address>, stands for what was taken out. Cartouche’s server passes the rest to the project, privately.") }
+    /// The word in the zip's name: "Mario Kart World log 2026-11-13 2105.zip".
+    static var gameLogFileWord: String { s("gameLog.fileWord", "log") }
 
     // MARK: Warnings before expiry
 

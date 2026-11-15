@@ -613,6 +613,95 @@
       "work": "paused"
     },
     {
+      "name": "iphone-sheet-manage",
+      "comment": "A game's sheet opened on its management (category: manage), as a game that has not written a log yet shows it: without Share the log.",
+      "screen": "sheet",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "category": "manage"
+    },
+    {
+      "name": "iphone-sheet-manage-log",
+      "comment": "The same sheet once the game wrote the logs of its last two sessions (work: log), the last ended in a crash: Share the log, above Uninstall.",
+      "screen": "sheet",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "log",
+      "category": "manage"
+    },
+    {
+      "name": "iphone-gamelog",
+      "comment": "The page that shares those logs (screen: gamelog): the last session and the one before, Send the log… as the game wrote them, and Send to Cartouche, cleaned.",
+      "screen": "gamelog",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "log"
+    },
+    {
+      "name": "iphone-gamelog-sent",
+      "comment": "What Send to Cartouche sends of those logs, cleaned (screen: gamelog-sent): without the paths of the player's folders, addresses, names or identifiers.",
+      "screen": "gamelog-sent",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "log"
+    },
+    {
       "name": "tv-playing",
       "screen": "tv",
       "sheet": "0400C3F00006E000",
@@ -1004,6 +1093,48 @@
         0
       ],
       "work": "offline"
+    },
+    {
+      "name": "iphone-storage-smb-refused",
+      "comment": "Add a shared folder (screen storage-smb), with a NAS nearby that refused the sign-in which lists its shared folders: the user name or the password the player typed (work smb-refused).",
+      "screen": "storage-smb",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "smb-refused"
+    },
+    {
+      "name": "iphone-storage-smb-no-guests",
+      "comment": "Add a shared folder (screen storage-smb), with a NAS nearby that refused the sign-in which lists its shared folders: a guest, without a user name (work smb-no-guests).",
+      "screen": "storage-smb",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "smb-no-guests"
     },
     {
       "name": "iphone-storage-mac-nearby",
