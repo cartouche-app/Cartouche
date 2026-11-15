@@ -414,7 +414,11 @@ struct CartoucheGameLogShare {
         let clean = cleaning.cleaner()
         var cleaned = self
         cleaned.what = Self.cleaned(words, by: clean)
-        cleaned.environment.facts = environment.facts.map { .init($0.name, clean($0.value)) }
+        // The facts are Cartouche's own words (CartoucheReport.Environment):
+        // cleaned as the logs are, but for the player's names, which would
+        // take those words with them.
+        let cleanFact = CartoucheLogCleaning().cleaner()
+        cleaned.environment.facts = environment.facts.map { .init($0.name, cleanFact($0.value)) }
         cleaned.logs = logs.map { $0.cleaned(by: clean) }
         cleaned.isCleaned = true
         return cleaned

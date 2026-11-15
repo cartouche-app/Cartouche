@@ -285,6 +285,18 @@ final class CartoucheGameLogShareTests: XCTestCase {
         XCTAssertTrue(withPath.cleaned().summary.contains("Saves: <path>"), withPath.cleaned().summary)
     }
 
+    func testTheFactsKeepCartouchesWordsWhenThePlayersNamesAreTheSame() {
+        // A player whose user name is "games" and whose shared folder is
+        // "SMB": the Storage fact, Cartouche's own words, read
+        // "<account> on <name>"; what the player wrote still loses them.
+        var share = share(lines: [20, 10], what: "games cannot sign in to SMB")
+        share.cleaning = CartoucheLogCleaning(redaction: CartoucheRedaction(names: ["SMB"], accounts: ["games"]))
+        let cleaned = share.cleaned()
+        XCTAssertTrue(cleaned.summary.contains("\nStorage: games on SMB, saves on SMB\n"), cleaned.summary)
+        XCTAssertEqual(cleaned.words, "<account> cannot sign in to <name>")
+        XCTAssertTrue(share.excerpt(limit: 50_000).hasPrefix(cleaned.summary))
+    }
+
     func testASummaryWithoutLog() {
         let share = CartoucheGameLogShare(game: "Pixel Quest", environment: environment, logs: [])
         XCTAssertTrue(share.summary.contains("Game: Pixel Quest\n"), share.summary)
