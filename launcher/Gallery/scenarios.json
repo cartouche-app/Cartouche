@@ -508,6 +508,95 @@
       "work": "paused"
     },
     {
+      "name": "iphone-sheet-manage",
+      "comment": "A game's sheet opened on its management (category: manage), as a game that has not written a log yet shows it: without Share the log.",
+      "screen": "sheet",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "category": "manage"
+    },
+    {
+      "name": "iphone-sheet-manage-log",
+      "comment": "The same sheet once the game wrote the logs of its last two sessions (work: log), the last ended in a crash: Share the log, above Uninstall.",
+      "screen": "sheet",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "log",
+      "category": "manage"
+    },
+    {
+      "name": "iphone-gamelog",
+      "comment": "The page that shares those logs (screen: gamelog): the last session and the one before, Send the log… as the game wrote them, and Send to Cartouche, cleaned.",
+      "screen": "gamelog",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "log"
+    },
+    {
+      "name": "iphone-gamelog-sent",
+      "comment": "What Send to Cartouche sends of those logs, cleaned (screen: gamelog-sent): without the paths of the player's folders, addresses, names or identifiers.",
+      "screen": "gamelog-sent",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "log"
+    },
+    {
       "name": "tv-playing",
       "screen": "tv",
       "sheet": "0400C3F00006E000",

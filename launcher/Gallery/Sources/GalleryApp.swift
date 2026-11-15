@@ -18,6 +18,10 @@
 //                                        when none:
 //        gameinfo                        what the player says of the sheet's
 //                                        game
+//        gamelog                         the log of the sheet's game, with
+//                                        -GalleryWork log
+//        gamelog-sent                    what Send to Cartouche sends of that
+//                                        log, cleaned
 //        games                           the home
 //        guide                           Your first game
 //        library                         every game, open over the home
@@ -88,6 +92,9 @@
 //        iphone-step                     a sign-in Apple accepted that
 //                                        stopped at the step that registers
 //                                        this iPhone, LocalDevVPN being off
+//        log                             the logs of the sheet's game's last
+//                                        two sessions, the last ended in a
+//                                        crash (GalleryLogs.swift)
 //        mac                             the player's Mac, paired, as the
 //                                        games folder and the saves folder
 //        mac-code                        two Macs nearby, pairing with the
@@ -155,6 +162,8 @@
 //                                        such as Controls
 //        cartouche.saves                 on a game's settings, its cloud
 //                                        saves
+//        manage                          on the sheet, the sheet opened on
+//                                        the game's management
 //        results                         on a game's sheet, the testers'
 //                                        results, what they wrote in French
 //                                        as the iPhone translates it
@@ -377,6 +386,9 @@ struct GalleryScenario {
             }
             if work == "saves", let titleId = sheet ?? ownedTitles.first {
                 GallerySaves.prepare(titleId: titleId)
+            }
+            if work == "log", let titleId = sheet ?? ownedTitles.first {
+                GalleryLogs.prepare(titleId: titleId)
             }
             if work == "mac" || work == "mac-offline" {
                 // The player's Mac, paired, with the games Cartouche Builder
@@ -720,7 +732,8 @@ struct CartoucheGalleryApp: App {
             if let entry = entries.all.first(where: { $0.titleId == scenario.sheet }) {
                 NavigationStack {
                     CartoucheGameSheetView(entry: entry, memory: CartoucheMemoryReading.now(), onPlay: { _ in },
-                                           onSettings: { _ in }, onImport: {}, onUninstall: { _ in })
+                                           onSettings: { _ in }, onImport: {}, onUninstall: { _ in },
+                                           opensOnManagement: scenario.category == "manage")
                         .toolbar {
                             ToolbarItem(placement: .confirmationAction) {
                                 Button(CartoucheText.done) {}
@@ -732,6 +745,17 @@ struct CartoucheGalleryApp: App {
             if let entry = entries.owned.first(where: { $0.titleId == scenario.sheet }) {
                 NavigationStack {
                     CartoucheGameInfoView(entry: entry, onClose: {})
+                }
+            }
+        case "gamelog", "gamelog-sent":
+            if let entry = entries.owned.first(where: { $0.titleId == scenario.sheet }), let app = entry.app,
+               let folder = CartoucheGameActions.shared.logs(of: app) {
+                NavigationStack {
+                    if scenario.screen == "gamelog" {
+                        CartoucheGameLogView(folder: folder, tileKey: entry.tileKey)
+                    } else {
+                        CartoucheGameLogSentView(share: GalleryLogs.share(of: folder), tileKey: entry.tileKey)
+                    }
                 }
             }
         case "shortcuts":
