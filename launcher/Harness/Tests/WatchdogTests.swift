@@ -59,7 +59,12 @@ final class WatchdogTests: XCTestCase {
         + (1...40).map { "CartoucheHarness the launcher's frame \($0)" }
 
     /// Held on purpose, as the launcher's own work would hold it: the
-    /// watchdog counts it all, and says where the main thread was.
+    /// watchdog counts it all, and says where the main thread was. It looks
+    /// at it again and again from a fifth of a second in, a tenth of a
+    /// second apart at least: as often as the Mac lets it, which on a busy
+    /// Mac of the CI's was 4 times in that second, not 8, each look taking a
+    /// tenth of a second more (run 43755471628). Its question can reach the
+    /// main thread after the hold began, later on such a Mac.
     func testTheMainThreadHeldCounts() async throws {
         let watchdog = HarnessWatchdog()
         watchdog.start()
@@ -68,9 +73,14 @@ final class WatchdogTests: XCTestCase {
         // The watchdog's question answered, once the main thread goes on.
         try await Task.sleep(for: .milliseconds(300))
         let worst = watchdog.stop()
-        XCTAssertGreaterThan(worst.longest.counted, 0.9)
+        XCTAssertGreaterThan(worst.longest.counted, 0.5)
         XCTAssertEqual(worst.longest.forRunningBoard, 0)
-        XCTAssertGreaterThanOrEqual(worst.longest.looks.count, 5, "looked at ten times a second from a fifth of a second in")
+        let times = worst.longest.looks.map(\.at)
+        XCTAssertGreaterThanOrEqual(times.count, 2, "looked at more than once: \(times)")
+        XCTAssertGreaterThanOrEqual(times.first ?? 0, HarnessWait.lookFrom - 0.01, "from a fifth of a second in: \(times)")
+        for (earlier, later) in zip(times, times.dropFirst()) {
+            XCTAssertGreaterThanOrEqual(later - earlier, HarnessWait.lookEvery - 0.01, "a tenth of a second apart at least: \(times)")
+        }
         #if arch(arm64)
         XCTAssertTrue(worst.longest.failure.contains("sleep"), worst.longest.failure)
         #endif
