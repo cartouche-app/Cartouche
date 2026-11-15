@@ -37,6 +37,10 @@ enum CartoucheDevice {
     /// iPad (CartoucheDeviceWords.swift).
     static let isPad = modelIdentifier.hasPrefix("iPad")
 
+    /// The symbol of the device a game is on, beside its size and its
+    /// build: the console on the Mac has its own.
+    static let symbol = "iphone"
+
     static var iOSVersion: String {
         let version = ProcessInfo.processInfo.operatingSystemVersion
         var text = "\(version.majorVersion).\(version.minorVersion)"

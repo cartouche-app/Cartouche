@@ -15,27 +15,29 @@
 //  Latin America, Portuguese of Portugal or Brazil, Simplified or
 //  Traditional Chinese. A game that has none of them starts in its own. A
 //  language the player chooses for a game, in Cartouche or on nxnative's
-//  screen, stays that game's.
+//  screen, stays that game's. Cartouche Builder chooses the same way on
+//  the Mac, from the Mac's languages, before it starts a game there
+//  (builder/mac, MacPlay.swift), reading this file through CartoucheCore.
 //
 //  Platform-independent: tested on its own by launcher/Package.swift.
 //
 
 import Foundation
 
-enum CartoucheGameLanguage {
+public enum CartoucheGameLanguage {
     /// nxnative's variable for the game's language (its settings.tsv): a
     /// choice among the game's languages, which the game reads once, as it
     /// starts.
-    static let variable = "DM_LANG"
+    public static let variable = "DM_LANG"
     /// Where nxnative saves the player's choice, in the game's preferences.
-    static let savedKey = "launcher." + variable
+    public static let savedKey = "launcher." + variable
     /// Who chose the game's language, a Source; absent until Cartouche
     /// first started the game, or showed its choice.
-    static let sourceKey = "cartouche.languageSource"
+    public static let sourceKey = "cartouche.languageSource"
     /// The language Cartouche last chose from the iPhone's.
-    static let iPhoneKey = "cartouche.iPhoneLanguage"
+    public static let iPhoneKey = "cartouche.iPhoneLanguage"
 
-    enum Source: String {
+    public enum Source: String {
         /// Chosen again from the iPhone's languages at each start.
         case iPhone
         /// The player's choice.
@@ -43,13 +45,19 @@ enum CartoucheGameLanguage {
     }
 
     /// What a game's preferences hold of its language.
-    struct Record: Equatable {
+    public struct Record: Equatable {
         /// nxnative's saved choice: the language the game starts in, if
         /// the game still has it.
-        var saved: String?
-        var source: Source?
+        public var saved: String?
+        public var source: Source?
         /// The language Cartouche last chose from the iPhone's.
-        var iPhone: String?
+        public var iPhone: String?
+
+        public init(saved: String? = nil, source: Source? = nil, iPhone: String? = nil) {
+            self.saved = saved
+            self.source = source
+            self.iPhone = iPhone
+        }
     }
 
     // MARK: The iPhone's languages
@@ -128,7 +136,7 @@ enum CartoucheGameLanguage {
     /// The first of the game's languages (OFFERED, nxnative's codes) that
     /// the iPhone's languages (PREFERRED, in their order) stand for; nil
     /// when the game has none of them.
-    static func best(for preferred: [String], among offered: [String]) -> String? {
+    public static func best(for preferred: [String], among offered: [String]) -> String? {
         for identifier in preferred {
             for code in codes(for: identifier) {
                 if let match = offered.first(where: { $0.caseInsensitiveCompare(code) == .orderedSame }) {
@@ -146,14 +154,14 @@ enum CartoucheGameLanguage {
     /// GAMEDEFAULT. The language is saved even when it is the game's own,
     /// so that a later build of the game, packed with another, starts in it
     /// too.
-    static func following(_ preferred: [String], offered: [String], gameDefault: String) -> Record {
+    public static func following(_ preferred: [String], offered: [String], gameDefault: String) -> Record {
         let language = best(for: preferred, among: offered) ?? gameDefault
         return Record(saved: language, source: .iPhone, iPhone: language)
     }
 
     /// What the game's preferences hold once the player chose LANGUAGE for
     /// the game, even its own: the game no longer follows the iPhone.
-    static func chosen(_ language: String) -> Record {
+    public static func chosen(_ language: String) -> Record {
         Record(saved: language, source: .player, iPhone: nil)
     }
 
@@ -165,7 +173,7 @@ enum CartoucheGameLanguage {
     /// one that is no longer the one Cartouche chose last, as only
     /// nxnative's screen changes it. A language the game no longer has was
     /// not the player's doing: a new build of the game left it out.
-    static func beforeStart(_ record: Record, preferred: [String], offered: [String], gameDefault: String) -> Record {
+    public static func beforeStart(_ record: Record, preferred: [String], offered: [String], gameDefault: String) -> Record {
         let saved = record.saved.flatMap { offered.contains($0) ? $0 : nil }
         switch record.source {
         case .player?:
@@ -184,7 +192,7 @@ enum CartoucheGameLanguage {
 
     /// The language the game starts in with RECORD: nxnative's saved
     /// choice when the game has it, else the game's own.
-    static func language(of record: Record, offered: [String], gameDefault: String) -> String {
+    public static func language(of record: Record, offered: [String], gameDefault: String) -> String {
         record.saved.flatMap { offered.contains($0) ? $0 : nil } ?? gameDefault
     }
 }

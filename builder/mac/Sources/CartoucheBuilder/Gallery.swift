@@ -29,15 +29,17 @@ enum Gallery {
         case assistantWelcome = "assistant-welcome", assistantTools = "assistant-tools", assistantSources = "assistant-sources"
         case assistantGames = "assistant-games", assistantKeys = "assistant-keys", assistantBuilds = "assistant-builds"
         case assistantIPhone = "assistant-iphone", assistantDone = "assistant-done"
-        // Cartouche's console on this Mac (ConsoleGallery.swift).
-        case console, consoleLibrary = "console-library"
+        // Cartouche's console on this Mac (ConsoleGallery.swift): its home,
+        // every game, a game's settings page beside them, a game's info over
+        // them.
+        case console, consoleLibrary = "console-library", consoleSettings = "console-settings", consoleInfo = "console-info"
         // What the window's height leaves out: the settings' Builds tab, and
         // the storage page down to the games on this Mac, in a window as
         // tall as it.
         case settingsBuilds = "settings-builds", storageMac = "storage-mac"
 
         /// Whether the page is the console's, which is always dark.
-        var isConsole: Bool { self == .console || self == .consoleLibrary }
+        var isConsole: Bool { [.console, .consoleLibrary, .consoleSettings, .consoleInfo].contains(self) }
 
         /// The setup assistant's step the page shows.
         var step: SetupStep? {
@@ -152,10 +154,11 @@ enum Gallery {
         switch page {
         case .settings, .settingsBuilds:
             controller = settings(model, open: page == .settingsBuilds ? .builds : .general)
-        case .console, .consoleLibrary:
+        case .console, .consoleLibrary, .consoleSettings, .consoleInfo:
             ConsoleGallery.prepare(language: L10n.code)
             model.show(.console)
-            controller = hosted(MainView(showingLibrary: page == .consoleLibrary), model)
+            controller = hosted(MainView(showingLibrary: page == .consoleLibrary, showingSettings: page == .consoleSettings,
+                                         showingInfo: page == .consoleInfo), model)
         case .menubar, .menubarBuilding:
             let panel = hosted(MenuBarView().background(Color(nsColor: .windowBackgroundColor)), model)
             size.height = ceil(panel.sizeThatFits(in: CGSize(width: size.width, height: 2000)).height)
@@ -183,7 +186,7 @@ enum Gallery {
         switch page {
         case .settings: window.title = SettingsTab.general.title
         case .settingsBuilds: window.title = SettingsTab.builds.title
-        case .console, .consoleLibrary: window.title = "Cartouche"
+        case .console, .consoleLibrary, .consoleSettings, .consoleInfo: window.title = "Cartouche"
         default: window.title = "Cartouche Builder"
         }
         if page == .settings || page == .settingsBuilds {
@@ -205,15 +208,22 @@ enum Gallery {
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
         wait(until: Date().addingTimeInterval(2.5))
-        if !(NSApp.isActive && window.isKeyWindow) { inBackground += 1 }
+        // A game's info opens over the console in a sheet, a window of its
+        // own: the picture is the sheet's.
+        var shown: NSWindow = window
+        if page == .consoleInfo {
+            if let sheet = window.attachedSheet { shown = sheet } else { complain(file, "the game's info did not open over the console") }
+        }
+        if !(NSApp.isActive && shown.isKeyWindow) { inBackground += 1 }
         defer {
+            if let sheet = window.attachedSheet { window.endSheet(sheet) }
             window.orderOut(nil)
             window.close()
         }
-        var picture = captured(window, for: file)
+        var picture = captured(shown, for: file)
         if picture == nil {
             drawnByAppKit += 1
-            picture = drawn(window)
+            picture = drawn(shown)
         }
         guard let data = picture?.representation(using: .png, properties: [:]) else { return false }
         do {

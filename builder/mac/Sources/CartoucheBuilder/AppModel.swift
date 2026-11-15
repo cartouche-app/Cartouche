@@ -1203,8 +1203,8 @@ final class AppModel: ObservableObject {
         return game(macGames.apps.values.first { $0.url.standardizedFileURL.path == path }?.titleID)
     }
 
-    /// The console's Play, and Game settings: nxnative's settings window
-    /// first.
+    /// The console's Play, and the last button of its settings page:
+    /// nxnative's settings window first.
     func play(app: URL, settings: Bool) {
         guard let game = self.game(ofApp: app) else { return }
         play(game, settings: settings)

@@ -9,12 +9,15 @@
 //  screen with the game unless a display mode is saved for it,
 //  turns nxnative's own cloud saves off while the builder keeps the saves,
 //  and gives the Home button's prompt and the players' prompt the player's
-//  language; the cloud saves folder the player may have chosen in that
-//  window; and how the game ended, from the launcher's last line in its log.
+//  language; the language the game starts in, chosen before each start as
+//  Cartouche chooses it on the iPhone; the cloud saves folder the player
+//  may have chosen in that window; and how the game ended, from the
+//  launcher's last line in its log.
 //  Platform-independent: Foundation only. Starting the app and following it
 //  is MacGames.swift's.
 //
 
+import CartoucheCore
 import Foundation
 
 /// A game's app for this Mac.
@@ -167,12 +170,13 @@ public enum MacPlayEnvironment {
     /// Cartouche's console behind it until it ends: one straight into the
     /// game does, unless a Display mode is saved for the game
     /// (launcher.DM_FULLSCREEN in the app's preferences, read by PREFERENCE
-    /// (key, domain)), which then holds. nxnative's settings window saves
-    /// Fullscreen alone: a window, its default, it saves as no choice, so a
-    /// game put in a window there fills the screen again from here, ⌃⌘F
-    /// putting it back in a window. A start with that window (SETTINGS)
-    /// leaves it to the window: a variable the start sets, the window shows
-    /// fixed.
+    /// (key, domain)), which then holds. The console's settings page shows
+    /// Fullscreen as the game's default, and saves a window as "0"
+    /// (ConsoleSettings.swift); nxnative's settings window saves Fullscreen
+    /// alone, a window, its default, as no choice, so a game put in a window
+    /// there fills the screen again from here, ⌃⌘F putting it back in a
+    /// window. A start with that window (SETTINGS) leaves it to the window:
+    /// a variable the start sets, the window shows fixed.
     public static func fullscreen(settings: Bool, of app: MacGameApp, preference: (String, String) -> String?) -> Bool {
         guard !settings else { return false }
         return preference("launcher." + fullscreenKey, app.bundleID) == nil
@@ -183,6 +187,59 @@ public enum MacPlayEnvironment {
     public static func arguments(settings: Bool) -> [String] {
         settings ? [] : ["--no-launcher"]
     }
+}
+
+/// The language a game starts in on this Mac, chosen before each start the
+/// builder makes as Cartouche chooses it on the iPhone (CartoucheGameLanguage,
+/// in CartoucheCore): the first of the Mac's languages that the game has,
+/// unless the player chose one, in the console's settings page or in
+/// nxnative's window. It is saved where nxnative keeps the player's choice,
+/// the app's preferences, so that its window shows it, and a start from the
+/// Finder or the Dock starts in it too. A game of one language has nothing
+/// to choose, nor one whose env.txt, or the start's own environment, sets
+/// it: nxnative keeps those over the player's choice.
+public enum MacGameLanguage {
+    /// Chooses APP's language before a start, from the Mac's languages,
+    /// PREFERRED, in their order; DOCUMENTS is the game's folder of
+    /// nxnative's, where the player's env.txt is, and ENVIRONMENT the
+    /// start's own. READ (key, domain) reads the app's preferences, WRITE
+    /// (key, value, domain) writes one, nil removing it. Returns the
+    /// language the game starts in, nil when there was nothing to choose.
+    @discardableResult
+    public static func prepare(_ app: MacGameApp, documents: URL, environment: [String: String] = [:], preferred: [String],
+                               read: @escaping (String, String) -> String?,
+                               write: @escaping (String, String?, String) -> Void) -> String? {
+        let resources = app.url.appendingPathComponent("Contents/Resources", isDirectory: true)
+        let files = [documents.appendingPathComponent("env.txt"), resources.appendingPathComponent("dm/env.txt")]
+        guard environment[CartoucheGameLanguage.variable] == nil,
+              let row = CartoucheGameSetting.rows(inBundle: resources)?.first(where: { $0.env == CartoucheGameLanguage.variable }),
+              row.kind == "choice", CartoucheGameSetting.fixedValues(files: files)[row.env] == nil else { return nil }
+        let choices = MacGameChoices(domain: app.bundleID, read: read, write: write)
+        let offered = row.optionValues
+        let record = CartoucheGameLanguage.beforeStart(choices.languageRecord, preferred: preferred, offered: offered,
+                                                      gameDefault: row.def)
+        choices.keepLanguage(record)
+        return CartoucheGameLanguage.language(of: record, offered: offered, gameDefault: row.def)
+    }
+}
+
+/// A game's preferences, as the builder reads and writes them: through its
+/// closures, cfprefsd's (MacGames.preference, MacGames.keep), or the
+/// tests' own. A choice is a string, as nxnative keeps them.
+final class MacGameChoices: CartoucheGameChoices {
+    let domain: String
+    private let read: (String, String) -> String?
+    private let write: (String, String?, String) -> Void
+
+    init(domain: String, read: @escaping (String, String) -> String?, write: @escaping (String, String?, String) -> Void) {
+        self.domain = domain
+        self.read = read
+        self.write = write
+    }
+
+    func string(forKey key: String) -> String? { read(key, domain) }
+    func data(forKey key: String) -> Data? { nil }
+    func set(_ value: Any?, forKey key: String) { write(key, value as? String, domain) }
 }
 
 /// nxnative's own cloud saves: a folder the player chose in a game's

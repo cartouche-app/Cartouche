@@ -40,7 +40,7 @@ final class CartoucheGameStats: ObservableObject {
     private var pending: [CartoucheGameFolders] = []
     private var measuring: String?
     private var observers: [NSObjectProtocol] = []
-    #if CARTOUCHE_GALLERY
+    #if CARTOUCHE_GALLERY || os(macOS)
     private var shownForGallery = false
     #endif
 
@@ -75,7 +75,7 @@ final class CartoucheGameStats: ObservableObject {
     /// every installed app, again, and measures again the games that may
     /// have changed.
     func cameBack(_ apps: [LCAppModel]) {
-        #if CARTOUCHE_GALLERY
+        #if CARTOUCHE_GALLERY || os(macOS)
         if shownForGallery { return }
         #endif
         let installed = Set(apps.compactMap { Self.bundleId(of: $0) })
@@ -90,7 +90,7 @@ final class CartoucheGameStats: ObservableObject {
     /// Reads the play time of APPS again, and measures again those that
     /// may have changed.
     func refresh(_ apps: [LCAppModel]) {
-        #if CARTOUCHE_GALLERY
+        #if CARTOUCHE_GALLERY || os(macOS)
         if shownForGallery { return }
         #endif
         var record = self.record
@@ -174,9 +174,11 @@ final class CartoucheGameStats: ObservableObject {
         try? data.write(to: file, options: .atomic)
     }
 
-    #if CARTOUCHE_GALLERY
+    #if CARTOUCHE_GALLERY || os(macOS)
     /// These sizes and play times, by bundle ID, for the launcher's gallery
-    /// (launcher/Gallery).
+    /// (launcher/Gallery) and the console's in Cartouche Builder's
+    /// (builder/mac, ConsoleGallery.swift): from then on, nothing is read
+    /// again, measured or kept.
     func showForGallery(sizes: [String: CartoucheGameSize], playTimes: [String: CartouchePlayTime]) {
         var record = CartouchePlayTimeRecord()
         for (bundleId, time) in playTimes {
@@ -288,7 +290,7 @@ struct CartoucheGameStatsLine: View {
                         .accessibilityValue(Text(CartoucheText.duration(seconds: time.seconds)))
                 }
                 if let size {
-                    Label(CartoucheText.size(bytes: size), systemImage: entry.app != nil ? "iphone" : "externaldrive")
+                    Label(CartoucheText.size(bytes: size), systemImage: entry.app != nil ? CartoucheDevice.symbol : "externaldrive")
                         .accessibilityLabel(Text(entry.app != nil ? CartoucheText.onThisIPhone
                                                     : CartoucheText.statsStored(CartoucheStoredGames.shared.serverName ?? "")))
                         .accessibilityValue(Text(CartoucheText.size(bytes: size)))

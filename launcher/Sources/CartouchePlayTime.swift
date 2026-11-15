@@ -10,7 +10,9 @@
 //  game is uninstalled with its saves, and shows for a game that is only
 //  in the player's games folder. The space is measured as LiveContainer's
 //  storage page measures it: what each file takes on the disk, links not
-//  followed.
+//  followed. On the Mac, Cartouche Builder counts a game's time in the same
+//  file, in the game's folder of nxnative's (builder/mac, MacPlayTime.swift),
+//  and its console reads it there as the iPhone's does.
 //
 //  Foundation only, so that it is tested on a Mac (swift test
 //  --package-path launcher); CartoucheGameStats.swift shows it.
@@ -19,21 +21,21 @@
 import Foundation
 
 /// A game's play time, as its counter writes it.
-struct CartouchePlayTime: Codable, Hashable {
+public struct CartouchePlayTime: Codable, Hashable {
     /// The time the game was in front and active, in seconds.
-    var seconds: Double
+    public var seconds: Double
     /// How many times the game started and came to the front.
-    var sessions: Int
-    var firstPlayed: Date?
-    var lastPlayed: Date?
+    public var sessions: Int
+    public var firstPlayed: Date?
+    public var lastPlayed: Date?
 
     /// The counter's file in the game's data folder.
-    static let file = "Library/Cartouche/PlayTime.plist"
+    public static let file = "Library/Cartouche/PlayTime.plist"
     /// The counter's format. A later one may mean something else: it is
     /// not read.
-    static let version = 1
+    public static let version = 1
 
-    init(seconds: Double = 0, sessions: Int = 0, firstPlayed: Date? = nil, lastPlayed: Date? = nil) {
+    public init(seconds: Double = 0, sessions: Int = 0, firstPlayed: Date? = nil, lastPlayed: Date? = nil) {
         self.seconds = seconds
         self.sessions = sessions
         self.firstPlayed = firstPlayed
@@ -52,7 +54,7 @@ struct CartouchePlayTime: Codable, Hashable {
     }
 
     /// The counter's file in the data folder HOME, if the game wrote one.
-    static func read(home: URL) -> CartouchePlayTime? {
+    public static func read(home: URL) -> CartouchePlayTime? {
         guard let data = try? Data(contentsOf: home.appendingPathComponent(file)),
               let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
         else { return nil }

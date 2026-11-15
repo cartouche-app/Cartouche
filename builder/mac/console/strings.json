@@ -4,13 +4,65 @@
       "en": "Remove from this Mac",
       "fr": "Retirer de ce Mac"
     },
+    "gameInfo.footer": {
+      "en": "What you change here stays on this Mac.",
+      "fr": "Ce que vous changez ici reste sur ce Mac."
+    },
     "games.empty.message": {
       "en": "Add your games in the Builder: it builds each one for this Mac from your own copy.",
       "fr": "Ajoutez vos jeux dans le Builder : il construit chacun pour ce Mac à partir de votre propre copie."
     },
+    "reason.doesNotRun": {
+      "en": "Testers could not run it on this Mac model.",
+      "fr": "Les testeurs n’ont pas pu le lancer sur ce modèle de Mac."
+    },
+    "reason.gpu": {
+      "en": "nxnative’s games need a Mac with an Apple chip: this Mac’s GPU cannot read their compressed textures, and a game stops there before its first image.",
+      "fr": "Les jeux nxnative demandent un Mac avec une puce Apple : le GPU de ce Mac ne lit pas leurs textures compressées, et un jeu s’y arrête avant sa première image."
+    },
+    "reason.ios": {
+      "en": "Needs macOS %@ or later.",
+      "fr": "Nécessite macOS %@ ou ultérieur."
+    },
+    "reason.memory": {
+      "en": "Needs about %1$@; a game may use %2$@ on this Mac.",
+      "fr": "Nécessite environ %1$@ ; un jeu peut utiliser %2$@ sur ce Mac."
+    },
     "running.paused": {
       "en": "Running in its own window.",
       "fr": "En cours, dans sa propre fenêtre."
+    },
+    "setting.language.iPhone": {
+      "en": "Mac language",
+      "fr": "Langue du Mac"
+    },
+    "setting.language.iPhone.missing": {
+      "en": "None of the Mac’s languages is in this game: it starts in %@.",
+      "fr": "Aucune des langues du Mac n’est dans ce jeu : il démarre en %@."
+    },
+    "setting.language.iPhone.starts": {
+      "en": "Starts in %@, the Mac’s language.",
+      "fr": "Démarre en %@, la langue du Mac."
+    },
+    "settings.intro": {
+      "en": "The settings this game starts with, from Cartouche, the Finder or the Dock.",
+      "fr": "Les réglages avec lesquels ce jeu démarre, depuis Cartouche, le Finder ou le Dock."
+    },
+    "settings.nxnativeScreen": {
+      "en": "Start on nxnative’s window",
+      "fr": "Lancer sur la fenêtre de nxnative"
+    },
+    "settings.nxnativeScreen.footer": {
+      "en": "Starts the game on nxnative’s own settings window, in English, with these choices: its Play button starts the game.",
+      "fr": "Lance le jeu sur la fenêtre de réglages de nxnative, en anglais, avec ces choix : son bouton Play démarre le jeu."
+    },
+    "settings.reset.footer": {
+      "en": "Brings back all the settings this game was tested with, and the Mac’s language.",
+      "fr": "Remet tous les réglages avec lesquels ce jeu a été testé, et la langue du Mac."
+    },
+    "settings.unreachable": {
+      "en": "Cartouche cannot open this game’s settings. Start it on nxnative’s window to choose them.",
+      "fr": "Cartouche ne peut pas ouvrir les réglages de ce jeu. Lancez-le sur la fenêtre de nxnative pour les choisir."
     },
     "sheet.build.here": {
       "en": "On this Mac: %@",
@@ -24,14 +76,51 @@
       "en": "On this Mac",
       "fr": "Sur ce Mac"
     },
+    "sheet.requirements.met": {
+      "en": "This Mac has what it needs",
+      "fr": "Ce Mac a tout ce qu’il faut"
+    },
+    "sheet.result.thisModel": {
+      "en": "This Mac model",
+      "fr": "Ce modèle de Mac"
+    },
     "sheet.results.translated": {
       "en": "Testers’ notes translated by the Mac",
       "fr": "Notes des testeurs traduites par le Mac"
+    },
+    "status.notRecommended": {
+      "en": "Not recommended on this Mac",
+      "fr": "Déconseillé sur ce Mac"
+    },
+    "status.recommended": {
+      "en": "Runs on this Mac",
+      "fr": "Tourne sur ce Mac"
+    },
+    "status.unsupported": {
+      "en": "Not supported on this Mac",
+      "fr": "Non pris en charge sur ce Mac"
+    },
+    "status.untested": {
+      "en": "Not tried on this Mac yet",
+      "fr": "Pas encore essayé sur ce Mac"
     },
     "summary.credit.translated": {
       "en": "Description: IGDB.com, translated by the Mac",
       "fr": "Description : IGDB.com, traduite par le Mac"
     }
   },
-  "strings": {}
+  "strings": {
+    "mac.current": {
+      "en": "This Mac: %1$@, macOS %2$@",
+      "fr": "Ce Mac : %1$@, macOS %2$@"
+    },
+    "mac.requirement": {
+      "en": "Apple chip, macOS %@ or later",
+      "fr": "Puce Apple, macOS %@ ou ultérieur"
+    },
+    "mac.settings.back": {
+      "en": "Back to the game",
+      "fr": "Retour au jeu"
+    }
+  }
 }

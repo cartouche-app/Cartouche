@@ -5951,6 +5951,23 @@
         }
       }
     },
+    "setting.displayMode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Display mode"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mode d’affichage"
+          }
+        }
+      }
+    },
     "setting.dynamicResolution" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6189,6 +6206,23 @@
         }
       }
     },
+    "setting.note.dynamicResolutionLoad" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lets the game lower its resolution under load. Turn off to keep full resolution for the selected console mode."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laisse le jeu baisser sa résolution selon la charge. Désactivez-la pour garder la pleine résolution du mode de console choisi."
+          }
+        }
+      }
+    },
     "setting.note.frameBuffering" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6291,6 +6325,23 @@
         }
       }
     },
+    "setting.note.switch2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plays Joy-Con 2 and Pro Controller 2 over Bluetooth: hold Sync on one during the game to pair it. macOS asks once for Bluetooth access."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Joue avec les Joy-Con 2 et la manette Pro 2 en Bluetooth : maintenez le bouton de synchronisation de l’une d’elles pendant la partie pour l’associer. macOS demande une fois l’accès au Bluetooth."
+          }
+        }
+      }
+    },
     "setting.note.upscaling" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6376,6 +6427,23 @@
         }
       }
     },
+    "setting.option.fullscreen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fullscreen"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plein écran"
+          }
+        }
+      }
+    },
     "setting.option.gameOwn" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6393,6 +6461,23 @@
         }
       }
     },
+    "setting.option.matchScreen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Match screen"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Celui de l’écran"
+          }
+        }
+      }
+    },
     "setting.option.standard" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6406,6 +6491,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Standard"
+          }
+        }
+      }
+    },
+    "setting.option.window" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Window"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fenêtre"
           }
         }
       }
@@ -6457,6 +6559,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Préparation des pipelines"
+          }
+        }
+      }
+    },
+    "setting.pressToJoin" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press a button to join"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appuyer sur un bouton pour rejoindre"
           }
         }
       }
@@ -6576,6 +6695,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Performances"
+          }
+        }
+      }
+    },
+    "setting.switch2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch 2 controllers"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Manettes Switch 2"
           }
         }
       }

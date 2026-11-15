@@ -4,167 +4,33 @@
 //
 //  A game's own settings in Cartouche: the rows nxnative's settings screen
 //  shows before the game (its Launcher.swift and LauncherSettings.swift),
-//  read from the game's dm/launcher.json, in the reader's language. The
-//  choices go where nxnative keeps them, in the game's preferences
-//  ("launcher.<variable>", only a choice that differs from the game's
-//  default; "cloudSavesBookmark" for the cloud saves folder), which
-//  CartoucheGameActions.settings(for:tileKey:) opens. Play starts the game
-//  with them, without that screen (DM_LAUNCHER=0: nxnative applies the
-//  saved choices), and the game's in-game menu changes the same ones. A
-//  setting an env file sets wins over a choice (nxnative's main.m): it
-//  shows, but does not change here. The game's language follows the
-//  iPhone's until the player chooses one (CartoucheGameLanguage.swift).
+//  read from the game's dm/launcher.json (CartoucheGameSettingList.swift),
+//  in the reader's language. The choices go where nxnative keeps them, in
+//  the game's preferences ("launcher.<variable>", only a choice that
+//  differs from the game's default; "cloudSavesBookmark" for the cloud
+//  saves folder), which CartoucheGameActions.settings(for:tileKey:) opens.
+//  Play starts the game with them, without that screen (DM_LAUNCHER=0:
+//  nxnative applies the saved choices), and the game's in-game menu
+//  changes the same ones. A setting an env file sets wins over a choice
+//  (nxnative's main.m): it shows, but does not change here. The game's
+//  language follows the iPhone's until the player chooses one
+//  (CartoucheGameLanguage.swift).
+//
+//  Cartouche's console on the Mac shows the same page for a game's app
+//  (builder/mac, ConsoleSettings.swift): the rows of its
+//  Contents/Resources/dm/launcher.json, the choices in the app's
+//  preferences domain, where nxnative's launcher reads them at every start,
+//  from Cartouche, the Finder or the Dock, so that nxnative's own window is
+//  no longer needed. The game's language follows the Mac's there. The
+//  cloud saves folder is the iPhone's category: on the Mac, the games'
+//  saves come with the console's saves page.
 //
 
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#endif
 import UniformTypeIdentifiers
-
-/// One row of nxnative's settings screen, as dm/launcher.json lists it
-/// (nxnative's LauncherSettings.swift, Setting).
-struct CartoucheGameSetting: Decodable, Identifiable, Hashable {
-    struct Base: Decodable, Hashable {
-        let docked: [Int]
-        let handheld: [Int]
-    }
-
-    let env: String
-    /// choice, range or toggle.
-    let kind: String
-    let label: String
-    let note: String
-    let def: String
-    let section: String?
-    /// "<variable>=<value>": shown only while that setting has that value.
-    let needs: String?
-    /// The render scale's 3D size at 1.0, docked and handheld.
-    let base: Base?
-    /// A choice's [value, label] pairs.
-    let options: [[String]]?
-    let min: Double?
-    let max: Double?
-    let step: Double?
-    /// A toggle's two values, 1 and 0 when not given.
-    let on: String?
-    let off: String?
-
-    var id: String { env }
-    var sectionTitle: String { section ?? "Game" }
-    var onValue: String { on ?? "1" }
-    var offValue: String { off ?? "0" }
-    /// A choice's options that have a value and a label.
-    var choices: [[String]] { (options ?? []).filter { $0.count >= 2 } }
-    /// Their values: for the game's language, the codes of its languages.
-    var optionValues: [String] { choices.map { $0[0] } }
-
-    /// A range compares as numbers: a slider writes 1.00 for 1.0.
-    func isDefault(_ value: String) -> Bool {
-        kind == "range" ? abs((Double(value) ?? .nan) - (Double(def) ?? .nan)) < 1e-6 : value == def
-    }
-
-    /// Whether the game still offers a saved choice.
-    func accepts(_ value: String) -> Bool {
-        switch kind {
-        case "choice":
-            return choices.contains { $0[0] == value }
-        case "range":
-            guard !value.contains(where: { $0 == "x" || $0 == "X" }), let number = Double(value), number.isFinite,
-                  let low = min, let high = max else { return false }
-            return number >= low && number <= high
-        case "toggle":
-            return value == onValue || value == offValue
-        default:
-            return true
-        }
-    }
-
-    enum CodingKeys: String, CodingKey {
-        case env, kind, label, note, def = "default", section, needs, base, options, min, max, step, on, off
-    }
-
-    init(from decoder: Decoder) throws {
-        let values = try decoder.container(keyedBy: CodingKeys.self)
-        env = try values.decode(String.self, forKey: .env)
-        kind = try values.decode(String.self, forKey: .kind)
-        label = try values.decodeIfPresent(String.self, forKey: .label) ?? env
-        note = try values.decodeIfPresent(String.self, forKey: .note) ?? ""
-        def = try values.decode(String.self, forKey: .def)
-        section = try values.decodeIfPresent(String.self, forKey: .section)
-        needs = try values.decodeIfPresent(String.self, forKey: .needs)
-        base = try? values.decodeIfPresent(Base.self, forKey: .base)
-        options = try values.decodeIfPresent([[String]].self, forKey: .options)
-        min = try values.decodeIfPresent(Double.self, forKey: .min)
-        max = try values.decodeIfPresent(Double.self, forKey: .max)
-        step = try values.decodeIfPresent(Double.self, forKey: .step)
-        on = try values.decodeIfPresent(String.self, forKey: .on)
-        off = try values.decodeIfPresent(String.self, forKey: .off)
-    }
-
-    /// The rows of a settings list such as dm/launcher.json.
-    static func rows(in data: Data) -> [CartoucheGameSetting]? {
-        struct File: Decodable { let settings: [CartoucheGameSetting] }
-        return (try? JSONDecoder().decode(File.self, from: data))?.settings
-    }
-
-    /// The rows of a game's dm/launcher.json; a game of several programs
-    /// keeps the first program's in dm/p0.
-    static func rows(inBundle bundle: URL) -> [CartoucheGameSetting]? {
-        let dm = bundle.appendingPathComponent("dm", isDirectory: true)
-        for file in [dm.appendingPathComponent("launcher.json"), dm.appendingPathComponent("p0/launcher.json")] {
-            if let data = try? Data(contentsOf: file), let rows = rows(in: data) {
-                return rows
-            }
-        }
-        return nil
-    }
-
-    /// The variables an env file sets (Documents/env.txt, then the bundle's
-    /// dm/env.txt), which nxnative keeps over the player's choices.
-    static func fixedValues(home: URL?, bundle: URL) -> [String: String] {
-        var found: [String: String] = [:]
-        let files = [home?.appendingPathComponent("Documents/env.txt"), bundle.appendingPathComponent("dm/env.txt")]
-        for file in files.compactMap({ $0 }) {
-            guard let text = try? String(contentsOf: file, encoding: .utf8) else { continue }
-            for raw in text.components(separatedBy: .newlines) {
-                let line = raw.trimmingCharacters(in: .whitespaces)
-                guard !line.hasPrefix("#"), let equal = line.firstIndex(of: "="), equal != line.startIndex else { continue }
-                let key = String(line[..<equal])
-                if found[key] == nil { found[key] = String(line[line.index(after: equal)...]) }
-            }
-        }
-        return found
-    }
-}
-
-/// Where a game keeps the player's choices: its preferences.
-protocol CartoucheGameChoices: AnyObject {
-    /// A string only, as nxnative reads a choice: never a number turned
-    /// into one.
-    func string(forKey key: String) -> String?
-    func data(forKey key: String) -> Data?
-    /// nil removes the key.
-    func set(_ value: Any?, forKey key: String)
-}
-
-extension CartoucheGameChoices {
-    /// What the game's preferences hold of its language
-    /// (CartoucheGameLanguage).
-    var languageRecord: CartoucheGameLanguage.Record {
-        CartoucheGameLanguage.Record(
-            saved: string(forKey: CartoucheGameLanguage.savedKey),
-            source: string(forKey: CartoucheGameLanguage.sourceKey).flatMap { CartoucheGameLanguage.Source(rawValue: $0) },
-            iPhone: string(forKey: CartoucheGameLanguage.iPhoneKey))
-    }
-
-    /// Keeps RECORD, writing only what changed: each write goes to cfprefsd
-    /// at once.
-    func keepLanguage(_ record: CartoucheGameLanguage.Record) {
-        let old = languageRecord
-        if record.saved != old.saved { set(record.saved, forKey: CartoucheGameLanguage.savedKey) }
-        if record.source != old.source { set(record.source?.rawValue, forKey: CartoucheGameLanguage.sourceKey) }
-        if record.iPhone != old.iPhone { set(record.iPhone, forKey: CartoucheGameLanguage.iPhoneKey) }
-    }
-}
 
 /// A game's settings and the player's choices, as nxnative's LauncherModel
 /// keeps them.
@@ -290,11 +156,20 @@ final class CartoucheGameSettingsModel: ObservableObject, Hashable {
     /// The cloud saves, the page's last category after nxnative's sections.
     static let savesCategory = "cartouche.saves"
 
+    /// Whether the page offers nxnative's own cloud saves, through a folder
+    /// of iCloud Drive: on the iPhone. On the Mac, the games' saves come
+    /// with the console's saves page.
+    #if os(iOS)
+    static let offersCloudSaves = true
+    #else
+    static let offersCloudSaves = false
+    #endif
+
     /// The category the player picked; nil for the first.
     @Published var category: String?
 
     var categories: [String] {
-        sections.filter { !rows(in: $0).isEmpty } + (canChange ? [Self.savesCategory] : [])
+        sections.filter { !rows(in: $0).isEmpty } + (canChange && Self.offersCloudSaves ? [Self.savesCategory] : [])
     }
 
     /// The category on screen: the one picked, else the first.
@@ -438,6 +313,7 @@ struct CartoucheGameSettingsView: View {
                 // One section for every category, so that the bar over it
                 // stays put as the player moves between them.
                 Section {
+                    #if os(iOS)
                     if category == CartoucheGameSettingsModel.savesCategory {
                         cloudSaves
                     } else {
@@ -445,6 +321,11 @@ struct CartoucheGameSettingsView: View {
                             CartoucheGameSettingRow(setting: setting, model: model)
                         }
                     }
+                    #else
+                    ForEach(model.rows(in: category)) { setting in
+                        CartoucheGameSettingRow(setting: setting, model: model)
+                    }
+                    #endif
                 } header: {
                     categoryHeader(category)
                 } footer: {
@@ -474,6 +355,7 @@ struct CartoucheGameSettingsView: View {
         .scrollContentBackground(.hidden)
         .background(CartoucheStage(key: model.tileKey))
         .navigationTitle(CartoucheText.gameSettings)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $choosingFolder) {
             CartoucheFolderPicker { url in
@@ -482,6 +364,7 @@ struct CartoucheGameSettingsView: View {
             }
             .ignoresSafeArea()
         }
+        #endif
     }
 
     /// Over the category's rows: the bar of the categories when there are
@@ -502,6 +385,7 @@ struct CartoucheGameSettingsView: View {
         }
     }
 
+    #if os(iOS)
     /// The rows of the cloud saves, the page's last category.
     @ViewBuilder
     private var cloudSaves: some View {
@@ -520,6 +404,7 @@ struct CartoucheGameSettingsView: View {
             CartoucheReportButton(report: report)
         }
     }
+    #endif
 }
 
 /// One setting: a menu, a slider with its value, or a switch. What it
@@ -792,6 +677,7 @@ struct CartoucheSettingsCategoryBar: View {
     }
 }
 
+#if os(iOS)
 /// The Files picker for a folder, which stays where it is: the game keeps
 /// a bookmark to it.
 struct CartoucheFolderPicker: UIViewControllerRepresentable {
@@ -824,3 +710,4 @@ struct CartoucheFolderPicker: UIViewControllerRepresentable {
         }
     }
 }
+#endif

@@ -351,8 +351,8 @@ struct BuildSettings: View {
             } header: {
                 Text(tr("Games", "Jeux"))
             } footer: {
-                Text(tr("Cartouche starts each game in the iPhone’s language when the game has it; this one otherwise.",
-                        "Cartouche lance chaque jeu dans la langue de l’iPhone quand le jeu l’a ; sinon dans celle-ci."))
+                Text(tr("Cartouche starts each game in the language of the iPhone or of this Mac when the game has it; this one otherwise.",
+                        "Cartouche lance chaque jeu dans la langue de l’iPhone ou de ce Mac quand le jeu l’a ; sinon dans celle-ci."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

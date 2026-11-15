@@ -7,12 +7,15 @@
 //  installs and starts games with LiveContainer), the game running, its
 //  setup (a certificate and a pairing file), its Apple ID, its first
 //  game's guide, the game behind the console, the iPhone's model, memory
-//  limit, signature and its renewals, how a game fits it, and the journal
-//  of its reports.
+//  limit, signature and its renewals, how a game fits it, the journal of
+//  its reports and its measurements.
 //  A Mac plays the games nxnative built for it, each in its own app: the
 //  console has nothing to set up, no limit of memory from iOS, no signature
-//  that expires, nothing behind it. Each stand-in keeps the names and the
-//  calls of the iPhone's, so that the screens are the same files.
+//  that expires, nothing behind it. A game fits it by the iPhone's rule
+//  (CartoucheGameFit.swift), against what this Mac has: its chip and macOS,
+//  which nxnative's apps for the Mac need, its GPU, and the memory Metal
+//  says a game may use here. Each stand-in keeps the names and the calls of
+//  the iPhone's, so that the screens are the same files.
 //
 
 import AppKit
@@ -55,21 +58,27 @@ final class CartoucheGameActions: ObservableObject {
     /// ID (dm/mac/launcher.c in nxnative).
     var dataRoot = FileManager.default.homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/nxnative", isDirectory: true)
+    /// Whether the games' settings pages keep the choices in memory rather
+    /// than in the games' preferences: the gallery's, which reads nothing
+    /// of the player's and keeps nothing (ConsoleSettings.swift).
+    var keepsChoicesInMemory = false
 
     /// The game's saves on this Mac come with the Mac's saves page; until
     /// then, the sheet has no saves section.
     func saves(of app: LCAppModel) -> CartoucheSaveTarget? { nil }
 
     /// The game's app and its data folder, for its size and its play time
-    /// (CartoucheGameStats). Nil for an app that is not an nxnative game.
+    /// (CartoucheGameStats), which the Builder counts there as the iPhone's
+    /// game does in its own (MacPlayTime.swift in BuilderKit). Nil for an
+    /// app that is not an nxnative game.
     func folders(of app: LCAppModel) -> CartoucheGameFolders? {
-        guard let found = CartoucheCatalog.shared.gameTitle(of: app), let contents = app.appInfo.bundlePath(),
-              let bundleId = CartoucheGameStats.bundleId(of: app) else { return nil }
-        let titleId = found.isEmpty ? nil : found
+        guard app.appInfo.titleId != nil || CartoucheCatalog.shared.gameTitle(of: app) != nil,
+              let contents = app.appInfo.bundlePath(), let bundleId = CartoucheGameStats.bundleId(of: app) else { return nil }
+        let titleId = titleId(of: app)
         var data: [String: URL] = [:]
         if let titleId {
-            let folder = dataRoot.appendingPathComponent(titleId.uppercased(), isDirectory: true)
-            if FileManager.default.fileExists(atPath: folder.path) { data[titleId.uppercased()] = folder }
+            let folder = dataRoot.appendingPathComponent(titleId, isDirectory: true)
+            if FileManager.default.fileExists(atPath: folder.path) { data[titleId] = folder }
         }
         // The app's Contents, which hold all of it and its Info.plist.
         return CartoucheGameFolders(bundleId: bundleId, titleId: titleId,
@@ -103,7 +112,9 @@ final class CartoucheGameKeeping: ObservableObject {
     @Published private(set) var limitMiB: Int?
 
     func startsInPlace(bundleId: String?, ownLimitMiB: Int?) -> Bool { false }
-    func gameLimitMiB(ownLimitMiB: Int?) -> Int? { ownLimitMiB }
+    /// The memory a game may use here: what Metal says this Mac's GPU can
+    /// hold without slowing down, the Mac's memory being the GPU's.
+    func gameLimitMiB(ownLimitMiB: Int?) -> Int? { ownLimitMiB ?? CartoucheDevice.gameMemoryMiB }
     func startBehind(bundleId: String) {}
     func sendsGamesInPlace(ownLimitMiB: Int?) -> Bool { false }
     func tryBehindAgain() {}
@@ -161,6 +172,10 @@ struct CartoucheGuideCard: View {
 
 /// What this Mac gives a game, under the iPhone's names.
 enum CartoucheDevice {
+    /// The symbol of the device a game is on, beside its size and its
+    /// build.
+    static let symbol = "laptopcomputer"
+
     /// The model identifier, such as "Mac16,13".
     static let modelIdentifier: String = {
         var size = 0
@@ -171,6 +186,25 @@ enum CartoucheDevice {
         return String(cString: model)
     }()
 
+    /// The Mac's chip, such as "Apple M4 Pro".
+    static let chip: String = {
+        var size = 0
+        sysctlbyname("machdep.cpu.brand_string", nil, &size, nil, 0)
+        guard size > 0 else { return "?" }
+        var brand = [CChar](repeating: 0, count: size)
+        sysctlbyname("machdep.cpu.brand_string", &brand, &size, nil, 0)
+        let text = String(cString: brand).trimmingCharacters(in: .whitespaces)
+        return text.isEmpty ? "?" : text
+    }()
+
+    /// The memory a game may use on this Mac, in MiB: Metal's
+    /// recommendedMaxWorkingSetSize, about three quarters of the Mac's
+    /// memory on an Apple chip; nil when Metal does not say.
+    static let gameMemoryMiB: Int? = {
+        guard let bytes = MTLCreateSystemDefaultDevice()?.recommendedMaxWorkingSetSize, bytes > 0 else { return nil }
+        return Int(bytes / 1_048_576)
+    }()
+
     /// macOS's version, where the iPhone says iOS's.
     static var iOSVersion: String {
         let version = ProcessInfo.processInfo.operatingSystemVersion
@@ -179,9 +213,18 @@ enum CartoucheDevice {
         return text
     }
 
-    /// A game's sheet names the iOS it needs, which a game built for the
-    /// Mac does not run on.
-    static func runsAtLeast(_ minimum: String) -> Bool { true }
+    /// The macOS nxnative's apps for the Mac need, which their Info.plist
+    /// says (LSMinimumSystemVersion): nxnative's README, dm/mac/min_os.mk.
+    static let macMinimum = "26.6"
+
+    /// Whether this Mac runs macOS MINIMUM or later, such as "26.6".
+    static func runsAtLeast(_ minimum: String) -> Bool {
+        let parts = minimum.split(separator: ".").map { Int($0) ?? 0 }
+        return ProcessInfo.processInfo.isOperatingSystemAtLeast(OperatingSystemVersion(
+            majorVersion: parts.count > 0 ? parts[0] : 0,
+            minorVersion: parts.count > 1 ? parts[1] : 0,
+            patchVersion: parts.count > 2 ? parts[2] : 0))
+    }
 
     static let supportsBCTextureCompression: Bool = MTLCreateSystemDefaultDevice()?.supportsBCTextureCompression ?? false
 
@@ -224,8 +267,11 @@ final class CartoucheRenewals: ObservableObject {
     var isRenewing: Bool { false }
 }
 
-/// How a game fits this Mac. The testers' results are the iPhones': a
-/// game nxnative built for this Mac has nobody's report here yet.
+/// How a game fits this Mac, from its sheet and what this Mac has, by the
+/// iPhone's rule (CartoucheGameFit), in words. A game nxnative built for
+/// the Mac needs its macOS, not the iOS the sheet names, and no Increased
+/// Memory Limit; the testers' results on this Mac's model count, as an
+/// iPhone's on its own.
 enum CartoucheFit: Hashable {
     case recommended
     case untested
@@ -255,9 +301,45 @@ enum CartoucheFit: Hashable {
         }
     }
 
-    static func of(_ sheet: CartoucheGameSheet, limitMiB: Int?) -> CartoucheFit { .untested }
+    /// LIMITMIB is the memory a game may use here
+    /// (CartoucheGameKeeping.gameLimitMiB).
+    static func of(_ sheet: CartoucheGameSheet, limitMiB: Int?) -> CartoucheFit {
+        let latest = sheet.results.filter { $0.device == CartoucheDevice.modelIdentifier }.max { $0.date < $1.date }
+        // The macOS of nxnative's apps for the Mac, where the iPhone's sheet
+        // says the iOS a game needs.
+        return CartoucheFit(CartoucheGameFit.verdict(
+            minimumIOS: CartoucheDevice.macMinimum, runsMinimumIOS: CartoucheDevice.runsAtLeast(CartoucheDevice.macMinimum),
+            readsBCTextures: CartoucheDevice.supportsBCTextureCompression,
+            needsIML: false, hasIML: true,
+            peakMiB: sheet.peakMemoryMiB, limitMiB: limitMiB, latestHere: latest?.status))
+    }
 
-    static func withoutSheet() -> CartoucheFit? { nil }
+    /// How a game without a sheet fits: nil, unless this Mac's GPU is one
+    /// nxnative refuses for every game.
+    static func withoutSheet() -> CartoucheFit? {
+        CartoucheGameFit.verdictWithoutSheet(readsBCTextures: CartoucheDevice.supportsBCTextureCompression)
+            .map { CartoucheFit($0) }
+    }
+
+    private init(_ verdict: CartoucheGameFit.Verdict) {
+        switch verdict {
+        case .recommended: self = .recommended
+        case .untested: self = .untested
+        case .notRecommended(let reasons): self = .notRecommended(reasons.map(Self.text))
+        case .unsupported(let reasons): self = .unsupported(reasons.map(Self.text))
+        }
+    }
+
+    private static func text(_ reason: CartoucheGameFit.Reason) -> String {
+        switch reason {
+        case .iOS(let minimum): return CartoucheText.reasonIOS(minimum)
+        case .gpu: return CartoucheText.reasonGPU
+        case .increasedMemoryLimit: return CartoucheText.reasonIML
+        case .memory(let needed, let limit):
+            return CartoucheText.reasonMemory(needed: CartoucheText.mebibytes(needed), limit: CartoucheText.mebibytes(limit))
+        case .doesNotRun: return CartoucheText.reasonDoesNotRun
+        }
+    }
 }
 
 // MARK: Reports
@@ -347,6 +429,18 @@ enum CartoucheReports {
         redaction.paths = CartoucheStorageRole.allCases.compactMap { settings.place($0)?.path }
         return redaction
     }
+}
+
+// MARK: Measurements
+
+/// Cartouche's measurements of the games and of its own events
+/// (CartoucheTelemetry.swift on the iPhone): the console's come with its
+/// System page, and until then an event is not kept.
+@MainActor
+final class CartoucheTelemetry {
+    static let shared = CartoucheTelemetry()
+
+    func event(_ name: String, game: String? = nil, fields: [String: CartoucheTelemetryValue] = [:]) {}
 }
 
 // MARK: Saves

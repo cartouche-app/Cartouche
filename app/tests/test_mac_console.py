@@ -16,7 +16,8 @@ which builds the iPhone's console screens for the Mac:
   with no stand-in for it (Mac/ConsoleStandIns.swift): a change to the
   iPhone's screens that only a Mac would find otherwise;
 - the Mac's own words (builder/mac/console/strings.json) say what the
-  launcher's say, with the same placeholders, and console/strings.py writes
+  launcher's say, with the same placeholders, those of the console's own
+  files are there as the files say them, and console/strings.py writes
   each language's table where the console reads it.
 
 Run from the repository root: python3 -m unittest discover -s app/tests -v
@@ -42,7 +43,7 @@ CATALOG = LAUNCHER / "Cartouche.xcstrings"
 MAC_STRINGS = ROOT / "builder" / "mac" / "console" / "strings.json"
 UNSHARED = ROOT / "builder" / "mac" / "console" / "unshared.json"
 MAC_SOURCES = ROOT / "builder" / "mac" / "Sources"
-PLAN_STEPS = range(5, 10)  # the plan's steps still to come after this one (docs/decisions/095.md)
+PLAN_STEPS = range(7, 10)  # the plan's steps still to come after this one (docs/decisions/095.md)
 WRITER = ROOT / "builder" / "mac" / "console" / "strings.py"
 LANGUAGES = ("en", "fr")
 
@@ -228,6 +229,20 @@ class MacConsoleWords(unittest.TestCase):
                 self.assertEqual(sorted(values), list(LANGUAGES))
                 self.assertTrue(all(values[language].strip() for language in LANGUAGES))
                 self.assertEqual(placeholders(values["fr"]), placeholders(values["en"]))
+
+    def test_the_console_files_words_are_the_macs_own(self):
+        """The words the console's own files speak (Mac/, CartoucheText's
+        s() and f()) are its own words, in English as the files say them:
+        a word a file adds without them would stay in English."""
+        spoken = {}
+        for path in sorted((CONSOLE / "Mac").glob("*.swift")):
+            text = path.read_text(encoding="utf-8")
+            for key, english in re.findall(r'\b[sf]\("([^"]+)",\s*"((?:[^"\\]|\\.)*)"', text):
+                spoken[key] = english
+        self.assertEqual(sorted(spoken), sorted(self.mac.get("strings", {})))
+        for key, english in spoken.items():
+            with self.subTest(key=key):
+                self.assertEqual(self.mac["strings"][key]["en"], english)
 
     def test_the_file_is_written_as_the_test_reads_it(self):
         text = MAC_STRINGS.read_text(encoding="utf-8")

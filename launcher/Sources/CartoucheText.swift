@@ -774,6 +774,9 @@ enum CartoucheText {
         case "Encode thread": return s("setting.encodeThread", "Encode thread")
         case "Hold frames when late": return s("setting.holdFrames", "Hold frames when late")
         case "Performance HUD": return s("setting.hud", "Performance HUD")
+        case "Display mode": return s("setting.displayMode", "Display mode")
+        case "Press a button to join": return s("setting.pressToJoin", "Press a button to join")
+        case "Switch 2 controllers": return s("setting.switch2", "Switch 2 controllers")
 
         case "Docked": return modeName("docked")
         case "Handheld": return modeName("handheld")
@@ -782,10 +785,17 @@ enum CartoucheText {
         case "Fit": return s("setting.option.fit", "Fit")
         case "Fill": return s("setting.option.fill", "Fill")
         case "iPhone Duo screen (1.43:1)": return s("setting.option.duoScreen", "iPhone Duo screen (1.43:1)")
+        case "Match screen": return s("setting.option.matchScreen", "Match screen")
+        case "Window": return s("setting.option.window", "Window")
+        case "Fullscreen": return s("setting.option.fullscreen", "Fullscreen")
 
         case "Adjusts resolution between 70% and 100% under load. Turn off to keep full resolution for the selected console mode.":
             let low = percent(0.7), high = percent(1)
             return f("setting.note.dynamicResolution", "Adjusts resolution between %1$@ and %2$@ under load. Turn off to keep full resolution for the selected console mode.", low, high)
+        case "Lets the game lower its resolution under load. Turn off to keep full resolution for the selected console mode.":
+            return s("setting.note.dynamicResolutionLoad", "Lets the game lower its resolution under load. Turn off to keep full resolution for the selected console mode.")
+        case "Plays Joy-Con 2 and Pro Controller 2 over Bluetooth: hold Sync on one during the game to pair it. macOS asks once for Bluetooth access.":
+            return s("setting.note.switch2", "Plays Joy-Con 2 and Pro Controller 2 over Bluetooth: hold Sync on one during the game to pair it. macOS asks once for Bluetooth access.")
         case "Uses more GPU time and can increase heat.":
             return s("setting.note.upscaling", "Uses more GPU time and can increase heat.")
         case "Fill crops the game's 16:9 picture to cover the screen. Health bars, subtitles or maps near the edges can be cut off. A full-screen picture without cropping needs a patch for each game.":

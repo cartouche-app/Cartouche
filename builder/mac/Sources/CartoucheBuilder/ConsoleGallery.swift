@@ -3,15 +3,18 @@
 //  Cartouche Builder
 //
 //  Cartouche's console in the gallery (Gallery.swift): its home with the
-//  sheet of the game in focus beside it, and every game, as the console
+//  sheet of the game in focus beside it, every game, a game's settings page
+//  in place of its sheet and its info over the console, as the console
 //  shows the games built for this Mac, and one a NAS keeps that is not
 //  installed here, in the window as the app shows it (MainView). The games
 //  are real ones nxnative builds, with their covers from IGDB as the
-//  console shows them; their apps are the gallery's own, empty, in a
-//  temporary folder, the NAS's file is only a name, and nothing of the
-//  player's is read: no data folder of nxnative's, no question to
-//  Cartouche's server. Like ConsoleWindow.swift, this file imports the
-//  console and not CartoucheCore, whose names it shares.
+//  console shows them; their apps are the gallery's own, empty but for
+//  their Info.plist and the list of settings nxnative gives a game on the
+//  Mac, in a temporary folder, their play time and their sizes made up, the
+//  NAS's file is only a name, and nothing of the player's is read or kept:
+//  no data folder of nxnative's, no game's preferences, no play time, no
+//  question to Cartouche's server. Like ConsoleWindow.swift, this file
+//  imports the console and not CartoucheCore, whose names it shares.
 //
 
 import AppKit
@@ -33,6 +36,64 @@ enum ConsoleGallery {
                              file: "/Volumes/Jeux/Animal Crossing New Horizons [01006F8002326000].app.zip",
                              size: 7_340_032_000, built: Date().addingTimeInterval(-26 * 3_600)),
     ]
+
+    /// The time two of them were played on this Mac, and the space each
+    /// takes here, its app and its data.
+    static let playTimes = [
+        "040074A01BF12000": CartouchePlayTime(seconds: 45_240, sessions: 23, firstPlayed: Date().addingTimeInterval(-9 * 86_400),
+                                              lastPlayed: Date().addingTimeInterval(-86_400)),
+        "0400C3F00006E000": CartouchePlayTime(seconds: 2_820, sessions: 2, firstPlayed: Date().addingTimeInterval(-4 * 3_600),
+                                              lastPlayed: Date().addingTimeInterval(-3 * 3_600)),
+    ]
+    static let sizes: [String: (app: UInt64, data: UInt64)] = [
+        "040074A01BF12000": (14_173_392_076, 48_234_496),
+        "0400C3F00006E000": (21_474_836_480, 327_155_712),
+        "01006BB00C6F0000": (3_113_851_290, 6_291_456),
+    ]
+
+    /// The settings nxnative lists for a game built for the Mac
+    /// (dm/games/settings.tsv, its rows for the Mac; the app's
+    /// Contents/Resources/dm/launcher.json), with a game's defaults.
+    static func settings(of titleID: String) -> String {
+        """
+        {"schema": 1, "game": "\(titleID)", "settings": [
+          {"env": "DM_FPS_TARGET", "kind": "choice", "section": "Game", "label": "Frame rate", "note": "", "default": "60",
+           "level": "basic", "options": [["30", "30 fps"], ["60", "60 fps"]]},
+          {"env": "DM_OPMODE", "kind": "choice", "section": "Game", "label": "Console mode", "note": "", "default": "1",
+           "level": "basic", "options": [["1", "Docked"], ["0", "Handheld"]]},
+          {"env": "DM_PRESENT_UPSCALE", "kind": "choice", "section": "Game", "label": "Upscaling",
+           "note": "Uses more GPU time and can increase heat.", "default": "off", "options": [["off", "Standard"], ["metalfx", "MetalFX"]]},
+          {"env": "DM_LANG", "kind": "choice", "section": "Game", "label": "Game language", "note": "", "default": "en-US", "level": "basic",
+           "options": [["en-US", "American English"], ["en-GB", "British English"], ["ja", "Japanese"], ["fr", "French"], ["de", "German"],
+                       ["es-419", "Latin American Spanish"], ["es", "Spanish"], ["it", "Italian"], ["nl", "Dutch"], ["fr-CA", "Canadian French"]]},
+          {"env": "DM_FULLSCREEN", "kind": "choice", "section": "Game", "label": "Display mode", "note": "", "default": "0",
+           "level": "basic", "options": [["0", "Window"], ["1", "Fullscreen"]]},
+          {"env": "DM_RUMBLE", "kind": "toggle", "section": "Controls", "label": "Game rumble", "note": "", "default": "1",
+           "level": "basic", "on": "1", "off": "0"},
+          {"env": "DM_RUMBLE_GAIN", "kind": "range", "section": "Controls", "label": "Rumble strength", "note": "", "default": "1.0",
+           "needs": "DM_RUMBLE=1", "min": 0.0, "max": 3.0, "step": 0.1},
+          {"env": "DM_RUMBLE_MIN", "kind": "range", "section": "Controls", "label": "Rumble cutoff", "note": "", "default": "0",
+           "min": 0.0, "max": 0.9, "step": 0.05},
+          {"env": "DM_PAD_PRESS_TO_JOIN", "kind": "toggle", "section": "Controls", "label": "Press a button to join", "note": "",
+           "default": "0", "on": "1", "off": "0"},
+          {"env": "DM_SW2", "kind": "toggle", "section": "Controls", "label": "Switch 2 controllers",
+           "note": "Plays Joy-Con 2 and Pro Controller 2 over Bluetooth: hold Sync on one during the game to pair it. macOS asks once for Bluetooth access.",
+           "default": "0", "on": "1", "off": "0"},
+          {"env": "DM_PRESENT_SNAP", "kind": "toggle", "section": "Performance", "label": "Frame buffering",
+           "note": "Up to one frame more display latency.", "default": "0", "on": "1", "off": "0"},
+          {"env": "DM_PSO_MTL4", "kind": "toggle", "section": "Performance", "label": "Metal 4 pipelines",
+           "note": "Keeps a pipeline archive; uses more memory.", "default": "1", "on": "1", "off": "0"},
+          {"env": "DM_PSO_PREBUILD", "kind": "toggle", "section": "Performance", "label": "Pipeline prebuild",
+           "note": "The first start waits a few minutes for it, once.", "default": "1", "needs": "DM_PSO_MTL4=1", "on": "1", "off": "0"},
+          {"env": "DM_NVN_ENC_THREAD", "kind": "toggle", "section": "Performance", "label": "Encode thread", "note": "",
+           "default": "1", "on": "1", "off": "0"},
+          {"env": "DM_FPS_HOLD", "kind": "toggle", "section": "Performance", "label": "Hold frames when late", "note": "",
+           "default": "on", "on": "on", "off": "off"},
+          {"env": "DM_METAL_HUD", "kind": "toggle", "section": "Performance", "label": "Performance HUD", "note": "",
+           "default": "0", "on": "1", "off": "0"}
+        ]}
+        """
+    }
 
     private static var folder: URL?
     private static var apps: [URL] = []
@@ -56,12 +117,18 @@ enum ConsoleGallery {
         for game in games {
             let app = folder.appendingPathComponent("Applications/\(game.name).app", isDirectory: true)
             let contents = app.appendingPathComponent("Contents", isDirectory: true)
+            // As nxnative writes them: the game's title ID, the macOS its
+            // apps need.
             let info: [String: Any] = ["CFBundleIdentifier": "org.nxnative." + game.titleID.lowercased(),
-                                       "CFBundleName": game.name, "CFBundlePackageType": "APPL"]
+                                       "CFBundleName": game.name, "CFBundlePackageType": "APPL",
+                                       "DMTitleID": game.titleID, "LSMinimumSystemVersion": "26.6"]
+            let dm = contents.appendingPathComponent("Resources/dm", isDirectory: true)
             do {
                 try FileManager.default.createDirectory(at: contents.appendingPathComponent("MacOS"), withIntermediateDirectories: true)
+                try FileManager.default.createDirectory(at: dm, withIntermediateDirectories: true)
                 try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0)
                     .write(to: contents.appendingPathComponent("Info.plist"))
+                try Data(settings(of: game.titleID).utf8).write(to: dm.appendingPathComponent("launcher.json"))
                 apps.append(app)
             } catch {
                 FileHandle.standardError.write(Data("gallery: the console's game \(game.name): \(error)\n".utf8))
@@ -70,7 +137,9 @@ enum ConsoleGallery {
         self.apps = apps
         let console = CartoucheMacConsole.shared
         console.asksServer = false
+        console.keepsChoicesInMemory = true
         console.dataFolder = folder.appendingPathComponent("nxnative", isDirectory: true)
+        console.showForGallery(playTimes: playTimes, sizes: sizes)
         console.show(games: apps, kept: kept)
 
         final class Done { var value = false }

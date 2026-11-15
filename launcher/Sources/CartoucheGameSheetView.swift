@@ -10,7 +10,9 @@
 //  description, the player's or IGDB's (CartoucheGameSummaryView), the time
 //  the player played it and the space it takes (CartoucheGameStats), what
 //  stops the game on this iPhone, if anything (what it needs folds into
-//  one line when this iPhone has it all), its build on the player's Mac,
+//  one line when this iPhone has it all; in the console on the Mac, an
+//  Apple chip and the macOS of the game's app in place of an iOS and
+//  Increased Memory Limit), its build on the player's Mac,
 //  with the button that asks the Mac for one, the one that stops it, and
 //  the way to all the Mac's builds, once Cartouche reaches the Mac and its
 //  Cartouche Builder knows the game (CartoucheMacBuildsView),
@@ -160,9 +162,7 @@ struct CartoucheGameSheetView: View {
                             }
                         }
                     }
-                    #if os(iOS)
                     requirements(sheet)
-                    #endif
                 } else {
                     // nxnative refuses this GPU for every game, with a sheet or
                     // without.
@@ -359,7 +359,7 @@ struct CartoucheGameSheetView: View {
                     buildLine(CartoucheText.buildNewer(serverName, CartoucheText.build(build, showsCommit: false)),
                               systemImage: "arrow.down.circle")
                     if let installed = installedBuild(of: app, showsCommit: false) {
-                        buildLine(CartoucheText.buildHere(installed), systemImage: "iphone")
+                        buildLine(CartoucheText.buildHere(installed), systemImage: CartoucheDevice.symbol)
                     }
                 }
             } else if let stored = entry.stored {
@@ -434,20 +434,32 @@ struct CartoucheGameSheetView: View {
     }
 
     private func requirementList(_ sheet: CartoucheGameSheet) -> [Requirement] {
+        #if os(iOS)
         var list = [Requirement(ok: CartoucheDevice.runsAtLeast(sheet.requirements.minimumIOS),
                                 title: CartoucheText.iosRequirement(sheet.requirements.minimumIOS),
                                 detail: CartoucheText.iosCurrent(CartoucheDevice.iOSVersion))]
+        #else
+        // On the Mac, the app nxnative built of the game for this Mac: an
+        // Apple chip, which Cartouche there needs too, and the macOS its
+        // Info.plist names.
+        let minimum = entry.app?.appInfo.minimumSystemVersion ?? CartoucheDevice.macMinimum
+        var list = [Requirement(ok: CartoucheDevice.runsAtLeast(minimum), title: CartoucheText.macRequirement(minimum),
+                                detail: CartoucheText.macCurrent(CartoucheDevice.chip, CartoucheDevice.iOSVersion))]
+        #endif
         if sheet.requirements.bcTextureCompression || !CartoucheDevice.supportsBCTextureCompression {
             list.append(Requirement(ok: CartoucheDevice.supportsBCTextureCompression,
                                     title: CartoucheText.bcRequirement,
                                     detail: CartoucheDevice.supportsBCTextureCompression ? CartoucheText.gpuSupported : CartoucheText.gpuUnsupported))
         }
+        // iOS's alone: a Mac gives a game its memory without it.
+        #if os(iOS)
         if sheet.requirements.increasedMemoryLimit {
             let limit = memory.map { CartoucheText.memoryAmount(mebibytes: $0.limitMiB) } ?? "–"
             list.append(Requirement(ok: CartoucheDevice.hasIncreasedMemoryLimit,
                                     title: CartoucheText.imlRequirement,
                                     detail: CartoucheDevice.hasIncreasedMemoryLimit ? CartoucheText.imlActive(limit) : CartoucheText.imlInactive(limit)))
         }
+        #endif
         if let peak = sheet.peakMemoryMiB {
             let fits = gameLimitMiB.map { peak <= $0 } ?? true
             list.append(Requirement(ok: fits,
@@ -634,7 +646,7 @@ struct CartoucheGameSheetView: View {
                     nxnative(game)
                 }
                 if let app = entry.app, let installed = installedBuild(of: app) {
-                    Label(CartoucheText.buildHere(installed), systemImage: "iphone")
+                    Label(CartoucheText.buildHere(installed), systemImage: CartoucheDevice.symbol)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }

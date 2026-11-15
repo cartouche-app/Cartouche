@@ -5,8 +5,9 @@
 //  What the builder needs to start a game's Mac app and to know how it
 //  ended (MacPlay.swift), as nxnative's docs/frontends.md and its launcher
 //  (dm/mac/launcher.c) say it: the app's Info.plist, the launcher's last
-//  line in its log, the environment of a start, and nxnative's own cloud
-//  saves, which the builder leaves a game's saves to.
+//  line in its log, the environment of a start, the language a game starts
+//  in, chosen as Cartouche chooses it on the iPhone, and nxnative's own
+//  cloud saves, which the builder leaves a game's saves to.
 //
 
 import Foundation
@@ -164,6 +165,78 @@ final class MacPlayTests: XCTestCase {
         asked.removeAll()
         XCTAssertFalse(MacPlayEnvironment.fullscreen(settings: true, of: app, preference: preference))
         XCTAssertEqual(asked, [])
+    }
+
+    // MARK: The game's language
+
+    /// An app whose settings list offers LANGUAGES, the first its own.
+    private func appWithLanguages(_ languages: [String], bundleID: String = "com.example.mk8") throws -> MacGameApp {
+        let url = try app("MK8", ["DMTitleID": "0100152000022000", "CFBundleIdentifier": bundleID])
+        let dm = url.appendingPathComponent("Contents/Resources/dm", isDirectory: true)
+        try FileManager.default.createDirectory(at: dm, withIntermediateDirectories: true)
+        let options = languages.map { "[\"\($0)\", \"\($0)\"]" }.joined(separator: ", ")
+        let list = """
+        {"schema": 1, "settings": [
+          {"env": "DM_FULLSCREEN", "kind": "choice", "section": "Game", "label": "Display mode", "note": "", "default": "0",
+           "options": [["0", "Window"], ["1", "Fullscreen"]]},
+          {"env": "DM_LANG", "kind": "choice", "section": "Game", "label": "Game language", "note": "",
+           "default": "\(languages[0])", "options": [\(options)]}
+        ]}
+        """
+        try Data(list.utf8).write(to: dm.appendingPathComponent("launcher.json"))
+        return try XCTUnwrap(MacGameApp(url: url))
+    }
+
+    func testAGameStartsInTheMacsLanguageUnlessThePlayerChoseOne() throws {
+        let game = try appWithLanguages(["en-US", "en-GB", "fr", "de", "ja"])
+        let documents = root.appendingPathComponent("0100152000022000", isDirectory: true)
+        var saved: [String: String] = [:]
+        let read: (String, String) -> String? = { key, domain in saved[domain + " " + key] }
+        let write: (String, String?, String) -> Void = { key, value, domain in saved[domain + " " + key] = value }
+        func prepare(_ preferred: [String]) -> String? {
+            MacGameLanguage.prepare(game, documents: documents, preferred: preferred, read: read, write: write)
+        }
+
+        // The first of the Mac's languages the game has, saved where nxnative
+        // reads the player's choice, in the app's own domain.
+        XCTAssertEqual(prepare(["fr-FR", "en-FR"]), "fr")
+        XCTAssertEqual(saved, ["com.example.mk8 launcher.DM_LANG": "fr", "com.example.mk8 cartouche.languageSource": "iPhone",
+                               "com.example.mk8 cartouche.iPhoneLanguage": "fr"])
+        // The Mac's languages change: the game follows at its next start.
+        XCTAssertEqual(prepare(["de-CH", "fr-FR"]), "de")
+        XCTAssertEqual(saved["com.example.mk8 launcher.DM_LANG"], "de")
+        // None of them: the game's own.
+        XCTAssertEqual(prepare(["pl-PL"]), "en-US")
+        // The player chose Japanese in nxnative's window: it stays.
+        saved["com.example.mk8 launcher.DM_LANG"] = "ja"
+        XCTAssertEqual(prepare(["fr-FR"]), "ja")
+        XCTAssertEqual(saved["com.example.mk8 cartouche.languageSource"], "player")
+        XCTAssertNil(saved["com.example.mk8 cartouche.iPhoneLanguage"])
+        XCTAssertEqual(prepare(["de-DE"]), "ja")
+    }
+
+    func testALanguageAnEnvFileOrTheStartSetsIsLeftAlone() throws {
+        let game = try appWithLanguages(["en-US", "fr"])
+        let documents = root.appendingPathComponent("0100152000022000", isDirectory: true)
+        try FileManager.default.createDirectory(at: documents, withIntermediateDirectories: true)
+        var writes = 0
+        let read: (String, String) -> String? = { _, _ in nil }
+        let write: (String, String?, String) -> Void = { _, _, _ in writes += 1 }
+        // The start's own environment.
+        XCTAssertNil(MacGameLanguage.prepare(game, documents: documents, environment: ["DM_LANG": "en-US"], preferred: ["fr-FR"],
+                                             read: read, write: write))
+        // The player's env.txt in nxnative's folder of the game, which
+        // nxnative keeps over the choice, as the app's own.
+        try Data("DM_LANG=en-US\n".utf8).write(to: documents.appendingPathComponent("env.txt"))
+        XCTAssertNil(MacGameLanguage.prepare(game, documents: documents, preferred: ["fr-FR"], read: read, write: write))
+        try FileManager.default.removeItem(at: documents.appendingPathComponent("env.txt"))
+        try Data("DM_LANG=en-US\n".utf8).write(to: game.url.appendingPathComponent("Contents/Resources/dm/env.txt"))
+        XCTAssertNil(MacGameLanguage.prepare(game, documents: documents, preferred: ["fr-FR"], read: read, write: write))
+        XCTAssertEqual(writes, 0)
+        // A game without the row, of one language: nothing to choose.
+        let one = try XCTUnwrap(MacGameApp(url: try app("Dread", ["DMTitleID": "010093801237C000"])))
+        XCTAssertNil(MacGameLanguage.prepare(one, documents: documents, preferred: ["fr-FR"], read: read, write: write))
+        XCTAssertEqual(writes, 0)
     }
 
     // MARK: nxnative's own cloud saves

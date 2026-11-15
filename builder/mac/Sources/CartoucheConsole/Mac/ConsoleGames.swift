@@ -7,7 +7,8 @@
 //  the Mac (dm/mac), which the app gives the console as its URL. Its
 //  Info.plist, in its Contents, says its name and its bundle ID,
 //  org.nxnative.<title ID in lowercase> unless the build was given
-//  another, from which the catalogue knows the game, as on the iPhone.
+//  another, from which the catalogue knows the game, as on the iPhone,
+//  and its title ID, whatever the bundle ID.
 //
 
 import AppKit
@@ -41,6 +42,16 @@ final class LCAppInfo {
     }
 
     func bundleIdentifier() -> String? { plist["CFBundleIdentifier"] as? String }
+
+    /// The game's title ID, as nxnative writes it in the app's Info.plist
+    /// (DMTitleID), whatever the bundle ID: the name of the game's folder
+    /// of data on this Mac.
+    var titleId: String? { CartoucheNxnativeApp.titleId(in: plist) }
+
+    /// The macOS the app needs, as its Info.plist says it.
+    var minimumSystemVersion: String? {
+        (plist["LSMinimumSystemVersion"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+    }
 
     /// LiveContainer's own settings for the app, which a Mac has none of.
     func info() -> NSMutableDictionary? { nil }

@@ -15,9 +15,11 @@
 //
 //  A game is started through LaunchServices, as the Finder starts it: it
 //  keeps its own permissions (Bluetooth, for its controllers) and its own
-//  place in the Dock. Its launcher's process is followed until it ends;
-//  how it ended is the last line its launcher wrote in its log
-//  (MacPlay.swift).
+//  place in the Dock, in the language the Mac's languages choose for it
+//  unless the player chose one (MacGameLanguage). Its launcher's process is
+//  followed until it ends; how it ended is the last line its launcher
+//  wrote in its log (MacPlay.swift). While it runs, its play time counts
+//  each time its app is the Mac's active one (MacPlayTime.swift).
 //
 
 import AppKit
@@ -107,16 +109,25 @@ public final class MacGames: ObservableObject {
     public let logs: URL
     private let scratch: URL
     private let preference: (String, String) -> String?
+    private let keep: (String, String?, String) -> Void
     private let sample: Bool
     private var watchers: [pid_t: any DispatchSourceProcess] = [:]
     private var observers: [any NSObjectProtocol] = []
     private var rounds: Task<Void, Never>?
     private var rounding = false
+    /// The play time of each game playing, by title ID.
+    private var counters: [String: MacPlayTime] = [:]
+    private var ticks: Task<Void, Never>?
+    /// The Mac asleep, its screens off or locked, or another user's session
+    /// in front: no game is played.
+    private var away = false
 
     /// STORE, the file of what the Mac knows of each game's saves; SCRATCH,
-    /// a folder of the builder's for the copies that come.
+    /// a folder of the builder's for the copies that come. PREFERENCE and
+    /// KEEP read and write the games' preferences.
     public init(store: URL, scratch: URL, games: URL = MacSavesFolder.nxnativeFolder, logs: URL = MacGames.nxnativeLogs,
-                sample: Bool = false, preference: @escaping (String, String) -> String? = MacGames.preference) {
+                sample: Bool = false, preference: @escaping (String, String) -> String? = MacGames.preference,
+                keep: @escaping (String, String?, String) -> Void = MacGames.keep) {
         self.store = MacSaveStore(url: store)
         keeper = MacSaveKeeper(store: self.store)
         self.scratch = scratch
@@ -124,6 +135,7 @@ public final class MacGames: ObservableObject {
         self.logs = logs
         self.sample = sample
         self.preference = preference
+        self.keep = keep
     }
 
     /// A string of another app's preferences: KEY in DOMAIN, as the app
@@ -131,6 +143,13 @@ public final class MacGames: ObservableObject {
     public nonisolated static func preference(_ key: String, _ domain: String) -> String? {
         CFPreferencesAppSynchronize(domain as CFString)
         return CFPreferencesCopyAppValue(key as CFString, domain as CFString) as? String
+    }
+
+    /// Keeps VALUE as KEY in another app's preferences, DOMAIN, at once:
+    /// nil removes it. The app reads it at its next start.
+    public nonisolated static func keep(_ key: String, _ value: String?, _ domain: String) {
+        CFPreferencesSetAppValue(key as CFString, value.map { $0 as CFString }, domain as CFString)
+        CFPreferencesAppSynchronize(domain as CFString)
     }
 
     // MARK: What the builder tells
@@ -172,13 +191,37 @@ public final class MacGames: ObservableObject {
     // MARK: Following the games
 
     /// Follows the games started from anywhere, and keeps the saves of
-    /// those that do not run in step, now and every minute.
+    /// those that do not run in step, now and every minute; counts the
+    /// play time of those playing.
     public func start() {
         guard !sample, observers.isEmpty else { return }
         let center = NSWorkspace.shared.notificationCenter
         observers.append(center.addObserver(forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor in self?.noticeRunning() }
         })
+        // The app in front changed, or the Mac went away or came back.
+        let front: [(NotificationCenter, Notification.Name, Bool?)] = [
+            (center, NSWorkspace.didActivateApplicationNotification, nil),
+            (center, NSWorkspace.didDeactivateApplicationNotification, nil),
+            (center, NSWorkspace.willSleepNotification, true),
+            (center, NSWorkspace.screensDidSleepNotification, true),
+            (center, NSWorkspace.sessionDidResignActiveNotification, true),
+            (center, NSWorkspace.didWakeNotification, false),
+            (center, NSWorkspace.screensDidWakeNotification, false),
+            (center, NSWorkspace.sessionDidBecomeActiveNotification, false),
+            (DistributedNotificationCenter.default(), Notification.Name("com.apple.screenIsLocked"), true),
+            (DistributedNotificationCenter.default(), Notification.Name("com.apple.screenIsUnlocked"), false),
+            // The builder quits: the time so far is written.
+            (NotificationCenter.default, NSApplication.willTerminateNotification, true),
+        ]
+        for (place, name, away) in front {
+            observers.append(place.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                Task { @MainActor in
+                    if let away { self?.away = away }
+                    self?.noticeFront()
+                }
+            })
+        }
         noticeRunning()
         rounds = Task { [weak self] in
             while !Task.isCancelled, self != nil {
@@ -186,15 +229,61 @@ public final class MacGames: ObservableObject {
                 try? await Task.sleep(nanoseconds: MacGames.roundInterval * 1_000_000_000)
             }
         }
+        ticks = Task { [weak self] in
+            while !Task.isCancelled, self != nil {
+                try? await Task.sleep(nanoseconds: UInt64(MacPlayTime.interval * 1_000_000_000))
+                self?.tickPlayTime()
+            }
+        }
     }
 
     public func stop() {
-        observers.forEach { NSWorkspace.shared.notificationCenter.removeObserver($0) }
+        for observer in observers {
+            NSWorkspace.shared.notificationCenter.removeObserver(observer)
+            DistributedNotificationCenter.default().removeObserver(observer)
+            NotificationCenter.default.removeObserver(observer)
+        }
         observers = []
         rounds?.cancel()
         rounds = nil
+        ticks?.cancel()
+        ticks = nil
         watchers.values.forEach { $0.cancel() }
         watchers = [:]
+        counters.values.forEach { $0.leftFront() }
+        counters = [:]
+    }
+
+    // MARK: Play time
+
+    /// Whether RUN's game is the Mac's active app: its launcher, its host,
+    /// or another program of its app.
+    private func isInFront(_ run: MacGameRun) -> Bool {
+        guard !away, let front = NSWorkspace.shared.frontmostApplication else { return false }
+        if front.processIdentifier == run.pid { return true }
+        let app = Self.realPath(run.app.url)
+        if front.bundleURL.map(Self.realPath) == app { return true }
+        return front.executableURL.map(Self.realPath)?.hasPrefix(app + "/Contents/MacOS/") ?? false
+    }
+
+    /// The app in front changed: the games playing count, or stop counting.
+    private func noticeFront() {
+        for (titleID, counter) in counters {
+            guard let run = playing[titleID] else { continue }
+            if isInFront(run) {
+                counter.cameToFront()
+            } else {
+                counter.leftFront()
+            }
+        }
+    }
+
+    /// Every 30 seconds, each game playing writes its time so far.
+    private func tickPlayTime() {
+        for (titleID, counter) in counters {
+            guard let run = playing[titleID] else { continue }
+            counter.tick(inFront: isInFront(run))
+        }
     }
 
     /// A program running: its process, and its path as the kernel names it.
@@ -281,8 +370,12 @@ public final class MacGames: ObservableObject {
 
     private func follow(_ run: MacGameRun) {
         playing[run.app.titleID] = run
+        if !sample, counters[run.app.titleID] == nil {
+            counters[run.app.titleID] = MacPlayTime(folder: games.appendingPathComponent(run.app.titleID, isDirectory: true))
+        }
         news?(.started(run))
         watch(run)
+        noticeFront()
     }
 
     /// Follows RUN's process until it ends. A game that ended as soon as it
@@ -324,6 +417,7 @@ public final class MacGames: ObservableObject {
             return
         }
         playing.removeValue(forKey: titleID)
+        counters.removeValue(forKey: titleID)?.leftFront()
         let (ending, code) = MacGameEnding.read(log: logs.appendingPathComponent(titleID + ".log"), since: run.started)
         news?(.ended(run, ending: ending, exit: code, seconds: Date().timeIntervalSince(run.started)))
         // The saves it made go.
@@ -363,6 +457,10 @@ public final class MacGames: ObservableObject {
         }
         // Started meanwhile, from the Dock: that one plays.
         if let run = followRunning(app) { return run }
+        // In the Mac's language, unless the player chose one.
+        let documents = games.appendingPathComponent(titleID, isDirectory: true)
+        MacGameLanguage.prepare(app, documents: documents, environment: self.environment, preferred: Locale.preferredLanguages,
+                                read: preference, write: keep)
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.arguments = MacPlayEnvironment.arguments(settings: settings)
         let own = games.standardizedFileURL.path == MacSavesFolder.nxnativeFolder.standardizedFileURL.path
