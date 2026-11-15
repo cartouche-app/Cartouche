@@ -6206,6 +6206,23 @@
         }
       }
     },
+    "setup.banner.signedElsewhere" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This IPA cannot sign in with an Apple ID."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette IPA ne peut pas se connecter avec un identifiant Apple."
+          }
+        }
+      }
+    },
     "setup.banner.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6440,6 +6457,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Une étape, une seule fois sur cet iPhone : le certificat avec lequel Cartouche signe vos jeux."
+          }
+        }
+      }
+    },
+    "setup.intro.signedElsewhere" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One step: the IPA made for your own certificate."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une étape : l’IPA faite pour votre propre certificat."
           }
         }
       }
@@ -8361,6 +8395,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Choisir son profil (.mobileprovision)"
+          }
+        }
+      }
+    },
+    "signing.elsewhere" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A signing app signed the IPA of Cartouche made for an Apple ID, without the app group its sign-in needs: signing in cannot work here. Sign Cartouche-%@-Own-Certificate.ipa instead, from Cartouche’s releases on GitHub, or install Cartouche with the Cartouche Installer on a computer."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une app de signature a signé l’IPA de Cartouche faite pour un identifiant Apple, sans le groupe d’apps dont sa connexion a besoin : la connexion ne peut pas marcher ici. Signez plutôt Cartouche-%@-Own-Certificate.ipa, depuis les versions de Cartouche sur GitHub, ou installez Cartouche avec l’Installeur Cartouche sur un ordinateur."
+          }
+        }
+      }
+    },
+    "signing.elsewhere.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign the IPA for your own certificate"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signez l’IPA pour votre propre certificat"
           }
         }
       }

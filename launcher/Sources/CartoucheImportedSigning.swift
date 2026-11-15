@@ -20,6 +20,18 @@ enum CartoucheImportedSigning {
     /// own certificate: the player gives Cartouche the certificate alone,
     /// and Cartouche reads the profile the signing app put in it.
     static var isSignedOnIPhone: Bool { mode == .iPhone }
+    /// Cartouche's IPA for an Apple ID that a signing app signed, without
+    /// its app group: the Apple ID's sign-in cannot work, and the setup and
+    /// the guide say to sign the IPA for the player's own certificate
+    /// instead (CartoucheOwnSignature.swift).
+    static var isSignedElsewhere: Bool { mode.isSignedElsewhere(hasAppGroup: LCSharedUtils.appGroupPath() != nil) }
+    /// Cartouche's version (app/config.env).
+    static var cartoucheVersion: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
+    }
+    /// The IPA for the player's own certificate of this version, among
+    /// Cartouche's releases on GitHub.
+    static var ownCertificateIPA: URL? { CartoucheRelease.ownCertificateIPA(version: cartoucheVersion) }
     /// The profile Cartouche was signed with, which iOS installed it with.
     static var ownProfile: Data? {
         try? Data(contentsOf: Bundle.main.bundleURL.appendingPathComponent("embedded.mobileprovision"))

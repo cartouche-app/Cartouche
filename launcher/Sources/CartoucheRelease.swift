@@ -50,6 +50,14 @@ struct CartoucheRelease: Equatable {
         return url
     }
 
+    /// The IPA for the player's own certificate of VERSION, among
+    /// Cartouche's releases on GitHub, as the Release workflow names it;
+    /// nil unless VERSION is numbers between dots.
+    static func ownCertificateIPA(version: String) -> URL? {
+        guard CartoucheVersion.numbers(version) != nil else { return nil }
+        return ownCertificateURL("https://github.com/clabeuhtegrite/Cartouche/releases/download/v\(version)/Cartouche-\(version)-Own-Certificate.ipa")
+    }
+
     private struct Source: Decodable {
         let apps: [App]
     }

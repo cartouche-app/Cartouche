@@ -29,6 +29,9 @@ enum GalleryState {
     /// LocalDevVPN is connected (CartoucheVPN.isConnected), whatever the
     /// interfaces of the Mac under the simulator (work: device-…).
     static var vpnConnected = false
+    /// The IPA for an Apple ID, signed by a signing app without its app
+    /// group, which LiveContainer then does not find (work: signed-elsewhere).
+    static var appGroupMissing = false
 
     static let documents: URL = {
         let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -311,7 +314,7 @@ enum LCUtils {
 enum LCSharedUtils {
     static func setCartoucheSigningCandidate(_ material: [String: Any]?) {}
     static func certificatePassword() -> String? { GalleryState.setupDone ? "" : nil }
-    static func appGroupPath() -> URL? { GalleryState.appGroup }
+    static func appGroupPath() -> URL? { GalleryState.appGroupMissing ? nil : GalleryState.appGroup }
 }
 
 struct LCPath {

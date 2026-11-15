@@ -40,6 +40,19 @@ enum CartoucheSigningMode: String, Equatable, Sendable {
     }
 }
 
+extension CartoucheSigningMode {
+    /// Whether this copy is Cartouche's IPA for an Apple ID that another app
+    /// signed, a signing app on the iPhone: only the built-in SideStore and
+    /// the Cartouche Installer give Cartouche the built-in SideStore's app
+    /// group (LiveContainer's patches 0001 and 0002), without which the
+    /// Apple ID's sign-in stops at once (SideStore's missingAppGroup). The
+    /// IPA for the player's own certificate needs no app group: it is the
+    /// one to sign there.
+    func isSignedElsewhere(hasAppGroup: Bool) -> Bool {
+        self == .account && !hasAppGroup
+    }
+}
+
 /// What Cartouche's signature carries, against what its profile allows.
 struct CartoucheOwnSignature: Equatable, Sendable {
     /// Where an entitlement stands.

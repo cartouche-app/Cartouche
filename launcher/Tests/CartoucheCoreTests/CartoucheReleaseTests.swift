@@ -112,6 +112,18 @@ final class CartoucheReleaseTests: XCTestCase {
         }
     }
 
+    /// The IPA for the player's own certificate of a version, which a copy
+    /// signed elsewhere offers to download: the Release workflow's name, on
+    /// Cartouche's releases on GitHub, never for a version that is not
+    /// numbers.
+    func testTheIPAForThePlayersOwnCertificateOfAVersion() {
+        XCTAssertEqual(CartoucheRelease.ownCertificateIPA(version: "0.13.0")?.absoluteString,
+                       "https://github.com/clabeuhtegrite/Cartouche/releases/download/v0.13.0/Cartouche-0.13.0-Own-Certificate.ipa")
+        for version in ["", "0.13.0/../../x", "0.13 beta", "latest"] {
+            XCTAssertNil(CartoucheRelease.ownCertificateIPA(version: version), version)
+        }
+    }
+
     /// The copies already installed, from 0.10 to 0.12, read the source
     /// with the entry of a version as they had it: the three new fields
     /// change nothing for them.

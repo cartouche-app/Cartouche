@@ -21,6 +21,7 @@ struct CartoucheSetupView: View {
     @ObservedObject private var account = CartoucheAccount.shared
     @State private var choosingPairingFile = false
     @State private var signingIn = false
+    @Environment(\.openURL) private var openURL
 
     static let localDevVPN = URL(string: "localdevvpn://")!
     static let localDevVPNAppStore = URL(string: "https://apps.apple.com/app/localdevvpn/id6755608044")!
@@ -29,7 +30,9 @@ struct CartoucheSetupView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 header
-                if !setup.usesImportedSigning {
+                if CartoucheImportedSigning.isSignedElsewhere {
+                    signedElsewhereStep
+                } else if !setup.usesImportedSigning {
                     step(
                         number: 1,
                         done: setup.hasPairingFile,
@@ -81,41 +84,43 @@ struct CartoucheSetupView: View {
                         }
                     }
                 }
-                step(
-                    number: setup.usesImportedSigning ? 1 : 3,
-                    done: setup.hasCertificate && setup.certificateWorks == true,
-                    title: CartoucheText.setupCertificateTitle,
-                    detail: certificateDetail
-                ) {
-                    if CartoucheImportedSigning.isImportedInstall {
-                        NavigationLink {
-                            CartoucheSigningView()
-                        } label: {
-                            Label(CartoucheText.signingTitle, systemImage: "signature")
+                if !CartoucheImportedSigning.isSignedElsewhere {
+                    step(
+                        number: setup.usesImportedSigning ? 1 : 3,
+                        done: setup.hasCertificate && setup.certificateWorks == true,
+                        title: CartoucheText.setupCertificateTitle,
+                        detail: certificateDetail
+                    ) {
+                        if CartoucheImportedSigning.isImportedInstall {
+                            NavigationLink {
+                                CartoucheSigningView()
+                            } label: {
+                                Label(CartoucheText.signingTitle, systemImage: "signature")
+                            }
+                            .buttonStyle(.bordered)
                         }
-                        .buttonStyle(.bordered)
-                    }
-                    if let problem = setup.signingProblem {
-                        Text(problem).font(.footnote).foregroundStyle(.red)
-                    }
-                    if setup.isImportingSigning { ProgressView(CartoucheText.setupCertificateChecking) }
-                    if setup.usesImportedSigning {
-                        Text(CartoucheImportedSigning.isSignedOnIPhone ? CartoucheText.signingUpdateOnIPhone
-                             : CartoucheText.signingUpdateOnComputer)
-                            .font(.footnote).foregroundStyle(.secondary)
-                    }
-                    // A sign-in that stopped: signing in again brings it.
-                    if !setup.hasCertificate && setup.signInStep != .unfinished {
-                        Button(CartoucheText.setupCheckAgain, systemImage: "arrow.clockwise") {
-                            setup.refresh()
+                        if let problem = setup.signingProblem {
+                            Text(problem).font(.footnote).foregroundStyle(.red)
                         }
-                        .buttonStyle(.bordered)
+                        if setup.isImportingSigning { ProgressView(CartoucheText.setupCertificateChecking) }
+                        if setup.usesImportedSigning {
+                            Text(CartoucheImportedSigning.isSignedOnIPhone ? CartoucheText.signingUpdateOnIPhone
+                                 : CartoucheText.signingUpdateOnComputer)
+                                .font(.footnote).foregroundStyle(.secondary)
+                        }
+                        // A sign-in that stopped: signing in again brings it.
+                        if !setup.hasCertificate && setup.signInStep != .unfinished {
+                            Button(CartoucheText.setupCheckAgain, systemImage: "arrow.clockwise") {
+                                setup.refresh()
+                            }
+                            .buttonStyle(.bordered)
+                        }
                     }
                 }
                 if setup.usesImportedSigning, let signature = CartoucheOwnSignature.current {
                     CartoucheOwnSignatureBox(signature: signature)
                 }
-                if !setup.usesImportedSigning { renewalNote }
+                if !setup.usesImportedSigning && !CartoucheImportedSigning.isSignedElsewhere { renewalNote }
             }
             .padding()
             .frame(maxWidth: 640)
@@ -139,6 +144,24 @@ struct CartoucheSetupView: View {
                 setup.importPairingFile(url)
             case .failure(let error):
                 setup.pairingFailed(error)
+            }
+        }
+    }
+
+    /// Cartouche's IPA for an Apple ID, signed by a signing app without its
+    /// app group: its sign-in cannot work, and the IPA for the player's own
+    /// certificate is the one to sign (CartoucheImportedSigning).
+    private var signedElsewhereStep: some View {
+        let version = CartoucheImportedSigning.cartoucheVersion
+        return step(number: 1, done: false, title: CartoucheText.signedElsewhereTitle,
+                    detail: CartoucheText.signedElsewhere(version)) {
+            if let ipa = CartoucheImportedSigning.ownCertificateIPA {
+                Button {
+                    openURL(ipa)
+                } label: {
+                    Label(CartoucheText.updateDownloadVersion(version), systemImage: "arrow.down.circle")
+                }
+                .buttonStyle(.borderedProminent)
             }
         }
     }
@@ -187,6 +210,7 @@ struct CartoucheSetupView: View {
     /// With the player's own certificate, Cartouche renews nothing: the
     /// certificate is the only step.
     private var headerDetail: String {
+        if CartoucheImportedSigning.isSignedElsewhere { return CartoucheText.setupIntroSignedElsewhere }
         if setup.usesImportedSigning {
             return setup.needsSetup ? CartoucheText.setupIntroOwnCertificate : CartoucheText.setupAllDoneOwnCertificate
         }
@@ -301,11 +325,13 @@ extension CartoucheSetup {
     }
 
     var bannerTitle: String {
+        if CartoucheImportedSigning.isSignedElsewhere { return CartoucheText.signedElsewhereTitle }
         if certificateRefused { return CartoucheText.setupBannerCertificate }
         return canPlay ? CartoucheText.setupBannerRenewal : CartoucheText.setupBannerTitle
     }
 
     func bannerDetail(signingInAgain: Bool, registeringDevice: Bool = false) -> String {
+        if CartoucheImportedSigning.isSignedElsewhere { return CartoucheText.setupBannerSignedElsewhere }
         if usesImportedSigning {
             if CartoucheImportedSigning.isSignedOnIPhone {
                 return certificateRefused ? CartoucheText.signingRefusedOnIPhone : CartoucheText.signingHowOnIPhone

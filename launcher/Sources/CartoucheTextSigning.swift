@@ -46,4 +46,12 @@ extension CartoucheText {
 
     // The guide's step for the player's own certificate.
     static var guideCertificateTitle: String { s("guide.certificate.title", "Import your certificate") }
+
+    // Cartouche's IPA for an Apple ID, signed by a signing app without its
+    // app group (CartoucheImportedSigning.isSignedElsewhere): the setup, the
+    // guide and the sign-in's error say which IPA to sign instead.
+    static var signedElsewhereTitle: String { s("signing.elsewhere.title", "Sign the IPA for your own certificate") }
+    static func signedElsewhere(_ version: String) -> String { f("signing.elsewhere", "A signing app signed the IPA of Cartouche made for an Apple ID, without the app group its sign-in needs: signing in cannot work here. Sign Cartouche-%@-Own-Certificate.ipa instead, from Cartouche’s releases on GitHub, or install Cartouche with the Cartouche Installer on a computer.", version) }
+    static var setupIntroSignedElsewhere: String { s("setup.intro.signedElsewhere", "One step: the IPA made for your own certificate.") }
+    static var setupBannerSignedElsewhere: String { s("setup.banner.signedElsewhere", "This IPA cannot sign in with an Apple ID.") }
 }

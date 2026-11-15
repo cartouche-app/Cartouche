@@ -178,6 +178,9 @@
 //        signature-refused               the sheet's game's process ended as
 //                                        iOS refused its signature
 //                                        (CartoucheGameActions failSigning)
+//        signed-elsewhere                the IPA for an Apple ID, signed by a
+//                                        signing app without its app group,
+//                                        which cannot sign in
 //        smb-no-guests                   on Add a shared folder (screen
 //                                        storage-smb), the NAS refusing a
 //                                        guest, without a user name
@@ -360,6 +363,7 @@ struct GalleryScenario {
         GalleryState.certificateRefused = work == "certificate"
         GalleryState.signInUnfinished = work == "sign-in-unfinished"
         GalleryState.vpnConnected = work.map { Self.deviceChecks[$0] != nil } ?? false
+        GalleryState.appGroupMissing = work == "signed-elsewhere"
         let pairing = GalleryState.documents.appendingPathComponent("SideStore/Documents", isDirectory: true)
         try? FileManager.default.removeItem(at: pairing)
         if setupDone || GalleryState.signInUnfinished {

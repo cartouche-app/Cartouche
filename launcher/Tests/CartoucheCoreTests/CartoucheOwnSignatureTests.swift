@@ -37,6 +37,20 @@ final class CartoucheOwnSignatureTests: XCTestCase {
 
     // MARK: Increased Memory Limit
 
+    /// The IPA for an Apple ID that a signing app signed has no app group,
+    /// which the Apple ID's sign-in needs: Cartouche says to sign the IPA for
+    /// the player's own certificate instead. A copy that has the group, or
+    /// one signed with the player's own certificate, which needs none, is
+    /// not one.
+    func testOnlyTheIPAForAnAppleIDWithoutItsAppGroupIsSignedElsewhere() {
+        XCTAssertTrue(CartoucheSigningMode.account.isSignedElsewhere(hasAppGroup: false))
+        XCTAssertFalse(CartoucheSigningMode.account.isSignedElsewhere(hasAppGroup: true))
+        for mode in [CartoucheSigningMode.iPhone, .installer] {
+            XCTAssertFalse(mode.isSignedElsewhere(hasAppGroup: false), "\(mode)")
+            XCTAssertFalse(mode.isSignedElsewhere(hasAppGroup: true), "\(mode)")
+        }
+    }
+
     func testIncreasedMemoryLimitCarriedLeftOutOrNotAllowed() {
         let all = CartoucheOwnSignature(signed: [memory: true], profile: [memory: true], team: team)
         XCTAssertEqual(all.increasedMemoryLimit, .granted)

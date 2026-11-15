@@ -897,6 +897,23 @@
       ]
     },
     {
+      "name": "iphone-setup-signed-elsewhere",
+      "comment": "The IPA for an Apple ID, signed by a signing app without its app group, which cannot sign in (work: signed-elsewhere): the setup offers the IPA for the player's own certificate.",
+      "screen": "setup",
+      "work": "signed-elsewhere",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-sign-in",
       "screen": "signin",
       "owned": [],
@@ -1077,6 +1094,23 @@
       "signing": "installer",
       "owned": [],
       "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-guide-signed-elsewhere",
+      "comment": "The same IPA (work: signed-elsewhere): Your first game offers the IPA for the player's own certificate as its first step.",
+      "screen": "guide",
+      "work": "signed-elsewhere",
+      "owned": [],
+      "setup": false,
       "controller": false,
       "width": 402,
       "height": 874,

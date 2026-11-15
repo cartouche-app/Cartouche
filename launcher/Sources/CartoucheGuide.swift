@@ -6,7 +6,9 @@
 //  used Cartouche (CartoucheGuideView): LocalDevVPN, the Apple ID, the game
 //  built on a Mac with Cartouche Builder, the games folder, then the game
 //  installed. Signed with the player's own certificate, the certificate
-//  takes the place of LocalDevVPN and the Apple ID. Each step ticks itself
+//  takes the place of LocalDevVPN and the Apple ID; for the IPA for an
+//  Apple ID that a signing app signed, which cannot sign in, the IPA for
+//  the player's own certificate takes it. Each step ticks itself
 //  from what Cartouche sees, in any order. The Mac's step is the player's
 //  to take: No thanks skips it, for a player whose games are built already
 //  or who has no Mac, and the guide goes on without it. The guide opens by
@@ -52,7 +54,10 @@ final class CartoucheGuide: ObservableObject {
         var buildSkipped = false
         /// Cartouche signs with an Apple ID: one installed with the player's
         /// own certificate has neither LocalDevVPN's step nor the Apple ID's,
-        /// and has the certificate's in their place.
+        /// and has the certificate's in their place. So has the IPA for an
+        /// Apple ID that a signing app signed without its app group, which
+        /// cannot sign in: its certificate's step is the IPA for the
+        /// player's own certificate (CartoucheImportedSigning.isSignedElsewhere).
         var requiresAccount = true
 
         /// The steps this installation has, in their order.
@@ -141,7 +146,7 @@ final class CartoucheGuide: ObservableObject {
                 || CartoucheStoredGames.shared.serverName != nil,
             hasInstalledGame: entries.owned.contains { $0.app != nil },
             buildSkipped: buildSkipped,
-            requiresAccount: !setup.usesImportedSigning)
+            requiresAccount: !setup.usesImportedSigning && !CartoucheImportedSigning.isSignedElsewhere)
     }
 
     /// Whether the home shows the guide's card, in place of the setup banner:
