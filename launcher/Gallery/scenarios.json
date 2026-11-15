@@ -1316,6 +1316,28 @@
       "category": "signature"
     },
     {
+      "name": "iphone-system-update-before-setup",
+      "comment": "The System page of a copy not set up yet, opened down to its updates, with a version of Cartouche on offer that it cannot install itself, and that a computer with the Cartouche Installer can install over it.",
+      "screen": "system",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "category": "update",
+      "work": "update"
+    },
+    {
       "name": "iphone-nightly-renewal",
       "screen": "nightly",
       "owned": [

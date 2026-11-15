@@ -135,7 +135,14 @@ final class CartoucheUpdates: ObservableObject {
 
     /// Whether this build reads its source, to install its updates or, signed
     /// with the player's own certificate, to say that one is out.
-    var canCheck: Bool { Self.sourceURL != nil && Self.bundleIdentifier != nil }
+    var canCheck: Bool {
+        #if CARTOUCHE_GALLERY
+        // The gallery reads no source: its screenshot of the System page's
+        // updates shows them as Cartouche's own build has them.
+        if isOnSystemPageForGallery { return true }
+        #endif
+        return Self.sourceURL != nil && Self.bundleIdentifier != nil
+    }
 
     /// The IPA of the version on offer that the player downloads, signed on
     /// the iPhone: the one for the player's own certificate, which the
@@ -264,6 +271,16 @@ final class CartoucheUpdates: ObservableObject {
     /// the version it installs, which Cartouche reads as it opens again.
     static func leavePendingForGallery(_ version: String) {
         UserDefaults.standard.set(version, forKey: pendingKey)
+    }
+
+    /// Whether the gallery shows a version on the System page, which opens
+    /// on its updates (CartoucheSystemView).
+    private(set) var isOnSystemPageForGallery = false
+
+    /// A version on the System page, for the launcher's gallery.
+    func showOnSystemPageForGallery(_ release: CartoucheRelease) {
+        available = release
+        isOnSystemPageForGallery = true
     }
     #endif
 

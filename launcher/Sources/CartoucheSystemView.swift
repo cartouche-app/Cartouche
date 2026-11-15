@@ -58,6 +58,9 @@ struct CartoucheSystemView: View {
     /// The first row of the signature's section.
     static let signatureRow = "signature"
 
+    /// The row of a version on offer, in the updates' section.
+    static let updateRow = "update"
+
     #if CARTOUCHE_GALLERY
     /// Whether the gallery's page opens on the Mac's builds, as the row
     /// under Storage opens them (screen: mac-builds).
@@ -498,6 +501,7 @@ struct CartoucheSystemView: View {
             .padding(.vertical, 4)
         } else if let available = updates.available {
             LabeledContent(CartoucheText.updateAvailable, value: available.version)
+                .id(Self.updateRow)
             if CartoucheImportedSigning.accountSigningDisabled {
                 // Its IPA, signed on the iPhone; the footer says what then.
                 if updates.download != nil {
