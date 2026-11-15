@@ -1,7 +1,7 @@
 """Checks the repository's shell scripts against the bash of a Mac, 3.2, as
-/bin/bash and as the bash that env finds without Homebrew's: on Ad's Mac and
-on GitHub's, where the gallery, the harness, the app and Cartouche Builder are
-built and tested.
+/bin/bash and as the bash that env finds without Homebrew's: on GitHub's
+Macs, where the gallery, the harness, the app and Cartouche Builder are built
+and tested.
 
 bash 3.2 finds where a command substitution, $( ... ), ends by reading what
 it holds as shell, a here-document's lines included: an apostrophe there, as

@@ -168,14 +168,6 @@ class WiringTests(unittest.TestCase):
         workflows["full-pass.yml"]["jobs"]["app"]["secrets"] = "inherit"
         self.assertEqual(self.problems(workflows), [])
 
-    def test_a_secret_the_pass_does_not_need(self):
-        # The token that finds Ad's Mac: the pass's Mac jobs run on GitHub's.
-        workflows = repository()
-        workflows["app.yml"]["jobs"]["route"] = {"name": "Ad's Mac or GitHub", "runs-on": "ubuntu-latest",
-                                                 "steps": [{"env": {"RUNNERS_TOKEN": "${{ secrets.MAC_RUNNER_TOKEN }}"},
-                                                            "run": "python3 .github/mac/route.py"}]}
-        self.assertEqual(self.problems(workflows), [])
-
     def test_the_secrets_of_jobs_the_pass_skips_are_theirs(self):
         workflows = repository()
         workflows["site.yml"]["jobs"]["publish"]["env"] = {"TOKEN": "${{ secrets.DEPLOY_TOKEN }}"}
@@ -685,7 +677,6 @@ class VerdictTests(unittest.TestCase):
         self.assertIs(names[("Builder", "Mac app")], False)
         self.assertIs(names[("Telemetry", "Telemetry server")], False)
         self.assertIs(names[("CI", "Workflow audit")], False)
-        self.assertIs(names[("App", "Ad's Mac or GitHub")], False)
         self.assertIs(names[("Launcher screens", "UI tests on an iPhone")], False)
         self.assertIs(names[("Launcher screens", "UI tests on an iPad")], False)
         self.assertIs(names[("Launcher screens", "Screenshots")], False)
@@ -695,7 +686,6 @@ class VerdictTests(unittest.TestCase):
         for skipped in (("Telemetry", "Deploy the telemetry server"), ("Builder", "Publish Cartouche Builder"),
                         ("Builder", "Full test pass on this commit"), ("Installer", "Publish the installer"),
                         ("Launcher screens", "Keep the screenshots on a branch"), ("Showcase site", "Publish it on gh-pages"),
-                        ("App", "Watch Ad's Mac"), ("Launcher screens", "Watch Ad's Mac"),
                         ("Launcher screens", "Note that the UI tests and screenshots are done"),
                         ("Launcher harness", "Note that the harness passed")):
             self.assertIs(names[skipped], True, skipped)
