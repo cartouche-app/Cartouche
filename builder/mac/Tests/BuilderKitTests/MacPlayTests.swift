@@ -134,6 +134,37 @@ final class MacPlayTests: XCTestCase {
                        documents.appendingPathComponent("save").path)
     }
 
+    /// Ad's choice (15 November): a game started from Cartouche fills the
+    /// screen, as a console's does, Cartouche behind it until it ends; it
+    /// opened in a window of its own beside Cartouche's.
+    func testAGameStartedStraightAwayFillsTheScreenUnlessThePlayerChoseOtherwise() {
+        let app = MacGameApp(url: URL(fileURLWithPath: "/Applications/MK8.app"), titleID: "0100152000022000", name: "Mario Kart 8 Deluxe",
+                             bundleID: "com.example.mk8")
+        var asked: [String] = []
+        var saved: String?
+        let preference: (String, String) -> String? = { key, domain in
+            asked.append(domain + " " + key)
+            return saved
+        }
+        XCTAssertTrue(MacPlayEnvironment.fullscreen(settings: false, of: app, preference: preference))
+        // nxnative's saved choice of Display mode, in the app's own domain.
+        XCTAssertEqual(asked, ["com.example.mk8 launcher.DM_FULLSCREEN"])
+        XCTAssertEqual(MacPlayEnvironment.make(app: app, keepsSaves: true, language: "en", fullscreen: true)["DM_FULLSCREEN"], "1")
+        XCTAssertNil(MacPlayEnvironment.make(app: app, keepsSaves: true, language: "en")["DM_FULLSCREEN"])
+        // A Display mode the player chose in nxnative's settings window holds:
+        // the start leaves it to the launcher, which applies it.
+        for choice in ["1", "0"] {
+            saved = choice
+            XCTAssertFalse(MacPlayEnvironment.fullscreen(settings: false, of: app, preference: preference), choice)
+        }
+        // With that window first, the window shows the player's choice: a
+        // variable the start set, it would show fixed.
+        saved = nil
+        asked.removeAll()
+        XCTAssertFalse(MacPlayEnvironment.fullscreen(settings: true, of: app, preference: preference))
+        XCTAssertEqual(asked, [])
+    }
+
     // MARK: nxnative's own cloud saves
 
     func testAGameWhoseSavesNxnativesCloudSyncsIsLeftToIt() throws {

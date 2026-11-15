@@ -246,6 +246,126 @@ final class MacSavesTests: XCTestCase {
         XCTAssertEqual(try read(mac), ["save/slot0.bin": "iPhone 1"])
     }
 
+    // MARK: Another saves folder
+
+    /// Ad's first game on a Mac (15 November): played before the Mac kept
+    /// its saves with the iPhone's folder on the NAS, it started without
+    /// them and saved anew, in the builder's own folder. Chosen then, the
+    /// NAS's folder would have taken the Mac's new saves as its newest copy,
+    /// written last, for the iPhone to take in place of its own.
+    func testAGamePlayedBeforeTheIPhonesFolderWasChosenTakesTheIPhonesSaves() async throws {
+        let own = try makeFolder(root.appendingPathComponent("Builder Saves", isDirectory: true))
+        let nasSaves = root.appendingPathComponent("NAS/Saves", isDirectory: true)
+        let nas = try makeFolder(nasSaves)
+        let store = MacSaveStore(url: root.appendingPathComponent("saves.json"))
+        let keeper = MacSaveKeeper(store: store)
+        // The iPhone's progress, in its folder on the NAS.
+        try write(["slot0.bin": "iPhone 7"], in: iPhone, at: t0)
+        let iPhones = CartoucheSaveSync.fileName(t0)
+        try await iPhoneCopy(of: iPhone, named: iPhones, in: nasSaves)
+        // The game played on the Mac an hour later, from nothing; its saves
+        // went to the builder's own folder after it.
+        try write(["slot0.bin": "new game"], in: mac, at: t0.addingTimeInterval(3600))
+        let sent = await keeper.sync(game, in: own, when: .after, now: t0.addingTimeInterval(3600))
+        XCTAssertEqual(sent?.step, "send")
+        let ownCopy = try XCTUnwrap(sent?.sent)
+        XCTAssertEqual(store.games(syncedIn: own.root), [game.titleID])
+        XCTAssertEqual(store.games(syncedIn: nasSaves), [])
+        // The NAS's folder is chosen while the game plays: after it, with
+        // saves it did not change, nothing moves, and the Mac remembers them.
+        let after = await keeper.sync(game, in: nas, when: .after, now: t0.addingTimeInterval(3700))
+        XCTAssertNil(after)
+        XCTAssertEqual(store.record(game.titleID).base?.place, "mac|" + own.root.path)
+        // The next round: the iPhone's saves come, the Mac's staying in the
+        // builder's folder; the NAS's folder holds the iPhone's copy alone.
+        let round = await keeper.sync(game, in: nas, when: .round, now: t0.addingTimeInterval(3760))
+        XCTAssertEqual(round?.step, "fetch")
+        XCTAssertEqual(round?.fetched, iPhones)
+        XCTAssertNil(round?.kept)
+        XCTAssertNil(round?.sent)
+        XCTAssertEqual(try read(mac), ["save/slot0.bin": "iPhone 7"])
+        let nasGame = nasSaves.appendingPathComponent("Mario Kart 8 Deluxe [0100152000022000]", isDirectory: true)
+        XCTAssertEqual(names(in: nasGame), [iPhones])
+        let kept = try await unpack(own.root.appendingPathComponent("Mario Kart 8 Deluxe [0100152000022000]/" + ownCopy))
+        XCTAssertEqual(kept, ["save/slot0.bin": "new game"])
+        XCTAssertEqual(store.record(game.titleID).base?.place, "mac|" + nasSaves.standardizedFileURL.path)
+        XCTAssertEqual(store.games(syncedIn: nasSaves), [game.titleID])
+        // In step now: the Mac's next game goes as the newest copy, written last.
+        try write(["slot0.bin": "iPhone 7 +mac"], in: mac, at: t0.addingTimeInterval(7200))
+        let next = await keeper.sync(game, in: nas, when: .after, now: t0.addingTimeInterval(7200))
+        XCTAssertEqual(next?.step, "send")
+        XCTAssertEqual(names(in: nasGame).count, 2)
+    }
+
+    func testSavesNoLongerInTheFolderTheMacLeftAreKeptInTheNewOneFirst() async throws {
+        let own = try makeFolder(root.appendingPathComponent("Builder Saves", isDirectory: true))
+        let nasSaves = root.appendingPathComponent("NAS/Saves", isDirectory: true)
+        let nas = try makeFolder(nasSaves)
+        try write(["slot0.bin": "iPhone 7"], in: iPhone, at: t0)
+        try await iPhoneCopy(of: iPhone, named: CartoucheSaveSync.fileName(t0), in: nasSaves)
+        try write(["slot0.bin": "new game"], in: mac, at: t0.addingTimeInterval(3600))
+        let sent = try await own.sync(game, base: nil, fetching: false)
+        let base = try XCTUnwrap(sent.base)
+        // The builder's folder lost that copy since.
+        try FileManager.default.removeItem(at: own.root.appendingPathComponent("Mario Kart 8 Deluxe [0100152000022000]/" + base.copy))
+        let outcome = try await nas.sync(game, base: base, fetching: true)
+        XCTAssertEqual(outcome.step, .keepAndFetch)
+        XCTAssertEqual(try read(mac), ["save/slot0.bin": "iPhone 7"])
+        // Kept under the iPhone's copy, which stays the newest.
+        let nasGame = nasSaves.appendingPathComponent("Mario Kart 8 Deluxe [0100152000022000]", isDirectory: true)
+        let kept = try XCTUnwrap(outcome.kept)
+        XCTAssertEqual(names(in: nasGame), [kept, CartoucheSaveSync.fileName(t0)].sorted())
+        XCTAssertEqual(names(in: nasGame).last, CartoucheSaveSync.fileName(t0))
+        let keptSaves = try await unpack(nasGame.appendingPathComponent(kept))
+        XCTAssertEqual(keptSaves, ["save/slot0.bin": "new game"])
+    }
+
+    func testSavesTheMacChangedSinceTheFolderItLeftAreNewsThere() async throws {
+        let own = try makeFolder(root.appendingPathComponent("Builder Saves", isDirectory: true))
+        let nasSaves = root.appendingPathComponent("NAS/Saves", isDirectory: true)
+        let nas = try makeFolder(nasSaves)
+        try write(["slot0.bin": "mac 1"], in: mac, at: t0)
+        let first = try await own.sync(game, base: nil, fetching: false)
+        let base = try XCTUnwrap(first.base)
+        // Played again on the Mac, the builder closed; the iPhone's copy older.
+        try write(["slot0.bin": "iPhone 1"], in: iPhone, at: t0.addingTimeInterval(1800))
+        try await iPhoneCopy(of: iPhone, named: CartoucheSaveSync.fileName(t0.addingTimeInterval(1800)), in: nasSaves)
+        try write(["slot0.bin": "mac 2"], in: mac, at: t0.addingTimeInterval(3600))
+        // The saves written last win, as for any two that changed.
+        let outcome = try await nas.sync(game, base: base, fetching: true)
+        XCTAssertEqual(outcome.step, .send)
+        XCTAssertEqual(try read(mac), ["save/slot0.bin": "mac 2"])
+        // A folder without the game's copies takes the Mac's saves, changed or not.
+        let empty = try makeFolder(root.appendingPathComponent("Empty Saves", isDirectory: true))
+        let fresh = try await empty.sync(game, base: outcome.base, fetching: true)
+        XCTAssertEqual(fresh.step, .send)
+    }
+
+    func testTheMacTakesTheIPhonesFolderOnAShareWhenNoOneElseUsesItsOwn() async throws {
+        let own = root.appendingPathComponent("Builder Saves", isDirectory: true)
+        let nas = root.appendingPathComponent("Volumes/NAS/Saves", isDirectory: true)
+        let other = root.appendingPathComponent("Volumes/Other/Saves", isDirectory: true)
+        // Found alone, no iPhone paired: taken, the builder's folder empty or not.
+        XCTAssertEqual(MacSavesFolder.adopted(found: [nas], own: own, paired: false, synced: []), nas)
+        XCTAssertNil(MacSavesFolder.adopted(found: [], own: own, paired: false, synced: []))
+        XCTAssertNil(MacSavesFolder.adopted(found: [nas, other], own: own, paired: false, synced: []))
+        XCTAssertNil(MacSavesFolder.adopted(found: [own], own: own, paired: false, synced: []))
+        // An iPhone paired: the builder's folder is left only when what is
+        // in it is this Mac's games'.
+        XCTAssertEqual(MacSavesFolder.adopted(found: [nas], own: own, paired: true, synced: []), nas)
+        try write(["slot0.bin": "mac 1"], in: mac, at: t0)
+        try await iPhoneCopy(of: mac, named: CartoucheSaveSync.fileName(t0), in: own)
+        try FileManager.default.createDirectory(at: own.appendingPathComponent("Zelda [01008CF01BAAC000]"), withIntermediateDirectories: true)
+        XCTAssertEqual(MacSavesFolder.adopted(found: [nas], own: own, paired: true, synced: [game.titleID]), nas)
+        XCTAssertNil(MacSavesFolder.adopted(found: [nas], own: own, paired: true, synced: []))
+        XCTAssertEqual(MacSavesFolder.adopted(found: [nas], own: own, paired: false, synced: []), nas)
+        // An iPhone's copies of a game this Mac does not play: its folder stays.
+        try write(["slot0.bin": "iPhone 1"], in: iPhone, at: t0)
+        try await iPhoneCopy(of: iPhone, named: CartoucheSaveSync.fileName(t0), folder: "Zelda [01008cf01baac000]", in: own)
+        XCTAssertNil(MacSavesFolder.adopted(found: [nas], own: own, paired: true, synced: [game.titleID]))
+        XCTAssertEqual(MacSavesFolder.adopted(found: [nas], own: own, paired: true, synced: [game.titleID, "01008CF01BAAC000"]), nas)
+    }
+
     // MARK: The game's folder
 
     func testTheGamesFolderIsCartouchesOrAnyEndingWithItsTitleID() async throws {
