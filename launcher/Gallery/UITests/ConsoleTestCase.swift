@@ -177,6 +177,10 @@ struct Launch {
     /// process holds the main thread for seconds on a CI Mac
     /// (GalleryKeyboard, GalleryTesting.swift).
     var typing = false
+    /// Cartouche signed with the player's own certificate (-GallerySigning,
+    /// GalleryApp.swift): "iphone", by a signing app on the iPhone, or
+    /// "installer", by the Cartouche Installer.
+    var signing: String?
     /// The title ID of the game Siri asks for as the gallery opens, before
     /// its console shows; and of the one it asks for each time the test
     /// posts GalleryWords.siriAsks (GalleryShortcut, GalleryTesting.swift).
@@ -193,6 +197,7 @@ struct Launch {
         if let sheet { arguments += ["-GallerySheet", sheet] }
         if let holdMainThread { arguments += ["-GalleryHoldMainThread", String(holdMainThread)] }
         if typing { arguments += ["-GalleryKeyboard", "1"] }
+        if let signing { arguments += ["-GallerySigning", signing] }
         if let siri { arguments += ["-GalleryShortcut", siri] }
         if let siriOnPost { arguments += ["-GalleryShortcutOnPost", siriOnPost] }
         if let model { arguments += ["-GalleryModel", model] }
@@ -437,6 +442,39 @@ class ConsoleTestCase: XCTestCase {
         button.tap()
     }
 
+    /// Cancels the confirmation on the screen (a confirmationDialog) as a
+    /// player does, then waits for it to go: by its Cancel, or, where iOS
+    /// shows it in a popover, which has no Cancel, as on an iPhone from
+    /// iOS 26, by a tap outside it, halfway between it and the edge of the
+    /// screen with the most room.
+    @MainActor
+    func cancelConfirmation(_ what: String, in app: XCUIApplication,
+                            file: StaticString = #filePath, line: UInt = #line) {
+        let sheet = app.sheets.firstMatch
+        expect(sheet.waitForExistence(timeout: 15), "No \(what)", in: app, file: file, line: line)
+        let cancel = sheet.buttons[Words.cancel]
+        let outside = app.otherElements["PopoverDismissRegion"]
+        var cancels = false
+        _ = waitUntil(5) {
+            cancels = cancel.exists && cancel.isHittable
+            return cancels || outside.exists
+        }
+        if cancels {
+            cancel.tap()
+        } else if outside.exists {
+            let area = outside.frame
+            let shown = sheet.frame
+            let below = area.maxY - shown.maxY
+            let above = shown.minY - area.minY
+            let y = below >= above ? shown.maxY + below / 2 : area.minY + above / 2
+            outside.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: (y - area.minY) / area.height)).tap()
+        } else {
+            expect(false, "\(what) has no Cancel, and nothing outside it to tap", in: app, file: file, line: line)
+            return
+        }
+        expect(waitForGone(sheet), "\(what) stayed once cancelled", in: app, file: file, line: line)
+    }
+
     /// Swipes the page up, slowly, until ELEMENT can be tapped: a list draws
     /// its rows only as they come on the screen.
     @MainActor
@@ -663,7 +701,9 @@ struct FilesPicker {
     /// Picks FILE, which the picker may show without its extension: where
     /// the picker opened, as after an earlier pick, else in On My iPhone,
     /// where uitests.sh puts it, from Browse, else in the gallery's own
-    /// folder there, where the gallery writes it too.
+    /// folder there, where the gallery writes it too, which a picker that
+    /// takes folders as well, as the one of a Switch save, did not open on
+    /// a tap (2026-11-14).
     func pick(_ file: String) {
         let name = (file as NSString).deletingPathExtension
         if let item = item(name, timeout: 5) {
@@ -699,9 +739,19 @@ struct FilesPicker {
     }
 
     /// Picks ITEM, unless the picker shows it greyed out: of a type the
-    /// import does not take.
+    /// import does not take. A picker that takes folders as well may only
+    /// select the file a tap picks in another, for its Open button to pick:
+    /// Open then, once the file shows as selected, never for the folder
+    /// shown, which Open would pick when nothing is.
     private func choose(_ item: XCUIElement, _ file: String) {
         test.expect(item.isEnabled, "The Files picker shows \(file) greyed out: \(item.debugDescription)", in: app)
         open(item)
+        guard !waitForItToGo(10), item.exists else { return }
+        let openButton = app.buttons["DOCPicker.actionButton"]
+        print("== The Files picker stayed 10 s after the tap on \(file): selected \(item.isSelected), "
+              + "Open \(openButton.exists ? (openButton.isEnabled ? "enabled" : "greyed out") : "absent")")
+        if item.isSelected, openButton.exists, openButton.isEnabled {
+            openButton.tap()
+        }
     }
 }

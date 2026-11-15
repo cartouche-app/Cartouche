@@ -3,11 +3,36 @@
 //  CartoucheGalleryUITests
 //
 //  The System page and every page it opens, each of which must come and go
-//  with the console answering throughout; and Cartouche's own update, on
-//  offer over the console, which Later puts off.
+//  with the console answering throughout; the builds of the player's Mac,
+//  driven from there; Reset Cartouche, at its end, which asks twice before
+//  it erases; and Cartouche's own update, on offer over the console, which
+//  Later puts off.
 //
 
 import XCTest
+
+/// The words of the page of all the Mac's builds, from System (decision
+/// 96).
+extension Words {
+    static let macBuildsOn = "Builds on %@"                 // mac.builds.title
+    static let buildWhatIsDue = "Build what is due"         // mac.builds.due
+    static let addWhatIsDue = "Add what is due"             // mac.builds.due.add
+    static let stopAll = "Stop all"                         // mac.builds.stopAll
+    static let macGameActions = "What to do with %@"        // mac.builds.game.actions
+    static let follow = "Follow"                            // mac.build.follow
+    static let stopFollowing = "Stop following"             // mac.build.unfollow
+    static let macNotFollowed = "Not followed"              // mac.game.notFollowed
+    static let nightly = "Build what is due every night"    // mac.builds.nightly
+    static let nightlyAt = "Every night at "                // mac.builds.nightly.footer
+}
+
+/// Reset Cartouche's words (CartoucheTextReset.swift).
+extension Words {
+    static let resetCartouche = "Reset Cartouche"           // reset.title
+    static let eraseAndRestart = "Erase everything and restart" // reset.erase
+    static let eraseEverything = "Erase everything"         // reset.confirm.erase
+    static let erasing = "Erasing…"                         // reset.erasing
+}
 
 final class SystemUITests: ConsoleTestCase {
     /// Setup, Storage, Renew every night, Game measurements and Report a
@@ -43,6 +68,94 @@ final class SystemUITests: ConsoleTestCase {
             expect(app.navigationBars[Words.system].waitForExistence(timeout: 10),
                    "Back from \(page.row) did not come back to the System page", in: app)
         }
+        tap(app.buttons[Words.done], "Done of the System page", in: app)
+        expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// Reset Cartouche, at the end of the System page, asks twice before it
+    /// erases anything: its button, then its confirmation, which, cancelled,
+    /// leaves everything as it was: by its Cancel, or, on an iPhone from
+    /// iOS 26, which shows it in a popover without one, by a tap outside it.
+    /// Erase everything covers the page while Cartouche erases, then
+    /// restarts: the gallery's reset only shows it, and comes back to the
+    /// page (CartoucheReset.swift).
+    @MainActor
+    func testResetCartoucheAsksTwiceBeforeItErases() {
+        let app = openConsole()
+        tap(app.buttons[Words.system], "System in the dock", in: app)
+        expect(app.navigationBars[Words.system].waitForExistence(timeout: 15), "The System page did not open", in: app)
+        scrollAndTap(element(in: app.buttons, beginningWith: Words.resetCartouche), "Reset Cartouche on the System page", in: app)
+        expect(app.navigationBars[Words.resetCartouche].waitForExistence(timeout: 15), "Reset Cartouche did not open", in: app)
+        let erase = element(in: app.buttons, beginningWith: Words.eraseAndRestart)
+        let erasing = element(labelled: Words.erasing, in: app)
+        // Once, then cancelled: nothing happens.
+        scrollAndTap(erase, "Erase everything and restart", in: app)
+        cancelConfirmation("The confirmation", in: app)
+        expect(!erasing.waitForExistence(timeout: 3), "The confirmation, cancelled, erased all the same", in: app)
+        // Then Erase everything.
+        scrollAndTap(erase, "Erase everything and restart, again", in: app)
+        tapButtonOnTop(Words.eraseEverything, "Erase everything, in the confirmation", in: app)
+        expect(erasing.waitForExistence(timeout: 10), "Erase everything did not cover the page while Cartouche erases", in: app)
+        expect(waitForGone(erasing, timeout: 15), "The gallery's reset did not end", in: app)
+        back(from: Words.resetCartouche, in: app)
+        tap(app.buttons[Words.done], "Done of the System page", in: app)
+        expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// The builds of the player's Mac, from the System page, while Cartouche
+    /// Builder builds a game and another waits its turn: what is due joins
+    /// the queue, Stop all stops every game, a game the Mac does not follow
+    /// is followed then left again from its menu, and the nightly build is
+    /// turned off; back on the System page, Done closes it.
+    @MainActor
+    func testTheMacsBuildsAreDrivenFromTheSystemPage() {
+        let app = openConsole(Launch(work: "mac-builds"))
+        tap(app.buttons[Words.system], "System in the dock", in: app)
+        expect(app.navigationBars[Words.system].waitForExistence(timeout: 15), "The System page did not open", in: app)
+        // The Mac paired in Storage, by its name (GalleryMac.paired).
+        let row = element(in: app.buttons, beginningWith: String(format: Words.macBuildsOn, "MacBook Air"))
+        scrollTo(row, "the Mac's builds on the System page", in: app)
+        tap(row, "the Mac's builds on the System page", in: app)
+        expect(app.navigationBars[Words.macBuildsPage].waitForExistence(timeout: 15), "The Mac's builds did not open", in: app)
+
+        // Pikmin 4, which nxnative improved, after the game waiting.
+        let list = app.collectionViews.descendants(matching: .any)
+        tap(app.buttons[Words.addWhatIsDue], "Add what is due", in: app)
+        scrollTo(element(in: list, beginningWith: "2. Pikmin 4"), "the game due, second in the queue", in: app)
+
+        // Every game of the batch stops: nothing waits, and what is due can
+        // be built again.
+        scrollAndTap(app.buttons[Words.stopAll], "Stop all", in: app)
+        expect(waitForGone(element(in: list, beginningWith: "1. ")), "A game still waits its turn once all stopped", in: app)
+        expect(app.buttons[Words.buildWhatIsDue].waitForExistence(timeout: 10), "No Build what is due once all stopped", in: app)
+
+        // Super Mario Odyssey, which the Mac does not follow: followed, then
+        // not again.
+        let menu = app.buttons[String(format: Words.macGameActions, "Super Mario Odyssey")]
+        scrollAndTap(menu, "the menu of the game the Mac does not follow", in: app)
+        tap(app.buttons[Words.follow], "Follow, in the game's menu", in: app)
+        expect(waitForGone(element(in: list, beginningWith: Words.macNotFollowed)), "The game followed still says it is not", in: app)
+        scrollAndTap(menu, "the menu of the game followed", in: app)
+        tap(app.buttons[Words.stopFollowing], "Stop following, in the game's menu", in: app)
+        expect(element(in: list, beginningWith: Words.macNotFollowed).waitForExistence(timeout: 10),
+               "The game left does not say it is not followed", in: app)
+
+        // The nightly build, on at 3:30: off, its time no longer said.
+        let nightly = app.switches[Words.nightly].firstMatch
+        scrollTo(nightly, "the nightly build", in: app)
+        expect((nightly.value as? String) == "1", "The nightly build is not on", in: app)
+        expect(element(beginningWith: Words.nightlyAt, in: app).exists, "The nightly build does not say when", in: app)
+        // The switch itself, at the row's end: a tap on its words does not
+        // turn it.
+        nightly.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
+        expect(waitUntil(10) { (nightly.value as? String) == "0" }, "The nightly build did not turn off", in: app)
+        expect(waitForGone(element(beginningWith: Words.nightlyAt, in: app)), "The nightly build off still says when", in: app)
+
+        back(from: Words.macBuildsPage, in: app)
+        expect(app.navigationBars[Words.system].waitForExistence(timeout: 10),
+               "Back from the Mac's builds did not come back to the System page", in: app)
         tap(app.buttons[Words.done], "Done of the System page", in: app)
         expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)
         expectMainThreadAnswered(app)

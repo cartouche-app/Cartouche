@@ -1,12 +1,13 @@
 import shutil
 import threading
 import unittest
+import zipfile
 from datetime import datetime
 from unittest import mock
 
 from cartouche_builder import ipa
 
-from support import MKW, Home, make_ipa
+from support import MKW, UNREADABLE_INFO_PLIST, Home, make_ipa
 
 
 class Info(Home):
@@ -31,6 +32,25 @@ class Info(Home):
         path = self.tmp / "nope.ipa"
         path.write_bytes(b"not a zip")
         self.assertIsNone(ipa.read_info(path))
+
+    def test_an_ipa_another_tool_made(self):
+        """Its Info.plist one Python cannot read, or the archive compressed
+        in a way Python cannot read, or encrypted: no IPA of nxnative's,
+        and no error for the games beside it."""
+        path = self.tmp / "other.ipa"
+        with zipfile.ZipFile(path, "w") as archive:
+            archive.writestr("Payload/Other.app/Info.plist", UNREADABLE_INFO_PLIST)
+        self.assertIsNone(ipa.read_info(path))
+        for name, flags, method in (("unknown-method.ipa", 0, 99), ("encrypted.ipa", 1, 0)):
+            path = make_ipa(self.tmp / name, {"DMTitleID": MKW})
+            data = bytearray(path.read_bytes())
+            # The Info.plist's local header and its central directory entry.
+            for signature, flag_at, method_at in ((b"PK\x03\x04", 6, 8), (b"PK\x01\x02", 8, 10)):
+                at = data.index(signature)
+                data[at + flag_at] |= flags
+                data[at + method_at:at + method_at + 2] = method.to_bytes(2, "little")
+            path.write_bytes(bytes(data))
+            self.assertIsNone(ipa.read_info(path), name)
 
 
 class Names(unittest.TestCase):

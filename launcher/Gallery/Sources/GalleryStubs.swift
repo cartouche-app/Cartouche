@@ -24,9 +24,17 @@ enum GalleryState {
     /// The part of a game's sheet the sheet opens on: results, the
     /// testers' results (category: results).
     static var sheetSection: String?
+    /// Cartouche signed with the player's own certificate (-GallerySigning):
+    /// on the iPhone, by a signing app, or by the Cartouche Installer.
+    static var signing: CartoucheSigningMode = .account
+    /// What that signature gives Cartouche (GalleryScenario.ownSignature).
+    static var ownSignature: CartoucheOwnSignature?
     /// LocalDevVPN is connected (CartoucheVPN.isConnected), whatever the
     /// interfaces of the Mac under the simulator (work: device-…).
     static var vpnConnected = false
+    /// The IPA for an Apple ID, signed by a signing app without its app
+    /// group, which LiveContainer then does not find (work: signed-elsewhere).
+    static var appGroupMissing = false
 
     static let documents: URL = {
         let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -171,6 +179,7 @@ final class CartoucheGameActions: ObservableObject {
     /// gallery has none of, but for the game whose saves a scenario syncs
     /// (work: saves, GallerySaves).
     func saves(of app: LCAppModel) -> CartoucheSaveTarget? { GallerySaves.target(of: app) }
+    func savesToImport(of app: LCAppModel) -> CartoucheSaveTarget? { GallerySaves.target(of: app) }
     /// Nor any log, but for the game whose logs a scenario shares (work:
     /// log, GalleryLogs).
     func logs(of app: LCAppModel) -> CartoucheGameLogFolder? { GalleryLogs.folder(of: app) }
@@ -308,7 +317,7 @@ enum LCUtils {
 enum LCSharedUtils {
     static func setCartoucheSigningCandidate(_ material: [String: Any]?) {}
     static func certificatePassword() -> String? { GalleryState.setupDone ? "" : nil }
-    static func appGroupPath() -> URL? { GalleryState.appGroup }
+    static func appGroupPath() -> URL? { GalleryState.appGroupMissing ? nil : GalleryState.appGroup }
 }
 
 struct LCPath {

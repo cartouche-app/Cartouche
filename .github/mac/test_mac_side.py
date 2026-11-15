@@ -371,11 +371,13 @@ def runtime(identifier: str, build: str, *devices: str, platform: str = "iOS", a
 
 
 # The iOS runtimes of GitHub's xcode-27 Macs (run 43219499519): only iOS
-# 27.1 and the runtime made for it run the iPhone Duo.
+# 27.1 and the runtime made for it run the iPhone Duo; each iOS 27 runs the
+# iPhone 17 Pro, which the UI tests and a screenshot take (run 43536204937,
+# iOS 27.2).
 GITHUB_RUNTIMES = [
-    runtime("iOS-27-0", "24A434", "iPhone 18 Pro", "iPad Pro 13-inch (M5)"),
-    runtime("iOS-27-1", "24A94425", "iPhone 18 Pro", "iPhone Duo", "iPad Pro 13-inch (M5)"),
-    runtime("iOS-27-2", "24B8117", "iPhone 18 Pro", "iPad Pro 13-inch (M5)", "iPad Air 13-inch (M4)"),
+    runtime("iOS-27-0", "24A434", "iPhone 17 Pro", "iPhone 18 Pro", "iPad Pro 13-inch (M5)"),
+    runtime("iOS-27-1", "24A94425", "iPhone 17 Pro", "iPhone 18 Pro", "iPhone Duo", "iPad Pro 13-inch (M5)"),
+    runtime("iOS-27-2", "24B8117", "iPhone 17 Pro", "iPhone 18 Pro", "iPad Pro 13-inch (M5)", "iPad Air 13-inch (M4)"),
     runtime("iOS-27-2-iPhone19-4", "24B91016s", "iPhone Duo"),
     runtime("tvOS-27-2", "24K150", "Apple TV 4K (4th generation)", platform="tvOS"),
 ]
@@ -397,9 +399,9 @@ class SimulatorsTests(unittest.TestCase):
         self.assertEqual(self.missing(GITHUB_RUNTIMES[2]), ["iPhone Duo"])
 
     def test_the_duo_s_runtime_alone_runs_no_ipad(self):
-        # Neither the iPad that draws the sized scenarios nor the one whose
-        # whole screen the iPad's scenarios take.
-        self.assertEqual(self.missing(GITHUB_RUNTIMES[3]), ["an iPad", "iPad Pro 13-inch (M5)"])
+        # Neither the iPad that draws the sized scenarios, nor the iPad and
+        # the iPhone 17 Pro whose whole screens scenarios take.
+        self.assertEqual(self.missing(GITHUB_RUNTIMES[3]), ["an iPad", "iPad Pro 13-inch (M5)", "iPhone 17 Pro"])
 
     def test_a_runtime_that_is_not_available_runs_nothing(self):
         gone = dict(GITHUB_RUNTIMES[3], isAvailable=False)
@@ -594,9 +596,86 @@ class WorkflowTests(unittest.TestCase):
     def test_the_app_s_build(self):
         self.check("app.yml", "build", "Build Cartouche.ipa", "cartouche-build,xcode-${{ env.XCODE_VERSION }}")
 
-    def test_the_screenshots(self):
-        self.check("screens.yml", "screens", "UI tests and screenshots",
+    def test_the_ui_tests_on_an_iphone(self):
+        self.check("screens.yml", "screens", "UI tests on an iPhone",
                    "cartouche-screens,xcode-${{ env.XCODE_VERSION }},ios-sim-${{ env.XCODE_VERSION }}")
+
+    def test_the_ui_tests_on_each_device_and_the_screenshots_run_on_macs_of_their_own(self):
+        # One after the other on one of GitHub's Macs, they took 84 of the
+        # job's 95 minutes (run 43637103769), ran out of them in the
+        # screenshots (#183), or were cancelled in the iPad's, by no one
+        # known (run 43637355324, 14 November): three jobs, at the same time.
+        jobs = self.workflow("screens.yml")["jobs"]
+        scripts = {"screens": "launcher/Gallery/uitests.sh build/ui-tests",
+                   "ipad": "launcher/Gallery/uitests.sh --ipad build/ui-tests/ipad",
+                   "shots": "launcher/Gallery/capture.sh build/screens"}
+        for job_id, script in scripts.items():
+            job = jobs[job_id]
+            runs = [step["run"] for step in job["steps"] if "run" in step]
+            self.assertIn(script, runs, job_id)
+            for other, theirs in scripts.items():
+                if other != job_id:
+                    self.assertNotIn(theirs, runs, job_id)
+            # None waits for another.
+            needs = job["needs"] if isinstance(job["needs"], list) else [job["needs"]]
+            self.assertFalse(set(needs) & set(scripts), job_id)
+            self.assertIn("!cancelled()", job["if"], job_id)
+            self.assertIn("needs.taken.outputs.taken != 'true'", job["if"], job_id)
+        # The route sends the iPhone's alone to Ad's Mac, which takes one at
+        # a time.
+        self.assertEqual(jobs["ipad"]["runs-on"], "xcode-27")
+        self.assertEqual(jobs["shots"]["runs-on"], "xcode-27")
+        # Each keeps what it found under a name of its own, the run's.
+        names = [step["with"]["name"] for job_id in scripts for step in jobs[job_id]["steps"]
+                 if step.get("uses", "").startswith("actions/upload-artifact@")]
+        self.assertEqual(sorted(names), ["launcher-screens", "launcher-ui-tests", "launcher-ui-tests-ipad"])
+        # The note that they are done waits for the three, and the branch of
+        # the screenshots for them.
+        for job_id in scripts:
+            self.assertIn(job_id, jobs["memo"]["needs"])
+            self.assertIn(f"needs.{job_id}.result == 'success'", jobs["memo"]["if"])
+        self.assertEqual(jobs["keep"]["needs"], "shots")
+        self.assertIn("needs.shots.outputs.shot == 'success'", jobs["keep"]["if"])
+        # Asked without the screenshots, a run skips their job.
+        self.assertIn("inputs.screenshots", jobs["shots"]["if"])
+        self.assertEqual(jobs["shots"]["outputs"]["shot"], "${{ steps.shoot.outcome }}")
+
+    def test_the_harness_runs_the_ipad_s_tests_on_a_mac_of_their_own(self):
+        # After the iPhone's, on the same Mac, the iPad's tests took its
+        # memory to 18 % free (run 43640175473), and GitHub's Macs were
+        # cancelled in them (run 43640426095, 14 November).
+        jobs = self.workflow("harness.yml")["jobs"]
+        scripts = {"harness": "launcher/Harness/harness.sh build/harness",
+                   "ipad": "launcher/Harness/harness.sh --ipad build/harness/ipad"}
+        for job_id, script in scripts.items():
+            job = jobs[job_id]
+            runs = [step["run"] for step in job["steps"] if "run" in step]
+            self.assertTrue(any(run.startswith(script) for run in runs), job_id)
+            for other, theirs in scripts.items():
+                if other != job_id:
+                    self.assertFalse(any(run.startswith(theirs) for run in runs), job_id)
+            self.assertEqual(job["needs"], "tested")
+            self.assertEqual(job["runs-on"], "xcode-27")
+            self.assertIn("!cancelled()", job["if"], job_id)
+        [ipad] = [step["run"] for step in jobs["ipad"]["steps"] if step.get("run", "").startswith(scripts["ipad"])]
+        self.assertIn("CartoucheHarnessTests/IPadTests CartoucheHarnessTests/BehindConsoleTests", " ".join(ipad.split()))
+        names = [step["with"]["name"] for job_id in scripts for step in jobs[job_id]["steps"]
+                 if step.get("uses", "").startswith("actions/upload-artifact@")]
+        self.assertEqual(sorted(names), ["launcher-harness", "launcher-harness-ipad"])
+        # The note that the harness passed: once both have, from Ubuntu, where
+        # the first job looks for it, and never in the Full test pass.
+        kept = [(job_id, step) for job_id, job in jobs.items() for step in job.get("steps", [])
+                if step.get("uses", "").startswith(("actions/cache@", "actions/cache/save@"))]
+        self.assertEqual([job_id for job_id, _ in kept], ["passed"])
+        [looked] = [s for s in jobs["tested"]["steps"] if s.get("uses", "").startswith("actions/cache/restore@")]
+        passed = jobs["passed"]
+        self.assertEqual(passed["runs-on"], jobs["tested"]["runs-on"])
+        self.assertEqual(kept[0][1]["with"]["path"], looked["with"]["path"])
+        self.assertEqual(kept[0][1]["with"]["key"], "${{ needs.tested.outputs.key }}")
+        for job_id in scripts:
+            self.assertIn(job_id, passed["needs"])
+            self.assertIn(f"needs.{job_id}.result == 'success'", passed["if"])
+        self.assertIn("github.event_name == 'pull_request'", passed["if"])
 
     def test_the_note_that_the_screenshots_are_done_is_kept_where_it_is_looked_for(self):
         # The first job looks for it on Ubuntu: a job on Ubuntu keeps it, once

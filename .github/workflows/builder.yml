@@ -35,6 +35,7 @@ on:
       # them; app/tests/test_mac_console.py checks this list against it), and
       # its words.
       - "launcher/Sources/CartoucheBridge.swift"
+      - "launcher/Sources/CartoucheBridgeBuilds.swift"
       - "launcher/Sources/CartoucheCatalog.swift"
       - "launcher/Sources/CartoucheCoverList.swift"
       - "launcher/Sources/CartoucheCovers.swift"
@@ -201,17 +202,32 @@ jobs:
           fi
           "$python" --version
           echo "path=$python" >> "$GITHUB_OUTPUT"
+      # About two minutes and a half, the build a minute of it. A test that
+      # waited for good kept the Mac until the job's hour, twice in a night
+      # (runs 43665377061 and 43669087000): ten minutes end it, and the step
+      # below says where it waited.
       - name: Tests
         id: tests
+        timeout-minutes: 10
         env:
           CARTOUCHE_BUILDER_PYTHON: ${{ steps.python.outputs.path }}
+          # Each test's lines as it runs, not all of them once the tests
+          # end: the log names the test that did not end.
+          NSUnbufferedIO: "YES"
         run: swift test --package-path builder/mac
-      # A test that stopped the tests' process (a trap says nothing of
-      # itself): the report macOS writes of it, its message and the frames
-      # of the thread that stopped.
+      # A test that did not end: where each thread of the tests' process
+      # waits, then the process ended. A test that stopped the tests'
+      # process (a trap says nothing of itself): the report macOS writes of
+      # it, its message and the frames of the thread that stopped.
       - name: Say how the tests ended
         if: ${{ failure() && steps.tests.outcome == 'failure' }}
         run: |
+          { pgrep -x xctest || true; } | while read -r pid; do
+            echo "== xctest $pid, which had not ended"
+            sample "$pid" 3 -file "$RUNNER_TEMP/xctest-$pid.txt" > /dev/null 2>&1 || true
+            cat "$RUNNER_TEMP/xctest-$pid.txt" 2>/dev/null || echo "no sample of it"
+            kill "$pid" 2>/dev/null || true
+          done
           sleep 20
           { find "$HOME/Library/Logs/DiagnosticReports" /Library/Logs/DiagnosticReports -name '*.ips' -mmin -60 2>/dev/null || true; } | while read -r report; do
             echo "== $report"
@@ -301,10 +317,13 @@ jobs:
           retention-days: 30
       # The app as it is in the disk image, on sample games: it runs no
       # engine, reads and writes none of the Mac's settings, and opens no
-      # bridge (Gallery.swift).
+      # bridge (Gallery.swift). It takes about three minutes; a page not
+      # taken within three ends it, and the step lets go of the Mac after
+      # fifteen whatever happens.
       - name: Take the screenshots
         id: gallery
         if: ${{ !cancelled() }}
+        timeout-minutes: 15
         run: |
           "build/builder/Cartouche Builder.app/Contents/MacOS/Cartouche Builder" --gallery build/screens
           ls build/screens

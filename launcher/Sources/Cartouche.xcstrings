@@ -398,13 +398,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "An automation in Shortcuts can renew Cartouche every night, with no computer. It runs Cartouche’s Refresh All Apps action, which does what Renew now does."
+            "value" : "An automation in Shortcuts can renew Cartouche every night, with no computer. It connects LocalDevVPN, then runs Cartouche’s Refresh All Apps action, which does what Renew now does."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Une automatisation de Raccourcis peut renouveler Cartouche chaque nuit, sans ordinateur. Elle lance l’action Refresh All Apps de Cartouche, qui fait comme Renouveler maintenant."
+            "value" : "Une automatisation de Raccourcis peut renouveler Cartouche chaque nuit, sans ordinateur. Elle connecte LocalDevVPN, puis lance l’action Refresh All Apps de Cartouche, qui fait comme Renouveler maintenant."
           }
         }
       }
@@ -426,19 +426,19 @@
         }
       }
     },
-    "daily.step1" : {
+    "daily.refreshAction" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Leave LocalDevVPN connected. Its traffic stays on the iPhone, so it can stay on all day."
+            "value" : "Then add the Refresh All Apps action of Cartouche, not LiveContainer’s: Cartouche waits for LocalDevVPN to connect before it renews."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Laissez LocalDevVPN connecté. Son trafic reste sur l’iPhone : il peut rester activé toute la journée."
+            "value" : "Ajoutez ensuite l’action Refresh All Apps de Cartouche, pas celle de LiveContainer : Cartouche attend que LocalDevVPN soit connecté avant de se renouveler."
           }
         }
       }
@@ -477,23 +477,6 @@
         }
       }
     },
-    "daily.step4" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tap Next, choose New Blank Automation, and add the Refresh All Apps action of Cartouche, not LiveContainer’s."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touchez Suivant, choisissez Nouvelle automatisation vide, et ajoutez l’action Refresh All Apps de Cartouche, pas celle de LiveContainer."
-          }
-        }
-      }
-    },
     "daily.step5" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -507,6 +490,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chaque renouvellement s’affiche sur la page Système comme dernier renouvellement, et donne sept jours de plus à Cartouche."
+          }
+        }
+      }
+    },
+    "daily.vpnAction" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap Next, choose New Blank Automation, then add the Enable LocalDevVPN action: it connects LocalDevVPN without opening it. An older LocalDevVPN calls it Start LocalDevVPN."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez Suivant, choisissez Nouvelle automatisation vide, puis ajoutez l’action Enable LocalDevVPN : elle connecte LocalDevVPN sans l’ouvrir. Un LocalDevVPN plus ancien l’appelle Start LocalDevVPN."
           }
         }
       }
@@ -1837,6 +1837,23 @@
         }
       }
     },
+    "guide.certificate.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import your certificate"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importez votre certificat"
+          }
+        }
+      }
+    },
     "guide.done" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2030,13 +2047,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Three steps from here to your first game. Each one ticks itself once it is done."
+            "value" : "Four steps from here to your first game. Each one ticks itself once it is done."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Trois étapes jusqu’à votre premier jeu. Chacune se coche toute seule une fois faite."
+            "value" : "Quatre étapes jusqu’à votre premier jeu. Chacune se coche toute seule une fois faite."
           }
         }
       }
@@ -2551,6 +2568,1111 @@
         }
       }
     },
+    "mac.build.action.again" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build again on the Mac"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Construire à nouveau sur le Mac"
+          }
+        }
+      }
+    },
+    "mac.build.action.build" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build on the Mac"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Construire sur le Mac"
+          }
+        }
+      }
+    },
+    "mac.build.action.queue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add to the Mac’s queue"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter à la file du Mac"
+          }
+        }
+      }
+    },
+    "mac.build.action.rebuild" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rebuild on the Mac"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconstruire sur le Mac"
+          }
+        }
+      }
+    },
+    "mac.build.asking" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asking the Mac…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demande au Mac…"
+          }
+        }
+      }
+    },
+    "mac.build.building" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Building on the Mac, %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En construction sur le Mac, %@"
+          }
+        }
+      }
+    },
+    "mac.build.building.now" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Building on the Mac"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En construction sur le Mac"
+          }
+        }
+      }
+    },
+    "mac.build.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its last build on the Mac failed"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sa dernière construction sur le Mac a échoué"
+          }
+        }
+      }
+    },
+    "mac.build.failed.on" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its last build on the Mac failed, %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sa dernière construction sur le Mac a échoué, %@"
+          }
+        }
+      }
+    },
+    "mac.build.follow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Follow"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suivre"
+          }
+        }
+      }
+    },
+    "mac.build.improved" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nxnative improved it since its last build on the Mac"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nxnative l’a amélioré depuis sa dernière construction sur le Mac"
+          }
+        }
+      }
+    },
+    "mac.build.ipaOnly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only its IPA is on the Mac: its dump is not in the Mac’s sources folder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seule son IPA est sur le Mac : son dump n’est pas dans le dossier des sources du Mac"
+          }
+        }
+      }
+    },
+    "mac.build.left" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "about %@ left"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "encore %@ environ"
+          }
+        }
+      }
+    },
+    "mac.build.new" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Never built on the Mac"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jamais construit sur le Mac"
+          }
+        }
+      }
+    },
+    "mac.build.next" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next to build on the Mac"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le prochain à construire sur le Mac"
+          }
+        }
+      }
+    },
+    "mac.build.noProfile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nxnative has no profile for it yet: the Mac builds it once it has one"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nxnative n’a pas encore de profil pour lui : le Mac le construira dès qu’il en aura un"
+          }
+        }
+      }
+    },
+    "mac.build.notFollowed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not followed on the Mac: built there only when you ask"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas suivi sur le Mac : construit seulement à votre demande"
+          }
+        }
+      }
+    },
+    "mac.build.remove" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove from the queue"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer de la file"
+          }
+        }
+      }
+    },
+    "mac.build.stop" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop its build"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêter sa construction"
+          }
+        }
+      }
+    },
+    "mac.build.stopping" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stopping…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêt…"
+          }
+        }
+      }
+    },
+    "mac.build.unfollow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop following"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne plus suivre"
+          }
+        }
+      }
+    },
+    "mac.build.upToDate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up to date on the Mac"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "À jour sur le Mac"
+          }
+        }
+      }
+    },
+    "mac.build.upToDate.built" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up to date on the Mac, built %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "À jour sur le Mac, construit %@"
+          }
+        }
+      }
+    },
+    "mac.build.waiting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting its turn on the Mac"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente de son tour sur le Mac"
+          }
+        }
+      }
+    },
+    "mac.build.waiting.after" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting its turn on the Mac, after %lld games"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente de son tour sur le Mac, après %lld jeux"
+          }
+        }
+      }
+    },
+    "mac.build.waiting.one" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting its turn on the Mac, after 1 game"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente de son tour sur le Mac, après 1 jeu"
+          }
+        }
+      }
+    },
+    "mac.builds.all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All the Mac’s builds"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toutes les constructions du Mac"
+          }
+        }
+      }
+    },
+    "mac.builds.building" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Building"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En construction"
+          }
+        }
+      }
+    },
+    "mac.builds.control.tooOld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update the app on %@ to stop its builds, build what is due, follow its games and set its nightly build from here."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettez à jour l’app de %@ pour arrêter ses constructions, construire ce qui est dû, suivre ses jeux et régler sa construction de nuit d’ici."
+          }
+        }
+      }
+    },
+    "mac.builds.due" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build what is due"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Construire ce qui est dû"
+          }
+        }
+      }
+    },
+    "mac.builds.due.add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add what is due"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter ce qui est dû"
+          }
+        }
+      }
+    },
+    "mac.builds.due.many" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld games are due: nxnative improved them, or they were never built."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld jeux sont à construire : nxnative les a améliorés, ou ils n’ont jamais été construits."
+          }
+        }
+      }
+    },
+    "mac.builds.due.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing is due on the Mac."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien n’est à construire sur le Mac."
+          }
+        }
+      }
+    },
+    "mac.builds.due.one" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 game is due: nxnative improved it, or it was never built."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 jeu est à construire : nxnative l’a amélioré, ou il n’a jamais été construit."
+          }
+        }
+      }
+    },
+    "mac.builds.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échec %@"
+          }
+        }
+      }
+    },
+    "mac.builds.failures" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Builds that failed"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Constructions échouées"
+          }
+        }
+      }
+    },
+    "mac.builds.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Once built, the game is in the Mac’s games folder, where Cartouche offers to install it or update it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une fois construit, le jeu arrive dans le dossier des jeux du Mac, d’où Cartouche propose de l’installer ou de le mettre à jour."
+          }
+        }
+      }
+    },
+    "mac.builds.game.actions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What to do with %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Que faire de %@"
+          }
+        }
+      }
+    },
+    "mac.builds.games" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Mac’s games"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les jeux du Mac"
+          }
+        }
+      }
+    },
+    "mac.builds.games.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Mac builds a game it follows again when nxnative improves it, and a game it does not follow only when you ask."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le Mac reconstruit un jeu qu’il suit quand nxnative l’améliore, et un jeu qu’il ne suit pas seulement à votre demande."
+          }
+        }
+      }
+    },
+    "mac.builds.idle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nothing building"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rien en construction"
+          }
+        }
+      }
+    },
+    "mac.builds.nightly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Build what is due every night"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Construire ce qui est dû chaque nuit"
+          }
+        }
+      }
+    },
+    "mac.builds.nightly.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every night at %@, the Mac builds what is due, even with its app closed."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque nuit à %@, le Mac construit ce qui est dû, même son app fermée."
+          }
+        }
+      }
+    },
+    "mac.builds.nightly.time" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Heure"
+          }
+        }
+      }
+    },
+    "mac.builds.notAnswering" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not answering"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne répond pas"
+          }
+        }
+      }
+    },
+    "mac.builds.notReady" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not ready"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas prêt"
+          }
+        }
+      }
+    },
+    "mac.builds.page" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Builds"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Constructions"
+          }
+        }
+      }
+    },
+    "mac.builds.reaching" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reaching…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connexion…"
+          }
+        }
+      }
+    },
+    "mac.builds.remove" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove %@ from the queue"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer %@ de la file"
+          }
+        }
+      }
+    },
+    "mac.builds.remove.short" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer"
+          }
+        }
+      }
+    },
+    "mac.builds.stopAll" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop all"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout arrêter"
+          }
+        }
+      }
+    },
+    "mac.builds.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Builds on %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Constructions sur %@"
+          }
+        }
+      }
+    },
+    "mac.builds.toUpdate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To update"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "À mettre à jour"
+          }
+        }
+      }
+    },
+    "mac.builds.tooOld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update the app on %@ to see its builds here and start one."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettez à jour l’app de %@ pour voir ses constructions ici et en lancer une."
+          }
+        }
+      }
+    },
+    "mac.builds.waiting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting their turn"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente de leur tour"
+          }
+        }
+      }
+    },
+    "mac.game.building" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Building, %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En construction, %@"
+          }
+        }
+      }
+    },
+    "mac.game.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its last build failed"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sa dernière construction a échoué"
+          }
+        }
+      }
+    },
+    "mac.game.improved" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Improved by nxnative"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Amélioré par nxnative"
+          }
+        }
+      }
+    },
+    "mac.game.ipaOnly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its IPA alone, without its dump"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son IPA seule, sans son dump"
+          }
+        }
+      }
+    },
+    "mac.game.new" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Never built"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jamais construit"
+          }
+        }
+      }
+    },
+    "mac.game.noProfile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No nxnative profile yet"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas encore de profil nxnative"
+          }
+        }
+      }
+    },
+    "mac.game.notFollowed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not followed"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non suivi"
+          }
+        }
+      }
+    },
+    "mac.game.upToDate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up to date"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "À jour"
+          }
+        }
+      }
+    },
+    "mac.game.upToDate.built" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up to date, built %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "À jour, construit %@"
+          }
+        }
+      }
+    },
+    "mac.game.waiting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting its turn"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En attente de son tour"
+          }
+        }
+      }
+    },
     "platform.switch" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3044,6 +4166,584 @@
         }
       }
     },
+    "reset.busy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: wait for it to end before resetting Cartouche."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ : attendez la fin avant de réinitialiser Cartouche."
+          }
+        }
+      }
+    },
+    "reset.confirm.erase" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erase everything"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout effacer"
+          }
+        }
+      }
+    },
+    "reset.confirm.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your games and their saves here, your settings and your storage are erased, then Cartouche starts again. This cannot be undone."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vos jeux et leurs sauvegardes ici, vos réglages et votre stockage sont effacés, puis Cartouche redémarre. C’est irréversible."
+          }
+        }
+      }
+    },
+    "reset.confirm.message.account" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your games and their saves here, your settings, your storage and your Apple ID are erased, then Cartouche starts again. This cannot be undone."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vos jeux et leurs sauvegardes ici, vos réglages, votre stockage et votre identifiant Apple sont effacés, puis Cartouche redémarre. C’est irréversible."
+          }
+        }
+      }
+    },
+    "reset.confirm.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erase everything?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout effacer ?"
+          }
+        }
+      }
+    },
+    "reset.erase" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erase everything and restart"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout effacer et redémarrer"
+          }
+        }
+      }
+    },
+    "reset.erasing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erasing…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effacement…"
+          }
+        }
+      }
+    },
+    "reset.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche could not erase everything"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche n’a pas pu tout effacer"
+          }
+        }
+      }
+    },
+    "reset.failed.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Items left: %lld. Copy the report, then try again, or restart Cartouche as it is."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Éléments restants : %lld. Copiez le rapport, puis réessayez, ou redémarrez Cartouche tel quel."
+          }
+        }
+      }
+    },
+    "reset.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche as just installed, without a computer: your games, settings and storage are erased; the certificate and the pairing file stay."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche comme tout juste installé, sans ordinateur : vos jeux, vos réglages et votre stockage sont effacés ; le certificat et le fichier de jumelage restent."
+          }
+        }
+      }
+    },
+    "reset.goes.account" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your Apple ID: you sign in again in Setup."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre identifiant Apple : vous vous reconnectez dans la mise en route."
+          }
+        }
+      }
+    },
+    "reset.goes.games" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your games, with their saves, settings and play time, and what was kept of the games you uninstalled."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vos jeux, avec leurs sauvegardes, leurs réglages et leur temps de jeu, et ce qui restait des jeux désinstallés."
+          }
+        }
+      }
+    },
+    "reset.goes.header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erased"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Effacé"
+          }
+        }
+      }
+    },
+    "reset.goes.settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche’s settings, the names and covers you gave your games, the guide’s progress, and the reports on problems."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les réglages de Cartouche, les noms et jaquettes donnés à vos jeux, la progression du guide, et les rapports de problèmes."
+          }
+        }
+      }
+    },
+    "reset.goes.storage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your storage: its servers and folders, with their passwords and sign-ins, Google Drive and your Mac among them."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre stockage : ses serveurs et dossiers, avec leurs mots de passe et connexions, Google Drive et votre Mac compris."
+          }
+        }
+      }
+    },
+    "reset.intro" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche erases everything you put in it, then starts again as it opened the first time: without a computer, and without installing it again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche efface tout ce que vous y avez mis, puis redémarre comme à sa toute première ouverture : sans ordinateur, et sans le réinstaller."
+          }
+        }
+      }
+    },
+    "reset.restart" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restart Cartouche"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redémarrer Cartouche"
+          }
+        }
+      }
+    },
+    "reset.restarting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restarting…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redémarrage…"
+          }
+        }
+      }
+    },
+    "reset.saves.atRisk" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The saves of %@ are not in your saves folder: the reset erases them."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les sauvegardes de %@ ne sont pas dans votre dossier des sauvegardes : la réinitialisation les efface."
+          }
+        }
+      }
+    },
+    "reset.saves.checking" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Looking for saves that are not in your saves folder…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recherche des sauvegardes absentes de votre dossier des sauvegardes…"
+          }
+        }
+      }
+    },
+    "reset.saves.header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saves"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sauvegardes"
+          }
+        }
+      }
+    },
+    "reset.saves.noFolder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To keep them, choose a saves folder in Storage first."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pour les garder, choisissez d’abord un dossier des sauvegardes dans Stockage."
+          }
+        }
+      }
+    },
+    "reset.saves.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No game has saves to lose."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun jeu n’a de sauvegardes à perdre."
+          }
+        }
+      }
+    },
+    "reset.saves.safe" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your games’ saves are in your saves folder: add it again in Storage, and they come back with the games."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les sauvegardes de vos jeux sont dans votre dossier des sauvegardes : ajoutez-le à nouveau dans Stockage, et elles reviennent avec les jeux."
+          }
+        }
+      }
+    },
+    "reset.saves.send" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send them to the saves folder now"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les envoyer maintenant dans le dossier des sauvegardes"
+          }
+        }
+      }
+    },
+    "reset.saves.sending" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending the saves…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoi des sauvegardes…"
+          }
+        }
+      }
+    },
+    "reset.stays.header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kept"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gardé"
+          }
+        }
+      }
+    },
+    "reset.stays.signing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The certificate Cartouche is signed with, and the pairing file: you need no computer to set it up again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le certificat qui signe Cartouche, et le fichier de jumelage : aucun ordinateur n’est nécessaire pour le remettre en route."
+          }
+        }
+      }
+    },
+    "reset.stays.storage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What your storage holds, the copies of your games and saves, even in a folder of Cartouche’s own space in Files: add your storage again to find them."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le contenu de votre stockage, copies de vos jeux et de vos sauvegardes, même dans un dossier de l’espace de Cartouche dans Fichiers : ajoutez à nouveau votre stockage pour les retrouver."
+          }
+        }
+      }
+    },
+    "reset.stays.system" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What iOS keeps: the days left on Cartouche’s signature, its permissions, and LocalDevVPN."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce que garde iOS : les jours restants de la signature de Cartouche, ses autorisations, et LocalDevVPN."
+          }
+        }
+      }
+    },
+    "reset.stays.telemetry" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game measurements: their random number, their switch and the reports not sent yet."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les mesures de jeu : leur numéro aléatoire, leur interrupteur et les rapports pas encore envoyés."
+          }
+        }
+      }
+    },
+    "reset.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset Cartouche"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinitialiser Cartouche"
+          }
+        }
+      }
+    },
+    "reset.wait" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche is busy: wait for it to finish before resetting it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche est occupé : attendez qu’il ait fini avant de le réinitialiser."
+          }
+        }
+      }
+    },
+    "reset.whilePlaying" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ is running: quit it before resetting Cartouche."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ est en cours : quittez-le avant de réinitialiser Cartouche."
+          }
+        }
+      }
+    },
     "result.boots" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3482,6 +5182,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Revenir à Cartouche"
+          }
+        }
+      }
+    },
+    "running.homeFades" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Home button hides after a few seconds: touch just below to bring it back."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le bouton Home s’efface après quelques secondes : touchez juste en dessous pour le faire revenir."
           }
         }
       }
@@ -5226,13 +6943,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sign in once, here in Cartouche, with LocalDevVPN connected: Cartouche then takes its certificate and renews itself every week."
+            "value" : "Sign in once, here in Cartouche: Cartouche then takes its certificate and renews itself every week."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Connectez-vous une fois, ici dans Cartouche, avec LocalDevVPN connecté : Cartouche prend alors son certificat et se renouvelle chaque semaine."
+            "value" : "Connectez-vous une fois, ici dans Cartouche : Cartouche prend alors son certificat et se renouvelle chaque semaine."
           }
         }
       }
@@ -5277,13 +6994,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The sign-in with %@ stopped before Cartouche got its certificate. Connect LocalDevVPN, then sign in again."
+            "value" : "The sign-in with %@ stopped before Cartouche got its certificate. Sign in again."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La connexion avec %@ s’est arrêtée avant que Cartouche reçoive son certificat. Connectez LocalDevVPN, puis reconnectez-vous."
+            "value" : "La connexion avec %@ s’est arrêtée avant que Cartouche reçoive son certificat. Reconnectez-vous."
           }
         }
       }
@@ -5437,6 +7154,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Connectez-vous avec votre identifiant Apple"
+          }
+        }
+      }
+    },
+    "setup.banner.signedElsewhere" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This IPA cannot sign in with an Apple ID."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette IPA ne peut pas se connecter avec un identifiant Apple."
           }
         }
       }
@@ -5611,6 +7345,23 @@
         }
       }
     },
+    "setup.done.ownCertificate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche signs your games with your own certificate. There is nothing more to do here."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche signe vos jeux avec votre propre certificat. Il n’y a plus rien à faire ici."
+          }
+        }
+      }
+    },
     "setup.done.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5641,6 +7392,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trois étapes, une seule fois sur cet iPhone. Ensuite, Cartouche se renouvelle tout seul."
+          }
+        }
+      }
+    },
+    "setup.intro.ownCertificate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One step, once on this iPhone: the certificate Cartouche signs your games with."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une étape, une seule fois sur cet iPhone : le certificat avec lequel Cartouche signe vos jeux."
+          }
+        }
+      }
+    },
+    "setup.intro.signedElsewhere" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One step: the IPA made for your own certificate."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une étape : l’IPA faite pour votre propre certificat."
           }
         }
       }
@@ -7062,13 +8847,30 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This iPhone did not answer through LocalDevVPN. Disconnect LocalDevVPN, connect it again, then try again."
+            "value" : "This iPhone did not answer through LocalDevVPN. Disconnect LocalDevVPN, connect it again, then try again. If it happens again, restart this iPhone."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cet iPhone n’a pas répondu par LocalDevVPN. Déconnectez LocalDevVPN, reconnectez-le, puis réessayez."
+            "value" : "Cet iPhone n’a pas répondu par LocalDevVPN. Déconnectez LocalDevVPN, reconnectez-le, puis réessayez. Si cela recommence, redémarrez cet iPhone."
+          }
+        }
+      }
+    },
+    "signIn.device.olderPairing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This iPhone’s pairing file is of an older kind, which Cartouche can no longer use on this iPhone since iOS 26.4. On your computer, choose Put the pairing file in Cartouche again in the Cartouche Installer: it makes one of the newer kind."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le fichier de jumelage de cet iPhone est d’un type plus ancien, que Cartouche ne peut plus utiliser sur cet iPhone depuis iOS 26.4. Sur votre ordinateur, choisissez Remettre le fichier de jumelage dans Cartouche dans l’Installeur Cartouche : il en fait un du type récent."
           }
         }
       }
@@ -7086,6 +8888,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cet iPhone n’a pas accepté son fichier de jumelage. Remettez le fichier de jumelage dans Cartouche avec l’Installeur Cartouche, sur votre ordinateur."
+          }
+        }
+      }
+    },
+    "signIn.device.pairingRefused" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This iPhone refused its pairing file, made before it stopped trusting your computer, or for another device. On your computer, in the Cartouche Installer’s Settings, choose Delete the stored pairing, choose this iPhone again, then Put the pairing file in Cartouche again, and tap Trust on this iPhone when it asks."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cet iPhone a refusé son fichier de jumelage, fait avant qu’il cesse de se fier à votre ordinateur, ou pour un autre appareil. Sur votre ordinateur, dans les Réglages de l’Installeur Cartouche, choisissez Supprimer le jumelage enregistré, choisissez de nouveau cet iPhone, puis Remettre le fichier de jumelage dans Cartouche, et touchez Se fier sur cet iPhone quand il le demande."
           }
         }
       }
@@ -7260,6 +9079,23 @@
         }
       }
     },
+    "signIn.sideStoreQuit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The built-in SideStore closed before it finished. Restart this iPhone, then try again. If it closes again, install the update offered in Settings › General › Software Update, if there is one."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le SideStore intégré s’est fermé avant d’avoir fini. Redémarrez cet iPhone, puis réessayez. S’il se ferme encore, installez la mise à jour proposée dans Réglages › Général › Mise à jour logicielle, s’il y en a une."
+          }
+        }
+      }
+    },
     "signIn.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7413,6 +9249,125 @@
         }
       }
     },
+    "signature.check.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your signature"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre signature"
+          }
+        }
+      }
+    },
+    "signature.keychains" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Games’ keychains"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trousseaux des jeux"
+          }
+        }
+      }
+    },
+    "signature.keychains.granted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each game keeps its own."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chaque jeu garde le sien."
+          }
+        }
+      }
+    },
+    "signature.keychains.leftOut" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your signing app did not sign in the games’ keychain groups, which your profile allows: the games share Cartouche’s keychain. Most games do not use it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre app de signature n’a pas inclus les groupes de trousseau des jeux, que votre profil permet : les jeux partagent le trousseau de Cartouche. La plupart des jeux ne s’en servent pas."
+          }
+        }
+      }
+    },
+    "signature.keychains.notInProfile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your profile does not allow the games’ keychain groups: the games share Cartouche’s keychain. Most games do not use it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre profil ne permet pas les groupes de trousseau des jeux : les jeux partagent le trousseau de Cartouche. La plupart des jeux ne s’en servent pas."
+          }
+        }
+      }
+    },
+    "signature.memory.leftOut" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your signing app left out Increased Memory Limit, which your profile allows: without it, iOS gives Cartouche and its games about 3 GB. Sign Cartouche again, keeping every entitlement of the profile."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre app de signature a laissé de côté la mémoire augmentée, que votre profil permet : sans elle, iOS donne environ 3 Go à Cartouche et à ses jeux. Signez Cartouche à nouveau en gardant tous les droits du profil."
+          }
+        }
+      }
+    },
+    "signature.memory.notInProfile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your profile does not allow Increased Memory Limit: without it, iOS gives Cartouche and its games about 3 GB, too little for most games. Use a profile whose App ID has this capability, then sign Cartouche again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre profil ne permet pas la mémoire augmentée : sans elle, iOS donne environ 3 Go à Cartouche et à ses jeux, trop peu pour la plupart des jeux. Prenez un profil dont l’App ID a cette capacité, puis signez Cartouche à nouveau."
+          }
+        }
+      }
+    },
     "signing.certificateChosen" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7464,6 +9419,40 @@
         }
       }
     },
+    "signing.elsewhere" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A signing app signed the IPA of Cartouche made for an Apple ID, without the app group its sign-in needs: signing in cannot work here. Sign Cartouche-%@-Own-Certificate.ipa instead, from Cartouche’s releases on GitHub, or install Cartouche with the Cartouche Installer on a computer."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une app de signature a signé l’IPA de Cartouche faite pour un identifiant Apple, sans le groupe d’apps dont sa connexion a besoin : la connexion ne peut pas marcher ici. Signez plutôt Cartouche-%@-Own-Certificate.ipa, depuis les versions de Cartouche sur GitHub, ou installez Cartouche avec l’Installeur Cartouche sur un ordinateur."
+          }
+        }
+      }
+    },
+    "signing.elsewhere.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign the IPA for your own certificate"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signez l’IPA pour votre propre certificat"
+          }
+        }
+      }
+    },
     "signing.handoffFailed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7494,6 +9483,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Choisissez votre certificat (.p12), son mot de passe et son profil (.mobileprovision). Ni compte Apple ni LocalDevVPN ne sont nécessaires."
+          }
+        }
+      }
+    },
+    "signing.howOnIPhone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose the certificate (.p12) your signing app signed Cartouche with, and type its password. Cartouche reads its profile by itself. Neither an Apple ID nor LocalDevVPN is needed."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez le certificat (.p12) avec lequel votre app de signature a signé Cartouche, et tapez son mot de passe. Cartouche lit son profil tout seul. Ni compte Apple ni LocalDevVPN ne sont nécessaires."
           }
         }
       }
@@ -7549,6 +9555,40 @@
         }
       }
     },
+    "signing.onlyOwnCertificate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche takes only the certificate it was signed with. To change certificates, sign Cartouche again with the new one in your signing app, then choose it here."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche ne prend que le certificat avec lequel il a été signé. Pour en changer, signez Cartouche à nouveau avec le nouveau dans votre app de signature, puis choisissez-le ici."
+          }
+        }
+      }
+    },
+    "signing.otherCertificate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche was signed with another certificate. Choose that one, or sign Cartouche again with this one in your signing app."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche a été signé avec un autre certificat. Choisissez celui-là, ou signez Cartouche à nouveau avec celui-ci dans votre app de signature."
+          }
+        }
+      }
+    },
     "signing.password" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7600,6 +9640,23 @@
         }
       }
     },
+    "signing.refusedOnIPhone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS refused this certificate, which may have been revoked. Sign Cartouche again with a valid certificate in your signing app, then choose that certificate here."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS a refusé ce certificat, qui a peut-être été révoqué. Signez Cartouche à nouveau avec un certificat valide dans votre app de signature, puis choisissez ce certificat ici."
+          }
+        }
+      }
+    },
     "signing.reinstall" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7612,7 +9669,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Si le profil avec lequel Cartouche a été installée n’autorise pas ce certificat, réinstallez Cartouche avec lui et son profil, depuis l’Installeur Cartouche."
+            "value" : "Si le profil avec lequel Cartouche a été installé n’autorise pas ce certificat, réinstallez Cartouche avec lui et son profil, depuis l’Installeur Cartouche."
           }
         }
       }
@@ -7646,7 +9703,24 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche est signée avec votre propre certificat : installez ses mises à jour, et un nouveau certificat avant qu’il n’expire, depuis l’Installeur Cartouche sur votre ordinateur. Elle n’a pas besoin d’être renouvelée chaque semaine."
+            "value" : "Cartouche est signé avec votre propre certificat : installez ses mises à jour, et un nouveau certificat avant qu’il n’expire, depuis l’Installeur Cartouche sur votre ordinateur. Il n’a pas besoin d’être renouvelé chaque semaine."
+          }
+        }
+      }
+    },
+    "signing.updateOnIPhone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche is signed with your own certificate and needs no renewal each week. When a new version is out, Cartouche says so: download it, sign it in your signing app as the first time, then install it over this one. Your games and saves stay."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche est signé avec votre propre certificat et n’a pas besoin d’être renouvelé chaque semaine. Quand une nouvelle version sort, Cartouche le dit : téléchargez-la, signez-la dans votre app de signature comme la première fois, puis installez-la par-dessus celle-ci. Vos jeux et sauvegardes restent."
           }
         }
       }
@@ -10898,6 +12972,74 @@
         }
       }
     },
+    "storage.smb.heldBack" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the server does not let this account sign in as it is. On the server, turn the account on, or give it a new password."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "le serveur ne laisse pas ce compte se connecter en l’état. Sur le serveur, activez le compte ou donnez-lui un nouveau mot de passe."
+          }
+        }
+      }
+    },
+    "storage.smb.locked" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the server locked this account after too many wrong passwords. Try again later, or unlock it on the server."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "le serveur a verrouillé ce compte après trop de mots de passe erronés. Réessayez plus tard, ou déverrouillez-le sur le serveur."
+          }
+        }
+      }
+    },
+    "storage.smb.noGuests" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the server does not let guests in. Type the user name and password of your account on it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "le serveur n’accepte pas les invités. Tapez le nom d’utilisateur et le mot de passe de votre compte sur ce serveur."
+          }
+        }
+      }
+    },
+    "storage.smb.refused" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "the server refused the user name or the password."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "le serveur a refusé le nom d’utilisateur ou le mot de passe."
+          }
+        }
+      }
+    },
     "storage.stopUsing" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11115,6 +13257,771 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Voir la traduction"
+          }
+        }
+      }
+    },
+    "switchSave.choose" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose the exported save"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir la sauvegarde exportée"
+          }
+        }
+      }
+    },
+    "switchSave.content" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Content"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contenu"
+          }
+        }
+      }
+    },
+    "switchSave.failed.import" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The game from your Switch was not put in place"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La partie de votre Switch n’a pas été mise en place"
+          }
+        }
+      }
+    },
+    "switchSave.failed.putBack" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The game from before the import was not put back"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La partie d’avant l’import n’a pas été remise"
+          }
+        }
+      }
+    },
+    "switchSave.failed.read" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The save was not read"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La sauvegarde n’a pas été lue"
+          }
+        }
+      }
+    },
+    "switchSave.failed.send" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The ZIP for the Switch was not made"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le ZIP pour la Switch n’a pas été fait"
+          }
+        }
+      }
+    },
+    "switchSave.files.many" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld files, %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld fichiers, %@"
+          }
+        }
+      }
+    },
+    "switchSave.files.one" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 file, %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 fichier, %@"
+          }
+        }
+      }
+    },
+    "switchSave.game" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jeu"
+          }
+        }
+      }
+    },
+    "switchSave.game.checked" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This one, by JKSV’s fiche"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Celui-ci, d’après la fiche de JKSV"
+          }
+        }
+      }
+    },
+    "switchSave.game.unchecked" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not checked: no JKSV fiche"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non vérifié : pas de fiche de JKSV"
+          }
+        }
+      }
+    },
+    "switchSave.import.action" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue this game here"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reprendre cette partie ici"
+          }
+        }
+      }
+    },
+    "switchSave.import.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The game from your Switch is in place: start the game to continue it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La partie de votre Switch est en place : lancez le jeu pour la reprendre."
+          }
+        }
+      }
+    },
+    "switchSave.import.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The game on your Switch should not be newer than this iPhone’s: a game may not read the save of a newer version."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le jeu de votre Switch ne doit pas être plus récent que celui de cet iPhone : un jeu ne lit pas toujours la sauvegarde d’une version plus récente."
+          }
+        }
+      }
+    },
+    "switchSave.import.header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue a game from the Switch"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reprendre une partie de la Switch"
+          }
+        }
+      }
+    },
+    "switchSave.import.intro" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On your Switch, export this game’s save with JKSV or Checkpoint, then put its folder or its ZIP on this iPhone, in Files: from the microSD card with a USB-C reader, through iCloud Drive or from your NAS."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sur votre Switch, exportez la sauvegarde de ce jeu avec JKSV ou Checkpoint, puis mettez son dossier ou son ZIP sur cet iPhone, dans Fichiers : depuis la carte microSD avec un lecteur USB-C, par iCloud Drive ou depuis votre NAS."
+          }
+        }
+      }
+    },
+    "switchSave.import.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It replaces this game’s save on this iPhone, which Cartouche keeps here: you can put it back."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elle remplace la sauvegarde de ce jeu sur cet iPhone, que Cartouche garde ici : vous pourrez la remettre."
+          }
+        }
+      }
+    },
+    "switchSave.import.message.folder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It replaces this game’s save on this iPhone, which Cartouche keeps here: you can put it back. It then goes to your saves folder, as the newest copy."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elle remplace la sauvegarde de ce jeu sur cet iPhone, que Cartouche garde ici : vous pourrez la remettre. Elle part ensuite dans votre dossier des sauvegardes, comme la copie la plus récente."
+          }
+        }
+      }
+    },
+    "switchSave.import.question" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue this game here?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reprendre cette partie ici ?"
+          }
+        }
+      }
+    },
+    "switchSave.import.sending" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It goes to your saves folder too, for your other iPhones."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elle part aussi dans votre dossier des sauvegardes, pour vos autres iPhone."
+          }
+        }
+      }
+    },
+    "switchSave.kind" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sauvegarde"
+          }
+        }
+      }
+    },
+    "switchSave.kind.account" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A player’s"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "D’un joueur"
+          }
+        }
+      }
+    },
+    "switchSave.kind.device" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The console’s"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "De la console"
+          }
+        }
+      }
+    },
+    "switchSave.problem.case" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Two of its files differ only by their capitals, %1$@ and %2$@: the iPhone cannot keep both."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deux de ses fichiers ne diffèrent que par leurs majuscules, %1$@ et %2$@ : l’iPhone ne peut pas garder les deux."
+          }
+        }
+      }
+    },
+    "switchSave.problem.cloudPull" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nxnative did not finish bringing this game’s save from iCloud: start the game once, then come back."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nxnative n’a pas fini de ramener la sauvegarde de ce jeu depuis iCloud : lancez le jeu une fois, puis revenez."
+          }
+        }
+      }
+    },
+    "switchSave.problem.empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There is no save in it: choose the folder or the ZIP that JKSV or Checkpoint made."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il n’y a pas de sauvegarde dedans : choisissez le dossier ou le ZIP que JKSV ou Checkpoint a faits."
+          }
+        }
+      }
+    },
+    "switchSave.problem.notAGame" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is not a game’s save, but system, BCAT or cache data."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce n’est pas la sauvegarde d’une partie, mais des données du système, BCAT ou de cache."
+          }
+        }
+      }
+    },
+    "switchSave.problem.otherGame" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is the save of another game: %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "C’est la sauvegarde d’un autre jeu : %@."
+          }
+        }
+      }
+    },
+    "switchSave.problem.several" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It holds more than one save: choose the folder or the ZIP of one."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il contient plus d’une sauvegarde : choisissez le dossier ou le ZIP d’une seule."
+          }
+        }
+      }
+    },
+    "switchSave.problem.startFirst" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is the console’s save: start the game once, then come back, and Cartouche will know where it goes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "C’est la sauvegarde de la console : lancez le jeu une fois, puis revenez, et Cartouche saura où la mettre."
+          }
+        }
+      }
+    },
+    "switchSave.problem.unreadable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is not a save Cartouche can read."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce n’est pas une sauvegarde que Cartouche sait lire."
+          }
+        }
+      }
+    },
+    "switchSave.putBack" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Put back the game from before the import"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remettre la partie d’avant l’import"
+          }
+        }
+      }
+    },
+    "switchSave.putBack.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The game from before the import is back."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La partie d’avant l’import est revenue."
+          }
+        }
+      }
+    },
+    "switchSave.putBack.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche kept this iPhone’s save when the game from your Switch replaced it, on %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche a gardé la sauvegarde de cet iPhone quand la partie de votre Switch l’a remplacée, le %@."
+          }
+        }
+      }
+    },
+    "switchSave.putBack.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It replaces the game from your Switch on this iPhone, which Cartouche keeps too."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elle remplace la partie de votre Switch sur cet iPhone, que Cartouche garde aussi."
+          }
+        }
+      }
+    },
+    "switchSave.putBack.question" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Put back the game from before the import?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remettre la partie d’avant l’import ?"
+          }
+        }
+      }
+    },
+    "switchSave.running" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quit the game to bring in or send its save."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quittez le jeu pour reprendre ou envoyer sa sauvegarde."
+          }
+        }
+      }
+    },
+    "switchSave.send.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Put the ZIP on your Switch’s microSD card, in the game’s folder of JKSV (JKSV, then the game’s name), then restore it in JKSV over the game’s save."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettez le ZIP sur la carte microSD de votre Switch, dans le dossier du jeu de JKSV (JKSV, puis le nom du jeu), puis restaurez-le dans JKSV sur la sauvegarde du jeu."
+          }
+        }
+      }
+    },
+    "switchSave.send.header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send this game to the Switch"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoyer cette partie vers la Switch"
+          }
+        }
+      }
+    },
+    "switchSave.send.make" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make the ZIP for JKSV"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préparer le ZIP pour JKSV"
+          }
+        }
+      }
+    },
+    "switchSave.send.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This game has no save on this iPhone yet."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce jeu n’a pas encore de sauvegarde sur cet iPhone."
+          }
+        }
+      }
+    },
+    "switchSave.send.share" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partager %@"
+          }
+        }
+      }
+    },
+    "switchSave.switch2" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No public tool exports a Switch 2 game’s save yet."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucun outil public n’exporte encore la sauvegarde d’un jeu de la Switch 2."
+          }
+        }
+      }
+    },
+    "switchSave.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Switch saves"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sauvegardes de la Switch"
+          }
+        }
+      }
+    },
+    "switchSave.version" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version on this iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version sur cet iPhone"
           }
         }
       }
@@ -11663,6 +14570,23 @@
         }
       }
     },
+    "system.releaseNotes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What’s new"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouveautés"
+          }
+        }
+      }
+    },
     "system.signature" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11737,13 +14661,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche renews itself each time you open it in its last 3 days, with LocalDevVPN on. Once expired, it no longer opens: install it again with the Cartouche Installer."
+            "value" : "Cartouche renews itself each time you open it in its last 3 days, and connects LocalDevVPN for it. Once expired, it no longer opens: install it again with the Cartouche Installer."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche se renouvelle seul chaque fois que vous l’ouvrez dans ses 3 derniers jours, avec LocalDevVPN activé. Expiré, il ne s’ouvre plus : réinstallez-le avec l’Installeur Cartouche."
+            "value" : "Cartouche se renouvelle seul chaque fois que vous l’ouvrez dans ses 3 derniers jours, et connecte LocalDevVPN pour cela. Expiré, il ne s’ouvre plus : réinstallez-le avec l’Installeur Cartouche."
           }
         }
       }
@@ -11935,19 +14859,36 @@
         }
       }
     },
+    "system.updates.download" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download Cartouche %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Télécharger Cartouche %@"
+          }
+        }
+      }
+    },
     "system.updates.footer" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "New versions install without a computer, with LocalDevVPN connected. Cartouche then closes: open it again. Your games and saves stay."
+            "value" : "New versions install without a computer, through LocalDevVPN, which Cartouche connects. Cartouche then closes: open it again. Your games and saves stay."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les nouvelles versions s’installent sans ordinateur, avec LocalDevVPN connecté. Cartouche se ferme ensuite : rouvrez-le. Vos jeux et sauvegardes restent."
+            "value" : "Les nouvelles versions s’installent sans ordinateur, par LocalDevVPN, que Cartouche connecte. Cartouche se ferme ensuite : rouvrez-le. Vos jeux et sauvegardes restent."
           }
         }
       }
@@ -11975,13 +14916,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Finish setting up Cartouche first."
+            "value" : "Finish setting up Cartouche first, or install this version from a computer with the Cartouche Installer, over this copy: your games and saves stay."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Terminez d’abord la configuration de Cartouche."
+            "value" : "Terminez d’abord la configuration de Cartouche, ou installez cette version depuis un ordinateur avec l’Installeur Cartouche, par-dessus cette copie : vos jeux et sauvegardes restent."
           }
         }
       }
@@ -12400,13 +15341,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Each start of Cartouche, game installs, updates, renewals, Apple ID sign-ins, signing certificates you import, how the Files picker of each import went, and errors, by their codes and the step they stopped at."
+            "value" : "Each start of Cartouche, game installs, updates, renewals, resets, Apple ID sign-ins, signing certificates you import, how the Files picker of each import went, and errors, by their codes and the step they stopped at."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chaque ouverture de Cartouche, les installations de jeux, les mises à jour, les renouvellements, les connexions au compte Apple, les certificats de signature importés, le déroulement du sélecteur de fichiers de chaque import et les erreurs, par leurs codes et l’étape où elles se sont arrêtées."
+            "value" : "Chaque ouverture de Cartouche, les installations de jeux, les mises à jour, les renouvellements, les réinitialisations, les connexions au compte Apple, les certificats de signature importés, le déroulement du sélecteur de fichiers de chaque import et les erreurs, par leurs codes et l’étape où elles se sont arrêtées."
           }
         }
       }
@@ -12802,6 +15743,23 @@
         }
       }
     },
+    "updates.download" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Download"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Télécharger"
+          }
+        }
+      }
+    },
     "updates.failed.message" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12961,13 +15919,47 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You have version %@. With LocalDevVPN connected, Cartouche installs the new one without a computer, then closes: open it again. Your games and saves stay."
+            "value" : "You have version %@. Cartouche installs the new one without a computer, through LocalDevVPN, then closes: open it again. Your games and saves stay."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vous avez la version %@. Avec LocalDevVPN connecté, Cartouche installe la nouvelle sans ordinateur, puis se ferme : rouvrez-le. Vos jeux et sauvegardes restent."
+            "value" : "Vous avez la version %@. Cartouche installe la nouvelle sans ordinateur, par LocalDevVPN, puis se ferme : rouvrez-le. Vos jeux et sauvegardes restent."
+          }
+        }
+      }
+    },
+    "updates.offer.onComputer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You have version %@. Install the new one from the Cartouche Installer on your computer, with your certificate: your games and saves stay."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous avez la version %@. Installez la nouvelle depuis l’Installeur Cartouche sur votre ordinateur, avec votre certificat : vos jeux et sauvegardes restent."
+          }
+        }
+      }
+    },
+    "updates.offer.onIPhone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You have version %@. Download the new one, sign it in your signing app as the first time, then install it over this one: your games and saves stay."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous avez la version %@. Téléchargez la nouvelle, signez-la dans votre app de signature comme la première fois, puis installez-la par-dessus celle-ci : vos jeux et sauvegardes restent."
           }
         }
       }
@@ -13080,13 +16072,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche closed before version %@ was installed. Try again from the System page, with LocalDevVPN connected."
+            "value" : "Cartouche closed before version %@ was installed. Try again from the System page."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche s’est fermé avant que la version %@ soit installée. Réessayez depuis la page Système, avec LocalDevVPN connecté."
+            "value" : "Cartouche s’est fermé avant que la version %@ soit installée. Réessayez depuis la page Système."
           }
         }
       }
@@ -13182,13 +16174,47 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Renew it on the System page, with LocalDevVPN connected."
+            "value" : "Renew it on the System page."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Renouvelez-le depuis la page Système, avec LocalDevVPN connecté."
+            "value" : "Renouvelez-le depuis la page Système."
+          }
+        }
+      }
+    },
+    "whatsNew.continue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuer"
+          }
+        }
+      }
+    },
+    "whatsNew.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What’s new in Cartouche %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouveautés de Cartouche %@"
           }
         }
       }

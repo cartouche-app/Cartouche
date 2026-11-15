@@ -16,6 +16,10 @@
       "en": "On this Mac: %@",
       "fr": "Sur ce Mac : %@"
     },
+    "sheet.noSheet.message": {
+      "en": "Cartouche has no sheet for this game yet.",
+      "fr": "Cartouche n’a pas encore de fiche pour ce jeu."
+    },
     "sheet.onThisIPhone": {
       "en": "On this Mac",
       "fr": "Sur ce Mac"

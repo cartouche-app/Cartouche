@@ -384,9 +384,22 @@ struct CartoucheStorageServerForm: View {
     @Environment(\.dismiss) private var dismiss
     private let isNew: Bool
 
+    #if CARTOUCHE_GALLERY
+    /// What the launcher's gallery (launcher/Gallery) shows on the form once
+    /// the player signed in: the password typed, and why the server did not
+    /// sign them in.
+    static var gallery: (password: String, problem: CartoucheReport?)?
+    #endif
+
     init(server: CartoucheStorageServer) {
         _server = State(initialValue: server)
         isNew = CartoucheStorageSettings.shared.server(server.id) == nil
+        #if CARTOUCHE_GALLERY
+        if let gallery = Self.gallery {
+            _password = State(initialValue: gallery.password)
+            _problem = State(initialValue: gallery.problem)
+        }
+        #endif
     }
 
     private var canSave: Bool {
@@ -799,7 +812,20 @@ final class CartoucheSMBBrowser: ObservableObject {
     private var lookups: [String: NWConnection] = [:]
     private let queue = DispatchQueue(label: "Cartouche SMB browser")
 
+    #if CARTOUCHE_GALLERY
+    /// What the launcher's gallery (launcher/Gallery) shows in place of
+    /// Bonjour's answers: made-up servers, never those of the network the
+    /// gallery runs on.
+    static var gallery: [Server]?
+    #endif
+
     func start() {
+        #if CARTOUCHE_GALLERY
+        if let gallery = Self.gallery {
+            found = gallery
+            return
+        }
+        #endif
         guard browser == nil else { return }
         let browser = NWBrowser(for: .bonjour(type: "_smb._tcp", domain: nil), using: .tcp)
         browser.browseResultsChangedHandler = { [weak self] results, _ in
@@ -1015,91 +1041,128 @@ struct CartoucheStorageFolderBrowser: View {
 
 @available(iOS 17.0, *)
 struct CartoucheSavesSection: View {
-    let target: CartoucheSaveTarget
+    /// The game's saves; nil for a game that never started, which has no
+    /// data folder yet: a save can come from the Switch then.
+    let target: CartoucheSaveTarget?
     /// Whether the game runs behind the console, writing its saves: they
     /// are neither synced nor put back meanwhile.
     let isRunning: Bool
+    /// The game, for its saves between the player's Switch and this
+    /// iPhone (CartoucheSwitchSaveView).
+    let switchGame: CartoucheSwitchSaveGame?
     @ObservedObject var backups = CartoucheSaveBackups.shared
     @ObservedObject private var settings = CartoucheStorageSettings.shared
     @ObservedObject private var reach = CartoucheStorageReach.shared
     @State private var syncing = false
 
-    init(target: CartoucheSaveTarget, isRunning: Bool = false) {
+    init(target: CartoucheSaveTarget?, isRunning: Bool = false, switchGame: CartoucheSwitchSaveGame? = nil) {
         self.target = target
         self.isRunning = isRunning
+        self.switchGame = switchGame
     }
+
+    /// The row of the saves between the Switch and this iPhone, which a
+    /// list can scroll to.
+    static let switchRow = "switchSaves"
+
+    #if CARTOUCHE_GALLERY
+    /// Where the row of the Switch saves is in the window, once the list has
+    /// laid it out, for the gallery's screenshot of the sheet at its saves.
+    static var galleryRowFrame: CGRect?
+    #endif
 
     var body: some View {
         Section {
-            if let location = settings.location(.saves) {
-                if let news = backups.news[target.key], let line = Self.line(of: news) {
-                    Label(line, systemImage: news.kept == nil ? "arrow.down.circle.fill" : "arrow.triangle.branch")
-                        .font(.footnote)
-                }
-                LabeledContent(CartoucheText.savesLastSync) {
-                    if let date = backups.lastSync[target.key] {
-                        Text(date, format: .relative(presentation: .named))
-                    } else {
-                        Text(CartoucheText.savesNoCopy)
-                    }
-                }
-                if settings.isReadOnly(.saves) {
-                    Text(CartoucheText.savesReadOnly)
-                        .font(.footnote)
-                        .foregroundStyle(Color.orange)
-                } else {
-                    Button {
-                        syncing = true
-                        Task {
-                            _ = await backups.syncNow(target)
-                            syncing = false
-                        }
-                    } label: {
-                        HStack {
-                            Label(CartoucheText.savesSyncNow(location.server.name), systemImage: "arrow.triangle.2.circlepath")
-                            if syncing || backups.isSyncing {
-                                Spacer()
-                                ProgressView()
-                            }
-                        }
-                    }
-                    .disabled(syncing || backups.isSyncing || isRunning)
-                }
+            if let target {
+                rows(of: target)
+            }
+            if let switchGame {
                 NavigationLink {
-                    CartoucheSaveCopiesView(target: target)
+                    CartoucheSwitchSaveView(game: switchGame, isRunning: isRunning)
                 } label: {
-                    Label(CartoucheText.savesPutBack, systemImage: "clock.arrow.circlepath")
+                    Label(CartoucheText.switchSaveTitle, systemImage: "arrow.left.arrow.right")
                 }
-                .disabled(isRunning)
-                if isRunning {
-                    Text(CartoucheText.savesRunning)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-                if reach.isOffline(location.server.id) {
-                    let away = CartoucheStorageOffline(location.server)
-                    Label(away.localizedDescription, systemImage: away.symbol)
-                        .font(.footnote)
-                        .foregroundStyle(Color.orange)
-                    if backups.waiting.contains(target.key) {
-                        Text(CartoucheText.savesWaitingHere)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                } else if let problem = backups.problemReport {
-                    Text(problem.message)
-                        .font(.footnote)
-                        .foregroundStyle(Color.orange)
-                    CartoucheReportButton(report: problem)
-                }
-            } else {
-                Text(CartoucheText.savesNoFolder)
-                    .foregroundStyle(.secondary)
+                .id(Self.switchRow)
+                #if CARTOUCHE_GALLERY
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { Self.galleryRowFrame = $0 }
+                #endif
             }
         } header: {
             Text(CartoucheText.savesTitle)
         } footer: {
-            Text(CartoucheText.savesFooter(CartoucheSaveBackups.kept))
+            if target != nil {
+                Text(CartoucheText.savesFooter(CartoucheSaveBackups.kept))
+            }
+        }
+    }
+
+    /// The rows of TARGET's saves, kept in step with the saves folder.
+    @ViewBuilder
+    private func rows(of target: CartoucheSaveTarget) -> some View {
+        if let location = settings.location(.saves) {
+            if let news = backups.news[target.key], let line = Self.line(of: news) {
+                Label(line, systemImage: news.kept == nil ? "arrow.down.circle.fill" : "arrow.triangle.branch")
+                    .font(.footnote)
+            }
+            LabeledContent(CartoucheText.savesLastSync) {
+                if let date = backups.lastSync[target.key] {
+                    Text(date, format: .relative(presentation: .named))
+                } else {
+                    Text(CartoucheText.savesNoCopy)
+                }
+            }
+            if settings.isReadOnly(.saves) {
+                Text(CartoucheText.savesReadOnly)
+                    .font(.footnote)
+                    .foregroundStyle(Color.orange)
+            } else {
+                Button {
+                    syncing = true
+                    Task {
+                        _ = await backups.syncNow(target)
+                        syncing = false
+                    }
+                } label: {
+                    HStack {
+                        Label(CartoucheText.savesSyncNow(location.server.name), systemImage: "arrow.triangle.2.circlepath")
+                        if syncing || backups.isSyncing {
+                            Spacer()
+                            ProgressView()
+                        }
+                    }
+                }
+                .disabled(syncing || backups.isSyncing || isRunning)
+            }
+            NavigationLink {
+                CartoucheSaveCopiesView(target: target)
+            } label: {
+                Label(CartoucheText.savesPutBack, systemImage: "clock.arrow.circlepath")
+            }
+            .disabled(isRunning)
+            if isRunning {
+                Text(CartoucheText.savesRunning)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            if reach.isOffline(location.server.id) {
+                let away = CartoucheStorageOffline(location.server)
+                Label(away.localizedDescription, systemImage: away.symbol)
+                    .font(.footnote)
+                    .foregroundStyle(Color.orange)
+                if backups.waiting.contains(target.key) {
+                    Text(CartoucheText.savesWaitingHere)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            } else if let problem = backups.problemReport {
+                Text(problem.message)
+                    .font(.footnote)
+                    .foregroundStyle(Color.orange)
+                CartoucheReportButton(report: problem)
+            }
+        } else {
+            Text(CartoucheText.savesNoFolder)
+                .foregroundStyle(.secondary)
         }
     }
 

@@ -1491,6 +1491,16 @@ final class CartoucheGameActions: ObservableObject {
                                    documents: container.containerURL.appendingPathComponent("Documents", isDirectory: true))
     }
 
+    /// Where the game keeps its saves, its data folder made now if it never
+    /// started, as on its first start: for a save the player brings from
+    /// their Switch before then (CartoucheSwitchSaveView). Nil for an app
+    /// that is not an nxnative game.
+    func savesToImport(of app: LCAppModel) -> CartoucheSaveTarget? {
+        guard CartoucheCatalog.shared.gameTitle(of: app) != nil else { return nil }
+        _ = Self.dataFolder(of: app)
+        return saves(of: app)
+    }
+
     /// Where an nxnative game writes its logs, in the data folder it plays
     /// with, for Share the log on its sheet (CartoucheGameLogView); nil for
     /// any other app, or a game that has no data folder yet.

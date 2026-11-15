@@ -10,7 +10,11 @@
 //  description, the player's or IGDB's (CartoucheGameSummaryView), the time
 //  the player played it and the space it takes (CartoucheGameStats), what
 //  stops the game on this iPhone, if anything (what it needs folds into
-//  one line when this iPhone has it all), the copies of its saves, Edit
+//  one line when this iPhone has it all), its build on the player's Mac,
+//  with the button that asks the Mac for one, the one that stops it, and
+//  the way to all the Mac's builds, once Cartouche reaches the Mac and its
+//  Cartouche Builder knows the game (CartoucheMacBuildsView),
+//  the copies of its saves, Edit
 //  the game's info for the player's own game (CartoucheGameInfoView), with
 //  what IGDB has of a game Cartouche does not know, after which the sheet
 //  goes back to its top, where the name and cover show; for a game installed
@@ -51,6 +55,11 @@ struct CartoucheGameSheetView: View {
     @ObservedObject private var actions = CartoucheGameActions.shared
     @ObservedObject private var keeping = CartoucheGameKeeping.shared
     @ObservedObject private var reach = CartoucheStorageReach.shared
+    #if os(iOS)
+    /// The player's Mac, asked its builds while the sheet shows: on the
+    /// Mac, the console is the app that builds, and its window shows them.
+    @StateObject private var macBuilds = CartoucheMacBuildsWatch()
+    #endif
 
     // Written out: the private state above would make the synthesized
     // initializer private.
@@ -108,6 +117,22 @@ struct CartoucheGameSheetView: View {
     /// The last row of the game's management.
     private static let management = "management"
 
+    #if os(iOS)
+    /// The game's title IDs, as the player's Mac may know it: its regions',
+    /// and those its copies say.
+    private var macTitleIds: [String] {
+        var seen = Set<String>()
+        let ids = (entry.game?.titleIds ?? []) + [entry.titleId, entry.ownTitleId, entry.stored?.titleId].compactMap { $0 }
+        return ids.filter { seen.insert($0.uppercased()).inserted }
+    }
+    #endif
+
+    #if CARTOUCHE_GALLERY
+    /// How the gallery brings the sheet down to its saves, for their
+    /// screenshot, given SwiftUI's scroll to the row of the Switch saves.
+    static var galleryToSaves: ((@escaping @MainActor () -> Void) async -> Void)?
+    #endif
+
     var body: some View {
         ScrollViewReader { reader in
             List {
@@ -157,9 +182,22 @@ struct CartoucheGameSheetView: View {
                     }
                 }
 
+                #if os(iOS)
+                CartoucheMacBuildsSection(titleIds: macTitleIds, isOwned: entry.isOwned, watch: macBuilds)
+                #endif
+
+                // The game's saves, with, on the iPhone, its saves between the
+                // player's Switch and this iPhone; the Mac's come with its
+                // saves page (builder/mac/console/unshared.json).
+                #if os(iOS)
+                if let app = entry.app, let game = switchGame(of: app) {
+                    CartoucheSavesSection(target: game.target, isRunning: actions.isRunning(app), switchGame: game)
+                }
+                #else
                 if let app = entry.app, let saves = actions.saves(of: app) {
                     CartoucheSavesSection(target: saves, isRunning: actions.isRunning(app))
                 }
+                #endif
 
                 if entry.isOwned {
                     infoSection
@@ -187,6 +225,24 @@ struct CartoucheGameSheetView: View {
             }
             .scrollContentBackground(.hidden)
             .background(CartoucheStage(key: entry.tileKey, art: entry.backdrop))
+            #if os(iOS)
+            .onAppear { macBuilds.start() }
+            .onDisappear { macBuilds.stop() }
+            #endif
+            #if CARTOUCHE_GALLERY
+            // The gallery's sheet on the game's build on the Mac (screen:
+            // sheet-mac): the game's build in the middle of the screen.
+            // Twice: the list had only guessed the heights of the rows on
+            // the way, which the first scroll lays out, and the second lands
+            // where asked.
+            .task {
+                guard CartoucheMacBuildsWatch.galleryScrolls else { return }
+                for _ in 0..<2 {
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    reader.scrollTo(CartoucheMacBuildsSection.anchor, anchor: .center)
+                }
+            }
+            #endif
             // What the player gave in Edit the game's info shows at once:
             // the sheet goes back to the game's name and cover.
             .onChange(of: entry.player) { _, _ in
@@ -223,6 +279,12 @@ struct CartoucheGameSheetView: View {
                     }
                 }
             }
+            // The gallery's screenshot of the sheet's saves, further down,
+            // once the game's saves are on the sheet.
+            .task(id: entry.app != nil) {
+                guard entry.app != nil, let toSaves = Self.galleryToSaves else { return }
+                await toSaves { reader.scrollTo(CartoucheSavesSection.switchRow, anchor: .center) }
+            }
             #endif
         }
         // The header names the game: the bar above it stays empty.
@@ -230,6 +292,20 @@ struct CartoucheGameSheetView: View {
         .navigationBarTitleDisplayMode(.inline)
         #endif
     }
+
+    #if os(iOS)
+    /// The game's saves, and the game, for its saves between the player's
+    /// Switch and this iPhone; nil for an app that is not an nxnative game.
+    private func switchGame(of app: LCAppModel) -> CartoucheSwitchSaveGame? {
+        let target = actions.saves(of: app)
+        guard target != nil || CartoucheCatalog.shared.gameTitle(of: app) != nil else { return nil }
+        return CartoucheSwitchSaveGame(name: entry.name, titleId: target?.titleId ?? entry.titleId,
+                                       version: CartoucheInstalledBuilds.installedBuild(of: app).version,
+                                       isSwitch2: entry.platform == "switch2", target: target,
+                                       makeTarget: { actions.savesToImport(of: app) },
+                                       isRunningNow: { actions.isRunning(app) })
+    }
+    #endif
 
     // MARK: Header
 

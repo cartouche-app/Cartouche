@@ -100,6 +100,24 @@
       "kind": "iphone",
       "why": "The question an install asks on an iPhone whose GPU cannot read BC textures (A16 and older): every Mac Cartouche runs on reads them."
     },
+    "CartoucheLocalDevVPN.swift": {
+      "kind": "iphone",
+      "why": "Cartouche having LocalDevVPN connect, by its link, before the built-in SideStore reaches the iPhone (sign-in, renewal, update): LocalDevVPN is the iPhone's alone, and a Mac signs and installs without it."
+    },
+    "CartoucheMacBuildsPage.swift": {
+      "kind": "mac",
+      "why": "All the paired Mac's builds, asked over the bridge from System: on the Mac, the console is the app that builds, and its window's Builds page shows and drives them.",
+      "mac": "CartoucheBuilder/ActivityView.swift"
+    },
+    "CartoucheMacBuildsView.swift": {
+      "kind": "mac",
+      "why": "A game's build on the paired Mac, asked over the bridge from its sheet: on the Mac, the console is the app that builds, and the game's sheet in its window shows its build, Build, Stop and Follow.",
+      "mac": "CartoucheBuilder/GameDetailView.swift"
+    },
+    "CartoucheOwnSignature.swift": {
+      "kind": "iphone",
+      "why": "How Cartouche was signed on the iPhone (by the built-in SideStore, the Cartouche Installer or a signing app there) and what the player's own certificate gives it (Increased Memory Limit, the games' keychain groups): the Mac's app is signed by its own release, and a Mac game by nxnative's build."
+    },
     "CartouchePickerMeasures.swift": {
       "kind": "iphone",
       "why": "What Cartouche can measure of iOS's Files picker."
@@ -113,6 +131,10 @@
       "kind": "mac",
       "why": "Cartouche's versions as the built-in SideStore's source lists them: the Mac's app updates itself from its own releases.",
       "mac": "BuilderKit/Updater.swift"
+    },
+    "CartoucheReleaseNotes.swift": {
+      "kind": "iphone",
+      "why": "The notes of each version of Cartouche on the iPhone (app/releases), which the iPhone's app carries, and when What's new shows them after its update: the Mac's app updates itself from its own releases."
     },
     "CartoucheRenewal.swift": {
       "kind": "mac",
@@ -132,6 +154,18 @@
       "kind": "later",
       "why": "The report under each error and its Copy the report button: with the console's measurements on the Mac; the console's stand-in keeps the Builder's own reports meanwhile.",
       "step": 8
+    },
+    "CartoucheReset.swift": {
+      "kind": "iphone",
+      "why": "System › Reset Cartouche: erases what LiveContainer, the built-in SideStore and the iPhone's keychain keep for Cartouche, then starts it again through LiveContainer: none of them is on the Mac."
+    },
+    "CartoucheResetPlan.swift": {
+      "kind": "iphone",
+      "why": "What a reset of Cartouche erases and keeps on the iPhone, LiveContainer's and SideStore's places and keys among them (CartoucheReset.swift)."
+    },
+    "CartoucheResetView.swift": {
+      "kind": "iphone",
+      "why": "System › Reset Cartouche, its page: the iPhone's reset (CartoucheReset.swift)."
     },
     "CartoucheRootView.swift": {
       "kind": "mac",
@@ -201,6 +235,21 @@
       "why": "The Storage page: with the console's storage and the library the iPhone and the Mac share.",
       "step": 7
     },
+    "CartoucheSwitchSave.swift": {
+      "kind": "later",
+      "why": "A save exported on the player's Switch with JKSV or Checkpoint, checked and put in place of a game's save, and the save it replaced kept and put back: on the Mac, with the console's storage and saves, where a game's saves are those of nxnative's app for the Mac (MacSaves).",
+      "step": 7
+    },
+    "CartoucheSwitchSaveArchive.swift": {
+      "kind": "later",
+      "why": "The folder or ZIP archive of a save exported on the Switch, read, and a game's save made into a ZIP archive for JKSV: on the Mac, with the console's storage and saves.",
+      "step": 7
+    },
+    "CartoucheSwitchSaveView.swift": {
+      "kind": "later",
+      "why": "A game's saves between the player's Switch and this iPhone, which the sheet's saves section opens (CartoucheStorageView.swift): on the Mac, with the console's storage and saves.",
+      "step": 7
+    },
     "CartoucheSystemView.swift": {
       "kind": "later",
       "why": "The System page: with the console's settings on the Mac; System opens the Builder meanwhile.",
@@ -220,9 +269,18 @@
       "why": "System › Game measurements: with the console's measurements on the Mac.",
       "step": 8
     },
+    "CartoucheTextReset.swift": {
+      "kind": "iphone",
+      "why": "The words of Reset Cartouche, the iPhone's alone (CartoucheReset.swift)."
+    },
     "CartoucheTextShortcuts.swift": {
       "kind": "iphone",
       "why": "The words of Siri and Home Screen (CartoucheShortcuts.swift, CartoucheGameShortcutsView.swift), the iPhone's alone."
+    },
+    "CartoucheTextSwitchSave.swift": {
+      "kind": "later",
+      "why": "The words of a game's saves between the player's Switch and this iPhone (CartoucheSwitchSaveView.swift): on the Mac, with the console's storage and saves.",
+      "step": 7
     },
     "CartoucheUpdateView.swift": {
       "kind": "mac",
@@ -237,6 +295,10 @@
     "CartoucheVPN.swift": {
       "kind": "iphone",
       "why": "Whether LocalDevVPN is on, which SideStore needs on the iPhone."
+    },
+    "CartoucheWhatsNewView.swift": {
+      "kind": "iphone",
+      "why": "What's new over the iPhone's console after an update of Cartouche on the iPhone, and System › What's new: the Mac's app updates itself from its own releases."
     }
   }
 }

@@ -702,10 +702,10 @@ def main(args: argparse.Namespace) -> None:
 # DM_LAUNCHER=0 or --no-launcher; the game's save in DM_SAVE, else in
 # ~/Library/Application Support/nxnative/<ID>/save. The game plays once
 # more: its save's progress.txt gains " +mac". Beside the save, played.txt
-# says what the game found: its window, DM_SAVE_SYNC, the title of the Home
-# button's prompt, its progress. For the tests, NXSIM_LOGS puts the log
-# elsewhere, NXSIM_PLAY makes the game last that many seconds, NXSIM_EXIT
-# is the host's exit code (0, a quit).
+# says what the game found: its window, DM_FULLSCREEN, DM_SAVE_SYNC, the
+# title of the Home button's prompt, its progress. For the tests, NXSIM_LOGS
+# puts the log elsewhere, NXSIM_PLAY makes the game last that many seconds,
+# NXSIM_EXIT is the host's exit code (0, a quit).
 LAUNCHER = """#!/bin/sh
 ID=@ID@
 NAME=@NAME@
@@ -722,6 +722,7 @@ for ARG in "$@"; do [ "$ARG" = --no-launcher ] && WINDOW=0; done
 FOUND=$(cat "$SAVE/progress.txt" 2>/dev/null)
 {
   echo "window=$WINDOW"
+  echo "fullscreen=${DM_FULLSCREEN-unset}"
   echo "save_sync=${DM_SAVE_SYNC-unset}"
   echo "quit_title=$(printf '%s\\n' "$DM_HOME_QUIT_TEXT" | sed -n 2p)"
   echo "found=$FOUND"

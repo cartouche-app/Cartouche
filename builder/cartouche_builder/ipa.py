@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import errno
 import os
-import plistlib
 import re
 import shutil
 import subprocess
@@ -24,7 +23,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-from . import titles
+from . import plists, titles
 from .i18n import t
 
 INFO_PLIST = re.compile(r"^Payload/[^/]+\.app/Info\.plist$")
@@ -59,8 +58,10 @@ def read_info(path: Path) -> IpaInfo | None:
             if len(entries) != 1 or entries[0].file_size > 4 << 20:
                 return None
             entry = entries[0]
-            data = plistlib.loads(archive.read(entry))
-    except (OSError, zipfile.BadZipFile, zipfile.LargeZipFile, plistlib.InvalidFileException, ValueError, EOFError):
+            data = plists.loads(archive.read(entry))
+    except (OSError, zipfile.BadZipFile, zipfile.LargeZipFile, ValueError, EOFError, NotImplementedError, RuntimeError):
+        # An archive another tool made: damaged, compressed in a way
+        # Python cannot read, or encrypted.
         return None
     if not isinstance(data, dict):
         return None

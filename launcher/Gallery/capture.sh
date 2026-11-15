@@ -22,7 +22,9 @@
 # test, which did this before, failed now and then to close the gallery
 # between two scenarios ("Failed to terminate"). The gallery is opened once
 # on each simulator before its scenarios, with more time: its first launch
-# after the install can take minutes.
+# after the install can take minutes. The install itself, right after the
+# iPad's first boot on one of GitHub's Macs, can go unanswered for minutes:
+# it is tried once more a minute later (install.py).
 #
 # A scenario that fails is named, with the screen as it was
 # (failed-<scenario>.png in OUT), the others go on, and the script fails at
@@ -42,7 +44,8 @@ OUT="$(cd "$1" && pwd)"
 BUILD="$HERE/Build"
 
 # The gallery, built once for every simulator (build.sh): when the UI tests
-# ran first, as in CI, this finds their build done.
+# ran first on this Mac, this finds their build done. The CI takes the
+# screenshots on a Mac of their own, as the UI tests run (screens.yml).
 "$HERE/build.sh"
 rm -rf "$BUILD/raw"
 mkdir -p "$BUILD/raw"
@@ -58,6 +61,8 @@ HERE, OUT, BUILD = (Path(path) for path in sys.argv[1:4])
 # When a screen is drawn and still, beside this script.
 sys.path.insert(0, str(HERE))
 import settled  # noqa: E402
+# How the gallery is installed on a simulator just booted.
+import install  # noqa: E402
 BUNDLE = "io.github.clabeuhtegrite.cartouche.gallery"
 APP = BUILD / "DerivedData/Build/Products/Debug-iphonesimulator/CartoucheGallery.app"
 document = json.loads((HERE / "scenarios.json").read_text())
@@ -146,7 +151,8 @@ def simulator(wanted):
 
 def arguments(scenario):
     """The gallery's launch arguments (Sources/GalleryApp.swift)."""
-    language = document["language"]
+    # A scenario with a language of its own is shown in it, the gallery's otherwise.
+    language = scenario.get("language", document["language"])
     args = ["-AppleLanguages", f"({language})", "-AppleLocale", "fr_FR" if language == "fr" else "en_US",
             "-GalleryScreen", scenario["screen"],
             "-GallerySetup", "1" if scenario["setup"] else "0",
@@ -169,6 +175,8 @@ def arguments(scenario):
         args += ["-GalleryWork", scenario["work"]]
     if scenario.get("category"):
         args += ["-GalleryCategory", scenario["category"]]
+    if scenario.get("signing"):
+        args += ["-GallerySigning", scenario["signing"]]
     return args
 
 
@@ -353,7 +361,7 @@ for device in sorted({s.get("device", "") for s in document["scenarios"]}):
     try:
         run("xcrun", "simctl", "bootstatus", udid, "-b", timeout=900)
         print(f"   booted {time.monotonic() - since:.0f} s after asked", flush=True)
-        run("xcrun", "simctl", "install", udid, str(APP))
+        install.install(run, Failure, udid, APP, name)
     except Failure as error:
         failures.append(f"{name}: {error}")
         continue

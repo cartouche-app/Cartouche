@@ -108,17 +108,24 @@ final class CartoucheAccount: ObservableObject {
     private var pending: Pending?
     private var vpnWaiting: CartoucheVPNWait?
     private var waiting: Task<Void, Never>?
-    /// How long the player waited for LocalDevVPN before what runs now, and
-    /// whether they went on without it, for the measurements.
+    /// How long the player waited for LocalDevVPN before what runs now,
+    /// whether they went on without it, and whether Cartouche opened it,
+    /// for the measurements.
     private var vpnWait: TimeInterval?
     private var wentOnWithoutVPN = false
+    private var openedVPN = false
+    /// Whether Cartouche has LocalDevVPN connect by itself, to sign in
+    /// again by itself.
+    private var connectingByItself = false
 
     /// Whether Cartouche started the step that registers this iPhone by
     /// itself, and when it does so (CartoucheDeviceStepWatch).
     private var deviceStepIsAutomatic = false
     private var deviceStepWatch = CartoucheDeviceStepWatch()
 
-    private static let pauseKey = "CartoucheSignInPause"
+    /// Where the pause is kept, which a reset of Cartouche keeps while it
+    /// counts (CartoucheReset).
+    static let pauseKey = "CartoucheSignInPause"
     private static let lastSignInKey = "CartoucheLastSignIn"
 
     private init() {
@@ -139,13 +146,7 @@ final class CartoucheAccount: ObservableObject {
 
     /// Whether LocalDevVPN is connected: always, in the simulator, which has
     /// none, and where SideStore does not go through it.
-    private static var vpnConnected: Bool {
-        #if targetEnvironment(simulator)
-        return true
-        #else
-        return CartoucheVPN.isConnected
-        #endif
-    }
+    private static var vpnConnected: Bool { CartoucheLocalDevVPN.isConnected }
 
     // MARK: The bridge to the built-in SideStore
 
@@ -177,6 +178,7 @@ final class CartoucheAccount: ObservableObject {
         isAutomatic = false
         vpnWait = nil
         wentOnWithoutVPN = false
+        openedVPN = false
         // SideStore keeps the Apple ID only once signed in.
         CartoucheReports.redactTyped(accounts: [appleID])
         if waitingForVPN && !Self.vpnConnected {
@@ -223,15 +225,38 @@ final class CartoucheAccount: ObservableObject {
     /// password it keeps, for the certificate that signs Cartouche. Returns
     /// whether it tried: not while SideStore keeps none, while Apple's limit
     /// on sign-ins holds, or without LocalDevVPN, which the setup tries again
-    /// with each time Cartouche comes to the front.
+    /// with each time Cartouche comes to the front. Without LocalDevVPN,
+    /// Cartouche first has it connect by itself, when it can
+    /// (CartoucheLocalDevVPN), then checks the setup again, which comes
+    /// back here.
     @discardableResult
     func signInAgain() -> Bool {
-        guard !CartoucheImportedSigning.accountSigningDisabled, phase == nil, pausedUntil == nil, Self.vpnConnected,
+        guard !CartoucheImportedSigning.accountSigningDisabled, phase == nil, pausedUntil == nil,
               let appleID = CartoucheStoreKeychain.string("appleIDEmailAddress"),
               let password = CartoucheStoreKeychain.string("appleIDPassword") else { return false }
+        guard Self.vpnConnected else {
+            connectByItself(for: "Signing in again") { CartoucheSetup.shared.refresh() }
+            return false
+        }
         signIn(appleID: appleID, password: password, waitingForVPN: false)
         isAutomatic = phase != nil
         return true
+    }
+
+    /// Has LocalDevVPN connect by itself, for WHAT Cartouche does by itself
+    /// without the player, then runs AGAIN once it is connected: once at a
+    /// time, and as CartoucheVPNConnect allows, not more than once in a
+    /// while.
+    private func connectByItself(for what: String, then again: @escaping @MainActor () -> Void) {
+        #if !CARTOUCHE_GALLERY
+        guard !connectingByItself, CartoucheLocalDevVPN.shared.decide(playerAsked: false) == .open else { return }
+        connectingByItself = true
+        Task {
+            let connection = await CartoucheLocalDevVPN.shared.connect(for: what, playerAsked: false)
+            connectingByItself = false
+            if connection.connected { again() }
+        }
+        #endif
     }
 
     /// Answers Apple's request for a verification code.
@@ -380,8 +405,13 @@ final class CartoucheAccount: ObservableObject {
         let setup = CartoucheSetup.shared
         guard phase == nil,
               CartoucheLastSignIn.signsInAgain(after: lastSignIn, at: setup.signInStep, installation: Self.installation,
-                                               hasPairingFile: setup.hasPairingFile, vpnConnected: Self.vpnConnected)
+                                               hasPairingFile: setup.hasPairingFile, vpnConnected: true)
         else { return }
+        // Without LocalDevVPN, Cartouche has it connect by itself first.
+        guard Self.vpnConnected else {
+            connectByItself(for: "Sign-in that stopped before the certificate") { [weak self] in self?.resumeSignIn() }
+            return
+        }
         signInAgain()
         if isAutomatic { CartoucheReports.note("Sign-in: the last one stopped before the certificate, signing in again by itself") }
         #endif
@@ -401,6 +431,9 @@ final class CartoucheAccount: ObservableObject {
     // MARK: Waiting for LocalDevVPN
 
     /// Waits for LocalDevVPN, ten minutes at most, then goes on with PENDING.
+    /// Cartouche has LocalDevVPN connect first, when it can
+    /// (CartoucheLocalDevVPN): it opens Cartouche again, which goes on as
+    /// soon as it is connected. Up to 0.12.1, the player connected it.
     private func wait(for pending: Pending) {
         self.pending = pending
         vpnWaiting = CartoucheVPNWait(started: Date())
@@ -410,6 +443,11 @@ final class CartoucheAccount: ObservableObject {
             phase = .waitingForVPN(deviceStep: false)
         }
         CartoucheReports.note("Waiting for LocalDevVPN")
+        if case .device = pending {
+            openedVPN = CartoucheLocalDevVPN.shared.open(for: "Registering this iPhone", playerAsked: true)
+        } else {
+            openedVPN = CartoucheLocalDevVPN.shared.open(for: "Sign-in", playerAsked: true)
+        }
         waiting?.cancel()
         waiting = Task { [weak self] in
             while !Task.isCancelled {
@@ -463,8 +501,10 @@ final class CartoucheAccount: ObservableObject {
     private func noteWait(in fields: inout [String: CartoucheTelemetryValue]) {
         if let vpnWait { fields["vpnWait"] = .number(max(0, vpnWait.rounded())) }
         if wentOnWithoutVPN { fields["withoutVPN"] = .flag(true) }
+        if openedVPN { fields["vpnOpened"] = .flag(true) }
         vpnWait = nil
         wentOnWithoutVPN = false
+        openedVPN = false
     }
 
     // MARK: Registering this iPhone alone
@@ -477,6 +517,7 @@ final class CartoucheAccount: ObservableObject {
         problemReport = nil
         vpnWait = nil
         wentOnWithoutVPN = false
+        openedVPN = false
         if Self.vpnConnected {
             startDeviceStep(automatic: false)
         } else {
@@ -498,6 +539,7 @@ final class CartoucheAccount: ObservableObject {
                                    idle: phase == nil && pausedUntil == nil) else { return }
         vpnWait = nil
         wentOnWithoutVPN = false
+        openedVPN = false
         startDeviceStep(automatic: true)
         #endif
     }
@@ -642,6 +684,16 @@ final class CartoucheAccount: ObservableObject {
             ? "The current pairing file is invalid. Reason: \(sentence)"
             : "VPN Connection Error:\n\(sentence)\n\nPlease make sure LocalDevVPN is connected and running properly."
         let failure = CartoucheFailure.sideStore(outcome: outcome, message: message, fraction: 0, seconds: 0,
+                                                 vpn: CartoucheVPN.isConnected, pairing: true)
+        failed(CartoucheText.sideStoreMessage(message, failure: failure, signIn: true), fraction: 0, failure: failure)
+    }
+
+    /// Shows a sign-in whose built-in SideStore quit as it launched, before
+    /// it said it had (app/patches/livecontainer/0016), as the sign-in's end
+    /// does, for the gallery's screens.
+    func showSideStoreQuitForGallery() {
+        let message = "Built-in SideStore quit unexpectedly while starting"
+        let failure = CartoucheFailure.sideStore(outcome: nil, message: message, fraction: 0, seconds: 1,
                                                  vpn: CartoucheVPN.isConnected, pairing: true)
         failed(CartoucheText.sideStoreMessage(message, failure: failure, signIn: true), fraction: 0, failure: failure)
     }

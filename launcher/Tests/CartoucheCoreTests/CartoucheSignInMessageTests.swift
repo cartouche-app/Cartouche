@@ -99,6 +99,12 @@ final class CartoucheSignInMessageTests: XCTestCase {
                        .unreadable(status: nil))
         XCTAssertNil(CartoucheSignInMessage.trouble(in: "Your Apple ID or password is incorrect.",
                                                     failure: CartoucheFailure(.appleCredentials, details: ["kind": .text("incorrectCredentials")])))
+        // The built-in SideStore closed before it finished, as it launched or
+        // on its way: LiveContainer's English words say nothing of what to do.
+        for message in ["Built-in SideStore quit unexpectedly while starting", "Built-in SideStore quit unexpectedly"] {
+            let quit = CartoucheFailure.sideStore(outcome: nil, message: message, fraction: 0, seconds: 1, vpn: true, pairing: true)
+            XCTAssertEqual(CartoucheSignInMessage.trouble(in: message, failure: quit), .sideStoreQuit, message)
+        }
     }
 
     func testTheTroubleWithThisIPhone() {
@@ -114,6 +120,39 @@ final class CartoucheSignInMessageTests: XCTestCase {
         XCTAssertEqual(CartoucheSignInMessage.deviceTrouble(in: CartoucheFailure(.device)), .noAnswer)
         XCTAssertNil(CartoucheSignInMessage.deviceTrouble(in: CartoucheFailure(.deviceRegistration, stage: "device")))
         XCTAssertNil(CartoucheSignInMessage.deviceTrouble(in: CartoucheFailure(.appleCredentials, stage: "account")))
+    }
+
+    func testTheTroubleMinimuxerToldOf() {
+        func trouble(_ cause: CartoucheFailure.Cause, _ kind: String, reason: String?, vpn: Bool?) -> CartoucheSignInMessage.DeviceTrouble? {
+            var details: [String: CartoucheTelemetryValue] = ["kind": .text(kind)]
+            if let reason { details["reason"] = .text(reason) }
+            if let vpn { details["vpn"] = .flag(vpn) }
+            return CartoucheSignInMessage.deviceTrouble(in: CartoucheFailure(cause, stage: "deviceCheck", details: details))
+        }
+        // A Lockdown pairing file, which minimuxer takes through LocalDevVPN
+        // from iOS 26.4 only beside an IPsec interface (patch 0022).
+        XCTAssertEqual(trouble(.vpn, "invalidVPN", reason: "noIPsec", vpn: true), .olderPairing)
+        XCTAssertEqual(trouble(.vpn, "invalidVPN", reason: "noIPsec", vpn: false), .olderPairing)
+        // LocalDevVPN connected, as Cartouche saw it: the iPhone did not
+        // answer through it, whatever minimuxer made of it: the player is
+        // not told that LocalDevVPN is not connected.
+        XCTAssertEqual(trouble(.vpn, "invalidVPN", reason: "portClosed", vpn: true), .noAnswer)
+        XCTAssertEqual(trouble(.vpn, "invalidVPN", reason: "dropped", vpn: true), .noAnswer)
+        XCTAssertEqual(trouble(.vpn, "invalidVPN", reason: nil, vpn: true), .noAnswer)
+        // LocalDevVPN off, or not known.
+        XCTAssertEqual(trouble(.vpn, "invalidVPN", reason: "portClosed", vpn: false), .vpn)
+        XCTAssertEqual(trouble(.vpn, "noVPN", reason: "noTunnel", vpn: false), .vpn)
+        XCTAssertEqual(trouble(.vpn, "invalidVPN", reason: nil, vpn: nil), .vpn)
+        // A pairing file this iPhone refused when minimuxer reached it.
+        for reason in ["handshake", "serviceRefused", "lockdownSession", "lockdownValue"] {
+            XCTAssertEqual(trouble(.pairing, "invalidPairingFile", reason: reason, vpn: true), .pairingRefused, reason)
+        }
+        // One missing, or that does not read, or a reason not known.
+        for reason in ["notLoaded", "unreadable", "incomplete", "noUDID", "other"] {
+            XCTAssertEqual(trouble(.pairing, "invalidPairingFile", reason: reason, vpn: true), .pairing, reason)
+        }
+        XCTAssertEqual(trouble(.pairing, "invalidPairingFile", reason: nil, vpn: true), .pairing)
+        XCTAssertEqual(trouble(.pairing, "pairingNotComplete", reason: "notLoaded", vpn: true), .pairing)
     }
 
     func testWhatASignInLeavesOfTheIPhonesStep() {
