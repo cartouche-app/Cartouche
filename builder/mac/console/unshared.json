@@ -37,6 +37,21 @@
       "why": "What the player says of a game (its name, genre, summary, cover): with the game's settings on the Mac.",
       "step": 6
     },
+    "CartoucheGameLogShare.swift": {
+      "kind": "later",
+      "why": "A game's log, read, summed up and cleaned for Send to Cartouche, which is a problem report: with the console's reports on the Mac, and the log nxnative's app for the Mac writes.",
+      "step": 8
+    },
+    "CartoucheGameLogView.swift": {
+      "kind": "later",
+      "why": "A game's log, from its sheet: shared as the game wrote it, or sent to Cartouche cleaned, as a problem report; with the console's reports on the Mac. The sheet's row stays the iPhone's meanwhile (#if os(iOS)).",
+      "step": 8
+    },
+    "CartoucheGameLogZip.swift": {
+      "kind": "later",
+      "why": "The zip of a game's logs that the share sheet shares: with the game's log page on the Mac (CartoucheGameLogView.swift).",
+      "step": 8
+    },
     "CartoucheGameNames.swift": {
       "kind": "iphone",
       "why": "The names Siri and Shortcuts know a game of the player's by, its shorter ones among them (CartoucheShortcuts.swift): on the Mac, each game is an app of its own, which Siri, Spotlight and Shortcuts know by its name."
@@ -84,6 +99,10 @@
     "CartoucheInstallQuestions.swift": {
       "kind": "iphone",
       "why": "The question an install asks on an iPhone whose GPU cannot read BC textures (A16 and older): every Mac Cartouche runs on reads them."
+    },
+    "CartoucheLocalDevVPN.swift": {
+      "kind": "iphone",
+      "why": "Cartouche having LocalDevVPN connect, by its link, before the built-in SideStore reaches the iPhone (sign-in, renewal, update): LocalDevVPN is the iPhone's alone, and a Mac signs and installs without it."
     },
     "CartoucheOwnSignature.swift": {
       "kind": "iphone",
@@ -190,6 +209,21 @@
       "why": "The Storage page: with the console's storage and the library the iPhone and the Mac share.",
       "step": 7
     },
+    "CartoucheSwitchSave.swift": {
+      "kind": "later",
+      "why": "A save exported on the player's Switch with JKSV or Checkpoint, checked and put in place of a game's save, and the save it replaced kept and put back: on the Mac, with the console's storage and saves, where a game's saves are those of nxnative's app for the Mac (MacSaves).",
+      "step": 7
+    },
+    "CartoucheSwitchSaveArchive.swift": {
+      "kind": "later",
+      "why": "The folder or ZIP archive of a save exported on the Switch, read, and a game's save made into a ZIP archive for JKSV: on the Mac, with the console's storage and saves.",
+      "step": 7
+    },
+    "CartoucheSwitchSaveView.swift": {
+      "kind": "later",
+      "why": "A game's saves between the player's Switch and this iPhone, which the sheet's saves section opens (CartoucheStorageView.swift): on the Mac, with the console's storage and saves.",
+      "step": 7
+    },
     "CartoucheSystemView.swift": {
       "kind": "later",
       "why": "The System page: with the console's settings on the Mac; System opens the Builder meanwhile.",
@@ -212,6 +246,11 @@
     "CartoucheTextShortcuts.swift": {
       "kind": "iphone",
       "why": "The words of Siri and Home Screen (CartoucheShortcuts.swift, CartoucheGameShortcutsView.swift), the iPhone's alone."
+    },
+    "CartoucheTextSwitchSave.swift": {
+      "kind": "later",
+      "why": "The words of a game's saves between the player's Switch and this iPhone (CartoucheSwitchSaveView.swift): on the Mac, with the console's storage and saves.",
+      "step": 7
     },
     "CartoucheUpdateView.swift": {
       "kind": "mac",

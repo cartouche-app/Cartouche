@@ -2,9 +2,11 @@
 //  CartoucheBuilderApp.swift
 //  Cartouche Builder
 //
-//  The Mac app: one window (the library, the builds, the storage, the
-//  iPhone bridge and the Mac's tools), its settings, and an item in the
-//  menu bar that keeps it at hand when the window is closed. Started with
+//  The Mac app: one window, with Cartouche's console or the builder (the
+//  library, the builds, the storage, the iPhone bridge and the Mac's
+//  tools), the player switching between them (ConsoleWindow.swift), its
+//  settings, and an item in the menu bar that keeps it at hand when the
+//  window is closed. Started with
 //  --gallery FOLDER, it saves pictures of its screens with sample games
 //  instead (Gallery.swift), for CI; with --layout-check, it takes its window
 //  through what a player does on sample games and checks that everything
@@ -38,7 +40,7 @@ struct CartoucheBuilderApp: App {
 
     var body: some Scene {
         Window("Cartouche Builder", id: AppModel.mainWindow) {
-            ContentView()
+            MainView()
                 .environmentObject(model)
                 .environmentObject(model.setup)
                 .environmentObject(model.bridge)
@@ -109,8 +111,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
     func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
         let info = response.notification.request.content.userInfo
         let model = AppModel.shared
-        if let section = info["section"] as? String, let found = AppSection(rawValue: section) { model.section = found }
-        if let game = info["game"] as? String { model.selection = game }
+        // What the builder did: on the builder's page that says so.
+        if let section = info["section"] as? String, let found = AppSection(rawValue: section) { model.showBuilder(found) }
+        if let game = info["game"] as? String {
+            model.selection = game
+            model.showBuilder(nil)
+        }
         model.showMainWindow()
     }
 }
@@ -119,6 +125,15 @@ struct AppCommands: Commands {
     @ObservedObject var model: AppModel
 
     var body: some Commands {
+        // The window's two interfaces, at the top of the View menu.
+        CommandGroup(before: .toolbar) {
+            ForEach(AppInterface.allCases) { interface in
+                Toggle(interface.title, isOn: Binding(get: { model.interface == interface },
+                                                      set: { if $0 { model.show(interface) } }))
+                    .keyboardShortcut(interface.shortcut)
+            }
+            Divider()
+        }
         CommandGroup(after: .newItem) {
             Button(tr("Check nxnative", "Vérifier nxnative")) {
                 Task { await model.refreshLibrary(update: true) }

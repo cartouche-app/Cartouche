@@ -11,7 +11,7 @@ from cartouche_builder import cli, schedule
 from cartouche_builder.paths import Paths
 from cartouche_builder.texts import TEXTS
 
-from support import MKW, Home, make_dump, make_engine_remote
+from support import MKW, UNREADABLE_INFO_PLIST, Home, make_dump, make_engine_remote
 
 PACKAGE = Path(__file__).resolve().parent.parent / "cartouche_builder"
 
@@ -57,6 +57,11 @@ class Schedule(Home):
         self.assertEqual(schedule.installed()["Label"], schedule.LABEL)
         schedule.sync(paths, False, 4, 5)
         self.assertFalse(schedule.agent_path().exists())
+        self.assertIsNone(schedule.installed())
+        # A file there Python cannot read, or no dictionary: none.
+        schedule.agent_path().write_bytes(UNREADABLE_INFO_PLIST)
+        self.assertIsNone(schedule.installed())
+        schedule.agent_path().write_bytes(plistlib.dumps(["a list"]))
         self.assertIsNone(schedule.installed())
 
 

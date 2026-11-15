@@ -14,8 +14,9 @@
 //  built for this Mac is played from the app, started by LaunchServices
 //  as the Finder starts it: the iPhone's copy of its saves comes first, its
 //  launcher (the simulated nxnative's, a script) plays from it, and the
-//  Mac's saves go after it, read back as the iPhone reads them. No real
-//  game is involved. The engine's own end-to-end tests are
+//  Mac's saves go after it, read back as the iPhone reads them; played
+//  again, it quits when Cartouche's console asks it to. No real game is
+//  involved. The engine's own end-to-end tests are
 //  builder/tests/test_end_to_end.py.
 //
 //  Skipped without a Python 3.12 or later for the engine
@@ -310,6 +311,22 @@ final class EndToEndTests: XCTestCase {
         await macGames.round()
         XCTAssertEqual(macGames.last[titleID]?.step, "fetch")
         XCTAssertEqual(try String(contentsOf: games.appendingPathComponent("\(titleID)/save/progress.txt"), encoding: .utf8), "iPhone 2\n")
+
+        // Cartouche's console quits a game that would play two minutes: its
+        // launcher, a script, does not answer macOS's request, and is stopped.
+        macGames.environment["NXSIM_PLAY"] = "120"
+        heard.removeAll()
+        _ = try await macGames.play(titleID)
+        try await eventually("the game playing", timeout: 30) { macGames.isPlaying(titleID) }
+        let asked = Date()
+        macGames.quit(titleID, grace: 1)
+        try await eventually("the game ended and its saves went", timeout: 30) {
+            !macGames.isPlaying(titleID) && macGames.last[titleID]?.step == "send"
+        }
+        XCTAssertLessThan(Date().timeIntervalSince(asked), 20)
+        XCTAssertTrue(heard.contains("started \(titleID) builder"), "\(heard)")
+        // Its log does not say how it ended: never a crash.
+        XCTAssertTrue(heard.contains("ended \(titleID) unknown -"), "\(heard)")
         // Nothing of this Mac's own nxnative folders was touched.
         XCTAssertFalse(FileManager.default.fileExists(atPath: MacSavesFolder.nxnativeFolder.appendingPathComponent(titleID).path))
     }

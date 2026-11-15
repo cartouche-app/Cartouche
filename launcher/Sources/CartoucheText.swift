@@ -192,9 +192,9 @@ enum CartoucheText {
     static var setupPairingInvalid: String { s("setup.pairing.invalid", "This file is not a pairing file. The Cartouche Installer puts the right one in Cartouche: Put the pairing file in Cartouche again.") }
     static var setupPairingFailed: String { s("setup.pairing.failed", "The pairing file was refused") }
     static var setupAppleIDTitle: String { s("setup.appleID.title", "Apple ID") }
-    static var setupAppleIDHow: String { s("setup.appleID.how", "Sign in once, here in Cartouche, with LocalDevVPN connected: Cartouche then takes its certificate and renews itself every week.") }
+    static var setupAppleIDHow: String { s("setup.appleID.how", "Sign in once, here in Cartouche: Cartouche then takes its certificate and renews itself every week.") }
     static func setupAppleIDDone(_ appleID: String) -> String { f("setup.appleID.done", "Signed in: %@", appleID) }
-    static func setupAppleIDUnfinished(_ appleID: String) -> String { f("setup.appleID.unfinished", "The sign-in with %@ stopped before Cartouche got its certificate. Connect LocalDevVPN, then sign in again.", appleID) }
+    static func setupAppleIDUnfinished(_ appleID: String) -> String { f("setup.appleID.unfinished", "The sign-in with %@ stopped before Cartouche got its certificate. Sign in again.", appleID) }
     static var setupSignIn: String { s("setup.appleID.signIn", "Sign In") }
     static func setupAppleIDDevice(_ appleID: String) -> String { f("setup.appleID.device", "Signed in: %@. This iPhone is left to register, which Cartouche does by itself once LocalDevVPN is connected.", appleID) }
     static var setupCertificateTitle: String { s("setup.certificate.title", "Certificate") }
@@ -279,7 +279,7 @@ enum CartoucheText {
     static var renewed: String { s("system.signature.renewed", "Last renewed") }
     static var team: String { s("system.signature.team", "Apple account team") }
     static var profileUnknown: String { s("system.signature.unknown", "Cartouche could not read its provisioning profile.") }
-    static var signatureFooter: String { s("system.signature.footer", "Cartouche renews itself each time you open it in its last 3 days, with LocalDevVPN on. Once expired, it no longer opens: install it again with the Cartouche Installer.") }
+    static var signatureFooter: String { s("system.signature.footer", "Cartouche renews itself each time you open it in its last 3 days, and connects LocalDevVPN for it. Once expired, it no longer opens: install it again with the Cartouche Installer.") }
     static var renewNow: String { s("system.signature.renew", "Renew now") }
     static var renewing: String { s("system.signature.renewing", "Renewing…") }
     static var renewingByItself: String { s("system.signature.renewing.auto", "Cartouche renews itself…") }
@@ -304,7 +304,7 @@ enum CartoucheText {
     // MARK: Cartouche's updates
 
     static var updatesTitle: String { s("system.updates", "Updates") }
-    static var updatesFooter: String { s("system.updates.footer", "New versions install without a computer, with LocalDevVPN connected. Cartouche then closes: open it again. Your games and saves stay.") }
+    static var updatesFooter: String { s("system.updates.footer", "New versions install without a computer, through LocalDevVPN, which Cartouche connects. Cartouche then closes: open it again. Your games and saves stay.") }
     static var updateAvailable: String { s("system.updates.available", "New version") }
     static func updateTo(_ version: String) -> String { f("system.updates.install", "Install Cartouche %@", version) }
     static var updateNeedsSetup: String { s("system.updates.needsSetup", "Finish setting up Cartouche first.") }
@@ -317,7 +317,7 @@ enum CartoucheText {
     static func updateSourceStatus(_ status: Int) -> String { f("updates.source.status", "its source answered with error %lld.", status) }
     static var updateUnavailable: String { s("updates.unavailable", "The built-in SideStore did not load. Close Cartouche, open it again, then update.") }
     static func updateOfferTitle(_ version: String) -> String { f("updates.offer.title", "Cartouche %@ is available", version) }
-    static func updateOfferMessage(_ running: String) -> String { f("updates.offer.message", "You have version %@. With LocalDevVPN connected, Cartouche installs the new one without a computer, then closes: open it again. Your games and saves stay.", running) }
+    static func updateOfferMessage(_ running: String) -> String { f("updates.offer.message", "You have version %@. Cartouche installs the new one without a computer, through LocalDevVPN, then closes: open it again. Your games and saves stay.", running) }
     static func updateSize(_ size: String) -> String { f("updates.offer.size", "Download: %@", size) }
     static var updateNow: String { s("updates.now", "Update") }
     static var updateLater: String { s("updates.later", "Later") }
@@ -331,16 +331,16 @@ enum CartoucheText {
     static var updateFailedTitle: String { s("updates.failed.title", "The update did not go through") }
     static func updateFailed(_ reason: String) -> String { f("updates.failed.message", "Check that LocalDevVPN is connected, then try again from the System page. SideStore says: %@", reason) }
     static var updateUnfinishedTitle: String { s("updates.unfinished.title", "The update did not finish") }
-    static func updateUnfinished(_ version: String) -> String { f("updates.unfinished.message", "Cartouche closed before version %@ was installed. Try again from the System page, with LocalDevVPN connected.", version) }
+    static func updateUnfinished(_ version: String) -> String { f("updates.unfinished.message", "Cartouche closed before version %@ was installed. Try again from the System page.", version) }
     static var updatedMessage: String { s("updates.done.message", "Your games, their saves and Cartouche’s settings are all still here.") }
 
     // MARK: Renewing every night
 
-    static var dailyIntro: String { s("daily.intro", "An automation in Shortcuts can renew Cartouche every night, with no computer. It runs Cartouche’s Refresh All Apps action, which does what Renew now does.") }
-    static var dailyStepVPN: String { s("daily.step1", "Leave LocalDevVPN connected. Its traffic stays on the iPhone, so it can stay on all day.") }
+    static var dailyIntro: String { s("daily.intro", "An automation in Shortcuts can renew Cartouche every night, with no computer. It connects LocalDevVPN, then runs Cartouche’s Refresh All Apps action, which does what Renew now does.") }
     static var dailyStepAutomation: String { s("daily.step2", "In Shortcuts, open Automation, then tap +.") }
     static var dailyStepTime: String { s("daily.step3", "Choose Time of Day: a time when the iPhone charges and is online, such as 4 AM, every day. Then choose Run Immediately.") }
-    static var dailyStepAction: String { s("daily.step4", "Tap Next, choose New Blank Automation, and add the Refresh All Apps action of Cartouche, not LiveContainer’s.") }
+    static var dailyStepVPN: String { s("daily.vpnAction", "Tap Next, choose New Blank Automation, then add the Enable LocalDevVPN action: it connects LocalDevVPN without opening it. An older LocalDevVPN calls it Start LocalDevVPN.") }
+    static var dailyStepAction: String { s("daily.refreshAction", "Then add the Refresh All Apps action of Cartouche, not LiveContainer’s: Cartouche waits for LocalDevVPN to connect before it renews.") }
     static var dailyStepCheck: String { s("daily.step5", "Each renewal shows on the System page as the last renewal, and gives Cartouche seven more days.") }
     static var openShortcuts: String { s("daily.openShortcuts", "Open Shortcuts") }
 
@@ -642,6 +642,12 @@ enum CartoucheText {
     static var storageAccountFooter: String { s("storage.account.footer", "The account of your Mac, PC or NAS. Leave the user name empty to sign in as a guest.") }
     static var storageConnect: String { s("storage.connect", "Sign in and list the shared folders") }
     static var storageNoShares: String { s("storage.noShares", "This account sees no shared folder there.") }
+    /// Why an SMB server did not sign the player in (CartoucheSMBRefusal),
+    /// after storage.signInFailed's colon.
+    static var storageSMBRefused: String { s("storage.smb.refused", "the server refused the user name or the password.") }
+    static var storageSMBNoGuests: String { s("storage.smb.noGuests", "the server does not let guests in. Type the user name and password of your account on it.") }
+    static var storageSMBLocked: String { s("storage.smb.locked", "the server locked this account after too many wrong passwords. Try again later, or unlock it on the server.") }
+    static var storageSMBHeldBack: String { s("storage.smb.heldBack", "the server does not let this account sign in as it is. On the server, turn the account on, or give it a new password.") }
     static var storageShare: String { s("storage.share", "Shared folder") }
     static var storageShareFooter: String { s("storage.share.footer", "On a Mac: System Settings › General › Sharing › File Sharing. On a PC: the folder’s Properties › Sharing.") }
     static var storageNameTitle: String { s("storage.name.title", "Name in Cartouche") }
@@ -879,11 +885,31 @@ enum CartoucheText {
     static var reportContents: String { s("report.contents", "What the report holds") }
     static var reportPrivacy: String { s("report.privacy", "It leaves this iPhone only when you send it, without passwords, server names or addresses, user names, Apple ID or team, even in what you write.") }
 
+    // MARK: A game's log (CartoucheGameLogView)
+
+    static var gameLogRow: String { s("gameLog.row", "Share the log") }
+    static var gameLogTitle: String { s("gameLog.title", "Game log") }
+    static var gameLogLast: String { s("gameLog.last", "Last session") }
+    static var gameLogBefore: String { s("gameLog.before", "Session before") }
+    static var gameLogCrashed: String { s("gameLog.crashed", "Ended in a crash") }
+    static var gameLogNone: String { s("gameLog.none", "The game has not written a log yet.") }
+    static var gameLogFooter: String { s("gameLog.footer", "What the game wrote as it ran: whoever helps you sees in it how it started and how it ended.") }
+    static var gameLogShare: String { s("gameLog.share", "Send the log…") }
+    static var gameLogPreparing: String { s("gameLog.preparing", "Preparing the log…") }
+    static func gameLogZipFailed(_ reason: String) -> String { f("gameLog.zipFailed", "The log could not be prepared: %@", reason) }
+    static var gameLogShareFooter: String { s("gameLog.share.footer", "By Messages, Mail or AirDrop, to whoever helps you: the log goes as the game wrote it, with the names of your folders in it.") }
+    static var gameLogWhatPrompt: String { s("gameLog.what.prompt", "What happened (optional)") }
+    static var gameLogWhatIsSent: String { s("gameLog.whatIsSent", "What Cartouche receives") }
+    static var gameLogSendFooter: String { s("gameLog.send.footer", "Cartouche receives the start and the end of each log, privately and cleaned: without the paths of your folders, addresses, names or identifiers.") }
+    static var gameLogSentFooter: String { s("gameLog.sent.footer", "What is in angle brackets, such as <path> or <address>, stands for what was taken out. Cartouche’s server passes the rest to the project, privately.") }
+    /// The word in the zip's name: "Mario Kart World log 2026-11-13 2105.zip".
+    static var gameLogFileWord: String { s("gameLog.fileWord", "log") }
+
     // MARK: Warnings before expiry
 
     static var warning24hTitle: String { s("warning.24h.title", "Cartouche expires in 24 hours") }
     static var warning6hTitle: String { s("warning.6h.title", "Cartouche expires in 6 hours") }
-    static var warningBody: String { s("warning.body", "Renew it on the System page, with LocalDevVPN connected.") }
+    static var warningBody: String { s("warning.body", "Renew it on the System page.") }
     static var warningExpiredTitle: String { s("warning.0h.title", "Cartouche has expired") }
     static var warningExpiredBody: String { s("warning.0h.body", "Install it again from a computer with the Cartouche Installer, over this copy: your games stay.") }
 

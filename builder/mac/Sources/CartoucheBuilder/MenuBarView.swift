@@ -5,9 +5,9 @@
 //  The item in the menu bar, there while the window is closed: what is
 //  being built and how far it is, the games nxnative improved with the
 //  button that rebuilds them, or adds them to the build running, the
-//  update that waits, and the way back to the window. Its label opens the
-//  window again when the app asks for it (a notification clicked while the
-//  window is closed).
+//  update that waits, and the way back to the window, on Cartouche's
+//  console or on the builder. Its label opens the window again when the
+//  app asks for it (a notification clicked while the window is closed).
 //
 
 import AppKit
@@ -149,7 +149,7 @@ struct MenuBarView: View {
                 Button {
                     model.section = .library
                     model.selection = game.titleID
-                    show()
+                    show(.builder)
                 } label: {
                     HStack(spacing: 10) {
                         cover(game.titleID)
@@ -208,8 +208,9 @@ struct MenuBarView: View {
 
     private var footer: some View {
         HStack(spacing: 8) {
-            Button(tr("Open Cartouche Builder", "Ouvrir Cartouche Builder")) { show() }
+            Button(tr("Open the console", "Ouvrir la console")) { show(.console) }
                 .keyboardShortcut("o")
+            Button(AppInterface.builder.title) { show(.builder) }
             Spacer()
             Button {
                 Task { await model.refreshLibrary(update: true) }
@@ -244,7 +245,9 @@ struct MenuBarView: View {
         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
     }
 
-    private func show() {
+    /// The window, on INTERFACE.
+    private func show(_ interface: AppInterface) {
+        model.show(interface)
         openWindow(id: AppModel.mainWindow)
         NSApp.activate()
     }
