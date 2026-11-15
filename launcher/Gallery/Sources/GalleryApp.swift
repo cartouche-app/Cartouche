@@ -27,6 +27,8 @@
 //        library                         every game, open over the home
 //        mac-builds                      all the Mac's builds, as System
 //                                        opens them (work: mac-builds)
+//        nightly                         Renew every night, its steps, from
+//                                        the System page
 //        report                          Report a problem
 //        settings                        the settings of the sheet's game,
 //                                        open at -GalleryCategory
@@ -811,6 +813,10 @@ struct CartoucheGalleryApp: App {
             }
         case "system", "mac-builds":
             CartoucheSystemView()
+        case "nightly":
+            NavigationStack {
+                CartoucheNightlyRenewalView()
+            }
         case "storage":
             NavigationStack {
                 CartoucheStorageView()

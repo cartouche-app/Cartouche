@@ -100,6 +100,10 @@
       "kind": "iphone",
       "why": "The question an install asks on an iPhone whose GPU cannot read BC textures (A16 and older): every Mac Cartouche runs on reads them."
     },
+    "CartoucheLocalDevVPN.swift": {
+      "kind": "iphone",
+      "why": "Cartouche having LocalDevVPN connect, by its link, before the built-in SideStore reaches the iPhone (sign-in, renewal, update): LocalDevVPN is the iPhone's alone, and a Mac signs and installs without it."
+    },
     "CartoucheMacBuildsPage.swift": {
       "kind": "mac",
       "why": "All the paired Mac's builds, asked over the bridge from System: on the Mac, the console is the app that builds, and its window's Builds page shows and drives them.",
