@@ -146,7 +146,7 @@ struct CartoucheGameWorkView: View {
                     VStack(spacing: 6) {
                         ProgressView(value: min(max(fraction, 0), 1))
                             .tint(Color.white)
-                        Text(min(max(fraction, 0), 1).formatted(.percent.precision(.fractionLength(0))))
+                        Text(CartoucheText.percent(min(max(fraction, 0), 1)))
                             .font(.footnote.weight(.semibold).monospacedDigit())
                             .foregroundStyle(CartoucheTheme.secondaryText)
                     }

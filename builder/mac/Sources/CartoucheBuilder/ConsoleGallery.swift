@@ -4,17 +4,18 @@
 //
 //  Cartouche's console in the gallery (Gallery.swift): its home with the
 //  sheet of the game in focus beside it, every game, a game's settings page
-//  in place of its sheet and its info over the console, as the console
-//  shows the games built for this Mac, and one a NAS keeps that is not
-//  installed here, in the window as the app shows it (MainView). The games
-//  are real ones nxnative builds, with their covers from IGDB as the
-//  console shows them; their apps are the gallery's own, empty but for
-//  their Info.plist and the list of settings nxnative gives a game on the
-//  Mac, in a temporary folder, their play time and their sizes made up, the
-//  NAS's file is only a name, and nothing of the player's is read or kept:
-//  no data folder of nxnative's, no game's preferences, no play time, no
-//  question to Cartouche's server. Like ConsoleWindow.swift, this file
-//  imports the console and not CartoucheCore, whose names it shares.
+//  in place of its sheet, its info over the console, and the whole sheet of
+//  a game played on this Mac, as the console shows the games built for this
+//  Mac, and one a NAS keeps that is not installed here, in the window as
+//  the app shows it (MainView). The games are real ones nxnative builds,
+//  with their covers from IGDB as the console shows them; their apps are
+//  the gallery's own, empty but for their Info.plist and the list of
+//  settings nxnative gives a game on the Mac, in a temporary folder, their
+//  play time and their sizes made up, the NAS's file is only a name, and
+//  nothing of the player's is read or kept: no data folder of nxnative's,
+//  no game's preferences, no play time, no question to Cartouche's server.
+//  Like ConsoleWindow.swift, this file imports the console and not
+//  CartoucheCore, whose names it shares.
 //
 
 import AppKit
@@ -36,6 +37,11 @@ enum ConsoleGallery {
                              file: "/Volumes/Jeux/Animal Crossing New Horizons [01006F8002326000].app.zip",
                              size: 7_340_032_000, built: Date().addingTimeInterval(-26 * 3_600)),
     ]
+
+    /// The game whose whole sheet the gallery shows: played on this Mac, and
+    /// the one of them testers wrote a sheet for (catalog/games), which says
+    /// how it fits this Mac.
+    static let sheetGame = "0400C3F00006E000"
 
     /// The time two of them were played on this Mac, and the space each
     /// takes here, its app and its data.

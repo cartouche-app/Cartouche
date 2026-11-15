@@ -9,13 +9,31 @@
 //  Mac, by the iPhone's rule; and what the console reads of a game's app
 //  and of its folder of nxnative's: its title ID whatever its bundle ID,
 //  the macOS it needs, and the play time the Builder counts there, which
-//  the app's gallery shows its own of. The choices are kept in memory, as
-//  the gallery keeps them: no test writes a game's preferences.
+//  the app's gallery shows its own of; the games' languages named, and
+//  numbers and days written, in the language the console speaks. The
+//  choices are kept in memory, as the gallery keeps them: no test writes a
+//  game's preferences.
 //
 
 import Foundation
 import XCTest
 @testable import CartoucheConsole
+
+/// A Mac app's list, as nxnative's settings.py writes it for the Mac.
+private let macList = """
+{"schema": 1, "game": "0100152000022000", "settings": [
+  {"env": "DM_FPS_TARGET", "kind": "choice", "section": "Game", "label": "Frame rate", "note": "", "default": "60",
+   "options": [["30", "30 fps"], ["60", "60 fps"]], "level": "basic"},
+  {"env": "DM_LANG", "kind": "choice", "section": "Game", "label": "Game language", "note": "", "default": "en-US",
+   "options": [["en-US", "American English"], ["en-GB", "British English"], ["fr", "French"], ["de", "German"],
+               ["es", "Spanish"], ["it", "Italian"], ["ja", "Japanese"]], "level": "basic"},
+  {"env": "DM_FULLSCREEN", "kind": "choice", "section": "Game", "label": "Display mode", "note": "", "default": "0",
+   "options": [["0", "Window"], ["1", "Fullscreen"]], "level": "basic"},
+  {"env": "DM_RUMBLE", "kind": "toggle", "section": "Controls", "label": "Game rumble", "note": "", "default": "1"},
+  {"env": "DM_SW2", "kind": "toggle", "section": "Controls", "label": "Switch 2 controllers", "note": "", "default": "0"},
+  {"env": "DM_METAL_HUD", "kind": "toggle", "section": "Performance", "label": "Performance HUD", "note": "", "default": "0"}
+]}
+"""
 
 @MainActor
 final class ConsoleSettingsTests: XCTestCase {
@@ -39,27 +57,11 @@ final class ConsoleSettingsTests: XCTestCase {
         try? FileManager.default.removeItem(at: root)
     }
 
-    /// A Mac app's list, as nxnative's settings.py writes it for the Mac.
-    static let macList = """
-    {"schema": 1, "game": "0100152000022000", "settings": [
-      {"env": "DM_FPS_TARGET", "kind": "choice", "section": "Game", "label": "Frame rate", "note": "", "default": "60",
-       "options": [["30", "30 fps"], ["60", "60 fps"]], "level": "basic"},
-      {"env": "DM_LANG", "kind": "choice", "section": "Game", "label": "Game language", "note": "", "default": "en-US",
-       "options": [["en-US", "American English"], ["en-GB", "British English"], ["fr", "French"], ["de", "German"],
-                   ["es", "Spanish"], ["it", "Italian"], ["ja", "Japanese"]], "level": "basic"},
-      {"env": "DM_FULLSCREEN", "kind": "choice", "section": "Game", "label": "Display mode", "note": "", "default": "0",
-       "options": [["0", "Window"], ["1", "Fullscreen"]], "level": "basic"},
-      {"env": "DM_RUMBLE", "kind": "toggle", "section": "Controls", "label": "Game rumble", "note": "", "default": "1"},
-      {"env": "DM_SW2", "kind": "toggle", "section": "Controls", "label": "Switch 2 controllers", "note": "", "default": "0"},
-      {"env": "DM_METAL_HUD", "kind": "toggle", "section": "Performance", "label": "Performance HUD", "note": "", "default": "0"}
-    ]}
-    """
-
     /// A game's app as nxnative builds one for the Mac, its settings list
     /// in its resources, under a bundle ID of the test's own: the choices
     /// in memory are kept by domain.
     private func makeApp(titleID: String = "0100152000022000", bundleID: String? = nil, info extra: [String: Any] = [:],
-                         list: String? = ConsoleSettingsTests.macList) throws -> LCAppModel {
+                         list: String? = macList) throws -> LCAppModel {
         let app = root.appendingPathComponent("Applications/MK8-\(UUID().uuidString).app", isDirectory: true)
         let contents = app.appendingPathComponent("Contents", isDirectory: true)
         try FileManager.default.createDirectory(at: contents.appendingPathComponent("Resources/dm"), withIntermediateDirectories: true)
@@ -138,6 +140,27 @@ final class ConsoleSettingsTests: XCTestCase {
         XCTAssertEqual(kept.string(forKey: "cartouche.languageSource"), "player")
         model.followIPhoneLanguage()
         XCTAssertEqual(kept.string(forKey: "cartouche.languageSource"), "iPhone")
+    }
+
+    func testTheConsoleNamesLanguagesAndWritesNumbersInTheLanguageItSpeaks() {
+        let console = CartoucheMacConsole.shared
+        let spoken = console.language
+        defer { console.speak(spoken, from: nil) }
+        let yesterday = Date().addingTimeInterval(-26 * 3_600)
+        // In French, whatever the Mac's language: the words of the tests'
+        // bundle are English, the numbers and the names French.
+        console.speak("fr", from: nil)
+        XCTAssertEqual(CartoucheText.languageNameInText("en-US", english: "American English"), "anglais (États-Unis)")
+        XCTAssertEqual(CartoucheText.languageName("ja", english: "Japanese"), "Japonais")
+        XCTAssertEqual(CartoucheText.size(bytes: 7_340_032_000), "7,3\u{00A0}GB")
+        XCTAssertEqual(CartoucheText.lastPlayed(yesterday), "hier")
+        console.speak("en", from: nil)
+        XCTAssertEqual(CartoucheText.languageNameInText("fr", english: "French"), "French")
+        XCTAssertEqual(CartoucheText.size(bytes: 7_340_032_000), "7.3\u{00A0}GB")
+        XCTAssertEqual(CartoucheText.lastPlayed(yesterday), "yesterday")
+        // The Mac's language: its own names and numbers.
+        console.speak(nil, from: nil)
+        XCTAssertEqual(CartoucheText.locale.identifier, Locale.current.identifier)
     }
 
     func testAnAppWithoutAListHasNoSettings() throws {

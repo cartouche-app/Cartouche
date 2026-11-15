@@ -16,6 +16,18 @@ enum CartoucheText {
     /// settings can change while it runs.
     nonisolated(unsafe) static var bundle = Bundle(for: CartoucheCatalog.self)
 
+    #if os(macOS)
+    /// The reader's language, in which the games' languages are named and
+    /// numbers and days written: on the Mac, the one the console speaks,
+    /// which the app's settings may choose other than the Mac's
+    /// (builder/mac, ConsoleView.swift).
+    nonisolated(unsafe) static var locale = Locale.current
+    #else
+    /// The reader's language, in which the games' languages are named and
+    /// numbers and days written: the iPhone's.
+    static var locale: Locale { Locale.current }
+    #endif
+
     static func s(_ key: String, _ english: String) -> String {
         let text = NSLocalizedString(key, tableName: "Cartouche", bundle: bundle, value: english, comment: "")
         #if canImport(UIKit)
@@ -27,7 +39,7 @@ enum CartoucheText {
     }
 
     static func f(_ key: String, _ english: String, _ arguments: CVarArg...) -> String {
-        String(format: s(key, english), locale: Locale.current, arguments: arguments)
+        String(format: s(key, english), locale: locale, arguments: arguments)
     }
 
     // MARK: Tabs and titles
@@ -475,12 +487,18 @@ enum CartoucheText {
         var parts: [String] = []
         if let version = build.version { parts.append(buildVersion(version)) }
         if let installedOn {
-            parts.append(buildInstalled(installedOn.formatted(date: .abbreviated, time: .shortened)))
+            parts.append(buildInstalled(dateAndTime(installedOn)))
         } else if let builtAt = build.builtAt {
-            parts.append(buildBuilt(builtAt.formatted(date: .abbreviated, time: .shortened)))
+            parts.append(buildBuilt(dateAndTime(builtAt)))
         }
         if showsCommit, let commit = build.shortCommit { parts.append(buildCommit(build.isDirty ? commit + "+dirty" : commit)) }
         return parts.joined(separator: ", ")
+    }
+
+    /// A day and its time, in the reader's language: "Nov 14, 2026 at
+    /// 6:22 PM", "14 nov. 2026 à 18:22".
+    static func dateAndTime(_ date: Date) -> String {
+        date.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened).locale(locale))
     }
 
     // MARK: A game behind the console
@@ -555,7 +573,7 @@ enum CartoucheText {
 
     /// When a game was last played: "yesterday", "2 hours ago".
     static func lastPlayed(_ date: Date) -> String {
-        min(date, Date()).formatted(.relative(presentation: .named))
+        min(date, Date()).formatted(.relative(presentation: .named).locale(locale))
     }
 
     /// A play time: "12 h 30 min", "45 min", "< 1 min".
@@ -824,7 +842,6 @@ enum CartoucheText {
     /// One of the game's languages, by its code (nxnative's nacp.py), in the
     /// reader's language; nxnative's English name when iOS has none.
     static func languageName(_ code: String, english: String) -> String {
-        let locale = Locale.current
         guard let name = locale.localizedString(forIdentifier: code), !name.isEmpty else { return gameSettingText(english) }
         return name.prefix(1).uppercased(with: locale) + name.dropFirst()
     }
@@ -832,7 +849,7 @@ enum CartoucheText {
     /// A language's name inside a sentence, in the reader's language
     /// ("French", "français"); nxnative's English name when iOS has none.
     static func languageNameInText(_ code: String, english: String) -> String {
-        guard let name = Locale.current.localizedString(forIdentifier: code), !name.isEmpty else { return gameSettingText(english) }
+        guard let name = locale.localizedString(forIdentifier: code), !name.isEmpty else { return gameSettingText(english) }
         return name
     }
 
@@ -848,8 +865,9 @@ enum CartoucheText {
         f("setting.language.iPhone.missing", "None of the iPhone’s languages is in this game: it starts in %@.", language)
     }
 
-    private static func percent(_ value: Double) -> String {
-        value.formatted(.percent.precision(.fractionLength(0)))
+    /// A share, as a percentage in the reader's language: "75%", "75\u{00A0}%".
+    static func percent(_ value: Double) -> String {
+        value.formatted(.percent.precision(.fractionLength(0)).locale(locale))
     }
 
     // MARK: Game measurements
@@ -950,7 +968,7 @@ enum CartoucheText {
     static func memoryAmount(mebibytes value: Int) -> String {
         let gibibytes = Double(value) / 1024
         let formatter = NumberFormatter()
-        formatter.locale = Locale.current
+        formatter.locale = locale
         formatter.minimumFractionDigits = 1
         formatter.maximumFractionDigits = 1
         let gib = formatter.string(from: NSNumber(value: gibibytes)) ?? String(format: "%.1f", gibibytes)
@@ -972,7 +990,7 @@ enum CartoucheText {
     /// "23.4 GB", in decimal gigabytes as iOS counts storage.
     static func storageAmount(bytes: Int64) -> String {
         let formatter = NumberFormatter()
-        formatter.locale = Locale.current
+        formatter.locale = locale
         formatter.minimumFractionDigits = 1
         formatter.maximumFractionDigits = 1
         let value = Double(bytes) / 1_000_000_000
@@ -981,7 +999,7 @@ enum CartoucheText {
 
     private static func grouped(_ value: Int) -> String {
         let formatter = NumberFormatter()
-        formatter.locale = Locale.current
+        formatter.locale = locale
         formatter.numberStyle = .decimal
         return formatter.string(from: NSNumber(value: value)) ?? String(value)
     }

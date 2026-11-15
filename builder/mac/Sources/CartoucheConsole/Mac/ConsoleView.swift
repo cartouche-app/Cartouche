@@ -189,11 +189,13 @@ public final class CartoucheMacConsole: ObservableObject {
     }
 
     /// Speaks LANGUAGE with the words in RESOURCES/Console/<language>, which
-    /// holds that language alone (bundle.sh, console/strings.py).
+    /// holds that language alone (bundle.sh, console/strings.py), and names
+    /// the games' languages in it.
     func speak(_ language: String?, from resources: URL?) {
         let chosen = language.flatMap { ["fr", "en"].contains($0) ? $0 : nil }
         let folder = chosen.flatMap { resources?.appendingPathComponent("Console/" + $0, isDirectory: true) }
         CartoucheText.bundle = folder.flatMap { Bundle(url: $0) } ?? Bundle(for: CartoucheCatalog.self)
+        CartoucheText.locale = chosen.map { Locale(identifier: $0) } ?? Locale.current
         self.language = chosen
     }
 
@@ -228,9 +230,11 @@ public struct CartoucheMacConsoleView: View {
     /// The game whose info the player changes, over the console.
     @State private var editingInfo: CartoucheEntry?
     /// Whether the console opens on the settings page of its first game on
-    /// this Mac, or with that game's info over it: the app's gallery's.
+    /// this Mac, or with that game's info over it, or with the sheet of the
+    /// game of that title ID beside it: the app's gallery's.
     private let opensSettings: Bool
     private let opensInfo: Bool
+    private let opensSheetOf: String?
     @Namespace private var zoom
 
     enum Route: Hashable {
@@ -239,12 +243,15 @@ public struct CartoucheMacConsoleView: View {
 
     /// The console on its home, or with every game open (SHOWINGLIBRARY),
     /// or with the settings page of its first game on this Mac beside it
-    /// (SHOWINGSETTINGS), or that game's info over it (SHOWINGINFO), as the
+    /// (SHOWINGSETTINGS), or that game's info over it (SHOWINGINFO), or the
+    /// sheet of the game of the title ID SHOWINGSHEETOF beside it, as the
     /// app's gallery shows it.
-    public init(showingLibrary: Bool = false, showingSettings: Bool = false, showingInfo: Bool = false) {
+    public init(showingLibrary: Bool = false, showingSettings: Bool = false, showingInfo: Bool = false,
+                showingSheetOf titleID: String? = nil) {
         _path = State(initialValue: showingLibrary ? [.library] : [])
         opensSettings = showingSettings
         opensInfo = showingInfo
+        opensSheetOf = titleID
     }
 
     /// Nothing open beside the console or over it that takes the
@@ -281,6 +288,9 @@ public struct CartoucheMacConsoleView: View {
             if let entry = entries.owned.first(where: { $0.app != nil }), let app = entry.app {
                 if opensSettings { openSettings(app, of: entry) }
                 if opensInfo { editingInfo = entry }
+            }
+            if let titleID = opensSheetOf, let entry = entries.owned.first(where: { $0.titleId == titleID }) {
+                paneID = entry.id
             }
             guard console.asksServer else { return }
             catalog.refreshCoversIfDue()
@@ -319,6 +329,7 @@ public struct CartoucheMacConsoleView: View {
                 zoom: path.isEmpty ? zoom : nil,
                 // Beside the console, the sheet describes the game in focus.
                 showsHero: entries.owned.isEmpty,
+                focusing: opensSheetOf.flatMap { titleID in entries.owned.first { $0.titleId == titleID }?.id },
                 onFocus: { item in
                     if case .game(let entry) = item { focus(entry) }
                 })
@@ -426,9 +437,9 @@ public struct CartoucheMacConsoleView: View {
     }
 
     /// Another game in focus closes the settings page of the last; the
-    /// gallery's page of the settings stays as it opened.
+    /// gallery's pages of the settings and of a sheet stay as they opened.
     private func focus(_ entry: CartoucheEntry) {
-        guard !opensSettings else { return }
+        guard !opensSettings, opensSheetOf == nil else { return }
         if paneID != entry.id { closeSettings() }
         paneID = entry.id
     }

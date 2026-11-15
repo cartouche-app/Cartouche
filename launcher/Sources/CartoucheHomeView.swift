@@ -61,6 +61,11 @@ struct CartoucheHomeView: View {
     /// is: a game's, the one that imports a game or the one for every game.
     let onFocus: (Item) -> Void
 
+    /// The game in focus as the home opens, by its entry's ID, when it is
+    /// not the first: the Mac's gallery opens the console on a game's sheet
+    /// (builder/mac, ConsoleView.swift).
+    let focusing: String?
+
     // Written out: before Swift 6.4 (SE-0502), the private state below made
     // the synthesized initializer private.
     init(entries: CartoucheCatalog.Entries, gameCount: Int, isActive: Bool,
@@ -69,7 +74,7 @@ struct CartoucheHomeView: View {
          onUninstall: @escaping (LCAppModel) -> Void, onSheet: @escaping (CartoucheEntry) -> Void,
          onLibrary: @escaping () -> Void, onSetup: @escaping () -> Void, onGuide: @escaping () -> Void = {},
          onTab: @escaping (LCTabIdentifier) -> Void, zoom: Namespace.ID? = nil,
-         showsHero: Bool = true, onFocus: @escaping (Item) -> Void = { _ in }) {
+         showsHero: Bool = true, focusing: String? = nil, onFocus: @escaping (Item) -> Void = { _ in }) {
         self.entries = entries
         self.gameCount = gameCount
         self.isActive = isActive
@@ -84,6 +89,7 @@ struct CartoucheHomeView: View {
         self.onTab = onTab
         self.zoom = zoom
         self.showsHero = showsHero
+        self.focusing = focusing
         self.onFocus = onFocus
     }
 
@@ -206,6 +212,12 @@ struct CartoucheHomeView: View {
             .onChange(of: metrics.isWide) { _, wide in isWide = wide }
         }
         .background(CartoucheStage(key: heroKey, art: heroBackdrop))
+        // The game it opens on, the shelf scrolled to it.
+        .onAppear {
+            if let focusing, let column = entries.owned.firstIndex(where: { $0.id == focusing }) {
+                focus(row: Self.shelfRow, column: column)
+            }
+        }
         .onChange(of: hero) { _, hero in
             if let hero { onFocus(hero) }
         }

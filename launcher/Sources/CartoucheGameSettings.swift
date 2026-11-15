@@ -189,13 +189,13 @@ final class CartoucheGameSettingsModel: ObservableObject, Hashable {
 
     /// An end of a range, as a percentage.
     static func rangeBound(_ value: Double) -> String {
-        value.formatted(.percent.precision(.fractionLength(0)))
+        CartoucheText.percent(value)
     }
 
     /// A range: its percentage, and the 3D size in pixels for the console
     /// mode chosen when the list gives it.
     func rangeLabel(_ setting: CartoucheGameSetting, _ value: Double) -> String {
-        let percent = value.formatted(.percent.precision(.fractionLength(0)))
+        let percent = CartoucheText.percent(value)
         guard let base = setting.base else { return percent }
         let size = (values["DM_OPMODE"] ?? "1") == "0" ? base.handheld : base.docked
         guard size.count == 2 else { return percent }
@@ -330,7 +330,7 @@ struct CartoucheGameSettingsView: View {
                     categoryHeader(category)
                 } footer: {
                     if category == CartoucheGameSettingsModel.savesCategory {
-                        Text(model.cloudNote ?? CartoucheText.cloudFooter)
+                        footer(model.cloudNote ?? CartoucheText.cloudFooter)
                     }
                 }
             }
@@ -340,7 +340,7 @@ struct CartoucheGameSettingsView: View {
                         Button(CartoucheText.settingsReset) { model.reset() }
                             .disabled(!model.changed)
                     } footer: {
-                        Text(CartoucheText.settingsResetFooter)
+                        footer(CartoucheText.settingsResetFooter)
                     }
                 }
             }
@@ -348,7 +348,7 @@ struct CartoucheGameSettingsView: View {
                 Section {
                     Button(CartoucheText.settingsNxnativeScreen, action: onNxnativeScreen)
                 } footer: {
-                    Text(CartoucheText.settingsNxnativeScreenFooter)
+                    footer(CartoucheText.settingsNxnativeScreenFooter)
                 }
             }
         }
@@ -365,6 +365,14 @@ struct CartoucheGameSettingsView: View {
             .ignoresSafeArea()
         }
         #endif
+    }
+
+    /// A section's footer, on as many lines as it takes: a list on the Mac
+    /// gives it one line, cut, otherwise.
+    private func footer(_ text: String) -> some View {
+        Text(text)
+            .lineLimit(nil)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     /// Over the category's rows: the bar of the categories when there are

@@ -44,16 +44,19 @@ struct MainView: View {
     @EnvironmentObject private var setup: MacSetup
     @EnvironmentObject private var bridge: BridgeController
     /// The console with every game open, with its first game's settings
-    /// page, or with that game's info over it, as the gallery shows it.
+    /// page, or with that game's info over it, or with the sheet of the
+    /// game of that title ID, as the gallery shows it.
     var showingLibrary = false
     var showingSettings = false
     var showingInfo = false
+    var showingSheetOf: String?
 
     var body: some View {
         Group {
             switch model.interface {
             case .console:
-                CartoucheMacConsoleView(showingLibrary: showingLibrary, showingSettings: showingSettings, showingInfo: showingInfo)
+                CartoucheMacConsoleView(showingLibrary: showingLibrary, showingSettings: showingSettings, showingInfo: showingInfo,
+                                        showingSheetOf: showingSheetOf)
                     .overlay(alignment: .top) { consoleBanner }
             case .builder:
                 ContentView()

@@ -54,7 +54,7 @@ extension CartoucheText {
     /// Here rather than in CartoucheText.swift, which packages without
     /// CartoucheTextResults.swift build too (launcher/StorageTests).
     static var measuredWords: CartoucheMeasuredWords {
-        CartoucheMeasuredWords(text: { key, english in s(key, english) }, locale: Locale.current)
+        CartoucheMeasuredWords(text: { key, english in s(key, english) }, locale: locale)
     }
 }
 

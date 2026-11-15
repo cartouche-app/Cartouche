@@ -31,15 +31,17 @@ enum Gallery {
         case assistantIPhone = "assistant-iphone", assistantDone = "assistant-done"
         // Cartouche's console on this Mac (ConsoleGallery.swift): its home,
         // every game, a game's settings page beside them, a game's info over
-        // them.
+        // them, and the whole sheet of a game played on this Mac, in a
+        // window as tall as it.
         case console, consoleLibrary = "console-library", consoleSettings = "console-settings", consoleInfo = "console-info"
+        case consoleSheet = "console-sheet"
         // What the window's height leaves out: the settings' Builds tab, and
         // the storage page down to the games on this Mac, in a window as
         // tall as it.
         case settingsBuilds = "settings-builds", storageMac = "storage-mac"
 
         /// Whether the page is the console's, which is always dark.
-        var isConsole: Bool { [.console, .consoleLibrary, .consoleSettings, .consoleInfo].contains(self) }
+        var isConsole: Bool { [.console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet].contains(self) }
 
         /// The setup assistant's step the page shows.
         var step: SetupStep? {
@@ -61,6 +63,7 @@ enum Gallery {
             switch self {
             case .settings, .settingsBuilds: return SettingsTab.size
             case .storageMac: return CGSize(width: 1024, height: 1440)
+            case .consoleSheet: return CGSize(width: 1024, height: 1300)
             // The window at its smallest, with a game's sheet whose
             // nxnative commits are a paragraph each, as nxnative writes them.
             case .gameNarrow: return CGSize(width: Columns.window.width, height: 680)
@@ -154,11 +157,12 @@ enum Gallery {
         switch page {
         case .settings, .settingsBuilds:
             controller = settings(model, open: page == .settingsBuilds ? .builds : .general)
-        case .console, .consoleLibrary, .consoleSettings, .consoleInfo:
+        case .console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet:
             ConsoleGallery.prepare(language: L10n.code)
             model.show(.console)
             controller = hosted(MainView(showingLibrary: page == .consoleLibrary, showingSettings: page == .consoleSettings,
-                                         showingInfo: page == .consoleInfo), model)
+                                         showingInfo: page == .consoleInfo,
+                                         showingSheetOf: page == .consoleSheet ? ConsoleGallery.sheetGame : nil), model)
         case .menubar, .menubarBuilding:
             let panel = hosted(MenuBarView().background(Color(nsColor: .windowBackgroundColor)), model)
             size.height = ceil(panel.sizeThatFits(in: CGSize(width: size.width, height: 2000)).height)
@@ -178,7 +182,7 @@ enum Gallery {
             }
         }
         let frame = CGRect(origin: CGPoint(x: 80, y: 80), size: size)
-        let window: NSWindow = page == .storageMac
+        let window: NSWindow = page == .storageMac || page == .consoleSheet
             ? TallWindow(contentRect: frame, styleMask: page.styleMask, backing: .buffered, defer: false)
             : KeyWindow(contentRect: frame, styleMask: page.styleMask, backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
@@ -186,7 +190,7 @@ enum Gallery {
         switch page {
         case .settings: window.title = SettingsTab.general.title
         case .settingsBuilds: window.title = SettingsTab.builds.title
-        case .console, .consoleLibrary, .consoleSettings, .consoleInfo: window.title = "Cartouche"
+        case .console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet: window.title = "Cartouche"
         default: window.title = "Cartouche Builder"
         }
         if page == .settings || page == .settingsBuilds {
@@ -209,10 +213,17 @@ enum Gallery {
         window.orderFrontRegardless()
         wait(until: Date().addingTimeInterval(2.5))
         // A game's info opens over the console in a sheet, a window of its
-        // own: the picture is the sheet's.
+        // own, which the window server shows with the console's window
+        // under it, as one: the picture is as large as both.
         var shown: NSWindow = window
+        var area: CGRect?
         if page == .consoleInfo {
-            if let sheet = window.attachedSheet { shown = sheet } else { complain(file, "the game's info did not open over the console") }
+            if let sheet = window.attachedSheet {
+                shown = sheet
+                area = window.frame.union(sheet.frame)
+            } else {
+                complain(file, "the game's info did not open over the console")
+            }
         }
         if !(NSApp.isActive && shown.isKeyWindow) { inBackground += 1 }
         defer {
@@ -220,7 +231,7 @@ enum Gallery {
             window.orderOut(nil)
             window.close()
         }
-        var picture = captured(shown, for: file)
+        var picture = captured(shown, for: file, area: area)
         if picture == nil {
             drawnByAppKit += 1
             picture = drawn(shown)
@@ -285,9 +296,12 @@ enum Gallery {
 
     /// The window as the window server shows it, with what only the window
     /// server draws: the sidebar's selection, the labels over the sidebar,
-    /// the glass of the toolbar's buttons. Nil, said on standard error,
-    /// when ScreenCaptureKit cannot take it.
-    private static func captured(_ window: NSWindow, for file: URL) -> NSBitmapImageRep? {
+    /// the glass of the toolbar's buttons; AREA, in the screen's points,
+    /// when the window server shows more than the window with it, as it
+    /// shows a sheet with the window under it, which a picture of the
+    /// window's size alone shrinks into a corner. Nil, said on standard
+    /// error, when ScreenCaptureKit cannot take it.
+    private static func captured(_ window: NSWindow, for file: URL, area: CGRect? = nil) -> NSBitmapImageRep? {
         final class Capture { var image: CGImage?; var done = false }
         let capture = Capture()
         let number = CGWindowID(window.windowNumber)
@@ -304,8 +318,9 @@ enum Gallery {
                 let filter = SCContentFilter(desktopIndependentWindow: shown)
                 let configuration = SCStreamConfiguration()
                 let scale = CGFloat(filter.pointPixelScale)
-                configuration.width = Int((filter.contentRect.width * scale).rounded())
-                configuration.height = Int((filter.contentRect.height * scale).rounded())
+                let size = area?.size ?? filter.contentRect.size
+                configuration.width = Int((size.width * scale).rounded())
+                configuration.height = Int((size.height * scale).rounded())
                 configuration.showsCursor = false
                 configuration.ignoreShadowsSingleWindow = true
                 // All of a window wider than the screen.
