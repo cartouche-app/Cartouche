@@ -1654,6 +1654,103 @@
       ]
     },
     {
+      "name": "iphone-system-end",
+      "comment": "The System page at its end, on Reset Cartouche.",
+      "screen": "system",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "category": "reset"
+    },
+    {
+      "name": "iphone-reset",
+      "comment": "Reset Cartouche's page, as the System page opens it.",
+      "screen": "reset",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-reset-end",
+      "comment": "Reset Cartouche's page at its end: the saves of the first of the player's games, which the reset would lose, and the button.",
+      "screen": "reset-end",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "saves"
+    },
+    {
+      "name": "iphone-sim-reset-confirm",
+      "comment": "Reset Cartouche's confirmation, at the page's end, on the iPhone 17 Pro's own screen, where iOS shows it from its button as on an iPhone: drawn at a size on the iPad, it would fall outside the frame.",
+      "device": "iPhone 17 Pro",
+      "screen": "reset",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "work": "confirm"
+    },
+    {
+      "name": "iphone-reset-erasing",
+      "comment": "Reset Cartouche under way.",
+      "screen": "reset",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "erasing"
+    },
+    {
       "name": "duo-folded-sign-in-code",
       "screen": "signin",
       "work": "code",

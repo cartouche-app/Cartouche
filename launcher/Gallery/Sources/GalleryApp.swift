@@ -33,6 +33,9 @@
 //                                        notes of the last versions the
 //                                        gallery carries
 //        report                          Report a problem
+//        reset                           Reset Cartouche's page, as the
+//                                        System page opens it
+//        reset-end                       the same, at its end, on its button
 //        settings                        the settings of the sheet's game,
 //                                        open at -GalleryCategory
 //        setup                           the setup
@@ -100,6 +103,9 @@
 //        certificate                     a certificate iOS no longer accepts
 //        code                            Apple asks for a verification code,
 //                                        on the sign-in
+//        confirm                         on Reset Cartouche's page, its
+//                                        confirmation, at the page's end,
+//                                        from its button
 //        device-handshake                a sign-in that stopped at the check
 //                                        of this iPhone, LocalDevVPN
 //                                        connected: a pairing file this
@@ -113,6 +119,8 @@
 //                                        whose sign-in Google ended, as after
 //                                        7 days for a project in testing,
 //                                        with two games' saves waiting for it
+//        erasing                         on Reset Cartouche's page, the reset
+//                                        under way
 //        iml-left-out                    signed by a signing app on the
 //                                        iPhone (-GallerySigning iphone),
 //                                        without Increased Memory Limit,
@@ -231,6 +239,8 @@
 //        nightly                         on the Mac's builds (screen
 //                                        mac-builds), down to the nightly
 //                                        build
+//        reset                           on the System page, the page at its
+//                                        end, on Reset Cartouche
 //        signature                       on the System page, the page
 //                                        scrolled down to its signature
 //        update                          on the System page, the page
@@ -531,6 +541,9 @@ struct GalleryScenario {
             }
             if work == "log", let titleId = sheet ?? ownedTitles.first {
                 GalleryLogs.prepare(titleId: titleId)
+            }
+            if work == "erasing" {
+                CartoucheReset.shared.showForGallery(.erasing)
             }
             if ["mac", "mac-offline", "mac-builds"].contains(work) {
                 // The player's Mac, paired, with the games Cartouche Builder
@@ -977,6 +990,11 @@ struct CartoucheGalleryApp: App {
                 CartoucheReleaseNotesView(notes: Array(CartoucheWhatsNew.carried.prefix(CartoucheWhatsNew.listed)))
             }
             .preferredColorScheme(.dark)
+        case "reset", "reset-end":
+            // As the System page opens it, or at its end.
+            NavigationStack {
+                CartoucheResetView(confirming: scenario.work == "confirm", showsEnd: scenario.screen == "reset-end")
+            }
         case "switch-save":
             // The game's saves between the Switch and this iPhone, from its
             // sheet: with work: saves, the save JKSV exported, read.

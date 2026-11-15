@@ -155,6 +155,18 @@
       "why": "The report under each error and its Copy the report button: with the console's measurements on the Mac; the console's stand-in keeps the Builder's own reports meanwhile.",
       "step": 8
     },
+    "CartoucheReset.swift": {
+      "kind": "iphone",
+      "why": "System › Reset Cartouche: erases what LiveContainer, the built-in SideStore and the iPhone's keychain keep for Cartouche, then starts it again through LiveContainer: none of them is on the Mac."
+    },
+    "CartoucheResetPlan.swift": {
+      "kind": "iphone",
+      "why": "What a reset of Cartouche erases and keeps on the iPhone, LiveContainer's and SideStore's places and keys among them (CartoucheReset.swift)."
+    },
+    "CartoucheResetView.swift": {
+      "kind": "iphone",
+      "why": "System › Reset Cartouche, its page: the iPhone's reset (CartoucheReset.swift)."
+    },
     "CartoucheRootView.swift": {
       "kind": "mac",
       "why": "Cartouche's screens in place of LiveContainer's tab bar: on the Mac, the app's window and its switch between the console and the Builder.",
@@ -256,6 +268,10 @@
       "kind": "later",
       "why": "System › Game measurements: with the console's measurements on the Mac.",
       "step": 8
+    },
+    "CartoucheTextReset.swift": {
+      "kind": "iphone",
+      "why": "The words of Reset Cartouche, the iPhone's alone (CartoucheReset.swift)."
     },
     "CartoucheTextShortcuts.swift": {
       "kind": "iphone",

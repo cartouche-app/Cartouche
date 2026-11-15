@@ -4,8 +4,9 @@
 //
 //  The System page and every page it opens, each of which must come and go
 //  with the console answering throughout; the builds of the player's Mac,
-//  driven from there; and Cartouche's own update, on offer over the
-//  console, which Later puts off.
+//  driven from there; Reset Cartouche, at its end, which asks twice before
+//  it erases; and Cartouche's own update, on offer over the console, which
+//  Later puts off.
 //
 
 import XCTest
@@ -23,6 +24,14 @@ extension Words {
     static let macNotFollowed = "Not followed"              // mac.game.notFollowed
     static let nightly = "Build what is due every night"    // mac.builds.nightly
     static let nightlyAt = "Every night at "                // mac.builds.nightly.footer
+}
+
+/// Reset Cartouche's words (CartoucheTextReset.swift).
+extension Words {
+    static let resetCartouche = "Reset Cartouche"           // reset.title
+    static let eraseAndRestart = "Erase everything and restart" // reset.erase
+    static let eraseEverything = "Erase everything"         // reset.confirm.erase
+    static let erasing = "Erasing…"                         // reset.erasing
 }
 
 final class SystemUITests: ConsoleTestCase {
@@ -59,6 +68,37 @@ final class SystemUITests: ConsoleTestCase {
             expect(app.navigationBars[Words.system].waitForExistence(timeout: 10),
                    "Back from \(page.row) did not come back to the System page", in: app)
         }
+        tap(app.buttons[Words.done], "Done of the System page", in: app)
+        expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// Reset Cartouche, at the end of the System page, asks twice before it
+    /// erases anything: its button, then its confirmation, which, cancelled,
+    /// leaves everything as it was: by its Cancel, or, on an iPhone from
+    /// iOS 26, which shows it in a popover without one, by a tap outside it.
+    /// Erase everything covers the page while Cartouche erases, then
+    /// restarts: the gallery's reset only shows it, and comes back to the
+    /// page (CartoucheReset.swift).
+    @MainActor
+    func testResetCartoucheAsksTwiceBeforeItErases() {
+        let app = openConsole()
+        tap(app.buttons[Words.system], "System in the dock", in: app)
+        expect(app.navigationBars[Words.system].waitForExistence(timeout: 15), "The System page did not open", in: app)
+        scrollAndTap(element(in: app.buttons, beginningWith: Words.resetCartouche), "Reset Cartouche on the System page", in: app)
+        expect(app.navigationBars[Words.resetCartouche].waitForExistence(timeout: 15), "Reset Cartouche did not open", in: app)
+        let erase = element(in: app.buttons, beginningWith: Words.eraseAndRestart)
+        let erasing = element(labelled: Words.erasing, in: app)
+        // Once, then cancelled: nothing happens.
+        scrollAndTap(erase, "Erase everything and restart", in: app)
+        cancelConfirmation("The confirmation", in: app)
+        expect(!erasing.waitForExistence(timeout: 3), "The confirmation, cancelled, erased all the same", in: app)
+        // Then Erase everything.
+        scrollAndTap(erase, "Erase everything and restart, again", in: app)
+        tapButtonOnTop(Words.eraseEverything, "Erase everything, in the confirmation", in: app)
+        expect(erasing.waitForExistence(timeout: 10), "Erase everything did not cover the page while Cartouche erases", in: app)
+        expect(waitForGone(erasing, timeout: 15), "The gallery's reset did not end", in: app)
+        back(from: Words.resetCartouche, in: app)
         tap(app.buttons[Words.done], "Done of the System page", in: app)
         expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)
         expectMainThreadAnswered(app)

@@ -56,6 +56,7 @@ let package = Package(
                 "CartoucheReleaseNotes.swift",
                 "CartoucheRenewalRules.swift",
                 "CartoucheReport.swift",
+                "CartoucheResetPlan.swift",
                 "CartoucheResumingSource.swift",
                 "CartoucheRomfs.swift",
                 "CartoucheS3.swift",
