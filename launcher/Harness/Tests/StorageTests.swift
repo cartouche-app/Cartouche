@@ -55,7 +55,7 @@ final class StorageTests: HarnessCase {
     // MARK: The games folder
 
     func testTheGamesFolderListsTheGamesInItAndOneLevelDown() async throws {
-        let (_, folder) = try HarnessStorage.folder("Jeux", for: [.games])
+        let (_, folder) = try await HarnessStorage.folder("Jeux", for: [.games])
         let named = HarnessGame.plain(0)
         let unnamed = HarnessGame.plain(1)
         // As Cartouche names the IPAs it writes, and as a dump may be named.
@@ -90,7 +90,7 @@ final class StorageTests: HarnessCase {
     }
 
     func testAGameInstallsFromTheGamesFolderReadWhereItSits() async throws {
-        let (_, folder) = try HarnessStorage.folder("Jeux", for: [.games])
+        let (_, folder) = try await HarnessStorage.folder("Jeux", for: [.games])
         let game = HarnessGame.plain(2)
         let ipa = try put(game, in: folder, at: "\(game.name) [\(game.titleId)].ipa")
         await stored.reload()
@@ -113,7 +113,7 @@ final class StorageTests: HarnessCase {
     }
 
     func testAGameFromTheGamesFolderInstallsAsFromTheFilesPicker() async throws {
-        let (_, folder) = try HarnessStorage.folder("Jeux", for: [.games])
+        let (_, folder) = try await HarnessStorage.folder("Jeux", for: [.games])
         let game = HarnessGame.plain(3)
         let fromFiles = try await installed(game)
         let viaLiveContainer = listing(of: try bundle(of: fromFiles))
@@ -129,7 +129,7 @@ final class StorageTests: HarnessCase {
     }
 
     func testADamagedIPAInTheGamesFolderIsRefusedAndSaysWhichFile() async throws {
-        let (_, folder) = try HarnessStorage.folder("Jeux", for: [.games])
+        let (_, folder) = try await HarnessStorage.folder("Jeux", for: [.games])
         let game = HarnessGame.plain()
         let damaged = try HarnessIPA.damaged(game, in: "romfs.img", named: "Damaged.ipa")
         try FileManager.default.copyItem(at: damaged, to: folder.appendingPathComponent("\(game.name) [\(game.titleId)].ipa"))
@@ -149,7 +149,7 @@ final class StorageTests: HarnessCase {
 
     func testOnAGPUNxnativeRefusesAGameFromTheGamesFolderAsksFirstToo() async throws {
         HarnessLC.readsBCTextures = false
-        let (_, folder) = try HarnessStorage.folder("Jeux", for: [.games])
+        let (_, folder) = try await HarnessStorage.folder("Jeux", for: [.games])
         let game = HarnessGame.plain()
         try put(game, in: folder, at: "\(game.name) [\(game.titleId)].ipa")
         await stored.reload()
@@ -177,7 +177,7 @@ final class StorageTests: HarnessCase {
     // MARK: A copy in the games folder
 
     func testAGameCopiedToTheGamesFolderIsItsIPAAndInstallsAgain() async throws {
-        let (_, folder) = try HarnessStorage.folder("Jeux", for: [.games])
+        let (_, folder) = try await HarnessStorage.folder("Jeux", for: [.games])
         let game = HarnessGame.plain(4)
         let app = try await installed(game)
         let top = "Payload/" + (app.appInfo.relativeBundlePath ?? "") + "/"
@@ -239,7 +239,7 @@ final class StorageTests: HarnessCase {
     }
 
     func testAGamesSavesGoToTheSavesFolderAfterItAndComeBackWithItsNextInstall() async throws {
-        let (_, saves) = try HarnessStorage.folder("Sauvegardes", for: [.saves])
+        let (_, saves) = try await HarnessStorage.folder("Sauvegardes", for: [.saves])
         let game = HarnessGame.plain(5)
         let app = try await installed(game)
         XCTAssertNotNil(app.appInfo.dataUUID, "a data folder, for the saves to come into")

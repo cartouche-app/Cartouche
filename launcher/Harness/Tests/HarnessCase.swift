@@ -355,14 +355,25 @@ enum HarnessStorage {
         try? FileManager.default.removeItem(at: root)
     }
 
+    /// The bookmark Cartouche keeps of the folder at URL once the player
+    /// picked it in Files (CartoucheFolder.bookmark), made away from the
+    /// main thread the test watches: the player picked their folder long
+    /// before what a test watches, and making a bookmark waits on the
+    /// simulator's file provider, which held the main thread 7.39 s on a
+    /// busy Mac of the CI's (ResetTests, the full test pass of 0.13.1).
+    static func bookmark(of url: URL) async throws -> Data {
+        try await Task.detached { try CartoucheFolder.bookmark(of: url) }.value
+    }
+
     /// A folder of the player's, with its own name, kept by Cartouche as
     /// the place for ROLES.
     @MainActor
-    static func folder(_ name: String, for roles: [CartoucheStorageRole]) throws -> (server: CartoucheStorageServer, url: URL) {
+    static func folder(_ name: String, for roles: [CartoucheStorageRole]) async throws
+        -> (server: CartoucheStorageServer, url: URL) {
         let url = root.appendingPathComponent(name, isDirectory: true)
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         var server = CartoucheStorageServer(kind: .folder, name: name)
-        server.bookmark = try CartoucheFolder.bookmark(of: url)
+        server.bookmark = try await bookmark(of: url)
         let settings = CartoucheStorageSettings.shared
         settings.save(server, secret: nil)
         for role in roles {

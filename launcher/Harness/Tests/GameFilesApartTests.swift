@@ -54,7 +54,7 @@ final class GameFilesApartTests: HarnessCase {
     // MARK: From the games folder
 
     func testAGameWithItsFilesApartInstallsFromTheGamesFolderWithTheImageBesideIt() async throws {
-        let (_, folder) = try HarnessStorage.folder("Jeux", for: [.games])
+        let (_, folder) = try await HarnessStorage.folder("Jeux", for: [.games])
         let game = apart(0)
         // As nxnative's extraction names it, which a copy through the Finder
         // or Files keeps.
@@ -81,7 +81,7 @@ final class GameFilesApartTests: HarnessCase {
     }
 
     func testWithoutItsImageAGameWithItsFilesApartIsRefusedAndTheStoragePageSaysSo() async throws {
-        let (_, folder) = try HarnessStorage.folder("Jeux", for: [.games])
+        let (_, folder) = try await HarnessStorage.folder("Jeux", for: [.games])
         let game = apart(1)
         try HarnessIPA.gameApart(game, in: folder, image: nil)
         // Another game's image, of another size, which no IPA there takes.
@@ -103,7 +103,7 @@ final class GameFilesApartTests: HarnessCase {
     }
 
     func testAnImageThatIsNotTheOneTheGameWasBuiltWithIsRefused() async throws {
-        let (_, folder) = try HarnessStorage.folder("Jeux", for: [.games])
+        let (_, folder) = try await HarnessStorage.folder("Jeux", for: [.games])
         let game = apart(3)
         // Of the size romfs.id names, but of other files: another index.
         var another = game

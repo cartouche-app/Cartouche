@@ -98,7 +98,7 @@ final class SwitchSaveTests: HarnessCase {
     }
 
     func testASaveFromTheSwitchGoesToTheSavesFolderAsTheNewestCopy() async throws {
-        let (_, saves) = try HarnessStorage.folder("Sauvegardes", for: [.saves])
+        let (_, saves) = try await HarnessStorage.folder("Sauvegardes", for: [.saves])
         let game = HarnessGame.plain(3)
         let app = try await installed(game)
         await CartoucheSaveBackups.shared.finish()
