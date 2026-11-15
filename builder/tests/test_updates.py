@@ -9,7 +9,7 @@ beside it, and in the image an app whose bundle identifier is its own. A
 release named otherwise is never found, and each player has to download the
 app again by hand, as with 0.5.0 and older, which took their disk images
 from github.com/clabeuhtegrite/Cartouche alone and find none since the
-repository moved to its organization (README.md, Updates; decision 116).
+repository moved to its organization (README.md, Updates; decision 117).
 
 These are the names of every copy since 0.6.0. Renaming the app, its disk
 image or its tag means publishing these names as well, for as long as such
