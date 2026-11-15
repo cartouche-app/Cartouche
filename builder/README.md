@@ -124,6 +124,8 @@ From then on, Cartouche installs your games from the Mac and keeps your saves th
 
 The app reads the project's `builder-v<version>` releases when it opens and every six hours. A newer version is downloaded and checked against the SHA-256 published beside it, then checked again before it replaces the app: the same bundle identifier, the version the release names, a macOS it runs on, an intact signature. It is put in place when the app quits, at once with **Restart**, or when nothing builds and no window is open. **Install updates by itself** in the settings can be turned off; the app then offers each update instead.
 
+Cartouche Builder 0.5.0 and older take their updates from the repository's former address, `github.com/clabeuhtegrite/Cartouche`, alone, and find none since the repository moved to its organization: download the app once more, and from 0.6.0 on it updates itself again.
+
 ## When a game is built again
 
 nxnative gets dozens of commits a day, and almost all of them change code every game shares, so building every game for each would keep the Mac busy for nothing. Before a batch, the builder moves its copy of nxnative to the newest commit of `main` and reads what changed since each game's build:
