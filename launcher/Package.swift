@@ -39,6 +39,8 @@ let package = Package(
                 "CartoucheGameFit.swift",
                 "CartoucheGameLanguage.swift",
                 "CartoucheGameLog.swift",
+                "CartoucheGameLogShare.swift",
+                "CartoucheGameLogZip.swift",
                 "CartoucheGameLookup.swift",
                 "CartoucheGameNames.swift",
                 "CartoucheGameOrientation.swift",

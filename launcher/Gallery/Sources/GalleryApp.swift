@@ -18,6 +18,10 @@
 //                                        when none:
 //        gameinfo                        what the player says of the sheet's
 //                                        game
+//        gamelog                         the log of the sheet's game, with
+//                                        -GalleryWork log
+//        gamelog-sent                    what Send to Cartouche sends of that
+//                                        log, cleaned
 //        games                           the home
 //        guide                           Your first game
 //        library                         every game, open over the home
@@ -40,6 +44,8 @@
 //        storage-drive-guide             the steps that make that client
 //        storage-mac                     Add your Mac, the form that pairs
 //                                        this iPhone with a Mac nearby
+//        storage-smb                     Add a shared folder, with a NAS
+//                                        nearby (GallerySMB)
 //        system                          the System page, down to
 //                                        -GalleryCategory
 //        telemetry                       Game measurements
@@ -93,6 +99,9 @@
 //        iphone-step                     a sign-in Apple accepted that
 //                                        stopped at the step that registers
 //                                        this iPhone, LocalDevVPN being off
+//        log                             the logs of the sheet's game's last
+//                                        two sessions, the last ended in a
+//                                        crash (GalleryLogs.swift)
 //        mac                             the player's Mac, paired, as the
 //                                        games folder and the saves folder
 //        mac-builds                      that Mac building one game and
@@ -143,6 +152,13 @@
 //        signature-refused               the sheet's game's process ended as
 //                                        iOS refused its signature
 //                                        (CartoucheGameActions failSigning)
+//        smb-no-guests                   on Add a shared folder (screen
+//                                        storage-smb), the NAS refusing a
+//                                        guest, without a user name
+//        smb-refused                     on Add a shared folder (screen
+//                                        storage-smb), the NAS refusing the
+//                                        user name or the password the
+//                                        player signed in with
 //        starting                        on the TV (screen tv), the game
 //                                        starting
 //        stopped-on-error                the sheet's game's process ended on
@@ -165,6 +181,8 @@
 //                                        such as Controls
 //        cartouche.saves                 on a game's settings, its cloud
 //                                        saves
+//        manage                          on the sheet, the sheet opened on
+//                                        the game's management
 //        nightly                         on the Mac's builds (screen
 //                                        mac-builds), down to the nightly
 //                                        build
@@ -380,6 +398,12 @@ struct GalleryScenario {
                 CartoucheStorageReach.shared.showOfflineForGallery([nas.id])
                 CartoucheSaveBackups.shared.showWaitingForGallery(2)
             }
+            // The servers Add a shared folder finds nearby: made-up ones,
+            // never those of the network the gallery runs on.
+            CartoucheSMBBrowser.gallery = screen == "storage-smb" ? GallerySMB.nearby : []
+            if screen == "storage-smb" {
+                CartoucheStorageServerForm.gallery = GallerySMB.signIn(work)
+            }
             if ["mac-nearby", "mac-code", "mac-refused"].contains(work) {
                 let refused = work == "mac-refused"
                 CartoucheMacBrowser.gallery = (found: refused ? [] : GalleryMac.nearby, refused: refused)
@@ -389,6 +413,9 @@ struct GalleryScenario {
             }
             if work == "saves", let titleId = sheet ?? ownedTitles.first {
                 GallerySaves.prepare(titleId: titleId)
+            }
+            if work == "log", let titleId = sheet ?? ownedTitles.first {
+                GalleryLogs.prepare(titleId: titleId)
             }
             if ["mac", "mac-offline", "mac-builds"].contains(work) {
                 // The player's Mac, paired, with the games Cartouche Builder
@@ -723,7 +750,8 @@ struct CartoucheGalleryApp: App {
             if let entry = entries.all.first(where: { $0.titleId == scenario.sheet }) {
                 NavigationStack {
                     CartoucheGameSheetView(entry: entry, memory: CartoucheMemoryReading.now(), onPlay: { _ in },
-                                           onSettings: { _ in }, onImport: {}, onUninstall: { _ in })
+                                           onSettings: { _ in }, onImport: {}, onUninstall: { _ in },
+                                           opensOnManagement: scenario.category == "manage")
                         .toolbar {
                             ToolbarItem(placement: .confirmationAction) {
                                 Button(CartoucheText.done) {}
@@ -735,6 +763,17 @@ struct CartoucheGalleryApp: App {
             if let entry = entries.owned.first(where: { $0.titleId == scenario.sheet }) {
                 NavigationStack {
                     CartoucheGameInfoView(entry: entry, onClose: {})
+                }
+            }
+        case "gamelog", "gamelog-sent":
+            if let entry = entries.owned.first(where: { $0.titleId == scenario.sheet }), let app = entry.app,
+               let folder = CartoucheGameActions.shared.logs(of: app) {
+                NavigationStack {
+                    if scenario.screen == "gamelog" {
+                        CartoucheGameLogView(folder: folder, tileKey: entry.tileKey)
+                    } else {
+                        CartoucheGameLogSentView(share: GalleryLogs.share(of: folder), tileKey: entry.tileKey)
+                    }
                 }
             }
         case "shortcuts":
@@ -775,6 +814,12 @@ struct CartoucheGalleryApp: App {
         case "storage":
             NavigationStack {
                 CartoucheStorageView()
+            }
+        case "storage-smb":
+            // As the Storage page opens it, once the player signed in to
+            // list the shared folders of a NAS nearby.
+            NavigationStack {
+                CartoucheStorageServerForm(server: GallerySMB.server(scenario.work))
             }
         case "storage-mac":
             // As the Storage page opens it, for a Mac not paired yet.

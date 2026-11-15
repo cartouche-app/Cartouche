@@ -1,6 +1,8 @@
 """One build for every simulator of a Mac: the gallery's (build.sh), which the
-UI tests on the iPhone and on the iPad and the screenshots share, and the
-harness's, which its iPad's step shares with the iPhone's.
+UI tests on the iPhone and on the iPad and the screenshots share on one Mac,
+and the harness's, which its iPad's step shares with the iPhone's there. The
+CI runs each on a Mac of its own (screens.yml, harness.yml), where each
+builds once.
 
 Each was built for the simulator it ran on, and built again for the next:
 in the iPad's step, while the iPad booted, until GitHub's Mac was out of
