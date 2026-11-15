@@ -42,6 +42,7 @@ enum LCUtils {
 enum LCSharedUtils {
     static func teamIdentifier() -> String? { nil }
     static func setCartoucheSigningCandidate(_: [String: Any]?) {}
+    static func appGroupPath() -> URL? { nil }
 }
 enum CartoucheStoreKeychain {
     static let service: String? = nil
@@ -62,7 +63,10 @@ enum CartoucheText {
                 "-module-cache-path", str(folder / "cache"),
                 str(folder / "Stubs.swift"), str(ROOT / "launcher/Sources/CartoucheSigningMaterial.swift"),
                 # How Cartouche was signed: by the Installer, or on the iPhone.
-                str(ROOT / "launcher/Sources/CartoucheOwnSignature.swift"), str(adapter),
+                str(ROOT / "launcher/Sources/CartoucheOwnSignature.swift"),
+                # The IPA for the player's own certificate of this version,
+                # which a copy signed elsewhere offers (isSignedElsewhere).
+                str(ROOT / "launcher/Sources/CartoucheRelease.swift"), str(adapter),
             ], capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
 
