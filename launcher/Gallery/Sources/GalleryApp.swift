@@ -25,6 +25,8 @@
 //        games                           the home
 //        guide                           Your first game
 //        library                         every game, open over the home
+//        nightly                         Renew every night, its steps, from
+//                                        the System page
 //        report                          Report a problem
 //        settings                        the settings of the sheet's game,
 //                                        open at -GalleryCategory
@@ -790,6 +792,10 @@ struct CartoucheGalleryApp: App {
             }
         case "system":
             CartoucheSystemView()
+        case "nightly":
+            NavigationStack {
+                CartoucheNightlyRenewalView()
+            }
         case "storage":
             NavigationStack {
                 CartoucheStorageView()
