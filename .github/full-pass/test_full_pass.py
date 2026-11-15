@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import copy
 import io
+import subprocess
 import sys
 import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -539,6 +541,32 @@ class WaitTests(unittest.TestCase):
         again = Run.of({"id": 3, "head_sha": SHA, "status": "completed", "conclusion": "cancelled",
                         "html_url": "u", "run_attempt": 2})
         self.assertEqual((again.attempt, again.cancelled, again.failed), (2, True, False))
+
+    def test_runs_again_only_the_jobs_that_did_not_pass(self):
+        # 15 November: the whole pass of 0.13.0 ran again for one iPad job
+        # GitHub cut, half an hour more than that job alone.
+        asked = []
+
+        def gh(answers):
+            def run(command, **kwargs):
+                asked.append(command[-1])
+                return subprocess.CompletedProcess(command, answers.pop(0))
+            return run
+
+        github = wait_for_pass.GitHub("o/r")
+        with mock.patch.object(wait_for_pass.subprocess, "run", gh([0])):
+            self.assertTrue(github.rerun(10))
+        self.assertEqual(asked, ["repos/o/r/actions/runs/10/rerun-failed-jobs"])
+        # GitHub will not run them alone: the whole run, as before.
+        asked.clear()
+        with mock.patch.object(wait_for_pass.subprocess, "run", gh([1, 0])):
+            self.assertTrue(github.rerun(10))
+        self.assertEqual(asked, ["repos/o/r/actions/runs/10/rerun-failed-jobs", "repos/o/r/actions/runs/10/rerun"])
+        # Nor the whole run: another job ran it again already.
+        asked.clear()
+        with mock.patch.object(wait_for_pass.subprocess, "run", gh([1, 1])):
+            self.assertFalse(github.rerun(10))
+        self.assertEqual(len(asked), 2)
 
     def test_prints_the_outcome_for_the_run(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -10,8 +10,11 @@ publish, run this before they publish anything from a commit:
   another: fix main, or re-run its failed jobs when a runner failed them;
 - one was cancelled, and none is running: with --start, run it again, once,
   and wait for it, rather than start another: each workflow that waited for
-  it started one of its own (13 November). Cancelled again once run again:
-  fail, with its link;
+  it started one of its own (13 November). Only its jobs that did not pass
+  run again, the cancelled ones among them, and those after them: the others
+  keep their results (the whole pass of 0.13.0 ran again for one iPad job
+  GitHub cut, half an hour more, 15 November). Cancelled again once run
+  again: fail, with its link;
 - a pass of an earlier commit of main has passed, and the commits since change
   only Cartouche's SideStore source, as the pull request "Source: Cartouche X"
   does: done, since nothing the pass tests has changed;
@@ -223,8 +226,15 @@ class GitHub:
                         "-f", f"ref={ref}"], check=True, capture_output=True, text=True)
 
     def rerun(self, run_id: int) -> bool:
-        return subprocess.run(["gh", "api", "-X", "POST", f"repos/{self.repository}/actions/runs/{run_id}/rerun"],
-                              capture_output=True, text=True).returncode == 0
+        """Runs again the jobs of the run that did not pass, cancelled or
+        failed, and the jobs after them, as Re-run failed jobs does; the
+        whole run when GitHub will not run them alone. Whether it did."""
+        for again in ("rerun-failed-jobs", "rerun"):
+            asked = subprocess.run(["gh", "api", "-X", "POST", f"repos/{self.repository}/actions/runs/{run_id}/{again}"],
+                                   capture_output=True, text=True)
+            if asked.returncode == 0:
+                return True
+        return False
 
 
 class Checkout:
