@@ -329,7 +329,7 @@ public struct CartoucheMacConsoleView: View {
                 zoom: path.isEmpty ? zoom : nil,
                 // Beside the console, the sheet describes the game in focus.
                 showsHero: entries.owned.isEmpty,
-                focusing: opensSheetOf.flatMap { titleID in entries.owned.first { $0.titleId == titleID }?.id },
+                focusing: galleryFocus(in: entries),
                 onFocus: { item in
                     if case .game(let entry) = item { focus(entry) }
                 })
@@ -434,6 +434,15 @@ public struct CartoucheMacConsoleView: View {
     private func paneEntry(in entries: CartoucheCatalog.Entries) -> CartoucheEntry? {
         guard !entries.owned.isEmpty else { return nil }
         return entries.entry(id: paneID) ?? entries.owned.first
+    }
+
+    /// The game the gallery's pages open the console on: the one whose
+    /// sheet is beside it, or the first on this Mac, whose settings or info
+    /// they show.
+    private func galleryFocus(in entries: CartoucheCatalog.Entries) -> String? {
+        if let titleID = opensSheetOf { return entries.owned.first { $0.titleId == titleID }?.id }
+        guard opensSettings || opensInfo else { return nil }
+        return entries.owned.first { $0.app != nil }?.id
     }
 
     /// Another game in focus closes the settings page of the last; the

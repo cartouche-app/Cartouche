@@ -80,6 +80,11 @@ struct CartoucheGameInfoView: View {
                 TextField(entry.ownName, text: $name)
                     #if os(iOS)
                     .textInputAutocapitalization(.words)
+                    #else
+                    // The field across the row, the game's own name in it
+                    // when it is empty, as on the iPhone: a form on the Mac
+                    // puts a field's title beside it otherwise.
+                    .labelsHidden()
                     #endif
                     .autocorrectionDisabled()
                     .submitLabel(.done)
@@ -111,6 +116,9 @@ struct CartoucheGameInfoView: View {
             Section {
                 TextField(CartoucheText.gameInfoSummaryPrompt, text: $summary, axis: .vertical)
                     .lineLimit(4 ... 12)
+                    #if os(macOS)
+                    .labelsHidden()
+                    #endif
             } header: {
                 Text(CartoucheText.gameInfoSummary)
             } footer: {
@@ -134,6 +142,9 @@ struct CartoucheGameInfoView: View {
                 }
             }
         }
+        // In boxes, as on the iPhone: a form on the Mac lines its titles up
+        // in a column of their own otherwise.
+        .formStyle(.grouped)
         .scrollContentBackground(.hidden)
         .background(CartoucheStage(key: entry.tileKey, art: shown.backdrop))
         .navigationTitle(CartoucheText.gameInfoTitle)
