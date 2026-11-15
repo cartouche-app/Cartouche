@@ -215,15 +215,17 @@ jobs:
           # end: the log names the test that did not end.
           NSUnbufferedIO: "YES"
         run: swift test --package-path builder/mac
-      # A test that did not end: where each thread of the tests' process
-      # waits, then the process ended. A test that stopped the tests'
-      # process (a trap says nothing of itself): the report macOS writes of
-      # it, its message and the frames of the thread that stopped.
+      # A test that did not end: the programs the tests' process had
+      # started and still had (Z: ended, never reaped), where each of its
+      # threads waits, then the process ended. A test that stopped the
+      # tests' process (a trap says nothing of itself): the report macOS
+      # writes of it, its message and the frames of the thread that stopped.
       - name: Say how the tests ended
         if: ${{ failure() && steps.tests.outcome == 'failure' }}
         run: |
           { pgrep -x xctest || true; } | while read -r pid; do
             echo "== xctest $pid, which had not ended"
+            ps -A -o pid=,ppid=,stat=,etime=,command= | awk -v parent="$pid" '$2 == parent' || true
             sample "$pid" 3 -file "$RUNNER_TEMP/xctest-$pid.txt" > /dev/null 2>&1 || true
             cat "$RUNNER_TEMP/xctest-$pid.txt" 2>/dev/null || echo "no sample of it"
             kill "$pid" 2>/dev/null || true
@@ -290,7 +292,9 @@ jobs:
           done
       # dmgbuild and the two packages it needs, at the versions and hashes
       # of builder/mac/Resources/dmg/requirements.txt, on a Python 3.10 or
-      # later, which they need.
+      # later, which they need. pip tries again for about four minutes, not
+      # eight seconds: the Mac once found no address for
+      # files.pythonhosted.org for longer (15 November, job 132823110791).
       - name: Make the disk image
         run: |
           python=""
@@ -306,7 +310,7 @@ jobs:
           fi
           "$python" --version
           "$python" -m venv build/dmgbuild
-          build/dmgbuild/bin/pip install --quiet --require-hashes --only-binary :all: -r builder/mac/Resources/dmg/requirements.txt
+          build/dmgbuild/bin/pip install --quiet --retries 10 --require-hashes --only-binary :all: -r builder/mac/Resources/dmg/requirements.txt
           PATH="$PWD/build/dmgbuild/bin:$PATH" builder/mac/make_dmg.sh "build/builder/Cartouche Builder.app" build/dmg
       - name: Keep the disk image
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
