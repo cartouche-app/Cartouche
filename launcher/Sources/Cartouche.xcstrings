@@ -9062,6 +9062,23 @@
         }
       }
     },
+    "signIn.otherCertificate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Apple ID already has a certificate that Cartouche does not hold, made by another app or computer, and Cartouche never revokes it. If you installed Cartouche with another Apple ID, sign in with that one. Otherwise, install Cartouche again over this copy with the Cartouche Installer on your computer, with this Apple ID: it gives Cartouche its certificate. Then sign in again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cet identifiant Apple a déjà un certificat que Cartouche n’a pas, créé par une autre app ou un autre ordinateur, et Cartouche ne le révoque jamais. Si vous avez installé Cartouche avec un autre identifiant Apple, connectez-vous avec celui-là. Sinon, réinstallez Cartouche par-dessus cette copie avec l’Installeur Cartouche sur votre ordinateur, avec cet identifiant Apple : il donne son certificat à Cartouche. Puis reconnectez-vous."
+          }
+        }
+      }
+    },
     "signIn.password" : {
       "extractionState" : "manual",
       "localizations" : {

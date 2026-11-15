@@ -770,6 +770,12 @@ struct GalleryWatchReadout: UIViewRepresentable {
 /// - with "limit" in it, Apple refuses more sign-ins for now, with its page
 ///   of HTTP 429, Too Many Requests, as SideStore passed it on before
 ///   app/patches/sidestore/0016;
+/// - with "nogroup" in it, SideStore finds no app group for its database,
+///   as when a signing app signed the IPA for an Apple ID, and leaves
+///   Cartouche how its sign-in ended, as app/patches/sidestore/0014 does;
+/// - with "othercert" in it, Apple accepts the Apple ID, which already has
+///   a certificate SideStore does not hold, and SideStore stops at the
+///   certificate, as app/patches/sidestore/0012 does;
 /// - any other signs the player in.
 ///
 /// Once signed in, the gallery has the Apple ID and the certificate, as the
@@ -801,6 +807,33 @@ final class GallerySideStore: NSObject {
         if appleID.contains("limit") {
             return "<html><head><title>429 Too Many Requests</title></head>"
                 + "<body><h1>429 Too Many Requests</h1></body></html>"
+        }
+        if appleID.contains("nogroup") {
+            let left: [String: Any] = [
+                "version": 1, "action": CartoucheSideStoreOutcome.Action.signIn.rawValue, "ok": false,
+                "date": Int(Date().timeIntervalSince1970), "seconds": 0, "stage": "database", "family": "database",
+                "kind": "missingAppGroup", "codes": "io.sidestore.DatabaseError -1003",
+            ]
+            if let written = try? JSONSerialization.data(withJSONObject: left) {
+                CartoucheStoreKeychain.set(written, for: CartoucheSideStoreOutcome.account)
+            }
+            return "App Group Container Inaccessible"
+        }
+        if appleID.contains("othercert") {
+            let left: [String: Any] = [
+                "version": 1, "action": CartoucheSideStoreOutcome.Action.signIn.rawValue, "ok": false,
+                "date": Int(Date().timeIntervalSince1970), "seconds": 4, "percent": 50, "stage": "certificate",
+                "family": "operation", "kind": "forbidden", "codes": "SideStore.OperationError 5", "certificates": 1,
+                "bundledCertificate": true, "activeCertificate": false,
+            ]
+            if let written = try? JSONSerialization.data(withJSONObject: left) {
+                CartoucheStoreKeychain.set(written, for: CartoucheSideStoreOutcome.account)
+            }
+            return "This Apple account already has a certificate, which signs the apps installed with it. "
+                + "This SideStore never revokes it and does not create another one.\n\n"
+                + "Install Cartouche again with the Cartouche Installer, over this copy: "
+                + "it gives Cartouche the certificate it signs with. Then sign in again.\n\n"
+                + "Certificate named by the app: …0A1B2C; key files: SideStore.framework; on the account: …3D4E5F."
         }
         if appleID.contains("code") {
             var error: String?

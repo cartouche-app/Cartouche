@@ -161,6 +161,10 @@
 //        newer-build                     a newer build of the sheet's game,
 //                                        or of the first of the player's, in
 //                                        the games folder
+//        no-app-group                    a sign-in whose built-in SideStore
+//                                        found no app group, as when a
+//                                        signing app signed the IPA for an
+//                                        Apple ID, LocalDevVPN connected
 //        not-signed-install              the sheet's game installed but not
 //                                        signed whole, with Sign again and
 //                                        play
@@ -190,7 +194,9 @@
 //                                        connected
 //        sign-in-unfinished              the setup after a sign-in that
 //                                        stopped before the certificate,
-//                                        with why and its report to copy
+//                                        the Apple ID having one made
+//                                        elsewhere, with why and its report
+//                                        to copy
 //        signature-refused               the sheet's game's process ended as
 //                                        iOS refused its signature
 //                                        (CartoucheGameActions failSigning)
@@ -401,7 +407,7 @@ struct GalleryScenario {
         GalleryState.appGroupMissing = work == "signed-elsewhere"
         GalleryState.signInUnfinished = work == "sign-in-unfinished"
         GalleryState.sheetSection = screen == "sheet" ? category : nil
-        GalleryState.vpnConnected = work.map { Self.deviceChecks[$0] != nil || $0 == "sidestore-quit" } ?? false
+        GalleryState.vpnConnected = work.map { Self.deviceChecks[$0] != nil || ["sidestore-quit", "no-app-group"].contains($0) } ?? false
         let pairing = GalleryState.documents.appendingPathComponent("SideStore/Documents", isDirectory: true)
         try? FileManager.default.removeItem(at: pairing)
         if setupDone || GalleryState.signInUnfinished {
@@ -508,6 +514,9 @@ struct GalleryScenario {
             }
             if work == "sidestore-quit" {
                 CartoucheAccount.shared.showSideStoreQuitForGallery()
+            }
+            if work == "no-app-group" {
+                CartoucheAccount.shared.showNoAppGroupForGallery()
             }
             if work == "sign-in-unfinished" {
                 CartoucheAccount.shared.showUnfinishedForGallery()

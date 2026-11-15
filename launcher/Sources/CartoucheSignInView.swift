@@ -400,6 +400,15 @@ struct CartoucheSignInView: View {
                     }
                     .buttonStyle(.bordered)
                 }
+                // No app group for the built-in SideStore: the IPA to sign
+                // instead, as the setup offers it.
+                if let ipa = account.problemIPA {
+                    Button(CartoucheText.updateDownloadVersion(CartoucheImportedSigning.cartoucheVersion),
+                           systemImage: "arrow.down.circle") {
+                        openURL(ipa)
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
                 CartoucheReportButton(report: problem)
                     .buttonStyle(.bordered)
             }
