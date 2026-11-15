@@ -13,7 +13,8 @@ import XCTest
 
 final class UpdaterTests: XCTestCase {
     private func release(_ tag: String, draft: Bool = false, prerelease: Bool = false, files: [String]? = nil,
-                         host: String = "https://github.com/clabeuhtegrite/Cartouche/releases/download") -> [String: Any] {
+                         host: String = "https://github.com/cartouche-app/Cartouche/releases/download",
+                         page: String = "https://github.com/cartouche-app/Cartouche") -> [String: Any] {
         let version = tag.hasPrefix("builder-v") ? String(tag.dropFirst("builder-v".count)) : tag
         let names = files ?? ["Cartouche-Builder-\(version).dmg", "Cartouche-Builder-\(version).dmg.sha256"]
         return [
@@ -21,7 +22,7 @@ final class UpdaterTests: XCTestCase {
             "draft": draft,
             "prerelease": prerelease,
             "body": "What \(tag) brings.",
-            "html_url": "https://github.com/clabeuhtegrite/Cartouche/releases/tag/\(tag)",
+            "html_url": "\(page)/releases/tag/\(tag)",
             "assets": names.map { ["name": $0, "browser_download_url": "\(host)/\(tag)/\($0)", "size": $0.hasSuffix(".dmg") ? 41_234_567 : 97] },
         ]
     }
@@ -47,10 +48,73 @@ final class UpdaterTests: XCTestCase {
         XCTAssertEqual(newest.size, 41_234_567)
         XCTAssertEqual(newest.image.lastPathComponent, "Cartouche-Builder-0.2.1.dmg")
         XCTAssertEqual(newest.checksum.lastPathComponent, "Cartouche-Builder-0.2.1.dmg.sha256")
-        XCTAssertEqual(newest.page.absoluteString, "https://github.com/clabeuhtegrite/Cartouche/releases/tag/builder-v0.2.1")
+        XCTAssertEqual(newest.page.absoluteString, "https://github.com/cartouche-app/Cartouche/releases/tag/builder-v0.2.1")
 
         XCTAssertNil(try BuilderReleases.newest(in: Data("[]".utf8)))
         XCTAssertThrowsError(try BuilderReleases.newest(in: Data("{\"message\": \"API rate limit exceeded\"}".utf8)))
+    }
+
+    func testAMovedRepositorysReleasesComeFromWhereGitHubAnswered() throws {
+        // GitHub redirects the API of a repository that moved to an
+        // organization, and its answer gives the new place's addresses.
+        let moved = "https://github.com/new-owner/Cartouche/releases/download"
+        let releases: [[String: Any]] = [
+            release("builder-v0.4.0", host: "https://github.com/someone-else/Cartouche/releases/download"),
+            release("builder-v0.3.0", host: moved),
+            release("builder-v0.2.0"),
+        ]
+        let data = try JSONSerialization.data(withJSONObject: releases)
+        XCTAssertEqual(try XCTUnwrap(try BuilderReleases.newest(in: data)).version, "0.2.0")
+
+        let answering = BuilderReleases.answeringRepository(URL(string: "https://api.github.com/repos/new-owner/Cartouche/releases?per_page=40"))
+        XCTAssertEqual(answering, "new-owner/Cartouche")
+        let newest = try XCTUnwrap(try BuilderReleases.newest(in: data, answering: answering))
+        XCTAssertEqual(newest.version, "0.3.0")
+        XCTAssertEqual(newest.image.absoluteString, moved + "/builder-v0.3.0/Cartouche-Builder-0.3.0.dmg")
+
+        XCTAssertEqual(BuilderReleases.answeringRepository(BuilderReleases.api), BuilderReleases.repository)
+        for other in ["http://api.github.com/repos/a/b/releases", "https://example.com/repos/a/b/releases",
+                      "https://api.github.com/repos/a/b/tags", "https://api.github.com/repos/a/releases"] {
+            XCTAssertNil(BuilderReleases.answeringRepository(URL(string: other)), other)
+        }
+        XCTAssertNil(BuilderReleases.answeringRepository(nil))
+    }
+
+    func testARedirectToTheRepositorysNumberTakesTheRepositoryItsReleasesName() throws {
+        // GitHub may send the API of a repository that moved to its number,
+        // https://api.github.com/repositories/ID/releases, which names no
+        // repository: its releases' pages name where it is now.
+        let moved = "https://github.com/new-owner/Cartouche"
+        let releases: [[String: Any]] = [
+            release("builder-v0.3.0", host: moved + "/releases/download", page: moved),
+            release("builder-v0.2.0", host: moved + "/releases/download", page: moved),
+        ]
+        let data = try JSONSerialization.data(withJSONObject: releases)
+        let byNumber = URL(string: "https://api.github.com/repositories/123456789/releases?per_page=40")
+        XCTAssertNil(BuilderReleases.answeringRepository(byNumber))
+        XCTAssertNil(try BuilderReleases.newest(in: data, answering: BuilderReleases.answeringRepository(byNumber)))
+
+        let answering = BuilderReleases.answeringRepository(byNumber, releases: data)
+        XCTAssertEqual(answering, "new-owner/Cartouche")
+        let newest = try XCTUnwrap(try BuilderReleases.newest(in: data, answering: answering))
+        XCTAssertEqual(newest.version, "0.3.0")
+        XCTAssertEqual(newest.image.absoluteString, moved + "/releases/download/builder-v0.3.0/Cartouche-Builder-0.3.0.dmg")
+        XCTAssertEqual(BuilderReleases.answeringRepository(BuilderReleases.api, releases: data), BuilderReleases.repository)
+
+        // Releases that name two repositories, or one of them none, name none.
+        for other: [[String: Any]] in [
+            [release("builder-v0.3.0", host: moved + "/releases/download", page: moved), release("builder-v0.2.0")],
+            [release("builder-v0.3.0", host: moved + "/releases/download", page: moved),
+             release("builder-v0.2.0", page: "https://example.com/new-owner/Cartouche")],
+            [],
+        ] {
+            XCTAssertNil(BuilderReleases.answeringRepository(byNumber, releases: try JSONSerialization.data(withJSONObject: other)))
+        }
+        XCTAssertNil(BuilderReleases.answeringRepository(byNumber, releases: Data("{\"message\": \"Not Found\"}".utf8)))
+        for other in ["https://api.github.com/repositories/12ab/releases", "https://api.github.com/repositories/123/tags",
+                      "https://example.com/repositories/123/releases", "http://api.github.com/repositories/123/releases"] {
+            XCTAssertNil(BuilderReleases.answeringRepository(URL(string: other), releases: data), other)
+        }
     }
 
     func testVersions() {

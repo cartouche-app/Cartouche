@@ -2,9 +2,9 @@
 //  ContentView.swift
 //  Cartouche Builder
 //
-//  The window: its pages in a sidebar, the page chosen, a message above
-//  it when something went wrong, and the setup assistant. The columns'
-//  widths are in Columns (Theme.swift).
+//  The builder, in the window (ConsoleWindow.swift): its pages in a
+//  sidebar, the page chosen, and a message above it when something went
+//  wrong. The columns' widths are in Columns (Theme.swift).
 //
 
 import AppKit
@@ -13,8 +13,6 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var model: AppModel
-    @EnvironmentObject private var setup: MacSetup
-    @EnvironmentObject private var bridge: BridgeController
 
     var body: some View {
         NavigationSplitView {
@@ -35,17 +33,6 @@ struct ContentView: View {
         // Each page has its title at its top: none in the toolbar, where the
         // covers scrolled under it.
         .toolbar(removing: .title)
-        .sheet(isPresented: $model.showSetup) {
-            SetupAssistant(start: model.setupStep)
-                .environmentObject(model)
-                .environmentObject(setup)
-                .environmentObject(bridge)
-        }
-        // Back from the Finder, where a game may have gone into the dumps or
-        // the games folder: it shows at once.
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            model.playerCameBack()
-        }
     }
 
     @ViewBuilder private var page: some View {

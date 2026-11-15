@@ -5,9 +5,9 @@
 //  The item in the menu bar, there while the window is closed: what is
 //  being built and how far it is, the games nxnative improved with the
 //  button that rebuilds them, or adds them to the build running, the
-//  update that waits, and the way back to the window. Its label opens the
-//  window again when the app asks for it (a notification clicked while the
-//  window is closed).
+//  update that waits, and the way back to the window, on Cartouche's
+//  console or on the builder. Its label opens the window again when the
+//  app asks for it (a notification clicked while the window is closed).
 //
 
 import AppKit
@@ -51,6 +51,9 @@ struct MenuBarView: View {
             }
             if !model.dueOutsideBatch.isEmpty {
                 improved(model.dueOutsideBatch)
+            }
+            if model.library?.games.contains(where: { model.canPlay($0) }) == true {
+                MacPlayMenu(games: model.macGames)
             }
             if case let .ready(release) = updater.state {
                 updateReady(release)
@@ -146,7 +149,7 @@ struct MenuBarView: View {
                 Button {
                     model.section = .library
                     model.selection = game.titleID
-                    show()
+                    show(.builder)
                 } label: {
                     HStack(spacing: 10) {
                         cover(game.titleID)
@@ -205,8 +208,9 @@ struct MenuBarView: View {
 
     private var footer: some View {
         HStack(spacing: 8) {
-            Button(tr("Open Cartouche Builder", "Ouvrir Cartouche Builder")) { show() }
+            Button(tr("Open the console", "Ouvrir la console")) { show(.console) }
                 .keyboardShortcut("o")
+            Button(AppInterface.builder.title) { show(.builder) }
             Spacer()
             Button {
                 Task { await model.refreshLibrary(update: true) }
@@ -241,8 +245,50 @@ struct MenuBarView: View {
         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
     }
 
-    private func show() {
+    /// The window, on INTERFACE.
+    private func show(_ interface: AppInterface) {
+        model.show(interface)
         openWindow(id: AppModel.mainWindow)
         NSApp.activate()
+    }
+}
+
+/// The games of this Mac, in the menu bar: the one playing, and a menu to
+/// play one.
+struct MacPlayMenu: View {
+    @EnvironmentObject private var model: AppModel
+    @ObservedObject var games: MacGames
+
+    var body: some View {
+        let playable = (model.library?.games ?? []).filter { model.canPlay($0) }.sorted {
+            $0.name.localizedStandardCompare($1.name) == .orderedAscending
+        }
+        HStack(spacing: 8) {
+            if let playing = games.playing.values.sorted(by: { $0.started < $1.started }).first {
+                Image(systemName: "gamecontroller.fill")
+                    .foregroundStyle(Theme.indigo)
+                Text(tr("Playing \(playing.app.name)", "En jeu : \(playing.app.name)"))
+                    .font(.caption)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            } else {
+                Image(systemName: "macbook")
+                    .foregroundStyle(.secondary)
+                Text(tr("Play on this Mac", "Jouer sur ce Mac"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 4)
+            Menu {
+                ForEach(playable) { game in
+                    Button(game.name) { model.play(game) }
+                }
+            } label: {
+                Label(tr("Play", "Jouer"), systemImage: "play.fill")
+            }
+            .menuStyle(.button)
+            .controlSize(.small)
+            .fixedSize()
+        }
     }
 }

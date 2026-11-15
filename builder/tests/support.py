@@ -149,7 +149,9 @@ def make_ipa(path: Path, info: dict, when=(2026, 11, 9, 21, 15, 52)) -> Path:
 
 FAKE_BUILD = r'''#!/usr/bin/env python3
 # A stand-in for nxnative's scripts/build_ipa_from_nsp.py: the same options and
-# JSON events, and an IPA of a few bytes.
+# JSON events, and an IPA of a few bytes; with --platform mac-app, a Mac app
+# of a few bytes (Contents/Info.plist, MacOS/dmhost), written as nxnative's
+# packer writes it: under <app>.partial, then renamed, its reuse key beside.
 import argparse, json, os, plistlib, struct, subprocess, sys, time, zipfile
 from pathlib import Path
 
@@ -191,10 +193,14 @@ if tsv.is_file():
 name = name or source.name
 work = Path(a.work_dir)
 work.mkdir(parents=True, exist_ok=True)
-(work / "had_ipa.txt").write_text("yes" if Path(a.out).exists() else "no")
-runs = work / "runs.txt"
+mac = a.platform == "mac-app"
+# The runs, and the options of the last, of each platform.
+prefix = "mac_" if mac else ""
+if not mac:
+    (work / "had_ipa.txt").write_text("yes" if Path(a.out).exists() else "no")
+runs = work / f"{prefix}runs.txt"
 runs.write_text(runs.read_text() + "run\n" if runs.exists() else "run\n")
-(work / "args.json").write_text(json.dumps(sys.argv[1:]))
+(work / f"{prefix}args.json").write_text(json.dumps(sys.argv[1:]))
 # As nxnative: the extracted files, the game's icon among them, and a shader cache.
 (work / "extract").mkdir(exist_ok=True)
 (work / "extract" / "game.bin").write_bytes(b"extracted" * 100)
@@ -208,6 +214,48 @@ print("not json: a tool's own line", flush=True)
 print("a warning on stderr", file=sys.stderr, flush=True)
 commit = subprocess.run(["git", "-C", str(repo), "rev-parse", "--short=12", "HEAD"], capture_output=True, text=True).stdout.strip()
 ev(ev="game", title_id=title_id, name=name, version="1.0.0", bundle_id="org.nxnative." + title_id.lower(), out=a.out, icon=str(work / "extract" / "icon_AmericanEnglish.jpg"))
+if mac:
+    if not a.out.endswith(".app"):
+        ev(ev="say", msg=f"[RED] the Mac app (-o / OUT_IPA) must end in .app: {a.out}")
+        sys.exit(1)
+    if os.environ.get("FAKE_MAC_FAIL") == title_id:
+        ev(ev="stage", k=2, n=3, name="Mac host", step="building")
+        ev(ev="say", msg="[RED] the Mac host did not build (exit 1): see mac_host.log")
+        sys.exit(1)
+    if os.environ.get("FAKE_MAC_NO_SPACE") == title_id:
+        ev(ev="stage", k=3, n=3, name="Mac app", step="starting")
+        ev(ev="say", msg=f"---- last lines of mac_app.log ----\nthe app needs 12.3 GB on the volume of {Path(a.out).parent} (no APFS clones from the build there) and 0.1 GB are free")
+        ev(ev="say", msg="[RED] pack_app.py failed (exit 1): see mac_app.log")
+        sys.exit(1)
+    if os.environ.get("FAKE_MAC_SLEEP") and os.environ.get("FAKE_SLEEP_ONLY", title_id) == title_id:
+        ev(ev="stage", k=2, n=3, name="Mac shaders", step="")
+        for _ in range(int(os.environ["FAKE_MAC_SLEEP"]) * 10):
+            time.sleep(0.1)
+    ev(ev="stage", k=3, n=3, name="Mac app", step="starting")
+    if os.environ.get("FAKE_MAC_NO_APP") == title_id:
+        ev(ev="stage_end", k=3, n=3, name="Mac app", ok=True, summary="", elapsed=0.1)
+        sys.exit(0)
+    import shutil
+    app = Path(a.out)
+    partial, old = Path(f"{app}.partial"), Path(f"{app}.old")
+    shutil.rmtree(partial, ignore_errors=True)
+    (partial / "Contents" / "MacOS").mkdir(parents=True)
+    (partial / "Contents" / "Resources").mkdir()
+    (partial / "Contents" / "Info.plist").write_bytes(plistlib.dumps({
+        "DMCommit": commit, "DMChain": "abcdef012345", "DMTitleID": title_id, "DMSaveSyncChoice": 1,
+        "CFBundleShortVersionString": "1.0.0", "CFBundleIdentifier": "org.nxnative.mac." + title_id.lower(),
+        "CFBundleName": name, "CFBundleExecutable": "nxnative"}))
+    (partial / "Contents" / "MacOS" / "nxnative").write_bytes(b"launcher " + commit.encode())
+    (partial / "Contents" / "MacOS" / "dmhost").write_bytes(b"host " + commit.encode())
+    (partial / "Contents" / "Resources" / "romfs.img").write_bytes((work / "extract" / "game.bin").read_bytes())
+    if app.exists():
+        os.rename(app, old)
+    os.rename(partial, app)
+    shutil.rmtree(old, ignore_errors=True)
+    Path(f"{app}.key").write_text(commit + "\n")
+    ev(ev="stage_end", k=3, n=3, name="Mac app", ok=True, summary=app.name, elapsed=0.1)
+    ev(ev="say", msg=f"done: {app} (0.0 GB); open it from Finder. Its save is in ~/Library/Application Support/nxnative/{title_id}/")
+    sys.exit(0)
 if os.environ.get("FAKE_FAIL") == title_id:
     ev(ev="say", msg="[RED] the fake build failed on purpose")
     sys.exit(1)
@@ -218,6 +266,20 @@ if os.environ.get("FAKE_DAMAGED") == title_id:
     ev(ev="stage", k=2, n=2, name="unpack v131072", step="")
     ev(ev="say", msg="[RED] v131072: 3 file(s) whose bytes do not start as their names promise (a .zs file that is not a zstd stream), so the game files are damaged:\n"
        "  romfs/Texture/a.zs (12,288 bytes, starts 000000)\nPack again from a good copy of the game (--allow-damaged packs these files as they are)")
+    sys.exit(1)
+if os.environ.get("FAKE_METAL") == title_id:
+    # As nxnative's check_metal, after its check of the files and with no
+    # stage of its own, with the Xcode the Mac builds with: FAKE_XCODE.
+    ev(ev="stage", k=2, n=2, name="check v131072 files", step="")
+    selected = os.environ.get("FAKE_XCODE", "27.1")
+    ev(ev="say", msg="[RED] this Mac's Metal compiler is not the one the shaders were tested with (dm/gfx/tools/dmsh_chain.lock): "
+       "metal_iphoneos Apple metal version 32023.620 (metalfe-32023.620) (tested: Apple metal version 32023.850 (metalfe-32023.850)). "
+       "Untested compilers are unsupported (GitHub issue #242). The Metal compiler is the selected Xcode's "
+       f"(selected: Xcode {selected} in /Applications/Xcode.app/Contents/Developer): install Xcode 27.2 (macOS 26.6 or later) "
+       "from https://developer.apple.com/download/all/ (beside a newer Xcode, as /Applications/Xcode-27.2.app), select it "
+       "(sudo xcode-select -s /Applications/Xcode-27.2.app, or DEVELOPER_DIR=/Applications/Xcode-27.2.app/Contents/Developer for one build), "
+       "then download its Metal toolchain (xcodebuild -downloadComponent MetalToolchain), "
+       "or ALLOW_OTHER_METAL = True (--allow-other-metal) to build with this one anyway")
     sys.exit(1)
 if os.environ.get("FAKE_CRASH") == title_id:
     print("Traceback (most recent call last):\n  File \"build_ipa_from_nsp.py\", line 1, in <module>\nKeyError: 'icon'", file=sys.stderr, flush=True)
@@ -294,8 +356,10 @@ def make_engine_remote(folder: Path, games: dict[str, str]) -> Path:
     return folder
 
 
-# What makes the fake nxnative fail, sleep or end without an IPA, for a game.
-FAKES = ("FAKE_FAIL", "FAKE_SLEEP", "FAKE_SLEEP_ONLY", "FAKE_NO_IPA", "FAKE_NO_SPACE", "FAKE_DAMAGED", "FAKE_CRASH", "FAKE_APP_BUILD", "FAKE_BROKEN_ONLY")
+# What makes the fake nxnative fail, sleep or end without an IPA (or a Mac
+# app), for a game.
+FAKES = ("FAKE_FAIL", "FAKE_SLEEP", "FAKE_SLEEP_ONLY", "FAKE_NO_IPA", "FAKE_NO_SPACE", "FAKE_DAMAGED", "FAKE_METAL", "FAKE_XCODE", "FAKE_CRASH",
+         "FAKE_APP_BUILD", "FAKE_BROKEN_ONLY", "FAKE_MAC_FAIL", "FAKE_MAC_NO_SPACE", "FAKE_MAC_SLEEP", "FAKE_MAC_NO_APP")
 
 
 class Home(unittest.TestCase):

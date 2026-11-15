@@ -1,9 +1,10 @@
 """Checks the words the launcher's UI tests look for on the screen
-(launcher/Gallery/UITests/ConsoleTestCase.swift, enum Words) against the
-English the launcher shows: each is the English fallback of the key its
-comment names in launcher/Sources/CartoucheText*.swift, or its beginning, so
-that a change of words fails here, on Linux, rather than as a UI test that
-finds nothing on a Mac.
+(launcher/Gallery/UITests/ConsoleTestCase.swift, enum Words, and the
+extensions of Words in the files of the tests) against the English the
+launcher shows: each is the English fallback of the key its comment names in
+launcher/Sources/CartoucheText*.swift, or its beginning, so that a change of
+words fails here, on Linux, rather than as a UI test that finds nothing on a
+Mac.
 
 Run from the repository root: python3 -m unittest discover -s app/tests -v
 """
@@ -34,6 +35,11 @@ class LauncherUITestWordsTest(unittest.TestCase):
         if not words:
             raise AssertionError("no enum Words in ConsoleTestCase.swift")
         cls.lines = [line for line in words.group(1).splitlines() if line.strip()]
+        # A feature's words, in the file of its tests.
+        for source in sorted(TESTS.glob("*.swift")):
+            text = source.read_text(encoding="utf-8")
+            for found in re.finditer(r"^extension Words \{\n(.*?)^\}", text, re.MULTILINE | re.DOTALL):
+                cls.lines += [line for line in found.group(1).splitlines() if line.strip()]
 
     def test_every_word_names_its_key(self):
         self.assertTrue(self.lines, "enum Words is empty")
