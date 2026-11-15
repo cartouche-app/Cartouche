@@ -1,10 +1,10 @@
 // Research only, removed before the merge: this branch's site with the games'
-// covers, for the review of the iPhone put back beside the iPad and the Mac:
+// covers, for the review of Cartouche's console in the Mac's window (#201):
 // node site-shoot.js BEFORE_DIR AFTER_DIR OUT_DIR (BEFORE_DIR unused this time)
-// The iPad and Mac section on its own, twice the size, 1440 and 390 points
-// wide, in English and French. The window grows to the section before each
-// shot: Chromium draws a nested size container wrong when it captures beyond
-// the window, which a reader's browser never does.
+// The iPad and Mac section and the Builder's on their own, twice the size,
+// 1440 and 390 points wide, in English and French. The window grows to the
+// section before each shot: Chromium draws a nested size container wrong when
+// it captures beyond the window, which a reader's browser never does.
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -52,13 +52,16 @@ async function settle(page) {
       await page.goto(url, { waitUntil: 'load' });
       await settle(page);
       await page.addStyleTag({ content: 'header.top { visibility: hidden !important; }' });
-      const section = await page.$('#ipad-mac');
-      const box = await section.boundingBox();
-      await page.setViewportSize({ width, height: Math.max(height, Math.ceil(box.height) + 40) });
-      await section.scrollIntoViewIfNeeded();
-      await page.waitForLoadState('networkidle').catch(() => {});
-      await page.waitForTimeout(1200);
-      await section.screenshot({ path: `${out}/after-${device}-${lang}-ipad-mac.png` });
+      for (const [id, name] of [['#ipad-mac', 'ipad-mac'], ['#builder', 'builder']]) {
+        const section = await page.$(id);
+        const box = await section.boundingBox();
+        await page.setViewportSize({ width, height: Math.max(height, Math.ceil(box.height) + 40) });
+        await section.scrollIntoViewIfNeeded();
+        await page.waitForLoadState('networkidle').catch(() => {});
+        await page.waitForTimeout(1200);
+        await section.screenshot({ path: `${out}/after-${device}-${lang}-${name}.png` });
+        await page.setViewportSize({ width, height });
+      }
       await context.close();
     }
   }

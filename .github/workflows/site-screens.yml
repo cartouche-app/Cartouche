@@ -6,7 +6,9 @@ name: Site screens
 # alone, in English and French, 1440 and 390 points wide
 # (.github/readme-screens/site-shoot.js). They go to the run's artifact, and
 # in one commit to .github/readme-screens/site on this branch, which starts
-# no workflow (GITHUB_TOKEN).
+# no workflow (GITHUB_TOKEN). With them, the English pictures of the Builder's
+# gallery of #201 (run 43651292033, whose branch went with its merge), for
+# the README's pictures, to .github/readme-screens/builder.
 
 on:
   push:
@@ -71,12 +73,31 @@ jobs:
           retention-days: 7
           if-no-files-found: error
 
-  push:
-    name: Commit them on the branch
-    needs: shoot
+  builder:
+    name: The Builder's gallery of #201, in English
     runs-on: ubuntu-latest
     permissions:
-      contents: write # .github/readme-screens/site on this branch
+      actions: read # the artifact of run 43651292033
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: builder-screens
+          run-id: 43651292033
+          github-token: ${{ github.token }}
+          path: gallery
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: builder-gallery-en
+          path: gallery/*-en-*.png
+          retention-days: 7
+          if-no-files-found: error
+
+  push:
+    name: Commit them on the branch
+    needs: [shoot, builder]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # .github/readme-screens on this branch
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -85,6 +106,10 @@ jobs:
         with:
           name: site-screens
           path: downloaded
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: builder-gallery-en
+          path: gallery
       - name: Commit and push them
         env:
           GH_TOKEN: ${{ github.token }}
@@ -96,7 +121,10 @@ jobs:
           rm -rf .github/readme-screens/site
           mkdir -p .github/readme-screens/site
           cp downloaded/*.png .github/readme-screens/site/
-          git add -A .github/readme-screens/site
+          rm -rf .github/readme-screens/builder
+          mkdir -p .github/readme-screens/builder
+          cp gallery/*.png .github/readme-screens/builder/
+          git add -A .github/readme-screens/site .github/readme-screens/builder
           git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
             commit -q -m "Research: the site before and after, from run $GITHUB_RUN_ID (removed before the merge)"
           git push -q "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" "HEAD:refs/heads/$BRANCH"
