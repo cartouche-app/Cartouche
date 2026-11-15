@@ -991,7 +991,9 @@
 
     .mw__main { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
     .mw__bar { display: flex; flex: none; align-items: center; gap: calc(10 * var(--pt)); height: calc(52 * var(--pt)); padding: 0 calc(14 * var(--pt)) 0 var(--pad); }
-    .mw__title { margin-right: auto; color: rgba(255, 255, 255, .5); font: 600 calc(15 * var(--pt))/1 var(--text); white-space: nowrap; }
+    .mw__switch { display: flex; margin-left: auto; padding: calc(2 * var(--pt)); border-radius: 999px; background: rgba(255, 255, 255, .06); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); color: rgba(235, 235, 245, .5); font: 500 calc(12.5 * var(--pt))/1 var(--text); white-space: nowrap; }
+    .mw__switch span { display: grid; place-items: center; height: calc(28 * var(--pt)); padding: 0 calc(12 * var(--pt)); border-radius: 999px; }
+    .mw__switch .is-on { background: rgba(255, 255, 255, .16); color: #fff; }
     .mw__tools { display: none; align-items: center; gap: calc(10 * var(--pt)); }
     .mw[data-page="library"] .mw__tools { display: flex; }
     .mw__round { display: grid; place-items: center; width: calc(32 * var(--pt)); height: calc(32 * var(--pt)); border-radius: 50%; background: rgba(255, 255, 255, .08); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); font-size: calc(15 * var(--pt)); }
@@ -1409,8 +1411,8 @@
                         <h2><span lang="fr">Reprenez votre partie sur l’écran d’à côté.</span><span lang="en">Pick up your game on the next screen.</span></h2>
                     </div>
                     <div class="prose">
-                        <p lang="fr">Cartouche est la même app sur iPhone et sur iPad : vos jeux, leurs fiches, la manette ou le tactile. Sur votre Mac, <a href="#builder">Cartouche Builder</a> construit chaque jeu pour le Mac aussi, et le lance. Vos sauvegardes vous suivent de l’un à l’autre, par votre Mac ou votre NAS : la plus récente l’emporte.</p>
-                        <p lang="en">Cartouche is the same app on iPhone and iPad: your games, their sheets, a controller or touch. On your Mac, <a href="#builder">Cartouche Builder</a> builds each game for the Mac too, and plays it there. Your saves follow you from one to the other, through your Mac or your NAS: the newest wins.</p>
+                        <p lang="fr">Cartouche est la même app sur iPhone et sur iPad : vos jeux, leurs fiches, la manette ou le tactile. Sur votre Mac, la console de Cartouche est dans la fenêtre de <a href="#builder">Cartouche Builder</a>, qui construit chaque jeu pour le Mac aussi, et le lance. Vos sauvegardes vous suivent de l’un à l’autre, par votre Mac ou votre NAS : la plus récente l’emporte.</p>
+                        <p lang="en">Cartouche is the same app on iPhone and iPad: your games, their sheets, a controller or touch. On your Mac, Cartouche’s console is in the window of <a href="#builder">Cartouche Builder</a>, which builds each game for the Mac too, and plays it there. Your saves follow you from one to the other, through your Mac or your NAS: the newest wins.</p>
                     </div>
                 </div>
                 <div class="duo">
@@ -1431,7 +1433,7 @@
                 <ul class="perks perks--three">
                     <li class="perk"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-iphone"/></svg></span><div><h3>iPhone</h3><p><span lang="fr">La console dans la poche, au tactile ou à la manette, et le jeu en pause derrière elle. Sur un iPhone 15 Pro ou plus récent.</span><span lang="en">The console in your pocket, by touch or with a controller, and the game paused behind it. On an iPhone 15 Pro or newer.</span></p></div></li>
                     <li class="perk"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-ipad"/></svg></span><div><h3>iPad</h3><p><span lang="fr">En paysage, la console et la fiche du jeu côte à côte. Un jeu fait pour se jouer de côté reste de côté. Sur un iPad à puce M1 ou plus récente.</span><span lang="en">In landscape, the console and the game’s sheet side by side. A game made to be played sideways stays sideways. On an iPad with an M1 chip or newer.</span></p></div></li>
-                    <li class="perk"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-laptop"/></svg></span><div><h3>Mac</h3><p><span lang="fr">Cartouche Builder construit chaque jeu pour le Mac aussi : Jouer sur ce Mac le lance, avec vos dernières sauvegardes. Sur un Mac à puce Apple.</span><span lang="en">Cartouche Builder builds each game for the Mac too: Play on this Mac starts it, with your newest saves. On a Mac with Apple silicon.</span></p></div></li>
+                    <li class="perk"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-laptop"/></svg></span><div><h3>Mac</h3><p><span lang="fr">La console de Cartouche et Cartouche Builder, dans la même fenêtre : Console ou Builder, en haut. Chaque jeu est construit pour le Mac aussi, et Jouer le lance avec vos dernières sauvegardes. Sur un Mac à puce Apple.</span><span lang="en">Cartouche’s console and Cartouche Builder, in one window: Console or Builder, at the top. Each game is built for the Mac too, and Play starts it with your newest saves. On a Mac with Apple silicon.</span></p></div></li>
                 </ul>
             </div>
         </section>
@@ -1568,8 +1570,8 @@
                     </div>
                     <div>
                         <div class="prose">
-                            <p lang="fr">Cartouche Builder est l’app Mac de Cartouche. À partir de vos propres copies, il construit chaque jeu avec nxnative, pour l’iPhone et l’iPad comme pour le Mac, et le dépose dans votre dossier de jeux. Puis il les suit : quand nxnative en améliore un, il le reconstruit, tout de suite ou la nuit, et Cartouche propose la mise à jour sur l’iPhone, sauvegardes gardées.</p>
-                            <p lang="en">Cartouche Builder is Cartouche’s Mac app. From your own copies, it builds each game with nxnative, for the iPhone and iPad as for the Mac, and puts it in your games folder. Then it follows them: when nxnative improves one, it builds it again, now or at night, and Cartouche offers the update on the iPhone, saves kept.</p>
+                            <p lang="fr">Cartouche Builder est l’app Mac de Cartouche. À partir de vos propres copies, il construit chaque jeu avec nxnative, pour l’iPhone et l’iPad comme pour le Mac, et le dépose dans votre dossier de jeux. Puis il les suit : quand nxnative en améliore un, il le reconstruit, tout de suite ou la nuit, et Cartouche propose la mise à jour sur l’iPhone, sauvegardes gardées. Sa fenêtre montre aussi la console de Cartouche, comme sur l’iPhone : Console ou Builder, en haut de la fenêtre, ou ⌘1 et ⌘2.</p>
+                            <p lang="en">Cartouche Builder is Cartouche’s Mac app. From your own copies, it builds each game with nxnative, for the iPhone and iPad as for the Mac, and puts it in your games folder. Then it follows them: when nxnative improves one, it builds it again, now or at night, and Cartouche offers the update on the iPhone, saves kept. Its window shows Cartouche’s console too, as on the iPhone: Console or Builder, at the top of the window, or ⌘1 and ⌘2.</p>
                         </div>
                         <div class="actions">
                             <a class="btn btn--primary" data-download="builder" href="https://github.com/cartouche-app/Cartouche/releases/download/builder-v0.2.0/Cartouche-Builder-0.2.0.dmg"><svg aria-hidden="true"><use href="#i-download"/></svg><span lang="fr">Télécharger Cartouche Builder</span><span lang="en">Download Cartouche Builder</span></a>
@@ -2191,8 +2193,10 @@
             }).join("") + "</nav>" +
             '<div class="mw__foot"><p>' + ic("box") + "nxnative 6c3aeb3" + ic("refresh") + "</p><small>" + t("Vérifié il y a 1 heure", "Checked 1 hour ago") + "</small></div></div>";
     }
+    // Console | Builder at the top of the window, where its title was (#201),
+    // the builder shown; then the library's tools.
     function macBar() {
-        return '<div class="mw__bar"><span class="mw__title">Cartouche Builder</span><span class="mw__tools">' +
+        return '<div class="mw__bar"><span class="mw__switch" role="img" data-label-fr="Console ou Builder, en haut de la fenêtre : le Builder est affiché" data-label-en="Console or Builder, at the top of the window: the builder is shown" aria-label="Console or Builder, at the top of the window: the builder is shown"><span>Console</span><span class="is-on">Builder</span></span><span class="mw__tools">' +
             '<button type="button" class="mw__round" data-rebuild data-label-fr="Reconstruire ce qui est dû" data-label-en="Rebuild what is due" aria-label="Rebuild what is due">' + ic("sparkle") + "</button>" +
             '<span class="mw__search">' + ic("search") + t("Chercher un jeu", "Search a game") + "</span></span></div>";
     }
@@ -2203,7 +2207,8 @@
 
     // A game's sheet beside the library (GameDetailView): how it is, Rebuild
     // and Follow, Play on this Mac and its saves, what it is built for, and
-    // why it is due. Its saves came from the iPhone, in the app's words.
+    // why it is due. Its saves came from the saves folder, in the app's words,
+    // which name no device since #201.
     function msheet(g) {
         var b = BUILDS.filter(function (x) { return x.id === g.id; })[0] || { state: "up" };
         var due = b.state === "due";
@@ -2218,7 +2223,7 @@
             '<span class="msheet__follow">' + t("Suivre", "Follow") + '<i class="mswitch is-on"></i></span></div>' +
             '<div class="mcard msheet__play"><span class="mbtn mbtn--go">' + ic("play") + t("Jouer sur ce Mac", "Play on this Mac") + "</span>" +
             mbtn("sliders", t("Réglages du jeu", "Game settings")) +
-            '<p class="msheet__note">' + ic("refresh") + "<span>" + t("Les sauvegardes les plus récentes, celles de l’iPhone, sont arrivées il y a 26 minutes.", "The newest saves, the iPhone’s, came 26 minutes ago.") + "</span></p></div>" +
+            '<p class="msheet__note">' + ic("refresh") + "<span>" + t("Les sauvegardes les plus récentes sont arrivées du dossier des sauvegardes il y a 26 minutes.", "The newest saves came from the saves folder 26 minutes ago.") + "</span></p></div>" +
             part(t("Construit pour", "Built for"),
                 platform("iphone", "iPhone", t("Son IPA, dans le dossier des jeux, pour Cartouche.", "Its IPA, in the games folder, for Cartouche.")) +
                 platform("laptop", t("Ce Mac", "This Mac"), t("Son app, pour y jouer sur ce Mac.", "Its app, to play it on this Mac."))) +

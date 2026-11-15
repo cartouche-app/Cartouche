@@ -31,7 +31,7 @@ On your Mac, Cartouche Builder builds your games, plays them there with the same
 - **The memory games need.** Cartouche's App ID gets Increased Memory Limit, even on a free account, and Game Mode while a game runs.
 - **Updates without a computer.** Cartouche offers its own new versions over the console and installs them, and offers a game's update when your games folder holds a newer build of it.
 - **On iPad too.** The same app, on an iPad with an M1 chip or newer: in landscape, the console and the sheet of the game in focus stand side by side, and a game made to be played sideways stays sideways behind the console. Portrait or landscape, iPhone or iPad, the interface follows the room it has.
-- **And on your Mac.** Cartouche Builder builds each of your games for the Mac as well as for the iPhone and iPad, and **Play on this Mac** starts it there, its saves kept in step with your iPhone's both ways, through your Mac or your NAS: a game left on the iPhone goes on on the Mac, and back.
+- **And on your Mac.** Cartouche's console is in Cartouche Builder's window too: **Console** and **Builder**, at the top of the window, switch from one to the other. Cartouche Builder builds each of your games for the Mac as well as for the iPhone and iPad, and **Play** starts it there, its saves kept in step with your iPhone's both ways, through your Mac or your NAS: a game left on the iPhone goes on on the Mac, and back.
 - **Measurements that make games run better.** After each session, Cartouche sends what nxnative measured, such as the frame rate and the memory, never your files, saves or accounts; **System › Game measurements** turns it off ([privacy](docs/privacy.md)). Under each error, **Copy the report** gives what it takes to understand it.
 
 You never see LiveContainer or SideStore, which Cartouche is built on: it drives them out of sight.
@@ -40,7 +40,7 @@ You never see LiveContainer or SideStore, which Cartouche is built on: it drives
 
 ## Cartouche Builder, on your Mac
 
-Cartouche Builder is Cartouche's Mac app. From your own copies, it builds each game with nxnative into your games folder, on the Mac or on your NAS: for the iPhone and iPad, and for the Mac itself. Then it follows them: when a change to nxnative touches one of your games, it builds it again, at once or at night, and Cartouche offers the update on the iPhone, saves kept. **Play on this Mac** starts a game on the Mac, with the newest of your saves, and sends the Mac's back to your saves folder after each game; a game kept on your NAS installs on the Mac the first time you play it there. It sets the Mac up itself, with no Terminal, updates itself, and once paired with your iPhone, by the same six digits on both screens, it serves your games and keeps your saves ([builder/README.md](builder/README.md)).
+Cartouche Builder is Cartouche's Mac app. From your own copies, it builds each game with nxnative into your games folder, on the Mac or on your NAS: for the iPhone and iPad, and for the Mac itself. Then it follows them: when a change to nxnative touches one of your games, it builds it again, at once or at night, and Cartouche offers the update on the iPhone, saves kept. **Play on this Mac** starts a game on the Mac, with the newest of your saves, and sends the Mac's back to your saves folder after each game; a game kept on your NAS installs on the Mac the first time you play it there. Its window shows Cartouche's console too, as on the iPhone: **Console** and **Builder**, at the top of the window or with ⌘1 and ⌘2, switch from one to the other, and the console also shows the games your NAS keeps for this Mac, which install from there. It sets the Mac up itself, with no Terminal, updates itself, and once paired with your iPhone, by the same six digits on both screens, it serves your games and keeps your saves ([builder/README.md](builder/README.md)).
 
 <p align="center"><img src="docs/images/builder.png" width="88%" alt="Cartouche Builder on a Mac: the player's games with their covers, and Mario Kart 8 Deluxe's sheet with Play on this Mac, the iPhone's newest saves and what the game is built for, the iPhone and this Mac"></p>
 
@@ -85,7 +85,7 @@ The ones nxnative runs natively. In Cartouche, **All games** lists every game nx
 <details>
 <summary><b>Does it run on iPad, and on a Mac?</b></summary>
 
-On an iPad with an M1 chip or newer, Cartouche is the same app as on the iPhone, installed the same way, and says iPad wherever it speaks of your device. On a Mac with Apple silicon, Cartouche Builder builds each of your games for the Mac too and plays it there, with the same saves as your iPhone and iPad.
+On an iPad with an M1 chip or newer, Cartouche is the same app as on the iPhone, installed the same way, and says iPad wherever it speaks of your device. On a Mac with Apple silicon, Cartouche Builder builds each of your games for the Mac too and plays it there, with the same saves as your iPhone and iPad, and its window shows Cartouche's console as well: **Console** or **Builder**, at the top of the window.
 </details>
 
 <details>
