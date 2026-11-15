@@ -40,6 +40,8 @@
 //        storage-drive-guide             the steps that make that client
 //        storage-mac                     Add your Mac, the form that pairs
 //                                        this iPhone with a Mac nearby
+//        storage-smb                     Add a shared folder, with a NAS
+//                                        nearby (GallerySMB)
 //        switch-save                     the saves of the sheet's game
 //                                        between the Switch and this iPhone,
 //                                        with -GalleryWork saves the save
@@ -145,6 +147,13 @@
 //        signature-refused               the sheet's game's process ended as
 //                                        iOS refused its signature
 //                                        (CartoucheGameActions failSigning)
+//        smb-no-guests                   on Add a shared folder (screen
+//                                        storage-smb), the NAS refusing a
+//                                        guest, without a user name
+//        smb-refused                     on Add a shared folder (screen
+//                                        storage-smb), the NAS refusing the
+//                                        user name or the password the
+//                                        player signed in with
 //        starting                        on the TV (screen tv), the game
 //                                        starting
 //        stopped-on-error                the sheet's game's process ended on
@@ -376,6 +385,12 @@ struct GalleryScenario {
                 CartoucheStorageSettings.shared.showForGallery(nas, games: "Jeux", saves: "Sauvegardes")
                 CartoucheStorageReach.shared.showOfflineForGallery([nas.id])
                 CartoucheSaveBackups.shared.showWaitingForGallery(2)
+            }
+            // The servers Add a shared folder finds nearby: made-up ones,
+            // never those of the network the gallery runs on.
+            CartoucheSMBBrowser.gallery = screen == "storage-smb" ? GallerySMB.nearby : []
+            if screen == "storage-smb" {
+                CartoucheStorageServerForm.gallery = GallerySMB.signIn(work)
             }
             if ["mac-nearby", "mac-code", "mac-refused"].contains(work) {
                 let refused = work == "mac-refused"
@@ -795,6 +810,12 @@ struct CartoucheGalleryApp: App {
         case "storage":
             NavigationStack {
                 CartoucheStorageView()
+            }
+        case "storage-smb":
+            // As the Storage page opens it, once the player signed in to
+            // list the shared folders of a NAS nearby.
+            NavigationStack {
+                CartoucheStorageServerForm(server: GallerySMB.server(scenario.work))
             }
         case "storage-mac":
             // As the Storage page opens it, for a Mac not paired yet.
