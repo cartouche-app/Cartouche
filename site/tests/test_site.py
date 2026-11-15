@@ -36,7 +36,7 @@ CATALOG = SITE.parent / "catalog"
 # Cartouche Installer for Mac and for Windows, and Cartouche Builder. A link
 # to one is marked data-download="<file>", for the publication to give it the
 # newest release (site/tools/downloads.py).
-REPOSITORY = "https://github.com/clabeuhtegrite/Cartouche"
+REPOSITORY = "https://github.com/cartouche-app/Cartouche"
 DOWNLOADS = {
     "builder": re.compile(re.escape(REPOSITORY) + r"/releases/download/builder-v(\d+\.\d+\.\d+)/Cartouche-Builder-\1\.dmg"),
     "installer-mac": re.compile(re.escape(REPOSITORY) + r"/releases/download/installer-v(\d+\.\d+\.\d+)/Cartouche-Installer-\1-Mac\.dmg"),

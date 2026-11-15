@@ -168,6 +168,9 @@ final class CartoucheGameActions: ObservableObject {
     /// gallery has none of, but for the game whose saves a scenario syncs
     /// (work: saves, GallerySaves).
     func saves(of app: LCAppModel) -> CartoucheSaveTarget? { GallerySaves.target(of: app) }
+    /// Nor any log, but for the game whose logs a scenario shares (work:
+    /// log, GalleryLogs).
+    func logs(of app: LCAppModel) -> CartoucheGameLogFolder? { GalleryLogs.folder(of: app) }
     func copySaves(of apps: [LCAppModel]) {}
     /// Nor any folder to measure: the scenario gives each game its size and
     /// play time (CartoucheGameStats.showForGallery).
@@ -187,7 +190,7 @@ final class CartoucheGameActions: ObservableObject {
 final class CartoucheTelemetry: ObservableObject {
     static let shared = CartoucheTelemetry()
     static let endpoint = URL(string: "https://telemetry.example.workers.dev")
-    static let privacyURL = URL(string: "https://github.com/clabeuhtegrite/Cartouche/blob/main/docs/privacy.md")!
+    static let privacyURL = URL(string: "https://github.com/cartouche-app/Cartouche/blob/main/docs/privacy.md")!
 
     @Published private(set) var isOn = true
     @Published private(set) var lastReport: String? = """
