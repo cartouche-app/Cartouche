@@ -419,6 +419,11 @@
     // it, display.foldSplit was true for any iPhone upright, which nxnative
     // splits at the middle of its screen too.
     const FOLD_READER = 3;
+    // A game nxnative stopped when the system took the GPU away from it
+    // (end.cause gpuLost) says so only from the fourth reading (reader 4):
+    // before it, that was a crash like any other abort, or an end the log of
+    // a Mac did not tell.
+    const GPU_LOST_READER = 4;
 
     // A game's status, by the game sheets' rules (telemetry/sheets.py), each
     // iPhone counting once by the median of its own sessions: "none" when no
@@ -444,7 +449,7 @@
         "thermal.critical", "thermal.seriousAfterMinutes", "lowPowerMinutes", "memory.peakMiB", "memory.exactPeak",
         "memory.gpuPeakMiB", "memory.lowestHeadroomMiB", "guestFile", "upscaler.kind", "upscaler.gpuMs",
         "audioUnderrunsPerMinute", "display.tv", "display.foldSplit", "dlc", "end.kind", "end.signal", "end.pc", "end.lr",
-        "process.limitMiB", "process.peakMiB", "process.lastAvailableMiB", "process.quit", "process.screens",
+        "end.cause", "process.limitMiB", "process.peakMiB", "process.lastAvailableMiB", "process.quit", "process.screens",
     ];
 
     const num = (value) => (typeof value === "number" && Number.isFinite(value) ? value : null);
@@ -907,12 +912,13 @@
         };
 
         // MARK: Endings
-        const crashes = groupBy(
-            sessions.filter((session) => endOf(session) === "crash"),
-            (session) => [session["end.signal"] ?? "", session["end.pc"] ?? "", session["end.lr"] ?? ""].join("|"),
-        );
+        const crashed = sessions.filter((session) => endOf(session) === "crash");
+        const crashes = groupBy(crashed, (session) => [session["end.signal"] ?? "", session["end.pc"] ?? "", session["end.lr"] ?? "", session["end.cause"] ?? ""].join("|"));
+        // The crashes whose log could tell a lost GPU, and those that did.
+        const toldWhy = crashed.filter((session) => (num(session.reader) ?? 1) >= GPU_LOST_READER);
         const endings = {
             ends: endsOf(sessions),
+            gpuLost: { count: toldWhy.filter((session) => session["end.cause"] === "gpuLost").length, read: toldWhy.length },
             byBuild: [...groupBy(sessions, (session) => session.nxnative)]
                 .map(([build, list]) => ({ build, sessions: list.length, bad: endsOf(list).bad, last: list.reduce((latest, session) => (session.day > latest ? session.day : latest), "") }))
                 .sort((a, b) => (b.last > a.last ? 1 : b.last < a.last ? -1 : b.sessions - a.sessions))
@@ -922,6 +928,7 @@
                     signal: num(list[0]["end.signal"]),
                     pc: text(list[0]["end.pc"]),
                     lr: text(list[0]["end.lr"]),
+                    cause: text(list[0]["end.cause"]),
                     count: list.length,
                     iphones: new Set(list.map((session) => session.install)).size,
                     games: [...new Set(list.map((session) => gameOf(catalog, session.game).name ?? session.game))],
@@ -1261,7 +1268,7 @@
         }
         for (const crash of endings.crashes) {
             if (crash.iphones >= ATTENTION.crashIphones) {
-                attention.push({ key: "crash", tone: "serious", copies: crash.iphones, signal: crash.signal, pc: crash.pc, count: crash.count, games: crash.games, section: "fins" });
+                attention.push({ key: "crash", tone: "serious", copies: crash.iphones, signal: crash.signal, pc: crash.pc, cause: crash.cause, count: crash.count, games: crash.games, section: "fins" });
             }
         }
         for (const game of memory.byGame) {
@@ -1473,7 +1480,8 @@
                     const limit = phone.increased ? 6143 : 3376;
                     const peak = Math.round(Math.min(profile.peak * between(0.92, 1.08), limit * between(0.9, 0.99)));
                     let end = null;
-                    if (crashRoll < profile.risk * (memoryTight ? 3 : 1) + 0.02) end = memoryTight || (profile.peak > 5000 && rand() < 0.6) ? { kind: "memory-likely" } : rand() < 0.15 ? { kind: "boot-failed" } : { kind: "crash", signal: pick([11, 11, 11, 10, 6]), pc: "main+0x" + pick(["1a2b3c", "4f00a8", "1a2b3c", "2c9e14"]), lr: "main+0x" + pick(["1a2b00", "4f0010", "1a2b00"]) };
+                    const reader = phone.version === "0.10.0" ? GPU_LOST_READER : 1;
+                    if (crashRoll < profile.risk * (memoryTight ? 3 : 1) + 0.02) end = memoryTight || (profile.peak > 5000 && rand() < 0.6) ? { kind: "memory-likely" } : rand() < 0.15 ? { kind: "boot-failed" } : reader >= GPU_LOST_READER && rand() < 0.15 ? { kind: "crash", signal: 6, pc: "__pthread_kill+0x8", lr: "pthread_kill+0x10c", cause: "gpuLost" } : { kind: "crash", signal: pick([11, 11, 11, 10, 6]), pc: "main+0x" + pick(["1a2b3c", "4f00a8", "1a2b3c", "2c9e14"]), lr: "main+0x" + pick(["1a2b00", "4f0010", "1a2b00"]) };
                     else if (rand() < 0.12) end = { kind: "unknown" };
                     const heat = rand() < profile.heat * 2.2 ? profile.heat * between(0.6, 1.4) : 0;
                     const serious = round(minutes * heat * 0.6);
@@ -1493,8 +1501,8 @@
                         nxnativeChanged: rand() < 0.08,
                         settings: rand() < 0.3 ? { DM_RENDER_SCALE: pick(["1.0", "0.75", "1.25"]), DM_OPMODE: "0" } : { DM_OPMODE: "0" },
                         minutes,
-                        // The newer version reads the log without its pauses, and the Duo's fold.
-                        reader: phone.version === "0.10.0" ? 3 : 1,
+                        // The newer version reads the log without its pauses, the Duo's fold and a lost GPU.
+                        reader,
                         frames: Math.round(minutes * 60 * fps),
                         targetFps: profile.target,
                         "fps.median": fps,
@@ -1542,6 +1550,7 @@
                         item["end.signal"] = end.signal ?? null;
                         item["end.pc"] = end.pc ?? null;
                         item["end.lr"] = end.lr ?? null;
+                        item["end.cause"] = end.cause ?? null;
                     }
                     add(phone, day, item);
                 }
@@ -1630,7 +1639,7 @@
         };
     }
 
-    root.CartoucheModel = { ENDS, THERMAL, SHOWN, STATUSES, SLOWEST_READER, FOLD_READER, ATTENTION, expand, compact, build, demo, median, dayList, gameOf, newestFirst, verdict, shownDays };
+    root.CartoucheModel = { ENDS, THERMAL, SHOWN, STATUSES, SLOWEST_READER, FOLD_READER, GPU_LOST_READER, ATTENTION, expand, compact, build, demo, median, dayList, gameOf, newestFirst, verdict, shownDays };
 })(typeof window !== "undefined" ? window : globalThis);
 </script>
 
@@ -1770,6 +1779,7 @@
         unknown_base: "Commit d'avant inconnu", profile: "Profil du jeu changé", named: "Commit qui nomme le jeu", shared: "Code commun changé",
     };
     const UPSCALERS = { metalfx: "MetalFX", bilinear: "Bilinéaire" };
+    const CAUSES = { gpuLost: "Perte du GPU" };
     const EVENTS = { "app.opened": "Ouverture de l'app", "app.unfinished": "Lancement inachevé", "app.updated": "Mise à jour de Cartouche", "signature.renewed": "Signature renouvelée", "renewal.done": "Renouvellement réussi", "game.installed": "Jeu installé ou mis à jour", "account.signedIn": "Connexion Apple réussie", "signing.imported": "Certificat importé", "import.picker": "Sélecteur de fichiers d'un import", error: "Erreur" };
 
     const gameName = (id, name) => name || id || "?";
@@ -2237,7 +2247,7 @@
             }
             case "crash":
                 return [
-                    "Le même plantage, " + (SIGNALS[item.signal] || "signal " + item.signal),
+                    "Le même plantage, " + [has(item.signal) ? SIGNALS[item.signal] || "signal " + item.signal : null, item.cause ? (CAUSES[item.cause] || item.cause).replace(/^./, (letter) => letter.toLowerCase()) : null].filter(Boolean).join(", "),
                     sentence("À " + (item.pc || "?") + ", " + plural(item.count, "fois", "fois") + " : " + item.games.map((id) => name(id)).slice(0, 3).join(", ") + (item.games.length > 3 ? "…" : "")),
                 ];
             case "memory":
@@ -2531,12 +2541,14 @@
         const builds = e.byBuild.some((build) => build.build);
         return [
             card("Fin des parties", "Comment chaque partie s'est terminée, d'après son journal.",
-                segmented(M.ENDS.map((kind) => ({ label: ENDS[kind], value: e.ends[kind], tone: END_TONES[kind], figure: count(e.ends[kind]) })), { empty: "Aucune partie sur cette période." })),
+                segmented(M.ENDS.map((kind) => ({ label: ENDS[kind], value: e.ends[kind], tone: END_TONES[kind], figure: count(e.ends[kind]) })), { empty: "Aucune partie sur cette période." }),
+                e.gpuLost.read ? h("p", { class: "minor", text: "Pertes du GPU : " + count(e.gpuLost.count) + " sur " + plural(e.gpuLost.read, "plantage lu", "plantages lus") + " depuis la lecture " + M.GPU_LOST_READER + " du journal. Le système a retiré le GPU au jeu après des erreurs du GPU, et nxnative l'a arrêté." }) : null),
             !builds ? null : card("Par build de nxnative", "Les builds les plus récents d'abord.",
                 bars(e.byBuild.map((build) => ({ label: build.build ? build.build.slice(0, 12) : "inconnu", sub: dayText(build.last), value: build.sessions, figure: plural(build.sessions, "partie", "parties"), note: build.sessions ? percent(build.bad / build.sessions) + " mal finies" : null, tone: build.sessions && build.bad / build.sessions >= 0.1 ? "var(--critical)" : "var(--s1)" })))),
             h("article", { class: "card span" }, h("h3", { text: "Plantages" }), h("p", { class: "sub", text: "Groupés par signal et par adresse dans le code du jeu (module + décalage)." }),
                 table([
                     { label: "Signal", cell: (crash) => signal(crash.signal), sort: (crash) => crash.signal ?? 0 },
+                    { label: "Cause", cell: (crash) => (crash.cause ? CAUSES[crash.cause] || crash.cause : DASH) },
                     { label: "pc", mono: true, cell: (crash) => crash.pc || DASH },
                     { label: "lr", mono: true, cell: (crash) => crash.lr || DASH },
                     { label: "Fois", numeric: true, cell: (crash) => count(crash.count), sort: (crash) => crash.count },

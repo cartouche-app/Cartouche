@@ -232,6 +232,9 @@ const session = object(
         signal: integer(1, 128),
         pc: text(LOCATION),
         lr: text(LOCATION),
+        // Why, when nxnative's log says: gpuLost, the system took the GPU
+        // away from the game (CartoucheGameLog.swift, from reader 4).
+        cause: oneOf("gpuLost"),
       },
       ["kind"],
     ),

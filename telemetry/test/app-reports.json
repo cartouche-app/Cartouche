@@ -16,10 +16,11 @@
       "dlc": true,
       "droppedPercent": 1.8,
       "end": {
+        "cause": "gpuLost",
         "kind": "crash",
-        "lr": "main+0x1a2b00",
-        "pc": "main+0x1a2b3c",
-        "signal": 11
+        "lr": "pthread_kill+0x10c",
+        "pc": "__pthread_kill+0x8",
+        "signal": 6
       },
       "fps": {
         "low5": 52,
@@ -82,7 +83,7 @@
           }
         ]
       },
-      "reader": 3,
+      "reader": 4,
       "schema": 1,
       "seq": 7,
       "session": "b8e1d0c4-7a2f-4e19-8c3d-2f6a9b0e1d7c",

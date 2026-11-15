@@ -176,8 +176,8 @@ class NxnativePageTest(unittest.TestCase):
         figures = {"Installs": "3", "Sessions": "4", "Hours": "2.3", "Target fps": "60", "FPS median": "58.0",
                    "FPS slowest 5%": "52.0", "Frame p99 ms": "33.4", "Stutters a minute": "3",
                    "Waiting for shaders": "70%", "Shader stall ms a minute": "210", "Prepare s": "21.4",
-                   "Peak MiB": "4,813", "Reached serious heat": "4 of 4", "Crashed": "0", "Failed to boot": "0",
-                   "Out of memory": "0", "Drew no frame": "0"}
+                   "Peak MiB": "4,813", "Reached serious heat": "4 of 4", "Crashed": "0", "GPU lost": "–",
+                   "Failed to boot": "0", "Out of memory": "0", "Drew no frame": "0"}
         self.assertEqual(rows(page, "By game"), [{"Game": MKW_NAME, "nxnative": "`6c3aeb3d70a1`", **figures}])
         self.assertEqual(rows(page, "By game and model"),
                          [{"Game": MKW_NAME, "Model": "`iPhone19,4`", "nxnative": "`6c3aeb3d70a1`", **figures}])
@@ -279,15 +279,34 @@ class NxnativePageTest(unittest.TestCase):
         self.run_page()
         page = self.page()
         by_signal, exact = tables(page, "Crashes")
-        self.assertEqual(by_signal, [{"Game": MKW_NAME, "Signal": "SIGSEGV", "Installs": "4", "Sessions": "4",
+        self.assertEqual(by_signal, [{"Game": MKW_NAME, "Signal": "SIGSEGV", "Cause": "–", "Installs": "4", "Sessions": "4",
                                       "Models": "`iPhone19,4` (+1)", "nxnative": "`aaaaaaaaaaaa`",
                                       "Minutes in": "35.2"}])
         self.assertEqual(exact, [{"Game": MKW_NAME, "Version": "1.0.0", "nxnative": "`aaaaaaaaaaaa`",
-                                  "Signal": "SIGSEGV", "pc": "`main+0x10`", "lr": "`main+0x08`", "Installs": "3",
+                                  "Signal": "SIGSEGV", "Cause": "–", "pc": "`main+0x10`", "lr": "`main+0x08`", "Installs": "3",
                                   "Sessions": "3", "Minutes in": "35.2"}])
         for unshared in ("main+0x99", "main+0x98", "SIGABRT", "main+0x20", "iPhone17,2"):
             self.assertNotIn(unshared, page)
         self.assertEqual(rows(page, "By game")[0]["Crashed"], "6")
+
+    def test_a_lost_gpu_is_a_crash_of_its_own_from_the_reading_that_tells_it(self):
+        abort = {"kind": "crash", "signal": 6, "pc": "__pthread_kill+0x8", "lr": "pthread_kill+0x10c"}
+        for phone in self.phones[:3]:
+            self.session(phone, nxnative="aaaaaaaaaaaa", reader=4, end={**abort, "cause": "gpuLost"})
+        for phone in self.phones[3:6]:
+            self.session(phone, nxnative="aaaaaaaaaaaa", reader=4, end=abort)
+        # Read before, a lost GPU was an abort like the others.
+        self.session(self.phones[6], nxnative="aaaaaaaaaaaa", end=abort)
+        self.run_page()
+        page = self.page()
+        by_signal, exact = tables(page, "Crashes")
+        self.assertEqual([(r["Signal"], r["Cause"], r["Installs"]) for r in by_signal],
+                         [("SIGABRT", "–", "4"), ("SIGABRT", "GPU access revoked", "3")])
+        self.assertEqual([(r["Signal"], r["Cause"], r["pc"], r["Installs"]) for r in exact],
+                         [("SIGABRT", "–", "`__pthread_kill+0x8`", "4"),
+                          ("SIGABRT", "GPU access revoked", "`__pthread_kill+0x8`", "3")])
+        line = rows(page, "By game")[0]
+        self.assertEqual((line["Crashed"], line["GPU lost"]), ("7", "3"))
 
     def test_no_installs_sessions_or_reports_number_is_written(self):
         for phone in self.phones[:3]:

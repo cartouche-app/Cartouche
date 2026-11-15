@@ -279,6 +279,30 @@ final class CartoucheGameLogTests: XCTestCase {
         XCTAssertEqual(CartoucheGameLogReader.location("_ZN2nn2os4WaitEv+0x3c"), "_ZN2nn2os4WaitEv+0x3c")
     }
 
+    /// The system took the GPU away from the game for the GPU errors it
+    /// caused, and nxnative stopped it (gpu_lost_check in nvn_mtl.m, and
+    /// front_gpu_lost in front_mac.m, at nxnative 8857684): an iPhone or an
+    /// iPad aborts it, as Fire Emblem's on an iPad Pro did twice on
+    /// 15 November; a Mac tells the player and quits it, without a crash
+    /// line. Any other abort says no cause.
+    func testAGameThatLostTheGPUSaysWhy() {
+        let iPad = measures("""
+        [dm] [nvn-mtl] [RED] command buffer execution error: The operation couldn’t be completed. (MTL4CommandQueueErrorDomain error 1.)
+        [dm] [nvn-mtl] [RED] GPU access revoked: the segment command buffer was ignored (fences back 7127 of 7127); macOS runs none of this process's GPU work any more, so the game stops
+        [dm] [nvn-mtl] FATAL GPU access revoked: macOS runs none of this process's GPU work any more
+        [dm] CRASH sig=6 addr=__pthread_kill+0x8 pc=__pthread_kill+0x8 lr=pthread_kill+0x10c sp=0x16beaa1b0
+        """)
+        XCTAssertEqual(iPad.end, CartoucheGameMeasures.End(kind: "crash", signal: 6, pc: "__pthread_kill+0x8",
+                                                           lr: "pthread_kill+0x10c", cause: "gpuLost"))
+        let mac = measures("""
+        [dm] [nvn-mtl] [RED] GPU access revoked: the display command buffer was ignored (fences back 812 of 815); macOS runs none of this process's GPU work any more, so the game stops
+        [dm] front end: the GPU no longer runs the game's work; telling the player and quitting
+        """)
+        XCTAssertEqual(mac.end, CartoucheGameMeasures.End(kind: "crash", cause: "gpuLost"))
+        let abort = measures("[dm] CRASH sig=6 addr=__pthread_kill+0x8 pc=__pthread_kill+0x8 lr=pthread_kill+0x10c sp=0x16beaa1b0")
+        XCTAssertEqual(abort.end, CartoucheGameMeasures.End(kind: "crash", signal: 6, pc: "__pthread_kill+0x8", lr: "pthread_kill+0x10c"))
+    }
+
     /// Lines it does not know, and numbers it cannot read, leave the
     /// measures out rather than wrong.
     func testUnknownLinesAndBadNumbersAreLeftOut() {

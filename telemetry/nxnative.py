@@ -64,6 +64,14 @@ WITHOUT_IML_MIB = 3376
 SIGNALS = {4: "SIGILL", 5: "SIGTRAP", 6: "SIGABRT", 7: "SIGEMT", 8: "SIGFPE", 9: "SIGKILL", 10: "SIGBUS",
            11: "SIGSEGV", 12: "SIGSYS"}
 
+# Why a game crashed, when its log says (CartoucheGameLog.swift, end.cause):
+# gpuLost, nxnative stopped it once the system took the GPU away from it for
+# the GPU errors it caused ("[RED] GPU access revoked", gpu_lost_check in
+# nvn_mtl.m). Cartouche tells it from its fourth reading of the log on:
+# before it, such a session was a crash like any other abort.
+CAUSES = {"gpuLost": "GPU access revoked"}
+GPU_LOST_READER = 4
+
 # The sessions one day received, a page at a time, with D1's parameters as
 # text. A session sent again because its log grew is the same session with
 # a higher seq.
@@ -89,6 +97,7 @@ SESSIONS = (
     "json_extract(body, '$.end.signal') AS signal, "
     "json_extract(body, '$.end.pc') AS pc, "
     "json_extract(body, '$.end.lr') AS lr, "
+    "json_extract(body, '$.end.cause') AS endCause, "
     "json_extract(body, '$.process.limitMiB') AS processLimit, "
     "json_extract(body, '$.memoryLimitMiB') AS limitMiB, "
     "json_extract(body, '$.reader') AS reader "
@@ -227,6 +236,15 @@ class Group:
     def endings(self) -> Counter:
         return Counter(e for e in (ending(s) for s in self.sessions) if e)
 
+    @property
+    def gpu_lost(self) -> int | None:
+        """The crashes nxnative ended when the system took the GPU away from
+        the game; none when Cartouche read no session of the group so as to
+        tell them."""
+        if not any((number(s.get("reader")) or 1) >= GPU_LOST_READER for s in self.sessions):
+            return None
+        return sum(1 for s in self.sessions if ending(s) == "crash" and s.get("endCause") == "gpuLost")
+
 
 
 def fmt(value: float | None, digits: int = 0) -> str:
@@ -294,7 +312,7 @@ def commits_text(group: Group) -> str:
 
 FIGURES = ("Installs | Sessions | Hours | Target fps | FPS median | FPS slowest 5% | Frame p99 ms | Stutters a minute "
            "| Waiting for shaders | Shader stall ms a minute | Prepare s | Peak MiB | Reached serious heat | Crashed "
-           "| Failed to boot | Out of memory | Drew no frame")
+           "| GPU lost | Failed to boot | Out of memory | Drew no frame")
 
 
 def figures(group: Group) -> str:
@@ -305,7 +323,8 @@ def figures(group: Group) -> str:
         fmt(group.figure("fps"), 1), fmt(group.figure("slowest"), 1), fmt(group.figure("p99"), 1),
         fmt(group.figure("stutters")), "–" if share is None else f"{share:.0%}", fmt(group.figure("stall")),
         fmt(group.figure("prepare"), 1), fmt(group.peak), f"{group.hot} of {len(group.sessions)}",
-        str(endings["crash"]), str(endings["boot-failed"]), str(endings["memory-likely"]), str(endings["no-frame"]),
+        str(endings["crash"]), fmt(group.gpu_lost), str(endings["boot-failed"]), str(endings["memory-likely"]),
+        str(endings["no-frame"]),
     ])
 
 
@@ -408,11 +427,15 @@ def page(catalog: Catalog, sessions: list[dict], events: list[dict], first: dt.d
         "- The figures come from the lines nxnative writes in `log.txt`, which Cartouche reads after each session "
         "([CartoucheGameLog.swift](https://github.com/cartouche-app/Cartouche/blob/main/launcher/Sources/"
         "CartoucheGameLog.swift)): the `[nvn]` timing, on-screen and power lines, `[longframe]`, `pipeline prepare`, "
-        "the memory and thermal lines, `CRASH sig=` and `[RED] boot:`. "
+        "the memory and thermal lines, `CRASH sig=`, `GPU access revoked` and `[RED] boot:`. "
         "A session's commit is the first 12 digits of `DMCommit` in the game's `Info.plist`; Cartouche 0.11.2 and "
         "before did not send it. Target fps is the rate most of the line's sessions asked for.",
         "- Reached serious heat: the sessions iOS put in its serious thermal state. Drew no frame: the session ended "
         "before nxnative's first summary line, whatever its end.",
+        "- GPU lost: the crashes nxnative ended once the system took the GPU away from the game for the GPU errors it "
+        "caused (`[RED] GPU access revoked`), as the crashes' cause says too. Cartouche tells them from its reading "
+        f"{GPU_LOST_READER} of the log on: before it, such a session is a crash like any other abort, and a line "
+        "with no session read so shows –. On a Mac, nxnative quits the game itself, and its crash has no signal.",
         "- A session counts once, as last sent; a copy of another region counts for its game.",
         "- nxnative, Models: the commit, or the model, most installs of the line ran, when at least 3 did, and how "
         "many others; else only how many. A Mac counts as an install does: a step of a build shows when at least 3 "
@@ -436,33 +459,36 @@ def crashes(catalog: Catalog, kept: list[dict]) -> list[str]:
     exact: dict[tuple, Group] = defaultdict(lambda: Group([]))
     for s in crashed:
         signal = int(number(s.get("signal")) or 0)
-        by_signal[(s["game"], signal)].sessions.append(s)
+        cause = s.get("endCause") or ""
+        by_signal[(s["game"], signal, cause)].sessions.append(s)
         if s.get("pc") and s.get("nxnative"):
-            exact[(s["game"], s.get("version") or "", s["nxnative"], signal, s["pc"], s.get("lr") or "")].sessions.append(s)
+            exact[(s["game"], s.get("version") or "", s["nxnative"], signal, cause, s["pc"],
+                   s.get("lr") or "")].sessions.append(s)
     lines = ["## Crashes", ""]
     rows = sorted(((k, g) for k, g in by_signal.items() if len(g.installs) >= MIN_INSTALLS),
                   key=lambda kv: (-len(kv[1].installs), kv[0]))
     if rows:
-        lines += ["| Game | Signal | Installs | Sessions | Models | nxnative | Minutes in |",
-                  "| --- | --- | --- | --- | --- | --- | --- |"]
-        for (game, signal), group in rows:
+        lines += ["| Game | Signal | Cause | Installs | Sessions | Models | nxnative | Minutes in |",
+                  "| --- | --- | --- | --- | --- | --- | --- | --- |"]
+        for (game, signal, cause), group in rows:
             models = most_shared(((s.get("device"), s["install"]) for s in group.sessions), "model")
-            lines.append(f"| {catalog.name(game)} | {SIGNALS.get(signal, signal or '–')} | {len(group.installs)} | "
+            lines.append(f"| {catalog.name(game)} | {SIGNALS.get(signal, signal or '–')} | "
+                         f"{CAUSES.get(cause, cause or '–')} | {len(group.installs)} | "
                          f"{len(group.sessions)} | {models} | {commits_text(group)} | "
                          f"{fmt(group.figure('minutes'), 1)} |")
         lines.append("")
     else:
-        lines += [f"No game crashed with one signal on {MIN_INSTALLS} installs or more.", ""]
+        lines += [f"No game crashed with one signal and cause on {MIN_INSTALLS} installs or more.", ""]
     rows = sorted(((k, g) for k, g in exact.items() if len(g.installs) >= MIN_INSTALLS),
                   key=lambda kv: (-len(kv[1].installs), kv[0]))
     if rows:
         lines += ["The same crash, at the same place of the same build, on several installs:", "",
-                  "| Game | Version | nxnative | Signal | pc | lr | Installs | Sessions | Minutes in |",
-                  "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
-        for (game, version, commit, signal, pc, lr), group in rows:
+                  "| Game | Version | nxnative | Signal | Cause | pc | lr | Installs | Sessions | Minutes in |",
+                  "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+        for (game, version, commit, signal, cause, pc, lr), group in rows:
             lines.append(f"| {catalog.name(game)} | {version or '–'} | `{commit}` | {SIGNALS.get(signal, signal)} | "
-                         f"`{pc}` | `{lr}` | {len(group.installs)} | {len(group.sessions)} | "
-                         f"{fmt(group.figure('minutes'), 1)} |")
+                         f"{CAUSES.get(cause, cause or '–')} | `{pc}` | `{lr}` | {len(group.installs)} | "
+                         f"{len(group.sessions)} | {fmt(group.figure('minutes'), 1)} |")
         lines.append("")
     return lines
 

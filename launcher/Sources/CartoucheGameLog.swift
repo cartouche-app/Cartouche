@@ -118,6 +118,13 @@ struct CartoucheGameMeasures: Codable, Equatable {
         /// Where it crashed, as module+offset: "main+0x1a2b3c".
         var pc: String?
         var lr: String?
+        /// Why, when the log says, from the fourth reading of the log on:
+        /// gpuLost, nxnative stopped the game once the system took the GPU
+        /// away from it for the GPU errors it caused ("GPU access revoked",
+        /// gpu_lost_check in nxnative's nvn_mtl.m). An iPhone aborts the
+        /// game then, a crash with signal 6 like any other abort; a Mac
+        /// tells the player and quits it, without a crash line.
+        var cause: String?
     }
 
     /// The last frame a 300-frame summary counted.
@@ -160,8 +167,12 @@ struct CartoucheGameLogReader {
     /// a Duo's fold, and judges the end against the limit the log's memory
     /// lines tell: before it, foldSplit was true for any iPhone upright,
     /// and the end was judged against the limit Cartouche read when it
-    /// read the log (telemetry/dashboard, FOLD_READER).
-    static let version = 3
+    /// read the log (telemetry/dashboard, FOLD_READER). 4 tells a game
+    /// nxnative stopped when the system took the GPU away from it
+    /// (End.cause gpuLost): before it, that was a crash like any other
+    /// abort, or, on a Mac, an end the log did not tell
+    /// (telemetry/dashboard, GPU_LOST_READER).
+    static let version = 4
     /// A frame this long is a pause, not a slow frame: the game left behind
     /// the console, Cartouche in the background, or a freeze. nxnative
     /// times each stretch of 300 frames by the clock (power_line,
@@ -248,6 +259,7 @@ struct CartoucheGameLogReader {
     private var lowPowerChanges: [(seconds: Double, on: Bool)] = []
     private var crash: CartoucheGameMeasures.End?
     private var bootProblem = false
+    private var gpuLost = false
 
     init() {}
 
@@ -313,6 +325,8 @@ struct CartoucheGameLogReader {
             readAudio(line)
         } else if line.contains("CRASH sig=") {
             readCrash(line)
+        } else if line.contains("GPU access revoked") {
+            gpuLost = true
         } else if line.contains("guest file: ") {
             readGuestFile(line)
         } else if line.contains("boot: DLC from ") {
@@ -621,6 +635,13 @@ struct CartoucheGameLogReader {
     }
 
     private func end(limitMiB: Int?) -> CartoucheGameMeasures.End {
+        if gpuLost {
+            // Nothing can be drawn any more: whatever came after, this
+            // stopped the game.
+            var end = crash ?? CartoucheGameMeasures.End(kind: "crash")
+            end.cause = "gpuLost"
+            return end
+        }
         if let crash { return crash }
         if bootProblem && lastFrame == nil {
             return CartoucheGameMeasures.End(kind: "boot-failed")

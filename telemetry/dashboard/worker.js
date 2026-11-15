@@ -122,6 +122,7 @@ export const SESSION = [
   "end.signal",
   "end.pc",
   "end.lr",
+  "end.cause",
   "process.limitMiB",
   "process.peakMiB",
   "process.lastAvailableMiB",

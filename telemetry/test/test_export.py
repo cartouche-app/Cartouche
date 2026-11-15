@@ -138,9 +138,9 @@ class ExportTest(unittest.TestCase):
             body = json.loads(row["body"])
             whole = {key: value for key, value in report.items() if key not in ("id", "install", "session")}
             self.assertEqual(body, whole)
-        session = sql.execute("SELECT json_extract(body, '$.fps.median') AS fps, json_extract(body, '$.end.pc') AS pc "
-                              "FROM reports WHERE kind = 'session'").fetchone()
-        self.assertEqual((session["fps"], session["pc"]), (59.9, "main+0x1a2b3c"))
+        session = sql.execute("SELECT json_extract(body, '$.fps.median') AS fps, json_extract(body, '$.end.pc') AS pc, "
+                              "json_extract(body, '$.end.cause') AS cause FROM reports WHERE kind = 'session'").fetchone()
+        self.assertEqual((session["fps"], session["pc"], session["cause"]), (59.9, "__pthread_kill+0x8", "gpuLost"))
         self.assertEqual([tuple(r) for r in sql.execute("SELECT day, reports, copies FROM daily ORDER BY day")],
                          [("2026-11-10", 5, 1), (TODAY, 2 + len(BUILDER), 2)])
         self.assertEqual([tuple(r) for r in sql.execute("SELECT day, filed FROM problems ORDER BY day")],
