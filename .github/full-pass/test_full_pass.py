@@ -663,6 +663,20 @@ class VerdictTests(unittest.TestCase):
         self.assertFalse(alone.matches("Storage / Storage against real servers (smb, 3)"))
         build = self.verdict.Expected("Installer", "Build for ${{ matrix.name }}", False, matrix=True)
         self.assertTrue(build.matches("Installer / Build for macOS"))
+        # A part of the screenshots, each on a Mac of its own (screens.yml).
+        shots = self.verdict.Expected("Launcher screens", "Screenshots", False, matrix=True)
+        self.assertTrue(shots.matches("Launcher screens / Screenshots (3)"))
+        self.assertFalse(shots.matches("Launcher screens / UI tests on an iPhone (1)"))
+
+    def test_a_part_of_a_matrix_that_failed(self):
+        self.expected.append(self.verdict.Expected("Launcher screens", "Screenshots", False, matrix=True))
+        self.calls["screens"] = "Launcher screens"
+        self.needs["screens"] = {"result": "success"}
+        parts = {f"Launcher screens / Screenshots ({part})": "success" for part in (1, 2, 3)}
+        self.assertTrue(self.judge(self.jobs(**parts)).passed)
+        parts["Launcher screens / Screenshots (2)"] = "failure"
+        self.assertIn("Launcher screens / Screenshots (2): failure", self.judge(self.jobs(**parts)).problems)
+        self.assertEqual(self.judge(self.jobs()).problems, ["Launcher screens / Screenshots is not in the run"])
 
     def test_a_call_missing_from_the_needs(self):
         self.assertIn("Installer: missing", self.judge(self.jobs(), {"app": {"result": "success"}}).problems)
@@ -673,7 +687,8 @@ class VerdictTests(unittest.TestCase):
         self.assertIs(names[("App", "Build Cartouche.ipa")], False)
         self.assertIs(names[("Storage", "Storage against real servers")], False)
         self.assertIs(names[("Installer", "Build for ${{ matrix.name }}")], False)
-        self.assertEqual({one.name for one in found if one.matrix}, {"Build for ${{ matrix.name }}"})
+        self.assertEqual({one.name for one in found if one.matrix},
+                         {"Build for ${{ matrix.name }}", "UI tests on an iPhone", "Screenshots"})
         self.assertIs(names[("Builder", "Mac app")], False)
         self.assertIs(names[("Telemetry", "Telemetry server")], False)
         self.assertIs(names[("CI", "Workflow audit")], False)

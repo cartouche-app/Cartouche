@@ -227,6 +227,17 @@ class Scripts(ScriptsCase):
                                 env=dict(self.env, FAKE_STATUS="65"))
         self.assertEqual(failed.returncode, 65)
 
+    def test_the_screenshots_say_what_the_mac_has_left_while_a_simulator_boots(self):
+        # GitHub cancelled a job of the screenshots as the iPad's install
+        # went unanswered after a boot of 253 s, and its log said nothing of
+        # the Mac's memory (run 43755743324).
+        lines = (HERE / "capture.sh").read_text().split("<<'PY'", 1)[1].splitlines()
+        for silent in ('run("xcrun", "simctl", "bootstatus", udid', "install.install(run, Failure",
+                       'launch(udid, scenarios[0], "warm-up"'):
+            found = [i for i, line in enumerate(lines) if silent in line]
+            self.assertEqual(len(found), 1, silent)
+            self.assertIn("with heartbeat.beating(", lines[found[0] - 1], silent)
+
     def test_the_harness_says_its_build_and_tests_go_on(self):
         tests = step(ROOT / "launcher/Harness/harness.sh",
                      'echo "== building the harness and running its tests"', 'STATUS="${STATUSES[0]}"')

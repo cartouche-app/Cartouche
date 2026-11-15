@@ -6,12 +6,16 @@
 # the same Mac, find it done. The CI runs each on a Mac of its own, at the
 # same time (.github/workflows/screens.yml).
 #
-#     launcher/Gallery/uitests.sh [--ipad] OUT
+#     launcher/Gallery/uitests.sh [--ipad | --part I/N] OUT
 #
 # --ipad runs the iPad's tests alone (UITests/IPadUITests.swift), which the
 # iPhone leaves out, on a 13-inch iPad Pro (M5), else the newest iPad, of
 # the newest iOS runtime that has one: the console and a game's sheet side
 # by side, as an iPad shows them.
+#
+# --part I/N runs part I of N of the iPhone's tests alone (parts.py): the
+# CI runs them in two parts, each on a Mac of its own (screens.yml), each
+# part with whole classes of tests.
 #
 # The tests open the gallery on the whole console, as Cartouche shows it,
 # and drive it as a player would (UITests/ConsoleTestCase.swift). They run on
@@ -38,11 +42,15 @@
 set -euo pipefail
 
 DEVICE=iPhone
+PART=1/1
 if [ "${1:-}" = "--ipad" ]; then
   DEVICE=iPad
   shift
+elif [ "${1:-}" = "--part" ] && [ $# -ge 2 ]; then
+  PART="$2"
+  shift 2
 fi
-[ $# -eq 1 ] || { echo "usage: $0 [--ipad] OUT" >&2; exit 2; }
+[ $# -eq 1 ] || { echo "usage: $0 [--ipad | --part I/N] OUT" >&2; exit 2; }
 HERE="$(cd "$(dirname "$0")" && pwd)"
 mkdir -p "$1"
 OUT="$(cd "$1" && pwd)"
@@ -55,6 +63,8 @@ started=$SECONDS
 KEPT=launcher-ui-tests
 if [ "$DEVICE" = iPad ]; then
   KEPT=launcher-ui-tests-ipad
+elif [ "$PART" != 1/1 ]; then
+  KEPT="launcher-ui-tests-${PART%/*}"
 fi
 
 # The simulator: its UDID on the last line.
@@ -113,12 +123,18 @@ sys.exit("no iOS runtime runs an iPad simulator" if os.environ.get("UITESTS_DEVI
 PY
 )"
 echo "== UI tests on the $DEVICE simulator $UDID"
-# The iPad's tests on the iPad alone.
-if [ "$DEVICE" = iPad ]; then
-  TESTS=(-only-testing:CartoucheGalleryUITests/IPadUITests)
-else
-  TESTS=(-skip-testing:CartoucheGalleryUITests/IPadUITests)
+# The tests of this run: the iPad's on the iPad alone; on the iPhone, this
+# part of the others, whose options for xcodebuild parts.py prints, one a
+# line.
+TESTS=(-only-testing:CartoucheGalleryUITests/IPadUITests)
+if [ "$DEVICE" = iPhone ]; then
+  OPTIONS="$(python3 "$HERE/parts.py" tests "$PART" "$HERE/UITests")"
+  TESTS=()
+  while IFS= read -r option; do
+    TESTS+=("$option")
+  done <<<"$OPTIONS"
 fi
+echo "   tests: ${TESTS[*]}"
 
 # The iPhone boots while the gallery builds, the iPad once it is built: the
 # iPad's simulator takes more of the Mac, and a build beside its boot, on

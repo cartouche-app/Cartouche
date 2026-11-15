@@ -3,7 +3,12 @@
 # launcher/Gallery/scenarios.json into OUT. Needs a Mac with Xcode and
 # XcodeGen (brew install xcodegen).
 #
-#     launcher/Gallery/capture.sh OUT
+#     launcher/Gallery/capture.sh [--part I/N] OUT
+#
+# --part I/N takes part I of N alone (parts.py): the CI takes them in three
+# parts, each on a Mac of its own (screens.yml). The sized scenarios are
+# shared between the parts before the last, the device scenarios are the
+# last's.
 #
 # A scenario with a size fits on the screen of the largest iPad simulator,
 # upright: the gallery draws it in the top left corner, at its size in
@@ -37,7 +42,12 @@
 
 set -euo pipefail
 
-[ $# -eq 1 ] || { echo "usage: $0 OUT" >&2; exit 2; }
+PART=1/1
+if [ "${1:-}" = "--part" ] && [ $# -ge 2 ]; then
+  PART="$2"
+  shift 2
+fi
+[ $# -eq 1 ] || { echo "usage: $0 [--part I/N] OUT" >&2; exit 2; }
 HERE="$(cd "$(dirname "$0")" && pwd)"
 mkdir -p "$1"
 OUT="$(cd "$1" && pwd)"
@@ -45,7 +55,7 @@ BUILD="$HERE/Build"
 
 # The gallery, built once for every simulator (build.sh): when the UI tests
 # ran first on this Mac, this finds their build done. The CI takes the
-# screenshots on a Mac of their own, as the UI tests run (screens.yml).
+# screenshots on Macs of their own, as the UI tests run (screens.yml).
 "$HERE/build.sh"
 rm -rf "$BUILD/raw"
 mkdir -p "$BUILD/raw"
@@ -53,7 +63,7 @@ mkdir -p "$BUILD/raw"
 # The tool that cuts a screen out of a screenshot, for this Mac.
 xcrun --sdk macosx swiftc -O "$HERE/screenshot.swift" -o "$BUILD/screenshot"
 
-python3 -u - "$HERE" "$OUT" "$BUILD" <<'PY'
+python3 -u - "$HERE" "$OUT" "$BUILD" "$PART" <<'PY'
 import json, re, subprocess, sys, time
 from pathlib import Path
 
@@ -63,9 +73,16 @@ sys.path.insert(0, str(HERE))
 import settled  # noqa: E402
 # How the gallery is installed on a simulator just booted.
 import install  # noqa: E402
+# The scenarios of this part of the screenshots.
+import parts  # noqa: E402
+# A line a minute, with what the Mac has left, while a step says nothing.
+import heartbeat  # noqa: E402
 BUNDLE = "io.github.clabeuhtegrite.cartouche.gallery"
 APP = BUILD / "DerivedData/Build/Products/Debug-iphonesimulator/CartoucheGallery.app"
 document = json.loads((HERE / "scenarios.json").read_text())
+# This part's scenarios alone, from here on: every one for 1/1.
+PART, PARTS = parts.parse(sys.argv[4])
+document["scenarios"] = parts.scenarios(document["scenarios"], PART, PARTS)
 failures = []
 
 
@@ -358,10 +375,16 @@ for device in sorted({s.get("device", "") for s in document["scenarios"]}):
     # How long each part takes, for the run's log.
     since = time.monotonic()
     maybe("xcrun", "simctl", "boot", udid)
+    # The boot, the install and the first launch say nothing for minutes on
+    # GitHub's Macs, where GitHub cancelled the job now and then as the
+    # iPad's install went unanswered after a boot of 253 s (run
+    # 43755743324): a line a minute says how the Mac's memory went before.
     try:
-        run("xcrun", "simctl", "bootstatus", udid, "-b", timeout=900)
-        print(f"   booted {time.monotonic() - since:.0f} s after asked", flush=True)
-        install.install(run, Failure, udid, APP, name)
+        with heartbeat.beating(f"booting {name}"):
+            run("xcrun", "simctl", "bootstatus", udid, "-b", timeout=900)
+        print(f"   booted {time.monotonic() - since:.0f} s after asked{heartbeat.left()}", flush=True)
+        with heartbeat.beating(f"installing the gallery on {name}"):
+            install.install(run, Failure, udid, APP, name)
     except Failure as error:
         failures.append(f"{name}: {error}")
         continue
@@ -373,8 +396,9 @@ for device in sorted({s.get("device", "") for s in document["scenarios"]}):
     # 90 s, while every later launch settled in 8 to 24 s.
     warm = time.monotonic()
     try:
-        launch(udid, scenarios[0], "warm-up", 300)
-        print(f"   first launch: settled in {time.monotonic() - warm:.0f} s", flush=True)
+        with heartbeat.beating(f"opening the gallery on {name}"):
+            launch(udid, scenarios[0], "warm-up", 300)
+        print(f"   first launch: settled in {time.monotonic() - warm:.0f} s{heartbeat.left()}", flush=True)
         warmed = True
     except Failure as error:
         print(f"::warning::first launch on {name}: {error}", flush=True)
@@ -400,7 +424,7 @@ for device in sorted({s.get("device", "") for s in document["scenarios"]}):
             keep_failed_screen(udid, scenario["name"], screens)
             crash_reports(started)
     print(f"   {len(scenarios)} scenarios in {time.monotonic() - shooting:.0f} s, "
-          f"{time.monotonic() - since:.0f} s on {name} in all", flush=True)
+          f"{time.monotonic() - since:.0f} s on {name} in all{heartbeat.left()}", flush=True)
     if device:
         slug = device.lower().replace(" ", "-")
         (OUT / f"{slug}-notes.txt").write_text("\n".join(notes) + "\n")
@@ -408,7 +432,8 @@ for device in sorted({s.get("device", "") for s in document["scenarios"]}):
     maybe("xcrun", "simctl", "shutdown", udid, timeout=300)
 
 missing = [s["name"] for s in document["scenarios"] if not (OUT / f"{s['name']}.png").exists()]
-print(f"== {len(document['scenarios']) - len(missing)} of {len(document['scenarios'])} screens in {OUT}")
+print(f"== {len(document['scenarios']) - len(missing)} of {len(document['scenarios'])} screens"
+      f"{f', part {PART} of {PARTS},' if PARTS > 1 else ''} in {OUT}")
 for failure in failures:
     print(f"::error::{failure}")
 if missing:
