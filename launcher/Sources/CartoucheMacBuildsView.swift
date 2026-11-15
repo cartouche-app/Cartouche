@@ -12,8 +12,10 @@
 //  game's Build button on the Mac does, the one that stops its build or
 //  takes it out of the queue, and the way to all the Mac's builds
 //  (CartoucheMacBuildsPage.swift), which System opens too. Nothing shows
-//  away from the Mac, nor without one: a Cartouche Builder too old to share
-//  its builds is told to update.
+//  away from the Mac, nor without one. A Cartouche Builder too old to share
+//  its builds, 0.5.0 or older, no longer finds its updates by itself: the
+//  sheet says so, and sends the Mac the link to download it again
+//  (CartoucheMacAppLink), from which it updates itself.
 //
 
 import SwiftUI
@@ -31,6 +33,15 @@ final class CartoucheMacBuildsWatch: ObservableObject {
         case follow(String, Bool)
         case nightly(CartoucheBridgeBuilds.Nightly)
     }
+
+    /// The disk image of Cartouche Builder that a Mac whose app is too old
+    /// to share its builds is sent: 0.6.0, the first that finds its updates
+    /// where the repository lives since it moved, and which updates itself
+    /// to the newest once open. 0.5.0 and older, the only ones that share
+    /// no builds, take their updates from its former address alone and
+    /// find none (builder/README.md, Updates). Every release keeps this
+    /// one (builder/tests/test_updates.py).
+    static let builderDownload = URL(string: "https://github.com/cartouche-app/Cartouche/releases/download/builder-v0.6.0/Cartouche-Builder-0.6.0.dmg")!
 
     /// How often the Mac is asked, in seconds: while it builds, the
     /// progress moves.
@@ -79,6 +90,9 @@ final class CartoucheMacBuildsWatch: ObservableObject {
     /// Whether the gallery's sheet opens on the game's build on the Mac
     /// (screen: sheet-mac), its section in the middle of the screen.
     static var galleryScrolls = false
+    /// The name of the Mac the gallery shows with an app too old to share
+    /// its builds, 0.5.0 or older (work: mac-too-old).
+    static var galleryTooOld: String?
     #endif
 
     /// The Mac paired in Storage: that of the games folder, where its
@@ -101,6 +115,10 @@ final class CartoucheMacBuildsWatch: ObservableObject {
             builds = gallery.builds
             reached = true
             canControl = true
+        } else if let mac = Self.galleryTooOld {
+            macName = mac
+            isTooOld = true
+            reached = true
         }
         return
         #else
@@ -364,6 +382,24 @@ final class CartoucheMacBuildsWatch: ObservableObject {
     #endif
 }
 
+/// The link to download the Mac's app again, which the player sends the Mac
+/// by AirDrop, Messages or Mail, for a Mac whose app is too old to share its
+/// builds and no longer finds its updates by itself: on a game's sheet and
+/// on the page of the Mac's builds.
+@available(iOS 17.0, *)
+struct CartoucheMacAppLink: View {
+    /// The Mac's name in Cartouche.
+    let mac: String
+
+    var body: some View {
+        ShareLink(item: CartoucheMacBuildsWatch.builderDownload,
+                  subject: Text(CartoucheText.macBuildsLinkSubject),
+                  message: Text(CartoucheText.macBuildsLinkMessage)) {
+            Label(CartoucheText.macBuildsSendLink(mac), systemImage: "laptopcomputer.and.arrow.down")
+        }
+    }
+}
+
 /// The game's build on the player's Mac, on its sheet: its line, the
 /// button that asks for one, the one that stops it, and the way to all the
 /// Mac's builds.
@@ -414,7 +450,9 @@ struct CartoucheMacBuildsSection: View {
             }
         } else if watch.isTooOld, isOwned {
             Section {
-                note(CartoucheText.macBuildsTooOld(watch.macName), systemImage: "arrow.up.circle")
+                note(CartoucheText.macBuildsTooOld(watch.macName), systemImage: "arrow.down.circle")
+                    .id(Self.anchor)
+                CartoucheMacAppLink(mac: watch.macName)
             }
         }
     }

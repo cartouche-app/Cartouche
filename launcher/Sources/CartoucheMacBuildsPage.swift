@@ -13,7 +13,10 @@
 //  Stop or Remove, and Follow; and the nightly build, on or off, and its
 //  time. The Mac's folders, its tools and an IPA's import stay on the Mac.
 //  A Mac whose app is a little older shows its builds and builds a game,
-//  and says to update its app for the rest.
+//  and says to update its app for the rest. One too old to share its
+//  builds, 0.5.0 or older, no longer finds its updates by itself: the page
+//  says so, and sends the Mac the link to download it again
+//  (CartoucheMacAppLink).
 //
 
 import SwiftUI
@@ -79,7 +82,8 @@ struct CartoucheMacBuildsPage: View {
                     .lineLimit(2)
             }
             if watch.isTooOld {
-                note(CartoucheText.macBuildsTooOld(watch.macName), systemImage: "arrow.up.circle")
+                note(CartoucheText.macBuildsTooOld(watch.macName), systemImage: "arrow.down.circle")
+                CartoucheMacAppLink(mac: watch.macName)
             } else if watch.reached == false {
                 note(CartoucheText.storageMacOffline(watch.macName), systemImage: "wifi.slash")
             } else if let builds = watch.builds {
@@ -98,7 +102,7 @@ struct CartoucheMacBuildsPage: View {
 
     /// Where the Mac is, in a word or two.
     private var macState: String {
-        if watch.isTooOld { return CartoucheText.macBuildsToUpdate }
+        if watch.isTooOld { return CartoucheText.macBuildsToDownload }
         guard let builds = watch.builds else {
             return watch.reached == false ? CartoucheText.macBuildsNotAnswering : CartoucheText.macBuildsReaching
         }

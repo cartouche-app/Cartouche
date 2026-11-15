@@ -24,6 +24,9 @@ extension Words {
     static let macNotFollowed = "Not followed"              // mac.game.notFollowed
     static let nightly = "Build what is due every night"    // mac.builds.nightly
     static let nightlyAt = "Every night at "                // mac.builds.nightly.footer
+    static let macTooOld = "The app on %@ no longer finds its updates by itself" // mac.builds.tooOld
+    static let macToDownload = "To download again"         // mac.builds.toDownload
+    static let macSendLink = "Send the link to %@"          // mac.builds.sendLink
 }
 
 /// Reset Cartouche's words (CartoucheTextReset.swift).
@@ -152,6 +155,35 @@ final class SystemUITests: ConsoleTestCase {
         nightly.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap()
         expect(waitUntil(10) { (nightly.value as? String) == "0" }, "The nightly build did not turn off", in: app)
         expect(waitForGone(element(beginningWith: Words.nightlyAt, in: app)), "The nightly build off still says when", in: app)
+
+        back(from: Words.macBuildsPage, in: app)
+        expect(app.navigationBars[Words.system].waitForExistence(timeout: 10),
+               "Back from the Mac's builds did not come back to the System page", in: app)
+        tap(app.buttons[Words.done], "Done of the System page", in: app)
+        expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// The builds of a Mac whose app is 0.5.0 or older, too old to share
+    /// them, and which no longer finds its updates by itself: the page says
+    /// to download the app again, and offers to send the Mac its link
+    /// (decision 118); back on the System page, Done closes it.
+    @MainActor
+    func testAMacWhoseAppNoLongerUpdatesItselfIsSentItsLink() {
+        let app = openConsole(Launch(work: "mac-too-old"))
+        tap(app.buttons[Words.system], "System in the dock", in: app)
+        expect(app.navigationBars[Words.system].waitForExistence(timeout: 15), "The System page did not open", in: app)
+        let row = element(in: app.buttons, beginningWith: String(format: Words.macBuildsOn, "MacBook Air"))
+        scrollTo(row, "the Mac's builds on the System page", in: app)
+        tap(row, "the Mac's builds on the System page", in: app)
+        expect(app.navigationBars[Words.macBuildsPage].waitForExistence(timeout: 15), "The Mac's builds did not open", in: app)
+
+        expect(element(beginningWith: Words.macToDownload, in: app).waitForExistence(timeout: 10),
+               "The Mac does not say its app is to download again", in: app)
+        expect(element(beginningWith: String(format: Words.macTooOld, "MacBook Air"), in: app).exists,
+               "The page does not say why the Mac's app is to download again", in: app)
+        expect(app.buttons[String(format: Words.macSendLink, "MacBook Air")].exists,
+               "No way to send the Mac the link to its app", in: app)
 
         back(from: Words.macBuildsPage, in: app)
         expect(app.navigationBars[Words.system].waitForExistence(timeout: 10),
