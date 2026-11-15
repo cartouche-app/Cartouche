@@ -151,8 +151,9 @@ final class MacPlayTests: XCTestCase {
         XCTAssertEqual(asked, ["com.example.mk8 launcher.DM_FULLSCREEN"])
         XCTAssertEqual(MacPlayEnvironment.make(app: app, keepsSaves: true, language: "en", fullscreen: true)["DM_FULLSCREEN"], "1")
         XCTAssertNil(MacPlayEnvironment.make(app: app, keepsSaves: true, language: "en")["DM_FULLSCREEN"])
-        // A Display mode the player chose in nxnative's settings window holds:
-        // the start leaves it to the launcher, which applies it.
+        // A Display mode saved for the game holds (nxnative's settings window
+        // saves Fullscreen; a front end may save either): the start leaves it
+        // to the launcher, which applies it.
         for choice in ["1", "0"] {
             saved = choice
             XCTAssertFalse(MacPlayEnvironment.fullscreen(settings: false, of: app, preference: preference), choice)

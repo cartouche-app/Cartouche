@@ -6,7 +6,7 @@
 //  needs to start it and to know how it ended (nxnative's docs/frontends.md,
 //  "Starting a game"): its title ID and names in its Info.plist; the
 //  environment of a start, which skips nxnative's settings window, fills the
-//  screen with the game unless the player chose otherwise in that window,
+//  screen with the game unless a display mode is saved for it,
 //  turns nxnative's own cloud saves off while the builder keeps the saves,
 //  and gives the Home button's prompt and the players' prompt the player's
 //  language; the cloud saves folder the player may have chosen in that
@@ -165,11 +165,14 @@ public enum MacPlayEnvironment {
 
     /// Whether a start of APP fills the screen, as a console's game does,
     /// Cartouche's console behind it until it ends: one straight into the
-    /// game does, unless the player chose a Display mode in nxnative's
-    /// settings window, its saved choice (launcher.DM_FULLSCREEN in the
-    /// app's preferences, read by PREFERENCE (key, domain)), which then
-    /// holds. A start with that window (SETTINGS) leaves it to the window:
-    /// a variable the start sets, the window shows fixed.
+    /// game does, unless a Display mode is saved for the game
+    /// (launcher.DM_FULLSCREEN in the app's preferences, read by PREFERENCE
+    /// (key, domain)), which then holds. nxnative's settings window saves
+    /// Fullscreen alone: a window, its default, it saves as no choice, so a
+    /// game put in a window there fills the screen again from here, ⌃⌘F
+    /// putting it back in a window. A start with that window (SETTINGS)
+    /// leaves it to the window: a variable the start sets, the window shows
+    /// fixed.
     public static func fullscreen(settings: Bool, of app: MacGameApp, preference: (String, String) -> String?) -> Bool {
         guard !settings else { return false }
         return preference("launcher." + fullscreenKey, app.bundleID) == nil
