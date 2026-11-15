@@ -96,7 +96,7 @@ extension CartoucheGameActions {
         }
         files.append(resources.appendingPathComponent("dm/env.txt"))
         let domain = app.appInfo.bundleIdentifier()
-        let choices: CartoucheGameChoices? = domain.map { domain in
+        let choices: CartoucheGameChoices? = domain.map { domain -> CartoucheGameChoices in
             keepsChoicesInMemory ? CartoucheMemoryGamePreferences(domain: domain) : CartoucheMacGamePreferences(domain: domain)
         }
         return CartoucheGameSettingsModel(
