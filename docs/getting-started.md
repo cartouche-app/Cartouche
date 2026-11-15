@@ -55,7 +55,7 @@ Your game shows in the guide's last step and in your library: **Install** instal
 
 - **LocalDevVPN:** Cartouche renews its seven-day signature through it, and connects it by itself when it needs it: as you open Cartouche in its last 3 days, from the System page, or every night with the Shortcuts automation that page explains.
 - **Your saves:** with a saves folder chosen on the storage page, Cartouche keeps each game's saves in step with it: they come when you install the game and before it starts, as after you install Cartouche again or play on another iPhone or an iPad, and go after each game. Cartouche Builder does the same on the Mac, before and after each game you play there, with the saves folder on the Mac or on a share of your NAS the Mac mounts ([builder/README.md](../builder/README.md#playing-on-this-mac)).
-- **Updates:** Cartouche offers its new versions itself, and the update of a game when your games folder holds a newer build of it. Cartouche Builder updates itself, when it builds nothing.
+- **Updates:** Cartouche offers its new versions itself, and the update of a game when your games folder holds a newer build of it. Cartouche Builder updates itself, when it builds nothing. Version 0.5.0 or older no longer finds its updates: [download Cartouche Builder](https://cartouche-app.github.io/Cartouche/download/#builder) once more, and the new one updates itself.
 - **The guide:** the × on its card takes it off the home; **System › Your first game** opens it again whenever you want.
 - **The certificate no longer works:** the home says so; sign in again. **The pairing file is missing:** the installer puts it in Cartouche again, or installs Cartouche again over this copy, which keeps your games and their saves.
 
