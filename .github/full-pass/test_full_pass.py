@@ -658,12 +658,18 @@ class VerdictTests(unittest.TestCase):
         self.assertIs(names[("Telemetry", "Telemetry server")], False)
         self.assertIs(names[("CI", "Workflow audit")], False)
         self.assertIs(names[("App", "Ad's Mac or GitHub")], False)
-        self.assertIs(names[("Launcher screens", "UI tests and screenshots")], False)
+        self.assertIs(names[("Launcher screens", "UI tests on an iPhone")], False)
+        self.assertIs(names[("Launcher screens", "UI tests on an iPad")], False)
+        self.assertIs(names[("Launcher screens", "Screenshots")], False)
+        self.assertIs(names[("Launcher harness", "Harness tests")], False)
+        self.assertIs(names[("Launcher harness", "Harness tests on an iPad")], False)
         self.assertIs(names[("Showcase site", "Check the page")], False)
         for skipped in (("Telemetry", "Deploy the telemetry server"), ("Builder", "Publish Cartouche Builder"),
                         ("Builder", "Full test pass on this commit"), ("Installer", "Publish the installer"),
                         ("Launcher screens", "Keep the screenshots on a branch"), ("Showcase site", "Publish it on gh-pages"),
-                        ("App", "Watch Ad's Mac"), ("Launcher screens", "Watch Ad's Mac")):
+                        ("App", "Watch Ad's Mac"), ("Launcher screens", "Watch Ad's Mac"),
+                        ("Launcher screens", "Note that the UI tests and screenshots are done"),
+                        ("Launcher harness", "Note that the harness passed")):
             self.assertIs(names[skipped], True, skipped)
 
     def test_the_summary_names_each_part(self):

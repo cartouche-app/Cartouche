@@ -42,7 +42,8 @@ OUT="$(cd "$1" && pwd)"
 BUILD="$HERE/Build"
 
 # The gallery, built once for every simulator (build.sh): when the UI tests
-# ran first, as in CI, this finds their build done.
+# ran first on this Mac, this finds their build done. The CI takes the
+# screenshots on a Mac of their own, as the UI tests run (screens.yml).
 "$HERE/build.sh"
 rm -rf "$BUILD/raw"
 mkdir -p "$BUILD/raw"
