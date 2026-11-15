@@ -125,6 +125,11 @@ class HarnessCase: XCTestCase {
         // never opened by Cartouche by itself.
         UserDefaults.standard.removeObject(forKey: CartoucheRenewals.lastTryKey)
         UserDefaults.standard.removeObject(forKey: CartoucheLocalDevVPN.lastAutomaticOpenKey)
+        // The Home button over a game has never faded away yet
+        // (HomeButtonTests).
+        if #available(iOS 18.0, *) {
+            UserDefaults.standard.removeObject(forKey: CartoucheGameScreen.homeHintKey)
+        }
         try? FileManager.default.removeItem(at: HarnessStorage.root)
         // No TV left by the test before (TVTests).
         if #available(iOS 18.0, *), let tv = CartoucheTV.shared.window {

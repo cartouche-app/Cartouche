@@ -116,6 +116,10 @@ enum HarnessLC {
     /// when nil, which a test cannot turn.
     static var screenTurned: CartoucheGameOrientations?
     static var deviceHeld: CartoucheGameOrientations?
+    /// Whether VoiceOver or Switch Control runs, as the screen of a game
+    /// behind the console reads it (CartoucheGameScreen): the Simulator's
+    /// own when nil, which a test cannot turn on.
+    static var assistiveTechnologyRuns: Bool?
     /// Whether LocalDevVPN is connected, as Cartouche reads it
     /// (CartoucheLocalDevVPN.isConnected): the Simulator has no LocalDevVPN.
     static var vpnConnected = true
@@ -249,6 +253,7 @@ enum HarnessLC {
         soundGoesToADisplay = nil
         screenTurned = nil
         deviceHeld = nil
+        assistiveTechnologyRuns = nil
         tests += 1
         vpnConnected = true
         localDevVPNInstalled = true
