@@ -14,7 +14,7 @@ On your Mac, Cartouche Builder builds your games, plays them there with the same
 
 **[Website](https://cartouche-app.github.io/Cartouche/)** · **[Getting started](docs/getting-started.md)** · **[Premiers pas](docs/getting-started.fr.md)** · **[Roadmap](docs/roadmap.md)** · **[Report a problem](https://github.com/cartouche-app/Cartouche/issues/new/choose)**
 
-<img src="docs/images/devices.png" width="100%" alt="Cartouche Builder on a MacBook Air: its library, and beside it the sheet of Mario Kart 8 Deluxe with Play on this Mac and what it is built for, the iPhone and this Mac; in front of it, Cartouche on an iPad in landscape: the player's games on one shelf beside the sheet of Mario Kart World, paused behind the console, with Resume and Quit; and on an iPhone in landscape, the same games, Donkey Kong Bananza in focus with Play and Details">
+<img src="docs/images/devices.png" width="100%" alt="Cartouche Builder on a MacBook Air, with Console and Builder at the top of its window: its library, and beside it the sheet of Mario Kart 8 Deluxe with Play on this Mac and what it is built for, the iPhone and this Mac; in front of it, Cartouche on an iPad in landscape: the player's games on one shelf beside the sheet of Mario Kart World, paused behind the console, with Resume and Quit; and on an iPhone in landscape, the same games, Donkey Kong Bananza in focus with Play and Details">
 
 </div>
 
@@ -42,7 +42,7 @@ You never see LiveContainer or SideStore, which Cartouche is built on: it drives
 
 Cartouche Builder is Cartouche's Mac app. From your own copies, it builds each game with nxnative into your games folder, on the Mac or on your NAS: for the iPhone and iPad, and for the Mac itself. Then it follows them: when a change to nxnative touches one of your games, it builds it again, at once or at night, and Cartouche offers the update on the iPhone, saves kept. **Play on this Mac** starts a game on the Mac, with the newest of your saves, and sends the Mac's back to your saves folder after each game; a game kept on your NAS installs on the Mac the first time you play it there. Its window shows Cartouche's console too, as on the iPhone: **Console** and **Builder**, at the top of the window or with ⌘1 and ⌘2, switch from one to the other, and the console also shows the games your NAS keeps for this Mac, which install from there. It sets the Mac up itself, with no Terminal, updates itself, and once paired with your iPhone, by the same six digits on both screens, it serves your games and keeps your saves ([builder/README.md](builder/README.md)).
 
-<p align="center"><img src="docs/images/builder.png" width="88%" alt="Cartouche Builder on a Mac: the player's games with their covers, and Mario Kart 8 Deluxe's sheet with Play on this Mac, the iPhone's newest saves and what the game is built for, the iPhone and this Mac"></p>
+<p align="center"><img src="docs/images/builder.png" width="88%" alt="Cartouche Builder on a Mac, with Console and Builder at the top of its window: the player's games with their covers, and Mario Kart 8 Deluxe's sheet with Play on this Mac, the newest saves from the saves folder and what the game is built for, the iPhone and this Mac"></p>
 
 <p align="center"><a href="https://cartouche-app.github.io/Cartouche/download/#builder"><img src="docs/images/download-builder.png" height="48" alt="Download Cartouche Builder"></a><br><sub>Free, for a Mac with Apple silicon and macOS 26.6 or later.</sub></p>
 

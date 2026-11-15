@@ -4,9 +4,9 @@ The pictures of the repository's [README](../../README.md), made from the app's 
 
 | File | What it shows | Made from |
 | --- | --- | --- |
-| `devices.png` | Cartouche Builder's library beside the sheet of a game, with Play on this Mac, on a MacBook Air; in front of it, the home beside the sheet of the game in focus, paused behind the console, landscape on an iPad Pro 13-inch, and the home, landscape on an iPhone 17 Pro | The Builder's gallery, `game-en-light`, and the app's, `ipad-home-paused-landscape` and `iphone-home-landscape`, in English; the iPad's status bar without the name of the gallery's app |
+| `devices.png` | Cartouche Builder's library beside the sheet of a game, with Play on this Mac and Console and Builder at the top of the window, on a MacBook Air; in front of it, the home beside the sheet of the game in focus, paused behind the console, landscape on an iPad Pro 13-inch, and the home, landscape on an iPhone 17 Pro | The Builder's gallery, `game-en-light` (since #201), and the app's, `ipad-home-paused-landscape` and `iphone-home-landscape`, in English; the iPad's status bar without the name of the gallery's app |
 | `screens.png` | All games, a game paused behind the console, a game's settings | The gallery's `iphone-library`, `iphone-home-paused` and `iphone-game-settings`, in English |
-| `builder.png` | Cartouche Builder's library, with a game's sheet: Play on this Mac, and what the game is built for | The Builder's gallery, `game-en-light` |
+| `builder.png` | Cartouche Builder's library, with a game's sheet: Play on this Mac, and what the game is built for; Console and Builder at the top of the window | The Builder's gallery, `game-en-light` (since #201) |
 | `icon.png` | Cartouche's icon, with the corners iOS gives it | [`app/icon`](../../app/icon/) |
 | `download-*.png` | The download buttons | Drawn for the README |
 
