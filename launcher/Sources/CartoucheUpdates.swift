@@ -282,6 +282,18 @@ final class CartoucheUpdates: ObservableObject {
         available = release
         isOnSystemPageForGallery = true
     }
+
+    /// The update to VERSION, failed as Apple had revoked the certificate of
+    /// Cartouche's signature, as SideStore tells it, for the launcher's
+    /// gallery: without noting the signature, which the gallery's next
+    /// screens keep.
+    func showRevokedForGallery(_ version: String) {
+        let failure = CartoucheFailure(.certificate, stage: "VerifyCertificate", fraction: 0.1, seconds: 4,
+                                       codes: "SideStore.OperationError 2",
+                                       details: ["kind": .text("certificateRevoked"), "vpn": .flag(true)])
+        failed(CartoucheRenewal.playerMessage("The certificate has been revoked.", failure: failure), version: version,
+               step: CartoucheText.updatePreparingTitle(version), fraction: 0.1, failure: failure)
+    }
     #endif
 
     // MARK: Updating
@@ -345,8 +357,10 @@ final class CartoucheUpdates: ObservableObject {
             var failure = CartoucheFailure.sideStore(outcome: outcome, message: message, fraction: fraction, seconds: seconds,
                                                      vpn: CartoucheVPN.isConnected, pairing: CartouchePairing.exists)
             if let vpn { CartoucheRenewal.note(vpn, in: &failure.details) }
-            // Never Apple's page for an error, as SideStore's words would show it.
-            failed(CartoucheText.sideStoreMessage(message, failure: failure), version: version, step: step, fraction: fraction,
+            // Apple revoked the certificate: Cartouche no longer renews
+            // itself on it either.
+            CartoucheRenewals.shared.noteIfRevoked(failure)
+            failed(CartoucheRenewal.playerMessage(message, failure: failure), version: version, step: step, fraction: fraction,
                    failure: failure)
         } else {
             CartoucheReports.note("Update to Cartouche " + version + " installed")
@@ -365,13 +379,19 @@ final class CartoucheUpdates: ObservableObject {
         return outcome
     }
 
-    /// The update to VERSION failed at STEP, as SideStore's MESSAGE says,
-    /// for the reason FAILURE gives.
+    /// The update to VERSION failed at STEP, as MESSAGE says, for the reason
+    /// FAILURE gives. When Cartouche can tell what to do
+    /// (CartoucheRenewalTrouble), MESSAGE says it in its own words
+    /// (CartoucheRenewal.playerMessage), alone on the notice: up to 0.13.0,
+    /// the notice always said to check LocalDevVPN and try again, before
+    /// SideStore's words.
     private func failed(_ message: String, version: String, step: String?, fraction: Double?, failure: CartoucheFailure) {
         let report = CartoucheReports.make(.update, CartoucheText.updateFailedTitle, message: message, step: step,
                                            fraction: fraction, failure: failure, facts: [.init("New version", version)])
         problemReport = report
-        notice = CartoucheGameNotice(title: CartoucheText.updateFailedTitle, message: CartoucheText.updateFailed(message), report: report)
+        let saysWhatToDo = CartoucheRenewalTrouble.of(failure) != nil
+        notice = CartoucheGameNotice(title: CartoucheText.updateFailedTitle,
+                                     message: saysWhatToDo ? message : CartoucheText.updateFailed(message), report: report)
     }
 
     /// What came of the update that was under way when Cartouche closed.

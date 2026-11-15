@@ -3,9 +3,10 @@
 //  CartoucheCore
 //
 //  When Cartouche renews itself, as it comes to the front in the last days
-//  of its signature, and what renewed a signature that lasts longer than
-//  it did, as the measurements send it, apart from the renewal itself
-//  (CartoucheRenewal.swift), so that they can be tested.
+//  of its signature, what renewed a signature that lasts longer than it
+//  did, as the measurements send it, and why a renewal or an update failed,
+//  when Cartouche says what to do in its own words, apart from the renewal
+//  itself (CartoucheRenewal.swift), so that they can be tested.
 //
 
 import Foundation
@@ -54,6 +55,9 @@ enum CartoucheAutomaticRenewal {
         var gameRunning: Bool
         /// When Cartouche last renewed itself, or tried to.
         var lastTry: Date?
+        /// Whether Apple revoked the certificate of the signature Cartouche
+        /// has, as its last renewal or update found (isRevoked).
+        var certificateRevoked = false
     }
 
     /// Why Cartouche does not renew itself now.
@@ -63,6 +67,11 @@ enum CartoucheAutomaticRenewal {
         /// The player's own certificate signs Cartouche, or the built-in
         /// SideStore is not there.
         case cannotRenew
+        /// Apple revoked the certificate of the signature Cartouche has: a
+        /// renewal, which signs nothing again, would fail the same way every
+        /// six hours, until an install of Cartouche over itself gives it
+        /// another signature (CartoucheRenewalTrouble.certificateRevoked).
+        case certificateRevoked
         /// The setup has something left, which a renewal needs.
         case setup
         /// LocalDevVPN is not connected: Cartouche tries again each time it
@@ -81,6 +90,7 @@ enum CartoucheAutomaticRenewal {
     static func wait(_ situation: Situation, at now: Date) -> Wait? {
         guard let daysLeft = situation.daysLeft, daysLeft <= days else { return .notDue }
         guard situation.canRenew else { return .cannotRenew }
+        guard !situation.certificateRevoked else { return .certificateRevoked }
         guard situation.isSetUp else { return .setup }
         guard !situation.sideStoreBusy else { return .sideStoreBusy }
         guard !situation.gameRunning else { return .gameRunning }
@@ -95,6 +105,46 @@ enum CartoucheAutomaticRenewal {
     /// Whether Cartouche renews itself now.
     static func isDue(_ situation: Situation, at now: Date) -> Bool {
         wait(situation, at: now) == nil
+    }
+
+    /// Whether the signature that expires at CURRENT is the one whose
+    /// certificate Apple revoked, which expired at REVOKED, as Cartouche
+    /// noted it when a renewal or an update found it: an install of
+    /// Cartouche over itself gives it a signature that expires at another
+    /// time. Nil for either, nothing tells it is.
+    static func isRevoked(current: Date?, revoked: Date?) -> Bool {
+        guard let current, let revoked else { return false }
+        return abs(current.timeIntervalSince(revoked)) < 1
+    }
+}
+
+/// Why a renewal or an update of Cartouche by the built-in SideStore failed,
+/// when Cartouche says what to do in its own words rather than SideStore's:
+/// up to 0.13.0, the System page showed SideStore's words of a renewal that
+/// failed, and the update's notice put them after its own, which always
+/// said to check LocalDevVPN and try again.
+enum CartoucheRenewalTrouble: Equatable {
+    /// Apple revoked the certificate of Cartouche's signature: SideStore no
+    /// longer finds it among the account's, and Apple's OCSP answers that it
+    /// is revoked (VerifyCertificateOperation). Another app or computer took
+    /// a new one with the same Apple ID. A renewal signs nothing again, and
+    /// a new sign-in stops on the account's other certificate, which
+    /// SideStore never revokes (app/patches/sidestore/0004, 0012): only an
+    /// install of Cartouche over itself, with the Cartouche Installer and
+    /// the same Apple ID, gives it a new one. On November 13 and 14, 4
+    /// renewals failed so on 3 copies of 0.12.x, while LiveContainer's
+    /// check still found the certificate working.
+    case certificateRevoked
+    /// SideStore did not reach this iPhone through LocalDevVPN, as a
+    /// sign-in tells it (CartoucheSignInMessage.deviceTrouble(in:)).
+    case device(CartoucheSignInMessage.DeviceTrouble)
+
+    /// The trouble FAILURE tells, nil for any other.
+    static func of(_ failure: CartoucheFailure) -> CartoucheRenewalTrouble? {
+        if failure.cause == .certificate, case .text("certificateRevoked")? = failure.details["kind"] {
+            return .certificateRevoked
+        }
+        return CartoucheSignInMessage.deviceTrouble(in: failure).map { .device($0) }
     }
 }
 

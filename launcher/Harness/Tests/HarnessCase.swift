@@ -126,9 +126,11 @@ class HarnessCase: XCTestCase {
         for account in ["signingCertificate", "signingCertificatePassword", "appleIDEmailAddress", "appleIDPassword"] {
             CartoucheStoreKeychain.remove(account)
         }
-        // No renewal tried by itself yet (RenewalTests), and LocalDevVPN
-        // never opened by Cartouche by itself.
+        // No renewal tried by itself yet, no certificate Apple revoked
+        // (RenewalTests), and LocalDevVPN never opened by Cartouche by
+        // itself.
         UserDefaults.standard.removeObject(forKey: CartoucheRenewals.lastTryKey)
+        UserDefaults.standard.removeObject(forKey: CartoucheRenewals.revokedKey)
         UserDefaults.standard.removeObject(forKey: CartoucheLocalDevVPN.lastAutomaticOpenKey)
         // The Home button over a game has never faded away yet
         // (HomeButtonTests).

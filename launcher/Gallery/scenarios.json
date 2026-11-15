@@ -622,6 +622,27 @@
       ]
     },
     {
+      "name": "iphone-update-revoked",
+      "comment": "The update of Cartouche to 0.4.0, failed as Apple had revoked the certificate of its signature: what to do, in Cartouche's words, alone on the notice (work: update-revoked).",
+      "screen": "games",
+      "work": "update-revoked",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-whats-new",
       "comment": "What's new over the console, as after an update to the newest version the gallery carries notes for (app/releases), in the gallery's French: notes written in English only show in English.",
       "screen": "games",
@@ -1367,6 +1388,50 @@
       ],
       "category": "signature",
       "work": "renewal-failed"
+    },
+    {
+      "name": "iphone-system-renewal-revoked",
+      "comment": "The System page down to the signature, after Cartouche renewed itself in its last 3 days and failed as Apple had revoked its certificate: what to do, in Cartouche's words.",
+      "screen": "system",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "category": "signature",
+      "work": "renewal-revoked"
+    },
+    {
+      "name": "iphone-system-renewal-unanswered",
+      "comment": "The System page down to the signature, after Cartouche renewed itself in its last 3 days and failed as this iPhone did not answer through LocalDevVPN: what to do, in the sign-in's words.",
+      "screen": "system",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "category": "signature",
+      "work": "renewal-unanswered"
     },
     {
       "name": "iphone-system-signature-setup-to-do",
