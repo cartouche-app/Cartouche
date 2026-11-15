@@ -298,10 +298,13 @@ jobs:
           retention-days: 30
       # The app as it is in the disk image, on sample games: it runs no
       # engine, reads and writes none of the Mac's settings, and opens no
-      # bridge (Gallery.swift).
+      # bridge (Gallery.swift). It takes about three minutes; a page not
+      # taken within three ends it, and the step lets go of the Mac after
+      # fifteen whatever happens.
       - name: Take the screenshots
         id: gallery
         if: ${{ !cancelled() }}
+        timeout-minutes: 15
         run: |
           "build/builder/Cartouche Builder.app/Contents/MacOS/Cartouche Builder" --gallery build/screens
           ls build/screens

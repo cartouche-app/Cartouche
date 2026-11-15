@@ -4,8 +4,10 @@
 //
 //  The console's screens on the Mac know a game nxnative built for the Mac
 //  as the iPhone's know an installed game (ConsoleGames.swift): by its app's
-//  Info.plist, in its Contents. The console keeps each game it shows from
-//  one list to the next, says which one runs, and finds the game's data
+//  Info.plist, in its Contents; and a game the Builder keeps on a NAS, not
+//  installed on this Mac, as the iPhone's know an IPA of the games folder.
+//  The console keeps each game it shows from one list to the next, says
+//  which one runs and how far an install is, and finds the game's data
 //  where nxnative's app keeps it, in apps and folders of the tests' own.
 //
 
@@ -90,6 +92,79 @@ final class MacConsoleTests: XCTestCase {
         XCTAssertTrue(console.apps[1] === first[0])
         console.show(games: [])
         XCTAssertTrue(console.apps.isEmpty)
+    }
+
+    @MainActor
+    func testAGameTheNASKeepsShowsAsAnIPAOfTheGamesFolderDoes() throws {
+        let console = CartoucheMacConsole.shared
+        let actions = CartoucheGameActions.shared
+        let kart = try nxnativeApp("Mario Kart 8 Deluxe", titleID: "0100152000022000")
+        let file = "/Volumes/Jeux/Animal Crossing New Horizons [01006F8002326000].app.zip"
+        let crossing = CartoucheMacKeptGame(titleID: "01006f8002326000", name: "Animal Crossing: New Horizons", file: file,
+                                            size: 7_340_032_000, built: Date(timeIntervalSince1970: 1_800_000_000))
+        var asked: [String] = []
+        console.onInstall = { asked.append($0) }
+        defer {
+            console.onInstall = { _ in }
+            console.show(games: [])
+        }
+
+        console.show(games: [kart], kept: [crossing], keptIn: "le NAS")
+        // As Cartouche on the iPhone reads an nxnative IPA.
+        let stored = try XCTUnwrap(console.stored.first)
+        XCTAssertEqual(console.stored.count, 1)
+        XCTAssertEqual(stored.titleId, "01006F8002326000")
+        XCTAssertEqual(stored.bundleId, "org.nxnative.01006f8002326000")
+        XCTAssertEqual(stored.name, "Animal Crossing: New Horizons")
+        XCTAssertEqual(stored.fileName, "Animal Crossing New Horizons [01006F8002326000].app.zip")
+        XCTAssertTrue(stored.isGame)
+        // The words of Install from le NAS, and of where its copy is.
+        XCTAssertEqual(CartoucheStoredGames.shared.serverName, "le NAS")
+        XCTAssertEqual(CartoucheStoredGames.shared.games, console.stored)
+
+        // The console's screens: the game installed, with its app, and the
+        // NAS's, with its file and nothing installed.
+        let entries = CartoucheCatalog.shared.entries(for: console.apps, stored: console.stored)
+        XCTAssertEqual(entries.owned.count, 2)
+        XCTAssertNotNil(entries.owned.first { $0.ownTitleId == "0100152000022000" }?.app)
+        let kept = try XCTUnwrap(entries.owned.first { $0.ownTitleId == "01006F8002326000" })
+        XCTAssertNil(kept.app)
+        XCTAssertEqual(kept.stored?.path, file)
+        XCTAssertEqual(kept.id, "stored:" + file)
+
+        // Install asks the app, by the game's title ID.
+        console.install(try XCTUnwrap(kept.stored))
+        XCTAssertEqual(asked, ["01006F8002326000"])
+
+        // How far the install is shows over the console, then goes.
+        console.showInstall("Animal Crossing: New Horizons", step: "Copie depuis le NAS…")
+        let work = try XCTUnwrap(actions.work)
+        XCTAssertEqual(work.kind, .installing)
+        XCTAssertEqual(work.step, "Copie depuis le NAS…")
+        XCTAssertEqual(work.place, "le NAS")
+        console.showInstall("Animal Crossing: New Horizons", step: "Décompression de son app…")
+        XCTAssertEqual(actions.work?.step, "Décompression de son app…")
+        XCTAssertEqual(actions.work?.started, work.started, "the same install")
+        console.showInstall(nil, step: "")
+        XCTAssertNil(actions.work)
+
+        // Installed: its app comes, and the NAS's game goes from the list.
+        let installed = try nxnativeApp("Animal Crossing New Horizons", titleID: "01006F8002326000")
+        console.show(games: [kart, installed], kept: [], keptIn: "le NAS")
+        XCTAssertTrue(console.stored.isEmpty)
+        XCTAssertTrue(CartoucheStoredGames.shared.games.isEmpty)
+        let after = CartoucheCatalog.shared.entries(for: console.apps, stored: console.stored)
+        XCTAssertEqual(after.owned.count, 2)
+        XCTAssertTrue(after.owned.allSatisfy { $0.app != nil && $0.stored == nil })
+    }
+
+    /// A game the NAS keeps wakes the console's storage settings, which keep
+    /// nothing in the Mac's keychain: an item one build of the app wrote
+    /// there, the next build, signed again, reads only once the player
+    /// allows it in a window of macOS's, which nobody answers on GitHub's
+    /// runners (the gallery waited on it until its job ended).
+    func testTheConsoleKeepsNothingInTheMacsKeychain() {
+        XCTAssertFalse(CartoucheStorageSettings.shared.keepsInKeychain)
     }
 
     @MainActor

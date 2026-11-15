@@ -11,7 +11,7 @@ from unittest import mock
 from cartouche_builder import api, batch, config as configs, macapps
 from cartouche_builder.paths import Paths
 
-from support import HOLLOW, MKW, ODYSSEY, Home, commit, make_dump, make_engine_remote, make_ipa
+from support import HOLLOW, MKW, ODYSSEY, UNREADABLE_INFO_PLIST, Home, commit, make_dump, make_engine_remote, make_ipa
 
 NAMES = {MKW: "Mario Kart World", ODYSSEY: "Super Mario Odyssey", HOLLOW: "Hollow Knight"}
 PYTHON = Path(sys.executable)
@@ -159,6 +159,31 @@ class Api(Home):
         (Path(app["path"]) / "Contents").mkdir(parents=True)
         (Path(app["path"]) / "Contents" / "Info.plist").write_bytes(b"<plist><dict></dict></plist>")
         self.assertEqual(self.call("storage")[1]["storage"]["mac_apps"], [])
+
+    def test_an_app_python_cannot_read_in_the_applications_folder(self):
+        """A games folder on a NAS: the library looks for this Mac's copies of
+        the games in the Applications folder of the player's session, among
+        the player's other apps. One whose Info.plist macOS reads and Python
+        does not is no game's, and the library, the Storage page and the
+        switches for this Mac work as before (on a player's Mac, the library
+        said "ExpatError: not well-formed (invalid token): line 19, column 0"
+        instead of the games, and the switch for this Mac came back off)."""
+        self.enterContext(mock.patch.dict(os.environ, {macapps.PACKED_ENV: "1"}))
+        other = Path.home() / "Applications" / "Some App.app" / "Contents"
+        other.mkdir(parents=True)
+        (other / "Info.plist").write_bytes(UNREADABLE_INFO_PLIST)
+        self.build(MKW)
+        code, data = self.call("library")
+        self.assertEqual(code, 0, data)
+        [game] = data["games"]
+        self.assertEqual((game["title_id"], game["mac"]["app"]), (MKW, None))
+        code, data = self.call("platform", MKW, "mac", "off")
+        self.assertEqual((code, data["platforms"]), (0, {"ios": True, "mac": False}))
+        code, data = self.call("platform", MKW, "mac", "on")
+        self.assertEqual((code, data["platforms"]), (0, {"ios": True, "mac": True}))
+        self.assertEqual(self.call("library")[0], 0)
+        code, data = self.call("storage")
+        self.assertEqual((code, data["storage"]["mac_apps"]), (0, []))
 
     def test_a_mac_app_kept_on_a_nas_and_this_macs_copy(self):
         """A games folder on a NAS keeps the game's app in one file: the
