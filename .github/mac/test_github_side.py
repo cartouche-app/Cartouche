@@ -333,7 +333,7 @@ class WatchTests(unittest.TestCase):
         self.assertNotIn(f"/repos/{REPOSITORY}/actions/runs/500/cancel", [p for _, p, _ in posts])
 
     def test_waits_for_the_mac_as_long_as_the_workflow_says(self):
-        # The UI tests and screenshots wait an hour, longer than the job
+        # The UI tests on an iPhone wait an hour, longer than the job
         # before them takes on the Mac; the builds 20.
         for extra, minutes in (({}, 20), ({"MAC_QUEUE_MINUTES": "60"}, 60)):
             with self.subTest(minutes=minutes):

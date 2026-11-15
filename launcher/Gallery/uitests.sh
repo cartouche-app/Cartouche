@@ -2,8 +2,9 @@
 # Builds the launcher's gallery with its UI tests (launcher/Gallery/UITests)
 # and runs them on an iPhone simulator, keeping their results in OUT. Needs a
 # Mac with Xcode and XcodeGen (brew install xcodegen). One build serves every
-# simulator (build.sh): the iPad's tests and the screenshots after these find
-# it done.
+# simulator (build.sh): the iPad's tests and the screenshots after these, on
+# the same Mac, find it done. The CI runs each on a Mac of its own, at the
+# same time (.github/workflows/screens.yml).
 #
 #     launcher/Gallery/uitests.sh [--ipad] OUT
 #
@@ -50,6 +51,11 @@ PROJECT="$HERE/CartoucheGallery.xcodeproj"
 BUNDLE="io.github.clabeuhtegrite.cartouche.gallery"
 APP="$BUILD/DerivedData/Build/Products/Debug-iphonesimulator/CartoucheGallery.app"
 started=$SECONDS
+# Where the CI keeps the results of the tests that failed (screens.yml).
+KEPT=launcher-ui-tests
+if [ "$DEVICE" = iPad ]; then
+  KEPT=launcher-ui-tests-ipad
+fi
 
 # The simulator: its UDID on the last line.
 UDID="$(UITESTS_DEVICE="$DEVICE" python3 -u - <<'PY' | tail -n 1
@@ -292,11 +298,11 @@ if [ "$status" -ne 0 ]; then
   # Each failure, with the screen's accessibility tree as the test found
   # it (ConsoleTestCase.expect), the first lines of each.
   echo "== What the tests that failed found"
-  awk '
+  awk -v kept="$KEPT" '
     / error: / || tolower($0) ~ /^test case .* failed/ { tree = 0; print; next }
     /^== .*The accessibility tree:$/ { tree = 1; lines = 0; print; next }
     tree && (tolower($0) ~ /^test case / || /^ *t = /) { tree = 0 }
-    tree { if (lines < 400) print; else if (lines == 400) print "    … the rest of the tree in launcher-ui-tests"; lines++ }
+    tree { if (lines < 400) print; else if (lines == 400) print "    … the rest of the tree in " kept; lines++ }
   ' "$OUT/xcodebuild.log" | head -n 1800 || true
 fi
 # Each test's result, and what the main thread's watch said at its end.
@@ -308,6 +314,6 @@ xcrun xcresulttool get test-results summary --path "$OUT/UITests.xcresult" 2>/de
 echo
 xcrun simctl shutdown "$UDID" 2>/dev/null || true
 if [ "$status" -ne 0 ]; then
-  echo "::error::UI tests failed on the $DEVICE: the end of the log shows each failed test and what it found on the screen; launcher-ui-tests keeps the results"
+  echo "::error::UI tests failed on the $DEVICE: the end of the log shows each failed test and what it found on the screen; $KEPT keeps the results"
 fi
 exit "$status"

@@ -12,7 +12,8 @@
 # GitHub cancelled the job (run 43602029480, 14 November), and before the
 # screenshots. Built for any simulator, of this Mac's processor alone, the
 # build is the same for each: the next finds it done, and Xcode builds again
-# only what changed.
+# only what changed. The CI runs each on a Mac of its own, at the same time,
+# where each builds it once (.github/workflows/screens.yml).
 #
 # xcodebuild says nothing for minutes as it builds: heartbeat.py says every
 # minute that the build goes on, and what the Mac has left.

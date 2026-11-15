@@ -9,8 +9,9 @@ The run goes back to GitHub's Macs:
   waits for it or runs: it went to sleep, lost the network, or its
   supervisor stopped it;
 - when the job has waited 20 minutes for the Mac (QUEUE_MINUTES), or as
-  long as MAC_QUEUE_MINUTES says: the UI tests and screenshots wait 60,
-  longer than the job before them takes on the Mac (46 minutes).
+  long as MAC_QUEUE_MINUTES says: the UI tests on an iPhone wait 60,
+  longer than the job before them took on the Mac (46 minutes, with the
+  screenshots).
 
 For that, it asks Mac rescue (mac-rescue.yml, from main) to run this run
 again once it has ended, then cancels it: a run again goes to GitHub's Macs
