@@ -15,7 +15,11 @@ These are the names of every copy since 0.6.0. Renaming the app, its disk
 image or its tag means publishing these names as well, for as long as such
 copies run; the bundle identifier never changes. An installed copy updated
 from end to end, with the disk image the workflow made:
-mac/Tests/BuilderKitTests/UpdaterEndToEndTests.swift."""
+mac/Tests/BuilderKitTests/UpdaterEndToEndTests.swift.
+
+Cartouche on the iPhone sends a Mac whose app is 0.5.0 or older the link to
+the disk image of a version that finds its updates, 0.6.0's (decision 118):
+that release stays published for as long as such Macs run."""
 
 import re
 import unittest
@@ -93,6 +97,21 @@ class Updates(unittest.TestCase):
         self.assertIn('--repo "$REPOSITORY"', step)
         for flag in ("--prerelease", "--draft"):
             self.assertNotIn(flag, step, WHY)
+
+    def test_the_iphone_sends_a_mac_too_old_a_disk_image_that_updates_itself(self):
+        # The link Cartouche shares for a Mac whose app no longer finds its
+        # updates (launcher/Sources/CartoucheMacBuildsView.swift): a disk
+        # image the workflow published, under the names above, of 0.6.0 or
+        # newer, which updates itself to the newest once open.
+        link = self.found(r'static let builderDownload = URL\(string: "([^"]+)"\)!',
+                          text("launcher/Sources/CartoucheMacBuildsView.swift"), "the link the iPhone sends")
+        prefix = f"https://github.com/{INSTALLED['repository']}/releases/download/{INSTALLED['tag']}"
+        self.assertTrue(link.startswith(prefix), (link, WHY))
+        version, _, image = link[len(prefix):].partition("/")
+        self.assertRegex(version, r"^\d{1,6}(\.\d{1,6}){0,3}$")
+        self.assertEqual(image, INSTALLED["image"].replace("{version}", version), WHY)
+        self.assertGreaterEqual(tuple(int(part) for part in version.split(".")), (0, 6, 0),
+                                "0.5.0 and older take their updates from the repository's former address alone")
 
     def test_the_version_is_one_they_compare(self):
         # BuilderVersion.parts: one to four numbers of six digits at most,
