@@ -25,6 +25,8 @@
 //        games                           the home
 //        guide                           Your first game
 //        library                         every game, open over the home
+//        mac-builds                      all the Mac's builds, as System
+//                                        opens them (work: mac-builds)
 //        nightly                         Renew every night, its steps, from
 //                                        the System page
 //        report                          Report a problem
@@ -32,7 +34,11 @@
 //                                        open at -GalleryCategory
 //        setup                           the setup
 //        sheet                           the sheet of -GallerySheet's game
-//        sheet-saves                     the same, further down, at its saves
+//        sheet-mac                       the sheet, scrolled to the game's
+//                                        build on the player's Mac (work:
+//                                        mac-builds)
+//        sheet-saves                     the sheet, further down, at its
+//                                        saves
 //        shortcuts                       Siri and Home Screen, from the
 //                                        sheet of the player's game
 //        signin                          the Apple ID sign-in
@@ -106,6 +112,11 @@
 //                                        crash (GalleryLogs.swift)
 //        mac                             the player's Mac, paired, as the
 //                                        games folder and the saves folder
+//        mac-builds                      that Mac building one game and
+//                                        another waiting its turn, as the
+//                                        games' sheets, System and the
+//                                        Mac's builds show them
+//                                        (GalleryMac.builds)
 //        mac-code                        two Macs nearby, pairing with the
 //                                        first, with the six digits on both
 //                                        screens
@@ -182,6 +193,9 @@
 //                                        saves
 //        manage                          on the sheet, the sheet opened on
 //                                        the game's management
+//        nightly                         on the Mac's builds (screen
+//                                        mac-builds), down to the nightly
+//                                        build
 //        signature                       on the System page, the page
 //                                        scrolled down to its signature
 //        update                          on the System page, the page
@@ -314,8 +328,12 @@ struct GalleryScenario {
             GalleryState.recordSignature(expiringIn: 6 * 86_400 + 3_600, renewedAgo: 86_400)
         }
         MainActor.assumeIsolated {
-            // The System page down to the scenario's section.
+            CartoucheMacBuildsWatch.galleryScrolls = screen == "sheet-mac"
+            // The System page down to the scenario's section, or on the
+            // Mac's builds, down to theirs.
             CartoucheSystemView.openingSection = screen == "system" ? category : nil
+            CartoucheSystemView.opensMacBuilds = screen == "mac-builds"
+            CartoucheMacBuildsPage.openingRow = screen == "mac-builds" && category == "nightly" ? CartoucheMacBuildsPage.nightlyRow : nil
             if work == "renewing" {
                 CartoucheRenewals.shared.showRenewingForGallery(at: 0.4)
             }
@@ -426,10 +444,11 @@ struct GalleryScenario {
             if work == "log", let titleId = sheet ?? ownedTitles.first {
                 GalleryLogs.prepare(titleId: titleId)
             }
-            if work == "mac" || work == "mac-offline" {
+            if ["mac", "mac-offline", "mac-builds"].contains(work) {
                 // The player's Mac, paired, with the games Cartouche Builder
                 // built in its Games folder; offline, away from home, the
-                // saves of two games wait for it.
+                // saves of two games wait for it; builds, Cartouche Builder
+                // at work, which the games' sheets and System show.
                 let mac = GalleryMac.paired()
                 CartoucheStorageSettings.shared.showForGallery(mac, games: CartoucheBridge.gamesFolder,
                                                                saves: CartoucheBridge.savesFolder)
@@ -437,6 +456,9 @@ struct GalleryScenario {
                 if work == "mac-offline" {
                     CartoucheStorageReach.shared.showOfflineForGallery([mac.id])
                     CartoucheSaveBackups.shared.showWaitingForGallery(2)
+                }
+                if work == "mac-builds" {
+                    CartoucheMacBuildsWatch.gallery = (mac: mac.name, builds: GalleryMac.builds())
                 }
             }
             if work == "drive-signed-out" {
@@ -755,7 +777,7 @@ struct CartoucheGalleryApp: App {
             // the sheet of the game in focus on an iPhone Duo unfolded once
             // the player has a game.
             CartoucheGamesView(showingLibrary: true)
-        case "sheet", "sheet-saves":
+        case "sheet", "sheet-mac", "sheet-saves":
             if let entry = entries.all.first(where: { $0.titleId == scenario.sheet }) {
                 NavigationStack {
                     CartoucheGameSheetView(entry: entry, memory: CartoucheMemoryReading.now(), onPlay: { _ in },
@@ -818,7 +840,7 @@ struct CartoucheGalleryApp: App {
                         }
                     }
             }
-        case "system":
+        case "system", "mac-builds":
             CartoucheSystemView()
         case "nightly":
             NavigationStack {
@@ -922,6 +944,37 @@ enum GalleryMac {
     /// reached it at.
     static func paired() -> CartoucheStorageServer {
         CartoucheStorageServer(kind: .mac, name: "MacBook Air", host: "192.168.1.20", port: Int(CartoucheBridge.port), macID: id)
+    }
+
+    /// Cartouche Builder at work on the Mac, as it tells Cartouche (work:
+    /// mac-builds): Mario Kart World building, Donkey Kong Bananza waiting
+    /// its turn, Link's Awakening built this morning, and three games the
+    /// player has not installed: one whose last build failed yesterday,
+    /// one nxnative improved since its last build, and one the Mac does
+    /// not follow. What is due built every night at 3:30. Its words in the
+    /// gallery's language, as a Mac in that language says them (stageText
+    /// in the Mac's Theme.swift).
+    static func builds(now: Date = Date()) -> CartoucheBridgeBuilds {
+        let hour: TimeInterval = 3_600
+        let french = CartoucheText.bundle.preferredLocalizations.first == "fr"
+        return CartoucheBridgeBuilds(running: true, games: [
+            .init(id: "0400C3F00006E000", name: "Mario Kart World", state: "building", reasons: ["changes"],
+                  progress: 0.42, step: french ? "Compilation des shaders pour l’iPhone" : "Compiling shaders for the iPhone",
+                  left: 21 * 60, built: now.addingTimeInterval(-3 * 24 * hour), followed: true, stoppable: true, stopping: false),
+            .init(id: "040074A01BF12000", name: "Donkey Kong Bananza", state: "queued", reasons: ["changes"], turn: 1,
+                  built: now.addingTimeInterval(-6 * 24 * hour), followed: true, stoppable: true, stopping: false),
+            .init(id: "01006BB00C6F0000", name: "The Legend of Zelda: Link's Awakening", state: "up_to_date",
+                  built: now.addingTimeInterval(-9 * hour), followed: true),
+            .init(id: "01003FC01670C000", name: "13 Sentinels: Aegis Rim", state: "failed",
+                  failed: now.addingTimeInterval(-26 * hour),
+                  error: french ? "La construction de l’app s’est arrêtée\u{00A0}: Xcode n’a trouvé aucun SDK iOS."
+                                : "Building the app stopped: Xcode found no iOS SDK.",
+                  followed: true),
+            .init(id: "0100B7C00933A000", name: "Pikmin 4", state: "due", reasons: ["changes"],
+                  built: now.addingTimeInterval(-12 * 24 * hour), followed: true),
+            .init(id: "0100000000010000", name: "Super Mario Odyssey", state: "not_followed",
+                  built: now.addingTimeInterval(-20 * 24 * hour), followed: false),
+        ], due: 1, nightly: CartoucheBridgeBuilds.Nightly(on: true, hour: 3, minute: 30))
     }
 
     private static func service(_ name: String) -> NWEndpoint {
