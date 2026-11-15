@@ -107,9 +107,26 @@ enum CartoucheRenewal {
                 guard let message, let failure else {
                     throw Failure(message: CartoucheText.renewFailed, failure: failure)
                 }
-                // Never Apple's page for an error, as SideStore's words would show it.
-                throw Failure(message: CartoucheText.sideStoreMessage(message, failure: failure), failure: failure)
+                throw Failure(message: playerMessage(message, failure: failure), failure: failure)
             }
+        }
+    }
+
+    /// What Cartouche tells the player when a renewal or an update of
+    /// Cartouche ended with the built-in SideStore's MESSAGE, FAILURE being
+    /// why: what to do, in its own words, when Apple revoked the certificate
+    /// or SideStore did not reach this iPhone (CartoucheRenewalTrouble);
+    /// otherwise SideStore's words, never Apple's page for an error, as they
+    /// would show it (CartoucheText.sideStoreMessage).
+    static func playerMessage(_ message: String, failure: CartoucheFailure) -> String {
+        CartoucheRenewalTrouble.of(failure).map(advice) ?? CartoucheText.sideStoreMessage(message, failure: failure)
+    }
+
+    /// What to do about TROUBLE.
+    static func advice(_ trouble: CartoucheRenewalTrouble) -> String {
+        switch trouble {
+        case .certificateRevoked: return CartoucheText.renewRevoked
+        case .device(let device): return CartoucheText.deviceMessage(device)
         }
     }
 
@@ -210,6 +227,11 @@ final class CartoucheRenewals: ObservableObject {
     /// When Cartouche last renewed itself, or tried to, kept across
     /// launches.
     static let lastTryKey = "Cartouche.renewal.automatic.last"
+    /// When the signature whose certificate Apple revoked expires, as a
+    /// renewal or an update found it, kept across launches: an install of
+    /// Cartouche over itself gives it a signature that expires at another
+    /// time (CartoucheAutomaticRenewal.isRevoked).
+    static let revokedKey = "Cartouche.renewal.revokedSignature"
 
     /// How long an update, a sign-in or the registration of this iPhone
     /// waits for the renewal under way before it goes on: three minutes,
@@ -234,6 +256,27 @@ final class CartoucheRenewals: ObservableObject {
         CartoucheRenewal.canRenew && CartoucheSetup.shared.isComplete && !sideStoreBusy
     }
 
+    /// Whether Apple revoked the certificate of the signature Cartouche has,
+    /// as a renewal or an update found it: Cartouche no longer renews itself,
+    /// which would fail the same way every six hours, and the System page
+    /// says to install it again over itself, with the Cartouche Installer,
+    /// until that gives it another signature. Renew now stays, for the
+    /// player who wants to see it fail again.
+    var certificateRevoked: Bool {
+        CartoucheAutomaticRenewal.isRevoked(current: CartoucheSignature.current().expirationDate,
+                                            revoked: UserDefaults.standard.object(forKey: Self.revokedKey) as? Date)
+    }
+
+    /// Notes the signature Cartouche has when FAILURE, why a renewal or an
+    /// update failed, says that Apple revoked its certificate.
+    func noteIfRevoked(_ failure: CartoucheFailure?) {
+        guard let failure, CartoucheRenewalTrouble.of(failure) == .certificateRevoked,
+              let expirationDate = CartoucheSignature.current().expirationDate else { return }
+        UserDefaults.standard.set(expirationDate, forKey: Self.revokedKey)
+        CartoucheReports.note("Apple revoked the certificate of this signature: Cartouche no longer renews itself on it")
+        objectWillChange.send()
+    }
+
     /// What Cartouche finds as it comes to the front.
     var situation: CartoucheAutomaticRenewal.Situation {
         let setup = CartoucheSetup.shared
@@ -245,7 +288,8 @@ final class CartoucheRenewals: ObservableObject {
             sideStoreBusy: sideStoreBusy,
             signInsPaused: CartoucheAccount.shared.pausedUntil != nil,
             gameRunning: CartoucheGameActions.shared.running != nil,
-            lastTry: UserDefaults.standard.object(forKey: Self.lastTryKey) as? Date)
+            lastTry: UserDefaults.standard.object(forKey: Self.lastTryKey) as? Date,
+            certificateRevoked: certificateRevoked)
     }
 
     /// Renew now, from the System page.
@@ -311,7 +355,9 @@ final class CartoucheRenewals: ObservableObject {
             do {
                 try await CartoucheRenewal.renew(progress: progress, automatic: automatic, vpn: vpn)
                 CartoucheReports.note("Renewal done")
+                UserDefaults.standard.removeObject(forKey: Self.revokedKey)
             } catch {
+                noteIfRevoked((error as? CartoucheRenewal.Failure)?.failure)
                 fail(error, automatic: automatic, fraction: progress.fractionCompleted, vpn: vpn)
             }
             self.progress = nil
@@ -350,6 +396,17 @@ final class CartoucheRenewals: ObservableObject {
     /// gallery's screens.
     func showFailedForGallery(_ error: Error) {
         fail(error, automatic: true, fraction: 0.3)
+    }
+
+    /// The renewal Cartouche started by itself, failed as Apple had revoked
+    /// its certificate, as SideStore tells it, for the gallery's screens:
+    /// without noting the signature, which the gallery's next screens keep.
+    func showRevokedForGallery() {
+        let failure = CartoucheFailure(.certificate, stage: "VerifyCertificate", fraction: 0.1, seconds: 4,
+                                       codes: "SideStore.OperationError 2",
+                                       details: ["kind": .text("certificateRevoked"), "vpn": .flag(true)])
+        let message = CartoucheRenewal.playerMessage("The certificate has been revoked.", failure: failure)
+        fail(CartoucheRenewal.Failure(message: message, failure: failure), automatic: true, fraction: 0.1)
     }
     #endif
 }

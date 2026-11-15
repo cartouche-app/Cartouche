@@ -21,6 +21,10 @@ enum HarnessSideStore {
         case renews(days: Double)
         /// SideStore fails with this message, Cartouche not renewed.
         case fails(String)
+        /// SideStore fails as Apple revoked the certificate it signs with,
+        /// and leaves why, as the built-in SideStore does
+        /// (CartoucheSideStoreOutcome): Cartouche not renewed.
+        case revoked
         /// SideStore no longer answers, until the test lets it
         /// (HarnessLC.endHeldRenewal), which renews Cartouche for seven
         /// days.
@@ -39,6 +43,16 @@ enum HarnessSideStore {
         ]
         let data = try? JSONSerialization.data(withJSONObject: record)
         try? data?.write(to: LCSharedUtils.appGroupPath().appendingPathComponent("widget_data.json"), options: .atomic)
+    }
+
+    /// Leaves in Cartouche's keychain how ACTION ended, failed with FIELDS,
+    /// as the built-in SideStore does (app/patches/sidestore/0014).
+    static func leaveFailure(_ fields: [String: Any], action: CartoucheSideStoreOutcome.Action) {
+        var written: [String: Any] = ["version": 1, "action": action.rawValue, "ok": false,
+                                      "date": Int(Date().timeIntervalSince1970)]
+        written.merge(fields) { _, new in new }
+        guard let data = try? JSONSerialization.data(withJSONObject: written) else { return }
+        _ = CartoucheStoreKeychain.set(data, for: CartoucheSideStoreOutcome.account)
     }
 }
 
@@ -71,6 +85,12 @@ final class HarnessRefresh: NSObject {
                 completion(nil)
             case .fails(let message):
                 completion(message)
+            case .revoked:
+                // As 4 renewals of 0.12.x left it on November 13 and 14.
+                HarnessSideStore.leaveFailure(["stage": "VerifyCertificate", "trail": "FetchAnisetteData>VerifyCertificate",
+                                               "family": "operation", "kind": "certificateRevoked",
+                                               "codes": "SideStore.OperationError 2"], action: .refresh)
+                completion("The certificate has been revoked.")
             case .hangs:
                 break
             }

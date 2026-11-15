@@ -2,8 +2,9 @@
 //  CartoucheRenewalRulesTests.swift
 //  CartoucheCoreTests
 //
-//  When Cartouche renews itself as it comes to the front, and what renewed
-//  a signature that lasts longer (Sources/CartoucheRenewalRules.swift).
+//  When Cartouche renews itself as it comes to the front, what renewed a
+//  signature that lasts longer, and why a renewal or an update failed, when
+//  Cartouche says what to do (Sources/CartoucheRenewalRules.swift).
 //
 
 import XCTest
@@ -16,10 +17,32 @@ final class CartoucheRenewalRulesTests: XCTestCase {
     /// SideStore idle and no game running, with DAYS LEFT.
     private func situation(daysLeft: Int? = 2, canRenew: Bool = true, isSetUp: Bool = true, vpn: Bool = true,
                            busy: Bool = false, paused: Bool = false, playing: Bool = false,
-                           lastTry: Date? = nil) -> CartoucheAutomaticRenewal.Situation {
+                           lastTry: Date? = nil, revoked: Bool = false) -> CartoucheAutomaticRenewal.Situation {
         CartoucheAutomaticRenewal.Situation(daysLeft: daysLeft, canRenew: canRenew, isSetUp: isSetUp, vpnConnected: vpn,
                                             sideStoreBusy: busy, signInsPaused: paused, gameRunning: playing,
-                                            lastTry: lastTry)
+                                            lastTry: lastTry, certificateRevoked: revoked)
+    }
+
+    /// Why a renewal failed, as Cartouche reads what the built-in SideStore
+    /// left (CartoucheSideStoreOutcome) with its MESSAGE, LocalDevVPN
+    /// connected or not (VPN).
+    private func renewalFailure(_ fields: [String: Any], message: String = "Failed to Refresh Some App",
+                                vpn: Bool = true) throws -> CartoucheFailure {
+        var written: [String: Any] = ["version": 1, "action": "refresh", "ok": false,
+                                      "date": Int(now.timeIntervalSince1970) - 30]
+        written.merge(fields) { _, new in new }
+        let data = try JSONSerialization.data(withJSONObject: written)
+        let outcome = try XCTUnwrap(CartoucheSideStoreOutcome(data: data, expecting: .refresh, now: now))
+        return CartoucheFailure.sideStore(outcome: outcome, message: message, fraction: 0.4, seconds: 9,
+                                          vpn: vpn, pairing: true)
+    }
+
+    /// What SideStore leaves when Apple revoked the certificate it signs
+    /// with, as 4 renewals of 0.12.x left it on November 13 and 14.
+    private func revokedFailure() throws -> CartoucheFailure {
+        try renewalFailure(["stage": "VerifyCertificate", "trail": "FetchAnisetteData>VerifyCertificate",
+                            "family": "operation", "kind": "certificateRevoked", "codes": "SideStore.OperationError 2"],
+                           message: "The certificate has been revoked.")
     }
 
     private func wait(_ situation: CartoucheAutomaticRenewal.Situation) -> CartoucheAutomaticRenewal.Wait? {
@@ -106,6 +129,93 @@ final class CartoucheRenewalRulesTests: XCTestCase {
     /// The iPhone's clock went back: a try dated later holds nothing back.
     func testATryDatedLaterThanNowHoldsNothingBack() {
         XCTAssertNil(wait(situation(lastTry: now.addingTimeInterval(3_600))))
+    }
+
+    // MARK: A certificate Apple revoked
+
+    /// On November 13 and 14, 4 renewals of 3 copies failed as Apple had
+    /// revoked their certificate, which no renewal gives back: up to 0.13.0,
+    /// Cartouche tried again every six hours, LocalDevVPN opened for each
+    /// try, until the signature expired.
+    func testNeverRenewsItselfOnACertificateAppleRevoked() {
+        XCTAssertEqual(wait(situation(revoked: true)), .certificateRevoked)
+        XCTAssertFalse(CartoucheAutomaticRenewal.isDue(situation(revoked: true), at: now))
+        // Six hours or three days after the last try alike.
+        XCTAssertEqual(wait(situation(lastTry: now.addingTimeInterval(-6 * 3_600), revoked: true)), .certificateRevoked)
+        XCTAssertEqual(wait(situation(lastTry: now.addingTimeInterval(-3 * 86_400), revoked: true)), .certificateRevoked)
+        // Nor does Cartouche open LocalDevVPN for it.
+        XCTAssertEqual(wait(situation(vpn: false, revoked: true)), .certificateRevoked)
+        // On its last day as on the others.
+        XCTAssertEqual(wait(situation(daysLeft: 0, revoked: true)), .certificateRevoked)
+        // A signature with more days left waits as any other.
+        XCTAssertEqual(wait(situation(daysLeft: 5, revoked: true)), .notDue)
+    }
+
+    /// The certificate Apple revoked is the one of the signature Cartouche
+    /// noted: an install of Cartouche over itself, with the Cartouche
+    /// Installer, gives it a signature that expires a week after it, and
+    /// Cartouche renews itself again.
+    func testOnlyTheSignatureAppleRevokedTheCertificateOfIsHeld() {
+        let revoked = now.addingTimeInterval(2 * 86_400 + 5 * 3_600)
+        XCTAssertTrue(CartoucheAutomaticRenewal.isRevoked(current: revoked, revoked: revoked))
+        // Read again from the profile or from SideStore's record.
+        XCTAssertTrue(CartoucheAutomaticRenewal.isRevoked(current: revoked.addingTimeInterval(0.4), revoked: revoked))
+        // Installed again a day later: a new signature, for seven days.
+        XCTAssertFalse(CartoucheAutomaticRenewal.isRevoked(current: now.addingTimeInterval(8 * 86_400), revoked: revoked))
+        XCTAssertFalse(CartoucheAutomaticRenewal.isRevoked(current: revoked.addingTimeInterval(60), revoked: revoked))
+        // Nothing noted, or a signature Cartouche could not read.
+        XCTAssertFalse(CartoucheAutomaticRenewal.isRevoked(current: revoked, revoked: nil))
+        XCTAssertFalse(CartoucheAutomaticRenewal.isRevoked(current: nil, revoked: revoked))
+    }
+
+    // MARK: What to tell of a renewal or an update that failed
+
+    /// SideStore no longer finds the certificate among the account's, and
+    /// Apple's OCSP answers that it is revoked: up to 0.13.0, the System
+    /// page said "The certificate has been revoked." and showed Renew now,
+    /// which failed the same way.
+    func testTellsACertificateAppleRevoked() throws {
+        let failure = try revokedFailure()
+        XCTAssertEqual(failure.cause, .certificate)
+        XCTAssertEqual(CartoucheRenewalTrouble.of(failure), .certificateRevoked)
+        // LocalDevVPN off or not, the certificate is no less revoked.
+        let offline = try renewalFailure(["stage": "VerifyCertificate", "family": "operation", "kind": "certificateRevoked"],
+                                         vpn: false)
+        XCTAssertEqual(CartoucheRenewalTrouble.of(offline), .certificateRevoked)
+    }
+
+    /// SideStore did not reach this iPhone through LocalDevVPN, as a renewal
+    /// or an update needs it to: what to do, as a sign-in says it.
+    func testTellsWhatKeptSideStoreFromThisIPhone() throws {
+        let off = try renewalFailure(["stage": "InstallProvisioningProfiles", "family": "operation", "kind": "noVPN"],
+                                     vpn: false)
+        XCTAssertEqual(CartoucheRenewalTrouble.of(off), .device(.vpn))
+        // LocalDevVPN connected, and this iPhone did not answer through it.
+        let silent = try renewalFailure(["stage": "InstallProvisioningProfiles", "family": "operation", "kind": "noVPN"])
+        XCTAssertEqual(CartoucheRenewalTrouble.of(silent), .device(.noAnswer))
+        let noWiFi = try renewalFailure(["stage": "InstallProvisioningProfiles", "family": "minimuxer",
+                                         "kind": "noConnection"])
+        XCTAssertEqual(CartoucheRenewalTrouble.of(noWiFi), .device(.wifi))
+        let refused = try renewalFailure(["stage": "InstallProvisioningProfiles", "family": "operation",
+                                          "kind": "invalidPairingFile", "reason": "handshake"])
+        XCTAssertEqual(CartoucheRenewalTrouble.of(refused), .device(.pairingRefused))
+    }
+
+    /// Anything else keeps SideStore's words, or Cartouche's of Apple's
+    /// answers (CartoucheText.sideStoreMessage).
+    func testLeavesAnyOtherFailureToSideStoresWords() throws {
+        let profiles = try renewalFailure(["stage": "FetchProvisioningProfiles", "family": "portal",
+                                           "kind": "provisioningProfileDoesNotExist"])
+        XCTAssertNil(CartoucheRenewalTrouble.of(profiles))
+        let refusedByApple = try renewalFailure(["stage": "FetchProvisioningProfiles", "family": "portal",
+                                                 "kind": "unknown", "apple": 1100])
+        XCTAssertNil(CartoucheRenewalTrouble.of(refusedByApple))
+        // A certificate's trouble that does not say Apple revoked it.
+        XCTAssertNil(CartoucheRenewalTrouble.of(CartoucheFailure(.certificate, stage: "VerifyCertificate")))
+        // SideStore left nothing.
+        XCTAssertNil(CartoucheRenewalTrouble.of(CartoucheFailure.sideStore(outcome: nil, message: "Something went wrong",
+                                                                           fraction: 0.2, seconds: 3, vpn: true,
+                                                                           pairing: true)))
     }
 
     // MARK: What renewed the signature

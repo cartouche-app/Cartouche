@@ -199,6 +199,55 @@ final class RenewalTests: HarnessCase {
         XCTAssertEqual(CartoucheSignature.current().daysLeft, 6)
     }
 
+    // MARK: A certificate Apple revoked
+
+    /// On November 13 and 14, 4 renewals of 3 copies of 0.12.x failed as
+    /// Apple had revoked their certificate: the System page showed
+    /// SideStore's words and Renew now, and Cartouche tried again every six
+    /// hours, which no renewal can fix. It says to install it again over
+    /// itself with the Cartouche Installer, and no longer renews itself on
+    /// that signature, until such an install gives it another.
+    func testACertificateAppleRevokedSaysToInstallAgainAndRenewsNoMore() async throws {
+        try await setUpCartouche()
+        HarnessSideStore.record(expiringIn: 1.5)
+        HarnessLC.renewal = .revoked
+        renewals.renewIfDue()
+        try await renewalEnds()
+        let report = try XCTUnwrap(renewals.report)
+        XCTAssertEqual(report.message, CartoucheText.renewRevoked)
+        XCTAssertEqual(report.failure?.cause, .certificate)
+        XCTAssertEqual(report.failure?.details["kind"], .text("certificateRevoked"))
+        XCTAssertTrue(renewals.certificateRevoked, "the System page says it after the report too")
+        XCTAssertEqual(CartoucheAutomaticRenewal.wait(renewals.situation, at: Date()), .certificateRevoked)
+
+        // Six hours later, LocalDevVPN off: no try, nor LocalDevVPN opened
+        // for one.
+        UserDefaults.standard.set(Date().addingTimeInterval(-6 * 3_600 - 1), forKey: CartoucheRenewals.lastTryKey)
+        HarnessLC.vpnConnected = false
+        HarnessLC.openedURLs = []
+        renewals.renewIfDue()
+        XCTAssertFalse(renewals.isRenewing)
+        try await pause(0.5)
+        XCTAssertEqual(HarnessLC.renewals.count, 1)
+        XCTAssertTrue(HarnessLC.openedURLs.isEmpty, "LocalDevVPN left alone")
+        HarnessLC.vpnConnected = true
+        renewals.renewIfDue()
+        XCTAssertFalse(renewals.isRenewing)
+        XCTAssertTrue(renewals.canRenewNow, "Renew now stays, for the player who wants to try again")
+
+        // Installed again over itself, with the Cartouche Installer: another
+        // signature, here one Cartouche renews itself again.
+        HarnessSideStore.record(expiringIn: 2.5)
+        XCTAssertFalse(renewals.certificateRevoked)
+        HarnessLC.renewal = .renews(days: 7)
+        renewals.renewIfDue()
+        XCTAssertTrue(renewals.isRenewing)
+        try await renewalEnds()
+        XCTAssertNil(renewals.report)
+        XCTAssertEqual(HarnessLC.renewals.count, 2)
+        XCTAssertEqual(CartoucheSignature.current().daysLeft, 6)
+    }
+
     // MARK: Renew now
 
     func testRenewNowRenewsOnceAtATime() async throws {

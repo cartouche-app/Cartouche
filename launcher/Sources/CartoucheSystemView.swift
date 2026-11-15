@@ -387,6 +387,13 @@ struct CartoucheSystemView: View {
                 .foregroundStyle(.red)
             CartoucheReportButton(report: report)
                 .font(.footnote)
+        } else if renewals.certificateRevoked {
+            // After the renewal or the update that found it, until an install
+            // over Cartouche gives it another signature: Cartouche no longer
+            // renews itself meanwhile.
+            Label(CartoucheText.renewRevoked, systemImage: "exclamationmark.triangle.fill")
+                .font(.footnote)
+                .foregroundStyle(.red)
         }
     }
 
