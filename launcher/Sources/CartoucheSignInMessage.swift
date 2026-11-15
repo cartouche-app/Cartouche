@@ -127,6 +127,19 @@ enum CartoucheSignInMessage {
         /// as it launched or on its way: LiveContainer's bridge says so in
         /// English, and says nothing of what to do.
         case sideStoreQuit
+        /// The built-in SideStore found no app group to open its database
+        /// in, its missingAppGroup: Cartouche's IPA for an Apple ID that a
+        /// signing app signed without that group, whose sign-in cannot
+        /// work (CartoucheOwnSignature.swift). SideStore's words, "App
+        /// Group Container Inaccessible", say nothing of the IPA to sign
+        /// instead.
+        case noAppGroup
+        /// The Apple ID already has a certificate the built-in SideStore
+        /// does not hold, made by another app or computer, which it never
+        /// revokes (app/patches/sidestore/0004, 0012): SideStore says so in
+        /// English, and sends to the Cartouche Installer without a word of
+        /// the Apple ID Cartouche was installed with.
+        case otherCertificate
     }
 
     /// Whether MESSAGE holds a page of HTML, as Apple's servers send one for
@@ -155,10 +168,12 @@ enum CartoucheSignInMessage {
     static func trouble(in message: String, failure: CartoucheFailure) -> Trouble? {
         if failure.cause == .tooManyAttempts { return .tooManyRequests }
         if failure.cause == .sideStoreQuit { return .sideStoreQuit }
+        if failure.cause == .certificateRefused { return .otherCertificate }
         var http: Int?
         if case .number(let number)? = failure.details["http"] { http = Int(number) }
         var kind: String?
         if case .text(let text)? = failure.details["kind"] { kind = text }
+        if kind == "missingAppGroup" { return .noAppGroup }
         let status = pageStatus(in: message) ?? http
         if status == 429 { return .tooManyRequests }
         if hasPage(message) || kind == "httpStatus" || kind == "invalidResponseFormat" {

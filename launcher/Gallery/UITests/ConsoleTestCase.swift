@@ -46,6 +46,7 @@ enum Words {
     static let code = "6-digit code"                        // signIn.code.placeholder
     static let signInFailed = "The sign-in did not go through" // signIn.failed.title
     static let tooManyRequests = "Apple is refusing new sign-ins for now" // signIn.tooManyRequests
+    static let otherCertificate = "This Apple ID already has a certificate that Cartouche does not hold" // signIn.otherCertificate
     static let tryAgainIn = "Try again in "                 // signIn.wait
     static let copyReport = "Copy the report"               // errorReport.copy
     static let reportCopied = "Report copied"               // errorReport.copied

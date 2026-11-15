@@ -5,11 +5,13 @@
 //  What Cartouche tells the player of the built-in SideStore's error, in
 //  Cartouche.xcstrings with the other words (CartoucheText.swift): its own
 //  words when Apple limits the requests or answers with a page, which
-//  SideStore's would show as they are, and when SideStore could not reach
-//  this iPhone for the sign-in, which SideStore's would send to its own
-//  settings. A file of its own, since it reads CartoucheFailure and
-//  CartoucheSignInMessage, which the storage tests (launcher/StorageTests)
-//  build CartoucheText.swift without.
+//  SideStore's would show as they are, when SideStore could not reach this
+//  iPhone for the sign-in, which SideStore's would send to its own
+//  settings, when it found no app group, which SideStore's would only name,
+//  and when the Apple ID has a certificate it does not hold, which
+//  SideStore's tell in English. A file of its own, since it reads
+//  CartoucheFailure and CartoucheSignInMessage, which the storage tests
+//  (launcher/StorageTests) build CartoucheText.swift without.
 //
 
 import Foundation
@@ -25,8 +27,8 @@ extension CartoucheText {
     /// FAILURE being what Cartouche told of how its action ended: its own
     /// words when Apple limits the requests or answered with a page, those
     /// of a SIGN-IN when it is one, also when SideStore closed before it
-    /// finished; SideStore's otherwise, without the App Intents error's
-    /// name.
+    /// finished, found no app group or met a certificate it does not hold;
+    /// SideStore's otherwise, without the App Intents error's name.
     static func sideStoreMessage(_ message: String, failure: CartoucheFailure, signIn: Bool = false) -> String {
         let readable = CartoucheSignInMessage.readable(message)
         switch CartoucheSignInMessage.trouble(in: readable, failure: failure) {
@@ -34,6 +36,8 @@ extension CartoucheText {
         case .unreadable(let status?)?: return applePage(status)
         case .unreadable(nil)?: return appleUnreadable
         case .sideStoreQuit?: return signIn ? signInSideStoreQuit : readable
+        case .noAppGroup?: return signIn ? signInNoAppGroup : readable
+        case .otherCertificate?: return signIn ? signInOtherCertificate : readable
         case nil:
             guard signIn, let trouble = CartoucheSignInMessage.deviceTrouble(in: failure) else { return readable }
             // Before Apple, or once it accepted the account.
@@ -48,6 +52,20 @@ extension CartoucheText {
     // MARK: The built-in SideStore, closed before it finished
 
     static var signInSideStoreQuit: String { s("signIn.sideStoreQuit", "The built-in SideStore closed before it finished. Restart this iPhone, then try again. If it closes again, install the update offered in Settings › General › Software Update, if there is one.") }
+
+    // MARK: The built-in SideStore, without its app group
+
+    /// What a sign-in that stopped as the built-in SideStore found no app
+    /// group says: what the setup and the guide say of the IPA for an Apple
+    /// ID that a signing app signed (CartoucheTextSigning.swift), with the
+    /// version of this copy, which names the IPA to sign instead.
+    static var signInNoAppGroup: String {
+        signedElsewhere(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0")
+    }
+
+    // MARK: The Apple ID's certificate, made elsewhere
+
+    static var signInOtherCertificate: String { s("signIn.otherCertificate", "This Apple ID already has a certificate that Cartouche does not hold, made by another app or computer, and Cartouche never revokes it. If you installed Cartouche with another Apple ID, sign in with that one. Otherwise, install Cartouche again over this copy with the Cartouche Installer on your computer, with this Apple ID: it gives Cartouche its certificate. Then sign in again.") }
 
     // MARK: This iPhone, through LocalDevVPN
 

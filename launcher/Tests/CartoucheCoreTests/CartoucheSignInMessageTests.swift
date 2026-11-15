@@ -105,6 +105,38 @@ final class CartoucheSignInMessageTests: XCTestCase {
             let quit = CartoucheFailure.sideStore(outcome: nil, message: message, fraction: 0, seconds: 1, vpn: true, pairing: true)
             XCTAssertEqual(CartoucheSignInMessage.trouble(in: message, failure: quit), .sideStoreQuit, message)
         }
+        // The built-in SideStore found no app group, as when a signing app
+        // signed the IPA for an Apple ID: its database's error as it starts,
+        // or its operations', whose words say nothing of the IPA to sign.
+        for (family, stage, message) in [("database", "database", "App Group Container Inaccessible"),
+                                         ("operation", "ClearAppCache", "SideStore's shared app group could not be accessed.")] {
+            let noGroup = sideStoreFailure(["stage": stage, "family": family, "kind": "missingAppGroup"], message: message)
+            XCTAssertEqual(CartoucheSignInMessage.trouble(in: message, failure: noGroup), .noAppGroup, family)
+        }
+        // Apple's portal refusing an app group of the account is another
+        // matter.
+        XCTAssertNil(CartoucheSignInMessage.trouble(in: "The app group does not exist.",
+                                                    failure: CartoucheFailure(.appGroup, details: ["kind": .text("appGroupDoesNotExist")])))
+        // The Apple ID already has a certificate the built-in SideStore does
+        // not hold, which it never revokes: its words are in English, and
+        // end with the certificates' serial numbers.
+        let certificate = "This Apple account already has a certificate, which signs the apps installed with it."
+        let other = sideStoreFailure(["stage": "certificate", "family": "operation", "kind": "forbidden"], message: certificate)
+        XCTAssertEqual(CartoucheSignInMessage.trouble(in: certificate, failure: other), .otherCertificate)
+        // SideStore's forbidden at another step is not that.
+        let elsewhere = sideStoreFailure(["stage": "ResignApp", "family": "operation", "kind": "forbidden"], message: "Forbidden")
+        XCTAssertNil(CartoucheSignInMessage.trouble(in: "Forbidden", failure: elsewhere))
+    }
+
+    /// What Cartouche makes of the built-in SideStore's MESSAGE, its sign-in
+    /// having left FIELDS as its outcome.
+    private func sideStoreFailure(_ fields: [String: Any], message: String) -> CartoucheFailure {
+        var left: [String: Any] = ["version": 1, "action": "signIn", "ok": false, "date": Int(Date().timeIntervalSince1970)]
+        left.merge(fields) { _, new in new }
+        let outcome = (try? JSONSerialization.data(withJSONObject: left))
+            .flatMap { CartoucheSideStoreOutcome(data: $0, expecting: .signIn) }
+        XCTAssertNotNil(outcome, "\(fields)")
+        return CartoucheFailure.sideStore(outcome: outcome, message: message, fraction: 0, seconds: 0, vpn: true, pairing: true)
     }
 
     func testTheTroubleWithThisIPhone() {

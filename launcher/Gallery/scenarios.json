@@ -1000,6 +1000,7 @@
     },
     {
       "name": "iphone-setup-sign-in-unfinished",
+      "comment": "The setup after a sign-in that stopped before the certificate, the Apple ID having a certificate made elsewhere: why, in Cartouche's words, and its report to copy.",
       "screen": "setup",
       "work": "sign-in-unfinished",
       "owned": [],
@@ -1199,6 +1200,23 @@
       "comment": "A sign-in whose built-in SideStore closed as it launched, LocalDevVPN connected: what to do, in Cartouche's words.",
       "screen": "signin",
       "work": "sidestore-quit",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-sign-in-no-app-group",
+      "comment": "A sign-in whose built-in SideStore found no app group, as when a signing app signed the IPA for an Apple ID, LocalDevVPN connected: the setup's words for that IPA, and the IPA for the player's own certificate to download.",
+      "screen": "signin",
+      "work": "no-app-group",
       "owned": [],
       "setup": false,
       "controller": false,
