@@ -143,6 +143,92 @@
       "work": "newer-build"
     },
     {
+      "name": "iphone-sheet-mac-building",
+      "comment": "The sheet, scrolled to the game's build on the player's Mac: that Mac building this game and another waiting its turn, with Stop its build and All the Mac's builds.",
+      "screen": "sheet-mac",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "mac-builds"
+    },
+    {
+      "name": "iphone-system-mac",
+      "comment": "The System page with the row of the player's Mac's builds, which shows that Mac building one game and another waiting its turn.",
+      "screen": "system",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "mac-builds"
+    },
+    {
+      "name": "iphone-mac-builds",
+      "comment": "All the Mac's builds, as System opens them: Build what is due and Stop all, the game building with Stop its build, the one waiting its turn with Remove, the build that failed and why, and every game of the Mac.",
+      "screen": "mac-builds",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "mac-builds"
+    },
+    {
+      "name": "iphone-mac-builds-nightly",
+      "comment": "The same, down to the Mac's nightly build, on, and its time.",
+      "screen": "mac-builds",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "mac-builds",
+      "category": "nightly"
+    },
+    {
       "name": "iphone-sheet-other",
       "screen": "sheet",
       "sheet": "01003FC01670C000",
@@ -432,6 +518,50 @@
       "name": "iphone-update-offer",
       "screen": "games",
       "work": "update",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-update-offer-own-certificate",
+      "comment": "Cartouche signed with the player's own certificate by a signing app on the iPhone, from the IPA for the player's own certificate (signing: iphone), with a new version on offer: to download, then sign again in that app.",
+      "screen": "games",
+      "work": "update",
+      "signing": "iphone",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-update-offer-installer",
+      "comment": "Cartouche installed with the player's own certificate by the Cartouche Installer (signing: installer), with a new version on offer: to install from the Installer.",
+      "screen": "games",
+      "work": "update",
+      "signing": "installer",
       "owned": [
         "0400C3F00006E000",
         "040074A01BF12000",
@@ -842,6 +972,58 @@
       ]
     },
     {
+      "name": "iphone-setup-own-certificate",
+      "comment": "The setup of a Cartouche signed by a signing app on the iPhone (signing: iphone), the signing app having left Increased Memory Limit out (work: iml-left-out).",
+      "screen": "setup",
+      "signing": "iphone",
+      "work": "iml-left-out",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-signing-own-certificate",
+      "comment": "The import of the certificate a signing app on the iPhone signed Cartouche with (screen: signing, signing: iphone).",
+      "screen": "signing",
+      "signing": "iphone",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-setup-installer",
+      "comment": "The setup of a Cartouche installed by the Cartouche Installer with the player's own certificate (signing: installer).",
+      "screen": "setup",
+      "signing": "installer",
+      "owned": [],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-sign-in",
       "screen": "signin",
       "owned": [],
@@ -997,6 +1179,40 @@
         0
       ],
       "work": "build-skipped"
+    },
+    {
+      "name": "iphone-guide-own-certificate",
+      "comment": "Your first game, in a Cartouche signed by a signing app on the iPhone (signing: iphone).",
+      "screen": "guide",
+      "signing": "iphone",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-guide-installer",
+      "comment": "Your first game, in a Cartouche installed by the Cartouche Installer with the player's own certificate (signing: installer).",
+      "screen": "guide",
+      "signing": "installer",
+      "owned": [],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
     },
     {
       "name": "iphone-system",

@@ -107,6 +107,11 @@ final class AppModel: ObservableObject {
     @Published private(set) var library: Library? {
         didSet { useMacApps() }
     }
+    /// The switches of the games' sheets the player flipped, shown at once
+    /// over the library as the engine read it last (readLibrary): reading
+    /// it again takes tens of seconds with a games folder on a NAS.
+    private var switches = GameSwitches()
+    private var readLibrary: Library?
     @Published private(set) var status: BatchStatus?
     /// The games asked for while a batch runs, not taken by it yet, and those
     /// taken out of it.
@@ -146,6 +151,9 @@ final class AppModel: ObservableObject {
     private var enqueueing = false
 
     private var started = false
+    /// Cartouche's saves folder is being looked for on the shares.
+    private var adopting = false
+    private var mounts: (any NSObjectProtocol)?
     private var poller: Task<Void, Never>?
     private var checker: Task<Void, Never>?
     /// When the library is read again for the player's coming back.
@@ -172,7 +180,7 @@ final class AppModel: ObservableObject {
     func start() async {
         guard !started, !sample else { return }
         started = true
-        library = Engine.cachedLibrary(home)
+        show(read: Engine.cachedLibrary(home), since: switches.mark)
         status = Engine.readStatus(home)
         queue = Engine.readQueue(home)
         telemetry.language = L10n.code
@@ -359,12 +367,26 @@ final class AppModel: ObservableObject {
         }
         defer { if update { checking = false } }
         do {
+            let mark = switches.mark
             let fresh = try await engine.library(update: update)
-            library = fresh
+            show(read: fresh, since: mark)
             if update { announceImproved(fresh) }
         } catch {
             if !quietly { show(error, origin: update ? "check" : "library", background: update) }
         }
+    }
+
+    /// The library as the engine read it, from MARK on (switches.mark, as
+    /// the read began), with the switches it does not say yet.
+    private func show(read fresh: Library?, since mark: Int) {
+        readLibrary = fresh
+        library = fresh.map { switches.read($0, since: mark) }
+    }
+
+    /// The switches as they are now, over the library as read.
+    private func showSwitches() {
+        guard let readLibrary else { return }
+        library = switches.applied(to: readLibrary)
     }
 
     /// The player is back in the app, maybe from the Finder, where they put
@@ -830,30 +852,50 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// Follows GAME, or no longer: its switch shows it at once, the
+    /// library read again after the engine's answer.
     func follow(_ game: Game, _ followed: Bool) {
         guard !sample, let engine else { return }
+        let titleID = game.titleID
+        let flip = switches.flip(titleID, followed: followed)
+        showSwitches()
         Task {
             do {
-                try await engine.follow(game.titleID, followed)
+                try await engine.follow(titleID, followed)
+                switches.answered(titleID, flip: flip, followed: followed)
+                showSwitches()
                 await loadConfig()
                 await refreshLibrary(update: false)
             } catch {
+                switches.refused(titleID, flip: flip)
+                showSwitches()
                 show(error, origin: "follow")
             }
         }
     }
 
     /// Builds GAME for PLATFORM ("ios", its IPA, or "mac", its app for this
-    /// Mac) again, or no longer; what was built stays where it is.
+    /// Mac) again, or no longer; what was built stays where it is. Its
+    /// switch shows it at once, turned on following the game as the engine
+    /// does, then as the engine answers; the library is read again after.
     func setPlatform(_ game: Game, _ platform: String, _ on: Bool) {
         guard !sample, let engine else { return }
+        let titleID = game.titleID
+        var platforms = GamePlatforms(ios: game.onIOS, mac: game.onMac)
+        if platform == "ios" { platforms.ios = on } else { platforms.mac = on }
+        let flip = switches.flip(titleID, platforms: platforms, followed: on ? true : nil)
+        showSwitches()
         Task {
             do {
-                _ = try await engine.platform(game.titleID, platform, on)
+                let answer = try await engine.platform(titleID, platform, on)
+                switches.answered(titleID, flip: flip, platforms: answer.platforms, followed: answer.followed)
+                showSwitches()
                 await loadConfig()
                 await refreshLibrary(update: false)
                 if storage != nil { await loadStorage() }
             } catch {
+                switches.refused(titleID, flip: flip)
+                showSwitches()
                 show(error, origin: "platform")
             }
         }
@@ -981,6 +1023,34 @@ final class AppModel: ObservableObject {
         macGames.language = L10n.code
         useMacSaves()
         macGames.start()
+        adoptSharedSaves()
+        // A NAS mounted later: its saves folder is looked for then.
+        mounts = NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didMountNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in self?.adoptSharedSaves() }
+        }
+    }
+
+    /// Takes Cartouche's saves folder on a share mounted here, the iPhone's
+    /// on a NAS, as Use it on the iPhone page does, while the player chose
+    /// none and keeps the saves of the games played here in step
+    /// (MacSavesFolder.adopted): the Mac's games then start from the
+    /// iPhone's saves, not from the builder's own folder, which no iPhone
+    /// writes to unless through the bridge. A share that does not answer
+    /// must not hold the window: the shares are looked through aside.
+    func adoptSharedSaves() {
+        guard !sample, !adopting, AppSettings.macSaves, bridge.savesIsDefault else { return }
+        adopting = true
+        let own = bridge.saves
+        let paired = !bridge.devices.isEmpty
+        let synced = macGames.store.games(syncedIn: own)
+        Task {
+            let found = await Task.detached(priority: .utility) {
+                MacSavesFolder.adopted(found: MacSavesFolder.found(), own: own, paired: paired, synced: synced)
+            }.value
+            adopting = false
+            guard let found, AppSettings.macSaves, bridge.savesIsDefault else { return }
+            bridge.setSaves(found)
+        }
     }
 
     /// The library's games that have an app on this Mac, as their
@@ -1198,6 +1268,9 @@ final class AppModel: ObservableObject {
             telemetry.event("builder.played", game: run.app.titleID,
                             fields: BuilderTelemetry.playedFields(ended: ending.rawValue, exit: code, seconds: seconds,
                                                                   fromBuilder: run.fromBuilder, settings: run.settings))
+            // Started from here, the game filled the screen, Cartouche
+            // behind it: Cartouche comes back as it ends, as a console does.
+            if run.fromBuilder { comeBack() }
             if ending == .crashed {
                 let log = "~/Library/Logs/nxnative/\(run.app.titleID).log"
                 banner = Banner(kind: .error, text: tr("\(run.app.name) stopped unexpectedly. Its log: \(log)",
@@ -1239,6 +1312,16 @@ final class AppModel: ObservableObject {
     func game(_ titleID: String?) -> Game? {
         guard let titleID else { return nil }
         return library?.game(titleID)
+    }
+
+    /// Cartouche's window in front again, once a game started from it
+    /// ended, on the page or the console it was started from; a window the
+    /// player closed, the game started from the menu bar, stays closed.
+    private func comeBack() {
+        guard let window = NSApp.windows.first(where: { $0.identifier?.rawValue == AppModel.mainWindow || $0.title == "Cartouche Builder" }),
+              window.isVisible else { return }
+        NSApp.activate()
+        window.makeKeyAndOrderFront(nil)
     }
 
     func showMainWindow() {

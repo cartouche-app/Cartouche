@@ -29,6 +29,7 @@ let package = Package(
             // as they did when the list was one line.
             sources: [
                 "CartoucheBridge.swift",
+                "CartoucheBridgeBuilds.swift",
                 "CartoucheCoverList.swift",
                 "CartoucheDeviceWords.swift",
                 "CartoucheDrive.swift",
@@ -46,6 +47,7 @@ let package = Package(
                 "CartoucheGamePlace.swift",
                 "CartoucheGameSigning.swift",
                 "CartoucheInstallQuestions.swift",
+                "CartoucheOwnSignature.swift",
                 "CartouchePickerMeasures.swift",
                 "CartouchePlayTime.swift",
                 "CartouchePlayerInfo.swift",

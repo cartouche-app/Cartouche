@@ -22,9 +22,15 @@
 //    the saves written last win, the others kept as a copy of their date.
 //  - The newest copy comes when the game is about to start, and while it
 //    does not run; the saves of the Mac go after each game.
+//  - Saves the Mac kept in step with another saves folder, and did not
+//    change since, are no news for the one the player chose since: they
+//    stay in the other, and this one's newest copy comes in their place
+//    (kept here first, as a copy of their date, were they no longer there).
 //  - A saves folder that is not there, a share not mounted, is offline:
 //    nothing moves; the game plays with the saves of the Mac, which go once
 //    the folder is back.
+//  - Until the player chooses one, the Mac takes Cartouche's saves folder
+//    it finds on a share mounted here (adopted), the iPhone's on a NAS.
 //  - What was the same on both sides last, the base, is kept for each game
 //    and one saves folder (MacSaveStore): another folder starts from none.
 //
@@ -196,6 +202,9 @@ public final class MacSavesFolder {
                      quiet: @Sendable () -> Bool = { true }) async throws -> MacSaveOutcome {
         guard reachable else { throw MacSavesError.offline }
         let base = given?.place == place ? given : nil
+        // The saves folder this Mac kept the game in step with before the
+        // player chose this one, by its base there.
+        let left = given?.place == place ? nil : given
         let documents = self.documents(of: game.titleID)
         let folder = gameFolder(of: game)
         let names = copyNames(in: folder)
@@ -219,8 +228,24 @@ public final class MacSavesFolder {
             }
             step = CartoucheSaveSync.step(here: here, newest: newest, base: base, baseIsThere: baseIsThere, fetching: fetching)
         }
+        // Saves this Mac has not changed since it kept them in step with the
+        // folder it left are no news here, whatever their date: a game first
+        // played before the player chose the iPhone's folder made new ones,
+        // which would have gone as the newest copy, for the iPhone to take
+        // in place of its own. They stay in the folder they were in step
+        // with, and this folder's newest copy comes in their place, as on a
+        // Mac without saves; were their copy no longer there, they are kept
+        // here first, as a copy of their date under it. Only a game started
+        // since, which changed them, makes them news, the saves written last
+        // winning then.
+        if base == nil, let left, let mine = here, let newest, newest.content != "",
+           [.send, .keep, .keepAndFetch].contains(step), Self.unchanged(mine, since: left) {
+            step = !fetching ? .none : stillThere(left, of: game) ? .fetch : .keepAndFetch
+        }
 
-        var outcome = MacSaveOutcome(step: step, base: base)
+        // A sync that moves nothing keeps what the Mac knew of the folder it
+        // left, for the next one.
+        var outcome = MacSaveOutcome(step: step, base: base ?? left)
         switch step {
         case .none, .compare:
             // Saves written again as they were: the base takes their look,
@@ -257,6 +282,24 @@ public final class MacSavesFolder {
     }
 
     // MARK: Steps
+
+    /// Whether SAVES are those BASE was made of: the same look, or the same
+    /// content written again.
+    static func unchanged(_ saves: CartoucheLocalSaves, since base: CartoucheSaveBase) -> Bool {
+        saves.look == base.look || (base.content != nil && saves.content == base.content)
+    }
+
+    /// Whether the copy BASE names is still in the saves folder of this
+    /// Mac's it was made in, there now.
+    private func stillThere(_ base: CartoucheSaveBase, of game: MacSaveGame) -> Bool {
+        guard base.place.hasPrefix("mac|"), !base.copy.isEmpty else { return false }
+        let other = MacSavesFolder(root: URL(fileURLWithPath: String(base.place.dropFirst(4)), isDirectory: true),
+                                   games: games, scratch: scratch)
+        guard other.reachable else { return false }
+        let copy = other.gameFolder(of: game).appendingPathComponent(base.copy)
+        var folder: ObjCBool = false
+        return FileManager.default.fileExists(atPath: copy.path, isDirectory: &folder) && !folder.boolValue
+    }
 
     /// The names of the copies in FOLDER, the oldest first; none when the
     /// game has no folder yet.
@@ -422,10 +465,39 @@ public final class MacSavesFolder {
         return found
     }
 
+    /// The saves folder this Mac takes by itself, as the player would with
+    /// Use it on the iPhone page, when they chose none: Cartouche's saves
+    /// folder on a share mounted here, when one was FOUND, and only one. The
+    /// builder's own folder (OWN) is the one the bridge shares as Saves: an
+    /// iPhone PAIRED with this Mac may keep its saves there, and would find
+    /// another folder in their place; with one, the builder's folder is left
+    /// only when each game folder with a copy in it is one of a game this
+    /// Mac kept in step there (SYNCED, title IDs).
+    public static func adopted(found: [URL], own: URL, paired: Bool, synced: Set<String>) -> URL? {
+        guard found.count == 1, found[0].standardizedFileURL.path != own.standardizedFileURL.path else { return nil }
+        if paired {
+            let names = (try? FileManager.default.contentsOfDirectory(atPath: own.path)) ?? []
+            for name in names {
+                guard let titleID = titleID(in: name) else { continue }
+                let folder = own.appendingPathComponent(name, isDirectory: true)
+                guard isFolder(folder), let copies = try? FileManager.default.contentsOfDirectory(atPath: folder.path),
+                      copies.contains(where: { CartoucheSaveSync.date(inName: $0) != nil }) else { continue }
+                if !synced.contains(titleID) { return nil }
+            }
+        }
+        return found[0]
+    }
+
     /// Whether NAME ends with a title ID in brackets: "Game [0100152000022000]".
     static func hasTitleID(_ name: String) -> Bool {
-        guard name.hasSuffix("]"), let open = name.lastIndex(of: "[") else { return false }
-        return isTitleID(String(name[name.index(after: open) ..< name.index(before: name.endIndex)]))
+        titleID(in: name) != nil
+    }
+
+    /// The title ID NAME ends with, in brackets, in capitals.
+    static func titleID(in name: String) -> String? {
+        guard name.hasSuffix("]"), let open = name.lastIndex(of: "[") else { return nil }
+        let id = String(name[name.index(after: open) ..< name.index(before: name.endIndex)])
+        return isTitleID(id) ? id.uppercased() : nil
     }
 
     /// Whether TEXT is a title ID: 16 hexadecimal digits.
@@ -518,6 +590,15 @@ public final class MacSaveStore: @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         return records[titleID.uppercased()] ?? MacSaveRecord()
+    }
+
+    /// The games whose saves this Mac kept in step with the saves folder
+    /// ROOT last, by title ID.
+    public func games(syncedIn root: URL) -> Set<String> {
+        let place = "mac|" + root.standardizedFileURL.path
+        lock.lock()
+        defer { lock.unlock() }
+        return Set(records.filter { $0.value.base?.place == place }.map(\.key))
     }
 
     public func set(_ titleID: String, _ record: MacSaveRecord) {
