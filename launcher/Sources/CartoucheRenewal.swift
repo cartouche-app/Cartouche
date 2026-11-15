@@ -408,5 +408,16 @@ final class CartoucheRenewals: ObservableObject {
         let message = CartoucheRenewal.playerMessage("The certificate has been revoked.", failure: failure)
         fail(CartoucheRenewal.Failure(message: message, failure: failure), automatic: true, fraction: 0.1)
     }
+
+    /// The renewal Cartouche started by itself, failed as this iPhone did not
+    /// answer through LocalDevVPN, connected, as SideStore tells it, for the
+    /// gallery's screens.
+    func showUnansweredForGallery() {
+        let failure = CartoucheFailure(.vpn, stage: "InstallProvisioningProfiles", fraction: 0.6, seconds: 14,
+                                       details: ["kind": .text("noVPN"), "vpn": .flag(true)])
+        let message = CartoucheRenewal.playerMessage("VPN Connection Error:\nNo device found.\n\nPlease make sure LocalDevVPN is connected and running properly.",
+                                                     failure: failure)
+        fail(CartoucheRenewal.Failure(message: message, failure: failure), automatic: true, fraction: 0.6)
+    }
     #endif
 }

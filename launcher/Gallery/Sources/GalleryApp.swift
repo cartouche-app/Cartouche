@@ -181,6 +181,9 @@
 //        renewal-revoked                 Cartouche's renewal in its last 3
 //                                        days, which failed as Apple had
 //                                        revoked its certificate
+//        renewal-unanswered              Cartouche's renewal in its last 3
+//                                        days, which failed as this iPhone
+//                                        did not answer through LocalDevVPN
 //        renewing                        Cartouche renewing itself in its
 //                                        last 3 days, as it came to the front
 //        saves                           the saves of the sheet's game, or of
@@ -416,7 +419,8 @@ struct GalleryScenario {
         }
         // The built-in SideStore's record of its last renewal: six days left,
         // or, as Cartouche renews itself, two and a bit.
-        if work == "renewing" || work == "renewal-failed" || work == "renewal-revoked" {
+        if work == "renewing" || work == "renewal-failed" || work == "renewal-revoked"
+            || work == "renewal-unanswered" {
             GalleryState.recordSignature(expiringIn: 2 * 86_400 + 5 * 3_600, renewedAgo: 4 * 86_400 + 19 * 3_600)
         } else {
             GalleryState.recordSignature(expiringIn: 6 * 86_400 + 3_600, renewedAgo: 86_400)
@@ -446,6 +450,9 @@ struct GalleryScenario {
             }
             if work == "renewal-revoked" {
                 CartoucheRenewals.shared.showRevokedForGallery()
+            }
+            if work == "renewal-unanswered" {
+                CartoucheRenewals.shared.showUnansweredForGallery()
             }
             CartoucheSetup.shared.refresh()
             CartoucheGuide.shared.startOverForGallery()

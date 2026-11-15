@@ -14712,13 +14712,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple revoked the certificate Cartouche is signed with, most likely because another app or computer took a new one with the same Apple ID. A renewal cannot change that: install Cartouche again over this copy with the Cartouche Installer, on your computer, with the same Apple ID. Your games and saves stay."
+            "value" : "Apple revoked the certificate Cartouche is signed with, most likely because another app or computer took a new one with the same Apple ID. Cartouche can no longer renew or update itself with this certificate: install Cartouche again over this copy with the Cartouche Installer, on your computer, with the same Apple ID. Your games and saves stay."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple a révoqué le certificat qui signe Cartouche, sans doute parce qu’une autre app ou un autre ordinateur en a pris un nouveau avec le même identifiant Apple. Un renouvellement n’y change rien : réinstallez Cartouche par-dessus cette copie avec l’Installeur Cartouche, sur votre ordinateur, avec le même identifiant Apple. Vos jeux et vos sauvegardes restent."
+            "value" : "Apple a révoqué le certificat qui signe Cartouche, sans doute parce qu’une autre app ou un autre ordinateur en a pris un nouveau avec le même identifiant Apple. Cartouche ne peut plus se renouveler ni se mettre à jour avec ce certificat : réinstallez Cartouche par-dessus cette copie avec l’Installeur Cartouche, sur votre ordinateur, avec le même identifiant Apple. Vos jeux et vos sauvegardes restent."
           }
         }
       }
