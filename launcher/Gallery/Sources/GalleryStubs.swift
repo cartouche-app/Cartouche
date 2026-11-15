@@ -35,6 +35,10 @@ enum GalleryState {
     /// The IPA for an Apple ID, signed by a signing app without its app
     /// group, which LiveContainer then does not find (work: signed-elsewhere).
     static var appGroupMissing = false
+    /// LiveContainer's LiveProcess extension, which the built-in SideStore
+    /// runs in, is missing from the app, as after an install that removed
+    /// its extensions (CartoucheLiveProcess; works: …-no-liveprocess).
+    static var liveProcessMissing = false
 
     static let documents: URL = {
         let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]

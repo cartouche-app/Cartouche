@@ -776,6 +776,9 @@ struct GalleryWatchReadout: UIViewRepresentable {
 /// - with "othercert" in it, Apple accepts the Apple ID, which already has
 ///   a certificate SideStore does not hold, and SideStore stops at the
 ///   certificate, as app/patches/sidestore/0012 does;
+/// - with "noliveprocess" in it, LiveContainer's bridge cannot start
+///   SideStore, LiveProcess missing from the app, and says so in its own
+///   words, SideStore never started, the Apple ID and password unread;
 /// - any other signs the player in.
 ///
 /// Once signed in, the gallery has the Apple ID and the certificate, as the
@@ -799,6 +802,9 @@ final class GallerySideStore: NSObject {
               let fields = try? JSONSerialization.jsonObject(with: data) as? [String: String],
               let appleID = fields["appleID"], !(fields["password"] ?? "").isEmpty else {
             return "Cartouche left no Apple ID and password in the keychain."
+        }
+        if appleID.contains("noliveprocess") {
+            return CartoucheLiveProcess.bridgeSentenceForGallery
         }
         // SideStore reads them once.
         CartoucheStoreKeychain.remove(CartoucheSignInMessage.credentialsAccount)

@@ -711,6 +711,16 @@ final class CartoucheAccount: ObservableObject {
         failed(CartoucheText.sideStoreMessage(message, failure: failure, signIn: true), fraction: 0, failure: failure)
     }
 
+    /// Shows a sign-in whose built-in SideStore could not start, LiveProcess,
+    /// which it runs in, missing from the app, as the sign-in's end does,
+    /// for the gallery's screens.
+    func showNoLiveProcessForGallery() {
+        let message = CartoucheLiveProcess.bridgeSentenceForGallery
+        let failure = CartoucheFailure.sideStore(outcome: nil, message: message, fraction: 0, seconds: 0,
+                                                 vpn: CartoucheVPN.isConnected, pairing: true)
+        failed(CartoucheText.sideStoreMessage(message, failure: failure, signIn: true), fraction: 0, failure: failure)
+    }
+
     /// Shows a sign-in whose built-in SideStore found no app group for its
     /// database, as when a signing app signed Cartouche's IPA for an Apple
     /// ID, as the sign-in's end does, for the gallery's screens.

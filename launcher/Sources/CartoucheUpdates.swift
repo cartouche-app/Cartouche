@@ -294,6 +294,17 @@ final class CartoucheUpdates: ObservableObject {
         failed(CartoucheRenewal.playerMessage("The certificate has been revoked.", failure: failure), version: version,
                step: CartoucheText.updatePreparingTitle(version), fraction: 0.1, failure: failure)
     }
+
+    /// The update to VERSION, failed as LiveProcess, which the built-in
+    /// SideStore runs in, is missing from the app, as LiveContainer's bridge
+    /// tells it, for the launcher's gallery.
+    func showNoLiveProcessForGallery(_ version: String) {
+        let message = CartoucheLiveProcess.bridgeSentenceForGallery
+        let failure = CartoucheFailure.sideStore(outcome: nil, message: message, fraction: 0, seconds: 1,
+                                                 vpn: true, pairing: true)
+        failed(CartoucheRenewal.playerMessage(message, failure: failure), version: version,
+               step: CartoucheText.updatePreparingTitle(version), fraction: 0, failure: failure)
+    }
     #endif
 
     // MARK: Updating

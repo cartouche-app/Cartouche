@@ -140,6 +140,13 @@ enum CartoucheSignInMessage {
         /// English, and sends to the Cartouche Installer without a word of
         /// the Apple ID Cartouche was installed with.
         case otherCertificate
+        /// LiveContainer's LiveProcess extension, which the built-in
+        /// SideStore runs in, is not in the app, so that SideStore cannot
+        /// start: LiveContainer's bridge says so in English, and sends the
+        /// player to the settings of LiveContainer+SideStore and of other
+        /// sideloaders, where only an install of Cartouche over itself, with
+        /// the Cartouche Installer, puts it back.
+        case noLiveProcess
     }
 
     /// Whether MESSAGE holds a page of HTML, as Apple's servers send one for
@@ -168,6 +175,7 @@ enum CartoucheSignInMessage {
     static func trouble(in message: String, failure: CartoucheFailure) -> Trouble? {
         if failure.cause == .tooManyAttempts { return .tooManyRequests }
         if failure.cause == .sideStoreQuit { return .sideStoreQuit }
+        if failure.cause == .liveProcessMissing { return .noLiveProcess }
         if failure.cause == .certificateRefused { return .otherCertificate }
         var http: Int?
         if case .number(let number)? = failure.details["http"] { http = Int(number) }

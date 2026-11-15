@@ -58,6 +58,9 @@ enum CartoucheAutomaticRenewal {
         /// Whether Apple revoked the certificate of the signature Cartouche
         /// has, as its last renewal or update found (isRevoked).
         var certificateRevoked = false
+        /// Whether LiveContainer's LiveProcess extension, which the built-in
+        /// SideStore runs in, is missing from the app (CartoucheLiveProcess).
+        var liveProcessMissing = false
     }
 
     /// Why Cartouche does not renew itself now.
@@ -67,6 +70,12 @@ enum CartoucheAutomaticRenewal {
         /// The player's own certificate signs Cartouche, or the built-in
         /// SideStore is not there.
         case cannotRenew
+        /// LiveProcess, which the built-in SideStore runs in, is not in the
+        /// app: SideStore cannot even start, and a renewal would fail the
+        /// same way every six hours, LocalDevVPN opened for each, until an
+        /// install of Cartouche over itself puts LiveProcess back
+        /// (CartoucheRenewalTrouble.liveProcessMissing).
+        case liveProcessMissing
         /// Apple revoked the certificate of the signature Cartouche has: a
         /// renewal, which signs nothing again, would fail the same way every
         /// six hours, until an install of Cartouche over itself gives it
@@ -90,6 +99,7 @@ enum CartoucheAutomaticRenewal {
     static func wait(_ situation: Situation, at now: Date) -> Wait? {
         guard let daysLeft = situation.daysLeft, daysLeft <= days else { return .notDue }
         guard situation.canRenew else { return .cannotRenew }
+        guard !situation.liveProcessMissing else { return .liveProcessMissing }
         guard !situation.certificateRevoked else { return .certificateRevoked }
         guard situation.isSetUp else { return .setup }
         guard !situation.sideStoreBusy else { return .sideStoreBusy }
@@ -122,7 +132,8 @@ enum CartoucheAutomaticRenewal {
 /// when Cartouche says what to do in its own words rather than SideStore's:
 /// up to 0.13.0, the System page showed SideStore's words of a renewal that
 /// failed, and the update's notice put them after its own, which always
-/// said to check LocalDevVPN and try again.
+/// said to check LocalDevVPN and try again; up to 0.13.1, LiveContainer's,
+/// in English, when LiveProcess was missing.
 enum CartoucheRenewalTrouble: Equatable {
     /// Apple revoked the certificate of Cartouche's signature: SideStore no
     /// longer finds it among the account's, and Apple's OCSP answers that it
@@ -138,9 +149,19 @@ enum CartoucheRenewalTrouble: Equatable {
     /// SideStore did not reach this iPhone through LocalDevVPN, as a
     /// sign-in tells it (CartoucheSignInMessage.deviceTrouble(in:)).
     case device(CartoucheSignInMessage.DeviceTrouble)
+    /// LiveContainer's LiveProcess extension, which the built-in SideStore
+    /// runs in, is not in the app: LiveContainer's bridge cannot start
+    /// SideStore, and says so in English, sending the player to the
+    /// settings of other sideloaders. Nothing in Cartouche puts it back: only
+    /// an install of Cartouche over itself, with the Cartouche Installer and
+    /// the same Apple ID, which keeps every extension. On November 15, a
+    /// copy of 0.12.1 tried its update to 0.13.0 11 times so, its notice
+    /// saying each time to check LocalDevVPN and try again.
+    case liveProcessMissing
 
     /// The trouble FAILURE tells, nil for any other.
     static func of(_ failure: CartoucheFailure) -> CartoucheRenewalTrouble? {
+        if failure.cause == .liveProcessMissing { return .liveProcessMissing }
         if failure.cause == .certificate, case .text("certificateRevoked")? = failure.details["kind"] {
             return .certificateRevoked
         }

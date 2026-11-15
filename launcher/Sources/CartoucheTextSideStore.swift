@@ -8,8 +8,10 @@
 //  SideStore's would show as they are, when SideStore could not reach this
 //  iPhone for the sign-in, which SideStore's would send to its own
 //  settings, when it found no app group, which SideStore's would only name,
-//  and when the Apple ID has a certificate it does not hold, which
-//  SideStore's tell in English. A file of its own, since it reads
+//  when the Apple ID has a certificate it does not hold, which SideStore's
+//  tell in English, and when LiveProcess, which it runs in, is missing from
+//  the app, which LiveContainer's tell in English, sending the player to
+//  the settings of other sideloaders. A file of its own, since it reads
 //  CartoucheFailure and CartoucheSignInMessage, which the storage tests
 //  (launcher/StorageTests) build CartoucheText.swift without.
 //
@@ -25,10 +27,11 @@ extension CartoucheText {
 
     /// What Cartouche tells the player of the built-in SideStore's MESSAGE,
     /// FAILURE being what Cartouche told of how its action ended: its own
-    /// words when Apple limits the requests or answered with a page, those
-    /// of a SIGN-IN when it is one, also when SideStore closed before it
-    /// finished, found no app group or met a certificate it does not hold;
-    /// SideStore's otherwise, without the App Intents error's name.
+    /// words when Apple limits the requests or answered with a page, or
+    /// LiveProcess is missing from the app, those of a SIGN-IN when it is
+    /// one, also when SideStore closed before it finished, found no app
+    /// group or met a certificate it does not hold; SideStore's otherwise,
+    /// without the App Intents error's name.
     static func sideStoreMessage(_ message: String, failure: CartoucheFailure, signIn: Bool = false) -> String {
         let readable = CartoucheSignInMessage.readable(message)
         switch CartoucheSignInMessage.trouble(in: readable, failure: failure) {
@@ -38,6 +41,7 @@ extension CartoucheText {
         case .sideStoreQuit?: return signIn ? signInSideStoreQuit : readable
         case .noAppGroup?: return signIn ? signInNoAppGroup : readable
         case .otherCertificate?: return signIn ? signInOtherCertificate : readable
+        case .noLiveProcess?: return noLiveProcess
         case nil:
             guard signIn, let trouble = CartoucheSignInMessage.deviceTrouble(in: failure) else { return readable }
             // Before Apple, or once it accepted the account.
@@ -66,6 +70,16 @@ extension CartoucheText {
     // MARK: The Apple ID's certificate, made elsewhere
 
     static var signInOtherCertificate: String { s("signIn.otherCertificate", "This Apple ID already has a certificate that Cartouche does not hold, made by another app or computer, and Cartouche never revokes it. If you installed Cartouche with another Apple ID, sign in with that one. Otherwise, install Cartouche again over this copy with the Cartouche Installer on your computer, with this Apple ID: it gives Cartouche its certificate. Then sign in again.") }
+
+    // MARK: LiveProcess, missing from the app
+
+    /// What a sign-in, a renewal or an update of Cartouche that stopped as
+    /// LiveProcess is missing from the app says, and the System page after
+    /// them: up to 0.13.1, LiveContainer's words, in English, which send the
+    /// player to the settings of LiveContainer+SideStore and of other
+    /// sideloaders, and the update's notice said before them to check
+    /// LocalDevVPN and try again.
+    static var noLiveProcess: String { s("app.noLiveProcess", "This copy of Cartouche is missing the part of the app the built-in SideStore runs in (LiveProcess): without it, Cartouche can neither sign in to your Apple ID, nor renew or update itself. Install Cartouche again over this copy with the Cartouche Installer, on your computer, with the same Apple ID: it puts that part back. Your games and saves stay.") }
 
     // MARK: This iPhone, through LocalDevVPN
 

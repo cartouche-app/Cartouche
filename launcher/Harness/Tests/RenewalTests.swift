@@ -5,8 +5,9 @@
 //  Cartouche renewing itself as it comes to the front in the last days of
 //  its signature, and Renew now (CartoucheRenewals in CartoucheRenewal.swift,
 //  CartoucheRenewalRules.swift), through the built-in SideStore's renewal
-//  as the harness stands it in (HarnessSideStore.swift); SideStore's other
-//  actions, which wait for a renewal under way, three minutes at most.
+//  as the harness stands it in (HarnessSideStore.swift), LiveProcess in the
+//  app or not; SideStore's other actions, which wait for a renewal under
+//  way, three minutes at most.
 //  What the measurements say of a renewal: TelemetryTests.
 //
 
@@ -240,6 +241,61 @@ final class RenewalTests: HarnessCase {
         HarnessSideStore.record(expiringIn: 2.5)
         XCTAssertFalse(renewals.certificateRevoked)
         HarnessLC.renewal = .renews(days: 7)
+        renewals.renewIfDue()
+        XCTAssertTrue(renewals.isRenewing)
+        try await renewalEnds()
+        XCTAssertNil(renewals.report)
+        XCTAssertEqual(HarnessLC.renewals.count, 2)
+        XCTAssertEqual(CartoucheSignature.current().daysLeft, 6)
+    }
+
+    // MARK: LiveProcess missing from the app
+
+    /// On November 15, a copy of 0.12.1 tried its update to 0.13.0 11 times,
+    /// LiveProcess missing from the app: LiveContainer's bridge could not
+    /// start the built-in SideStore, and said so in English, sending the
+    /// player to the settings of other sideloaders, after the notice's own
+    /// words, which said to check LocalDevVPN and try again. Its renewals
+    /// fail the same way, and up to 0.13.1 Cartouche tried one every six
+    /// hours in its last three days, LocalDevVPN opened for each. It no
+    /// longer renews itself without LiveProcess, and Renew now says, in its
+    /// own words, to install it again over itself with the Cartouche
+    /// Installer, which puts LiveProcess back.
+    func testWithoutLiveProcessSaysToInstallAgainAndRenewsNoMore() async throws {
+        try await setUpCartouche()
+        HarnessSideStore.record(expiringIn: 1.5)
+        HarnessLC.removeLiveProcess()
+        XCTAssertTrue(renewals.liveProcessMissing, "the System page says what to do before any renewal")
+        XCTAssertEqual(CartoucheAutomaticRenewal.wait(renewals.situation, at: Date()), .liveProcessMissing)
+
+        // Cartouche comes to the front, LocalDevVPN off, then on: no try, nor
+        // LocalDevVPN opened for one.
+        HarnessLC.vpnConnected = false
+        HarnessLC.openedURLs = []
+        renewals.renewIfDue()
+        XCTAssertFalse(renewals.isRenewing)
+        HarnessLC.vpnConnected = true
+        renewals.renewIfDue()
+        XCTAssertFalse(renewals.isRenewing)
+        try await pause(0.5)
+        XCTAssertTrue(HarnessLC.renewals.isEmpty, "Cartouche did not renew itself")
+        XCTAssertTrue(HarnessLC.openedURLs.isEmpty, "LocalDevVPN left alone")
+        XCTAssertNil(UserDefaults.standard.object(forKey: CartoucheRenewals.lastTryKey), "no try counted")
+
+        // Renew now stays, and says what to do in Cartouche's words, never
+        // LiveContainer's.
+        XCTAssertTrue(renewals.canRenewNow)
+        renewals.renewNow()
+        try await renewalEnds()
+        let report = try XCTUnwrap(renewals.report)
+        XCTAssertEqual(report.message, CartoucheText.noLiveProcess)
+        XCTAssertEqual(report.failure?.cause, .liveProcessMissing)
+        XCTAssertEqual(HarnessLC.renewals.count, 1)
+
+        // Installed again over itself, with the Cartouche Installer:
+        // LiveProcess back, and Cartouche renews itself again.
+        HarnessLC.installLiveProcess()
+        XCTAssertFalse(renewals.liveProcessMissing)
         renewals.renewIfDue()
         XCTAssertTrue(renewals.isRenewing)
         try await renewalEnds()

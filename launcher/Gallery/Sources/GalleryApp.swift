@@ -187,6 +187,10 @@
 //                                        game paused behind the console
 //        renewal-failed                  Cartouche's renewal in its last 3
 //                                        days, which failed, the network gone
+//        renewal-no-liveprocess          Cartouche in its last 3 days,
+//                                        LiveProcess missing from the app:
+//                                        no renewal by itself, and what to
+//                                        do on the System page
 //        renewal-revoked                 Cartouche's renewal in its last 3
 //                                        days, which failed as Apple had
 //                                        revoked its certificate
@@ -203,6 +207,9 @@
 //        sidestore-quit                  a sign-in whose built-in SideStore
 //                                        quit as it launched, LocalDevVPN
 //                                        connected
+//        sign-in-no-liveprocess          a sign-in whose built-in SideStore
+//                                        could not start, LiveProcess missing
+//                                        from the app, LocalDevVPN connected
 //        sign-in-unfinished              the setup after a sign-in that
 //                                        stopped before the certificate,
 //                                        the Apple ID having one made
@@ -232,6 +239,9 @@
 //        update                          a new version of Cartouche on offer,
 //                                        over the console, or on the System
 //                                        page (screen system)
+//        update-no-liveprocess           the update of Cartouche to 0.4.0,
+//                                        failed as LiveProcess is missing
+//                                        from the app
 //        update-revoked                  the update of Cartouche to 0.4.0,
 //                                        failed as Apple had revoked the
 //                                        certificate of its signature
@@ -419,9 +429,12 @@ struct GalleryScenario {
         GalleryState.ownSignature = ownSignature
         GalleryState.certificateRefused = work == "certificate"
         GalleryState.appGroupMissing = work == "signed-elsewhere"
+        GalleryState.liveProcessMissing = work?.hasSuffix("-no-liveprocess") == true
         GalleryState.signInUnfinished = work == "sign-in-unfinished"
         GalleryState.sheetSection = screen == "sheet" ? category : nil
-        GalleryState.vpnConnected = work.map { Self.deviceChecks[$0] != nil || ["sidestore-quit", "no-app-group"].contains($0) } ?? false
+        GalleryState.vpnConnected = work.map {
+            Self.deviceChecks[$0] != nil || ["sidestore-quit", "no-app-group", "sign-in-no-liveprocess"].contains($0)
+        } ?? false
         let pairing = GalleryState.documents.appendingPathComponent("SideStore/Documents", isDirectory: true)
         try? FileManager.default.removeItem(at: pairing)
         if setupDone || GalleryState.signInUnfinished {
@@ -431,7 +444,7 @@ struct GalleryScenario {
         // The built-in SideStore's record of its last renewal: six days left,
         // or, as Cartouche renews itself, two and a bit.
         if work == "renewing" || work == "renewal-failed" || work == "renewal-revoked"
-            || work == "renewal-unanswered" {
+            || work == "renewal-unanswered" || work == "renewal-no-liveprocess" {
             GalleryState.recordSignature(expiringIn: 2 * 86_400 + 5 * 3_600, renewedAgo: 4 * 86_400 + 19 * 3_600)
         } else {
             GalleryState.recordSignature(expiringIn: 6 * 86_400 + 3_600, renewedAgo: 86_400)
@@ -519,6 +532,9 @@ struct GalleryScenario {
             if work == "update-revoked" {
                 CartoucheUpdates.shared.showRevokedForGallery("0.4.0")
             }
+            if work == "update-no-liveprocess" {
+                CartoucheUpdates.shared.showNoLiveProcessForGallery("0.4.0")
+            }
             if work == "code" {
                 CartoucheAccount.shared.requestCodeForGallery(.init(
                     id: "gallery", mode: .sms, phone: "+33 •• •• •• •• 78", canTextMessage: false, error: nil))
@@ -541,6 +557,9 @@ struct GalleryScenario {
             }
             if work == "no-app-group" {
                 CartoucheAccount.shared.showNoAppGroupForGallery()
+            }
+            if work == "sign-in-no-liveprocess" {
+                CartoucheAccount.shared.showNoLiveProcessForGallery()
             }
             if work == "sign-in-unfinished" {
                 CartoucheAccount.shared.showUnfinishedForGallery()

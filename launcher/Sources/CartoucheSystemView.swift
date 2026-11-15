@@ -387,6 +387,13 @@ struct CartoucheSystemView: View {
                 .foregroundStyle(.red)
             CartoucheReportButton(report: report)
                 .font(.footnote)
+        } else if renewals.liveProcessMissing {
+            // Until an install over Cartouche puts LiveProcess back: Cartouche
+            // no longer renews itself meanwhile, and Renew now, an update or
+            // a sign-in says the same.
+            Label(CartoucheText.noLiveProcess, systemImage: "exclamationmark.triangle.fill")
+                .font(.footnote)
+                .foregroundStyle(.red)
         } else if renewals.certificateRevoked {
             // After the renewal or the update that found it, until an install
             // over Cartouche gives it another signature: Cartouche no longer

@@ -11,7 +11,10 @@ LiveContainer and SideStore:
   and Refresh All Apps still takes its apps where the patch changes them;
 - Refresh All Apps waits for LocalDevVPN's tunnel, which the automation of
   Shortcuts connects just before it (app/patches/livecontainer/0015), and
-  reads it as the launcher does.
+  reads it as the launcher does;
+- the launcher looks for LiveProcess, without which it no longer renews
+  itself, where LiveContainer's bridge does before it starts the built-in
+  SideStore.
 
 Needs the LiveContainer and SideStore submodules, and patch(1).
 Run from the repository root: python3 -m unittest discover -s app/tests -v
@@ -37,6 +40,7 @@ SS_APP_DELEGATE = ROOT / "app" / "SideStore" / "AltStore" / "AppDelegate.swift"
 SS_PATCHES = ROOT / "app" / "patches" / "sidestore"
 LC_PATCHES = ROOT / "app" / "patches" / "livecontainer"
 LC_INTENTS_PATH = "SideStoreSupport/SideStore.swift"
+LC_BOOTSTRAP = ROOT / "app" / "LiveContainer" / "LiveContainer" / "LCBootstrap.m"
 TUNNEL_WAIT = ROOT / "launcher" / "SideStoreSupport" / "CartoucheTunnelWait.swift"
 LAUNCHER_VPN = ROOT / "launcher" / "Sources" / "CartoucheVPN.swift"
 
@@ -193,6 +197,20 @@ class RenewalTest(unittest.TestCase):
         self.assertEqual(wait.group(1), launcher.group(1))
         for check in ("IFF_UP", "AF_INET", "NI_NUMERICHOST"):
             self.assertIn(check, read(TUNNEL_WAIT))
+
+    def test_the_launcher_looks_for_liveprocess_where_the_bridge_does(self):
+        # Without LiveProcess, Cartouche no longer renews itself, and the
+        # System page says to install it again over itself
+        # (CartoucheLiveProcess): it looks for it where LiveContainer's bridge
+        # does before it starts the built-in SideStore, in the PlugIns of
+        # LiveContainer's main bundle, the app's own in Cartouche's process.
+        lc = read(LC_INTENTS)
+        self.assertIn('UserDefaults.lcMainBundle().builtInPlugInsURL?.appendingPathComponent("LiveProcess.appex")', lc)
+        self.assertIn("lcMainBundle = [NSBundle mainBundle];", read(LC_BOOTSTRAP))
+        check = re.search(r"\nenum CartoucheLiveProcess \{.*?\n\}\n", read(LAUNCHER), re.S)
+        self.assertIsNotNone(check, "CartoucheLiveProcess is gone from CartoucheRenewal.swift")
+        self.assertIn("Bundle.main.builtInPlugInsURL", check.group(0))
+        self.assertIn('appendingPathComponent("LiveProcess.appex")', check.group(0))
 
 
 if __name__ == "__main__":

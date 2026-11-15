@@ -9,10 +9,15 @@
 //  123456; "limit": Apple refuses more sign-ins for now, with its page of
 //  HTTP 429; "nogroup": SideStore finds no app group for its database;
 //  "othercert": the Apple ID already has a certificate SideStore does not
-//  hold.
+//  hold; "noliveprocess": LiveProcess, which SideStore runs in, is missing
+//  from the app.
 //
 
 import XCTest
+
+extension Words {
+    static let noLiveProcess = "This copy of Cartouche is missing the part of the app the built-in SideStore runs in" // app.noLiveProcess
+}
 
 final class SignInUITests: ConsoleTestCase {
     /// A wrong code gets a new request that says so; the right one signs the
@@ -109,6 +114,30 @@ final class SignInUITests: ConsoleTestCase {
                "The failure does not say what to do about the Apple ID's certificate", in: app)
         expect(!element(in: everything, containing: "This SideStore never revokes").exists, "SideStore's words show as they came", in: app)
         expect(!element(in: everything, containing: "Certificate named by the app").exists, "The serial numbers show", in: app)
+
+        tap(app.buttons[Words.cancel], "Cancel of the sign-in", in: app)
+        expect(waitForGone(app.staticTexts[Words.signInTitle]), "Cancel did not close the sign-in", in: app)
+        closeSetup(in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// LiveProcess, which the built-in SideStore runs in, missing from the
+    /// app: LiveContainer's bridge cannot start SideStore, and up to 0.13.1
+    /// its words showed, in English, sending the player to the settings of
+    /// other sideloaders. The failure says, in Cartouche's words, to install
+    /// it again over itself with the Cartouche Installer.
+    @MainActor
+    func testSignInWithoutLiveProcessSaysToInstallAgain() {
+        let app = openConsole(Launch(setupDone: false, pairingOnly: true, typing: true))
+        openSignIn(in: app)
+        signIn(in: app, appleID: "noliveprocess@example.com")
+
+        expect(app.staticTexts[Words.signInFailed].waitForExistence(timeout: 30), "No failure of the sign-in", in: app)
+        let everything = app.descendants(matching: .any)
+        expect(element(in: everything, beginningWith: Words.noLiveProcess).exists,
+               "The failure does not say to install Cartouche again", in: app)
+        expect(!element(in: everything, containing: "Unable to locate LiveProcess bundle").exists,
+               "LiveContainer's words show as they came", in: app)
 
         tap(app.buttons[Words.cancel], "Cancel of the sign-in", in: app)
         expect(waitForGone(app.staticTexts[Words.signInTitle]), "Cancel did not close the sign-in", in: app)

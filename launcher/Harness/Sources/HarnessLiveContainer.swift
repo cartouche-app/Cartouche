@@ -193,10 +193,12 @@ enum HarnessLC {
     }
 
     /// LiveContainer's LiveProcess extension, where Cartouche looks for it
-    /// (CartoucheGameKeeping.isAvailable): its Info.plist, in the app's
-    /// PlugIns, which the Simulator lets the app write. The harness's
-    /// AppSceneViewController stands in for what it runs.
-    private static func installLiveProcess() {
+    /// (CartoucheGameKeeping.isAvailable, CartoucheLiveProcess): its
+    /// Info.plist, in the app's PlugIns, which the Simulator lets the app
+    /// write. The harness's AppSceneViewController stands in for what it
+    /// runs. Back before each test, as an install of Cartouche over itself
+    /// with the Cartouche Installer puts it back.
+    static func installLiveProcess() {
         guard let plugins = Bundle.main.builtInPlugInsURL else { return }
         let appex = plugins.appendingPathComponent("LiveProcess.appex", isDirectory: true)
         let info = appex.appendingPathComponent("Info.plist")
@@ -209,6 +211,13 @@ enum HarnessLC {
             "CFBundleExecutable": "LiveProcess",
         ]
         (plist as NSDictionary).write(to: info, atomically: true)
+    }
+
+    /// Takes LiveProcess out of the app's PlugIns, as an install that
+    /// removed the app's extensions leaves Cartouche.
+    static func removeLiveProcess() {
+        guard let plugins = Bundle.main.builtInPlugInsURL else { return }
+        try? FileManager.default.removeItem(at: plugins.appendingPathComponent("LiveProcess.appex", isDirectory: true))
     }
 
     /// LiveContainer and the harness as on a new install: no app, no data
@@ -264,6 +273,7 @@ enum HarnessLC {
         renewalTime = 0.2
         renewals = []
         vpnAtRenewals = []
+        installLiveProcess()
         HarnessScenes.reset()
         HarnessNetwork.reset()
         let model = DataManager.shared.model

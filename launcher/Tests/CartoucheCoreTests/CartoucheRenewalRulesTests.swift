@@ -17,10 +17,12 @@ final class CartoucheRenewalRulesTests: XCTestCase {
     /// SideStore idle and no game running, with DAYS LEFT.
     private func situation(daysLeft: Int? = 2, canRenew: Bool = true, isSetUp: Bool = true, vpn: Bool = true,
                            busy: Bool = false, paused: Bool = false, playing: Bool = false,
-                           lastTry: Date? = nil, revoked: Bool = false) -> CartoucheAutomaticRenewal.Situation {
+                           lastTry: Date? = nil, revoked: Bool = false,
+                           noLiveProcess: Bool = false) -> CartoucheAutomaticRenewal.Situation {
         CartoucheAutomaticRenewal.Situation(daysLeft: daysLeft, canRenew: canRenew, isSetUp: isSetUp, vpnConnected: vpn,
                                             sideStoreBusy: busy, signInsPaused: paused, gameRunning: playing,
-                                            lastTry: lastTry, certificateRevoked: revoked)
+                                            lastTry: lastTry, certificateRevoked: revoked,
+                                            liveProcessMissing: noLiveProcess)
     }
 
     /// Why a renewal failed, as Cartouche reads what the built-in SideStore
@@ -43,6 +45,19 @@ final class CartoucheRenewalRulesTests: XCTestCase {
         try renewalFailure(["stage": "VerifyCertificate", "trail": "FetchAnisetteData>VerifyCertificate",
                             "family": "operation", "kind": "certificateRevoked", "codes": "SideStore.OperationError 2"],
                            message: "The certificate has been revoked.")
+    }
+
+    /// What LiveContainer's bridge says when LiveProcess is not in the app
+    /// (app/LiveContainer/SideStoreSupport/SideStore.swift), SideStore never
+    /// started, so that it left nothing: 11 updates of a copy of 0.12.1 to
+    /// 0.13.0 failed so on November 15.
+    private func noLiveProcessFailure(vpn: Bool = true) -> CartoucheFailure {
+        CartoucheFailure.sideStore(outcome: nil, message: "Unable to locate LiveProcess bundle. To use the Refresh All Apps "
+                                       + "shortcut, reinstall LiveContainer+SideStore with LiveProcess installed. If you use "
+                                       + "SideStore, choose \"Keep App Extensions (Use Main Profile)\". If you use PlumeImpactor, "
+                                       + "choose \"Only Register Main Bundle\". For other sideloaders, select keep all "
+                                       + "extensions, i.e. DO NOT Remove any extension.",
+                                   fraction: 0, seconds: 1, vpn: vpn, pairing: true)
     }
 
     private func wait(_ situation: CartoucheAutomaticRenewal.Situation) -> CartoucheAutomaticRenewal.Wait? {
@@ -151,6 +166,30 @@ final class CartoucheRenewalRulesTests: XCTestCase {
         XCTAssertEqual(wait(situation(daysLeft: 5, revoked: true)), .notDue)
     }
 
+    /// LiveProcess, which the built-in SideStore runs in, missing from the
+    /// app: no renewal can even start, and up to 0.13.1 Cartouche tried
+    /// again every six hours in its last three days, LocalDevVPN opened for
+    /// each try, until the signature expired.
+    func testNeverRenewsItselfWithoutLiveProcess() {
+        XCTAssertEqual(wait(situation(noLiveProcess: true)), .liveProcessMissing)
+        XCTAssertFalse(CartoucheAutomaticRenewal.isDue(situation(noLiveProcess: true), at: now))
+        // Six hours or three days after the last try alike.
+        XCTAssertEqual(wait(situation(lastTry: now.addingTimeInterval(-6 * 3_600), noLiveProcess: true)), .liveProcessMissing)
+        XCTAssertEqual(wait(situation(lastTry: now.addingTimeInterval(-3 * 86_400), noLiveProcess: true)), .liveProcessMissing)
+        // Nor does Cartouche open LocalDevVPN for it, nor wait for the setup,
+        // which no sign-in can finish without LiveProcess either.
+        XCTAssertEqual(wait(situation(vpn: false, noLiveProcess: true)), .liveProcessMissing)
+        XCTAssertEqual(wait(situation(isSetUp: false, noLiveProcess: true)), .liveProcessMissing)
+        // On its last day as on the others, the certificate revoked or not:
+        // an install over itself gives back both.
+        XCTAssertEqual(wait(situation(daysLeft: 0, noLiveProcess: true)), .liveProcessMissing)
+        XCTAssertEqual(wait(situation(revoked: true, noLiveProcess: true)), .liveProcessMissing)
+        // A signature with more days left waits as any other, and the
+        // player's own certificate is never renewed here.
+        XCTAssertEqual(wait(situation(daysLeft: 5, noLiveProcess: true)), .notDue)
+        XCTAssertEqual(wait(situation(canRenew: false, noLiveProcess: true)), .cannotRenew)
+    }
+
     /// The certificate Apple revoked is the one of the signature Cartouche
     /// noted: an install of Cartouche over itself, with the Cartouche
     /// Installer, gives it a signature that expires a week after it, and
@@ -199,6 +238,23 @@ final class CartoucheRenewalRulesTests: XCTestCase {
         let refused = try renewalFailure(["stage": "InstallProvisioningProfiles", "family": "operation",
                                           "kind": "invalidPairingFile", "reason": "handshake"])
         XCTAssertEqual(CartoucheRenewalTrouble.of(refused), .device(.pairingRefused))
+    }
+
+    /// LiveContainer's bridge could not start SideStore, LiveProcess missing
+    /// from the app: up to 0.13.1, the update's notice said to check
+    /// LocalDevVPN and try again, before LiveContainer's words, in English,
+    /// which send the player to the settings of other sideloaders.
+    func testTellsLiveProcessMissing() {
+        let failure = noLiveProcessFailure()
+        XCTAssertEqual(failure.cause, .liveProcessMissing)
+        XCTAssertEqual(CartoucheRenewalTrouble.of(failure), .liveProcessMissing)
+        // LocalDevVPN off or not: it would not start SideStore either.
+        XCTAssertEqual(CartoucheRenewalTrouble.of(noLiveProcessFailure(vpn: false)), .liveProcessMissing)
+        // LiveProcess there, but refusing to start: not the same trouble.
+        let refused = CartoucheFailure.sideStore(outcome: nil, message: "Failed to start extension Error Domain=NSCocoaErrorDomain",
+                                                 fraction: 0, seconds: 1, vpn: true, pairing: true)
+        XCTAssertEqual(refused.cause, .liveProcessFailed)
+        XCTAssertNil(CartoucheRenewalTrouble.of(refused))
     }
 
     /// Anything else keeps SideStore's words, or Cartouche's of Apple's

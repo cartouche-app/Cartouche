@@ -273,6 +273,23 @@
         }
       }
     },
+    "app.noLiveProcess" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This copy of Cartouche is missing the part of the app the built-in SideStore runs in (LiveProcess): without it, Cartouche can neither sign in to your Apple ID, nor renew or update itself. Install Cartouche again over this copy with the Cartouche Installer, on your computer, with the same Apple ID: it puts that part back. Your games and saves stay."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il manque à cette copie de Cartouche la partie de l’app où tourne le SideStore intégré (LiveProcess) : sans elle, Cartouche ne peut ni se connecter à votre identifiant Apple, ni se renouveler, ni se mettre à jour. Réinstallez Cartouche par-dessus cette copie avec l’Installeur Cartouche, sur votre ordinateur, avec le même identifiant Apple : il remet cette partie. Vos jeux et vos sauvegardes restent."
+          }
+        }
+      }
+    },
     "apple.page" : {
       "extractionState" : "manual",
       "localizations" : {

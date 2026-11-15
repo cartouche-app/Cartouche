@@ -126,6 +126,17 @@ final class CartoucheSignInMessageTests: XCTestCase {
         // SideStore's forbidden at another step is not that.
         let elsewhere = sideStoreFailure(["stage": "ResignApp", "family": "operation", "kind": "forbidden"], message: "Forbidden")
         XCTAssertNil(CartoucheSignInMessage.trouble(in: "Forbidden", failure: elsewhere))
+        // LiveProcess, which the built-in SideStore runs in, is not in the
+        // app: LiveContainer's bridge cannot start it, and its English words
+        // send the player to the settings of other sideloaders.
+        let noLiveProcess = "Unable to locate LiveProcess bundle. To use the Refresh All Apps shortcut, reinstall "
+            + "LiveContainer+SideStore with LiveProcess installed."
+        let missing = CartoucheFailure.sideStore(outcome: nil, message: noLiveProcess, fraction: 0, seconds: 0, vpn: true, pairing: true)
+        XCTAssertEqual(CartoucheSignInMessage.trouble(in: noLiveProcess, failure: missing), .noLiveProcess)
+        // LiveProcess there, refusing to start, is not that.
+        let refusing = "Failed to start extension Error Domain=NSCocoaErrorDomain Code=4099"
+        let failed = CartoucheFailure.sideStore(outcome: nil, message: refusing, fraction: 0, seconds: 0, vpn: true, pairing: true)
+        XCTAssertNil(CartoucheSignInMessage.trouble(in: refusing, failure: failed))
     }
 
     /// What Cartouche makes of the built-in SideStore's MESSAGE, its sign-in

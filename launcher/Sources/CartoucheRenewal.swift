@@ -114,10 +114,11 @@ enum CartoucheRenewal {
 
     /// What Cartouche tells the player when a renewal or an update of
     /// Cartouche ended with the built-in SideStore's MESSAGE, FAILURE being
-    /// why: what to do, in its own words, when Apple revoked the certificate
-    /// or SideStore did not reach this iPhone (CartoucheRenewalTrouble);
-    /// otherwise SideStore's words, never Apple's page for an error, as they
-    /// would show it (CartoucheText.sideStoreMessage).
+    /// why: what to do, in its own words, when Apple revoked the certificate,
+    /// SideStore did not reach this iPhone, or LiveProcess, which SideStore
+    /// runs in, is missing from the app (CartoucheRenewalTrouble); otherwise
+    /// SideStore's words, never Apple's page for an error, as they would show
+    /// it (CartoucheText.sideStoreMessage).
     static func playerMessage(_ message: String, failure: CartoucheFailure) -> String {
         CartoucheRenewalTrouble.of(failure).map(advice) ?? CartoucheText.sideStoreMessage(message, failure: failure)
     }
@@ -127,6 +128,7 @@ enum CartoucheRenewal {
         switch trouble {
         case .certificateRevoked: return CartoucheText.renewRevoked
         case .device(let device): return CartoucheText.deviceMessage(device)
+        case .liveProcessMissing: return CartoucheText.noLiveProcess
         }
     }
 
@@ -204,6 +206,38 @@ enum CartoucheRenewal {
     }
 }
 
+/// LiveContainer's LiveProcess extension, in Cartouche's PlugIns, which the
+/// built-in SideStore runs in, for each of its actions: a renewal, an update
+/// of Cartouche, a sign-in, the registration of this iPhone. An install that
+/// removed the app's extensions leaves Cartouche without it, and
+/// LiveContainer's bridge then cannot start SideStore
+/// (CartoucheRenewalTrouble.liveProcessMissing).
+enum CartoucheLiveProcess {
+    /// Whether it is in the app, where LiveContainer's bridge looks for it
+    /// (SideStoreSupport's RefreshHandler): as a folder, which a Bundle of
+    /// it needs. The gallery has none, and says whether it is missing.
+    static var isInApp: Bool {
+        #if CARTOUCHE_GALLERY
+        return !GalleryState.liveProcessMissing
+        #else
+        guard let plugins = Bundle.main.builtInPlugInsURL else { return false }
+        var isFolder: ObjCBool = false
+        return FileManager.default.fileExists(atPath: plugins.appendingPathComponent("LiveProcess.appex").path,
+                                              isDirectory: &isFolder) && isFolder.boolValue
+        #endif
+    }
+
+    #if CARTOUCHE_GALLERY
+    /// What LiveContainer's bridge says when it is missing
+    /// (app/LiveContainer/SideStoreSupport/SideStore.swift), for the
+    /// gallery's screens.
+    static let bridgeSentenceForGallery = "Unable to locate LiveProcess bundle. To use the Refresh All Apps shortcut, "
+        + "reinstall LiveContainer+SideStore with LiveProcess installed. If you use SideStore, choose \"Keep App Extensions "
+        + "(Use Main Profile)\". If you use PlumeImpactor, choose \"Only Register Main Bundle\". For other sideloaders, "
+        + "select keep all extensions, i.e. DO NOT Remove any extension."
+    #endif
+}
+
 /// The renewal under way, from Renew now or by Cartouche itself as it comes
 /// to the front, and why the last one failed: one at a time, as the
 /// built-in SideStore takes its actions. The System page shows it, and
@@ -267,6 +301,14 @@ final class CartoucheRenewals: ObservableObject {
                                             revoked: UserDefaults.standard.object(forKey: Self.revokedKey) as? Date)
     }
 
+    /// Whether LiveProcess, which the built-in SideStore runs in, is missing
+    /// from the app (CartoucheLiveProcess): Cartouche no longer renews
+    /// itself, which would fail the same way every six hours, LocalDevVPN
+    /// opened for each, and the System page says to install it again over
+    /// itself, with the Cartouche Installer, which puts it back. Renew now
+    /// stays, which then says the same.
+    var liveProcessMissing: Bool { !CartoucheLiveProcess.isInApp }
+
     /// Notes the signature Cartouche has when FAILURE, why a renewal or an
     /// update failed, says that Apple revoked its certificate.
     func noteIfRevoked(_ failure: CartoucheFailure?) {
@@ -289,7 +331,8 @@ final class CartoucheRenewals: ObservableObject {
             signInsPaused: CartoucheAccount.shared.pausedUntil != nil,
             gameRunning: CartoucheGameActions.shared.running != nil,
             lastTry: UserDefaults.standard.object(forKey: Self.lastTryKey) as? Date,
-            certificateRevoked: certificateRevoked)
+            certificateRevoked: certificateRevoked,
+            liveProcessMissing: liveProcessMissing)
     }
 
     /// Renew now, from the System page.

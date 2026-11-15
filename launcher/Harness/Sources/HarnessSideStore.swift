@@ -10,6 +10,8 @@
 //  test says (HarnessLC.renewal): it records each call, takes
 //  HarnessLC.renewalTime, then records the new expiry and answers, or
 //  fails with SideStore's words, or answers only when the test lets it.
+//  Without LiveProcess in the app (HarnessLC.removeLiveProcess), the bridge
+//  answers at once with LiveContainer's words, SideStore never started.
 //
 
 import Foundation
@@ -45,6 +47,23 @@ enum HarnessSideStore {
         try? data?.write(to: LCSharedUtils.appGroupPath().appendingPathComponent("widget_data.json"), options: .atomic)
     }
 
+    /// What LiveContainer's bridge says when LiveProcess is not in the app,
+    /// where it looks for it before it starts SideStore
+    /// (app/LiveContainer/SideStoreSupport/SideStore.swift).
+    static let noLiveProcess = "Unable to locate LiveProcess bundle. To use the Refresh All Apps shortcut, reinstall "
+        + "LiveContainer+SideStore with LiveProcess installed. If you use SideStore, choose \"Keep App Extensions (Use Main "
+        + "Profile)\". If you use PlumeImpactor, choose \"Only Register Main Bundle\". For other sideloaders, select keep "
+        + "all extensions, i.e. DO NOT Remove any extension."
+
+    /// Whether LiveProcess is in the app's PlugIns, as LiveContainer's
+    /// bridge finds it: a folder, read again at each call.
+    static var hasLiveProcess: Bool {
+        guard let plugins = Bundle.main.builtInPlugInsURL else { return false }
+        var isFolder: ObjCBool = false
+        return FileManager.default.fileExists(atPath: plugins.appendingPathComponent("LiveProcess.appex").path,
+                                              isDirectory: &isFolder) && isFolder.boolValue
+    }
+
     /// Leaves in Cartouche's keychain how ACTION ended, failed with FIELDS,
     /// as the built-in SideStore does (app/patches/sidestore/0014).
     static func leaveFailure(_ fields: [String: Any], action: CartoucheSideStoreOutcome.Action) {
@@ -66,6 +85,10 @@ final class HarnessRefresh: NSObject {
     static func refreshAllApps(progress: Progress, completion: @escaping (String?) -> Void) {
         HarnessLC.renewals.append(Date())
         HarnessLC.vpnAtRenewals.append(HarnessLC.vpnConnected)
+        guard HarnessSideStore.hasLiveProcess else {
+            DispatchQueue.main.async { completion(HarnessSideStore.noLiveProcess) }
+            return
+        }
         let renewal = HarnessLC.renewal
         progress.totalUnitCount = 100
         progress.completedUnitCount = 10
