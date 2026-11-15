@@ -315,6 +315,24 @@ jobs:
           path: build/dmg
           if-no-files-found: error
           retention-days: 30
+      # The disk image as a copy of the app already installed takes it from
+      # GitHub's releases, as the tests serve them: found on a later answer,
+      # downloaded, checked, mounted and put in place of an older copy, its
+      # signature intact (UpdaterEndToEndTests.swift). What is published is
+      # what the installed copies take. A few seconds: the tests are built.
+      # The test must have run and passed, not been skipped.
+      - name: An installed copy updates itself to this disk image
+        timeout-minutes: 10
+        env:
+          NSUnbufferedIO: "YES"
+          TEST: testTheDiskImageTheWorkflowMadeUpdatesAnInstalledBuilder
+        run: |
+          set -o pipefail
+          set -- build/dmg/Cartouche-Builder-*.dmg
+          test "$#" -eq 1 && test -f "$1"
+          CARTOUCHE_BUILDER_DMG="$PWD/$1" swift test --package-path builder/mac --filter "UpdaterEndToEndTests/$TEST" 2>&1 \
+            | tee "$RUNNER_TEMP/update.log"
+          grep -qF "$TEST]' passed" "$RUNNER_TEMP/update.log"
       # The app as it is in the disk image, on sample games: it runs no
       # engine, reads and writes none of the Mac's settings, and opens no
       # bridge (Gallery.swift). It takes about three minutes; a page not
