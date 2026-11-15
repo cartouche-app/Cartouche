@@ -26,6 +26,34 @@ MKW = "0400C3F00006E000"
 ODYSSEY = "0100000000010000"
 HOLLOW = "0100A0000E2F0000"
 
+# An app's Info.plist that macOS reads and Python's XML parser does not: a
+# stray control character (a vertical tab) begins line 19, in its copyright.
+# plistlib raises "ExpatError: not well-formed (invalid token): line 19,
+# column 0", which the library said instead of the games on a player's Mac
+# with such an app in the Applications folder of their session.
+UNREADABLE_INFO_PLIST = b"""<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleExecutable</key>
+	<string>Some App</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.example.someapp</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Some App</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Some App
+\x0b 2024 Some Company</string>
+</dict>
+</plist>
+"""
+
 
 def npdm(title_id: str) -> bytes:
     """A main.npdm with only what titles.npdm_title_id reads: META, and an

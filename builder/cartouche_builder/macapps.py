@@ -31,7 +31,6 @@ the games folder, beside the game's IPA (Place):
 from __future__ import annotations
 
 import os
-import plistlib
 import re
 import shutil
 import stat
@@ -44,7 +43,7 @@ import zipfile
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 
-from . import titles
+from . import plists, titles
 from .i18n import t
 from .ipa import clean_name as file_name_of
 from .library import walk_size
@@ -77,8 +76,8 @@ def read_info(app: Path) -> AppInfo | None:
     """What APP's Info.plist says, or None for a folder that is no app."""
     try:
         with open(app / "Contents" / "Info.plist", "rb") as stream:
-            data = plistlib.loads(stream.read(4 << 20))
-    except (OSError, plistlib.InvalidFileException, ValueError, EOFError):
+            data = plists.loads(stream.read(4 << 20))
+    except OSError:
         return None
     if not isinstance(data, dict):
         return None
