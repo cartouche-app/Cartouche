@@ -361,9 +361,9 @@ struct GalleryScenario {
         GalleryState.signing = signing == "iphone" ? .iPhone : signing == "installer" ? .installer : .account
         GalleryState.ownSignature = ownSignature
         GalleryState.certificateRefused = work == "certificate"
+        GalleryState.appGroupMissing = work == "signed-elsewhere"
         GalleryState.signInUnfinished = work == "sign-in-unfinished"
         GalleryState.vpnConnected = work.map { Self.deviceChecks[$0] != nil } ?? false
-        GalleryState.appGroupMissing = work == "signed-elsewhere"
         let pairing = GalleryState.documents.appendingPathComponent("SideStore/Documents", isDirectory: true)
         try? FileManager.default.removeItem(at: pairing)
         if setupDone || GalleryState.signInUnfinished {
