@@ -61,6 +61,9 @@ struct MainView: View {
     var showingMeasures = false
     var showingReport = false
     var showingGuide = false
+    /// The builder's Builds page with what the batch said open, as the
+    /// gallery shows it.
+    var showingDetails = false
     /// The Mac's appearance, light or dark: the builder's.
     @State private var macScheme = MainView.scheme(of: NSApplication.shared.effectiveAppearance)
 
@@ -75,7 +78,7 @@ struct MainView: View {
                                         showingGuide: showingGuide)
                     .overlay(alignment: .top) { consoleBanner }
             case .builder:
-                ContentView()
+                ContentView(showingDetails: showingDetails)
             }
         }
         // The switch stands where the window's title would.

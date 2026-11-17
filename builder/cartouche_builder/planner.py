@@ -17,7 +17,9 @@ A game whose last build failed at the current commit, with the same files and
 tools, waits for one of these to change instead of failing again every night.
 A game built from a newer commit than the checkout's, which stays on the last
 commit that built while the branch's newest does not (fallback.py), is up to
-date.
+date; so is a game whose shaders the newest commit split otherwise than its
+profile says, built since from the commit before nxnative's splitter changed,
+with the same files, until nxnative has a newer commit (fallback.py too).
 
 A game is built for the iPhone (its IPA) and for this Mac (its app,
 macapps.py), unless one of the two is turned off (config.on_ios, on_mac).
@@ -35,6 +37,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from . import fallback
 from . import ipa as ipas
 from . import macapps
 from .config import Config
@@ -98,8 +101,12 @@ def plan(
     force: set[str] | None = None,
     now: float | None = None,
     mac: macapps.Place | None = None,
+    held: dict[str, dict] | None = None,
 ) -> Plan:
+    """HELD: the games whose split differed from their profile's, as
+    fallback.splits() gives them."""
     force = {f.upper() for f in force or set()}
+    held = held or {}
     prints: dict[str, str] = {}
     matcher = Matcher({tid: p.name for tid, p in profiles.items()}, config.aliases)
     commits_since: dict[str, list[Commit]] = {}
@@ -172,6 +179,12 @@ def plan(
         elif base is None or not engine.is_ancestor(base, head):
             reasons.append("unknown_base")
             details.append(t("plan.unknown_base", commit=build.commit[:12]))
+        elif fallback.held_split(held.get(game.title_id), head, base, _cached(game, prints)):
+            # Built from the commit before nxnative's splitter changed, the
+            # newest splitting its shaders otherwise than its profile says: the
+            # commits since are not missing from it, they do not build it.
+            if not reasons:
+                entry.reasons, entry.detail = ["up_to_date"], t("plan.split_held", old=build.commit[:12], new=head[:12])
         else:
             if base not in commits_since:
                 commits_since[base] = engine.commits(base, head)

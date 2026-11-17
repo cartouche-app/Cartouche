@@ -633,9 +633,12 @@ public struct GameProgress: Codable, Equatable {
     public var duration: Double?
     /// The nxnative commit it was built (or tried) from, 12 digits, and
     /// whether that is an older one than the branch's newest, which does
-    /// not build (cartouche_builder/fallback.py).
+    /// not build (cartouche_builder/fallback.py), or, SPLIT, the one before
+    /// nxnative's shader splitter changed, for this game alone, the newest
+    /// splitting its shaders otherwise than its profile says (decision 133).
     public var commit: String?
     public var fallback: Bool?
+    public var split: Bool?
     /// Why it was not built, as a name (cartouche_builder/causes.py:
     /// "app_build", "no_space", "damaged"...), nxnative's exit code, and for
     /// an error of the engine's own, its exception, where and errno.
@@ -668,7 +671,7 @@ public struct GameProgress: Codable, Equatable {
 
     enum CodingKeys: String, CodingKey {
         case name, reasons, detail, state, stage, step, k, n, frac, overall, eta, note, message, started, ended, error, log, ipa, duration
-        case commit, fallback, cause, exit, failure, room, makes, platform, mac
+        case commit, fallback, split, cause, exit, failure, room, makes, platform, mac
         case titleID = "title_id"
         case macOnly = "mac_only"
         case macApp = "mac_app"
@@ -711,6 +714,14 @@ public struct GameProgress: Codable, Equatable {
     public var fallbackCommit: String? {
         guard fallback == true, let commit, !commit.isEmpty, state == "built" || state == "building" else { return nil }
         return commit
+    }
+
+    /// The commit before nxnative's shader splitter changed it was built
+    /// from, or builds from, alone, the newest splitting its shaders
+    /// otherwise than its profile says, the other games building from the
+    /// newest (decision 133): not the last commit that built on this Mac.
+    public var splitCommit: String? {
+        split == true ? fallbackCommit : nil
     }
 
     /// The batch builds its app for this Mac, after its IPA or alone.

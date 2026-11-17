@@ -180,7 +180,7 @@ FAKE_BUILD = r'''#!/usr/bin/env python3
 # JSON events, and an IPA of a few bytes; with --platform mac-app, a Mac app
 # of a few bytes (Contents/Info.plist, MacOS/dmhost), written as nxnative's
 # packer writes it: under <app>.partial, then renamed, its reuse key beside.
-import argparse, json, os, plistlib, struct, subprocess, sys, time, zipfile
+import argparse, json, os, plistlib, re, struct, subprocess, sys, time, zipfile
 from pathlib import Path
 
 ap = argparse.ArgumentParser()
@@ -206,7 +206,6 @@ if npdm.is_file():
     offset = struct.unpack_from("<I", data, 0x70)[0]
     title_id = "%016X" % struct.unpack_from("<Q", data, offset + 0x10)[0]
 else:
-    import re
     names = [source.name] + ([p.name for p in source.iterdir()] if source.is_dir() else [])
     found = [m.group(1) for n in names if (m := re.search(r"\[([0-9A-Fa-f]{16})\]", n))]
     # The builder's folder of links to a game's packages is named by its ID.
@@ -242,6 +241,25 @@ print("not json: a tool's own line", flush=True)
 print("a warning on stderr", file=sys.stderr, flush=True)
 commit = subprocess.run(["git", "-C", str(repo), "rev-parse", "--short=12", "HEAD"], capture_output=True, text=True).stdout.strip()
 ev(ev="game", title_id=title_id, name=name, version="1.0.0", bundle_id="org.nxnative." + title_id.lower(), out=a.out, icon=str(work / "extract" / "icon_AmericanEnglish.jpg"))
+# As nxnative's shader split (split_shaders), for an IPA and a Mac app alike:
+# the tables it makes of the game's shaders are checked against those of its
+# profile. The fake splitter says how it reads them ("reads: last" in
+# dm/gfx/tools/shader_split.py), and the profile's tables how they were split
+# ("split by: last" in dm/games/<ID>/shader_map.tsv): different, the build
+# stops, as Mario Kart World's at nxnative 8d62601f (16 November 2026), whose
+# splitter kept the first copy of a shader main holds twice, not the last.
+splitter, tables = repo / "dm/gfx/tools/shader_split.py", repo / "dm/games" / title_id / "shader_map.tsv"
+if splitter.is_file() and tables.is_file():
+    ev(ev="stage", k=2, n=2, name="shader split", step="splitting")
+    reads, split_by = re.search(r"reads: (\w+)", splitter.read_text()), re.search(r"split by: (\w+)", tables.read_text())
+    if reads and split_by and reads.group(1) != split_by.group(1):
+        ev(ev="say", msg=f"[RED] the split shader tables differ from game profile {title_id}'s:\n"
+           "shader_map.tsv: 36 row(s) only in the profile, 36 only in the split\n"
+           "profile: vs_main.bin\t2\tvertex\tcbc9002c858e8a64\tmain#BNSH@0x3328000#var13 / split: ps_main.bin\t0\tpixel\t2fd34ddcf16ac1a7\tmain#BNSH@0x3328000#var0\n"
+           "Either these game files are not the versions the profile registers, or shader_split.py now reads them differently and the profile's tables "
+           f"were not split again (the split's tables: {work / 'shaders.partial' / 'tables'})")
+        sys.exit(1)
+    ev(ev="stage_end", k=2, n=2, name="shader split", ok=True, summary="", elapsed=0.1)
 if mac:
     if not a.out.endswith(".app"):
         ev(ev="say", msg=f"[RED] the Mac app (-o / OUT_IPA) must end in .app: {a.out}")
@@ -333,6 +351,10 @@ if os.environ.get("FAKE_SLEEP") and os.environ.get("FAKE_SLEEP_ONLY", title_id) 
     for _ in range(int(os.environ["FAKE_SLEEP"]) * 10):
         time.sleep(0.1)
 ev(ev="stage", k=2, n=2, name="pack", step="")
+# The commit the IPA says it was built from, as nxnative's packer reads it:
+# the checkout's at the end of the build, as at its start, unless something
+# moved the checkout while the game built.
+commit = subprocess.run(["git", "-C", str(repo), "rev-parse", "--short=12", "HEAD"], capture_output=True, text=True).stdout.strip()
 if os.environ.get("FAKE_NO_IPA") == title_id:
     ev(ev="stage_end", k=2, n=2, name="pack", ok=True, summary="", elapsed=0.1)
     sys.exit(0)

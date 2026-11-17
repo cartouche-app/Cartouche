@@ -392,6 +392,30 @@ final class EngineAnswerTests: XCTestCase {
         XCTAssertNil(current.heldBehind)
     }
 
+    /// A game built alone from the commit before nxnative's shader splitter
+    /// changed, the newest splitting its shaders otherwise than its profile
+    /// says, the others from the newest (decision 133): the activity says
+    /// which older commit it is, not the last one that built on this Mac.
+    func testAGameBuiltFromBeforeTheSplitterChanged() throws {
+        let json = #"""
+            {"state": "done", "head": "7f2a1b3c4d5e6f70", "latest": "7f2a1b3c4d5e6f70", "fallback": null,
+             "games": [{"title_id": "0400C3F00006E000", "name": "Mario Kart World", "state": "built", "commit": "24e007be1c3f",
+                        "fallback": true, "split": true},
+                       {"title_id": "0100000000010000", "name": "Super Mario Odyssey", "state": "built", "commit": "7f2a1b3c4d5e",
+                        "fallback": false, "split": false},
+                       {"title_id": "010093801237C000", "name": "Not built", "state": "failed", "commit": "7f2a1b3c4d5e",
+                        "fallback": false, "split": false, "cause": "tables", "error": "nxnative reads this game's shaders otherwise than its profile says"},
+                       {"title_id": "01007EF00011E000", "name": "An older engine's", "state": "built", "commit": "6da69001c0ff", "fallback": true}]}
+            """#
+        let status = try JSONDecoder().decode(BatchStatus.self, from: Data(json.utf8))
+        XCTAssertNil(status.fallback)
+        XCTAssertEqual(status.games.map(\.split), [true, false, false, nil])
+        XCTAssertEqual(status.games.map(\.splitCommit), ["24e007be1c3f", nil, nil, nil])
+        XCTAssertEqual(status.games.map(\.fallbackCommit), ["24e007be1c3f", nil, nil, "6da69001c0ff"])
+        XCTAssertEqual(status.games[2].cause, "tables")
+        XCTAssertEqual(status.games[2].shownError, "nxnative reads this game's shaders otherwise than its profile says")
+    }
+
     func testAFullDiskInThePlayersWords() {
         let posix = NSError(domain: NSPOSIXErrorDomain, code: Int(ENOSPC))
         XCTAssertTrue(DiskSpace.isFull(NSError(domain: NSCocoaErrorDomain, code: NSFileWriteOutOfSpaceError)))

@@ -13,6 +13,11 @@ the builder words for the causes the player can act on (words):
               dump's files, a NUP's SHA-256, an NSP's hashes
   app_build   nxnative's iOS app did not build (its "app build" stage, Xcode):
               what a commit of nxnative can break for every game (fallback.py)
+  tables      nxnative's shader split made other tables of the game's shaders
+              than its profile's (its "shader split" stage): what a commit of
+              nxnative changing the splitter can break for one game, built
+              then from the commit before (fallback.py), or files that are
+              not the version the profile registers
   crashed     nxnative's script ended on an exception of its own
   signal      nxnative ended on a signal (killed, out of memory?)
   refused     nxnative refused the builder's options (exit code 2)
@@ -59,6 +64,13 @@ DAMAGED_VERSION = re.compile(r"^(v\d+): \d+ file\(s\) whose bytes", re.MULTILINE
 METAL = re.compile(r"Metal compiler is not the one the shaders were tested with", re.IGNORECASE)
 SELECTED_XCODE = re.compile(r"\(selected: Xcode (\d+(?:\.\d+)*)")
 WANTED_XCODE = re.compile(r"install Xcode (\d+(?:\.\d+)*)")
+# What nxnative's shader split says when the tables it made of the game's
+# shaders are not its profile's (build_ipa_from_nsp.py, split_shaders): "the
+# split shader tables differ from game profile 0400C3F00006E000's: ...
+# Either these game files are not the versions the profile registers, or
+# shader_split.py now reads them differently and the profile's tables were
+# not split again".
+TABLES = re.compile(r"the split shader tables differ from game profile", re.IGNORECASE)
 TRACEBACK = "Traceback (most recent call last):"
 
 
@@ -83,6 +95,8 @@ def of_build(result) -> str:
         return "metal"
     if DAMAGED.search(said):
         return "damaged"
+    if TABLES.search(said):
+        return "tables"
     if result.code < 0 or result.code == 143:
         return "signal"
     if result.stage == APP_BUILD and result.code == 1:
@@ -116,6 +130,8 @@ def words(cause: str, said: str, folder: Path | None = None) -> str | None:
         if found:
             part = t("cause.damaged_base") if found.group(1) == "v0" else t("cause.damaged_update", version=found.group(1))
         return t("cause.damaged", part=part)
+    if cause == "tables":
+        return t("cause.tables")
     if cause == "metal":
         selected = SELECTED_XCODE.search(said or "")
         wanted = WANTED_XCODE.search(said or "")

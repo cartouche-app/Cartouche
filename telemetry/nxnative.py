@@ -623,7 +623,8 @@ def builds(events: list[dict]) -> list[str]:
 # (builder/cartouche_builder/causes.py), and those of a builder older than
 # 0.5.0, which named none: not the player's files (damaged, zip, keys), nor
 # the Mac's (no_space, no_room, metal), nor a commit of nxnative that breaks
-# every game's app build (app_build), nor a stop or the builder's own code.
+# every game's app build (app_build) or splits a game's shaders otherwise than
+# its profile says (tables), nor a stop or the builder's own code.
 GAMES_OWN = (None, "", "nxnative", "crashed", "signal", "no_ipa")
 
 

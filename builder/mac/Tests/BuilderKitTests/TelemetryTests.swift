@@ -242,6 +242,37 @@ final class TelemetryTests: XCTestCase {
         }
     }
 
+    /// A game built alone from the commit before nxnative's shader splitter
+    /// changed, the newest splitting its shaders otherwise than its profile
+    /// says (decision 133): its IPA's event and its Mac app's say so, beside
+    /// the older commit; the other games and the batch are on the newest.
+    func testAGameBuiltFromBeforeTheSplitterChanged() throws {
+        let json = #"""
+            {"state": "done", "scheduled": false, "head": "7f2a1b3c4d5e6f70", "latest": "7f2a1b3c4d5e6f70", "fallback": null,
+             "started": "2026-11-17T20:00:00+00:00", "ended": "2026-11-17T21:00:00+00:00",
+             "games": [
+               {"title_id": "0400C3F00006E000", "name": "Mario Kart World", "state": "built", "reasons": ["new"], "duration": 3600.2,
+                "commit": "24e007be1c3f", "fallback": true, "split": true, "platform": "mac", "mac": "built", "mac_only": false, "mac_duration": 900.4},
+               {"title_id": "0100000000010000", "name": "Super Mario Odyssey", "state": "built", "reasons": ["shared"], "duration": 1200,
+                "commit": "7f2a1b3c4d5e", "fallback": false, "split": false}]}
+            """#
+        let status = try JSONDecoder().decode(BatchStatus.self, from: Data(json.utf8))
+        let events = BuilderTelemetry.batchEvents(status, library: nil, jobs: 1)
+        XCTAssertEqual(events.map(\.name), ["builder.built", "builder.built", "builder.macBuilt", "builder.batch"])
+        XCTAssertEqual(events[0].fields, ["fallback": .flag(true), "nxnative": .text("24e007be1c3f"), "reasons": .text("new"),
+                                          "seconds": .number(3600), "split": .flag(true)])
+        XCTAssertEqual(events[1].fields, ["nxnative": .text("7f2a1b3c4d5e"), "reasons": .text("shared"), "seconds": .number(1200)])
+        XCTAssertEqual(events[2].fields, ["alone": .flag(false), "fallback": .flag(true), "nxnative": .text("24e007be1c3f"), "reasons": .text("new"),
+                                          "seconds": .number(900), "split": .flag(true)])
+        XCTAssertEqual(events[3].fields["nxnative"], .text("7f2a1b3c4d5e"))
+        XCTAssertNil(events[3].fields["fallback"])
+        XCTAssertNil(events[3].fields["split"])
+        for (index, event) in events.enumerated() {
+            XCTAssertNotNil(TelemetryEvent(id: "6a1d9e3c-0000-4000-8000-00000000030\(index)", seq: index + 1, context: context,
+                                           name: event.name, game: event.game, fields: event.fields), event.name)
+        }
+    }
+
     /// A game played on this Mac, and its saves kept in step with the
     /// iPhone's: how it ended and what moved, as names and numbers; words
     /// that are no name are not sent as they are.

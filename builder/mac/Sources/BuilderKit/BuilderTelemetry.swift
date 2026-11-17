@@ -576,6 +576,7 @@ public final class BuilderTelemetry: ObservableObject {
             if let kind = library?.game(game.titleID)?.kind { fields["source"] = .text(kind) }
             if let built = game.commit.flatMap(BuilderTelemetry.commit) ?? head { fields["nxnative"] = .text(built) }
             if game.fallback == true { fields["fallback"] = .flag(true) }
+            if game.split == true { fields["split"] = .flag(true) }
             if game.state == "built" {
                 if let size = library?.game(game.titleID)?.ipa?.size, size > 0 {
                     fields["ipaMB"] = .number((Double(size) / 1_000_000).rounded())
@@ -601,6 +602,7 @@ public final class BuilderTelemetry: ObservableObject {
             if let kind = library?.game(game.titleID)?.kind { fields["source"] = .text(kind) }
             if let built = game.commit.flatMap(BuilderTelemetry.commit) ?? head { fields["nxnative"] = .text(built) }
             if game.fallback == true { fields["fallback"] = .flag(true) }
+            if game.split == true { fields["split"] = .flag(true) }
             if game.mac == "built" {
                 // As the games folder keeps it: the app, or its file on a NAS.
                 let mac = library?.game(game.titleID)?.mac

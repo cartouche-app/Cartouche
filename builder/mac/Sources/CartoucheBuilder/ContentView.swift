@@ -13,6 +13,8 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject private var model: AppModel
+    /// The Builds page with what the batch said open (the gallery).
+    var showingDetails = false
 
     var body: some View {
         NavigationSplitView {
@@ -38,7 +40,7 @@ struct ContentView: View {
     @ViewBuilder private var page: some View {
         switch model.section {
         case .library: LibraryView()
-        case .activity: ActivityView()
+        case .activity: ActivityView(showingDetails: showingDetails)
         case .storage: StorageView()
         case .iphone: BridgeView()
         case .setup: SetupView()

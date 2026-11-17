@@ -17,7 +17,12 @@ import SwiftUI
 
 struct ActivityView: View {
     @EnvironmentObject private var model: AppModel
-    @State private var showLines = false
+    @State private var showLines: Bool
+
+    /// SHOWINGDETAILS: what the batch said open, as the gallery shows it.
+    init(showingDetails: Bool = false) {
+        _showLines = State(initialValue: showingDetails)
+    }
 
     var body: some View {
         ScrollView {
@@ -341,7 +346,14 @@ struct GameList: View {
                         .foregroundStyle(.orange)
                         .lineLimit(3)
                 }
-                if let commit = game.fallbackCommit {
+                if let commit = game.splitCommit {
+                    // This game alone, the others from the newest (decision 133).
+                    Text(tr("From nxnative \(commit.prefix(8)), from before nxnative changed how it reads shaders: the newest reads this game’s otherwise than its profile for now",
+                            "Avec nxnative \(commit.prefix(8)), d’avant le changement de sa lecture des shaders : le plus récent lit ceux de ce jeu autrement que son profil pour l’instant"))
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                        .lineLimit(2)
+                } else if let commit = game.fallbackCommit {
                     Text(tr("From nxnative \(commit.prefix(8)), the last commit that built: the newest does not build for now",
                             "Avec nxnative \(commit.prefix(8)), le dernier commit qui a construit : le plus récent ne construit pas pour l’instant"))
                         .font(.caption)
