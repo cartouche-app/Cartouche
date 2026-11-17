@@ -30,8 +30,10 @@ enum Gallery {
         case assistantGames = "assistant-games", assistantKeys = "assistant-keys", assistantBuilds = "assistant-builds"
         case assistantIPhone = "assistant-iphone", assistantDone = "assistant-done"
         // The settings' Folders tab, where the dumps folder and the games
-        // folder are chosen.
-        case settingsFolders = "settings-folders"
+        // folder are chosen; and the help on naming what they hold, as the
+        // sheet it opens shows it, at its top and on the dumps folder, as
+        // the library opens it.
+        case settingsFolders = "settings-folders", names, namesDumps = "names-dumps"
         // Cartouche's console on this Mac (ConsoleGallery.swift): its home,
         // every game, a game's settings page beside them, a game's info over
         // them, and the whole sheet of a game played on this Mac, in a
@@ -76,6 +78,7 @@ enum Gallery {
         var size: CGSize {
             if step != nil { return SetupAssistant.size }
             switch self {
+            case .names, .namesDumps: return NamingHelp.size
             case .settings, .settingsBuilds, .settingsFolders: return SettingsTab.size
             case .storageMac: return CGSize(width: 1024, height: 1440)
             case .consoleSheet: return CGSize(width: 1024, height: 1640)
@@ -87,14 +90,17 @@ enum Gallery {
             }
         }
 
-        var inEnglish: Bool { [.library, .game, .gameQueue, .setup, .menubar, .assistantWelcome, .assistantGames, .console].contains(self) }
+        /// Whether the page is the help on naming, the sheet it is.
+        var isNaming: Bool { self == .names || self == .namesDumps }
+
+        var inEnglish: Bool { [.library, .game, .gameQueue, .setup, .menubar, .assistantWelcome, .assistantGames, .console, .names].contains(self) }
 
         /// The window as the app opens it: the settings as the Settings
         /// scene does, the menu bar's panel without a frame, the setup
         /// assistant as the sheet it is, without a title bar, which would
         /// add its height above it.
         var styleMask: NSWindow.StyleMask {
-            if step != nil { return [.borderless] }
+            if step != nil || isNaming { return [.borderless] }
             switch self {
             case .settings, .settingsBuilds, .settingsFolders: return [.titled, .closable]
             case .menubar, .menubarBuilding: return [.borderless]
@@ -170,6 +176,14 @@ enum Gallery {
         var size = page.size
         let controller: NSViewController
         switch page {
+        case .names, .namesDumps:
+            // The sheet it is, as the setup assistant's steps are shown, in
+            // the language the console speaks, the app's.
+            ConsoleLink.speak()
+            controller = hosted(NamingHelp(onDumps: page == .namesDumps)
+                                    .background(Color(nsColor: .windowBackgroundColor))
+                                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous)),
+                                model, bridged: false)
         case .settingsFolders:
             controller = settings(model, open: .folders)
         case .settings, .settingsBuilds:
@@ -216,7 +230,7 @@ enum Gallery {
         if page == .settings || page == .settingsBuilds || page == .settingsFolders {
             window.toolbarStyle = .preference
         }
-        if page.step != nil {
+        if page.step != nil || page.isNaming {
             window.isOpaque = false
             window.backgroundColor = .clear
         }

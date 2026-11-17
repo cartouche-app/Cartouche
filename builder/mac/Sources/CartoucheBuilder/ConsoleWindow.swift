@@ -10,8 +10,9 @@
 //
 //  The console is CartoucheConsole's, the iPhone's screens (ConsoleView.swift
 //  there). It is imported only in files that do not import CartoucheCore,
-//  whose names it shares: this one and ConsoleGallery.swift. The rest of the
-//  app reaches it through ConsoleLink, with the games' apps and words.
+//  whose names it shares: this one, ConsoleGallery.swift and NamingHelp.swift.
+//  The rest of the app reaches it through ConsoleLink, with the games' apps
+//  and words.
 //
 
 import AppKit

@@ -1,0 +1,1 @@
+../../../../../launcher/Sources/CartoucheNaming.swift

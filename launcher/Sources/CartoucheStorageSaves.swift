@@ -91,8 +91,7 @@ final class CartoucheSavesFolder {
     private func gameFolder(of target: CartoucheSaveTarget) async throws -> String {
         let made = Self.folderName(target)
         guard let titleId = target.titleId else { return CartoucheStoragePath.join(path, made) }
-        let suffix = "[\(titleId.uppercased())]"
-        let found = try await folders().filter { $0.uppercased().hasSuffix(suffix) }.sorted()
+        let found = try await folders().filter { CartoucheNaming.isSavesFolder($0, of: titleId) }.sorted()
         guard found.count > 1 else { return CartoucheStoragePath.join(path, found.first ?? made) }
         var chosen = found[0]
         var newest: Date?

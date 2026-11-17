@@ -512,6 +512,7 @@ struct IssuesCard: View {
         if let sources = model.config?.sources, !sources.isEmpty {
             Button(tr("Show the dumps folder", "Afficher le dossier des dumps")) { model.open(sources) }
         }
+        NamingHelpButton(title: NamingHelpButton.dumps, onDumps: true)
         SettingsLink {
             Text(tr("Settings…", "Réglages…"))
         }
@@ -546,6 +547,10 @@ struct EmptyLibrary: View {
                     model.openSetup(at: (model.config?.sources ?? "").isEmpty ? .sources : .games)
                 }
                 .buttonStyle(.borderedProminent)
+            } else if !searching && filter == .all && (model.library?.issues.isEmpty ?? true) {
+                // No game in the dumps folder, and nothing left aside, which
+                // the card above opens the help from: how the Builder finds them.
+                NamingHelpButton(title: NamingHelpButton.dumps, onDumps: true)
             }
         }
         .frame(maxWidth: .infinity, minHeight: 280)

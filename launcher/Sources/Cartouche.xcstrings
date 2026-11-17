@@ -3741,6 +3741,414 @@
         }
       }
     },
+    "naming.buildFolder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A folder ending in _build, where nxnative builds, or in _dump, and the Finder’s __MACOSX: never a game."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un dossier finissant par _build, où nxnative construit, ou par _dump, et le __MACOSX du Finder : jamais un jeu."
+          }
+        }
+      }
+    },
+    "naming.built" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An IPA or a romfs.img is no dump: put them in the games folder."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une IPA ou un romfs.img n’est pas un dump : mettez-les dans le dossier des jeux."
+          }
+        }
+      }
+    },
+    "naming.copy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A copy of the game’s saves, named after when it was made, in UTC. The %lld newest are kept."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une copie des sauvegardes du jeu, nommée d’après le moment où elle a été faite, en UTC. Les %lld plus récentes sont gardées."
+          }
+        }
+      }
+    },
+    "naming.dump" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A dump, as nxnative lays it out (base/exefs and base/romfs, or exefs and romfs, then updates and dlc), or zipped: any name, its title ID is read inside."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un dump, rangé comme nxnative le lit (base/exefs et base/romfs, ou exefs et romfs, puis updates et dlc), ou zippé : n’importe quel nom, son ID du titre est lu à l’intérieur."
+          }
+        }
+      }
+    },
+    "naming.dumps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dumps folder, for Cartouche Builder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dossier des dumps, pour Cartouche Builder"
+          }
+        }
+      }
+    },
+    "naming.dumps.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loose or each in its folder, up to %lld folders down. A name without its title ID works too: Cartouche Builder then reads it inside, which takes your prod.keys for a package."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En vrac ou chacun dans son dossier, jusqu’à %lld dossiers plus bas. Un nom sans ID du titre convient aussi : Cartouche Builder le lit alors à l’intérieur, ce qui demande vos prod.keys pour un paquet."
+          }
+        }
+      }
+    },
+    "naming.found" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Found"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnu"
+          }
+        }
+      }
+    },
+    "naming.gameFiles" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The image of a game’s files, for an IPA built without them: any name ending in romfs.img, beside its IPA or elsewhere in the folder."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’image des fichiers d’un jeu, pour une IPA construite sans eux : tout nom finissant par romfs.img, à côté de son IPA ou ailleurs dans le dossier."
+          }
+        }
+      }
+    },
+    "naming.gameFolder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A folder per game, which Cartouche makes: any name, as long as it ends with the game’s title ID."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un dossier par jeu, que Cartouche crée : n’importe quel nom, tant qu’il finit par l’ID du titre du jeu."
+          }
+        }
+      }
+    },
+    "naming.games.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Builder puts each game’s IPA here, named so; a game copied here from its sheet is named the same way."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Builder dépose ici l’IPA de chaque jeu, nommée ainsi ; un jeu copié ici depuis sa fiche est nommé de la même façon."
+          }
+        }
+      }
+    },
+    "naming.intro" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche and Cartouche Builder know a game by its title ID: the 16 letters and digits in square brackets in its name, as they name what they write. A game’s sheet shows its title ID."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche et Cartouche Builder reconnaissent un jeu à son ID du titre : les 16 lettres et chiffres entre crochets dans son nom, comme ils nomment ce qu’ils écrivent. La fiche d’un jeu montre son ID du titre."
+          }
+        }
+      }
+    },
+    "naming.leftAside" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left aside"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laissé de côté"
+          }
+        }
+      }
+    },
+    "naming.macApp" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A game built for the Mac, which Cartouche Builder keeps beside its IPA on a NAS: leave it there."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un jeu construit pour le Mac, que Cartouche Builder garde à côté de son IPA sur un NAS : laissez-le là."
+          }
+        }
+      }
+    },
+    "naming.namedIPA" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An IPA, named as Cartouche and Cartouche Builder name it: the game, then its title ID."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une IPA, nommée comme Cartouche et Cartouche Builder la nomment : le jeu, puis son ID du titre."
+          }
+        }
+      }
+    },
+    "naming.notACopy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not a copy Cartouche made: it stays as it is, never put back."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas une copie faite par Cartouche : elle reste telle quelle, jamais remise en place."
+          }
+        }
+      }
+    },
+    "naming.nup" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A Switch 2 game, in its .nup."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un jeu Switch 2, dans son .nup."
+          }
+        }
+      }
+    },
+    "naming.open" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How to name your games"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comment nommer vos jeux"
+          }
+        }
+      }
+    },
+    "naming.package" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A game’s package: .nsp, .xci, .nsz or .xcz, read with your prod.keys."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le paquet d’un jeu : .nsp, .xci, .nsz ou .xcz, lu avec vos prod.keys."
+          }
+        }
+      }
+    },
+    "naming.saves.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche names these itself: leave their names as they are."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche les nomme lui-même : laissez leurs noms tels quels."
+          }
+        }
+      }
+    },
+    "naming.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Naming your games"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nommer vos jeux"
+          }
+        }
+      }
+    },
+    "naming.tooDeep" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Two folders down: Cartouche reads the folder and the folders right in it, no deeper."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deux dossiers plus bas : Cartouche lit le dossier et les dossiers juste dedans, pas plus loin."
+          }
+        }
+      }
+    },
+    "naming.unnamedFolder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Without the game’s title ID: Cartouche makes the game’s own folder beside it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sans l’ID du titre du jeu : Cartouche crée le dossier du jeu à côté."
+          }
+        }
+      }
+    },
+    "naming.unnamedIPA" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Any other name ending in .ipa: Cartouche then reads the game inside, a little slower."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tout autre nom finissant par .ipa : Cartouche lit alors le jeu à l’intérieur, un peu plus lentement."
+          }
+        }
+      }
+    },
+    "naming.update" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its update, beside it: an update’s title ID is its game’s with 800 at its end instead of 000. Its DLC go beside it too."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sa mise à jour, à côté : l’ID du titre d’une mise à jour est celui de son jeu, avec 800 au lieu de 000 à la fin. Ses DLC vont aussi à côté."
+          }
+        }
+      }
+    },
     "platform.switch" : {
       "extractionState" : "manual",
       "localizations" : {

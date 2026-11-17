@@ -282,6 +282,7 @@ struct SetupAssistant: View {
             ChosenFolder(title: tr("Dumps folder", "Dossier des dumps"), path: config.sources, detail: sourcesDetail) {
                 chooseFolder(.sources, from: nil)
             }
+            NamingHelpButton(title: NamingHelpButton.dumps, onDumps: true, link: true)
         }
     }
 
@@ -319,6 +320,7 @@ struct SetupAssistant: View {
             ChosenFolder(title: tr("Games folder", "Dossier des jeux"), path: config.games, detail: nil) {
                 chooseFolder(.games, from: nil)
             }
+            NamingHelpButton(title: NamingHelpButton.games, link: true)
             if let text = gamesProblem ?? problem {
                 Label(text, systemImage: "exclamationmark.triangle.fill")
                     .font(.callout)
