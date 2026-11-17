@@ -44,6 +44,8 @@ final class FakeMac: @unchecked Sendable {
     /// of them.
     private var connections: [CartoucheConnection]?
     private var given: [[CartoucheConnection]] = []
+    /// The folders each iPhone told it with its connections, in order.
+    private var told: [CartoucheChosenFolders?] = []
     private var tailnet: [String]?
     private var listener: NWListener?
     private let queue = DispatchQueue(label: "Fake Mac")
@@ -149,6 +151,13 @@ final class FakeMac: @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         return given
+    }
+
+    /// The folders each iPhone told it with them, in order.
+    var toldFolders: [CartoucheChosenFolders?] {
+        lock.lock()
+        defer { lock.unlock() }
+        return told
     }
 
     func entry(_ path: String) -> Entry? {
@@ -287,6 +296,7 @@ final class FakeMac: @unchecked Sendable {
             guard let kept = connections else { return (.failure(.notFound, "connections"), Data()) }
             guard let theirs = request.connections else { return (.failure(.protocolError, "connections"), Data()) }
             given.append(theirs)
+            told.append(request.places)
             let merged = CartoucheConnections.merged(kept, theirs)
             connections = merged
             response.connections = merged

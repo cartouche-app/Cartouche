@@ -7,7 +7,9 @@
 //  folder. An iPhone pairs once, with a code shown on both screens. The
 //  games played on this Mac keep their saves in step with the iPhone's in
 //  that saves folder, or in Cartouche's saves folder on a share, which the
-//  page finds on the shares mounted here. With Tailscale, which the player
+//  page finds on the shares mounted here; or in the saves folder the player
+//  chose on the iPhone, when it is on one of their connections, which the
+//  page then shows in its place. With Tailscale, which the player
 //  installs apart on this Mac and on the iPhone, the paired iPhones reach
 //  this Mac away from home too: the page says whether it is on, and this
 //  Mac's address there, by which an iPhone pairs when Bonjour cannot see
@@ -70,16 +72,29 @@ struct BridgeView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
                     Divider().padding(.leading, 12)
-                    FolderRow(symbol: "externaldrive.badge.icloud", title: tr("Saves folder", "Dossier des sauvegardes"), path: bridge.saves.path,
-                              note: bridge.savesIsDefault ? tr("In Cartouche Builder’s folder", "Dans le dossier de Cartouche Builder") : nil) {
-                        Button(tr("Change…", "Changer…")) {
-                            if let url = FolderPicker.choose(title: tr("Where the saves go", "Où vont les sauvegardes"), directory: bridge.saves) {
-                                bridge.setSaves(url)
-                            }
+                    if let place = model.macGames.folder, let connection = place.connection {
+                        // The iPhone's, on one of the player's connections:
+                        // chosen there.
+                        let name = ConsoleLink.connectionName(connection) ?? tr("its connection", "sa connexion")
+                        FolderRow(symbol: "externaldrive.connected.to.line.below", title: tr("Saves folder", "Dossier des sauvegardes"),
+                                  path: place.path.isEmpty ? name : name + " › " + place.path.split(separator: "/").joined(separator: " › "),
+                                  note: tr("The iPhone’s, chosen on it: this Mac reaches it through the same connection, “\(name)”.",
+                                           "Celui de l’iPhone, choisi sur lui : ce Mac l’atteint par la même connexion, « \(name) ».")) {
+                            EmptyView()
                         }
-                        .controlSize(.small)
+                    } else {
+                        FolderRow(symbol: "externaldrive.badge.icloud", title: tr("Saves folder", "Dossier des sauvegardes"), path: bridge.saves.path,
+                                  note: bridge.savesIsDefault ? tr("In Cartouche Builder’s folder", "Dans le dossier de Cartouche Builder") : nil) {
+                            Button(tr("Change…", "Changer…")) {
+                                if let url = FolderPicker.choose(title: tr("Where the saves go", "Où vont les sauvegardes"), directory: bridge.saves) {
+                                    bridge.setSaves(url)
+                                }
+                            }
+                            .controlSize(.small)
+                        }
                     }
-                    if let share = found.first(where: { $0.standardizedFileURL != bridge.saves.standardizedFileURL }) {
+                    if model.macGames.folder?.connection == nil,
+                       let share = found.first(where: { $0.standardizedFileURL != bridge.saves.standardizedFileURL }) {
                         Divider().padding(.leading, 48)
                         let volume = share.pathComponents.count > 2 ? share.pathComponents[2] : share.lastPathComponent
                         FolderRow(symbol: "server.rack", title: tr("Cartouche’s saves found on “\(volume)”", "Sauvegardes de Cartouche trouvées sur « \(volume) »"),

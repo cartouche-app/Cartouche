@@ -7,7 +7,8 @@
 //  BridgeConnectionsSource, CartoucheConnections.swift): a Mac that takes
 //  none says so in its info and refuses them, the session going on; one
 //  that does takes the iPhone's, with their secrets, and gives its own,
-//  each side then keeping the same. What Cartouche does with them is
+//  each side then keeping the same, and hears of the folders the player
+//  chose on the iPhone. What Cartouche does with them is
 //  tested with Cartouche's storage (launcher/StorageTests, MacBridgeTests).
 //
 
@@ -22,9 +23,11 @@ import XCTest
 private final class Connections: BridgeConnectionsSource {
     var kept: [CartoucheConnection] = []
     var given: [[CartoucheConnection]] = []
+    var told: [CartoucheChosenFolders?] = []
 
-    func bridgeConnections(_ theirs: [CartoucheConnection]) -> [CartoucheConnection] {
+    func bridgeConnections(_ theirs: [CartoucheConnection], places: CartoucheChosenFolders?) -> [CartoucheConnection] {
         given.append(theirs)
+        told.append(places)
         kept = CartoucheConnections.merged(kept, theirs)
         return kept
     }
@@ -108,6 +111,9 @@ final class BridgeConnectionsTests: XCTestCase {
         XCTAssertEqual(theirs.first { $0.id == removed.id }?.removed, true)
         let given = await MainActor.run { connections.given }
         XCTAssertEqual(given, [[nas, removed]])
+        // Told no folder: an iPhone older than that.
+        let toldNone = await MainActor.run { connections.told }
+        XCTAssertEqual(toldNone, [nil])
         // The iPhone keeps the same.
         XCTAssertEqual(Set(CartoucheConnections.merged([nas, removed], theirs, now: now).map(\.id)), Set(theirs.map(\.id)))
 
@@ -120,6 +126,13 @@ final class BridgeConnectionsTests: XCTestCase {
         }
         let again = try await client.connections([])
         XCTAssertEqual(Set(again.map(\.id)), Set(theirs.map(\.id)))
+
+        // The folders chosen on the iPhone, with the connections.
+        let places = CartoucheChosenFolders(games: .init(connection: nil, path: "", chosen: now),
+                                            saves: .init(connection: nas.id, path: "Cartouche/Saves", chosen: now))
+        _ = try await client.connections([nas], places: places)
+        let told = await MainActor.run { connections.told }
+        XCTAssertEqual(told.last, places)
         client.close()
         await serving.value
     }

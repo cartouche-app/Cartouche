@@ -7,7 +7,8 @@
 //  its bridge (JSON), kept on this Mac with their secrets in the Builder's
 //  file, readable by the player only, never in the preferences, and the
 //  Mac's given back, those removed on either side among them; the saves
-//  folder of this Mac, which never goes to an iPhone; the gallery's,
+//  folder of this Mac, which never goes to an iPhone, or the iPhone's on a
+//  connection, followed when it is replaced or removed; the gallery's,
 //  which nothing keeps; and This Mac's folders as the player knows them.
 //  Each test has preferences and a secrets file of its own.
 //
@@ -129,6 +130,54 @@ final class ConsoleStorageTests: XCTestCase {
         XCTAssertEqual(mac.servers.map(\.id), [CartoucheStorageSettings.macSavesID, nas.id])
         XCTAssertEqual(mac.place(.saves)?.path, "/Volumes/Partage/Cartouche/Saves")
         XCTAssertEqual(settings().servers.map(\.id), [nas.id])
+    }
+
+    /// The iPhone's saves folder on one of the connections, where the
+    /// Builder keeps the saves of this Mac's games: shown as that
+    /// connection's folder, as the iPhone shows it, never kept; a
+    /// connection no longer there leaves the Mac's own.
+    func testTheIPhonesSavesFolderOnAConnection() throws {
+        let mac = settings()
+        let nas = CartoucheStorageServer(kind: .smb, name: "NAS du salon", host: "192.168.1.2", username: "joueur", share: "Jeux",
+                                         changed: now)
+        mac.save(nas, secret: "mot de passe")
+        mac.showMacSaves(name: "NAS du salon", path: "Cartouche/Saves", connection: nas.id)
+        XCTAssertEqual(mac.place(.saves), CartoucheStoragePlace(server: nas.id, path: "Cartouche/Saves"))
+        XCTAssertEqual(mac.servers.map(\.id), [nas.id], "no folder of this Mac's beside it")
+        XCTAssertTrue(mac.keepsMacSavesOnConnection)
+        XCTAssertNil(settings().place(.saves))
+        // Back to the Mac's own.
+        mac.showMacSaves(name: "le dossier des sauvegardes", path: "/Users/Shared/Saves")
+        XCTAssertEqual(mac.place(.saves)?.server, CartoucheStorageSettings.macSavesID)
+        XCTAssertFalse(mac.keepsMacSavesOnConnection)
+        // A connection this Mac does not have: its own folder, by its name.
+        mac.showMacSaves(name: "le dossier des sauvegardes", path: "/Users/Shared/Saves", connection: UUID())
+        XCTAssertEqual(mac.place(.saves)?.server, CartoucheStorageSettings.macSavesID)
+        // None.
+        mac.showMacSaves(name: nil, path: "")
+        XCTAssertNil(mac.place(.saves))
+    }
+
+    func testTheIPhonesFolderFollowsItsConnectionReplacedOrRemoved() throws {
+        let mac = settings()
+        let first = UUID(uuidString: "00000000-0000-4000-8000-000000000001")!
+        let nas = CartoucheConnection(id: UUID(uuidString: "FFFFFFFF-0000-4000-8000-000000000002")!, kind: "smb", name: "NAS",
+                                      host: "192.168.1.2", username: "joueur", share: "Jeux", secret: "mot de passe", changed: now)
+        mac.take([nas])
+        XCTAssertEqual(CartoucheMacConsole.currentConnection(nas.id, in: mac), nas.id)
+        // The same NAS added on an iPhone, under an ID that sorts first.
+        var same = nas
+        same.id = first
+        same.changed = now + 60
+        mac.take([same])
+        XCTAssertEqual(CartoucheMacConsole.currentConnection(nas.id, in: mac), first)
+        // Removed: none, nor for a connection never there.
+        var removed = same
+        removed.removed = true
+        removed.changed = now + 120
+        mac.take([removed])
+        XCTAssertNil(CartoucheMacConsole.currentConnection(nas.id, in: mac))
+        XCTAssertNil(CartoucheMacConsole.currentConnection(UUID(), in: mac))
     }
 
     /// The gallery's connections, kept in memory only: nothing of them in

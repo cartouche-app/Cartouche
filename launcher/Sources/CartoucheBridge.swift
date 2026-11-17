@@ -34,7 +34,9 @@
 //  A Mac whose info says hasConnections also takes the player's connections
 //  to their storage, a NAS, a bucket, a server or a Google Drive with their
 //  passwords, and gives its own, so that both keep the same
-//  (CartoucheConnections.swift).
+//  (CartoucheConnections.swift). The iPhone tells it too the folders the
+//  player chose there for the games and the saves (places), which a Mac
+//  older than that leaves aside.
 //
 //  This file is shared: Cartouche compiles it with the launcher, Cartouche
 //  Builder through the CartoucheCore package (launcher/Package.swift). It
@@ -346,10 +348,13 @@ public struct CartoucheBridgeRequest: Codable, Equatable {
     public var due: Bool?
     /// connections: the iPhone's, with those it removed.
     public var connections: [CartoucheConnection]?
+    /// connections: the folders the player chose on the iPhone for the
+    /// games and the saves, with when.
+    public var places: CartoucheChosenFolders?
 
     public init(_ op: Operation, path: String? = nil, offset: UInt64? = nil, count: Int? = nil, size: UInt64? = nil, upload: String? = nil,
                 game: String? = nil, followed: Bool? = nil, nightly: CartoucheBridgeBuilds.Nightly? = nil, due: Bool? = nil,
-                connections: [CartoucheConnection]? = nil) {
+                connections: [CartoucheConnection]? = nil, places: CartoucheChosenFolders? = nil) {
         self.op = op
         self.path = path
         self.offset = offset
@@ -361,6 +366,7 @@ public struct CartoucheBridgeRequest: Codable, Equatable {
         self.nightly = nightly
         self.due = due
         self.connections = connections
+        self.places = places
     }
 }
 
@@ -998,10 +1004,11 @@ public final class CartoucheBridgeClient {
     }
 
     /// Gives the Mac MINE, the iPhone's connections with those it removed,
-    /// and gets the Mac's once it took them; ask only a Mac whose info says
-    /// it takes them (hasConnections).
-    public func connections(_ mine: [CartoucheConnection]) async throws -> [CartoucheConnection] {
-        guard let theirs = try await call(CartoucheBridgeRequest(.connections, connections: mine)).0.connections else {
+    /// and PLACES, the folders chosen on the iPhone, and gets the Mac's
+    /// connections once it took them; ask only a Mac whose info says it
+    /// takes them (hasConnections).
+    public func connections(_ mine: [CartoucheConnection], places: CartoucheChosenFolders? = nil) async throws -> [CartoucheConnection] {
+        guard let theirs = try await call(CartoucheBridgeRequest(.connections, connections: mine, places: places)).0.connections else {
             throw CartoucheBridgeError(.protocolError, "no connections")
         }
         return theirs

@@ -358,6 +358,10 @@
       "en": "1 connection",
       "fr": "1 connexion"
     },
+    "mac.storage.iPhoneSaves.footer": {
+      "en": "The saves folder chosen on your iPhone: Cartouche Builder keeps the saves of the games played on this Mac there too, through the same connection, before and after each game, as the iPhone does. The %lld newest copies are kept. To change it, choose another on the iPhone.",
+      "fr": "Le dossier des sauvegardes choisi sur votre iPhone : Cartouche Builder y garde aussi celles des jeux joués sur ce Mac, par la même connexion, avant et après chaque partie, comme l’iPhone. Les %lld copies les plus récentes y restent. Pour en changer, choisissez-en un autre sur l’iPhone."
+    },
     "mac.storage.thisMac": {
       "en": "This Mac",
       "fr": "Ce Mac"
@@ -365,6 +369,10 @@
     "mac.storage.thisMac.footer": {
       "en": "Cartouche Builder’s folders, which your iPhones reach through it: its games folder keeps the games it builds, and its saves folder the saves of your games.",
       "fr": "Les dossiers de Cartouche Builder, que vos iPhone atteignent à travers lui : son dossier des jeux garde les jeux qu’il construit, et son dossier des sauvegardes les sauvegardes de vos jeux."
+    },
+    "mac.storage.thisMac.games.footer": {
+      "en": "Cartouche Builder’s games folder, which your iPhones reach through it, keeps the games it builds.",
+      "fr": "Le dossier des jeux de Cartouche Builder, que vos iPhone atteignent à travers lui, garde les jeux qu’il construit."
     },
     "mac.system.back": {
       "en": "Back to the console",

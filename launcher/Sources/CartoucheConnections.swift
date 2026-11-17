@@ -129,6 +129,51 @@ public struct CartoucheConnection: Codable, Equatable, Sendable {
     }
 }
 
+/// The folders the player chose on an iPhone for the games and the saves,
+/// as the paired Mac is told them with the connections: the Mac keeps the
+/// saves of the games played on it in the same saves folder, and sends its
+/// builds to the same games folder, when they are on a connection both
+/// have. Of what its iPhones told it, a Mac keeps, for each, the folder
+/// chosen last (taking).
+public struct CartoucheChosenFolders: Codable, Equatable, Sendable {
+    public struct Folder: Codable, Equatable, Sendable {
+        /// The connection it is on; nil for none the Mac has: a folder
+        /// picked on the iPhone, the Mac's own through the bridge, or no
+        /// folder at all.
+        public var connection: UUID?
+        /// From the connection's root, folders joined by "/".
+        public var path: String
+        /// When the player chose it on the iPhone.
+        public var chosen: Date
+
+        public init(connection: UUID?, path: String, chosen: Date) {
+            self.connection = connection
+            self.path = path
+            self.chosen = chosen
+        }
+    }
+
+    public var games: Folder?
+    public var saves: Folder?
+
+    public init(games: Folder? = nil, saves: Folder? = nil) {
+        self.games = games
+        self.saves = saves
+    }
+
+    /// These, with the folders TOLD gives that were chosen later, as a Mac
+    /// keeps what its iPhones tell it: one chosen at the same time as the
+    /// one kept leaves it, so that two iPhones never take turns.
+    public func taking(_ told: CartoucheChosenFolders) -> CartoucheChosenFolders {
+        func later(_ kept: Folder?, _ told: Folder?) -> Folder? {
+            guard let told else { return kept }
+            guard let kept else { return told }
+            return told.chosen > kept.chosen ? told : kept
+        }
+        return CartoucheChosenFolders(games: later(games, told.games), saves: later(saves, told.saves))
+    }
+}
+
 public enum CartoucheConnections {
     /// The kinds of place that go over the bridge.
     public static let kinds: Set<String> = ["smb", "s3", "ftp", "sftp", "drive"]

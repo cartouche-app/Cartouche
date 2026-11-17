@@ -358,6 +358,28 @@ enum ConsoleLink {
         CartoucheMacConsole.shared.takeConnections(theirs)
     }
 
+    /// The connection the folders an iPhone chose on the connection ID are
+    /// on now, the one it was replaced by: nil when it was removed, or this
+    /// Mac does not have it.
+    static func currentConnection(_ id: UUID) -> UUID? {
+        CartoucheMacConsole.shared.currentConnection(id)
+    }
+
+    /// The name the player gave the connection ID.
+    static func connectionName(_ id: UUID) -> String? {
+        CartoucheMacConsole.shared.connectionName(id)
+    }
+
+    /// ACTION, a moment after each change the player makes to their
+    /// connections on the console's Storage page: once, as the app starts.
+    static func followConnections(_ action: @escaping () -> Void) {
+        connectionsWatch = CartoucheMacConsole.shared.connectionsChanged
+            .receive(on: DispatchQueue.main)
+            .sink { _ in action() }
+    }
+
+    private static var connectionsWatch: AnyCancellable?
+
     /// The Builder's games folder and saves folder, which the console's
     /// Storage page shows under This Mac.
     static func showFolders(games: URL?, saves: URL?) {
@@ -427,9 +449,15 @@ enum ConsoleLink {
             games.checked.values.max().map { offline > $0 } ?? true
         } ?? false
         let folder = games.folder.map { folder in
-            CartoucheMacSavesFolder(name: folder.root.path.hasPrefix("/Volumes/") ? tr("the NAS", "le NAS")
-                                        : tr("the saves folder", "le dossier des sauvegardes"),
-                                    path: folder.root.path, isAway: away)
+            // The iPhone's, on a connection: by the connection's name.
+            if let connection = folder.connection {
+                return CartoucheMacSavesFolder(name: CartoucheMacConsole.shared.connectionName(connection)
+                                                   ?? tr("the saves folder", "le dossier des sauvegardes"),
+                                               path: folder.path, isAway: away, connection: connection)
+            }
+            return CartoucheMacSavesFolder(name: folder.path.hasPrefix("/Volumes/") ? tr("the NAS", "le NAS")
+                                               : tr("the saves folder", "le dossier des sauvegardes"),
+                                           path: folder.path, isAway: away)
         }
         var saves: [String: CartoucheMacGameSaves] = [:]
         for titleID in Set(games.last.keys).union(games.checked.keys).union(games.cloud.keys) {

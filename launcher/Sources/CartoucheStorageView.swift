@@ -13,7 +13,10 @@
 //  same as the paired iPhones' (CartoucheConnections.swift): this Mac's
 //  folders, the Builder's, stand in place of the games folder and the saves
 //  folder (builder/mac, ConsoleStorage.swift), and neither a Mac nor a
-//  folder of Files is added there.
+//  folder of Files is added there. When the saves folder chosen on the
+//  iPhone is on one of the connections, the Builder keeps the saves of the
+//  Mac's games there too, and the page shows it as the iPhone does, the
+//  choice staying the iPhone's.
 //
 
 import Combine
@@ -63,8 +66,13 @@ struct CartoucheStorageView: View {
                         .foregroundStyle(.secondary)
                 }
                 #if os(macOS)
-                // This Mac's folders, the Builder's (ConsoleStorage.swift).
+                // This Mac's folders, the Builder's (ConsoleStorage.swift),
+                // and the iPhone's saves folder, where the Builder keeps the
+                // saves of this Mac's games when it is on a connection.
                 CartoucheMacFoldersSection()
+                if settings.keepsMacSavesOnConnection {
+                    placeSection(.saves)
+                }
                 #else
                 placeSection(.games)
                 placeSection(.saves)
@@ -232,6 +240,8 @@ struct CartoucheStorageView: View {
                         .foregroundStyle(Color.orange)
                     CartoucheReportButton(report: problem)
                 }
+                #if os(iOS)
+                // On the Mac, the iPhone's: chosen there.
                 Menu {
                     serverChoices(role)
                 } label: {
@@ -243,6 +253,7 @@ struct CartoucheStorageView: View {
                 } label: {
                     Label(CartoucheText.storageStopUsing, systemImage: "xmark.circle")
                 }
+                #endif
             } else if settings.servers.isEmpty {
                 Text(CartoucheText.storageAddFirst)
                     .foregroundStyle(.secondary)
@@ -258,7 +269,11 @@ struct CartoucheStorageView: View {
         } header: {
             Text(Self.title(role))
         } footer: {
+            #if os(macOS)
+            Text(role == .games ? CartoucheText.storageGamesFooter : CartoucheText.macStorageIPhoneSavesFooter(CartoucheSaveBackups.kept))
+            #else
             Text(role == .games ? CartoucheText.storageGamesFooter : CartoucheText.storageSavesFooter(CartoucheSaveBackups.kept))
+            #endif
         }
     }
 

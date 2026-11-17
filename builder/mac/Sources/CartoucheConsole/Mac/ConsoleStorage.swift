@@ -13,9 +13,12 @@
 //  (CartoucheStorageSettings). In place of the iPhone's games folder and
 //  saves folder, This Mac: the Builder's own, where the console takes the
 //  games it shows and the Builder keeps the saves of the games played
-//  here, which the player changes in the Builder.
+//  here, which the player changes in the Builder; unless the saves folder
+//  chosen on the iPhone is on one of the connections, where the Builder
+//  keeps them then, and which the page shows as the iPhone does.
 //
 
+import Combine
 import SwiftUI
 
 /// The Builder's games folder and saves folder, as This Mac shows them.
@@ -52,6 +55,15 @@ extension CartoucheMacConsole {
         return try? JSONEncoder().encode(settings.connections())
     }
 
+    /// A moment after the player adds, changes or removes one of their
+    /// connections here, on the Storage page: the iPhone's saves folder,
+    /// where the Builder keeps this Mac's games' saves, may be on it.
+    public var connectionsChanged: AnyPublisher<Void, Never> {
+        CartoucheStorageSettings.shared.connectionsChanged
+            .debounce(for: .seconds(1), scheduler: DispatchQueue.main)
+            .eraseToAnyPublisher()
+    }
+
     /// Made-up connections on the Storage page, a NAS, a bucket and a
     /// Google Drive, named in LANGUAGE, for the app's gallery: kept in
     /// memory only, nothing of the player's read or written from then on.
@@ -75,6 +87,7 @@ extension CartoucheMacConsole {
 /// games.
 struct CartoucheMacFoldersSection: View {
     @ObservedObject private var console = CartoucheMacConsole.shared
+    @ObservedObject private var settings = CartoucheStorageSettings.shared
 
     // Written out, as the private state above makes the synthesized
     // initializer private.
@@ -83,7 +96,10 @@ struct CartoucheMacFoldersSection: View {
     var body: some View {
         CartoucheSection {
             row(CartoucheText.storageGamesFolder, symbol: "square.stack.3d.up.fill", folder: console.folders.games)
-            row(CartoucheText.storageSavesFolder, symbol: "clock.arrow.circlepath", folder: console.folders.saves)
+            // The iPhone's, on a connection, in its own section below.
+            if !settings.keepsMacSavesOnConnection {
+                row(CartoucheText.storageSavesFolder, symbol: "clock.arrow.circlepath", folder: console.folders.saves)
+            }
             // How to name the games, their saves and the dumps: under the
             // games folder on the iPhone, under This Mac's folders here.
             NavigationLink(value: CartoucheMacConsoleView.Route.naming) {
@@ -98,7 +114,7 @@ struct CartoucheMacFoldersSection: View {
         } header: {
             Text(CartoucheText.macStorageThisMac)
         } footer: {
-            Text(CartoucheText.macStorageThisMacFooter)
+            Text(settings.keepsMacSavesOnConnection ? CartoucheText.macStorageThisMacGamesFooter : CartoucheText.macStorageThisMacFooter)
         }
     }
 
@@ -131,6 +147,17 @@ extension CartoucheText {
           "Cartouche Builder’s folders, which your iPhones reach through it: its games folder keeps the games it builds, and its saves folder the saves of your games.")
     }
     static var macStorageChangeInBuilder: String { s("mac.storage.change", "Change in Cartouche Builder") }
+    static var macStorageThisMacGamesFooter: String {
+        s("mac.storage.thisMac.games.footer",
+          "Cartouche Builder’s games folder, which your iPhones reach through it, keeps the games it builds.")
+    }
+
+    /// Under the iPhone's saves folder, on a connection.
+    static func macStorageIPhoneSavesFooter(_ kept: Int) -> String {
+        f("mac.storage.iPhoneSaves.footer",
+          "The saves folder chosen on your iPhone: Cartouche Builder keeps the saves of the games played on this Mac there too, through the same connection, before and after each game, as the iPhone does. The %lld newest copies are kept. To change it, choose another on the iPhone.",
+          kept)
+    }
 
     /// Under the connections of the console's Storage page.
     static var storageConnectionsFooter: String {

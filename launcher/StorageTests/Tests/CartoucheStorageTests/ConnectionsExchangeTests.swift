@@ -11,7 +11,9 @@
 //  goes here with the folders chosen on it; the same NAS added on both
 //  sides becomes one, the folders chosen on either kept on it; a change
 //  made here meanwhile stays; a Mac too old to take them is left alone;
-//  each change goes to the Mac a moment after it is made. The rule both
+//  each change goes to the Mac a moment after it is made; the folders
+//  chosen here go with them, on a connection the Mac has or on none, with
+//  when they were chosen. The rule both
 //  sides follow is tested on its own (launcher/Tests,
 //  CartoucheConnectionsTests), the Mac's side in builder/mac's tests
 //  (BridgeConnectionsTests). It needs no server, so it always runs.
@@ -179,6 +181,57 @@ final class ConnectionsExchangeTests: XCTestCase {
         XCTAssertEqual(settings.removed.map(\.id), [here.id])
         XCTAssertEqual(settings.removed.first?.replacedBy, first)
         XCTAssertEqual(sorted(settings.connections()), sorted(mac.keptConnections))
+    }
+
+    func testTheFoldersChosenHereGoToTheMacWithWhenTheyWereChosen() async throws {
+        mac.takeConnections()
+        let settings = settings()
+        let paired = try await pair(in: settings)
+        let nas = CartoucheStorageServer(kind: .smb, name: "NAS", host: "192.168.1.2", username: "player", share: "Games")
+        settings.save(nas, secret: "nas password")
+        let before = Date()
+        settings.setPlace(CartoucheStoragePlace(server: nas.id, path: "Cartouche/Sauvegardes"), for: .saves)
+        // The games on the Mac itself, through the bridge: on no
+        // connection the Mac has, its own folder.
+        settings.setPlace(CartoucheStoragePlace(server: paired.id, path: "Games"), for: .games)
+        let after = Date()
+
+        let took = await CartoucheConnectionsExchange.exchange(with: paired, settings: settings)
+        XCTAssertTrue(took)
+        let told = try XCTUnwrap(mac.toldFolders.last ?? nil)
+        let saves = try XCTUnwrap(told.saves)
+        XCTAssertEqual(saves.connection, nas.id)
+        XCTAssertEqual(saves.path, "Cartouche/Sauvegardes")
+        XCTAssertGreaterThanOrEqual(saves.chosen, before)
+        XCTAssertLessThanOrEqual(saves.chosen, after)
+        let games = try XCTUnwrap(told.games)
+        XCTAssertNil(games.connection)
+        XCTAssertEqual(games.path, "")
+
+        // None chosen since: no folder, chosen later.
+        settings.setPlace(nil, for: .saves)
+        XCTAssertEqual(settings.chosenFolders().saves?.connection, nil)
+        XCTAssertGreaterThan(try XCTUnwrap(settings.chosenFolders().saves?.chosen), saves.chosen)
+        // Removing its connection chooses none too.
+        settings.setPlace(CartoucheStoragePlace(server: nas.id, path: "Sauvegardes"), for: .saves)
+        let chosenAgain = try XCTUnwrap(settings.chosenFolders().saves)
+        settings.remove(nas)
+        let removed = try XCTUnwrap(settings.chosenFolders().saves)
+        XCTAssertNil(removed.connection)
+        XCTAssertGreaterThanOrEqual(removed.chosen, chosenAgain.chosen)
+    }
+
+    func testAFolderAnOlderCartoucheChoseGoesAsChosenLongAgo() throws {
+        let suite = "ConnectionsExchangeTests." + UUID().uuidString
+        suites.append(suite)
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        let nas = CartoucheStorageServer(kind: .smb, name: "NAS", host: "192.168.1.2", username: "player", share: "Games",
+                                         changed: Date())
+        defaults.set(try JSONEncoder().encode([nas]), forKey: "Cartouche.storage.servers")
+        defaults.set(try JSONEncoder().encode(CartoucheStoragePlace(server: nas.id, path: "Saves")), forKey: "Cartouche.storage.saves")
+        let told = CartoucheStorageSettings(defaults: defaults).chosenFolders()
+        XCTAssertEqual(told.saves, CartoucheChosenFolders.Folder(connection: nas.id, path: "Saves", chosen: Date(timeIntervalSince1970: 0)))
+        XCTAssertNil(told.games, "nothing chosen, nothing told")
     }
 
     func testAChangeMadeHereMeanwhileStays() throws {

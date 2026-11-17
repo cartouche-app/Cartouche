@@ -26,7 +26,9 @@
 //  a bucket, a server or a Google Drive, with their passwords, and takes
 //  those of the Storage page of Cartouche's console on the Mac, which the
 //  app keeps the same as the iPhone's from then on
-//  (BridgeConnectionsSource, CartoucheConnections.swift); its info says so
+//  (BridgeConnectionsSource, CartoucheConnections.swift), with the folders
+//  the player chose on the iPhone for the games and the saves, which the
+//  Mac follows when they are on one of them; its info says so
 //  (hasConnections).
 //
 //  With Tailscale on this Mac, which the player installs apart, its info
@@ -87,10 +89,12 @@ public protocol BridgeBuildsSource: AnyObject {
 @MainActor
 public protocol BridgeConnectionsSource: AnyObject {
     /// Takes THEIRS, a paired iPhone's connections with those it removed,
-    /// as the ones changed last, and gives the Mac's once it took them,
-    /// with those removed on either side; throws when it could not take
-    /// them, which leaves the iPhone's as they are.
-    func bridgeConnections(_ theirs: [CartoucheConnection]) throws -> [CartoucheConnection]
+    /// as the ones changed last, and PLACES, the folders the player chose
+    /// on it, none from a Cartouche older than that, and gives the Mac's
+    /// connections once it took them, with those removed on either side;
+    /// throws when it could not take them, which leaves the iPhone's as
+    /// they are.
+    func bridgeConnections(_ theirs: [CartoucheConnection], places: CartoucheChosenFolders?) throws -> [CartoucheConnection]
 }
 
 public final class BridgeServer: @unchecked Sendable {
@@ -451,7 +455,8 @@ public final class BridgeServer: @unchecked Sendable {
         guard let theirs = request.connections else { return .failure(.protocolError, "connections") }
         do {
             var response = CartoucheBridgeResponse()
-            response.connections = try await MainActor.run { try source.bridgeConnections(theirs) }
+            let places = request.places
+            response.connections = try await MainActor.run { try source.bridgeConnections(theirs, places: places) }
             return response
         } catch {
             return .failure(.failed, "connections")

@@ -95,8 +95,9 @@ public final class MacGames: ObservableObject {
     /// whose player chose one, by title ID.
     @Published public private(set) var cloud: [String: String] = [:]
     /// The saves folder the Mac's saves are kept in step with, nil when
-    /// they are not.
-    @Published public private(set) var folder: MacSavesFolder?
+    /// they are not: a folder of this Mac's or a share mounted here, or the
+    /// iPhone's on one of the player's connections.
+    @Published public private(set) var folder: (any MacSavesPlace)?
 
     /// The games' apps on this Mac, by title ID.
     public private(set) var apps: [String: MacGameApp] = [:]
@@ -173,12 +174,24 @@ public final class MacGames: ObservableObject {
 
     /// The saves folder, ROOT, or none: the saves stay as they are.
     public func use(saves root: URL?) {
-        guard let root else {
+        use(place: root.map { MacSavesFolder(root: $0, games: games, scratch: scratch) })
+    }
+
+    /// The iPhone's saves folder on one of the player's connections, as
+    /// DRIVER reaches it, the console's (MacConnectionSaves).
+    public func use(connection driver: any MacConnectionSavesDriver) {
+        use(place: MacConnectionSaves(driver: driver, games: games, scratch: scratch))
+    }
+
+    /// The saves folder PLACE, or none: the one in use stays when it is
+    /// the same folder.
+    public func use(place: (any MacSavesPlace)?) {
+        guard let place else {
             if folder != nil { folder = nil }
             return
         }
-        guard folder?.root != root.standardizedFileURL else { return }
-        folder = MacSavesFolder(root: root, games: games, scratch: scratch)
+        guard folder?.place != place.place else { return }
+        folder = place
     }
 
     /// Whether the builder keeps TITLE_ID's saves in step: a saves folder
@@ -537,7 +550,7 @@ public final class MacGames: ObservableObject {
     }
 
     @discardableResult
-    private func sync(_ app: MacGameApp, in folder: MacSavesFolder, when: MacSaveMoment) async -> MacSaveEvent? {
+    private func sync(_ app: MacGameApp, in folder: any MacSavesPlace, when: MacSaveMoment) async -> MacSaveEvent? {
         // A copy takes the place of the saves only while no program of the
         // game runs, looked at again just before: one started from the Dock
         // meanwhile keeps the saves it found.
@@ -594,14 +607,13 @@ public final class MacGames: ObservableObject {
     /// TITLE_ID's copies in the saves folder, the newest first, read off the
     /// main thread: none when the builder keeps no saves of the game's. It
     /// throws offline when the saves folder is not there, a share not
-    /// mounted.
+    /// mounted or a server that does not answer.
     public func copies(_ titleID: String) async throws -> [MacSaveCopyInfo] {
         let titleID = titleID.uppercased()
         guard let app = apps[titleID], let folder, keepsSaves(titleID) else { return [] }
         let game = app.saveGame
         return try await Task.detached(priority: .userInitiated) {
-            guard folder.reachable else { throw MacSavesError.offline }
-            return folder.copies(of: game)
+            try await folder.listCopies(of: game)
         }.value
     }
 

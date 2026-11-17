@@ -61,8 +61,20 @@ enum AppSettings {
     /// the player chooses.
     static let interfaceKey = "interface"
 
+    /// The folders the paired iPhones chose for the games and the saves,
+    /// as they told them with their connections, the one chosen last of
+    /// each (CartoucheChosenFolders).
+    static let toldFoldersKey = "toldFolders"
+
     static var menuBar: Bool { UserDefaults.standard.object(forKey: menuBarKey) as? Bool ?? true }
     static var macSaves: Bool { UserDefaults.standard.object(forKey: macSavesKey) as? Bool ?? true }
+    static var toldFolders: CartoucheChosenFolders {
+        get {
+            UserDefaults.standard.data(forKey: toldFoldersKey).flatMap { try? JSONDecoder().decode(CartoucheChosenFolders.self, from: $0) }
+                ?? CartoucheChosenFolders()
+        }
+        set { UserDefaults.standard.set(try? JSONEncoder().encode(newValue), forKey: toldFoldersKey) }
+    }
     static var interface: AppInterface {
         UserDefaults.standard.string(forKey: interfaceKey).flatMap(AppInterface.init(rawValue:)) ?? .console
     }
@@ -1044,6 +1056,9 @@ final class AppModel: ObservableObject {
         macGames.news = { [weak self] news in self?.heard(news) }
         macGames.language = L10n.code
         useMacSaves()
+        // The iPhone's saves folder may be on a connection the player
+        // changes or removes on the console's Storage page.
+        ConsoleLink.followConnections { [weak self] in self?.useMacSaves() }
         macGames.start()
         adoptSharedSaves()
         // A NAS mounted later: its saves folder is looked for then.
@@ -1060,7 +1075,8 @@ final class AppModel: ObservableObject {
     /// writes to unless through the bridge. A share that does not answer
     /// must not hold the window: the shares are looked through aside.
     func adoptSharedSaves() {
-        guard !sample, !adopting, AppSettings.macSaves, bridge.savesIsDefault else { return }
+        // None while the saves are in the iPhone's folder, on a connection.
+        guard !sample, !adopting, AppSettings.macSaves, bridge.savesIsDefault, macGames.folder?.connection == nil else { return }
         adopting = true
         let own = bridge.saves
         let paired = !bridge.devices.isEmpty
@@ -1070,7 +1086,7 @@ final class AppModel: ObservableObject {
                 MacSavesFolder.adopted(found: MacSavesFolder.found(), own: own, paired: paired, synced: synced)
             }.value
             adopting = false
-            guard let found, AppSettings.macSaves, bridge.savesIsDefault else { return }
+            guard let found, AppSettings.macSaves, bridge.savesIsDefault, macGames.folder?.connection == nil else { return }
             bridge.setSaves(found)
         }
     }
@@ -1115,12 +1131,25 @@ final class AppModel: ObservableObject {
         ConsoleLink.readSessions(playing: Set(macGames.playing.keys))
     }
 
-    /// The saves folder of the bridge, the iPhone's, or none when the
+    /// The saves folder of the bridge, or the one the player chose on the
+    /// iPhone when it is on one of their connections, which the console
+    /// reaches as the iPhone does (ConnectionSaves.swift); none when the
     /// player turned the Mac's saves off.
     func useMacSaves() {
         guard !sample else { return }
-        macGames.use(saves: AppSettings.macSaves ? bridge.saves : nil)
-        Task { await macGames.round() }
+        let before = macGames.folder?.place
+        defer {
+            // A round in the folder now in use, when it is another.
+            if macGames.folder?.place != before { Task { await macGames.round() } }
+        }
+        if !AppSettings.macSaves {
+            macGames.use(saves: nil)
+        } else if let told = AppSettings.toldFolders.saves, let id = told.connection,
+                  let connection = ConsoleLink.currentConnection(id) {
+            macGames.use(connection: ConsoleConnectionSaves(connection: connection, path: told.path, scratch: home.savesScratch))
+        } else {
+            macGames.use(saves: bridge.saves)
+        }
     }
 
     func setMacSaves(_ on: Bool) {

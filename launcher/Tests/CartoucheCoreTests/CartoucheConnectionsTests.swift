@@ -7,7 +7,8 @@
 //  last, a removal that goes across and is forgotten after 180 days, a
 //  secret the other side does not give kept, the same place added on both
 //  sides made one under the ID that sorts first, what stays on its device
-//  left out, and both sides ending with the same whichever asked.
+//  left out, and both sides ending with the same whichever asked; of the
+//  folders its iPhones chose, those a Mac keeps.
 //
 
 import Foundation
@@ -221,5 +222,39 @@ final class CartoucheConnectionsTests: XCTestCase {
         var back = second
         back.replacedBy = a
         XCTAssertNil(CartoucheConnections.current(a, in: [first, back]))
+    }
+
+    // MARK: The folders chosen on the iPhones
+
+    func testAMacKeepsTheFoldersChosenLast() {
+        let nasSaves = CartoucheChosenFolders.Folder(connection: a, path: "Cartouche/Saves", chosen: now)
+        let driveSaves = CartoucheChosenFolders.Folder(connection: b, path: "Saves", chosen: now + 60)
+        let macGames = CartoucheChosenFolders.Folder(connection: nil, path: "", chosen: now)
+        // Told of none yet: it takes what it is told.
+        let first = CartoucheChosenFolders().taking(CartoucheChosenFolders(games: macGames, saves: nasSaves))
+        XCTAssertEqual(first, CartoucheChosenFolders(games: macGames, saves: nasSaves))
+        // Another iPhone chose its saves folder later: it wins; its games
+        // folder, of none told, leaves the one kept.
+        let second = first.taking(CartoucheChosenFolders(saves: driveSaves))
+        XCTAssertEqual(second, CartoucheChosenFolders(games: macGames, saves: driveSaves))
+        // The first iPhone, telling again what it chose before, changes
+        // nothing; chosen at the same time, neither: no taking turns.
+        XCTAssertEqual(second.taking(CartoucheChosenFolders(games: macGames, saves: nasSaves)), second)
+        let same = CartoucheChosenFolders.Folder(connection: c, path: "Saves", chosen: now + 60)
+        XCTAssertEqual(second.taking(CartoucheChosenFolders(saves: same)), second)
+        // No folder, chosen later, wins too: the Mac's own again.
+        let none = CartoucheChosenFolders.Folder(connection: nil, path: "", chosen: now + 120)
+        XCTAssertEqual(second.taking(CartoucheChosenFolders(saves: none)).saves, none)
+    }
+
+    func testTheFoldersChosenGoThereAndBack() throws {
+        let told = CartoucheChosenFolders(games: .init(connection: nil, path: "", chosen: now),
+                                          saves: .init(connection: a, path: "Cartouche/Saves", chosen: now + 0.5))
+        let request = CartoucheBridgeRequest(.connections, connections: [], places: told)
+        let back = try JSONDecoder().decode(CartoucheBridgeRequest.self, from: JSONEncoder().encode(request))
+        XCTAssertEqual(back.places, told)
+        // From an iPhone a little older, which tells none.
+        let older = try JSONDecoder().decode(CartoucheBridgeRequest.self, from: Data(#"{"op":"connections","connections":[]}"#.utf8))
+        XCTAssertNil(older.places)
     }
 }

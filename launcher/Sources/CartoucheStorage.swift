@@ -199,8 +199,12 @@ final class CartoucheStorageSettings: ObservableObject {
     /// The servers the player removed that went over the bridge, as their
     /// paired Mac or iPhone is told, for 180 days.
     @Published private(set) var removed: [CartoucheConnection] = []
-    /// A server that goes over the bridge was saved or removed here: the
-    /// paired Mac takes it (CartoucheConnectionsExchange).
+    /// When the player last chose the folder of each role, or none: the
+    /// paired Mac follows the folders chosen last (chosenFolders). None for
+    /// a folder an older Cartouche kept.
+    @Published private(set) var chosen: [CartoucheStorageRole: Date] = [:]
+    /// A server that goes over the bridge was saved or removed here, or a
+    /// folder chosen: the paired Mac takes it (CartoucheConnectionsExchange).
     let connectionsChanged = PassthroughSubject<Void, Never>()
 
     private let defaults: UserDefaults
@@ -210,6 +214,7 @@ final class CartoucheStorageSettings: ObservableObject {
     private static let readOnlyServersKey = "Cartouche.storage.readOnly.servers"
     private static let readOnlyFoldersKey = "Cartouche.storage.readOnly.folders"
     private static let removedKey = "Cartouche.storage.removed"
+    private static let chosenKey = "Cartouche.storage.chosen"
     private static let keychainService = "Cartouche storage"
 
     /// KEEPSINKEYCHAIN: the settings go to the keychain too, and come from
@@ -239,6 +244,10 @@ final class CartoucheStorageSettings: ObservableObject {
         if let data = defaults.data(forKey: Self.removedKey),
            let removed = try? decoder.decode([CartoucheConnection].self, from: data) {
             self.removed = removed
+        }
+        if let data = defaults.data(forKey: Self.chosenKey),
+           let dates = try? decoder.decode([String: Date].self, from: data) {
+            chosen = Self.byRole(dates)
         }
         // The servers an older Cartouche kept, as changed now: one the
         // paired Mac changed since wins over them.
@@ -303,6 +312,7 @@ final class CartoucheStorageSettings: ObservableObject {
         servers.removeAll { $0.id == server.id }
         for (role, place) in places where place.server == server.id {
             places[role] = nil
+            chosen[role] = Date()
         }
         Self.storeSecret(nil, for: server.id)
         forgetAccess(of: server.id)
@@ -477,22 +487,52 @@ final class CartoucheStorageSettings: ObservableObject {
 
     func setPlace(_ place: CartoucheStoragePlace?, for role: CartoucheStorageRole) {
         places[role] = place
+        chosen[role] = Date()
         persist()
+        // The paired Mac keeps its own in the same folder, when it can.
+        connectionsChanged.send()
+    }
+
+    /// The folders chosen here for the games and the saves, as the paired
+    /// Mac is told them with the connections: on a server that goes over
+    /// the bridge, or on none the Mac has, a folder picked here, the Mac's
+    /// own or none. A folder an older Cartouche kept goes as chosen long
+    /// ago, which a Mac told of none takes.
+    func chosenFolders() -> CartoucheChosenFolders {
+        func folder(_ role: CartoucheStorageRole) -> CartoucheChosenFolders.Folder? {
+            let place = places[role]
+            guard let date = chosen[role] ?? (place != nil ? Date(timeIntervalSince1970: 0) : nil) else { return nil }
+            guard let place, server(place.server)?.travels == true else {
+                return CartoucheChosenFolders.Folder(connection: nil, path: "", chosen: date)
+            }
+            return CartoucheChosenFolders.Folder(connection: place.server, path: place.path, chosen: date)
+        }
+        return CartoucheChosenFolders(games: folder(.games), saves: folder(.saves))
+    }
+
+    private static func byRole(_ dates: [String: Date]) -> [CartoucheStorageRole: Date] {
+        Dictionary(uniqueKeysWithValues: dates.compactMap { key, date in CartoucheStorageRole(rawValue: key).map { ($0, date) } })
     }
 
     #if os(macOS)
     /// The Mac's saves folder, as Cartouche Builder keeps the saves of the
     /// games played on this Mac in step with it, for a game's sheet in
     /// Cartouche's console (Mac/ConsoleSaves.swift): a folder named NAME,
-    /// at PATH, kept in memory only, beside the player's servers; nil for
-    /// none, the saves staying on this Mac.
-    func showMacSaves(name: String?, path: String) {
+    /// at PATH, kept in memory only, beside the player's servers; or the
+    /// iPhone's, at PATH on CONNECTION, one of them, which the Storage page
+    /// shows as the iPhone does; nil for none, the saves staying on this
+    /// Mac.
+    func showMacSaves(name: String?, path: String, connection: UUID? = nil) {
         var servers = self.servers.filter { $0.id != Self.macSavesID }
         var places = self.places
         if let name {
-            servers.insert(CartoucheStorageServer(id: Self.macSavesID, kind: .folder, name: name), at: 0)
-            places[.saves] = CartoucheStoragePlace(server: Self.macSavesID, path: path)
-        } else if places[.saves]?.server == Self.macSavesID {
+            if let connection, servers.contains(where: { $0.id == connection }) {
+                places[.saves] = CartoucheStoragePlace(server: connection, path: path)
+            } else {
+                servers.insert(CartoucheStorageServer(id: Self.macSavesID, kind: .folder, name: name), at: 0)
+                places[.saves] = CartoucheStoragePlace(server: Self.macSavesID, path: path)
+            }
+        } else {
             places[.saves] = nil
         }
         guard servers != self.servers || places != self.places else { return }
@@ -502,6 +542,13 @@ final class CartoucheStorageSettings: ObservableObject {
 
     /// The Mac's saves folder's ID, the same each time.
     static let macSavesID = UUID(uuidString: "6D616373-6176-4573-A000-000000000001")!
+
+    /// Whether the Builder keeps the saves of this Mac's games in the
+    /// iPhone's saves folder, on one of the player's connections.
+    var keepsMacSavesOnConnection: Bool {
+        guard let place = places[.saves] else { return false }
+        return place.server != Self.macSavesID && server(place.server)?.travels == true
+    }
     #endif
 
     #if CARTOUCHE_GALLERY
@@ -557,6 +604,8 @@ final class CartoucheStorageSettings: ObservableObject {
                 defaults.removeObject(forKey: Self.placeKey(role))
             }
         }
+        defaults.set(try? encoder.encode(Dictionary(uniqueKeysWithValues: chosen.map { ($0.key.rawValue, $0.value) })),
+                     forKey: Self.chosenKey)
         #endif
         defaults.set(try? encoder.encode(removed), forKey: Self.removedKey)
         if keepsInKeychain {
@@ -579,6 +628,9 @@ final class CartoucheStorageSettings: ObservableObject {
         /// The servers removed that the paired Mac is told of; none for
         /// what an older Cartouche kept.
         var removed: [CartoucheConnection]?
+        /// When each folder was chosen, by role; none for what an older
+        /// Cartouche kept.
+        var chosen: [String: Date]?
 
         /// Puts them in the preferences, where the settings read them.
         func write(to defaults: UserDefaults) {
@@ -594,6 +646,9 @@ final class CartoucheStorageSettings: ObservableObject {
             if let removed {
                 defaults.set(try? encoder.encode(removed), forKey: CartoucheStorageSettings.removedKey)
             }
+            if let chosen {
+                defaults.set(try? encoder.encode(chosen), forKey: CartoucheStorageSettings.chosenKey)
+            }
         }
     }
 
@@ -602,7 +657,8 @@ final class CartoucheStorageSettings: ObservableObject {
              places: Dictionary(uniqueKeysWithValues: places.map { ($0.key.rawValue, $0.value) }),
              readOnlyServers: readOnlyServers.map(\.uuidString).sorted(),
              readOnlyFolders: readOnlyFolders.sorted(),
-             removed: removed)
+             removed: removed,
+             chosen: Dictionary(uniqueKeysWithValues: chosen.map { ($0.key.rawValue, $0.value) }))
     }
 
     /// The keychain item of the settings, beside the servers' secrets.

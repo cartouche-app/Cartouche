@@ -10,7 +10,10 @@
 //  them in step (MacSaves.swift and MacGames.swift in BuilderKit), before a
 //  game, after it and every minute while it does not run, with the saves
 //  folder of its iPhone page: the bridge's, or a NAS's share mounted on
-//  this Mac. This stand-in of the iPhone's CartoucheSaveBackups shows what
+//  this Mac; or with the one the player chose on the iPhone, on one of
+//  their connections, by the iPhone's code (ConsoleConnectionSaves.swift),
+//  which the Storage page then shows as the iPhone shows it. This stand-in
+//  of the iPhone's CartoucheSaveBackups shows what
 //  the app tells it (CartoucheMacConsole.showSaves), and asks the app for
 //  the rest: a sync now, the copies, a copy put back, a save from the
 //  Switch put in place or the one it replaced put back, each in the
@@ -66,11 +69,15 @@ public struct CartoucheMacSavesFolder: Equatable, Sendable {
     public var path: String
     /// Whether it was not there when the Builder last tried it.
     public var isAway: Bool
+    /// The connection it is on, the iPhone's saves folder: nil for a folder
+    /// of this Mac's.
+    public var connection: UUID?
 
-    public init(name: String, path: String, isAway: Bool = false) {
+    public init(name: String, path: String, isAway: Bool = false, connection: UUID? = nil) {
         self.name = name
         self.path = path
         self.isAway = isAway
+        self.connection = connection
     }
 }
 
@@ -228,7 +235,7 @@ final class CartoucheSaveBackups: ObservableObject {
     }
 
     func show(folder: CartoucheMacSavesFolder?, games: [String: CartoucheMacGameSaves]) {
-        settings.showMacSaves(name: folder?.name, path: folder?.path ?? "")
+        settings.showMacSaves(name: folder?.name, path: folder?.path ?? "", connection: folder?.connection)
         if let folder, let server = settings.location(.saves)?.server {
             if folder.isAway {
                 CartoucheStorageReach.shared.noteOffline(server)

@@ -381,11 +381,12 @@ enum CartoucheMacStorage {
 
 /// The player's connections to their storage, given to each paired Mac
 /// with their secrets, and the Mac's taken, so that both have the same
-/// (CartoucheConnections.swift): after a pairing, a moment after a server
-/// that goes over the bridge was saved or removed here, and when Cartouche
-/// comes to the front, at most every ten minutes then. A Mac away, closed
-/// or too old to take them is asked again the next time; none of it makes
-/// a report.
+/// (CartoucheConnections.swift), with the folders chosen here for the games
+/// and the saves, which the Mac uses too when they are on one of them:
+/// after a pairing, a moment after a server that goes over the bridge was
+/// saved or removed here or a folder chosen, and when Cartouche comes to
+/// the front, at most every ten minutes then. A Mac away, closed or too old
+/// to take them is asked again the next time; none of it makes a report.
 @MainActor
 final class CartoucheConnectionsExchange: ObservableObject {
     static let shared = CartoucheConnectionsExchange()
@@ -473,7 +474,7 @@ final class CartoucheConnectionsExchange: ObservableObject {
                 NSLog("[Cartouche] the Mac takes no connections: its Cartouche Builder is older")
                 return false
             }
-            let theirs = try await mac.client.connections(settings.connections())
+            let theirs = try await mac.client.connections(settings.connections(), places: settings.chosenFolders())
             let changed = settings.take(theirs)
             NSLog("[Cartouche] the Mac took the connections and gave %ld, %@", theirs.filter { !$0.removed }.count,
                   changed ? "which changed some here" : "the same as here")
