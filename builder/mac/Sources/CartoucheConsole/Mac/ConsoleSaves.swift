@@ -211,6 +211,13 @@ final class CartoucheSaveBackups: ObservableObject {
         problems[target.key]
     }
 
+    /// Why the last sync failed, and the report on it, as the Storage page
+    /// says it under the saves folder: on the Mac, where each game's saves
+    /// go on their own, the newest of the games' failures.
+    var problemReport: CartoucheReport? {
+        problems.values.max { $0.date < $1.date }
+    }
+
     /// Whether nxnative's own cloud saves keep TARGET's saves, chosen in
     /// the game's settings: the Builder leaves them alone.
     func isLeftToCloud(_ target: CartoucheSaveTarget) -> Bool {

@@ -103,6 +103,13 @@ final class ConsoleSavesTests: XCTestCase {
         XCTAssertNil(backups.news[titleID])
         console.showSaves(folder: folder, games: [titleID: CartoucheMacGameSaves(lastSync: synced, failure: "The disk is full.")])
         XCTAssertEqual(backups.problem(of: target), report)
+        // The Storage page, under the saves folder, says the newest of the
+        // games' failures.
+        XCTAssertEqual(backups.problemReport, report)
+        console.showSaves(folder: folder, games: [titleID: CartoucheMacGameSaves(lastSync: synced, failure: "The disk is full."),
+                                                  "01004D300C5AE000": CartoucheMacGameSaves(failure: "The folder is gone.")])
+        XCTAssertEqual(backups.problem(of: target), report)
+        XCTAssertEqual(backups.problemReport?.message, "The folder is gone.")
 
         // The saves folder away: the saves wait, and the sheet says it is
         // offline; nxnative's own cloud saves keep another game's.
@@ -112,6 +119,7 @@ final class ConsoleSavesTests: XCTestCase {
                                                 "01004D300C5AE000": CartoucheMacGameSaves(inCloud: true)])
         XCTAssertTrue(backups.waiting.contains(titleID))
         XCTAssertNil(backups.problem(of: target))
+        XCTAssertNil(backups.problemReport)
         XCTAssertTrue(CartoucheStorageReach.shared.isOffline(location.server.id))
         XCTAssertTrue(backups.isLeftToCloud(CartoucheSaveTarget(key: "01004D300C5AE000", name: "Kirby", titleId: "01004D300C5AE000",
                                                                 documents: root)))
