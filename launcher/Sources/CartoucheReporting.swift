@@ -278,10 +278,9 @@ enum CartoucheReports {
         return String(cString: build)
     }()
 
+    /// The room for a game, as an install reads it (CartoucheFreeSpace).
     private static var freeSpace: Int64? {
-        let values = try? URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
-            .resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
-        return values?.volumeAvailableCapacityForImportantUsage
+        CartoucheFreeSpace.forImportantUsage(at: URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true))
     }
 
     // MARK: The error

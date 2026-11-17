@@ -42,6 +42,7 @@ on:
       - "launcher/Sources/CartoucheDrive.swift"
       - "launcher/Sources/CartoucheFTP.swift"
       - "launcher/Sources/CartoucheFailure.swift"
+      - "launcher/Sources/CartoucheFreeSpace.swift"
       - "launcher/Sources/CartoucheGameBuild.swift"
       - "launcher/Sources/CartoucheGameFit.swift"
       - "launcher/Sources/CartoucheGameInfoView.swift"

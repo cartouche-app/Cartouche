@@ -897,10 +897,12 @@ final class CartoucheGameActions: ObservableObject {
     }
 
     /// The room this iPhone has for a game, off the main thread: iOS counts
-    /// what it could free for it, which takes it a moment.
+    /// what it could free for it, which takes it a moment. Read again for
+    /// each install: LCPath.docPath itself keeps what it read, and said the
+    /// room of the install before, when the player had freed some since
+    /// (CartoucheFreeSpace).
     nonisolated private static func freeSpace() async -> Int64? {
-        let values = try? LCPath.docPath.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
-        return values?.volumeAvailableCapacityForImportantUsage
+        CartoucheFreeSpace.forImportantUsage(at: LCPath.docPath)
     }
 
     /// The size of the IPA at URL, if Cartouche can read it, off the main

@@ -694,15 +694,13 @@ final class Session {
         name.lowercased().hasSuffix(".app")
     }
 
-    /// The free space of URL's disk, as the Finder counts it.
+    /// The free space of URL's disk, as the Finder counts it, read again
+    /// for each question: the games folder's URL, kept since the settings
+    /// named it, keeps what it read (CartoucheFreeSpace).
     static func free(_ url: URL) -> UInt64? {
-        if let values = try? url.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]),
-           let capacity = values.volumeAvailableCapacityForImportantUsage, capacity > 0 {
+        if let capacity = CartoucheFreeSpace.forImportantUsage(at: url), capacity > 0 {
             return UInt64(capacity)
         }
-        if let values = try? url.resourceValues(forKeys: [.volumeAvailableCapacityKey]), let capacity = values.volumeAvailableCapacity {
-            return UInt64(max(0, capacity))
-        }
-        return nil
+        return CartoucheFreeSpace.available(at: url).map { UInt64(max(0, $0)) }
     }
 }

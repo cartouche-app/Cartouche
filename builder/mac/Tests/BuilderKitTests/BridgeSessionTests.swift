@@ -155,4 +155,25 @@ final class BridgeSessionTests: XCTestCase {
         XCTAssertEqual(ask(CartoucheBridgeRequest(.list, path: "")).0.items?.map(\.name), ["Games"])
         XCTAssertEqual(ask(CartoucheBridgeRequest(.list, path: "Saves")).0.error, .notFound)
     }
+
+    /// The room the Mac tells an iPhone is read again at each question: the
+    /// games folder's URL, kept since the settings named it, holds what it
+    /// read before, as an iPhone's LCPath.docPath held the room of an
+    /// install refused 49 seconds earlier (cartouche-reports #10).
+    func testTheRoomIsReadAgainAtEachQuestion() throws {
+        let kept: Int64 = 9_262_491_986
+        var held = URL(fileURLWithPath: games.path, isDirectory: true)
+        held.setTemporaryResourceValue(kept, forKey: .volumeAvailableCapacityForImportantUsageKey)
+        held.setTemporaryResourceValue(Int(kept), forKey: .volumeAvailableCapacityKey)
+        server.roots = BridgeRoots(games: held, saves: saves)
+        // What reading the folder's URL itself gives: the value it holds.
+        let values = try XCTUnwrap(server.roots.games).resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
+        guard values.volumeAvailableCapacityForImportantUsage == kept else {
+            throw XCTSkip("this macOS's own value comes before the one the URL holds")
+        }
+        let free = ask(CartoucheBridgeRequest(.free, path: "Games")).0.free
+        XCTAssertNotNil(free)
+        XCTAssertNotEqual(free, UInt64(kept))
+        XCTAssertNotEqual(ask(CartoucheBridgeRequest(.info)).0.free, UInt64(kept))
+    }
 }

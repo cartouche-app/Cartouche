@@ -35,6 +35,7 @@ let package = Package(
                 "CartoucheDrive.swift",
                 "CartoucheFTP.swift",
                 "CartoucheFailure.swift",
+                "CartoucheFreeSpace.swift",
                 "CartoucheGameBuild.swift",
                 "CartoucheGameFit.swift",
                 "CartoucheGameLanguage.swift",
