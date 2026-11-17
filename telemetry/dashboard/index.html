@@ -1779,7 +1779,8 @@
         unknown_base: "Commit d'avant inconnu", profile: "Profil du jeu changé", named: "Commit qui nomme le jeu", shared: "Code commun changé",
     };
     const UPSCALERS = { metalfx: "MetalFX", bilinear: "Bilinéaire" };
-    const CAUSES = { gpuLost: "Perte du GPU" };
+    // Why a game ended, when its log says (end.cause).
+    const END_CAUSES = { gpuLost: "Perte du GPU" };
     const EVENTS = { "app.opened": "Ouverture de l'app", "app.unfinished": "Lancement inachevé", "app.updated": "Mise à jour de Cartouche", "signature.renewed": "Signature renouvelée", "renewal.done": "Renouvellement réussi", "game.installed": "Jeu installé ou mis à jour", "account.signedIn": "Connexion Apple réussie", "signing.imported": "Certificat importé", "import.picker": "Sélecteur de fichiers d'un import", error: "Erreur" };
 
     const gameName = (id, name) => name || id || "?";
@@ -2247,7 +2248,7 @@
             }
             case "crash":
                 return [
-                    "Le même plantage, " + [has(item.signal) ? SIGNALS[item.signal] || "signal " + item.signal : null, item.cause ? (CAUSES[item.cause] || item.cause).replace(/^./, (letter) => letter.toLowerCase()) : null].filter(Boolean).join(", "),
+                    "Le même plantage, " + [has(item.signal) ? SIGNALS[item.signal] || "signal " + item.signal : null, item.cause ? (END_CAUSES[item.cause] || item.cause).replace(/^./, (letter) => letter.toLowerCase()) : null].filter(Boolean).join(", "),
                     sentence("À " + (item.pc || "?") + ", " + plural(item.count, "fois", "fois") + " : " + item.games.map((id) => name(id)).slice(0, 3).join(", ") + (item.games.length > 3 ? "…" : "")),
                 ];
             case "memory":
@@ -2548,7 +2549,7 @@
             h("article", { class: "card span" }, h("h3", { text: "Plantages" }), h("p", { class: "sub", text: "Groupés par signal et par adresse dans le code du jeu (module + décalage)." }),
                 table([
                     { label: "Signal", cell: (crash) => signal(crash.signal), sort: (crash) => crash.signal ?? 0 },
-                    { label: "Cause", cell: (crash) => (crash.cause ? CAUSES[crash.cause] || crash.cause : DASH) },
+                    { label: "Cause", cell: (crash) => (crash.cause ? END_CAUSES[crash.cause] || crash.cause : DASH) },
                     { label: "pc", mono: true, cell: (crash) => crash.pc || DASH },
                     { label: "lr", mono: true, cell: (crash) => crash.lr || DASH },
                     { label: "Fois", numeric: true, cell: (crash) => count(crash.count), sort: (crash) => crash.count },

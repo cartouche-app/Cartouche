@@ -878,6 +878,219 @@ test("the days of the window, across months and years", () => {
   assert.deepEqual(M.dayList("2026-11-10", "2026-11-10"), ["2026-11-10"]);
 });
 
+// MARK: The page as a browser runs it
+
+// The page's scripts, but the catalog's JSON. A browser parses a script whole
+// before it runs any of it: one error, such as a name declared twice, and
+// none of it runs, which left the page without a section from 15 November.
+const SCRIPTS = [...PAGE.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)]
+  .filter(([, attributes]) => !attributes.includes('type="application/json"'))
+  .map(([, attributes, source]) => ({ id: /\bid="([^"]+)"/.exec(attributes)?.[1] ?? "?", source }));
+const VIEW = SCRIPTS.find((script) => script.id === "view").source;
+
+test("every script of the page compiles", () => {
+  assert.deepEqual(SCRIPTS.map((script) => script.id), ["model", "view"]);
+  for (const script of SCRIPTS) {
+    assert.doesNotThrow(() => new vm.Script(script.source, { filename: `index.html, script ${script.id}` }), script.id);
+  }
+});
+
+// Just enough of a browser's page for the view (the second script) to draw
+// every section, and the charts it draws at the next frame: nothing is laid
+// out, and what the view writes is only read back by the tests below.
+class StandInNode {
+  constructor() {
+    this.childNodes = [];
+    this.parentNode = null;
+  }
+  get isConnected() {
+    return this.parentNode !== null;
+  }
+  get textContent() {
+    return this.childNodes.map((child) => child.textContent).join("");
+  }
+  set textContent(value) {
+    this.replaceChildren(...(value === null || value === undefined || value === "" ? [] : [String(value)]));
+  }
+  append(...nodes) {
+    for (const node of nodes) {
+      const child = node instanceof StandInNode ? node : new StandInText(String(node));
+      child.remove();
+      child.parentNode = this;
+      this.childNodes.push(child);
+    }
+  }
+  replaceChildren(...nodes) {
+    for (const child of this.childNodes) child.parentNode = null;
+    this.childNodes = [];
+    this.append(...nodes);
+  }
+  remove() {
+    if (!this.parentNode) return;
+    const siblings = this.parentNode.childNodes;
+    siblings.splice(siblings.indexOf(this), 1);
+    this.parentNode = null;
+  }
+  replaceWith(...nodes) {
+    const parent = this.parentNode;
+    if (!parent) return;
+    const rest = parent.childNodes.slice(parent.childNodes.indexOf(this) + 1);
+    for (const child of rest) child.remove();
+    this.remove();
+    parent.append(...nodes, ...rest);
+  }
+  // Every element below this one, in the page's order.
+  *descendants() {
+    for (const child of this.childNodes) {
+      if (!(child instanceof StandInElement)) continue;
+      yield child;
+      yield* child.descendants();
+    }
+  }
+}
+
+class StandInText extends StandInNode {
+  constructor(text) {
+    super();
+    this.text = text;
+  }
+  get textContent() {
+    return this.text;
+  }
+}
+
+class StandInElement extends StandInNode {
+  constructor(tag) {
+    super();
+    this.tagName = tag.toUpperCase();
+    this.attributes = new Map();
+    this.dataset = {};
+    this.hidden = false;
+    this.className = "";
+    this.listeners = [];
+    const classes = new Set();
+    this.classList = {
+      add: (...names) => names.forEach((name) => classes.add(name)),
+      remove: (...names) => names.forEach((name) => classes.delete(name)),
+      contains: (name) => classes.has(name),
+      toggle: (name, on = !classes.has(name)) => (on ? classes.add(name) : classes.delete(name), on),
+    };
+    this.style = { setProperty: (name, value) => (this.style[name] = String(value)) };
+  }
+  get id() {
+    return this.getAttribute("id") ?? "";
+  }
+  get options() {
+    return this.childNodes.filter((child) => child.tagName === "OPTION");
+  }
+  setAttribute(name, value) {
+    this.attributes.set(name, String(value));
+  }
+  getAttribute(name) {
+    return this.attributes.get(name) ?? null;
+  }
+  removeAttribute(name) {
+    this.attributes.delete(name);
+  }
+  addEventListener(type, listener) {
+    this.listeners.push({ type, listener });
+  }
+  getBoundingClientRect() {
+    return { x: 0, y: 0, left: 0, top: 0, right: 0, bottom: 0, width: 0, height: 0 };
+  }
+}
+
+/** The page's model and view run in a stand-in for the browser, on SEARCH
+ * (?demo for the sample data) or on what /data answers: the page, its
+ * controls, the line under them and what fills main, once the view has
+ * read its data and drawn its charts. */
+async function runPage({ search = "", answer: body = null, catalog = CATALOG } = {}) {
+  const byId = new Map();
+  const element = (id, tag = "div") => {
+    const found = new StandInElement(tag);
+    found.setAttribute("id", id);
+    byId.set(id, found);
+    return found;
+  };
+  element("catalog", "script").textContent = JSON.stringify(catalog);
+  for (const key of ["game", "device", "version"]) element(`f-${key}`, "select").append(new StandInElement("option"));
+  const range = [7, 28, 90, 365].map((days) => Object.assign(new StandInElement("button"), { dataset: { days: String(days) } }));
+  const document = {
+    documentElement: new StandInElement("html"),
+    getElementById: (id) => byId.get(id) ?? element(id),
+    querySelectorAll: (selector) => (selector === ".range button" ? range : []),
+    createElement: (tag) => new StandInElement(tag),
+    createElementNS: (namespace, tag) => new StandInElement(tag),
+    createTextNode: (text) => new StandInText(String(text)),
+  };
+  const frames = [];
+  const asked = [];
+  const page = vm.createContext({
+    document,
+    Node: StandInNode,
+    URLSearchParams,
+    location: { search, hash: "", pathname: "/" },
+    history: { replaceState: () => {} },
+    innerWidth: 1280,
+    addEventListener: () => {},
+    scrollTo: () => {},
+    requestAnimationFrame: (callback) => frames.push(callback),
+    cancelAnimationFrame: () => {},
+    fetch: async (url) => {
+      asked.push(url);
+      return { ok: true, status: 200, json: async () => JSON.parse(JSON.stringify(body)) };
+    },
+  });
+  page.window = page;
+  for (const script of SCRIPTS) vm.runInContext(script.source, page, { filename: `index.html, script ${script.id}` });
+  // The data read, then the charts drawn at the frames that follow.
+  await new Promise((resolve) => setImmediate(resolve));
+  while (frames.length) frames.shift()();
+  const main = document.getElementById("main");
+  return {
+    asked,
+    state: document.getElementById("state").textContent,
+    problem: document.getElementById("problem"),
+    sections: main.childNodes.filter((child) => child.tagName === "SECTION").map((section) => section.id),
+    main,
+  };
+}
+
+// The sections the page's menu jumps to.
+const JUMPS = [.../<nav class="jump"[\s\S]*?<\/nav>/.exec(PAGE)[0].matchAll(/href="#([a-z]+)"/g)].map(([, id]) => id);
+
+test("the page draws every section of the sample data, and its charts", async () => {
+  const page = await runPage({ search: "?demo" });
+  assert.equal(page.problem.hidden, true, page.problem.textContent);
+  assert.match(page.state, /^À jour à /);
+  assert.deepEqual(page.asked, [], "the sample data asks the server nothing");
+  assert.ok(JUMPS.length >= 16);
+  for (const id of JUMPS) assert.ok(page.sections.includes(id), `the section ${id}`);
+  const svgs = [...page.main.descendants()].filter((node) => node.tagName === "SVG");
+  assert.ok(svgs.length > 0, "the charts drawn");
+  // A lost GPU, in the crashes' table and among what needs a look.
+  const text = page.main.textContent;
+  assert.match(text, /Perte du GPU/);
+  assert.match(text, /Le même plantage, SIGABRT, perte du GPU/);
+});
+
+test("the page draws the reports Cartouche makes, as /data sends them", async () => {
+  const page = await runPage({ answer: answer(APP_REPORTS.map(asRow).reverse()) });
+  assert.equal(page.problem.hidden, true, page.problem.textContent);
+  assert.match(page.state, /^À jour à /);
+  assert.deepEqual(page.asked, ["/data?days=28"]);
+  for (const id of JUMPS) assert.ok(page.sections.includes(id), `the section ${id}`);
+  assert.match(page.main.textContent, /Mario Kart World/);
+  assert.match(page.main.textContent, /Perte du GPU/);
+});
+
+test("a page that cannot read its data says so, and draws nothing", async () => {
+  const page = await runPage({ answer: { schema: 1 } });
+  assert.equal(page.problem.hidden, false);
+  assert.notEqual(page.problem.textContent, "");
+  assert.deepEqual(page.sections, []);
+});
+
 // MARK: From the app to the page
 
 // With Node's own SQLite, when it has one: the reports Cartouche makes go
