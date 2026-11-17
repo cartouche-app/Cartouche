@@ -691,41 +691,62 @@ struct CartoucheNightlyRenewalView: View {
         ]
     }
 
+    /// Whether the page opens scrolled down to Tailscale: the launcher's
+    /// gallery (launcher/Gallery); never in Cartouche.
+    #if CARTOUCHE_GALLERY
+    static var opensOnTailscale = false
+    #else
+    static let opensOnTailscale = false
+    #endif
+
+    /// Tailscale's section, which the gallery opens the page on.
+    private static let tailscaleRow = "tailscale"
+
     var body: some View {
-        List {
-            Section {
-                Text(CartoucheText.dailyIntro)
-            }
-            Section {
-                ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
-                    HStack(alignment: .firstTextBaseline, spacing: 12) {
-                        Text(String(index + 1))
-                            .font(.subheadline.monospacedDigit().weight(.bold))
-                            .foregroundStyle(.white)
-                            .frame(width: 26, height: 26)
-                            .background(Color.accentColor, in: Circle())
-                            .accessibilityHidden(true)
-                        Text(step)
+        ScrollViewReader { reader in
+            List {
+                Section {
+                    Text(CartoucheText.dailyIntro)
+                }
+                Section {
+                    ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
+                        HStack(alignment: .firstTextBaseline, spacing: 12) {
+                            Text(String(index + 1))
+                                .font(.subheadline.monospacedDigit().weight(.bold))
+                                .foregroundStyle(.white)
+                                .frame(width: 26, height: 26)
+                                .background(Color.accentColor, in: Circle())
+                                .accessibilityHidden(true)
+                            Text(step)
+                        }
+                        .padding(.vertical, 2)
                     }
-                    .padding(.vertical, 2)
+                }
+                // iOS keeps one VPN at a time: LocalDevVPN turns Tailscale
+                // off, and Tailscale's own action turns it on again
+                // (CartoucheTailscale.swift).
+                Section {
+                    Text(CartoucheText.dailyTailscale)
+                        .font(.subheadline)
+                        .id(Self.tailscaleRow)
+                } header: {
+                    Text(verbatim: "Tailscale")
+                }
+                Section {
+                    Link(destination: CartoucheRenewal.shortcutsURL) {
+                        Label(CartoucheText.openShortcuts, systemImage: "square.2.layers.3d")
+                    }
                 }
             }
-            // iOS keeps one VPN at a time: LocalDevVPN turns Tailscale off,
-            // and Tailscale's own action turns it on again
-            // (CartoucheTailscale.swift).
-            Section {
-                Text(CartoucheText.dailyTailscale)
-                    .font(.subheadline)
-            } header: {
-                Text(verbatim: "Tailscale")
-            }
-            Section {
-                Link(destination: CartoucheRenewal.shortcutsURL) {
-                    Label(CartoucheText.openShortcuts, systemImage: "square.2.layers.3d")
-                }
+            .cartoucheStageBackground()
+            .task {
+                guard Self.opensOnTailscale else { return }
+                // Once the list has laid out its rows; the section's header
+                // shows above its first row.
+                try? await Task.sleep(for: .milliseconds(500))
+                reader.scrollTo(Self.tailscaleRow, anchor: UnitPoint(x: 0.5, y: 0.6))
             }
         }
-        .cartoucheStageBackground()
         .navigationTitle(CartoucheText.renewEveryNight)
         .navigationBarTitleDisplayMode(.inline)
     }

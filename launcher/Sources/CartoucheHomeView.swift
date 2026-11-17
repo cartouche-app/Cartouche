@@ -302,18 +302,26 @@ struct CartoucheHomeView: View {
                 // LocalDevVPN, which Cartouche connected for a renewal, a
                 // sign-in or an update, turned Tailscale off: once that is
                 // done, until Tailscale is on again. Tailscale's page of the
-                // App Store opens it, as it has no link of its own.
+                // App Store opens it, as it has no link of its own. Its
+                // words where the bar has room for them, as a server
+                // offline; on an upright iPhone, the symbol alone.
                 Button {
                     openURL(CartoucheTailscale.appStore)
                 } label: {
-                    Label(CartoucheText.tailscaleTurnedOffShort, systemImage: "network")
-                        .labelStyle(CartoucheTightLabelStyle())
-                        .font(.subheadline.weight(.semibold))
-                        .lineLimit(1)
-                        .foregroundStyle(Color.orange)
-                        .padding(.horizontal, 12)
-                        .frame(height: 34)
-                        .cartoucheGlass(in: Capsule(), interactive: true)
+                    Group {
+                        if metrics.size.width >= Self.offlineNameWidth {
+                            Label(CartoucheText.tailscaleTurnedOffShort, systemImage: "network")
+                                .labelStyle(CartoucheTightLabelStyle())
+                        } else {
+                            Image(systemName: "network")
+                        }
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
+                    .foregroundStyle(Color.orange)
+                    .padding(.horizontal, 12)
+                    .frame(height: 34)
+                    .cartoucheGlass(in: Capsule(), interactive: true)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text(CartoucheText.tailscaleTurnedOff))

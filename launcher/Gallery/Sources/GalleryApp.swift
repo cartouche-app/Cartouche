@@ -299,7 +299,8 @@
 //                                        as the iPhone translates it
 //        signature                       on the System page, the page
 //                                        scrolled down to its signature
-//        tailscale                       on the Storage page, the page
+//        tailscale                       on the Storage page or Renew every
+//                                        night (screen nightly), the page
 //                                        scrolled down to Tailscale
 //        update                          on the System page, the page
 //                                        scrolled down to its updates
@@ -484,6 +485,7 @@ struct GalleryScenario {
             // Mac's builds, down to theirs.
             CartoucheSystemView.openingSection = screen == "system" ? category : nil
             CartoucheStorageView.opensOnTailscale = screen == "storage" && category == "tailscale"
+            CartoucheNightlyRenewalView.opensOnTailscale = screen == "nightly" && category == "tailscale"
             // Tailscale as the scenario has it, never as the Mac the
             // simulator runs on does.
             CartoucheStorageReach.shared.showTailscaleForGallery(["mac-tailscale", "tailscale"].contains(work))
