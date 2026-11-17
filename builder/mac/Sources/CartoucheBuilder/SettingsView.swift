@@ -212,6 +212,7 @@ struct FolderSettings: View {
                             help: tr("Where the IPAs go: the folder Cartouche reads, on this Mac or on your NAS.", "Où vont les IPA : le dossier que lit Cartouche, sur ce Mac ou sur votre NAS."),
                             path: model.config?.games ?? "") { path in model.update { $0.games = path } }
                 KeysField()
+                NamingField()
             } header: {
                 Text(tr("Your games", "Vos jeux"))
             } footer: {
@@ -265,6 +266,24 @@ struct FolderField: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                 Text(help)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+/// How to name what the folders hold, the dumps, the games' IPAs and their
+/// saves: the help Cartouche shows under its Storage page (NamingHelp.swift).
+struct NamingField: View {
+    var body: some View {
+        LabeledContent {
+            NamingHelpButton(title: tr("Show…", "Afficher…"))
+        } label: {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(NamingHelp.title)
+                Text(tr("What Cartouche Builder and Cartouche find in each folder, with examples.",
+                        "Ce que Cartouche Builder et Cartouche trouvent dans chaque dossier, avec des exemples."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

@@ -43,11 +43,17 @@ DOWNLOADS = {
     "installer-windows": re.compile(re.escape(REPOSITORY) + r"/releases/download/installer-v(\d+\.\d+\.\d+)/Cartouche-Installer-\1-Windows\.exe"),
 }
 
+# The project's Discord server, by the one invite its bot keeps, which never
+# expires (decided by Ad on 17 Nov).
+DISCORD = "https://discord.gg/wG3DZjdAeF"
+
 # Every absolute link the page may hold, whole: the repository and its pages,
-# the files above, nxnative, and IGDB, which the page credits.
+# the files above, the Discord server, nxnative, and IGDB, which the page credits.
 ALLOWED_LINKS = [
     re.compile(re.escape(REPOSITORY)),
     re.compile(re.escape(REPOSITORY) + r"/blob/main/[\w/.-]+\.md(?:#[\w-]+)?"),
+    re.compile(re.escape(REPOSITORY) + r"/issues/new/choose"),
+    re.compile(re.escape(DISCORD)),
     *DOWNLOADS.values(),
     re.compile(r"https://github\.com/seedds/nxnative"),
     re.compile(r"https://www\.igdb\.com"),
@@ -309,6 +315,15 @@ class SiteTests(unittest.TestCase):
                     self.assertEqual(len(game[key]), 2, f"{game['name']}: {key}")
                     self.assertTrue(all(game[key]), f"{game['name']}: {key}")
 
+    def test_the_discord_server_by_its_one_invite(self) -> None:
+        # In the header beside GitHub, in the footer, and in the FAQ's answer on help.
+        discord = [attrs for tag, attrs in self.page.tags if tag == "a" and "discord" in attrs.get("href", "")]
+        self.assertEqual({attrs["href"] for attrs in discord}, {DISCORD})
+        self.assertEqual(len(discord), 4, "header, footer, and the FAQ's answer in French and in English")
+        self.assertIn('<a class="gh" href="' + DISCORD + '"', self.text)
+        self.assertIn('<use href="#i-discord"/>', self.text)
+        self.assertNotRegex(self.text, r"(?i)discord(?:app)?\.com/invite|discord\.gg/(?!wG3DZjdAeF\b)")
+
     def test_the_page_credits_igdb_and_provides_no_game(self) -> None:
         for sentence in (
             "Les noms, les jaquettes et les illustrations des jeux appartiennent à leurs éditeurs ; ils viennent d’<a href=\"https://www.igdb.com\">IGDB</a>",
@@ -427,6 +442,10 @@ class DownloadPageTests(unittest.TestCase):
             self.assertEqual(card.count("data-started hidden"), 1, f"{key} says when its download starts")
         versions = check_downloads(self, self.text, self.page)
         self.assertEqual(sorted(versions), sorted(DOWNLOADS))
+
+    def test_the_discord_server_in_its_footer(self) -> None:
+        discord = [attrs["href"] for tag, attrs in self.page.tags if tag == "a" and "discord" in attrs.get("href", "")]
+        self.assertEqual(discord, [DISCORD])
 
     def test_the_same_files_as_the_site(self) -> None:
         text, page = read_page()

@@ -120,6 +120,9 @@ struct CartoucheStorageView: View {
 
     // MARK: The games folder and the saves folder
 
+    /// The row that opens how to name the games, which the UI tests tap.
+    static let namingRow = "storage.naming"
+
     private func placeSection(_ role: CartoucheStorageRole) -> some View {
         CartoucheSection {
             if let place = settings.place(role), let server = settings.server(place.server) {
@@ -169,6 +172,7 @@ struct CartoucheStorageView: View {
                     }
                     Button(CartoucheText.storageReadAgain, systemImage: "arrow.clockwise") { stored.refresh(evenIfOffline: true) }
                         .disabled(stored.isScanning)
+                    namingLink
                 } else if offline {
                     // As the games folder's lines: what waits, and a way to
                     // try the server again, or to sign in to the Drive again.
@@ -215,18 +219,32 @@ struct CartoucheStorageView: View {
             } else if settings.servers.isEmpty {
                 Text(CartoucheText.storageAddFirst)
                     .foregroundStyle(.secondary)
+                if role == .games { namingLink }
             } else {
                 Menu {
                     serverChoices(role)
                 } label: {
                     Label(CartoucheText.storageChooseFolder, systemImage: "folder.badge.plus")
                 }
+                if role == .games { namingLink }
             }
         } header: {
             Text(Self.title(role))
         } footer: {
             Text(role == .games ? CartoucheText.storageGamesFooter : CartoucheText.storageSavesFooter(CartoucheSaveBackups.kept))
         }
+    }
+
+    /// How the games here are named, their saves too, and the dumps
+    /// Cartouche Builder reads on a Mac: under the games folder's reading,
+    /// before the folder is changed, or under what to do first.
+    private var namingLink: some View {
+        NavigationLink {
+            CartoucheNamingView()
+        } label: {
+            Label(CartoucheText.namingOpen, systemImage: "text.badge.checkmark")
+        }
+        .accessibilityIdentifier(Self.namingRow)
     }
 
     /// The servers to look for ROLE's folder on. A shared folder that lets

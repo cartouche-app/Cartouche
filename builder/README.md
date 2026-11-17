@@ -75,6 +75,8 @@ The app looks at nxnative and your games when it opens, if it last did more than
 
 A folder on your NAS works: connect its share in the Finder once, and the builder connects it again by itself, with the password saved in the keychain.
 
+**Naming your games**, under **Folders** in the settings, the assistant's steps of the dumps and of the games folder, and the library when it finds no game or leaves files aside, shows with made-up examples what each folder holds and what the builder and Cartouche make of each name, found or left aside: the page Cartouche shows under its **Storage** page ([`NamingHelp.swift`](mac/Sources/CartoucheBuilder/NamingHelp.swift), [`CartoucheNaming.swift`](../launcher/Sources/CartoucheNaming.swift)). [`tests/test_naming.py`](tests/test_naming.py) checks that the builder finds each example of the dumps folder the page says it finds, and nothing else, and names the IPAs and the Mac's apps as it shows them.
+
 ### Little room on the Mac
 
 A game's build folder, `<title ID>_build`, keeps what the next build reuses, so a build after a small change takes minutes instead of hours. The builder keeps the Mac's disk from filling:

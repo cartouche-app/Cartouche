@@ -78,10 +78,10 @@ struct CartoucheStoredGame: Codable, Hashable, Identifiable {
         return name + ".ipa"
     }
 
-    /// The title ID in a name such as "Mario Kart World [09D00E8A5D61A000].ipa".
+    /// The title ID in a name such as "Example Quest [0100F00D0BAD0000].ipa",
+    /// as the Storage page says it (CartoucheNaming).
     static func titleId(inName name: String) -> String? {
-        guard let range = name.range(of: #"\[[0-9A-Fa-f]{16}\]"#, options: .regularExpression) else { return nil }
-        return String(name[range].dropFirst().dropLast()).uppercased()
+        CartoucheNaming.titleId(inName: name)
     }
 
     /// The title ID in an nxnative bundle ID, org.nxnative.<title ID>.
@@ -318,7 +318,7 @@ final class CartoucheStoredGames: ObservableObject {
                     let path = CartoucheStoragePath.join(folder, item.name)
                     images.append(CartoucheRomfsImage(path: path, folder: CartoucheStoragePath.parent(path), size: item.size))
                 }
-                for item in items where !item.isFolder && item.name.lowercased().hasSuffix(".ipa") {
+                for item in items where !item.isFolder && CartoucheNaming.isIPA(item.name) {
                     let path = CartoucheStoragePath.join(folder, item.name)
                     let key = Self.key(location.server, path: path, size: item.size, modified: item.modified)
                     // What a scan before 0.9.0 found says nothing of the

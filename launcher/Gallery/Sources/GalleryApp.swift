@@ -57,6 +57,9 @@
 //        storage-drive-guide             the steps that make that client
 //        storage-mac                     Add your Mac, the form that pairs
 //                                        this iPhone with a Mac nearby
+//        storage-names                   How to name your games, as the
+//                                        Storage page opens it, at its top
+//                                        or down to -GalleryCategory
 //        storage-smb                     Add a shared folder, with a NAS
 //                                        nearby (GallerySMB)
 //        switch-save                     the saves of the sheet's game
@@ -275,6 +278,9 @@
 //                                        such as Controls
 //        cartouche.saves                 on a game's settings, its cloud
 //                                        saves
+//        dumps                           on how to name the games (screen
+//                                        storage-names), the page down to
+//                                        Cartouche Builder's dumps folder
 //        manage                          on the sheet, the sheet opened on
 //                                        the game's management
 //        nightly                         on the Mac's builds (screen
@@ -285,6 +291,9 @@
 //        results                         on a game's sheet, the testers'
 //                                        results, what they wrote in French
 //                                        as the iPhone translates it
+//        saves                           on how to name the games (screen
+//                                        storage-names), the page down to
+//                                        the saves folder
 //        signature                       on the System page, the page
 //                                        scrolled down to its signature
 //        update                          on the System page, the page
@@ -1067,6 +1076,11 @@ struct CartoucheGalleryApp: App {
         case "storage-drive-guide":
             NavigationStack {
                 CartoucheDriveGuideView()
+            }
+        case "storage-names":
+            // As the Storage page opens it.
+            NavigationStack {
+                CartoucheNamingView(opening: scenario.category.flatMap(CartoucheNaming.Place.init(rawValue:)))
             }
         case "telemetry":
             NavigationStack {

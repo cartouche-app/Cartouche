@@ -32,6 +32,11 @@ enum Gallery {
         case assistantWelcome = "assistant-welcome", assistantTools = "assistant-tools", assistantSources = "assistant-sources"
         case assistantGames = "assistant-games", assistantKeys = "assistant-keys", assistantBuilds = "assistant-builds"
         case assistantIPhone = "assistant-iphone", assistantDone = "assistant-done"
+        // The settings' Folders tab, where the dumps folder and the games
+        // folder are chosen; and the help on naming what they hold, as the
+        // sheet it opens shows it, at its top and on the dumps folder, as
+        // the library opens it.
+        case settingsFolders = "settings-folders", names, namesDumps = "names-dumps"
         // Cartouche's console on this Mac (ConsoleGallery.swift): its home,
         // every game, a game's settings page beside them, a game's info over
         // them, and the whole sheet of a game played on this Mac, in a
@@ -90,7 +95,8 @@ enum Gallery {
         var size: CGSize {
             if step != nil { return SetupAssistant.size }
             switch self {
-            case .settings, .settingsBuilds: return SettingsTab.size
+            case .names, .namesDumps: return NamingHelp.size
+            case .settings, .settingsBuilds, .settingsFolders: return SettingsTab.size
             case .storageMac: return CGSize(width: 1024, height: 1440)
             case .consoleSheet, .consoleSheetNewer: return CGSize(width: 1024, height: 1640)
             // This Mac and every connection, down to the footer.
@@ -112,13 +118,16 @@ enum Gallery {
         /// assistant as the sheet it is, without a title bar, which would
         /// add its height above it.
         var styleMask: NSWindow.StyleMask {
-            if step != nil { return [.borderless] }
+            if step != nil || isNaming { return [.borderless] }
             switch self {
-            case .settings, .settingsBuilds: return [.titled, .closable]
+            case .settings, .settingsBuilds, .settingsFolders: return [.titled, .closable]
             case .menubar, .menubarBuilding: return [.borderless]
             default: return [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
             }
         }
+
+        /// Whether the page is the help on naming, the sheet it is.
+        var isNaming: Bool { self == .names || self == .namesDumps }
     }
 
     /// Pictures AppKit drew itself, as ScreenCaptureKit could not take them.
@@ -150,6 +159,10 @@ enum Gallery {
         var saved = 0
         for language in ["fr", "en"] {
             L10n.use(language)
+            // The console speaks it too, as once the app read its settings
+            // (AppModel): its words show in the builder's, as the help on
+            // naming the games' title in the settings.
+            ConsoleLink.speak()
             for page in Page.allCases where language == "fr" || page.inEnglish {
                 for dark in page.isConsole ? [true] : language == "fr" ? [false, true] : [false] {
                     let file = folder.appendingPathComponent("\(page.rawValue)-\(language)-\(dark ? "dark" : "light").png")
@@ -191,6 +204,14 @@ enum Gallery {
         var size = page.size
         let controller: NSViewController
         switch page {
+        case .names, .namesDumps:
+            // The sheet it is, as the setup assistant's steps are shown.
+            controller = hosted(NamingHelp(onDumps: page == .namesDumps)
+                                    .background(Color(nsColor: .windowBackgroundColor))
+                                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous)),
+                                model, bridged: false)
+        case .settingsFolders:
+            controller = settings(model, open: .folders)
         case .settings, .settingsBuilds:
             controller = settings(model, open: page == .settingsBuilds ? .builds : .general)
         case .console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet, .consoleSheetNewer, .consoleSaves, .consoleSwitchSave,
@@ -235,13 +256,14 @@ enum Gallery {
         switch page {
         case .settings: window.title = SettingsTab.general.title
         case .settingsBuilds: window.title = SettingsTab.builds.title
+        case .settingsFolders: window.title = SettingsTab.folders.title
         case _ where page.isConsole: window.title = "Cartouche"
         default: window.title = "Cartouche Builder"
         }
-        if page == .settings || page == .settingsBuilds {
+        if page == .settings || page == .settingsBuilds || page == .settingsFolders {
             window.toolbarStyle = .preference
         }
-        if page.step != nil {
+        if page.step != nil || page.isNaming {
             window.isOpaque = false
             window.backgroundColor = .clear
         }

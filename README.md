@@ -12,7 +12,7 @@ On your Mac, Cartouche Builder builds your games, plays them there with the same
 
 <a href="https://cartouche.cloud/download/#installer-mac"><img src="docs/images/download-mac.png" height="48" alt="Download the Cartouche Installer for Mac"></a>&nbsp;&nbsp;<a href="https://cartouche.cloud/download/#installer-windows"><img src="docs/images/download-windows.png" height="48" alt="Download the Cartouche Installer for Windows"></a>
 
-**[Website](https://cartouche.cloud/)** · **[Getting started](docs/getting-started.md)** · **[Premiers pas](docs/getting-started.fr.md)** · **[Roadmap](docs/roadmap.md)** · **[Report a problem](https://github.com/cartouche-app/Cartouche/issues/new/choose)**
+**[Website](https://cartouche.cloud/)** · **[Getting started](docs/getting-started.md)** · **[Premiers pas](docs/getting-started.fr.md)** · **[Roadmap](docs/roadmap.md)** · **[Discord](https://discord.gg/wG3DZjdAeF)** · **[Report a problem](https://github.com/cartouche-app/Cartouche/issues/new/choose)**
 
 <img src="docs/images/devices.png" width="100%" alt="Cartouche Builder on a MacBook Air, with Console and Builder at the top of its window: its library, and beside it the sheet of Mario Kart 8 Deluxe with Play on this Mac and what it is built for, the iPhone and this Mac; in front of it, Cartouche on an iPad in landscape: the player's games on one shelf beside the sheet of Mario Kart World, paused behind the console, with Resume and Quit; and on an iPhone in landscape, the same games, Donkey Kong Bananza in focus with Play and Details">
 
@@ -60,7 +60,7 @@ Step by step, from nothing to your first game: [docs/getting-started.md](docs/ge
 
 **Your own signing certificate:** with a `.p12` and its provisioning profile, choose your certificate instead of the Apple Account in the Installer's second step. It signs Cartouche with them, with no Apple account, LocalDevVPN or weekly renewal; games then start in Cartouche's place, and most of them need Increased Memory Limit in the profile ([docs/imported-signing.md](docs/imported-signing.md)).
 
-Cartouche is young and changes often: it offers each new version itself. Something wrong? **Copy the report** under the error, or **System › Report a problem**, and [open an issue](https://github.com/cartouche-app/Cartouche/issues/new/choose).
+Cartouche is young and changes often: it offers each new version itself. Something wrong? **Copy the report** under the error, or **System › Report a problem**, and [open an issue](https://github.com/cartouche-app/Cartouche/issues/new/choose). Questions and help, in English, French, Spanish or German, on [Cartouche's Discord server](https://discord.gg/wG3DZjdAeF).
 
 ## Questions
 

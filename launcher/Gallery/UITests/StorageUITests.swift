@@ -10,13 +10,19 @@
 //  without an error, with Sign in to Google again in place of Try again;
 //  the player's Mac, paired, as the games folder; and Add your Mac, with
 //  the Macs nearby, the digits to check on both screens, and iOS refusing
-//  the local network. The gallery stands in for the servers, Google and
-//  the Macs (GalleryApp.swift): nothing here reaches a real one, but the
-//  NAS's Try again, which knocks on its address, as the app does, and
-//  finds no one.
+//  the local network; and how to name the games, from the page. The
+//  gallery stands in for the servers, Google and the Macs
+//  (GalleryApp.swift): nothing here reaches a real one, but the NAS's Try
+//  again, which knocks on its address, as the app does, and finds no one.
 //
 
 import XCTest
+
+/// The words of how to name the games (CartoucheTextNaming.swift).
+extension Words {
+    static let namingOpen = "How to name your games"        // naming.open
+    static let namingTitle = "Naming your games"            // naming.title
+}
 
 final class StorageUITests: ConsoleTestCase {
     /// With no place yet, the page says to add one first and offers each
@@ -179,6 +185,31 @@ final class StorageUITests: ConsoleTestCase {
         expect(element(beginningWith: Words.noLocalNetwork, in: app).waitForExistence(timeout: 15),
                "Add your Mac does not say iOS refuses the local network", in: app)
         closeAddYourMac(in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// How to name the games opens from the Storage page, no folder chosen
+    /// yet: the games folder's examples, the saves folder's, then the
+    /// dumps Cartouche Builder reads on a Mac, each found or left aside;
+    /// Back brings the page again.
+    @MainActor
+    func testHowToNameTheGamesShowsEachFoldersExamples() {
+        let app = openConsole()
+        openStorage(in: app)
+        let row = app.buttons[Words.namingOpen]
+        scrollTo(row, "\(Words.namingOpen) on the Storage page", in: app)
+        tap(row, "\(Words.namingOpen) on the Storage page", in: app)
+        expect(app.navigationBars[Words.namingTitle].waitForExistence(timeout: 15),
+               "\(Words.namingOpen) did not open \(Words.namingTitle)", in: app)
+        // Down the page, in its order (CartoucheNamingView.swift).
+        for example in ["naming.games.namedIPA", "naming.games.tooDeep", "naming.saves.copy", "naming.dumps.package",
+                        "naming.dumps.built"] {
+            scrollTo(app.descendants(matching: .any)[example], "The example \(example) of \(Words.namingTitle)", in: app)
+        }
+        back(from: Words.namingTitle, in: app)
+        expect(app.navigationBars[Words.storage].waitForExistence(timeout: 10),
+               "Back from \(Words.namingTitle) did not bring the Storage page", in: app)
+        closeStorage(in: app)
         expectMainThreadAnswered(app)
     }
 
