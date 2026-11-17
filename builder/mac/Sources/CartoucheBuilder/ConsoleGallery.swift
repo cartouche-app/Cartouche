@@ -130,7 +130,31 @@ enum ConsoleGallery {
     /// The console with the gallery's games, speaking LANGUAGE ("fr" or "en"),
     /// the saves of the sheet's game kept in step with a NAS's share.
     static func prepare(language: String) {
-        show()
+        if let covers = makeGames() {
+            let deadline = Date().addingTimeInterval(60)
+            while !covers.loaded && Date() < deadline {
+                RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            }
+        }
+        show(language: language)
+    }
+
+    /// As prepare(language:), from a task of the main actor: the layout
+    /// check's. Spun inside such a task, prepare(language:)'s run loop does
+    /// not run the covers' task, also the main actor's, which waits for it
+    /// to end: the layout check waited the whole minute (17 November).
+    static func prepareInTask(language: String) async {
+        if let covers = makeGames() {
+            let deadline = Date().addingTimeInterval(60)
+            while !covers.loaded && Date() < deadline {
+                try? await Task.sleep(for: .milliseconds(50))
+            }
+        }
+        show(language: language)
+    }
+
+    /// The games and the NAS's in the console, speaking LANGUAGE.
+    private static func show(language: String) {
         let console = CartoucheMacConsole.shared
         let nas = language == "fr" ? "le NAS" : "the NAS"
         console.show(games: apps, kept: kept, keptIn: nas)
@@ -139,10 +163,15 @@ enum ConsoleGallery {
         console.speak(language)
     }
 
-    /// The games' apps, made once, shown by the console, and their covers
-    /// loaded, a minute at most.
-    private static func show() {
-        guard folder == nil else { return }
+    /// Whether the covers are loaded, as the task loading them says.
+    private final class Covers {
+        var loaded = false
+    }
+
+    /// The games' apps, made once, shown by the console, their covers
+    /// loading: nil when they were made before.
+    private static func makeGames() -> Covers? {
+        guard folder == nil else { return nil }
         let folder = FileManager.default.temporaryDirectory
             .appendingPathComponent("cartouche-gallery-\(UUID().uuidString)", isDirectory: true)
         self.folder = folder
@@ -181,16 +210,12 @@ enum ConsoleGallery {
         console.showForGallery(playTimes: playTimes, sizes: sizes)
         console.show(games: apps, kept: kept)
 
-        final class Done { var value = false }
-        let done = Done()
+        let covers = Covers()
         Task { @MainActor in
             await console.loadCovers(everyGame: true)
-            done.value = true
+            covers.loaded = true
         }
-        let deadline = Date().addingTimeInterval(60)
-        while !done.value && Date() < deadline {
-            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
-        }
+        return covers
     }
 
     /// The games' apps go once the pictures are taken.

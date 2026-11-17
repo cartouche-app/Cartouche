@@ -239,7 +239,7 @@ enum LayoutCheck {
         // The gallery's games in the console, their covers loaded before
         // (ConsoleGallery.swift): no question to Cartouche's server, nothing
         // of the Mac's read.
-        ConsoleGallery.prepare(language: L10n.code)
+        await ConsoleGallery.prepareInTask(language: L10n.code)
         defer { ConsoleGallery.cleanUp() }
         var failures = 0
         var consoles: [(mode: String, picture: CGImage)] = []
