@@ -262,6 +262,10 @@ def installs_text(n: int) -> str:
     return f"{n} installs" if n >= MIN_INSTALLS or n == 0 else f"fewer than {MIN_INSTALLS} installs"
 
 
+def macs_text(n: int) -> str:
+    return f"{n} Macs" if n >= MIN_INSTALLS or n == 0 else f"fewer than {MIN_INSTALLS} Macs"
+
+
 def shared(pairs) -> tuple[list[tuple[str, int]], int]:
     """Of (value, install) pairs, the values at least MIN_INSTALLS installs
     share, with how many share each, most first; and how many other values
@@ -441,7 +445,10 @@ def page(catalog: Catalog, sessions: list[dict], events: list[dict], first: dt.d
         "many others; else only how many. A Mac counts as an install does: a step of a build shows when at least 3 "
         "Macs failed at it.",
         "- Builds: the Macs whose Cartouche Builder follows a fork of nxnative are left out, and so are the builds "
-        "the player stopped and the errors of Cartouche Builder's own code. Where they failed is nxnative's stage.",
+        "the player stopped and the errors of Cartouche Builder's own code. A game of a Mac counts once for a commit, "
+        "as its last try with it ended, however often its player tried it again. A regression is such a game that "
+        "failed and had built on that Mac on an earlier try, from any commit of the 28 days. Where they failed is "
+        "nxnative's stage of each failed game's last try.",
         "",
     ]
     summary = [f"## nxnative's page, {first} to {last}", "",
@@ -526,38 +533,61 @@ NOT_NXNATIVES = ("stopped", "builder")
 
 def builds(events: list[dict]) -> list[str]:
     """Cartouche Builder's builds on players' Macs, by nxnative commit, but
-    those of a fork of nxnative and the failures that are not nxnative's."""
+    those of a fork of nxnative and the failures that are not nxnative's.
+    A game of a Mac counts once for a commit, as its last try with it ended,
+    however often its player tried it again; its regressions are the games
+    that failed so and had built on that Mac on an earlier try, which is what
+    a commit that broke a build does, where a game a Mac never built may
+    fail for its own files."""
     forks = {e["install"] for e in once([e for e in events if e.get("name") == "builder.opened"], lambda e: e["install"])
              if e.get("fork") in (1, True)}
-    by: dict[str, dict] = defaultdict(lambda: {"macs": set(), "built": 0, "failed": []})
-    for e in events:
-        if e.get("name") not in ("builder.built", "builder.failed") or e["install"] in forks or not e.get("nxnative"):
-            continue
-        if e["name"] == "builder.failed" and e.get("cause") in NOT_NXNATIVES:
-            continue
-        commit = by[e["nxnative"]]
-        commit["macs"].add(e["install"])
+    tries = [e for e in events
+             if e.get("name") in ("builder.built", "builder.failed") and e["install"] not in forks and e.get("nxnative")
+             and not (e["name"] == "builder.failed" and e.get("cause") in NOT_NXNATIVES)]
+
+    def game_of_mac(e: dict) -> tuple:
+        return e["install"], e.get("game")
+
+    # When each game of each Mac first built, as the Mac counts its reports.
+    first_built: dict[tuple, int] = {}
+    for e in tries:
         if e["name"] == "builder.built":
-            commit["built"] += 1
-        else:
-            commit["failed"].append((e.get("stage") or "a step not said", e["install"]))
-    rows = sorted(((c, b) for c, b in by.items() if len(b["macs"]) >= MIN_INSTALLS),
-                  key=lambda kv: (-len(kv[1]["macs"]), kv[0]))
+            key, seq = game_of_mac(e), e.get("seq") or 0
+            first_built[key] = min(first_built.get(key, seq), seq)
+    by: dict[str, list] = defaultdict(list)
+    for e in tries:
+        by[e["nxnative"]].append(e)
+    rows = []
+    for commit, its in by.items():
+        macs = {e["install"] for e in its}
+        if len(macs) < MIN_INSTALLS:
+            continue
+        last = once(its, game_of_mac)
+        failed = [e for e in last if e["name"] == "builder.failed"]
+        back = [e for e in failed if first_built.get(game_of_mac(e), e.get("seq") or 0) < (e.get("seq") or 0)]
+        rows.append((commit, len(macs), len(last) - len(failed), failed, back))
+    rows.sort(key=lambda row: (-row[1], row[0]))
     lines = ["## Builds on players' Macs, by nxnative commit", "",
-             "Cartouche Builder builds players' games with nxnative's build script, on their Macs.", ""]
+             "Cartouche Builder builds players' games with nxnative's build script, on their Macs. A game of a Mac "
+             "counts once for a commit, as its last try with it ended, however often its player tried it again. "
+             "Regressions are the games that fail with the commit and had built on their Mac before, and on how many "
+             "Macs: a commit that broke a build makes them on several.", ""]
     if not rows:
         return lines + [f"No nxnative commit was built on {MIN_INSTALLS} Macs or more.", ""]
-    lines += ["| nxnative | Macs | Built | Failed | Where they failed |", "| --- | --- | --- | --- | --- |"]
-    for commit, b in rows:
+    lines += ["| nxnative | Macs | Built | Failed | Regressions | Where they failed |",
+              "| --- | --- | --- | --- | --- | --- |"]
+    for commit, macs, built, failed, back in rows:
         # The steps at least MIN_INSTALLS Macs failed at, with how many
-        # failures each; the others together.
-        stages, _ = shared(b["failed"])
-        counts = Counter(stage for stage, _ in b["failed"])
+        # games failed at each; the others together.
+        pairs = [(e.get("stage") or "a step not said", e["install"]) for e in failed]
+        stages, _ = shared(pairs)
+        counts = Counter(stage for stage, _ in pairs)
         where = [f"{stage} {counts[stage]}" for stage, _ in stages]
-        rest = len(b["failed"]) - sum(counts[stage] for stage, _ in stages)
+        rest = len(pairs) - sum(counts[stage] for stage, _ in stages)
         if rest:
             where.append(f"other steps {rest}")
-        lines.append(f"| `{commit}` | {len(b['macs'])} | {b['built']} | {len(b['failed'])} | {', '.join(where) or '–'} |")
+        regressions = f"{len(back)} on {macs_text(len({e['install'] for e in back}))}" if back else "0"
+        lines.append(f"| `{commit}` | {macs} | {built} | {len(failed)} | {regressions} | {', '.join(where) or '–'} |")
     return lines + [""]
 
 

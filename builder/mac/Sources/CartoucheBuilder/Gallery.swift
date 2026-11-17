@@ -46,6 +46,11 @@ enum Gallery {
         // the storage page down to the games on this Mac, in a window as
         // tall as it.
         case settingsBuilds = "settings-builds", storageMac = "storage-mac"
+        // The game page of the builder in the window that showed the
+        // console just before, the player back from it with the switch at
+        // the top of the window: as the game page, whatever the Mac's
+        // appearance.
+        case gameAfterConsole = "game-after-console"
 
         /// Whether the page is the console's, which is always dark.
         var isConsole: Bool {
@@ -173,6 +178,9 @@ enum Gallery {
     }
 
     private static func render(_ page: Page, samples: Samples, dark: Bool, to file: URL) -> Bool {
+        // The Mac in the page's mode, as the window: the builder's follows
+        // the Mac's (MainView).
+        NSApp.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
         let model = samples.model(for: page)
         var size = page.size
         let controller: NSViewController
@@ -187,6 +195,11 @@ enum Gallery {
                                          showingInfo: page == .consoleInfo,
                                          showingSheetOf: sheet ? ConsoleGallery.sheetGame : nil,
                                          showingSaves: page.savesPage), model)
+        case .gameAfterConsole:
+            // The console first, in the window, as the player had it.
+            ConsoleGallery.prepare(language: L10n.code)
+            model.show(.console)
+            controller = hosted(MainView(), model)
         case .menubar, .menubarBuilding:
             let panel = hosted(MenuBarView().background(Color(nsColor: .windowBackgroundColor)), model)
             size.height = ceil(panel.sizeThatFits(in: CGSize(width: size.width, height: 2000)).height)
@@ -236,6 +249,11 @@ enum Gallery {
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
         wait(until: Date().addingTimeInterval(2.5))
+        // Then the builder, the switch turned as the player turns it.
+        if page == .gameAfterConsole {
+            model.show(.builder)
+            wait(until: Date().addingTimeInterval(2.5))
+        }
         // A game's info opens over the console in a sheet, a window of its
         // own, which the window server shows with the console's window
         // under it, as one: the picture is as large as both.
@@ -429,11 +447,11 @@ enum Gallery {
             switch page {
             case .library, .activity, .storage, .iphone: model.section = AppSection(rawValue: page.rawValue) ?? .library
             case .storageMac: model.section = .storage
-            case .libraryRoom, .game, .gameNarrow, .gameNewer, .gameQueue, .gameXcode, .gameUnbuilt: model.section = .library
+            case .libraryRoom, .game, .gameNarrow, .gameNewer, .gameQueue, .gameXcode, .gameUnbuilt, .gameAfterConsole: model.section = .library
             case .setup, .setupXcode: model.section = .setup
             default: break
             }
-            if page == .game || page == .gameNarrow || page == .gameNewer { model.selection = "0100152000022000" }
+            if page == .game || page == .gameNarrow || page == .gameNewer || page == .gameAfterConsole { model.selection = "0100152000022000" }
             if page == .gameXcode { model.selection = "01004D300C5AE000" }
             if page == .gameUnbuilt { model.selection = Gallery.unbuilt.titleID }
             // A game up to date, while a batch runs: added to its queue.

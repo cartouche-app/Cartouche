@@ -12,6 +12,9 @@ app-reports.json.
 - the lines by model and by commit, the crashes and the builds by commit
   show only what three installs, or three Macs, share; a commit, a model or
   a step fewer share is never named;
+- a game a Mac tried again counts once for a commit, as its last try
+  ended, and the games that had built on that Mac and fail with the
+  commit, its regressions, apart;
 - no install's, session's or report's number is ever written;
 - a session sent again counts once, at its highest seq; only the 28 days
   before the run count; a copy of another region counts for its game;
@@ -42,6 +45,8 @@ TODAY = "2026-11-12"
 # The reading of the log from which the slowest 5% counts (sheets.SLOWEST_READER).
 READER = 2
 MKW_NAME = f"Mario Kart World `{MKW}`"
+# Games the builds name by their title ID alone.
+GAMES = [f"01000000000{n}0000" for n in range(1, 6)]
 
 TEMPLATE = next(r for r in json.loads((HERE / "app-reports.json").read_text(encoding="utf-8"))["reports"]
                 if r["kind"] == "session")
@@ -347,28 +352,85 @@ class NxnativePageTest(unittest.TestCase):
         self.assertNotIn("26.5", page)
 
     def test_builds_by_commit_leave_out_forks_and_what_is_not_nxnatives(self):
+        one, two, three = GAMES[:3]
         for mac in self.macs[:3]:
-            self.event(mac, "builder.opened", nxnative="aaaaaaaaaaaa", forkOfNxnative=False)
-            self.event(mac, "builder.failed", nxnative="aaaaaaaaaaaa", stage="app build", cause="app_build")
+            self.event(mac, "builder.opened", nxnative="aaaaaaaaaaaa", forkOfNxnative=False, seq=1)
+            self.event(mac, "builder.failed", game=one, nxnative="aaaaaaaaaaaa", stage="app build", cause="app_build",
+                       seq=2)
         for mac in self.macs[:2]:
-            self.event(mac, "builder.built", nxnative="aaaaaaaaaaaa")
-        self.event(self.macs[2], "builder.failed", nxnative="aaaaaaaaaaaa", stage="unpack v0", cause="damaged")
+            self.event(mac, "builder.built", game=two, nxnative="aaaaaaaaaaaa", seq=3)
+        self.event(self.macs[2], "builder.failed", game=two, nxnative="aaaaaaaaaaaa", stage="unpack v0", cause="damaged",
+                   seq=3)
         # Not nxnative's: the player stopped the build; Cartouche Builder's own code failed.
-        self.event(self.macs[0], "builder.failed", nxnative="aaaaaaaaaaaa", stage="extract v0", cause="stopped")
-        self.event(self.macs[1], "builder.failed", nxnative="aaaaaaaaaaaa", stage="deliver", cause="builder")
+        self.event(self.macs[0], "builder.failed", game=three, nxnative="aaaaaaaaaaaa", stage="extract v0",
+                   cause="stopped", seq=4)
+        self.event(self.macs[1], "builder.failed", game=three, nxnative="aaaaaaaaaaaa", stage="deliver", cause="builder",
+                   seq=4)
         # A Mac that follows a fork of nxnative, as it last started.
         self.event(self.macs[3], "builder.opened", nxnative="aaaaaaaaaaaa", forkOfNxnative=False, seq=1)
         self.event(self.macs[3], "builder.opened", nxnative="aaaaaaaaaaaa", forkOfNxnative=True, seq=2)
-        self.event(self.macs[3], "builder.built", nxnative="aaaaaaaaaaaa", seq=3)
+        self.event(self.macs[3], "builder.built", game=one, nxnative="aaaaaaaaaaaa", seq=3)
         for mac in self.macs[4:6]:
-            self.event(mac, "builder.built", nxnative="bbbbbbbbbbbb")
+            self.event(mac, "builder.built", game=one, nxnative="bbbbbbbbbbbb")
         self.run_page()
         page = self.page()
         self.assertEqual(rows(page, "Builds on players' Macs, by nxnative commit"), [
-            {"nxnative": "`aaaaaaaaaaaa`", "Macs": "3", "Built": "2", "Failed": "4",
+            {"nxnative": "`aaaaaaaaaaaa`", "Macs": "3", "Built": "2", "Failed": "4", "Regressions": "0",
              "Where they failed": "app build 3, other steps 1"}])
         for left_out in ("bbbbbbbbbbbb", "unpack v0", "extract v0", "deliver"):
             self.assertNotIn(left_out, page.split("## How it is summed up")[0])
+
+    def test_a_game_a_mac_tried_again_counts_once_for_a_commit_and_the_games_that_built_before_apart(self):
+        """As on 17 November 2026: one Mac tried the same game of its own a
+        dozen times with each commit, and a commit of nxnative's changed how
+        shaders are split, so that games three Macs had built failed with it.
+        Counted by try, the first read as broken commits and the second
+        drowned in them."""
+        botw, smo, own, other, later = GAMES
+        before, broke, after = "aaaaaaaaaaaa", "bbbbbbbbbbbb", "cccccccccccc"
+        mac = self.macs
+
+        def built(m, game, commit, seq):
+            self.event(mac[m], "builder.built", game=game, nxnative=commit, seq=seq)
+
+        def failed(m, game, commit, seq, stage="shader split", cause="nxnative"):
+            self.event(mac[m], "builder.failed", game=game, nxnative=commit, stage=stage, cause=cause, seq=seq)
+
+        # Three Macs built their games, and fail with the commit that broke them.
+        built(0, botw, before, 1)
+        built(0, smo, before, 2)
+        failed(0, botw, broke, 3)
+        failed(0, smo, broke, 4)
+        built(1, botw, before, 1)
+        built(1, smo, before, 2)
+        for seq in (3, 4, 5):
+            failed(1, botw, broke, seq)
+        built(2, botw, before, 1)
+        failed(2, botw, broke, 2)
+        # A Mac that tries a game it never built again and again, and one it
+        # built once it failed with the same commit.
+        for seq in range(1, 13):
+            failed(3, own, broke, seq, stage="check v65536 files", cause="crashed")
+        failed(3, other, broke, 13, stage="check v65536 files", cause="crashed")
+        built(3, other, broke, 14)
+        for seq in range(15, 21):
+            failed(3, own, after, seq, stage="check v65536 files", cause="crashed")
+        # A regression on fewer than three Macs: how many is not written.
+        failed(3, other, after, 21, stage="check v65536 files", cause="crashed")
+        # A game that failed before it built is no regression.
+        failed(4, later, before, 1)
+        built(4, later, after, 2)
+        built(5, later, after, 1)
+        self.run_page()
+        page = self.page()
+        self.assertEqual(rows(page, "Builds on players' Macs, by nxnative commit"), [
+            {"nxnative": f"`{before}`", "Macs": "4", "Built": "5", "Failed": "1", "Regressions": "0",
+             "Where they failed": "other steps 1"},
+            {"nxnative": f"`{broke}`", "Macs": "4", "Built": "1", "Failed": "5", "Regressions": "4 on 3 Macs",
+             "Where they failed": "shader split 4, other steps 1"},
+            {"nxnative": f"`{after}`", "Macs": "3", "Built": "2", "Failed": "2", "Regressions": "1 on fewer than 3 Macs",
+             "Where they failed": "other steps 2"}])
+        self.assertNotIn("check v65536 files", page.split("## How it is summed up")[0])
 
     def test_the_games_no_mac_built_for_cartouche_builder(self):
         """unbuilt.json: a game three Macs tried and none built, as Pokopia

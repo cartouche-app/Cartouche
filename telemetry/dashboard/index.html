@@ -255,6 +255,10 @@
     td.wide { min-width: 220px; }
     td.nowrap, td .nowrap { white-space: nowrap; }
     td small { color: var(--ink-3); }
+    td small.block { display: block; margin-top: 1px; }
+    code.code { font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink-2); }
+    .linkish.more { display: block; margin: 10px 0 0; }
+    .tabs button b { font-weight: 650; font-variant-numeric: tabular-nums; margin-left: 2px; }
     tbody tr.pick { cursor: pointer; }
     tbody tr.pick:hover td { background: var(--wash); }
     .game { display: flex; align-items: center; gap: 10px; min-width: 200px; }
@@ -377,9 +381,9 @@
     <div class="wrap">
         <nav class="jump" aria-label="Sections">
             <a href="#regarder">À regarder</a><a href="#parcours">Parcours</a><a href="#versions">Versions</a><a href="#jeux">Jeux</a><a href="#compatibilite">Par appareil</a>
-            <a href="#activite">Activité</a><a href="#fluidite">Fluidité</a><a href="#chaleur">Chaleur</a><a href="#memoire">Mémoire</a><a href="#fins">Plantages</a>
-            <a href="#appareils">Appareils</a><a href="#installations">Installations</a><a href="#erreurs">Erreurs</a><a href="#problemes">Problèmes</a>
-            <a href="#builder">Builder</a><a href="#serveur">Serveur</a>
+            <a href="#fins">Plantages</a><a href="#erreurs">Erreurs</a><a href="#builder">Builder</a>
+            <a href="#activite">Activité</a><a href="#fluidite">Fluidité</a><a href="#chaleur">Chaleur</a><a href="#memoire">Mémoire</a>
+            <a href="#appareils">Appareils</a><a href="#installations">Installations</a><a href="#problemes">Problèmes</a><a href="#serveur">Serveur</a>
         </nav>
     </div>
 </div>
@@ -424,6 +428,21 @@
     // before it, that was a crash like any other abort, or an end the log of
     // a Mac did not tell.
     const GPU_LOST_READER = 4;
+    // A crash in the game's own code says where it happened, as nxnative's log
+    // names the game's modules and the offset in them (main+0x8903c8): the same
+    // address on several iPhones is the same bug. An abort stops in the
+    // system's pthread_kill, at the same address whatever the game aborted for:
+    // those are told apart by their game, not by their address.
+    const GAME_CODE = /^(?:main|sdk|subsdk\d*|rtld)\+0x[0-9a-f]+$/i;
+    // A game's share of time hot counts from half an hour measured: a session
+    // of a few minutes on a hot day says nothing of the game.
+    const HOT_MINUTES = 30;
+    // An error the newest version did not send is gone from it only once
+    // enough copies run that version to tell.
+    const GONE_COPIES = 10;
+    // A game no session drew a frame of, though its sessions lasted this long
+    // in all, may run while its log counts no frame.
+    const UNCOUNTED_MINUTES = 30;
 
     // A game's status, by the game sheets' rules (telemetry/sheets.py), each
     // iPhone counting once by the median of its own sessions: "none" when no
@@ -436,7 +455,7 @@
 
     // What "À regarder" lists: how many points at most, and from how many
     // copies, iPhones, Macs or failures each kind is worth a look.
-    const ATTENTION = { items: 8, signInCopies: 3, gameIphones: 2, buildFailures: 3, newErrorCopies: 2, crashIphones: 2, memoryShare: 0.95 };
+    const ATTENTION = { items: 8, signInCopies: 3, gameIphones: 2, buildMacs: 2, newErrorCopies: 2, crashIphones: 2, memoryShare: 0.95 };
 
     // Every field of a session the page shows, so that a field the server
     // starts to send is not left out (telemetry/test/dashboard.test.js).
@@ -776,7 +795,9 @@
                         const peak = num(session["memory.peakMiB"]);
                         // Behind the console, the game's process had a limit of its own.
                         const limit = num(session["process.limitMiB"]) ?? num(session.memoryLimitMiB);
-                        if (peak === null || !limit || (found && peak / limit <= found.ratio)) return found;
+                        // A peak past its limit says that limit was not the game's, as
+                        // Cartouche's own that a game behind the console sent in 0.12.
+                        if (peak === null || !limit || peak > limit || (found && peak / limit <= found.ratio)) return found;
                         return { peak, limit, ratio: peak / limit };
                     }, null),
                     ends,
@@ -884,8 +905,8 @@
             lowPower: share(sessions.filter((session) => num(session.lowPowerMinutes) !== null), (session) => session.lowPowerMinutes > 0),
             playMinutes: sum(sessions.map((session) => session.minutes)),
             byGame: games
-                .filter((game) => game.thermalMinutes > 0)
-                .map((game) => ({ id: game.id, name: game.name, hotShare: game.hot / game.thermalMinutes, minutes: game.thermalMinutes }))
+                .filter((game) => game.thermalMinutes >= HOT_MINUTES)
+                .map((game) => ({ id: game.id, name: game.name, hotShare: game.hot / game.thermalMinutes, minutes: game.thermalMinutes, iphones: game.iphones }))
                 .sort((a, b) => b.hotShare - a.hotShare)
                 .slice(0, 8),
         };
@@ -913,30 +934,55 @@
 
         // MARK: Endings
         const crashed = sessions.filter((session) => endOf(session) === "crash");
-        const crashes = groupBy(crashed, (session) => [session["end.signal"] ?? "", session["end.pc"] ?? "", session["end.lr"] ?? "", session["end.cause"] ?? ""].join("|"));
+        // A crash in the game's code by its signal and its address; one in the
+        // system's, as every abort is, by its game.
+        const inGameCode = (session) => GAME_CODE.test(text(session["end.pc"]) ?? "");
+        const crashes = groupBy(crashed, (session) =>
+            (inGameCode(session)
+                ? ["code", session["end.signal"] ?? "", session["end.pc"], session["end.lr"] ?? "", session["end.cause"] ?? ""]
+                : ["system", session["end.signal"] ?? "", session["end.cause"] ?? "", gameId(session) ?? ""]
+            ).join("|"));
+        const sessionsOfGame = new Map(countBy(sessions, gameId).map((row) => [row.key, row.count]));
         // The crashes whose log could tell a lost GPU, and those that did.
         const toldWhy = crashed.filter((session) => (num(session.reader) ?? 1) >= GPU_LOST_READER);
         const endings = {
             ends: endsOf(sessions),
             gpuLost: { count: toldWhy.filter((session) => session["end.cause"] === "gpuLost").length, read: toldWhy.length },
             byBuild: [...groupBy(sessions, (session) => session.nxnative)]
-                .map(([build, list]) => ({ build, sessions: list.length, bad: endsOf(list).bad, last: list.reduce((latest, session) => (session.day > latest ? session.day : latest), "") }))
-                .sort((a, b) => (b.last > a.last ? 1 : b.last < a.last ? -1 : b.sessions - a.sessions))
-                .slice(0, 8),
-            crashes: [...crashes.values()]
-                .map((list) => ({
-                    signal: num(list[0]["end.signal"]),
-                    pc: text(list[0]["end.pc"]),
-                    lr: text(list[0]["end.lr"]),
-                    cause: text(list[0]["end.cause"]),
-                    count: list.length,
-                    iphones: new Set(list.map((session) => session.install)).size,
-                    games: [...new Set(list.map((session) => gameOf(catalog, session.game).name ?? session.game))],
-                    builds: [...new Set(list.map((session) => session.nxnative).filter(Boolean))],
+                .map(([build, list]) => ({
+                    build,
+                    sessions: list.length,
+                    bad: endsOf(list).bad,
+                    first: list.reduce((earliest, session) => (!earliest || session.day < earliest ? session.day : earliest), ""),
                     last: list.reduce((latest, session) => (session.day > latest ? session.day : latest), ""),
                 }))
-                .sort((a, b) => b.count - a.count || (b.last > a.last ? 1 : -1))
-                .slice(0, 20),
+                .sort((a, b) => (b.last > a.last ? 1 : b.last < a.last ? -1 : b.sessions - a.sessions))
+                .slice(0, 8),
+            // The widest first: a crash on many iPhones before one an iPhone
+            // met again and again.
+            crashes: [...crashes.values()]
+                .map((list) => {
+                    const code = inGameCode(list[0]);
+                    const game = code ? null : gameId(list[0]);
+                    return {
+                        signal: num(list[0]["end.signal"]),
+                        pc: text(list[0]["end.pc"]),
+                        lr: text(list[0]["end.lr"]),
+                        cause: text(list[0]["end.cause"]),
+                        where: code ? "code" : "system",
+                        game,
+                        count: list.length,
+                        // The sessions of its game, for a crash told by its game.
+                        of: game ? sessionsOfGame.get(game) ?? null : null,
+                        iphones: new Set(list.map((session) => session.install)).size,
+                        games: [...new Set(list.map(gameId).filter(Boolean))],
+                        builds: [...new Set(list.map((session) => session.nxnative).filter(Boolean))],
+                        versions: [...new Set(list.map((session) => session.cartouche).filter(Boolean))].sort(newestFirst),
+                        last: list.reduce((latest, session) => (session.day > latest ? session.day : latest), ""),
+                    };
+                })
+                .sort((a, b) => b.iphones - a.iphones || b.count - a.count || (b.last > a.last ? 1 : b.last < a.last ? -1 : 0))
+                .slice(0, 60),
         };
 
         // MARK: Devices
@@ -1006,6 +1052,17 @@
             seenIn.get(key).add(event.cartouche);
         }
         const newIn = (key) => (newest && seenIn.get(key)?.size === 1 && seenIn.get(key).has(newest) ? newest : null);
+        // Whether the newest version still sends an error: new in it, still
+        // there, or gone from it, once enough copies run it to tell; null
+        // when it cannot tell.
+        const newestCopies = newest ? new Set(phoneReports.filter((report) => report.cartouche === newest).map((report) => report.install)).size : 0;
+        const stateIn = (key) => {
+            const seen = seenIn.get(key);
+            if (!newest || !seen) return null;
+            if (seen.has(newest)) return seen.size === 1 ? "new" : "still";
+            return newestCopies >= GONE_COPIES ? "gone" : null;
+        };
+        const STATE_ORDER = { new: 0, still: 0, gone: 2 };
         const signInErrors = errors.filter((event) => event.fields.origin === "signIn");
         const signedIn = named("account.signedIn");
         const errorsView = {
@@ -1027,8 +1084,11 @@
                 seconds: median(signInErrors.map((event) => event.fields.seconds)),
                 secondsOk: median(signedIn.map((event) => event.fields.seconds)),
             },
-            // The errors most iPhones met first: one iPhone that tries again
-            // and again weighs less than many that each met it once.
+            // Those the newest version still sends first, then those it no
+            // longer sends; and the errors most iPhones met first: one iPhone
+            // that tries again and again weighs less than many that each met
+            // it once.
+            newest,
             byCode: [...codes]
                 .map(([key, list]) => ({
                     origin: text(list[0].fields.origin),
@@ -1040,12 +1100,15 @@
                     iphones: new Set(list.map((event) => event.install)).size,
                     versions: [...new Set(list.map((event) => event.cartouche).filter(Boolean))].sort(newestFirst),
                     newIn: newIn(key),
+                    state: stateIn(key),
+                    // The newest version that sent it, whatever the filters.
+                    lastIn: [...(seenIn.get(key) ?? [])].sort(newestFirst)[0] ?? null,
                     background: share(list, (event) => event.fields.background),
                     first: list.reduce((earliest, event) => (!earliest || event.day < earliest ? event.day : earliest), ""),
                     last: list.reduce((latest, event) => (event.day > latest ? event.day : latest), ""),
                 }))
-                .sort((a, b) => b.iphones - a.iphones || b.count - a.count)
-                .slice(0, 20),
+                .sort((a, b) => (STATE_ORDER[a.state] ?? 1) - (STATE_ORDER[b.state] ?? 1) || b.iphones - a.iphones || b.count - a.count)
+                .slice(0, 60),
             byVersion: [...groupBy(events.filter((event) => event.name === "error" || event.name === "app.opened"), (event) => event.cartouche)]
                 .map(([version, list]) => ({
                     version,
@@ -1067,6 +1130,20 @@
         const cleaned = mac("builder.cleaned");
         const paired = mac("builder.paired");
         const reasons = (list) => countBy(list.flatMap((event) => (text(event.fields.reasons) ?? "").split(",").filter(Boolean).map((reason) => ({ install: event.install, reason }))), (item) => item.reason);
+        // A game of a Mac. A player who builds a failing game again and again
+        // sends a failure each time: a commit counts each game of each Mac
+        // once, at its last try with it, and says apart how many tries failed.
+        const gameOfMac = (event) => event.install + "|" + gameId(event);
+        // When each game of each Mac first built (its seq). A failure after it
+        // is a regression: a game that built on that Mac and no longer does,
+        // what a commit nxnative broke does to the games it touches, where a
+        // game that never built may fail for its own files.
+        const firstBuilt = new Map();
+        for (const event of built) {
+            const key = gameOfMac(event);
+            if (!firstBuilt.has(key) || (event.seq ?? 0) < firstBuilt.get(key)) firstBuilt.set(key, event.seq ?? 0);
+        }
+        const regressed = (event) => firstBuilt.has(gameOfMac(event)) && firstBuilt.get(gameOfMac(event)) < (event.seq ?? 0);
         const builder = {
             macs: macs.length,
             events: macEvents.length,
@@ -1092,20 +1169,31 @@
             },
             failed: {
                 count: failed.length,
+                // The games of Macs the failures are of, and those Macs.
+                macGames: new Set(failed.map(gameOfMac)).size,
+                macs: new Set(failed.map((event) => event.install)).size,
                 stages: countBy(failed, (event) => text(event.fields.stage)),
                 reasons: reasons(failed),
                 games: countBy(failed, (event) => gameId(event)).map((row) => ({ ...row, name: gameOf(catalog, row.key).name })).slice(0, 8),
             },
             // What each nxnative commit gave the Macs that built with it, the
-            // latest first: a commit nxnative broke fails on every Mac.
+            // latest days first: each game of each Mac once, as its last try
+            // with the commit ended. A commit nxnative broke fails games that
+            // built before, on several Macs (regressions); a game a Mac never
+            // built, tried again and again, is one failure of that Mac's.
             byCommit: [...groupBy([...built, ...failed], (event) => text(event.fields.nxnative))]
                 .map(([commit, list]) => {
-                    const ok = list.filter((event) => event.name === "builder.built");
-                    const ko = list.filter((event) => event.name === "builder.failed");
+                    const last = latestBy(list, gameOfMac);
+                    const ok = last.filter((event) => event.name === "builder.built");
+                    const ko = last.filter((event) => event.name === "builder.failed");
+                    const back = ko.filter(regressed);
                     return {
                         commit,
                         built: ok.length,
                         failed: ko.length,
+                        tries: list.filter((event) => event.name === "builder.failed").length,
+                        regressions: back.length,
+                        regressedMacs: new Set(back.map((event) => event.install)).size,
                         macs: new Set(list.map((event) => event.install)).size,
                         failedMacs: new Set(ko.map((event) => event.install)).size,
                         games: new Set(list.map((event) => gameId(event)).filter(Boolean)).size,
@@ -1198,8 +1286,8 @@
                 const failedSignIns = vEvents.filter((event) => event.name === "error" && event.fields.origin === "signIn");
                 const vErrors = vEvents.filter((event) => event.name === "error");
                 const openedCopies = groupBy(opens, (event) => event.install);
-                const topError = countBy(vErrors, (event) => (text(event.fields.origin) ?? "?") + "|" + (text(event.fields.cause) ?? "unknown"))
-                    .sort((a, b) => b.installs - a.installs || b.count - a.count)[0];
+                const errorKey = (event) => (text(event.fields.origin) ?? "?") + "|" + (text(event.fields.cause) ?? "unknown");
+                const topError = countBy(vErrors, errorKey).sort((a, b) => b.installs - a.installs || b.count - a.count)[0];
                 return {
                     version,
                     copies: new Set(list.map((report) => report.install)).size,
@@ -1216,7 +1304,16 @@
                     bad: vSessions.filter((session) => BAD.has(endOf(session))).length,
                     errors: vErrors.length,
                     errorCopies: new Set(vErrors.map((event) => event.install)).size,
-                    topError: topError ? { origin: topError.key.split("|")[0], cause: topError.key.split("|")[1], copies: topError.installs, count: topError.count } : null,
+                    // Its code too, which says more than a cause the app could not name.
+                    topError: topError
+                        ? {
+                            origin: topError.key.split("|")[0],
+                            cause: topError.key.split("|")[1],
+                            error: mode(vErrors.filter((event) => errorKey(event) === topError.key).map((event) => text(event.fields.error))),
+                            copies: topError.installs,
+                            count: topError.count,
+                        }
+                        : null,
                     first: list.reduce((earliest, report) => (!earliest || report.day < earliest ? report.day : earliest), ""),
                     last: list.reduce((latest, report) => (report.day > latest ? report.day : latest), ""),
                 };
@@ -1250,15 +1347,36 @@
             ).sort((a, b) => b.installs - a.installs)[0];
             attention.push({ key: "signIn", tone: "critical", copies: journey.neverSignedIn, cause: cause ? cause.key : null, causeCopies: cause ? cause.installs : 0, section: "parcours" });
         }
+        const flagged = new Set();
         for (const game of games) {
             const judged = game.verdict;
             if ((judged.status === "none" || judged.status === "boots") && judged.iphones >= ATTENTION.gameIphones) {
-                attention.push({ key: "game", tone: judged.status === "none" ? "critical" : "serious", copies: judged.iphones, game: game.id, name: game.name, status: judged.status, bad: judged.ends.bad, sessions: judged.sessions, ends: judged.ends });
+                // Long sessions that counted no frame may be a game whose log
+                // does not count them, as much as one stuck on a black screen.
+                const uncounted = judged.status === "none" && judged.minutes >= UNCOUNTED_MINUTES;
+                flagged.add(game.id);
+                attention.push({
+                    key: "game",
+                    tone: judged.status === "none" && !uncounted ? "critical" : "serious",
+                    copies: judged.iphones,
+                    game: game.id,
+                    name: game.name,
+                    status: judged.status,
+                    uncounted,
+                    minutes: judged.minutes,
+                    bad: judged.ends.bad,
+                    sessions: judged.sessions,
+                    ends: judged.ends,
+                });
             }
         }
+        // A commit nxnative broke: games that built fail with it on several
+        // Macs, or no Mac builds anything with it. One Mac trying its games
+        // again and again is not enough.
         for (const commit of builder.byCommit) {
-            if (commit.commit && !commit.built && commit.failed >= ATTENTION.buildFailures) {
-                attention.push({ key: "build", tone: "serious", copies: commit.failedMacs, commit: commit.commit, failed: commit.failed, stage: commit.stage, last: commit.last, section: "builder" });
+            const broke = commit.regressedMacs >= ATTENTION.buildMacs;
+            if (commit.commit && (broke || (!commit.built && commit.failedMacs >= ATTENTION.buildMacs))) {
+                attention.push({ key: "build", tone: "serious", copies: broke ? commit.regressedMacs : commit.failedMacs, commit: commit.commit, failed: commit.failed, regressions: broke ? commit.regressions : 0, stage: commit.stage, last: commit.last, section: "builder" });
             }
         }
         for (const row of errorsView.byCode) {
@@ -1266,9 +1384,17 @@
                 attention.push({ key: "newError", tone: "warning", copies: row.iphones, version: row.newIn, origin: row.origin, cause: row.cause, stage: row.stage, count: row.count, section: "erreurs" });
             }
         }
+        // The same address in the game's code on several iPhones is the same
+        // bug; the aborts of a game on several iPhones, the game's, unless it
+        // is there already for not running or not holding.
         for (const crash of endings.crashes) {
-            if (crash.iphones >= ATTENTION.crashIphones) {
+            if (crash.iphones < ATTENTION.crashIphones) continue;
+            if (crash.where === "code") {
                 attention.push({ key: "crash", tone: "serious", copies: crash.iphones, signal: crash.signal, pc: crash.pc, cause: crash.cause, count: crash.count, games: crash.games, section: "fins" });
+            } else if (crash.game && !flagged.has(crash.game)) {
+                // A game once, by its widest aborts.
+                flagged.add(crash.game);
+                attention.push({ key: "abort", tone: "serious", copies: crash.iphones, game: crash.game, name: gameOf(catalog, crash.game).name, signal: crash.signal, cause: crash.cause, count: crash.count, sessions: crash.of });
             }
         }
         for (const game of memory.byGame) {
@@ -1310,7 +1436,15 @@
             compatibility,
             attention: attention.slice(0, ATTENTION.items),
             attentionMore: Math.max(0, attention.length - ATTENTION.items),
+            // The rest, which the page shows when asked.
+            attentionRest: attention.slice(ATTENTION.items),
             games,
+            // How many games have each status, those measured on at least
+            // three iPhones apart, as the game sheets ask.
+            gameStatuses: STATUSES.map((status) => {
+                const alike = games.filter((game) => game.verdict.status === status);
+                return { status, games: alike.length, measured: alike.filter((game) => game.verdict.iphones >= 3).length };
+            }),
             fluidity,
             heat,
             memory,
@@ -1368,6 +1502,8 @@
     function demo(days, catalog, now) {
         const rand = random(20261113);
         const pick = (list) => list[Math.floor(rand() * list.length)];
+        // An abort stops in the system's pthread_kill, as on an iPhone.
+        const codeCrash = (signal, pc, lr) => (signal === 6 ? { kind: "crash", signal, pc: "__pthread_kill+0x8", lr: "pthread_kill+0x10c" } : { kind: "crash", signal, pc, lr });
         const between = (low, high) => low + rand() * (high - low);
         const round = (value, digits = 1) => Math.round(value * 10 ** digits) / 10 ** digits;
         const hex = (length) => Array.from({ length }, () => Math.floor(rand() * 16).toString(16)).join("");
@@ -1481,7 +1617,7 @@
                     const peak = Math.round(Math.min(profile.peak * between(0.92, 1.08), limit * between(0.9, 0.99)));
                     let end = null;
                     const reader = phone.version === "0.10.0" ? GPU_LOST_READER : 1;
-                    if (crashRoll < profile.risk * (memoryTight ? 3 : 1) + 0.02) end = memoryTight || (profile.peak > 5000 && rand() < 0.6) ? { kind: "memory-likely" } : rand() < 0.15 ? { kind: "boot-failed" } : reader >= GPU_LOST_READER && rand() < 0.15 ? { kind: "crash", signal: 6, pc: "__pthread_kill+0x8", lr: "pthread_kill+0x10c", cause: "gpuLost" } : { kind: "crash", signal: pick([11, 11, 11, 10, 6]), pc: "main+0x" + pick(["1a2b3c", "4f00a8", "1a2b3c", "2c9e14"]), lr: "main+0x" + pick(["1a2b00", "4f0010", "1a2b00"]) };
+                    if (crashRoll < profile.risk * (memoryTight ? 3 : 1) + 0.02) end = memoryTight || (profile.peak > 5000 && rand() < 0.6) ? { kind: "memory-likely" } : rand() < 0.15 ? { kind: "boot-failed" } : reader >= GPU_LOST_READER && rand() < 0.15 ? { kind: "crash", signal: 6, pc: "__pthread_kill+0x8", lr: "pthread_kill+0x10c", cause: "gpuLost" } : codeCrash(pick([11, 11, 11, 10, 6]), "main+0x" + pick(["1a2b3c", "4f00a8", "1a2b3c", "2c9e14"]), "main+0x" + pick(["1a2b00", "4f0010", "1a2b00"]));
                     else if (rand() < 0.12) end = { kind: "unknown" };
                     const heat = rand() < profile.heat * 2.2 ? profile.heat * between(0.6, 1.4) : 0;
                     const serious = round(minutes * heat * 0.6);
@@ -1639,7 +1775,7 @@
         };
     }
 
-    root.CartoucheModel = { ENDS, THERMAL, SHOWN, STATUSES, SLOWEST_READER, FOLD_READER, GPU_LOST_READER, ATTENTION, expand, compact, build, demo, median, dayList, gameOf, newestFirst, verdict, shownDays };
+    root.CartoucheModel = { ENDS, THERMAL, SHOWN, STATUSES, SLOWEST_READER, FOLD_READER, GPU_LOST_READER, GAME_CODE, HOT_MINUTES, GONE_COPIES, UNCOUNTED_MINUTES, ATTENTION, expand, compact, build, demo, median, dayList, gameOf, newestFirst, verdict, shownDays };
 })(typeof window !== "undefined" ? window : globalThis);
 </script>
 
@@ -1743,6 +1879,7 @@
         install: "Installer un jeu", export: "Envoyer un jeu", start: "Lancer un jeu", uninstall: "Supprimer un jeu",
         update: "Mettre à jour Cartouche", renewal: "Renouveler la signature", pairing: "Fichier de jumelage",
         signIn: "Connexion Apple", storage: "Stockage", saves: "Sauvegardes", cloud: "Sauvegardes sur le stockage",
+        reset: "Réinitialiser Cartouche",
     };
     const CAUSES = { shaders: "Shaders", textures: "Textures", other: "Autre" };
     // The causes an error of the app gives (CartoucheFailure.Cause).
@@ -1768,6 +1905,8 @@
     const SIGN_IN_STAGES = {
         start: "Avant SideStore", database: "Base de SideStore", credentials: "Identifiants", account: "Compte Apple", verification: "Code de vérification",
         team: "Équipe", certificate: "Certificat", device: "Enregistrement de l'iPhone", finish: "Fin", unknown: "Non dite",
+        // Cartouche's check of the iPhone before anything goes to Apple, and SideStore quitting before it launched.
+        deviceCheck: "Vérification de l'iPhone", launch: "Lancement de SideStore",
     };
     const CAUSE_TONES = { shaders: "var(--s1)", textures: "var(--s2)", other: "var(--s3)" };
     const SIGNALS = { 4: "SIGILL", 5: "SIGTRAP", 6: "SIGABRT", 8: "SIGFPE", 9: "SIGKILL", 10: "SIGBUS", 11: "SIGSEGV", 13: "SIGPIPE", 15: "SIGTERM" };
@@ -1781,7 +1920,20 @@
     const UPSCALERS = { metalfx: "MetalFX", bilinear: "Bilinéaire" };
     // Why a game ended, when its log says (end.cause).
     const END_CAUSES = { gpuLost: "Perte du GPU" };
-    const EVENTS = { "app.opened": "Ouverture de l'app", "app.unfinished": "Lancement inachevé", "app.updated": "Mise à jour de Cartouche", "signature.renewed": "Signature renouvelée", "renewal.done": "Renouvellement réussi", "game.installed": "Jeu installé ou mis à jour", "account.signedIn": "Connexion Apple réussie", "signing.imported": "Certificat importé", "import.picker": "Sélecteur de fichiers d'un import", error: "Erreur" };
+    // What an abort of each cause means, said where the abort is.
+    const ABORT_WHY = { gpuLost: "le système a retiré le GPU au jeu après des erreurs du GPU, et nxnative l'a arrêté" };
+    const EVENTS = {
+        "app.opened": "Ouverture de l'app", "app.unfinished": "Lancement inachevé", "app.updated": "Mise à jour de Cartouche", "app.reset": "Cartouche réinitialisé",
+        "signature.renewed": "Signature renouvelée", "renewal.done": "Renouvellement réussi", "game.installed": "Jeu installé ou mis à jour",
+        "game.infoChanged": "Infos d'un jeu modifiées", "game.shortcut": "Raccourci vers un jeu", "account.signedIn": "Connexion Apple réussie",
+        "signing.imported": "Certificat importé", "import.picker": "Sélecteur de fichiers d'un import", error: "Erreur",
+    };
+    // What the newest version of Cartouche does with an error (the model's state).
+    const ERROR_STATES = {
+        new: ["nouvelle en ", "var(--critical)"],
+        still: ["encore en ", "var(--warning)"],
+        gone: ["plus vue en ", "var(--good)"],
+    };
 
     const gameName = (id, name) => name || id || "?";
     function language(code) {
@@ -2090,11 +2242,16 @@
         return value.split(/(?<=[a-z0-9])(?=[A-Z])|(?<=[.<_])/).flatMap((part, index) => (index ? [h("wbr"), part] : [part]));
     }
 
+    // A table that sorts by the columns that say how, and that shows its
+    // first options.limit rows until asked for the others.
     function table(head, rows, options = {}) {
         if (!rows.length) return empty(options.empty);
         let sorted = rows.slice();
         let by = null;
         let descending = true;
+        const hidden = options.limit && rows.length > options.limit ? rows.length - options.limit : 0;
+        let all = !hidden;
+        const more = hidden ? h("button", { type: "button", class: "linkish more" }) : null;
         const body = h("tbody");
         const headCells = head.map((column, index) => {
             const cell = h("th", { class: column.numeric ? "n" : null, scope: "col" });
@@ -2106,7 +2263,8 @@
             return cell;
         });
         const fill = () => {
-            body.replaceChildren(...sorted.map((row) => {
+            if (more) more.textContent = all ? "Réduire" : options.more ? options.more(hidden) : hidden === 1 ? "Voir la dernière ligne" : "Voir les " + count(hidden) + " autres lignes";
+            body.replaceChildren(...(all ? sorted : sorted.slice(0, options.limit)).map((row) => {
                 const line = h("tr", { class: options.pick ? "pick" : null }, head.map((column) => {
                     const value = column.cell(row);
                     return h("td", { class: [column.numeric ? "n" : "", column.mono ? "mono" : "", column.wide ? "wide" : ""].join(" ").trim() || null }, column.mono ? breakable(value) : value);
@@ -2137,8 +2295,13 @@
             headCells.forEach((cell, other) => (other === index ? cell.setAttribute("aria-sort", descending ? "descending" : "ascending") : cell.removeAttribute("aria-sort")));
             fill();
         };
+        if (more) more.addEventListener("click", () => {
+            all = !all;
+            fill();
+        });
         fill();
-        return h("div", { class: "scroll" }, h("table", {}, h("thead", {}, h("tr", {}, headCells)), body));
+        const shown = h("div", { class: "scroll" }, h("table", {}, h("thead", {}, h("tr", {}, headCells)), body));
+        return more ? h("div", {}, shown, more) : shown;
     }
 
     function cover(id, coverId, name) {
@@ -2227,18 +2390,32 @@
                     "Jamais connectées à Apple",
                     (item.cause ? "Cause la plus fréquente : " + (FAILURE_CAUSES[item.cause] || item.cause) + ", pour " + plural(item.causeCopies, "copie", "copies") + ". " : "") + "Sans elle, Cartouche ne se renouvelle pas seul chaque semaine.",
                 ];
-            case "game":
+            case "game": {
+                const ended = plural(item.bad, "partie", "parties") + " sur " + count(item.sessions) + " finie" + (item.bad > 1 ? "s" : "") + " mal (" + M.ENDS.filter((kind) => kind !== "ok" && kind !== "unknown" && item.ends[kind]).map((kind) => ENDS[kind].toLowerCase() + " " + count(item.ends[kind])).join(", ") + ")";
+                if (item.status !== "none") return [name(item.game, item.name) + " ne tient pas", ended + "."];
+                if (item.uncounted) {
+                    return [
+                        name(item.game, item.name) + " : aucune image comptée",
+                        "Sur " + plural(item.copies, "iPhone", "iPhones") + ", pour " + duration(item.minutes) + " de parties : son journal ne compte peut-être pas ses images, ou le jeu reste sur un écran noir.",
+                    ];
+                }
                 return [
-                    name(item.game, item.name) + (item.status === "none" ? " ne tourne pas" : " ne tient pas"),
-                    item.status === "none"
-                        ? "Aucune image affichée, sur " + plural(item.copies, "iPhone", "iPhones") + "."
-                        : plural(item.bad, "partie", "parties") + " sur " + count(item.sessions) + " finie" + (item.bad > 1 ? "s" : "") + " mal (" + M.ENDS.filter((kind) => kind !== "ok" && kind !== "unknown" && item.ends[kind]).map((kind) => ENDS[kind].toLowerCase() + " " + count(item.ends[kind])).join(", ") + ").",
+                    name(item.game, item.name) + " ne tourne pas",
+                    "Aucune image affichée, sur " + plural(item.copies, "iPhone", "iPhones") + (item.bad ? " : " + ended : "") + ".",
                 ];
-            case "build":
-                return [
-                    "nxnative " + item.commit.slice(0, 8) + " : aucune construction réussie",
-                    sentence(plural(item.failed, "échec", "échecs") + (item.stage ? ", surtout à l'étape « " + item.stage + " »" : "") + ", le dernier le " + dayText(item.last)),
-                ];
+            }
+            case "build": {
+                const where = (item.stage ? ", surtout à l'étape « " + item.stage + " »" : "") + ", le dernier le " + dayText(item.last);
+                return item.regressions
+                    ? [
+                        "nxnative " + item.commit.slice(0, 8) + " : des jeux qui se construisaient échouent",
+                        sentence(plural(item.regressions, "jeu déjà construit sur ces Macs échoue", "jeux déjà construits sur ces Macs échouent") + " avec lui" + where),
+                    ]
+                    : [
+                        "nxnative " + item.commit.slice(0, 8) + " : aucune construction réussie",
+                        sentence(plural(item.failed, "jeu en échec", "jeux en échec") + where),
+                    ];
+            }
             case "newError": {
                 const stage = item.stage ? (item.origin === "signIn" ? SIGN_IN_STAGES[item.stage] || item.stage : item.stage) : null;
                 return [
@@ -2249,7 +2426,13 @@
             case "crash":
                 return [
                     "Le même plantage, " + [has(item.signal) ? SIGNALS[item.signal] || "signal " + item.signal : null, item.cause ? (END_CAUSES[item.cause] || item.cause).replace(/^./, (letter) => letter.toLowerCase()) : null].filter(Boolean).join(", "),
-                    sentence("À " + (item.pc || "?") + ", " + plural(item.count, "fois", "fois") + " : " + item.games.map((id) => name(id)).slice(0, 3).join(", ") + (item.games.length > 3 ? "…" : "")),
+                    sentence("À " + (item.pc || "?") + " dans le code du jeu, " + plural(item.count, "fois", "fois") + " : " + item.games.map((id) => name(id)).slice(0, 3).join(", ") + (item.games.length > 3 ? "…" : "")),
+                ];
+            case "abort":
+                return [
+                    name(item.game, item.name) + (item.cause ? " : " + (END_CAUSES[item.cause] || item.cause).replace(/^./, (letter) => letter.toLowerCase()) : " s'arrête brutalement"),
+                    sentence(plural(item.count, "arrêt", "arrêts") + (has(item.signal) ? " (" + (SIGNALS[item.signal] || "signal " + item.signal) + ")" : "") + (item.sessions ? " en " + plural(item.sessions, "partie", "parties") : "") + " : "
+                        + (item.cause ? ABORT_WHY[item.cause] || "le jeu s'est arrêté de lui-même" : "le jeu s'est arrêté de lui-même, et son adresse, la même pour tous les jeux, ne dit pas pourquoi")),
                 ];
             case "memory":
                 return [
@@ -2265,16 +2448,25 @@
         if (!model.attention.length) {
             return h("div", { class: "all-clear" }, statusDot("var(--good)", ""), model.totals.reports ? "Rien d'alarmant sur cette période." : "Pas encore de mesure sur cette période.");
         }
-        const list = h("ol", { class: "attention" }, model.attention.map((item) => {
+        const point = (item) => {
             const [title, detail] = attentionText(item);
             const action = item.game
                 ? h("button", { type: "button", class: "linkish", text: "Voir ce jeu", onclick: () => pickGame(item.game) })
                 : item.section ? h("a", { href: "#" + item.section, class: "linkish", text: "Voir le détail" }) : null;
+            const unit = item.key === "build" ? ["Mac", "Macs"] : ["game", "crash", "abort"].includes(item.key) ? ["iPhone", "iPhones"] : ["copie", "copies"];
             return h("li", { "--tone": TONES[item.tone] || "var(--warning)" },
-                h("span", { class: "count" }, count(item.copies), h("small", { text: item.key === "build" ? (item.copies > 1 ? "Macs" : "Mac") : item.key === "game" || item.key === "crash" ? (item.copies > 1 ? "iPhones" : "iPhone") : item.copies > 1 ? "copies" : "copie" })),
+                h("span", { class: "count" }, count(item.copies), h("small", { text: unit[item.copies > 1 ? 1 : 0] })),
                 h("div", {}, h("b", { text: title }), h("p", { text: detail }), action));
-        }));
-        return h("div", {}, list, model.attentionMore ? h("p", { class: "foot", text: "Et " + count(model.attentionMore) + " de plus, moins répandus." }) : null);
+        };
+        const list = h("ol", { class: "attention" }, model.attention.map(point));
+        if (!model.attentionMore) return h("div", {}, list);
+        // The others, less widespread, on demand.
+        const more = h("button", { type: "button", class: "linkish", text: model.attentionMore === 1 ? "Voir l'autre point, moins répandu" : "Voir les " + count(model.attentionMore) + " autres, moins répandus" });
+        more.addEventListener("click", () => {
+            list.append(...model.attentionRest.map(point));
+            more.remove();
+        });
+        return h("div", {}, list, h("p", { class: "foot" }, more));
     }
 
     // MARK: Journey
@@ -2310,6 +2502,16 @@
 
     // MARK: Versions
 
+    // Where an error happened and why; its code when the app could not name
+    // the cause, which says more than « Autre ».
+    function errorLabel(error) {
+        const unnamed = !error.cause || error.cause === "other" || error.cause === "unknown";
+        return [
+            (ORIGINS[error.origin] || error.origin || "?") + " › ",
+            unnamed && error.error ? h("code", { class: "code" }, breakable(error.error.replace(/ (?=-?\d)/g, "\u00a0"))) : FAILURE_CAUSES[error.cause] || error.cause,
+        ];
+    }
+
     function versionsTable(model) {
         const rows = model.versions;
         if (!rows.length) return [card("Par version de Cartouche", null, empty())];
@@ -2331,7 +2533,7 @@
                     h("td", { class: "n" }, row.setUp ? percent(row.setUp.share) : DASH, meter(row.setUp && row.setUp.share, toneOf(row.setUp && row.setUp.share, 0.6, 0.3))),
                     h("td", { class: "n" }, has(bad) ? percent(bad, 1) : DASH, row.sessions ? h("small", { text: " sur " + count(row.sessions) }) : null),
                     h("td", { class: "n" }, has(errors) ? n0.format(errors) : DASH),
-                    h("td", { class: "wide" }, row.topError ? [(ORIGINS[row.topError.origin] || row.topError.origin) + " › " + (FAILURE_CAUSES[row.topError.cause] || row.topError.cause), " ", h("small", { class: "nowrap", text: plural(row.topError.copies, "copie", "copies") })] : DASH),
+                    h("td", { class: "wide" }, row.topError ? [errorLabel(row.topError), " ", h("small", { class: "nowrap", text: plural(row.topError.copies, "copie", "copies") })] : DASH),
                     h("td", { class: "n" }, row.first === row.last ? dayText(row.last) : dayText(row.first) + " – " + dayText(row.last)));
             }))));
         return [h("article", { class: "card span" },
@@ -2423,15 +2625,37 @@
             bars(model.eventNames.map((row) => ({ label: EVENTS[row.key] || row.key, sub: EVENTS[row.key] ? row.key : null, value: row.count, figure: count(row.count), note: plural(row.installs, "iPhone", "iPhones") })), { empty: "Aucun événement sur cette période." }));
     }
 
+    // The verdict the games' table shows, "" for every game; the worst first.
+    let gamesStatus = "";
+    const STATUS_ORDER = ["none", "boots", "issues", "playable"];
     function gamesTable(model, pickGame) {
         if (!model.games.length) return card("Jeux joués", null, empty("Aucune partie sur cette période."));
         // The slowest 5% only once a game has parties read without their pauses.
         const slowest = model.games.some((game) => has(game.low5));
         const waiting = model.games.some((game) => game.low5Waiting);
         const builds = model.games.some((game) => game.build);
-        return h("article", { class: "card span" },
-            h("h3", { text: "Jeux joués" }),
-            h("p", { class: "sub", text: "Le verdict suit les règles des fiches des jeux : chaque iPhone compte une fois, par la médiane de ses parties. Le pic mémoire est le plus haut, avec la part de la limite d'iOS que le jeu a le plus approchée." + (!slowest && waiting ? " Les 5 % les plus lents viendront avec les parties lues sans leurs pauses (lecture 2 du journal)." : "") + " Un clic sur un jeu filtre toute la page." }),
+        const statuses = Object.fromEntries(model.gameStatuses.map((item) => [item.status, item]));
+        if (gamesStatus && !(statuses[gamesStatus] && statuses[gamesStatus].games)) gamesStatus = "";
+        const holder = h("div");
+        const draw = () => {
+            const choice = (status, label, games, tone, tip) => h("button", {
+                type: "button",
+                role: "tab",
+                "aria-selected": String(gamesStatus === status),
+                title: tip,
+                onclick: () => {
+                    gamesStatus = status;
+                    draw();
+                },
+            }, tone ? h("span", { class: "status" }, h("i", { "--fill": tone }), label) : label, " ", h("b", { text: count(games) }));
+            const tabs = h("div", { class: "tabs", role: "tablist", "aria-label": "Verdict" },
+                choice("", "Tous", model.games.length),
+                STATUS_ORDER.filter((status) => statuses[status] && statuses[status].games).map((status) =>
+                    choice(status, STATUS[status], statuses[status].games, STATUS_TONES[status], STATUS_NOTES[status] + " " + plural(statuses[status].measured, "jeu mesuré", "jeux mesurés") + " sur au moins 3 iPhones.")));
+            const shown = gamesStatus ? model.games.filter((game) => game.verdict.status === gamesStatus) : model.games;
+            holder.replaceChildren(tabs, gamesRows(shown));
+        };
+        const gamesRows = (shown) =>
             table([
                 { label: "Jeu", cell: gameCell, sort: (game) => gameName(game.id, game.name), numeric: false },
                 { label: "Verdict", cell: (game) => verdictPill(game.verdict), sort: (game) => M.STATUSES.indexOf(game.verdict.status) * 1000 - game.verdict.iphones, numeric: false },
@@ -2445,7 +2669,12 @@
                 { label: "Fins", cell: (game) => h("div", { class: "endcell" }, endBar(game.ends)), sort: (game) => game.badShare ?? -1, numeric: true },
                 builds ? { label: "nxnative", mono: true, cell: (game) => [game.build ? game.build.slice(0, 8) : DASH, game.builds > 1 ? h("small", { text: " +" + (game.builds - 1) }) : null], sort: (game) => game.build || "", numeric: false } : null,
                 { label: "Dernière", numeric: true, cell: (game) => dayText(game.last), sort: (game) => game.last, },
-            ].filter(Boolean), model.games, { pick: (game) => pickGame(game.id) }));
+            ].filter(Boolean), shown, { pick: (game) => pickGame(game.id), limit: 20, more: (hidden) => (hidden === 1 ? "Voir l'autre jeu" : "Voir les " + count(hidden) + " autres jeux") });
+        draw();
+        return h("article", { class: "card span" },
+            h("h3", { text: "Jeux joués" }),
+            h("p", { class: "sub", text: "Le verdict suit les règles des fiches des jeux : chaque iPhone compte une fois, par la médiane de ses parties. Le pic mémoire est le plus haut, avec la part de la limite d'iOS que le jeu a le plus approchée." + (!slowest && waiting ? " Les 5 % les plus lents viendront avec les parties lues sans leurs pauses (lecture 2 du journal)." : "") + " Les plus joués d'abord ; un clic sur un jeu filtre toute la page." }),
+            holder);
     }
 
     function fluidity(model) {
@@ -2510,8 +2739,8 @@
                     ["Économie d'énergie", total ? percent(t.lowPowerMinutes / Math.max(t.playMinutes, total)) : DASH, "du temps"],
                     ["Parties en économie", shareText(t.lowPower)],
                 ])),
-            card("Jeux qui chauffent le plus", "Part du temps en état chaud ou critique.",
-                bars(t.byGame.map((game) => ({ label: gameName(game.id, game.name), value: game.hotShare, figure: percent(game.hotShare), tone: game.hotShare >= 0.4 ? "var(--critical)" : game.hotShare >= 0.2 ? "var(--serious)" : "var(--s1)", tip: [duration(game.minutes) + " mesurées"] })), { max: 1, meter: true, empty: "Aucun jeu n'a chauffé." })),
+            card("Jeux qui chauffent le plus", "Part du temps en état chaud ou critique, des jeux mesurés une demi-heure au moins.",
+                bars(t.byGame.map((game) => ({ label: gameName(game.id, game.name), value: game.hotShare, figure: percent(game.hotShare), tone: game.hotShare >= 0.4 ? "var(--critical)" : game.hotShare >= 0.2 ? "var(--serious)" : "var(--s1)", tip: [duration(game.minutes) + " mesurées", plural(game.iphones, "iPhone", "iPhones")] })), { max: 1, meter: true, empty: "Aucun jeu n'a chauffé." })),
         ];
     }
 
@@ -2538,27 +2767,33 @@
 
     function endings(model) {
         const e = model.endings;
-        const signal = (value) => (has(value) ? (SIGNALS[value] || "signal " + value) : DASH);
         const builds = e.byBuild.some((build) => build.build);
         return [
             card("Fin des parties", "Comment chaque partie s'est terminée, d'après son journal.",
                 segmented(M.ENDS.map((kind) => ({ label: ENDS[kind], value: e.ends[kind], tone: END_TONES[kind], figure: count(e.ends[kind]) })), { empty: "Aucune partie sur cette période." }),
+                e.ends.unknown ? h("p", { class: "minor", text: "Une fin inconnue est un jeu que le joueur a fermé, ou qu'iOS a arrêté sans un mot : seuls un plantage, la mémoire et un démarrage raté comptent contre un jeu." }) : null,
                 e.gpuLost.read ? h("p", { class: "minor", text: "Pertes du GPU : " + count(e.gpuLost.count) + " sur " + plural(e.gpuLost.read, "plantage lu", "plantages lus") + " depuis la lecture " + M.GPU_LOST_READER + " du journal. Le système a retiré le GPU au jeu après des erreurs du GPU, et nxnative l'a arrêté." }) : null),
-            !builds ? null : card("Par build de nxnative", "Les builds les plus récents d'abord.",
-                bars(e.byBuild.map((build) => ({ label: build.build ? build.build.slice(0, 12) : "inconnu", sub: dayText(build.last), value: build.sessions, figure: plural(build.sessions, "partie", "parties"), note: build.sessions ? percent(build.bad / build.sessions) + " mal finies" : null, tone: build.sessions && build.bad / build.sessions >= 0.1 ? "var(--critical)" : "var(--s1)" })))),
-            h("article", { class: "card span" }, h("h3", { text: "Plantages" }), h("p", { class: "sub", text: "Groupés par signal et par adresse dans le code du jeu (module + décalage)." }),
+            !builds ? null : card("Par build de nxnative", "Les builds vus le plus récemment d'abord, avec le jour où chacun est apparu.",
+                bars(e.byBuild.map((build) => ({ label: build.build ? build.build.slice(0, 12) : "inconnu", sub: build.first ? "depuis le " + dayText(build.first) : null, value: build.sessions, figure: plural(build.sessions, "partie", "parties"), note: build.sessions ? percent(build.bad / build.sessions) + " mal finies" : null, tone: build.sessions && build.bad / build.sessions >= 0.1 ? "var(--critical)" : "var(--s1)" })))),
+            h("article", { class: "card span" }, h("h3", { text: "Plantages" }),
+                h("p", { class: "sub", text: "Un plantage dans le code du jeu est groupé par son adresse (module + décalage) : la même adresse sur plusieurs iPhones est le même bug. Un arrêt du jeu (SIGABRT) passe toujours par la même adresse du système, quelle qu'en soit la raison : il est groupé par jeu, avec ses parties. Les plus répandus d'abord." }),
                 table([
-                    { label: "Signal", cell: (crash) => signal(crash.signal), sort: (crash) => crash.signal ?? 0 },
-                    { label: "Cause", cell: (crash) => (crash.cause ? END_CAUSES[crash.cause] || crash.cause : DASH) },
-                    { label: "pc", mono: true, cell: (crash) => crash.pc || DASH },
-                    { label: "lr", mono: true, cell: (crash) => crash.lr || DASH },
-                    { label: "Fois", numeric: true, cell: (crash) => count(crash.count), sort: (crash) => crash.count },
+                    { label: "Plantage", cell: (crash) => crashLabel(crash), sort: (crash) => (crash.where === "code" ? 1 : 0) * 100 + (crash.signal ?? 0), numeric: false },
+                    { label: "Jeu", wide: true, cell: (crash) => crash.games.map((id) => gameName(id, catalog.games && catalog.games[id] && catalog.games[id][0])).slice(0, 4).join(", ") + (crash.games.length > 4 ? "…" : "") || DASH },
+                    { label: "Fois", numeric: true, cell: (crash) => [count(crash.count), crash.of ? h("small", { text: " en " + plural(crash.of, "partie", "parties") }) : null], sort: (crash) => crash.count },
                     { label: "iPhones", numeric: true, cell: (crash) => count(crash.iphones), sort: (crash) => crash.iphones },
-                    { label: "Jeux", wide: true, cell: (crash) => crash.games.join(", ") },
-                    builds ? { label: "nxnative", mono: true, cell: (crash) => crash.builds.map((build) => build.slice(0, 8)).join(", ") || DASH } : null,
+                    { label: "Adresse", mono: true, cell: (crash) => (crash.where === "code" ? [crash.pc, crash.lr ? h("small", { class: "block", text: "← " + crash.lr }) : null] : DASH) },
+                    builds ? { label: "nxnative", mono: true, cell: (crash) => crash.builds.map((build) => build.slice(0, 8)).slice(0, 3).join(", ") + (crash.builds.length > 3 ? " +" + (crash.builds.length - 3) : "") || DASH } : null,
+                    { label: "Cartouche", cell: (crash) => crash.versions.slice(0, 2).join(", ") + (crash.versions.length > 2 ? "…" : "") || DASH },
                     { label: "Dernier", numeric: true, cell: (crash) => dayText(crash.last), sort: (crash) => crash.last },
-                ].filter(Boolean), e.crashes, { empty: "Aucun plantage sur cette période." })),
+                ].filter(Boolean), e.crashes, { empty: "Aucun plantage sur cette période.", limit: 12 })),
         ];
+    }
+    // A crash by its signal, and where: in the game's code, or an abort.
+    function crashLabel(crash) {
+        const name = has(crash.signal) ? SIGNALS[crash.signal] || "signal " + crash.signal : "Arrêt";
+        const where = crash.where === "code" ? "dans le code du jeu" : crash.signal === 6 || !has(crash.signal) ? "arrêt du jeu" : "dans le système";
+        return [h("b", { text: name }), h("small", { class: "block", text: where }), crash.cause ? tag(END_CAUSES[crash.cause] || crash.cause, "var(--critical)") : null];
     }
 
     function devices(model) {
@@ -2602,7 +2837,8 @@
             card("Où l'app a échoué", plural(e.count, "erreur", "erreurs") + " sur " + plural(e.iphones, "iPhone", "iPhones") + (e.background ? ", " + percent(e.background.share) + " en arrière-plan." : "."),
                 bars(e.byOrigin.map((row) => ({ label: ORIGINS[row.key] || row.key, value: row.count, figure: count(row.count), note: plural(row.installs, "iPhone", "iPhones") })), { empty: "Aucune erreur sur cette période." })),
             card("Pourquoi", "La cause que l'app tire de l'erreur, de ses codes et de l'étape atteinte, jamais de son texte.",
-                bars(e.byCause.map((row) => ({ label: FAILURE_CAUSES[row.key] || row.key, value: row.count, figure: count(row.count), note: plural(row.installs, "iPhone", "iPhones") })), { empty: "Aucune erreur sur cette période." })),
+                bars(e.byCause.slice(0, 12).map((row) => ({ label: FAILURE_CAUSES[row.key] || row.key, value: row.count, figure: count(row.count), note: plural(row.installs, "iPhone", "iPhones") })), { empty: "Aucune erreur sur cette période." }),
+                e.byCause.length > 12 ? h("p", { class: "foot", text: "Et " + plural(e.byCause.length - 12, "autre cause", "autres causes") + ", " + plural(e.byCause.slice(12).reduce((all, row) => all + row.count, 0), "erreur", "erreurs") + " en tout." }) : null),
             card("Connexion Apple", tried ? plural(s.succeeded, "connexion réussie", "connexions réussies") + " sur " + plural(tried, "essai", "essais") + (s.failed ? ", " + plural(s.failed, "échec", "échecs") + " sur " + plural(s.iphones, "iPhone", "iPhones") + "." : ".") : "Aucune connexion sur cette période.",
                 facts([
                     ["Réussite", tried ? percent(s.succeeded / tried) : DASH],
@@ -2616,9 +2852,10 @@
                 bars(s.byStage.map((row) => ({ label: SIGN_IN_STAGES[row.key] || row.key, value: row.count, figure: count(row.count), note: plural(row.installs, "iPhone", "iPhones"), tip: ["étape atteinte"] })), { empty: "Aucun échec de connexion sur cette période." })),
             card("Par version de Cartouche", "Erreurs pour 100 ouvertures de l'app, les versions récentes d'abord.",
                 bars(e.byVersion.filter((row) => row.opens).map((row) => ({ label: "Cartouche " + row.version, value: (row.errors / row.opens) * 100, figure: one((row.errors / row.opens) * 100) + " / 100", note: plural(row.errors, "erreur", "erreurs"), tip: [plural(row.opens, "ouverture", "ouvertures")] })), { empty: "Aucune erreur sur cette période." })),
-            h("article", { class: "card span" }, h("h3", { text: "Codes d'erreur" }), h("p", { class: "sub", text: "Les erreurs que le plus de copies ont rencontrées d'abord : cause, étape atteinte, cas de l'erreur, domaines et codes de l'erreur et de celles qu'elle contient, jamais son texte. « Nouvelle » : seule la version la plus récente l'a envoyée." }),
+            h("article", { class: "card span" }, h("h3", { text: "Codes d'erreur" }),
+                h("p", { class: "sub", text: (e.newest ? "D'abord celles que la " + e.newest + ", la version la plus récente, envoie encore, puis celles qu'elle n'envoie plus ; dans chaque groupe, " : "") + "celles que le plus de copies ont rencontrées d'abord : cause, étape atteinte, cas de l'erreur, domaines et codes de l'erreur et de celles qu'elle contient, jamais son texte. « Nouvelle » : seule la version la plus récente l'a envoyée ; « plus vue » : elle ne l'a pas envoyée, sur " + count(M.GONE_COPIES) + " copies au moins." }),
                 table([
-                    { label: "Où", cell: (row) => [ORIGINS[row.origin] || row.origin || DASH, row.newIn ? tag("nouvelle en " + row.newIn, "var(--warning)") : null], sort: (row) => row.origin || "", numeric: false },
+                    { label: "Où", cell: (row) => [ORIGINS[row.origin] || row.origin || DASH, row.state ? tag(ERROR_STATES[row.state][0] + e.newest, ERROR_STATES[row.state][1]) : null], sort: (row) => row.origin || "", numeric: false },
                     { label: "Cause", cell: (row) => (row.cause ? FAILURE_CAUSES[row.cause] || row.cause : DASH), sort: (row) => row.cause || "", numeric: false },
                     { label: "Étape", mono: true, cell: (row) => row.stage || DASH },
                     { label: "Cas", mono: true, cell: (row) => row.kind || DASH },
@@ -2628,7 +2865,7 @@
                     { label: "Arrière-plan", numeric: true, cell: (row) => shareText(row.background) },
                     { label: "Versions", cell: (row) => row.versions.join(", ") || DASH },
                     { label: "Dernière", numeric: true, cell: (row) => dayText(row.last), sort: (row) => row.last },
-                ], e.byCode, { empty: "Aucune erreur sur cette période." })),
+                ], e.byCode, { empty: "Aucune erreur sur cette période.", limit: 12 })),
         ];
     }
 
@@ -2668,12 +2905,13 @@
                 columns(b.daily.map((day) => ({ label: dayText(day.day), title: long.format(new Date(day.day + "T00:00:00Z")) + (day.failed ? " · " + plural(day.failed, "échec", "échecs") : ""), value: day.built + day.failed, figure: plural(day.built, "construit", "construits") + (day.failed ? ", " + plural(day.failed, "échec", "échecs") : ""), tone: day.failed && !day.built ? "var(--critical)" : "var(--s1)" })), { height: 120, label: "Constructions par jour" }),
                 facts([["Durée médiane", duration(has(b.built.seconds) ? b.built.seconds / 60 : null)], ["IPA médiane", has(b.built.ipaMB) ? n0.format(b.built.ipaMB) : DASH, "Mo"], ["Lots", count(b.batches.count)], ["Lot médian", duration(b.batches.minutes)]])),
             h("article", { class: "card span" }, h("h3", { text: "Par commit de nxnative" }),
-                h("p", { class: "sub", text: "Ce que chaque commit de nxnative a donné aux Macs qui ont construit avec, les plus récents d'abord : un commit que nxnative a cassé échoue sur tous les Macs." }),
+                h("p", { class: "sub", text: "Ce que chaque commit de nxnative a donné aux Macs qui ont construit avec, les jours les plus récents d'abord. Chaque jeu d'un Mac compte une fois, comme son dernier essai a fini : un jeu relancé dix fois ne fait qu'un échec. Une régression est un jeu que ce Mac construisait et qui échoue avec ce commit : un commit que nxnative a cassé en fait sur plusieurs Macs." }),
                 table([
                     { label: "Commit", mono: true, cell: (row) => row.commit ? row.commit.slice(0, 12) : "inconnu" },
                     { label: "Réussite", cell: (row) => h("span", { class: "verdict", "--tone": toneOf(row.built / Math.max(1, row.built + row.failed), 0.8, 0.5) }, h("i"), percent(row.built / Math.max(1, row.built + row.failed))), sort: (row) => row.built / Math.max(1, row.built + row.failed), numeric: true },
                     { label: "Construits", numeric: true, cell: (row) => count(row.built), sort: (row) => row.built },
-                    { label: "Échecs", numeric: true, cell: (row) => count(row.failed), sort: (row) => row.failed },
+                    { label: "Échecs", numeric: true, cell: (row) => [count(row.failed), row.tries > row.failed ? h("small", { text: " en " + plural(row.tries, "essai", "essais") }) : null], sort: (row) => row.failed },
+                    { label: "Régressions", numeric: true, cell: (row) => (row.regressions ? [count(row.regressions), h("small", { text: " sur " + plural(row.regressedMacs, "Mac", "Macs") })] : DASH), sort: (row) => row.regressions },
                     { label: "Macs", numeric: true, cell: (row) => [count(row.macs), row.failedMacs ? h("small", { text: " dont " + count(row.failedMacs) + " en échec" }) : null], sort: (row) => row.macs },
                     { label: "Jeux", numeric: true, cell: (row) => count(row.games), sort: (row) => row.games },
                     { label: "Étape des échecs", cell: (row) => row.stage || DASH },
@@ -2681,8 +2919,9 @@
                 ], b.byCommit, { empty: "Aucune construction sur cette période." })),
             card("Pourquoi construire", "Ce qui a fait construire chaque jeu, à nouveau ou pour la première fois.", ranked(b.built.reasons, (key) => REBUILD[key] || key),
                 h("p", { class: "foot", text: "Sources : " + (b.built.sources.map((item) => item.key + " (" + count(item.count) + ")").join(", ") || DASH) })),
-            card("Échecs", plural(b.failed.count, "échec", "échecs") + " de construction.",
-                ranked(b.failed.stages, (key) => "Étape " + key),
+            card("Échecs", plural(b.failed.count, "échec", "échecs") + " de construction" + (b.failed.count ? ", de " + plural(b.failed.macGames, "jeu", "jeux") + " sur " + plural(b.failed.macs, "Mac", "Macs") + " : un jeu relancé compte à chaque essai." : "."),
+                ranked(b.failed.stages.slice(0, 10), (key) => "Étape " + key),
+                b.failed.stages.length > 10 ? h("p", { class: "foot", text: "Et " + plural(b.failed.stages.length - 10, "autre étape", "autres étapes") + " : " + b.failed.stages.slice(10).map((item) => item.key + " (" + count(item.count) + ")").join(", ") + "." }) : null,
                 h("p", { class: "foot", text: "Raisons : " + (b.failed.reasons.map((item) => (REBUILD[item.key] || item.key) + " (" + count(item.count) + ")").join(", ") || DASH) + " · Jeux : " + (b.failed.games.map((item) => gameName(item.key, item.name)).join(", ") || DASH) })),
             card("Installation des outils et entretien", null,
                 bars(b.setup.map((item) => ({ label: SETUP[item.item] || item.item, value: item.count, figure: count(item.ready) + " prêt" + (item.ready > 1 ? "s" : ""), note: duration(has(item.seconds) ? item.seconds / 60 : null) })), { empty: "Aucun outil installé sur cette période." }),
@@ -2769,16 +3008,16 @@
             section("versions", "Versions de Cartouche", "Chaque version, ses copies et ce qu'elles ont rencontré.", h("div", { class: "grid wide" }, versionsTable(model))),
             section("jeux", "Jeux", "Ce qui a été joué, et comment ça a tourné.", h("div", { class: "grid wide" }, gamesTable(model, pickGame))),
             section("compatibilite", "Par appareil", "Comment chaque jeu tourne sur chaque modèle.", h("div", { class: "grid wide" }, compatibility(model, pickGame))),
+            section("fins", "Fins de partie et plantages", "Comment les parties se terminent, et ce qui les arrête.", h("div", { class: "grid wide" }, endings(model))),
+            section("erreurs", "Erreurs de Cartouche", "Ce qui échoue dans l'app, et ce que la version la plus récente fait encore.", h("div", { class: "grid wide" }, errors(model))),
+            section("builder", "Cartouche Builder", "Les Macs qui construisent les jeux.", h("div", { class: "grid" }, builder(model))),
             section("activite", "Activité", null, h("div", { class: "grid wide" }, activity(model), eventsCard(model), weekdays(model))),
             section("fluidite", "Fluidité", "Ce que nxnative a mesuré pendant les parties.", h("div", { class: "grid" }, fluidity(model))),
             section("chaleur", "Chaleur et énergie", null, h("div", { class: "grid" }, heat(model))),
             section("memoire", "Mémoire", null, h("div", { class: "grid" }, memory(model))),
-            section("fins", "Fins de partie et plantages", null, h("div", { class: "grid wide" }, endings(model))),
             section("appareils", "Appareils et versions", plural(model.devices.iphones, "iPhone", "iPhones") + " sur la période.", h("div", { class: "grid" }, devices(model))),
             section("installations", "Installations de jeux", null, h("div", { class: "grid" }, installs(model))),
-            section("erreurs", "Erreurs de Cartouche", null, h("div", { class: "grid wide" }, errors(model))),
             section("problemes", "Problèmes signalés", null, h("div", { class: "grid" }, problems(model))),
-            section("builder", "Cartouche Builder", "Les Macs qui construisent les jeux.", h("div", { class: "grid" }, builder(model))),
             section("serveur", "Serveur", null, h("div", { class: "grid" }, server(model))),
         ].filter(Boolean));
         main.setAttribute("aria-busy", "false");
