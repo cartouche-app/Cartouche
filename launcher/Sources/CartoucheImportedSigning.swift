@@ -34,7 +34,11 @@ enum CartoucheImportedSigning {
     static var ownCertificateIPA: URL? { CartoucheRelease.ownCertificateIPA(version: cartoucheVersion) }
     /// The profile Cartouche was signed with, which iOS installed it with.
     static var ownProfile: Data? {
-        try? Data(contentsOf: Bundle.main.bundleURL.appendingPathComponent("embedded.mobileprovision"))
+        #if CARTOUCHE_GALLERY
+        return GalleryState.ownProfile
+        #else
+        return try? Data(contentsOf: Bundle.main.bundleURL.appendingPathComponent("embedded.mobileprovision"))
+        #endif
     }
     static var isSelected: Bool {
         isImportedInstall

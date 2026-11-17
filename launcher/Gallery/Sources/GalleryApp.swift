@@ -239,6 +239,16 @@
 //        signed-elsewhere                the IPA for an Apple ID, signed by a
 //                                        signing app without its app group,
 //                                        which cannot sign in
+//        signing-no-own-profile          signed on the iPhone (-GallerySigning
+//                                        iphone) by a signing app that put no
+//                                        profile in Cartouche: the import of
+//                                        a certificate, which the setup
+//                                        refused
+//        signing-profile-file            the same, Cartouche's profile in
+//                                        it, for a profile (.mobileprovision)
+//                                        chosen in the certificate's place
+//        signing-wrong-password          the same, for a .p12 whose password
+//                                        is not the one typed
 //        smb-no-guests                   on Add a shared folder (screen
 //                                        storage-smb), the NAS refusing a
 //                                        guest, without a user name
@@ -398,6 +408,33 @@ struct GalleryScenario {
     /// The title IDs of the player's games.
     var ownedTitles: [String] { owned.map { item in String(item.prefix { $0 != ":" }) } }
 
+    /// The certificate the player chose and the password they typed, in a
+    /// Cartouche signed on the iPhone, for an import that the setup refused
+    /// as the scenario's work says (works signing-…): the import's page, and
+    /// the guide's and the setup's step, say why.
+    var signingTrial: (certificate: Data, password: String)? {
+        switch work {
+        case "signing-wrong-password", "signing-no-own-profile": return (Self.standInPKCS12, "cartouche")
+        case "signing-profile-file": return (Self.standInProfile, "cartouche")
+        default: return nil
+        }
+    }
+
+    /// The first bytes of a .p12, as iOS reads them: a SEQUENCE whose first
+    /// value is the INTEGER 3, its version (RFC 7292); no key, no
+    /// certificate.
+    static let standInPKCS12 = Data([0x30, 0x82, 0x01, 0x00, 0x02, 0x01, 0x03] + [UInt8](repeating: 0, count: 253))
+
+    /// A provisioning profile for the gallery's team, a year from expiring:
+    /// its property list, in the CMS envelope's place.
+    static let standInProfile: Data = {
+        let plist: [String: Any] = ["Name": "Gallery", "TeamIdentifier": ["GALLERY123"],
+                                    "ExpirationDate": Date(timeIntervalSinceNow: 365 * 86_400), "DeveloperCertificates": [Data]()]
+        let xml = (try? PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)) ?? Data()
+        // A CMS envelope's first bytes: a SEQUENCE, then signedData's OID.
+        return Data([0x30, 0x80, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x07, 0x02]) + xml
+    }()
+
     /// The checks of this iPhone that minimuxer failed, LocalDevVPN
     /// connected, by work: SideStore's
     /// kind of error, minimuxer's reason and the library's words behind it,
@@ -461,6 +498,7 @@ struct GalleryScenario {
         GalleryState.setupDone = setupDone
         GalleryState.signing = signing == "iphone" ? .iPhone : signing == "installer" ? .installer : .account
         GalleryState.ownSignature = ownSignature
+        GalleryState.ownProfile = signingTrial != nil && work != "signing-no-own-profile" ? Self.standInProfile : nil
         GalleryState.certificateRefused = work == "certificate"
         GalleryState.appGroupMissing = work == "signed-elsewhere"
         GalleryState.liveProcessMissing = work?.hasSuffix("-no-liveprocess") == true
@@ -521,6 +559,10 @@ struct GalleryScenario {
                 CartoucheRenewals.shared.showUnansweredForGallery()
             }
             CartoucheSetup.shared.refresh()
+            if let trial = signingTrial {
+                // The import the setup refused, as the player tried it.
+                Task { await CartoucheSetup.shared.importSigning(certificate: trial.certificate, password: trial.password, profile: nil) }
+            }
             CartoucheGuide.shared.startOverForGallery()
             if work == "build-skipped" { CartoucheGuide.shared.skipBuild() }
             if controller { CartoucheGamepad.shared.showHints() }
@@ -1073,7 +1115,7 @@ struct CartoucheGalleryApp: App {
             CartoucheSignInView()
         case "signing":
             NavigationStack {
-                CartoucheSigningView()
+                CartoucheSigningView(certificate: scenario.signingTrial?.certificate)
             }
         case "guide":
             NavigationStack {

@@ -1137,6 +1137,60 @@
       ]
     },
     {
+      "name": "iphone-signing-wrong-password",
+      "comment": "The same, after an import whose password does not open the .p12 the player chose (work: signing-wrong-password).",
+      "screen": "signing",
+      "work": "signing-wrong-password",
+      "signing": "iphone",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-signing-profile-file",
+      "comment": "The same, after an import of the profile (.mobileprovision) the player chose in the certificate's place (work: signing-profile-file).",
+      "screen": "signing",
+      "work": "signing-profile-file",
+      "signing": "iphone",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-signing-no-own-profile",
+      "comment": "The same, in a Cartouche its signing app put no profile in (embedded.mobileprovision), after an import of the certificate (work: signing-no-own-profile).",
+      "screen": "signing",
+      "work": "signing-no-own-profile",
+      "signing": "iphone",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-setup-installer",
       "comment": "The setup of a Cartouche installed by the Cartouche Installer with the player's own certificate (signing: installer).",
       "screen": "setup",
