@@ -332,7 +332,8 @@ final class CartoucheRenewals: ObservableObject {
             gameRunning: CartoucheGameActions.shared.running != nil,
             lastTry: UserDefaults.standard.object(forKey: Self.lastTryKey) as? Date,
             certificateRevoked: certificateRevoked,
-            liveProcessMissing: liveProcessMissing)
+            liveProcessMissing: liveProcessMissing,
+            tailscaleConnected: CartoucheTailscale.isConnected)
     }
 
     /// Renew now, from the System page.
@@ -347,6 +348,8 @@ final class CartoucheRenewals: ObservableObject {
     /// When only LocalDevVPN is missing, Cartouche has it connect first, if
     /// it can open it (CartoucheLocalDevVPN): otherwise it counts no try,
     /// and renews itself as it comes back once LocalDevVPN is connected.
+    /// While Tailscale is on, which LocalDevVPN turns off, it waits for the
+    /// last two days, as the player's automation renews it at night.
     func renewIfDue() {
         let situation = self.situation
         switch CartoucheAutomaticRenewal.wait(situation, at: Date()) {

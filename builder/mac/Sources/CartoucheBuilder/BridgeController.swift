@@ -12,6 +12,7 @@
 import AppKit
 import BuilderKit
 import CartoucheCore
+import Network
 import SwiftUI
 
 /// An iPhone that asks to pair, until the player answers.
@@ -43,11 +44,17 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
     @Published private(set) var connected: Set<String> = []
     @Published private(set) var request: PairingRequest?
     @Published private(set) var games: URL?
+    /// This Mac's addresses in the player's tailnet, while Tailscale is on
+    /// here (CartoucheTailscale.swift): the paired iPhones reach the Mac
+    /// there away from home.
+    @Published private(set) var tailnet: [String] = []
     /// The window's model, whose builds a paired iPhone sees.
     weak var model: AppModel?
     private var panel: NSPanel?
     /// The Mac's name and the saves folder the gallery shows (preview).
     private var sampleMac: (name: String, saves: URL)?
+    /// The Mac's network, which Tailscale's tunnel joins and leaves.
+    private var network: NWPathMonitor?
 
     init(home: BuilderHome, sample: Bool) {
         self.home = home
@@ -55,6 +62,16 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
             server = nil
         } else {
             server = BridgeServer(devices: BridgeDevices(url: home.bridge), name: BridgeController.macName)
+            tailnet = CartoucheTailscale.ownAddresses()
+            let monitor = NWPathMonitor()
+            monitor.pathUpdateHandler = { [weak self] _ in
+                let addresses = CartoucheTailscale.ownAddresses()
+                Task { @MainActor in
+                    if self?.tailnet != addresses { self?.tailnet = addresses }
+                }
+            }
+            monitor.start(queue: DispatchQueue(label: "io.github.clabeuhtegrite.cartouche-builder.network"))
+            network = monitor
         }
         server?.delegate = self
         devices = server?.devices.all ?? []
@@ -129,13 +146,16 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
         devices = server?.devices.all ?? []
     }
 
-    /// Shows sample iPhones, without a server, and a made-up Mac name and
-    /// saves folder in place of this Mac's: the gallery's pictures.
-    func preview(devices: [PairedDevice], connected: Set<String>, games: String, name: String, saves: URL) {
+    /// Shows sample iPhones, without a server, and a made-up Mac name,
+    /// saves folder and addresses in the tailnet in place of this Mac's:
+    /// the gallery's pictures.
+    func preview(devices: [PairedDevice], connected: Set<String>, games: String, name: String, saves: URL,
+                 tailnet: [String] = []) {
         self.devices = devices
         self.connected = connected
         self.games = URL(fileURLWithPath: games, isDirectory: true)
         sampleMac = (name, saves)
+        self.tailnet = tailnet
         state = .running(port: CartoucheBridge.port)
     }
 
@@ -167,7 +187,9 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
             }
         }
         devices = server.devices.all
-        model?.telemetry.event("builder.paired", fields: ["allowed": .flag(allowed)])
+        // Whether Tailscale is on this Mac, as app.opened says it of the
+        // iPhone: never the tailnet, its names or its addresses.
+        model?.telemetry.event("builder.paired", fields: ["allowed": .flag(allowed), "tailscale": .flag(!tailnet.isEmpty)])
         return allowed
     }
 

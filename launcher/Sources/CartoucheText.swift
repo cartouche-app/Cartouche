@@ -362,6 +362,7 @@ enum CartoucheText {
     static var dailyStepVPN: String { s("daily.vpnAction", "Tap Next, choose New Blank Automation, then add the Enable LocalDevVPN action: it connects LocalDevVPN without opening it. An older LocalDevVPN calls it Start LocalDevVPN.") }
     static var dailyStepAction: String { s("daily.refreshAction", "Then add the Refresh All Apps action of Cartouche, not LiveContainer’s: Cartouche waits for LocalDevVPN to connect before it renews.") }
     static var dailyStepCheck: String { s("daily.step5", "Each renewal shows on the System page as the last renewal, and gives Cartouche seven more days.") }
+    static var dailyTailscale: String { s("daily.tailscale", "With Tailscale, add its Connect action last, among those of the Tailscale app: LocalDevVPN turned Tailscale off, and the automation turns it on again.") }
     static var openShortcuts: String { s("daily.openShortcuts", "Open Shortcuts") }
 
     // MARK: Installing, starting and uninstalling a game
@@ -703,6 +704,15 @@ enum CartoucheText {
     static func storageOfflineCheck(_ name: String) -> String { f("storage.offline.check", "%@ does not answer on this network: check its address, and that the iPhone is on its network or on your VPN.", name) }
     /// A few words, beside the server's name.
     static func storageOfflineShort(_ name: String) -> String { f("storage.offline.short", "%@ offline", name) }
+    static func storageOfflineTailscaleOff(_ name: String) -> String { f("storage.offline.tailscaleOff", "%@ answers only through Tailscale, which is off on this iPhone: turn it on in the Tailscale app, and Cartouche tries again at once.", name) }
+    static func storageOfflineTailscaleOffShort(_ name: String) -> String { f("storage.offline.tailscaleOff.short", "%@: Tailscale off", name) }
+    static var storageTailscaleTitle: String { s("storage.tailscale.title", "Away from home") }
+    static var tailscaleTurnedOffShort: String { s("tailscale.turnedOff.short", "Tailscale off") }
+    static var tailscaleTurnedOff: String { s("tailscale.turnedOff", "LocalDevVPN turned Tailscale off, as iOS keeps one VPN at a time: open Tailscale to turn it on again.") }
+    static var storageTailscaleConnected: String { s("storage.tailscale.connected", "Connected") }
+    static var storageTailscaleOff: String { s("storage.tailscale.off", "Off") }
+    static var storageTailscaleAppStore: String { s("storage.tailscale.appStore", "Tailscale on the App Store") }
+    static var storageTailscaleFooter: String { s("storage.tailscale.footer", "With Tailscale, installed apart on this iPhone and on your Mac or NAS, Cartouche reaches them wherever you are: your Mac by itself, a NAS by its name or its address in Tailscale. iOS keeps one VPN at a time: LocalDevVPN, which Cartouche connects to renew and update itself, turns Tailscale off until you turn it on again.") }
     static var storageTryAgain: String { s("storage.tryAgain", "Try again") }
 
     // MARK: A game's saves

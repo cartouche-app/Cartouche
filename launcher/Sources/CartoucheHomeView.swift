@@ -101,6 +101,7 @@ struct CartoucheHomeView: View {
     /// A renewal, as Cartouche renews itself in its last days: the days
     /// left go once it ends.
     @ObservedObject private var renewals = CartoucheRenewals.shared
+    @Environment(\.openURL) private var openURL
     @State private var row = CartoucheHomeView.shelfRow
     @State private var columns = [0, 0]
     @State private var signature = CartoucheSignature.current()
@@ -273,8 +274,9 @@ struct CartoucheHomeView: View {
             // symbol alone, as the controller's.
             if let offline = reach.offlineInUse.first {
                 // A Google Drive whose sign-in Google ended says so, the
-                // same way: its Storage page signs in again.
-                let away = CartoucheStorageOffline(offline)
+                // same way: its Storage page signs in again. One that only
+                // Tailscale reaches says to turn it on.
+                let away = CartoucheStorageOffline(offline, tailscale: reach.tailscaleConnected)
                 Button {
                     onTab(.system)
                 } label: {
@@ -295,6 +297,26 @@ struct CartoucheHomeView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text(away.title))
+            } else if CartoucheTailscaleReminder.shows(turnedOff: reach.tailscaleTurnedOff, tailscaleOn: reach.tailscaleConnected,
+                                                       busy: renewals.isRenewing, at: Date()) {
+                // LocalDevVPN, which Cartouche connected for a renewal, a
+                // sign-in or an update, turned Tailscale off: once that is
+                // done, until Tailscale is on again. Tailscale's page of the
+                // App Store opens it, as it has no link of its own.
+                Button {
+                    openURL(CartoucheTailscale.appStore)
+                } label: {
+                    Label(CartoucheText.tailscaleTurnedOffShort, systemImage: "network")
+                        .labelStyle(CartoucheTightLabelStyle())
+                        .font(.subheadline.weight(.semibold))
+                        .lineLimit(1)
+                        .foregroundStyle(Color.orange)
+                        .padding(.horizontal, 12)
+                        .frame(height: 34)
+                        .cartoucheGlass(in: Capsule(), interactive: true)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text(CartoucheText.tailscaleTurnedOff))
             }
             // Renewals keep Cartouche signed: its expiry shows here only
             // when it comes close, and leads to the System page.

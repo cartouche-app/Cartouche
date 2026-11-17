@@ -18,6 +18,16 @@
 //  does after seven days for a project in testing, is out of reach the same
 //  way, until the player signs in again (CartoucheDriveSessions).
 //
+//  A server that answers only through Tailscale, which the player installs
+//  apart (CartoucheTailscale.swift), by its name or its address in their
+//  tailnet, and the player's Mac away from home, say to turn Tailscale on
+//  while it is off here: iOS keeps one VPN at a time, and LocalDevVPN, which
+//  Cartouche connects for what the built-in SideStore does, turns it off.
+//  Tailscale coming on changes the iPhone's network, and Cartouche tries
+//  the servers in use again. When LocalDevVPN, which Cartouche connected,
+//  turned Tailscale off, the console's top bar says to turn it on again
+//  until it is (CartoucheTailscaleReminder).
+//
 
 import Combine
 import Foundation
@@ -28,6 +38,19 @@ import Network
 /// whose sign-in Google ended: out of reach until the player signs in
 /// again.
 struct CartoucheStorageOffline: LocalizedError {
+    /// What Tailscale has to do with a server that does not answer.
+    enum Tailscale: Equatable {
+        /// Nothing: Cartouche does not reach it through Tailscale.
+        case none
+        /// It answers only through Tailscale, or it is the player's Mac,
+        /// whose addresses in the tailnet Cartouche knows, and Tailscale is
+        /// off on this iPhone.
+        case off
+        /// It is the player's Mac, which did not answer through Tailscale
+        /// either, on here.
+        case unanswered
+    }
+
     /// The server's name in Cartouche, or its address before it has one.
     let name: String
     /// Whether it is the player's Mac, which answers only while Cartouche
@@ -35,29 +58,51 @@ struct CartoucheStorageOffline: LocalizedError {
     let isMac: Bool
     /// Whether it is a Google Drive whose sign-in Google ended.
     let isSignedOut: Bool
+    let tailscale: Tailscale
 
-    init(_ server: CartoucheStorageServer) {
+    /// SERVER offline, Tailscale on this iPhone or not (TAILSCALE).
+    init(_ server: CartoucheStorageServer, tailscale: Bool = CartoucheTailscale.isConnected) {
         let name = server.name.trimmingCharacters(in: .whitespaces)
         self.name = name.isEmpty ? server.host.trimmingCharacters(in: .whitespaces) : name
         isMac = server.kind == .mac
         isSignedOut = server.kind == .drive && CartoucheDriveSessions.shared.hasEnded(server.id)
+        self.tailscale = Self.tailscale(of: server, on: tailscale)
+    }
+
+    /// What Tailscale has to do with SERVER not answering, with Tailscale
+    /// on this iPhone or not (ON).
+    static func tailscale(of server: CartoucheStorageServer, on: Bool) -> Tailscale {
+        if server.kind == .mac {
+            let throughTailscale = !(server.tailnet ?? []).isEmpty || CartoucheTailscale.isTailnetHost(server.host)
+            return !throughTailscale ? .none : on ? .unanswered : .off
+        }
+        guard !on, let host = CartoucheStorageReach.address(of: server)?.host else { return .none }
+        return CartoucheTailscale.isTailnetHost(host) ? .off : .none
     }
 
     var errorDescription: String? {
         if isSignedOut { return CartoucheText.storageDriveSignedOut(name) }
-        return isMac ? CartoucheText.storageMacOffline(name) : CartoucheText.storageOffline(name)
+        switch (isMac, tailscale) {
+        case (true, .off): return CartoucheText.storageMacOfflineTailscaleOff(name)
+        case (true, .unanswered): return CartoucheText.storageMacOfflineTailscale(name)
+        case (true, .none): return CartoucheText.storageMacOffline(name)
+        case (false, .off): return CartoucheText.storageOfflineTailscaleOff(name)
+        case (false, _): return CartoucheText.storageOffline(name)
+        }
     }
 
     /// A few words, beside the server's name, and their symbol.
     var short: String {
-        isSignedOut ? CartoucheText.storageDriveSignedOutShort(name) : CartoucheText.storageOfflineShort(name)
+        if isSignedOut { return CartoucheText.storageDriveSignedOutShort(name) }
+        return tailscale == .off ? CartoucheText.storageOfflineTailscaleOffShort(name) : CartoucheText.storageOfflineShort(name)
     }
 
     var symbol: String { isSignedOut ? "person.crop.circle.badge.exclamationmark" : "wifi.slash" }
 
     /// What a screen reader says of it.
     var title: String {
-        isSignedOut ? CartoucheText.storageDriveSignedOutShort(name) : CartoucheText.storageOfflineTitle(name)
+        if isSignedOut { return CartoucheText.storageDriveSignedOutShort(name) }
+        return tailscale == .off ? CartoucheText.storageOfflineTailscaleOffShort(name) : CartoucheText.storageOfflineTitle(name)
     }
 }
 
@@ -94,6 +139,15 @@ final class CartoucheStorageReach: ObservableObject {
 
     /// The servers that do not answer from here, by ID.
     @Published private(set) var absences: [UUID: Absence] = [:]
+    /// Whether Tailscale is connected on this iPhone, as the network last
+    /// changed (CartoucheTailscale.swift).
+    @Published private(set) var tailscaleConnected = CartoucheTailscale.isConnected
+    /// When LocalDevVPN, which Cartouche connected, turned Tailscale off,
+    /// until Tailscale is on again (CartoucheTailscaleReminder).
+    @Published private(set) var tailscaleTurnedOff = UserDefaults.standard.object(forKey: CartoucheTailscaleReminder.key) as? Date
+    /// When Cartouche opened LocalDevVPN with Tailscale on, until Tailscale
+    /// goes off.
+    private var tailscaleGoingOff: Date?
     /// The servers being tried again.
     @Published private(set) var trying: Set<UUID> = []
     /// Each server that answers again, as soon as it does.
@@ -179,6 +233,39 @@ final class CartoucheStorageReach: ObservableObject {
     /// every minute only then.
     func setInFront(_ inFront: Bool) {
         isInFront = inFront
+        // The player may have turned Tailscale on meanwhile, or LocalDevVPN
+        // turned it off.
+        if inFront { tailscaleSeen(CartoucheTailscale.isConnected) }
+    }
+
+    // MARK: Tailscale and LocalDevVPN
+
+    /// Cartouche opens LocalDevVPN, for what the built-in SideStore does:
+    /// LocalDevVPN turns Tailscale off, if it is on (TAILSCALE_ON), which
+    /// the console then says once it is.
+    func noteOpeningLocalDevVPN(tailscaleOn: Bool = CartoucheTailscale.isConnected) {
+        guard tailscaleOn else { return }
+        tailscaleGoingOff = Date()
+        CartoucheReports.note("Tailscale is connected: LocalDevVPN turns it off")
+    }
+
+    /// Tailscale as the iPhone has it now, CONNECTED or not, as the network
+    /// changes and as Cartouche comes to the front: off once Cartouche
+    /// opened LocalDevVPN, LocalDevVPN turned it off; on, the player turned
+    /// it on again.
+    func tailscaleSeen(_ connected: Bool) {
+        if connected != tailscaleConnected { tailscaleConnected = connected }
+        if connected {
+            tailscaleGoingOff = nil
+            guard tailscaleTurnedOff != nil else { return }
+            tailscaleTurnedOff = nil
+            UserDefaults.standard.removeObject(forKey: CartoucheTailscaleReminder.key)
+            CartoucheReports.note("Tailscale is connected again")
+        } else if let since = tailscaleGoingOff {
+            tailscaleGoingOff = nil
+            tailscaleTurnedOff = since
+            UserDefaults.standard.set(since, forKey: CartoucheTailscaleReminder.key)
+        }
     }
 
     /// Tries SERVER again, as the player asks or as the network changes:
@@ -208,6 +295,8 @@ final class CartoucheStorageReach: ObservableObject {
     }
 
     private func networkChanged(to network: String) {
+        // Tailscale's tunnel comes and goes as an interface of the network.
+        tailscaleSeen(CartoucheTailscale.isConnected)
         guard network != self.network else { return }
         let first = self.network.isEmpty
         self.network = network
@@ -303,25 +392,30 @@ final class CartoucheStorageReach: ObservableObject {
         let connection = NWConnection(host: NWEndpoint.Host(host), port: endpointPort, using: .tcp)
         let queue = DispatchQueue(label: "Cartouche knock")
         let once = CartoucheOnce()
-        return await withCheckedContinuation { (continuation: CheckedContinuation<Bool, Never>) in
-            connection.stateUpdateHandler = { state in
-                let answered: Bool
-                switch state {
-                case .ready: answered = true
-                // Waiting: no network that reaches it, or refused.
-                case .waiting, .failed, .cancelled: answered = false
-                default: return
+        // Cancelling the task gives up at once: no answer.
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { (continuation: CheckedContinuation<Bool, Never>) in
+                connection.stateUpdateHandler = { state in
+                    let answered: Bool
+                    switch state {
+                    case .ready: answered = true
+                    // Waiting: no network that reaches it, or refused.
+                    case .waiting, .failed, .cancelled: answered = false
+                    default: return
+                    }
+                    guard once.claim() else { return }
+                    connection.cancel()
+                    continuation.resume(returning: answered)
                 }
-                guard once.claim() else { return }
-                connection.cancel()
-                continuation.resume(returning: answered)
+                connection.start(queue: queue)
+                queue.asyncAfter(deadline: .now() + .nanoseconds(Int(clamping: patience))) {
+                    guard once.claim() else { return }
+                    connection.cancel()
+                    continuation.resume(returning: false)
+                }
             }
-            connection.start(queue: queue)
-            queue.asyncAfter(deadline: .now() + .nanoseconds(Int(clamping: patience))) {
-                guard once.claim() else { return }
-                connection.cancel()
-                continuation.resume(returning: false)
-            }
+        } onCancel: {
+            connection.cancel()
         }
     }
 
@@ -334,6 +428,19 @@ final class CartoucheStorageReach: ObservableObject {
     }
 
     #if CARTOUCHE_GALLERY
+    /// Tailscale on or off, for the launcher's gallery (launcher/Gallery).
+    func showTailscaleForGallery(_ connected: Bool) {
+        CartoucheTailscale.galleryConnected = connected
+        tailscaleConnected = connected
+    }
+
+    /// Tailscale turned off by LocalDevVPN half an hour ago, for the
+    /// launcher's gallery.
+    func showTailscaleTurnedOffForGallery() {
+        showTailscaleForGallery(false)
+        tailscaleTurnedOff = Date().addingTimeInterval(-30 * 60)
+    }
+
     /// SERVERS offline, for the launcher's gallery (launcher/Gallery).
     func showOfflineForGallery(_ servers: [UUID]) {
         let since = Date().addingTimeInterval(-20 * 60)

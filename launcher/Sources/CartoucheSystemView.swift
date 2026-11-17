@@ -710,6 +710,15 @@ struct CartoucheNightlyRenewalView: View {
                     .padding(.vertical, 2)
                 }
             }
+            // iOS keeps one VPN at a time: LocalDevVPN turns Tailscale off,
+            // and Tailscale's own action turns it on again
+            // (CartoucheTailscale.swift).
+            Section {
+                Text(CartoucheText.dailyTailscale)
+                    .font(.subheadline)
+            } header: {
+                Text(verbatim: "Tailscale")
+            }
             Section {
                 Link(destination: CartoucheRenewal.shortcutsURL) {
                     Label(CartoucheText.openShortcuts, systemImage: "square.2.layers.3d")

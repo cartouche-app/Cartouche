@@ -12,7 +12,8 @@
 import Foundation
 
 /// Cartouche renews itself, without the player, each time it comes to the
-/// front in the last days of its signature, with LocalDevVPN connected: up
+/// front in the last days of its signature, with LocalDevVPN connected, in
+/// its last two only while Tailscale is on, which LocalDevVPN turns off: up
 /// to 0.12.0, only Renew now, on the System page, and an automation the
 /// player made in Shortcuts renewed it, while the System page said that it
 /// renewed itself. A renewal installs new provisioning profiles, and signs
@@ -23,6 +24,12 @@ enum CartoucheAutomaticRenewal {
     /// them (CartoucheHomeView.expirySoonDays). A free Apple account's
     /// signature lasts seven days.
     static let days = 3
+    /// From how many days left while Tailscale is on: its last two, under
+    /// 48 hours. iOS keeps one VPN at a time, and LocalDevVPN, which the
+    /// renewal connects, turns Tailscale off until the player turns it on
+    /// again (CartoucheTailscale.swift): the nights before, the player's
+    /// automation has the time to renew Cartouche first.
+    static let tailscaleDays = 1
     /// How long Cartouche waits after it tried, whether the renewal went
     /// through or not, before it tries again: each renewal asks Apple's
     /// servers for the profiles, and one that failed, with Apple or with
@@ -61,6 +68,9 @@ enum CartoucheAutomaticRenewal {
         /// Whether LiveContainer's LiveProcess extension, which the built-in
         /// SideStore runs in, is missing from the app (CartoucheLiveProcess).
         var liveProcessMissing = false
+        /// Whether Tailscale is connected on this iPhone, which LocalDevVPN
+        /// would turn off.
+        var tailscaleConnected = false
     }
 
     /// Why Cartouche does not renew itself now.
@@ -86,6 +96,10 @@ enum CartoucheAutomaticRenewal {
         /// LocalDevVPN is not connected: Cartouche tries again each time it
         /// comes back, as when the player turned it on.
         case vpn
+        /// LocalDevVPN is not connected and Tailscale is, with more days
+        /// left than `tailscaleDays`: connecting LocalDevVPN would turn
+        /// Tailscale off.
+        case tailscale
         case sideStoreBusy
         case signInsPaused
         case gameRunning
@@ -108,6 +122,7 @@ enum CartoucheAutomaticRenewal {
         if let lastTry = situation.lastTry, now >= lastTry, now.timeIntervalSince(lastTry) < spacing {
             return .triedLately
         }
+        if !situation.vpnConnected, situation.tailscaleConnected, daysLeft > tailscaleDays { return .tailscale }
         guard situation.vpnConnected else { return .vpn }
         return nil
     }

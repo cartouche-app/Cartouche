@@ -3,10 +3,12 @@
 //  Cartouche
 //
 //  The player's Mac on the Storage page (CartoucheStorageView): the Macs
-//  nearby whose Cartouche Builder shares with Cartouche, the six digits to
-//  compare with the Mac's while pairing, and, for a new Mac, whether its
+//  nearby whose Cartouche Builder shares with Cartouche, a Mac by its name
+//  or its address in the player's tailnet, away from home, the six digits
+//  to compare with the Mac's while pairing, and, for a new Mac, whether its
 //  Games and Saves folders become the games folder and the saves folder.
-//  The bridge itself is in CartoucheStorageMac.swift.
+//  The bridge itself is in CartoucheStorageMac.swift, Tailscale in
+//  CartoucheTailscale.swift.
 //
 
 import Combine
@@ -63,7 +65,7 @@ final class CartoucheMacPairing: ObservableObject {
                     }
                 }
             } catch {
-                failure = error
+                failure = mac.macID == nil ? Self.typed(error, at: mac.name) : error
             }
             guard self.attempt == attempt, !Task.isCancelled else { return }
             if let paired {
@@ -86,6 +88,15 @@ final class CartoucheMacPairing: ObservableObject {
         mac = nil
         code = nil
     }
+
+    /// ERROR, of a pairing with the Mac at ADDRESS, which the player typed:
+    /// an address that took no connection says what to check.
+    static func typed(_ error: Error, at address: String) -> Error {
+        let domain = (error as NSError).domain
+        guard domain == "CartoucheBridge.closed" || domain == "CartoucheBridge.timeout" else { return error }
+        return NSError(domain: domain, code: 0,
+                       userInfo: [NSLocalizedDescriptionKey: CartoucheText.storageMacAddressUnanswered(address)])
+    }
 }
 
 // MARK: The form
@@ -99,6 +110,9 @@ struct CartoucheStorageMacForm: View {
     /// saves folder, as they do when there are none yet.
     @State private var useGames: Bool
     @State private var useSaves: Bool
+    /// A Mac's name or address, typed, which Bonjour cannot see.
+    @State private var typedAddress = ""
+    @State private var typedIsInvalid = false
     @Environment(\.dismiss) private var dismiss
     private let isNew: Bool
     /// The Macs this iPhone is paired with already, as other places.
@@ -116,6 +130,7 @@ struct CartoucheStorageMacForm: View {
     var body: some View {
         Form {
             nearbySection
+            addressSection
             if let code = pairing.code {
                 Section {
                     Text(verbatim: CartoucheBridge.spaced(code))
@@ -158,6 +173,11 @@ struct CartoucheStorageMacForm: View {
                     TextField(CartoucheText.storageName, text: $server.name)
                     if !server.host.isEmpty {
                         LabeledContent(CartoucheText.storageMacLastAddress, value: server.host)
+                    }
+                    // As its Cartouche Builder tells it, while Tailscale
+                    // is on there.
+                    if let tailnet = server.tailnet?.first, tailnet != server.host {
+                        LabeledContent(CartoucheText.storageMacTailnetAddress, value: tailnet)
                     }
                 } header: {
                     Text(CartoucheText.storageNameTitle)
@@ -229,6 +249,58 @@ struct CartoucheStorageMacForm: View {
             Text(CartoucheText.storageMacNearby)
         } footer: {
             Text(isNew ? CartoucheText.storageMacHow : CartoucheText.storageMacPairAgain)
+        }
+    }
+
+    /// A Mac Bonjour cannot see, away from home or on another network:
+    /// paired by its name or its address in the player's tailnet, through
+    /// Tailscale on both.
+    private var addressSection: some View {
+        Section {
+            TextField(CartoucheText.storageMacAddressPlaceholder, text: $typedAddress)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .keyboardType(.URL)
+                .submitLabel(.go)
+                .onSubmit { pairTyped() }
+                .onChange(of: typedAddress) { _, _ in typedIsInvalid = false }
+            if typedIsInvalid {
+                Text(CartoucheText.storageMacAddressInvalid)
+                    .font(.footnote)
+                    .foregroundStyle(Color.orange)
+            }
+            Button {
+                pairTyped()
+            } label: {
+                LabeledContent {
+                    if let mac = pairing.mac, mac.macID == nil {
+                        ProgressView()
+                    }
+                } label: {
+                    Label(CartoucheText.storageMacAddressPair, systemImage: "link")
+                }
+            }
+            .disabled(pairing.isPairing || typedAddress.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        } header: {
+            Text(CartoucheText.storageMacByAddress)
+        } footer: {
+            Text(CartoucheText.storageMacAddressFooter)
+        }
+    }
+
+    /// Pairs with the Mac at the address typed, on the bridge's port unless
+    /// it gives another.
+    private func pairTyped() {
+        guard !pairing.isPairing else { return }
+        guard let typed = CartoucheTypedAddress.parse(typedAddress, port: CartoucheBridge.port),
+              let port = NWEndpoint.Port(rawValue: typed.port) else {
+            typedIsInvalid = true
+            return
+        }
+        typedIsInvalid = false
+        let mac = CartoucheNearbyMac(name: typed.host, macID: nil, endpoint: .hostPort(host: NWEndpoint.Host(typed.host), port: port))
+        pairing.start(server, with: mac) { made, secret in
+            await paired(made, secret: secret)
         }
     }
 

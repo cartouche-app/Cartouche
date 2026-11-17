@@ -20,6 +20,10 @@
 //  own carries SideStore's traffic all the same, and SideStore says why
 //  when it cannot reach this iPhone.
 //
+//  LocalDevVPN turns Tailscale off, iOS keeping one VPN at a time: once
+//  what needed LocalDevVPN is done, the console's top bar says to turn
+//  Tailscale on again (CartoucheTailscaleReminder).
+//
 
 import Foundation
 import UIKit
@@ -115,6 +119,9 @@ final class CartoucheLocalDevVPN {
             UserDefaults.standard.set(Date(), forKey: Self.lastAutomaticOpenKey)
         }
         CartoucheReports.note(what + (playerAsked ? ": opening LocalDevVPN" : ": opening LocalDevVPN, by itself"))
+        // iOS keeps one VPN at a time: Tailscale goes off, which the console
+        // says once LocalDevVPN is no longer needed (CartoucheTailscale.swift).
+        CartoucheStorageReach.shared.noteOpeningLocalDevVPN()
         Self.openURL(url)
         return true
     }

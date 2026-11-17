@@ -151,11 +151,17 @@ public final class CartoucheBridgeConnection: CartoucheBridgeTransport, @uncheck
         return parameters
     }
 
-    /// Connects to ENDPOINT, or fails after TIMEOUT.
+    /// Connects to ENDPOINT, or fails after TIMEOUT. Cancelling the task
+    /// closes the connection, which fails at once.
     public static func open(_ endpoint: NWEndpoint, timeout: TimeInterval = 8) async throws -> CartoucheBridgeConnection {
+        try Task.checkCancellation()
         let connection = NWConnection(to: endpoint, using: parameters())
         let opened = CartoucheBridgeConnection(connection)
-        try await opened.start(timeout: timeout)
+        try await withTaskCancellationHandler {
+            try await opened.start(timeout: timeout)
+        } onCancel: {
+            opened.close()
+        }
         return opened
     }
 
@@ -374,6 +380,10 @@ public struct CartoucheBridgeResponse: Codable, Equatable {
     /// (buildDue, stop, stopAll, follow, nightly).
     public var hasBuilds: Bool?
     public var hasBuildsControl: Bool?
+    /// info: the Mac's addresses in the player's tailnet while Tailscale is
+    /// on there (CartoucheTailscale.swift), IPv4 first; none without it. A
+    /// Cartouche Builder older than this one says nothing.
+    public var tailscale: [String]?
     /// builds, build and the rest: the Mac's builds, after what was asked.
     public var builds: CartoucheBridgeBuilds?
 
@@ -741,16 +751,87 @@ public final class CartoucheBridgeClient {
     public var macID: String { channel.peer }
     public var macName: String { channel.peerName }
 
-    /// Connects to the Mac at ENDPOINT with the paired KEY.
+    /// Connects to the Mac at ENDPOINT with the paired KEY. Cancelling the
+    /// task closes the connection, which fails at once.
     public static func connect(_ endpoint: NWEndpoint, device: String, key: Data, mac: String?, timeout: TimeInterval = 8) async throws -> CartoucheBridgeClient {
         let connection = try await CartoucheBridgeConnection.open(endpoint, timeout: timeout)
         do {
-            let channel = try await CartoucheBridgeHandshake.client(connection, device: device, key: key, mac: mac)
+            let channel = try await withTaskCancellationHandler {
+                try await CartoucheBridgeHandshake.client(connection, device: device, key: key, mac: mac)
+            } onCancel: {
+                connection.close()
+            }
+            try Task.checkCancellation()
             return CartoucheBridgeClient(channel: channel, address: connection.remoteAddress, port: connection.remotePort)
         } catch {
             connection.close()
             throw error
         }
+    }
+
+    /// Connects to the Mac at the first of ENDPOINTS where it answers, as
+    /// connect does: each is tried HEAD_START seconds after the one before
+    /// it, the others go on meanwhile, and the first session opened closes
+    /// the rest. The Mac's own refusal, as it forgot this iPhone
+    /// (notPaired) or speaks another version of the bridge (protocolError),
+    /// ends them all: its other addresses would say the same. Another Mac
+    /// at one of them (notMac) only leaves that one out. Throws the last
+    /// error when none answers.
+    public static func connect(firstOf endpoints: [NWEndpoint], device: String, key: Data, mac: String?,
+                               headStart: TimeInterval = 0.3, timeout: TimeInterval = 8) async throws -> CartoucheBridgeClient {
+        guard endpoints.count > 1 else {
+            guard let endpoint = endpoints.first else { throw CartoucheBridgeError(.closed) }
+            return try await connect(endpoint, device: device, key: key, mac: mac, timeout: timeout)
+        }
+        // Each client goes from its attempt to this task alone.
+        enum Attempt: @unchecked Sendable {
+            case opened(CartoucheBridgeClient)
+            case failed(Error)
+        }
+        let (client, error) = await withTaskGroup(of: Attempt.self) { group -> (CartoucheBridgeClient?, Error) in
+            for (index, endpoint) in endpoints.enumerated() {
+                group.addTask {
+                    if index > 0 {
+                        do {
+                            try await Task.sleep(nanoseconds: UInt64(Double(index) * headStart * 1_000_000_000))
+                        } catch {
+                            return .failed(error)
+                        }
+                    }
+                    do {
+                        return .opened(try await connect(endpoint, device: device, key: key, mac: mac, timeout: timeout))
+                    } catch {
+                        return .failed(error)
+                    }
+                }
+            }
+            var first: CartoucheBridgeClient?
+            var refusal: Error?
+            var last: Error = CartoucheBridgeError(.closed)
+            for await attempt in group {
+                switch attempt {
+                case let .opened(client):
+                    if first == nil && refusal == nil {
+                        first = client
+                        group.cancelAll()
+                    } else {
+                        client.close()
+                    }
+                case let .failed(error):
+                    guard first == nil, refusal == nil, !(error is CancellationError) else { continue }
+                    if let bridge = error as? CartoucheBridgeError, [.notPaired, .protocolError].contains(bridge.kind) {
+                        refusal = bridge
+                        group.cancelAll()
+                    } else {
+                        last = error
+                    }
+                }
+            }
+            return (first, refusal ?? last)
+        }
+        if let client { return client }
+        try Task.checkCancellation()
+        throw error
     }
 
     /// Sends REQUEST with BODY and waits for the answer and its body. The

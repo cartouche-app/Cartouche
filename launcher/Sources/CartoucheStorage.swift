@@ -72,6 +72,11 @@ struct CartoucheStorageServer: Codable, Identifiable, Hashable {
     /// A Mac: its ID in Cartouche Builder, which Bonjour finds it by. Its
     /// paired key is the secret in the keychain.
     var macID: String?
+    /// A Mac: its addresses in the player's tailnet, as its Cartouche
+    /// Builder last told them, which Cartouche tries away from home while
+    /// Tailscale is on here (CartoucheTailscale.swift); nil until it told
+    /// some.
+    var tailnet: [String]?
 }
 
 /// A folder on one of the player's servers.

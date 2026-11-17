@@ -22,6 +22,12 @@
 //  queue, stops them all, follows a game or not, builds every night or not;
 //  its info says so as well (hasBuildsControl).
 //
+//  With Tailscale on this Mac, which the player installs apart, its info
+//  tells the paired iPhone the Mac's addresses in their tailnet
+//  (tailscale), where Cartouche reaches it away from home, where Bonjour
+//  does not go (CartoucheTailscale.swift). The listener takes connections
+//  on every network of the Mac, Tailscale's among them.
+//
 
 import CartoucheCore
 import Foundation
@@ -82,6 +88,10 @@ public final class BridgeServer: @unchecked Sendable {
 
     public let devices: BridgeDevices
     public weak var delegate: BridgeServerDelegate?
+    /// The Mac's addresses in the player's tailnet now, which info tells the
+    /// paired iPhones: Tailscale's, read from the Mac's interfaces; none
+    /// without it. The tests give their own.
+    let tailnetAddresses: @Sendable () -> [String]
 
     private let lock = NSLock()
     private let queue = DispatchQueue(label: "io.github.clabeuhtegrite.cartouche-builder.bridge")
@@ -96,9 +106,11 @@ public final class BridgeServer: @unchecked Sendable {
     private var generation = 0
     private weak var _builds: BridgeBuildsSource?
 
-    public init(devices: BridgeDevices, name: String) {
+    public init(devices: BridgeDevices, name: String,
+                tailnetAddresses: @escaping @Sendable () -> [String] = { CartoucheTailscale.ownAddresses() }) {
         self.devices = devices
         _name = name
+        self.tailnetAddresses = tailnetAddresses
     }
 
     // MARK: State
@@ -524,6 +536,10 @@ final class Session {
             response.readOnly = false
             response.hasBuilds = server?.builds != nil
             response.hasBuildsControl = server?.builds != nil
+            // None without Tailscale: the iPhone keeps those it knew, the
+            // ones Tailscale gives this Mac for good.
+            let tailnet = server?.tailnetAddresses() ?? []
+            response.tailscale = tailnet.isEmpty ? nil : tailnet
         case .list:
             let place = try resolve(request.path)
             guard let place else {

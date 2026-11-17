@@ -69,6 +69,7 @@ let package = Package(
                 "CartoucheSignInMessage.swift",
                 "CartoucheSwitchSave.swift",
                 "CartoucheSwitchSaveArchive.swift",
+                "CartoucheTailscale.swift",
                 "CartoucheTelemetryReport.swift",
                 "CartoucheTextResults.swift",
                 "CartoucheTranslations.swift",

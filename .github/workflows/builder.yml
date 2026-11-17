@@ -83,6 +83,7 @@ on:
       - "launcher/Sources/CartoucheSwitchSave.swift"
       - "launcher/Sources/CartoucheSwitchSaveArchive.swift"
       - "launcher/Sources/CartoucheSwitchSaveView.swift"
+      - "launcher/Sources/CartoucheTailscale.swift"
       - "launcher/Sources/CartoucheTelemetryReport.swift"
       - "launcher/Sources/CartoucheText.swift"
       - "launcher/Sources/CartoucheTextDrive.swift"

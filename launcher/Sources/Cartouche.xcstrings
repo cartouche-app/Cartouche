@@ -511,6 +511,23 @@
         }
       }
     },
+    "daily.tailscale" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With Tailscale, add its Connect action last, among those of the Tailscale app: LocalDevVPN turned Tailscale off, and the automation turns it on again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avec Tailscale, ajoutez en dernier son action Connect, parmi celles de l’app Tailscale : LocalDevVPN a éteint Tailscale, et l’automatisation le rallume."
+          }
+        }
+      }
+    },
     "daily.vpnAction" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11901,6 +11918,91 @@
         }
       }
     },
+    "storage.mac.address.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Away from home, or on a network where Bonjour does not find it: with Tailscale on this iPhone and on the Mac, type the Mac’s name in Tailscale, such as macbook-air, or its address there, which starts with 100."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hors de chez vous, ou sur un réseau où Bonjour ne le trouve pas : avec Tailscale sur cet iPhone et sur le Mac, tapez le nom du Mac dans Tailscale, comme macbook-air, ou son adresse là-bas, qui commence par 100."
+          }
+        }
+      }
+    },
+    "storage.mac.address.invalid" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This is neither a name nor an address: type the Mac’s name in Tailscale, or its address there, without anything before or after it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce n’est ni un nom ni une adresse : tapez le nom du Mac dans Tailscale, ou son adresse là-bas, sans rien avant ni après."
+          }
+        }
+      }
+    },
+    "storage.mac.address.pair" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pair with this Mac"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Associer ce Mac"
+          }
+        }
+      }
+    },
+    "storage.mac.address.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale name or address of the Mac"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nom Tailscale ou adresse du Mac"
+          }
+        }
+      }
+    },
+    "storage.mac.address.unanswered" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ does not answer: check its address, that Share with Cartouche on the iPhone is on in Cartouche Builder, and that Tailscale is connected on this iPhone and on the Mac."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ne répond pas : vérifiez son adresse, que Partager avec Cartouche sur l’iPhone est activé dans Cartouche Builder, et que Tailscale est connecté sur cet iPhone et sur le Mac."
+          }
+        }
+      }
+    },
     "storage.mac.busy" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11914,6 +12016,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ associe un autre iPhone, ou a été trop sollicité : réessayez dans quelques minutes."
+          }
+        }
+      }
+    },
+    "storage.mac.byAddress" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By its address"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Par son adresse"
           }
         }
       }
@@ -11992,13 +12111,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "On your Mac, open Cartouche Builder and turn on Share with Cartouche on the iPhone, on its iPhone page. This iPhone and the Mac must be on the same Wi-Fi."
+            "value" : "On your Mac, open Cartouche Builder and turn on Share with Cartouche on the iPhone, on its iPhone page. This iPhone and the Mac must be on the same Wi-Fi, or both on Tailscale: then pair it by its address, below."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sur votre Mac, ouvrez Cartouche Builder et activez Partager avec Cartouche sur l’iPhone, dans sa page iPhone. Cet iPhone et le Mac doivent être sur le même Wi-Fi."
+            "value" : "Sur votre Mac, ouvrez Cartouche Builder et activez Partager avec Cartouche sur l’iPhone, dans sa page iPhone. Cet iPhone et le Mac doivent être sur le même Wi-Fi, ou tous deux sur Tailscale : associez-le alors par son adresse, plus bas."
           }
         }
       }
@@ -12139,6 +12258,40 @@
         }
       }
     },
+    "storage.mac.offline.tailscale" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ answers neither on this network nor through Tailscale. Open Cartouche Builder on it with Share with Cartouche on the iPhone turned on, and check that Tailscale is connected on the Mac too."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ne répond ni sur ce réseau ni par Tailscale. Ouvrez-y Cartouche Builder avec Partager avec Cartouche sur l’iPhone activé, et vérifiez que Tailscale est connecté sur le Mac aussi."
+          }
+        }
+      }
+    },
+    "storage.mac.offline.tailscaleOff" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ does not answer on this network. Away from home, turn on Tailscale on this iPhone for Cartouche to reach it. At home, open Cartouche Builder on it with Share with Cartouche on the iPhone turned on."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ne répond pas sur ce réseau. Hors de chez vous, allumez Tailscale sur cet iPhone pour que Cartouche le rejoigne. Chez vous, ouvrez-y Cartouche Builder avec Partager avec Cartouche sur l’iPhone activé."
+          }
+        }
+      }
+    },
     "storage.mac.pairAgain" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12220,6 +12373,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ n’a pas autorisé cet iPhone."
+          }
+        }
+      }
+    },
+    "storage.mac.tailnetAddress" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Through Tailscale"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Par Tailscale"
           }
         }
       }
@@ -12492,6 +12662,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ hors ligne"
+          }
+        }
+      }
+    },
+    "storage.offline.tailscaleOff" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ answers only through Tailscale, which is off on this iPhone: turn it on in the Tailscale app, and Cartouche tries again at once."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ ne répond que par Tailscale, éteint sur cet iPhone : allumez-le dans l’app Tailscale, et Cartouche réessaie aussitôt."
+          }
+        }
+      }
+    },
+    "storage.offline.tailscaleOff.short" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@: Tailscale off"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ : Tailscale éteint"
           }
         }
       }
@@ -13274,6 +13478,91 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ne plus utiliser ce dossier"
+          }
+        }
+      }
+    },
+    "storage.tailscale.appStore" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale on the App Store"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale dans l’App Store"
+          }
+        }
+      }
+    },
+    "storage.tailscale.connected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecté"
+          }
+        }
+      }
+    },
+    "storage.tailscale.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With Tailscale, installed apart on this iPhone and on your Mac or NAS, Cartouche reaches them wherever you are: your Mac by itself, a NAS by its name or its address in Tailscale. iOS keeps one VPN at a time: LocalDevVPN, which Cartouche connects to renew and update itself, turns Tailscale off until you turn it on again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avec Tailscale, installé à part sur cet iPhone et sur votre Mac ou votre NAS, Cartouche les rejoint où que vous soyez : votre Mac de lui-même, un NAS par son nom ou son adresse dans Tailscale. iOS ne garde qu’un VPN à la fois : LocalDevVPN, que Cartouche connecte pour se renouveler et se mettre à jour, éteint Tailscale jusqu’à ce que vous le rallumiez."
+          }
+        }
+      }
+    },
+    "storage.tailscale.off" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Éteint"
+          }
+        }
+      }
+    },
+    "storage.tailscale.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Away from home"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hors de chez vous"
           }
         }
       }
@@ -15263,6 +15552,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Système"
+          }
+        }
+      }
+    },
+    "tailscale.turnedOff" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LocalDevVPN turned Tailscale off, as iOS keeps one VPN at a time: open Tailscale to turn it on again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LocalDevVPN a éteint Tailscale, iOS ne gardant qu’un VPN à la fois : ouvrez Tailscale pour le rallumer."
+          }
+        }
+      }
+    },
+    "tailscale.turnedOff.short" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale off"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tailscale éteint"
           }
         }
       }
