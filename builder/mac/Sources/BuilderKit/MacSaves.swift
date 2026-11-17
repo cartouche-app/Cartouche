@@ -246,18 +246,15 @@ public final class MacSavesFolder: Sendable {
             step = CartoucheSaveSync.step(here: here, newest: newest, base: base, baseIsThere: baseIsThere, fetching: fetching)
         }
         // Saves this Mac has not changed since it kept them in step with the
-        // folder it left are no news here, whatever their date: a game first
-        // played before the player chose the iPhone's folder made new ones,
-        // which would have gone as the newest copy, for the iPhone to take
-        // in place of its own. They stay in the folder they were in step
-        // with, and this folder's newest copy comes in their place, as on a
-        // Mac without saves; were their copy no longer there, they are kept
-        // here first, as a copy of their date under it. Only a game started
-        // since, which changed them, makes them news, the saves written last
-        // winning then.
-        if base == nil, let left, let mine = here, let newest, newest.content != "",
-           [.send, .keep, .keepAndFetch].contains(step), Self.unchanged(mine, since: left) {
-            step = !fetching ? .none : stillThere(left, of: game) ? .fetch : .keepAndFetch
+        // folder it left are no news here, whatever their date: this
+        // folder's newest copy comes in their place (CartoucheSaveSync's
+        // afterLeaving, which a folder on one of the player's connections
+        // takes too). Only a game started since, which changed them, makes
+        // them news, the saves written last winning then.
+        if base == nil, let left {
+            step = CartoucheSaveSync.afterLeaving(step, left: left, here: here, newest: newest, fetching: fetching) {
+                Self.copyIsThere(left, of: game, games: games, scratch: scratch)
+            }
         }
         // A game older than the newest copy's never takes it, nor puts its
         // saves over it: they go as a copy under it instead, as on the
@@ -368,15 +365,12 @@ public final class MacSavesFolder: Sendable {
 
     // MARK: Steps
 
-    /// Whether SAVES are those BASE was made of: the same look, or the same
-    /// content written again.
-    static func unchanged(_ saves: CartoucheLocalSaves, since base: CartoucheSaveBase) -> Bool {
-        saves.look == base.look || (base.content != nil && saves.content == base.content)
-    }
-
     /// Whether the copy BASE names is still in the saves folder of this
-    /// Mac's it was made in, there now.
-    private func stillThere(_ base: CartoucheSaveBase, of game: MacSaveGame) -> Bool {
+    /// Mac's it was made in, there now: false for one on a connection, which
+    /// is not looked at, so that the saves of the Mac are kept as a copy
+    /// first.
+    public static func copyIsThere(_ base: CartoucheSaveBase, of game: MacSaveGame, games: URL = MacSavesFolder.nxnativeFolder,
+                                   scratch: URL) -> Bool {
         guard base.place.hasPrefix("mac|"), !base.copy.isEmpty else { return false }
         let other = MacSavesFolder(root: URL(fileURLWithPath: String(base.place.dropFirst(4)), isDirectory: true),
                                    games: games, scratch: scratch)

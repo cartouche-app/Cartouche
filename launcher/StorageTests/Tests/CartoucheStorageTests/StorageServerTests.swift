@@ -689,6 +689,129 @@ class StorageServerTests: XCTestCase {
         XCTAssertNil(try XCTUnwrap(takes.base).gameVersion)
     }
 
+    // MARK: Saves of a Mac
+
+    /// Cartouche Builder keeps the saves of the games played on a Mac in
+    /// step with the iPhone's saves folder on the same connection by this
+    /// code, once the player chose that folder on the iPhone (decision 131).
+    func testAMacTakesTheIPhonesSavesInPlaceOfThoseItKeptInItsOwnFolder() async throws {
+        let remote = try await signIn()
+        let folder = try await scratchFolder(remote)
+        let scratchHere = try localFolder()
+        func round() -> CartoucheSavesFolder {
+            CartoucheSavesFolder(remote: remote, path: folder, place: "test|" + folder, scratch: scratchHere)
+        }
+        let gameFolder = CartoucheStoragePath.join(folder, "Essai de stockage [0100CA27C0DE0000]")
+        func copies() async throws -> [String] {
+            try await remote.list(gameFolder).map(\.name).filter { !$0.hasSuffix(".partial") }.sorted()
+        }
+        let morning = Date(timeIntervalSince1970: 1_794_292_800)
+
+        // The iPhone played: its saves are the newest copy in its folder.
+        let phone = CartoucheSaveTarget(key: "phone", name: "Essai de stockage", titleId: "0100CA27C0DE0000",
+                                        documents: try play("partie de l'iPhone", written: morning))
+        let phoneSent = try await round().sync(phone, base: nil, fetching: false)
+        XCTAssertEqual(phoneSent.step, .send)
+
+        // A Mac played the game later, its saves in step with the Mac's own
+        // saves folder, before the player chose the iPhone's.
+        func macPlayed(_ key: String) throws -> (CartoucheSaveTarget, CartoucheSaveBase) {
+            let documents = try play("partie du Mac", written: morning + 600)
+            let saves = try XCTUnwrap(CartoucheSaveSync.saves(in: documents))
+            let left = CartoucheSaveBase(place: "mac|/Saves", copy: CartoucheSaveSync.fileName(morning + 600),
+                                         content: try CartoucheSaveSync.content(ofSavesIn: documents), look: saves.look)
+            return (CartoucheSaveTarget(key: key, name: "Essai de stockage", titleId: "0100CA27C0DE0000", documents: documents),
+                    left)
+        }
+        let (mac, left) = try macPlayed("mac")
+
+        // Newer, they would go over the iPhone's, for it to take in place of
+        // its own: they are no news here. After a game, nothing moves, and
+        // the base of the folder left stays for the next sync.
+        let waits = try await round().sync(mac, base: left, fetching: false, leaving: { true })
+        XCTAssertEqual(waits.step, .none)
+        XCTAssertEqual(waits.base, left)
+        XCTAssertEqual(try party(in: mac.documents), "partie du Mac")
+        // As the game starts, the iPhone's come in their place, which stay
+        // in the folder left.
+        let comes = try await round().sync(mac, base: waits.base, fetching: true, leaving: { true })
+        XCTAssertEqual(comes.step, .fetch)
+        XCTAssertNil(comes.kept)
+        XCTAssertEqual(try party(in: mac.documents), "partie de l'iPhone")
+        let macBase = try XCTUnwrap(comes.base)
+        XCTAssertEqual(macBase.place, "test|" + folder)
+        let afterComes = try await copies()
+        XCTAssertEqual(afterComes, [CartoucheSaveSync.fileName(morning)])
+
+        // Their copy no longer in the folder left, they are kept here first,
+        // under the iPhone's.
+        let (other, otherLeft) = try macPlayed("other")
+        let keeps = try await round().sync(other, base: otherLeft, fetching: true, leaving: { false })
+        XCTAssertEqual(keeps.step, .keepAndFetch)
+        XCTAssertEqual(keeps.kept, CartoucheSaveSync.fileName(morning - 1))
+        XCTAssertEqual(try party(in: other.documents), "partie de l'iPhone")
+        let afterKeeps = try await copies()
+        XCTAssertEqual(afterKeeps, [morning - 1, morning].map(CartoucheSaveSync.fileName))
+
+        // Saves a game changed since are news: written last, they go as the
+        // newest copy, which the iPhone takes at its next start.
+        let (changed, changedLeft) = try macPlayed("changed")
+        _ = try play("partie du Mac, ensuite", written: morning + 900, in: changed.documents)
+        let sent = try await round().sync(changed, base: changedLeft, fetching: true, leaving: { true })
+        XCTAssertEqual(sent.step, .send)
+        XCTAssertEqual(sent.sent, CartoucheSaveSync.fileName(morning + 900))
+        XCTAssertEqual(try party(in: changed.documents), "partie du Mac, ensuite")
+        let phoneTakes = try await round().sync(phone, base: phoneSent.base, fetching: true)
+        XCTAssertEqual(phoneTakes.step, .fetch)
+        XCTAssertEqual(try party(in: phone.documents), "partie du Mac, ensuite")
+
+        // Once in step, the folder's base alone counts, as on an iPhone.
+        let inStep = try await round().sync(mac, base: macBase, fetching: true, leaving: { true })
+        XCTAssertEqual(inStep.step, .fetch)
+        XCTAssertEqual(try party(in: mac.documents), "partie du Mac, ensuite")
+    }
+
+    func testACopyNeverComesUnderAGameThatStartedMeanwhileOnAMac() async throws {
+        let remote = try await signIn()
+        let folder = try await scratchFolder(remote)
+        let scratchHere = try localFolder()
+        func round() -> CartoucheSavesFolder {
+            CartoucheSavesFolder(remote: remote, path: folder, place: "test|" + folder, scratch: scratchHere)
+        }
+        let morning = Date(timeIntervalSince1970: 1_794_292_800)
+        let phone = CartoucheSaveTarget(key: "phone", name: "Essai de stockage", titleId: "0100CA27C0DE0000",
+                                        documents: try play("partie 1", written: morning))
+        let first = try await round().sync(phone, base: nil, fetching: false)
+        let mac = CartoucheSaveTarget(key: "mac", name: "Essai de stockage", titleId: "0100CA27C0DE0000",
+                                      documents: try localFolder())
+        let macFirst = try await round().sync(mac, base: nil, fetching: true)
+        XCTAssertEqual(try party(in: mac.documents), "partie 1")
+        let macBase = try XCTUnwrap(macFirst.base)
+        _ = try play("partie 2", written: morning + 600, in: phone.documents)
+        let second = try await round().sync(phone, base: first.base, fetching: false)
+        XCTAssertEqual(second.step, .send)
+
+        // The game started from the Dock while the copy came: the saves it
+        // found stay, and nothing is left of the copy on the Mac,
+        do {
+            _ = try await round().sync(mac, base: macBase, fetching: true, quiet: { false })
+            XCTFail("a copy came under a game that started meanwhile")
+        } catch is CartoucheSavesBusy {}
+        XCTAssertEqual(try party(in: mac.documents), "partie 1")
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: scratchHere.path), [])
+        // nor when the player puts one back.
+        do {
+            _ = try await round().putBack(CartoucheSaveSync.fileName(morning + 600), of: mac, base: macBase, quiet: { false })
+            XCTFail("a copy was put back under a game that started meanwhile")
+        } catch is CartoucheSavesBusy {}
+        XCTAssertEqual(try party(in: mac.documents), "partie 1")
+
+        // Once the game ended, it comes.
+        let comes = try await round().sync(mac, base: macBase, fetching: true)
+        XCTAssertEqual(comes.step, .fetch)
+        XCTAssertEqual(try party(in: mac.documents), "partie 2")
+    }
+
     // MARK: Where the account can write
 
     func testKnowsWhereItCanWrite() async throws {

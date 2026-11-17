@@ -143,6 +143,70 @@ final class CartoucheSaveSyncTests: XCTestCase {
         XCTAssertEqual(step(here("1|10|1", "a", minutes: 1), copy("c", minutes: 9), base: known), .fetch)
     }
 
+    // MARK: Saves kept in step with another folder
+
+    /// What step() gave as STEP, with no base, becomes for saves a Mac kept
+    /// in step with another saves folder, its base there being LEFT.
+    private func afterLeaving(_ step: CartoucheSaveStep, _ here: CartoucheLocalSaves?, _ newest: CartoucheSaveCopy?,
+                              left: CartoucheSaveBase, leftThere: Bool = true, fetching: Bool = true) -> CartoucheSaveStep {
+        CartoucheSaveSync.afterLeaving(step, left: left, here: here, newest: newest, fetching: fetching) { leftThere }
+    }
+
+    /// The base a Mac kept in its own saves folder, before the player chose
+    /// the iPhone's.
+    private let left = CartoucheSaveBase(place: "mac|/Saves", copy: "2026-11-10_06-41-00.zip", content: "a", look: "1|10|1")
+
+    func testSavesUnchangedSinceTheFolderLeftAreNoNewsWhateverTheirDate() {
+        let mine = here("1|10|1", "a", minutes: 30)
+        let theirs = copy("b", minutes: 9)
+        // Written after the folder's newest copy, they would go over it, for
+        // the iPhone to take in place of its own.
+        XCTAssertEqual(step(mine, theirs), .send)
+        XCTAssertEqual(afterLeaving(.send, mine, theirs, left: left), .fetch)
+        // Written before it, they would be kept there under it.
+        let older = here("1|10|1", "a", minutes: 1)
+        XCTAssertEqual(step(older, theirs), .keepAndFetch)
+        XCTAssertEqual(afterLeaving(.keepAndFetch, older, theirs, left: left), .fetch)
+        // The same content written again is unchanged too.
+        XCTAssertEqual(afterLeaving(.send, here("1|10|7", "a", minutes: 40), theirs, left: left), .fetch)
+        // A base an older Cartouche left knows the saves by their look only.
+        let looked = CartoucheSaveBase(place: left.place, copy: left.copy, content: nil, look: "1|10|1")
+        XCTAssertEqual(afterLeaving(.send, mine, theirs, left: looked), .fetch)
+    }
+
+    func testSavesNoLongerInTheFolderLeftAreKeptHereFirst() {
+        let mine = here("1|10|1", "a", minutes: 30)
+        XCTAssertEqual(afterLeaving(.send, mine, copy("b", minutes: 9), left: left, leftThere: false), .keepAndFetch)
+    }
+
+    func testAfterAGameSavesUnchangedSinceTheFolderLeftWaitForTheNextStart() {
+        let mine = here("1|10|1", "a", minutes: 30)
+        XCTAssertEqual(step(mine, copy("b", minutes: 9), fetching: false), .send)
+        XCTAssertEqual(afterLeaving(.send, mine, copy("b", minutes: 9), left: left, fetching: false), .none)
+        XCTAssertEqual(afterLeaving(.keep, here("1|10|1", "a", minutes: 1), copy("b", minutes: 9), left: left,
+                                    fetching: false), .none)
+    }
+
+    func testSavesChangedSinceTheFolderLeftAreNewsTheSavesWrittenLastWinning() {
+        let theirs = copy("b", minutes: 9)
+        XCTAssertEqual(afterLeaving(.send, here("1|12|30", "c", minutes: 30), theirs, left: left), .send)
+        XCTAssertEqual(afterLeaving(.keepAndFetch, here("1|12|5", "c", minutes: 5), theirs, left: left), .keepAndFetch)
+        XCTAssertEqual(afterLeaving(.keep, here("1|12|5", "c", minutes: 5), theirs, left: left, fetching: false), .keep)
+    }
+
+    func testSavesLeftGoWhereThereIsNoCopyAndNothingElseChanges() {
+        let mine = here("1|10|1", "a", minutes: 30)
+        // No copy there, or a copy of no save: the saves go, as the newest.
+        XCTAssertEqual(afterLeaving(.send, mine, nil, left: left), .send)
+        XCTAssertEqual(afterLeaving(.send, mine, copy("", minutes: 9), left: left), .send)
+        // No save here: the newest copy comes, as on any device.
+        XCTAssertEqual(afterLeaving(.fetch, nil, copy("b", minutes: 9), left: left), .fetch)
+        // What is not known yet is read first, then decided again.
+        XCTAssertEqual(afterLeaving(.compare, here("1|10|1", nil, minutes: 30), copy(nil, minutes: 9), left: left), .compare)
+        // The same saves on both sides.
+        XCTAssertEqual(afterLeaving(.same, mine, copy("a", minutes: 9), left: left), .same)
+    }
+
     // MARK: The game's version
 
     func testAVersionIsNewerByItsNumbers() {

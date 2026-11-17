@@ -182,6 +182,34 @@ public enum CartoucheSaveSync {
         return .send
     }
 
+    // MARK: Saves kept in step with another folder
+
+    /// Whether SAVES are those BASE was made of: the same look, or the same
+    /// content written again.
+    public static func unchanged(_ saves: CartoucheLocalSaves, since base: CartoucheSaveBase) -> Bool {
+        saves.look == base.look || (base.content != nil && saves.content == base.content)
+    }
+
+    /// STEP, as step() gave it with no base, for HERE, saves a device kept
+    /// in step with another saves folder, as LEFT, its base there, says:
+    /// on a Mac whose saves folder became its iPhone's (Cartouche Builder,
+    /// MacSaves.swift). Saves it did not change since are no news for this
+    /// folder, whatever their date: a game first played before the player
+    /// chose the iPhone's folder made new ones, which would have gone as the
+    /// newest copy, for the iPhone to take in place of its own. They stay
+    /// in the folder they were in step with, and NEWEST, this folder's
+    /// newest copy, comes in their place, as on a device without saves;
+    /// were their copy no longer in the folder left (LEFTTHERE), they are
+    /// kept here first, as a copy of their date under it. Not FETCHING,
+    /// nothing moves. Saves changed since, which a game started since made,
+    /// and a newest copy of no save, keep STEP: the saves written last win.
+    public static func afterLeaving(_ step: CartoucheSaveStep, left: CartoucheSaveBase, here: CartoucheLocalSaves?,
+                                    newest: CartoucheSaveCopy?, fetching: Bool, leftThere: () -> Bool) -> CartoucheSaveStep {
+        guard let here, let newest, newest.content != "", [.send, .keep, .keepAndFetch].contains(step),
+              unchanged(here, since: left) else { return step }
+        return !fetching ? .none : leftThere() ? .fetch : .keepAndFetch
+    }
+
     // MARK: The game's version
 
     /// Whether STEP would bring the newest copy here, or put the saves here
