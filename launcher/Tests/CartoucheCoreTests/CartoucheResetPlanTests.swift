@@ -345,35 +345,114 @@ final class CartoucheResetPlanTests: XCTestCase {
                                     "Library/Application Support/CartoucheShared/LiveContainer/Tweaks/x"])
     }
 
-    /// What cannot go says where, by its domain and code, and the rest goes.
-    func testWhatCannotGoComesBackAndTheRestGoes() throws {
-        final class StubbornFileManager: FileManager {
-            var stuck: Set<String> = []
+    /// A file manager that refuses to remove the files STUCK, and any
+    /// folder that holds one, as a folder that does not go as a whole; and
+    /// the folders KEPTBYIOS, once it removed what they hold, as iOS does
+    /// with Documents/Inbox on an iPhone.
+    private final class StubbornFileManager: FileManager {
+        var stuck: Set<String> = []
+        var keptByIOS: Set<String> = []
 
-            override func removeItem(at url: URL) throws {
-                if stuck.contains(url.standardizedFileURL.path) {
-                    throw NSError(domain: NSCocoaErrorDomain, code: CocoaError.Code.fileWriteNoPermission.rawValue,
-                                  userInfo: [NSFilePathErrorKey: url.path])
-                }
-                try super.removeItem(at: url)
-            }
+        private func refusal(_ url: URL) -> NSError {
+            NSError(domain: NSCocoaErrorDomain, code: CocoaError.Code.fileWriteNoPermission.rawValue,
+                    userInfo: [NSFilePathErrorKey: url.path,
+                               NSUnderlyingErrorKey: NSError(domain: NSPOSIXErrorDomain, code: Int(EPERM))])
         }
+
+        override func removeItem(at url: URL) throws {
+            let path = url.standardizedFileURL.path
+            if stuck.contains(path) || stuck.contains(where: { $0.hasPrefix(path + "/") }) {
+                throw refusal(url)
+            }
+            if keptByIOS.contains(path) {
+                for name in try contentsOfDirectory(atPath: path) {
+                    try removeItem(at: url.appendingPathComponent(name))
+                }
+                throw refusal(url)
+            }
+            try super.removeItem(at: url)
+        }
+    }
+
+    /// What cannot go says where, by its domain and code, and the rest goes:
+    /// a folder that does not go as a whole goes item by item, down to what
+    /// could not.
+    func testWhatCannotGoComesBackAndTheRestGoes() throws {
         let home = try folder()
         let appGroup = try folder()
         try write("x", at: "Documents/Applications/Kart.app/Info.plist", in: home)
+        try write("x", at: "Documents/Applications/Kart.app/Kart", in: home)
+        try write("x", at: "Documents/Applications/Zelda.app/Info.plist", in: home)
         try write("x", at: "Documents/Data/Application/A0F3/x", in: home)
         try write("x", at: "Cartouche/x", in: appGroup)
+        try write("x", at: "Cartouche/GameMemory.plist", in: appGroup)
         let fileManager = StubbornFileManager()
-        fileManager.stuck = [home.appendingPathComponent("Documents/Applications").standardizedFileURL.path,
-                             appGroup.appendingPathComponent("Cartouche").standardizedFileURL.path]
+        fileManager.stuck = [home.appendingPathComponent("Documents/Applications/Kart.app/Info.plist").standardizedFileURL.path,
+                             appGroup.appendingPathComponent("Cartouche/x").standardizedFileURL.path]
         let failures = CartoucheResetPlan.eraseFiles(home: home, appGroup: appGroup, keeping: [], fileManager: fileManager)
         XCTAssertEqual(failures, [
-            CartoucheResetPlan.Failure(path: "Documents/Applications", reason: "NSCocoaErrorDomain 513"),
-            CartoucheResetPlan.Failure(path: "AppGroup/Cartouche", reason: "NSCocoaErrorDomain 513"),
+            CartoucheResetPlan.Failure(path: "Documents/Applications/Kart.app/Info.plist", reason: "NSCocoaErrorDomain 513"),
+            CartoucheResetPlan.Failure(path: "AppGroup/Cartouche/x", reason: "NSCocoaErrorDomain 513"),
         ])
-        XCTAssertEqual(failures.map(\.description), ["Documents/Applications: NSCocoaErrorDomain 513",
-                                                      "AppGroup/Cartouche: NSCocoaErrorDomain 513"])
+        XCTAssertEqual(failures.map(\.description), ["Documents/Applications/Kart.app/Info.plist: NSCocoaErrorDomain 513",
+                                                      "AppGroup/Cartouche/x: NSCocoaErrorDomain 513"])
         XCTAssertEqual(tree(home), ["Documents/", "Documents/Applications/", "Documents/Applications/Kart.app/",
                                     "Documents/Applications/Kart.app/Info.plist"])
+        XCTAssertEqual(tree(appGroup), ["Cartouche/", "Cartouche/x"])
+    }
+
+    /// iOS keeps Documents/Inbox for itself, where it puts what another app
+    /// opens Cartouche with, as a game's IPA from Files: the app may empty
+    /// it, never remove it. Emptied, it is not an item left, and Cartouche
+    /// starts again; as are other folders iOS would keep so.
+    func testAFolderIOSKeepsForItselfIsEmptiedAndStays() throws {
+        let home = try folder()
+        let appGroup = try folder()
+        try makeFolder("Documents/Inbox", in: home)
+        try write("x", at: "Documents/Applications/Kart.app/Info.plist", in: home)
+        try write("x", at: "tmp/io.github.clabeuhtegrite.cartouche-Inbox/Kart.ipa", in: home)
+        try write("x", at: "Cartouche/GameMemory.plist", in: appGroup)
+        let fileManager = StubbornFileManager()
+        fileManager.keptByIOS = [home.appendingPathComponent("Documents/Inbox").standardizedFileURL.path,
+                                 home.appendingPathComponent("tmp/io.github.clabeuhtegrite.cartouche-Inbox").standardizedFileURL.path]
+        XCTAssertEqual(CartoucheResetPlan.eraseFiles(home: home, appGroup: appGroup, keeping: [], fileManager: fileManager), [])
+        XCTAssertEqual(tree(home), ["Documents/", "Documents/Inbox/", "tmp/", "tmp/io.github.clabeuhtegrite.cartouche-Inbox/"])
+        XCTAssertEqual(tree(appGroup), [])
+
+        // Not when something of the player's stays in it.
+        try write("x", at: "Documents/Inbox/Kart.ipa", in: home)
+        fileManager.stuck = [home.appendingPathComponent("Documents/Inbox/Kart.ipa").standardizedFileURL.path]
+        XCTAssertEqual(CartoucheResetPlan.eraseFiles(home: home, appGroup: appGroup, keeping: [], fileManager: fileManager),
+                       [CartoucheResetPlan.Failure(path: "Documents/Inbox/Kart.ipa", reason: "NSCocoaErrorDomain 513")])
+    }
+
+    /// The telemetry says where what could not go lay, and why, by
+    /// Cartouche's own folders and iOS's: never a file's name, nor the
+    /// bundle ID an Inbox of iOS's is named after, which may hold the team's.
+    func testWhatWasLeftIsMeasuredWithoutAFilesName() {
+        func left(_ path: String, _ reason: String = "NSCocoaErrorDomain 513") -> CartoucheResetPlan.Failure {
+            CartoucheResetPlan.Failure(path: path, reason: reason)
+        }
+        XCTAssertNil(CartoucheResetPlan.measured([]))
+        XCTAssertEqual(CartoucheResetPlan.measured([left("Documents/Inbox")]), "Documents/Inbox NSCocoaErrorDomain 513")
+        XCTAssertEqual(CartoucheResetPlan.measured([left("Documents/Mes notes de Zelda.txt"),
+                                                    left("Documents/Applications/Kart.app/Info.plist")]),
+                       "Documents/… NSCocoaErrorDomain 513; Documents/Applications/… NSCocoaErrorDomain 513")
+        XCTAssertEqual(CartoucheResetPlan.measured([left("Library/Caches/com.apple.dyld"),
+                                                    left("Library/com.apple.dyld", "NSCocoaErrorDomain 512")]),
+                       "Library/Caches/… NSCocoaErrorDomain 513; Library/com.apple.dyld NSCocoaErrorDomain 512")
+        XCTAssertEqual(CartoucheResetPlan.measured([left("tmp/io.github.clabeuhtegrite.cartouche.ABCDE12345-Inbox/Kart.ipa"),
+                                                    left("Keychain/SideStore/appleIDPassword", "OSStatus -25308"),
+                                                    left("AppGroup/Cartouche")]),
+                       "tmp/…-Inbox/… NSCocoaErrorDomain 513; Keychain/SideStore/… OSStatus -25308; "
+                       + "AppGroup/Cartouche NSCocoaErrorDomain 513")
+        // Each place once, at most four, within what the telemetry's server
+        // takes of a text.
+        let many = (0..<9).map { left("Documents/Data/Application/\($0)/x") } + ["Inbox", "Tweaks", "SideStore", "Applications", "Data"]
+            .map { left("Documents/" + $0) }
+        let measured = CartoucheResetPlan.measured(many) ?? ""
+        XCTAssertEqual(measured.components(separatedBy: "; ").count, 4)
+        XCTAssertTrue(measured.hasPrefix("Documents/Data/… NSCocoaErrorDomain 513; Documents/Inbox"))
+        XCTAssertLessThanOrEqual(measured.count, 160)
     }
 }
