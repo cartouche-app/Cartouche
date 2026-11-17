@@ -34,7 +34,7 @@ codesign --force --sign - "$app"
 
 for strategy in preferred windowFirst viewDuring viewAfter explicit; do
   echo "== $strategy"
-  "$app/Contents/MacOS/Probe" "$strategy" "$pictures" 2>&1 || echo "✗ $strategy ended with $?"
+  "$app/Contents/MacOS/Probe" -strategy "$strategy" -pictures "$pictures" 2>&1 || echo "✗ $strategy ended with $?"
 done
 
 echo "== the console of each, against the app's own"

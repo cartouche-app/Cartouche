@@ -5,11 +5,11 @@
 //
 //  A window as the app's: the switch at the top, the builder (a sidebar's
 //  list and a page of cards) or the console, dark, under it. `Probe
-//  STRATEGY FOLDER` opens it on the builder, the Mac in light mode, takes
-//  its picture, shows the console, takes its picture, shows the builder
-//  again and takes its picture, then has the app's appearance changed and
-//  changed back, as macOS does when the player changes theirs, and takes a
-//  last one. It says how far each picture of the builder is from the first,
+//  -strategy STRATEGY -pictures FOLDER` opens it on the builder, the Mac in
+//  light mode, takes its picture, shows the console, takes its picture,
+//  shows the builder again and takes its picture, then has the app's
+//  appearance changed and changed back, as macOS does when the player
+//  changes theirs, and takes a last one. It says how far each picture of the builder is from the first,
 //  and the colour scheme SwiftUI gave each part each time. `Probe --compare
 //  A B` says how far picture B is from picture A.
 //
@@ -74,7 +74,9 @@ final class Probe: ObservableObject {
     static let shared = Probe()
 
     @Published var console = false
-    let strategy: Strategy = CommandLine.arguments.dropFirst().compactMap(Strategy.init(rawValue:)).first ?? .preferred
+    /// -strategy NAME: a bare argument would be a document AppKit opens,
+    /// and the app would open no window of its own.
+    let strategy: Strategy = UserDefaults.standard.string(forKey: "strategy").flatMap(Strategy.init(rawValue:)) ?? .preferred
     /// The colour scheme each part's views last had, as SwiftUI gave it.
     static var seen: [String: ColorScheme] = [:]
 
@@ -280,15 +282,15 @@ final class DarkWindowView: NSView {
 enum Steps {
     static var window: NSWindow?
     static var macScheme: ColorScheme = .light
-    static let folder = URL(fileURLWithPath: CommandLine.arguments.dropFirst().first { $0.hasPrefix("/") }
-                                ?? FileManager.default.currentDirectoryPath)
+    static let folder = URL(fileURLWithPath: UserDefaults.standard.string(forKey: "pictures") ?? FileManager.default.currentDirectoryPath)
 
     static func run() async {
         say("the Mac's own appearance: \(NSApp.effectiveAppearance.name.rawValue)")
         // The Mac in light mode, as the player's was.
         NSApp.appearance = NSAppearance(named: .aqua)
         guard let window = await mainWindow() else {
-            say("✗ the window never opened")
+            say("✗ the window never opened; windows: " + NSApp.windows.map { "\($0.title) [\($0.identifier?.rawValue ?? "")] visible \($0.isVisible)" }
+                .joined(separator: ", "))
             exit(2)
         }
         self.window = window
