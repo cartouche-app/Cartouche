@@ -75,7 +75,8 @@ enum Gallery {
         // nxnative's 8d62601f of 16 November 2026: built in a batch from
         // the commit before nxnative's splitter changed, alone, the other
         // games from the newest, with what the batch said open, in a window
-        // as tall as the page; and its sheet once built, held there.
+        // as tall as the page; and its sheet once built, held there, down to
+        // its build.
         case activitySplit = "activity-split", gameSplit = "game-split"
 
         /// Whether the page is the console's, which is always dark.
@@ -92,7 +93,7 @@ enum Gallery {
         /// as the page, which AppKit would fit to the screen.
         var isTall: Bool {
             isWholeSheet || [.storageMac, .iphoneGames, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport,
-                             .activitySplit].contains(self)
+                             .activitySplit, .gameSplit].contains(self)
         }
 
         /// The page of the sheet's saves it opens over the sheet.
@@ -140,6 +141,9 @@ enum Gallery {
             case .consoleSystem: return CGSize(width: 1024, height: 980)
             // The game building, the games built, and what the batch said.
             case .activitySplit: return CGSize(width: 1024, height: 1060)
+            // The sheet down to its build: why it is up to date, and the
+            // commit it was built from.
+            case .gameSplit: return CGSize(width: 1024, height: 1150)
             // The window at its smallest, with a game's sheet whose
             // nxnative commits are a paragraph each, as nxnative writes them.
             case .gameNarrow: return CGSize(width: Columns.window.width, height: 680)
