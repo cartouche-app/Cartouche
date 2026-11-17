@@ -69,6 +69,7 @@ struct CartoucheSavesSection: View {
         } footer: {
             if let target, !isLeftToCloud(target) {
                 Text(CartoucheText.savesFooter(CartoucheSaveBackups.kept))
+                    .cartoucheFooter()
             }
         }
     }
@@ -261,6 +262,7 @@ struct CartoucheSaveCopiesView: View {
                 }
             } footer: {
                 Text(CartoucheText.savesPutBackFooter)
+                    .cartoucheFooter()
             }
         }
         .cartoucheStageBackground()

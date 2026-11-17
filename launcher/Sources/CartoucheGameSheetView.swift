@@ -516,6 +516,7 @@ struct CartoucheGameSheetView: View {
         } footer: {
             if entry.isUnknown, entry.playerCover == nil {
                 Text(entry.found.map { CartoucheText.gameInfoFound($0.name) } ?? CartoucheText.gameInfoNotFound)
+                    .cartoucheFooter()
             }
         }
     }

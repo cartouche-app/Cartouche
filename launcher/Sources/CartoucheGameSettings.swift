@@ -367,12 +367,8 @@ struct CartoucheGameSettingsView: View {
         #endif
     }
 
-    /// A section's footer, on as many lines as it takes: a list on the Mac
-    /// gives it one line, cut, otherwise.
     private func footer(_ text: String) -> some View {
-        Text(text)
-            .lineLimit(nil)
-            .fixedSize(horizontal: false, vertical: true)
+        Text(text).cartoucheFooter()
     }
 
     /// Over the category's rows: the bar of the categories when there are

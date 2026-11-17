@@ -157,6 +157,15 @@ enum CartouchePlayStatus: Hashable {
     }
 }
 
+extension Text {
+    /// A section's footer, on as many lines as it takes: a list on the Mac
+    /// gives it one line, cut, otherwise.
+    func cartoucheFooter() -> some View {
+        lineLimit(nil)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
 @available(iOS 17.0, *)
 extension View {
     /// Liquid Glass in this shape on iOS 26 and later, frosted material

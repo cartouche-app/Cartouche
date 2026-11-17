@@ -202,6 +202,7 @@ struct CartoucheSwitchSaveView: View {
             Text(verbatim: found.pick.url.lastPathComponent)
         } footer: {
             Text(CartoucheText.switchSaveImportFooter)
+                .cartoucheFooter()
         }
     }
 
@@ -245,6 +246,7 @@ struct CartoucheSwitchSaveView: View {
             .disabled(isRunning || working)
         } footer: {
             Text(CartoucheText.switchSavePutBackFooter(CartoucheText.dateAndTime(before.date)))
+                .cartoucheFooter()
         }
     }
 
@@ -277,6 +279,7 @@ struct CartoucheSwitchSaveView: View {
             Text(CartoucheText.switchSaveSendHeader)
         } footer: {
             Text(CartoucheText.switchSaveSendFooter)
+                .cartoucheFooter()
         }
     }
 

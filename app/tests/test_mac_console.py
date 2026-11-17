@@ -93,6 +93,36 @@ def outside_iphone_parts(swift: str, condition=IPHONE_CONDITION):
             yield number, code
 
 
+def footers_cut_on_the_mac(swift: str):
+    """The lines of SWIFT whose Text is a section's footer, and does not take
+    .cartoucheFooter(): a list on the Mac gives a footer one line, cut."""
+    lines = swift.splitlines()
+    found = []
+    for index, line in enumerate(lines):
+        at = re.search(r"\bfooter:\s*\{", line)
+        if not at:
+            continue
+        depth, block = 1, []
+        rest = line[at.end():]
+        number = index
+        while True:
+            for character in rest:
+                depth += {"{": 1, "}": -1}.get(character, 0)
+                if depth == 0:
+                    break
+            block.append((number + 1, rest))
+            if depth <= 0 or number + 1 >= len(lines):
+                break
+            number += 1
+            rest = lines[number]
+        texts = [(n, code) for n, code in block if re.match(r"\s*Text\(", code)]
+        for position, (n, _) in enumerate(texts):
+            following = [code for m, code in block if m >= n and (position + 1 == len(texts) or m < texts[position + 1][0])]
+            if ".cartoucheFooter()" not in "\n".join(following):
+                found.append(n)
+    return found
+
+
 def own_names(swift: str):
     """The launcher's names that SWIFT declares, and those it uses, in the
     parts the console builds."""
@@ -180,6 +210,24 @@ class MacConsoleSources(unittest.TestCase):
                 self.assertEqual(sorted(used - declared), [],
                                  "give the Mac a stand-in (Mac/ConsoleStandIns.swift), link the file that declares it, "
                                  "or wrap the part in #if os(iOS)")
+
+    def test_the_shared_files_footers_take_the_lines_they_need(self):
+        """A list on the Mac gives a section's footer one line, cut: the
+        saves' footers on a game's sheet were, before Text.cartoucheFooter()
+        (CartoucheTheme.swift)."""
+        for link in sorted(SHARED.iterdir()):
+            with self.subTest(name=link.name):
+                found = footers_cut_on_the_mac(link.read_text(encoding="utf-8"))
+                self.assertEqual(found, [], "end each footer's Text with .cartoucheFooter()")
+
+    def test_the_check_sees_a_footer_cut_on_the_mac(self):
+        swift = "\n".join([
+            "Section {", "} footer: {", "    Text(a)", "        .cartoucheFooter()", "}",
+            "Section {", "} footer: {", "    if b {", "        Text(c)", "    }", "}",
+            "Section {", "} header: {", "    Text(d)", "} footer: {", "    footer(e)", "}",
+            "Section {", "} footer: { Text(f) }",
+        ])
+        self.assertEqual(footers_cut_on_the_mac(swift), [9, 19])
 
     def test_the_check_sees_a_name_the_console_lacks(self):
         swift = "\n".join([
