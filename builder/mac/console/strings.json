@@ -220,6 +220,18 @@
       "en": "Version on this Mac",
       "fr": "Version sur ce Mac"
     },
+    "system.device": {
+      "en": "This Mac",
+      "fr": "Ce Mac"
+    },
+    "system.updates.notChecked": {
+      "en": "Cartouche Builder has not looked for an update yet.",
+      "fr": "Cartouche Builder n’a pas encore cherché de mise à jour."
+    },
+    "system.updates.upToDate": {
+      "en": "Cartouche Builder %@ is the latest version.",
+      "fr": "Cartouche Builder %@ est la dernière version."
+    },
     "telemetry.erase": {
       "en": "Erase what this Mac sent",
       "fr": "Effacer les envois de ce Mac"
@@ -269,6 +281,50 @@
     "mac.file.saved": {
       "en": "Saved in %@.",
       "fr": "Enregistré dans %@."
+    },
+    "mac.guide.build.action": {
+      "en": "Open the library",
+      "fr": "Ouvrir la bibliothèque"
+    },
+    "mac.guide.build.detail": {
+      "en": "In Cartouche Builder’s library, build one of your games for this Mac: it comes to the console once built.",
+      "fr": "Dans la bibliothèque de Cartouche Builder, construisez un de vos jeux pour ce Mac : il arrive dans la console une fois construit."
+    },
+    "mac.guide.build.title": {
+      "en": "Build a game for this Mac",
+      "fr": "Construire un jeu pour ce Mac"
+    },
+    "mac.guide.finished": {
+      "en": "This Mac is ready, and your first game played: the games you build next come to the console by themselves.",
+      "fr": "Ce Mac est prêt et votre premier jeu lancé : les jeux que vous construirez ensuite arriveront d’eux-mêmes dans la console."
+    },
+    "mac.guide.intro": {
+      "en": "Three steps to a first game on this Mac. Each ticks itself once done, in any order.",
+      "fr": "Trois étapes jusqu’à un premier jeu sur ce Mac. Chacune se coche d’elle-même une fois faite, dans n’importe quel ordre."
+    },
+    "mac.guide.play.action": {
+      "en": "Back to the console",
+      "fr": "Retour à la console"
+    },
+    "mac.guide.play.detail": {
+      "en": "Pick your game in the console, then Play.",
+      "fr": "Choisissez votre jeu dans la console, puis Jouer."
+    },
+    "mac.guide.play.title": {
+      "en": "Play it",
+      "fr": "Y jouer"
+    },
+    "mac.guide.setup.action": {
+      "en": "Open the assistant",
+      "fr": "Ouvrir l’assistant"
+    },
+    "mac.guide.setup.detail": {
+      "en": "Cartouche Builder’s assistant installs what nxnative needs, then asks where your dumps are and where your games go.",
+      "fr": "L’assistant de Cartouche Builder installe ce dont nxnative a besoin, puis demande où sont vos dumps et où vont vos jeux."
+    },
+    "mac.guide.setup.title": {
+      "en": "Make this Mac ready",
+      "fr": "Préparer ce Mac"
     },
     "mac.requirement": {
       "en": "Apple chip, macOS %@ or later",
@@ -321,6 +377,34 @@
     "mac.system.builder.footer": {
       "en": "Your games built for this Mac, their builds, this Mac’s folders and its iPhones: the Builder, in this window in place of the console.",
       "fr": "Vos jeux construits pour ce Mac, leurs constructions, les dossiers de ce Mac et ses iPhone : le Builder, dans cette fenêtre à la place de la console."
+    },
+    "mac.updates.automatic": {
+      "en": "Install updates by itself",
+      "fr": "Installer les mises à jour toute seule"
+    },
+    "mac.updates.download": {
+      "en": "Download %@",
+      "fr": "Télécharger la %@"
+    },
+    "mac.updates.downloading": {
+      "en": "Downloading %@…",
+      "fr": "Téléchargement de la %@…"
+    },
+    "mac.updates.footer": {
+      "en": "Cartouche Builder looks for a new version every six hours, and installs it when it quits, never during a build.",
+      "fr": "Cartouche Builder cherche une nouvelle version toutes les six heures, et l’installe quand il quitte, jamais pendant une construction."
+    },
+    "mac.updates.installing": {
+      "en": "Installing…",
+      "fr": "Installation…"
+    },
+    "mac.updates.ready": {
+      "en": "%@ is ready: it installs when Cartouche Builder quits.",
+      "fr": "La %@ est prête : elle s’installe quand Cartouche Builder quitte."
+    },
+    "mac.updates.restart": {
+      "en": "Restart to update",
+      "fr": "Redémarrer pour mettre à jour"
     }
   }
 }

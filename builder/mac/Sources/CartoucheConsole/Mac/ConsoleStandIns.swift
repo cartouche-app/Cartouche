@@ -5,14 +5,14 @@
 //  What the console's screens (Shared/) ask of the iPhone's Cartouche, as
 //  a Mac answers: its game actions (CartoucheGameActions.swift, which
 //  installs and starts games with LiveContainer), the game running, its
-//  setup (a certificate and a pairing file), its Apple ID, its first
-//  game's guide, the game behind the console, the iPhone's model, memory
-//  limit, signature and its renewals, how a game fits it, where a game
-//  keeps its saves and writes its logs. The saves themselves, which the
-//  Builder keeps in step, are in ConsoleSaves.swift, and its measurements,
-//  which the Builder sends, in ConsoleTelemetry.swift; the reports and their
-//  journal are the iPhone's (CartoucheReporting.swift), in the Builder's
-//  folder.
+//  setup (a certificate and a pairing file), its Apple ID, the game behind
+//  the console, the iPhone's model, memory limit, signature and its
+//  renewals, how a game fits it, where a game keeps its saves and writes
+//  its logs. The saves themselves, which the Builder keeps in step, are in
+//  ConsoleSaves.swift, and its measurements, which the Builder sends, in
+//  ConsoleTelemetry.swift; the first game's guide, the Mac's own steps, in
+//  ConsoleGuide.swift; the reports and their journal are the iPhone's
+//  (CartoucheReporting.swift), in the Builder's folder.
 //  A Mac plays the games nxnative built for it, each in its own app: the
 //  console has nothing to set up, no limit of memory from iOS, no signature
 //  that expires, nothing behind it. A game fits it by the iPhone's rule
@@ -187,25 +187,6 @@ final class CartoucheAccount: ObservableObject {
 
     @Published private(set) var phase: Phase?
     @Published private(set) var isAutomatic = false
-}
-
-/// The first game's guide is the iPhone's: the home has no card for it on
-/// the Mac, whose games come from its Builder.
-@MainActor
-final class CartoucheGuide: ObservableObject {
-    static let shared = CartoucheGuide()
-
-    struct Progress: Equatable {}
-
-    func progress(_ entries: CartoucheCatalog.Entries) -> Progress { Progress() }
-    func showsCard(_ progress: Progress) -> Bool { false }
-}
-
-struct CartoucheGuideCard: View {
-    let progress: CartoucheGuide.Progress
-    let action: () -> Void
-
-    var body: some View { EmptyView() }
 }
 
 // MARK: This Mac

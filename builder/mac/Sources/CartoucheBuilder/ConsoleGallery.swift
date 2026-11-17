@@ -132,14 +132,14 @@ enum ConsoleGallery {
     /// the saves of the sheet's game kept in step with a NAS's share: the
     /// newest copy came, or, NEWER, it waits for the game's update, version
     /// 1.2.0 of the game having written it and this Mac's app being 1.0.0.
-    static func prepare(language: String, newer: Bool = false) {
+    static func prepare(language: String, newer: Bool = false, firstGame: Bool = false) {
         if let covers = makeGames() {
             let deadline = Date().addingTimeInterval(60)
             while !covers.loaded && Date() < deadline {
                 RunLoop.main.run(until: Date().addingTimeInterval(0.05))
             }
         }
-        show(language: language, newer: newer)
+        show(language: language, newer: newer, firstGame: firstGame)
     }
 
     /// As prepare(language:newer:), from a task of the main actor: the
@@ -154,13 +154,14 @@ enum ConsoleGallery {
                 try? await Task.sleep(for: .milliseconds(50))
             }
         }
-        show(language: language, newer: newer)
+        show(language: language, newer: newer, firstGame: false)
     }
 
     /// The games and the NAS's in the console, speaking LANGUAGE, the
     /// newest copy of the sheet's game's saves waiting for its update when
-    /// NEWER.
-    private static func show(language: String, newer: Bool) {
+    /// NEWER; the guide to a first game for a player who has played none of
+    /// them yet when FIRSTGAME, its card on the home, and done otherwise.
+    private static func show(language: String, newer: Bool, firstGame: Bool) {
         let console = CartoucheMacConsole.shared
         let nas = language == "fr" ? "le NAS" : "the NAS"
         console.show(games: apps, kept: kept, keptIn: nas)
@@ -178,6 +179,7 @@ enum ConsoleGallery {
         // reaches itself.
         CartoucheMacConsole.measuresServer = URL(string: "https://telemetry.example.invalid")
         console.showMeasures(CartoucheMacMeasures(isOn: true, sent: 48, waiting: 0, lastSent: copies[0].date, lastReport: lastReport))
+        console.showGuideForGallery(played: !firstGame)
         console.speak(language)
     }
 

@@ -113,14 +113,16 @@ def footers_cut_on_the_mac(swift: str):
     """The lines of SWIFT that open a section's footer in a list, the section
     being SwiftUI's own rather than a CartoucheSection: a list on the Mac
     gives a section's footer two lines at most, and cuts a longer one at both
-    ends. A file without a list, as a form, keeps its sections' footers."""
+    ends. A file without a list, as a form, keeps its sections' footers, and
+    the parts only the iPhone builds are the iPhone's."""
     if not re.search(r"\bList\s*\{", swift):
         return []
+    on_the_mac = {number for number, _ in outside_iphone_parts(swift)}
     lines = [STRING.sub('""', line) for line in swift.splitlines()]
     found = []
     for index, line in enumerate(lines):
         at = re.search(r"\}\s*footer:\s*\{", line)
-        if not at:
+        if not at or index + 1 not in on_the_mac:
             continue
         # Back to the line that opens the section, past the blocks of its
         # header and of its rows, each closed by the "}" before its label.
@@ -338,6 +340,10 @@ let iPhone = date.formatted()
             "}",
         ])
         self.assertEqual(footers_cut_on_the_mac(swift), [8, 14])
+        # The iPhone's own sections keep SwiftUI's.
+        iphone = "\n".join(["List {", "#if os(iOS)", "Section {", "} footer: {", "    Text(a)", "}", "#else",
+                             "Section {", "} footer: {", "    Text(b)", "}", "#endif", "}"])
+        self.assertEqual(footers_cut_on_the_mac(iphone), [9])
         # A form's footers take their lines on the Mac.
         form = "\n".join(["Form {", "Section {", "} footer: {", "    Text(a)", "}", "}"])
         self.assertEqual(footers_cut_on_the_mac(form), [])

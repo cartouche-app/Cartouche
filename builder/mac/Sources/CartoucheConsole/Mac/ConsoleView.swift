@@ -69,6 +69,12 @@ public final class CartoucheMacConsole: ObservableObject {
     public var onImport: () -> Void = {}
     /// Cartouche Builder, from the console's System page.
     public var onSystem: () -> Void = {}
+    /// The Builder's setup assistant, over the console: the first step of
+    /// the guide to a first game on this Mac (ConsoleGuide.swift).
+    public var onSetup: () -> Void = {}
+    /// Whether the setup assistant was gone through to its end, as the
+    /// guide ticks its first step: the app says so, and each change.
+    @Published public var isSetUp = false
     /// Change in the Builder, under This Mac on the Storage page: the page
     /// of the Builder where the player chooses its games folder and its
     /// saves folder.
@@ -110,6 +116,14 @@ public final class CartoucheMacConsole: ObservableObject {
     public var logsFolder: URL {
         get { CartoucheGameActions.shared.logsRoot }
         set { CartoucheGameActions.shared.logsRoot = newValue }
+    }
+
+    /// The guide to a first game on this Mac as the app's gallery shows it:
+    /// this Mac ready, its games built, and one played (PLAYED) or none yet,
+    /// the guide's card then on the home (ConsoleGuide.swift).
+    public func showGuideForGallery(played: Bool) {
+        isSetUp = true
+        CartoucheGuide.shared.showForGallery(played: played)
     }
 
     /// Keeps the console's journal and the last reports of what went wrong
@@ -273,10 +287,12 @@ public struct CartoucheMacConsoleView: View {
 
     enum Route: Hashable {
         case library
-        /// The console's System page (ConsoleSystem.swift), and its
-        /// Storage, Game measurements and Report a problem pages, the
-        /// iPhone's; and how to name the games, from the Storage page.
-        case system, storage, telemetry, report, naming
+        /// The console's System page, the iPhone's (CartoucheSystemView),
+        /// and its Storage, Game measurements and Report a problem pages,
+        /// the iPhone's too; how to name the games, from the Storage page;
+        /// the guide to a first game on this Mac (ConsoleGuide.swift), from
+        /// the System page or from its card on the home.
+        case system, storage, telemetry, report, naming, guide
     }
 
     /// The console on its home, or with every game open (SHOWINGLIBRARY),
@@ -286,14 +302,15 @@ public struct CartoucheMacConsoleView: View {
     /// page of its saves SHOWINGSAVES open, or with its System page open
     /// (SHOWINGSYSTEM), or the Storage page under it (SHOWINGSTORAGE), or
     /// its Game measurements page (SHOWINGMEASURES), or its Report a
-    /// problem page (SHOWINGREPORT), as the app's gallery shows it.
+    /// problem page (SHOWINGREPORT), or the guide to a first game on this
+    /// Mac (SHOWINGGUIDE), as the app's gallery shows it.
     public init(showingLibrary: Bool = false, showingSettings: Bool = false, showingInfo: Bool = false,
                 showingSheetOf titleID: String? = nil, showingSaves: CartoucheMacSavesPage? = nil,
                 showingSystem: Bool = false, showingStorage: Bool = false, showingMeasures: Bool = false,
-                showingReport: Bool = false) {
+                showingReport: Bool = false, showingGuide: Bool = false) {
         _path = State(initialValue: showingLibrary ? [.library] : showingStorage ? [.system, .storage]
                         : showingMeasures ? [.system, .telemetry] : showingReport ? [.system, .report]
-                        : showingSystem ? [.system] : [])
+                        : showingGuide ? [.system, .guide] : showingSystem ? [.system] : [])
         opensSettings = showingSettings
         opensInfo = showingInfo
         opensSheetOf = titleID
@@ -377,6 +394,7 @@ public struct CartoucheMacConsoleView: View {
                 onSheet: { focus($0) },
                 onLibrary: { path.append(.library) },
                 onSetup: {},
+                onGuide: { path.append(.guide) },
                 onTab: { tab in
                     if tab == .system, path.last != .system { path.append(.system) }
                 },
@@ -399,7 +417,7 @@ public struct CartoucheMacConsoleView: View {
                             zoom: zoom,
                             onFocus: { focus($0) })
                     case .system:
-                        CartoucheMacSystemView { console.onSystem() }
+                        CartoucheSystemView()
                             .cartoucheConsolePage(CartoucheText.systemTab, back: CartoucheText.macBackToConsole)
                     case .storage:
                         CartoucheStorageView()
@@ -413,6 +431,12 @@ public struct CartoucheMacConsoleView: View {
                     case .naming:
                         CartoucheNamingView()
                             .cartoucheConsolePage(CartoucheText.namingTitle, back: CartoucheText.storageTitle)
+                    case .guide:
+                        // Its way back to where it opened from: the System
+                        // page, or the home whose card opened it.
+                        CartoucheGuideView { path.removeAll() }
+                            .cartoucheConsolePage(CartoucheText.guideTitle,
+                                                  back: path.first == .system ? CartoucheText.systemTab : CartoucheText.macBackToConsole)
                     }
                 }
         }
@@ -538,8 +562,10 @@ public struct CartoucheMacConsoleView: View {
         paneID = entry.id
     }
 
-    /// Starts the game's app, or brings it back to the front.
+    /// Starts the game's app, or brings it back to the front: the last
+    /// step of the guide to a first game on this Mac (ConsoleGuide.swift).
     private func play(_ app: LCAppModel, showingSettings: Bool = false) {
         console.onPlay(app.appInfo.url, showingSettings)
+        CartoucheGuide.shared.notePlayed()
     }
 }

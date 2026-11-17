@@ -17,12 +17,24 @@
 //  It opens over the console (CartoucheRootView), and OK or the
 //  controller's Menu button closes it.
 //
+//  Cartouche's console on the Mac shows the same page, a page of the
+//  console's own stack there (builder/mac, ConsoleView.swift): the guide
+//  to a first game on that Mac in place of the setup (ConsoleGuide.swift),
+//  the storage, Cartouche Builder where the iPhone has its Mac's builds,
+//  This Mac, the Builder's updates (ConsoleSystem.swift), the game
+//  measurements, the version and Report a problem; a Mac has no memory
+//  limit, no game behind the console, no signature to renew and nothing
+//  to reset.
+//
 
 import SwiftUI
+#if os(iOS)
 import UserNotifications
+#endif
 
 @available(iOS 17.0, *)
 struct CartoucheSystemView: View {
+    #if os(iOS)
     @State private var memory = CartoucheMemoryReading.now()
     @State private var signature = CartoucheSignature.current()
     @State private var alertStatus: UNAuthorizationStatus?
@@ -32,17 +44,23 @@ struct CartoucheSystemView: View {
     @ObservedObject private var renewals = CartoucheRenewals.shared
     /// The sign-in, during which SideStore renews nothing: Renew now waits.
     @ObservedObject private var account = CartoucheAccount.shared
-    @ObservedObject private var storage = CartoucheStorageSettings.shared
-    @ObservedObject private var reach = CartoucheStorageReach.shared
     @ObservedObject private var updates = CartoucheUpdates.shared
     @ObservedObject private var keeping = CartoucheGameKeeping.shared
     @ObservedObject private var actions = CartoucheGameActions.shared
-    @ObservedObject private var telemetry = CartoucheTelemetry.shared
-    @ObservedObject private var guide = CartoucheGuide.shared
     @ObservedObject private var storedGames = CartoucheStoredGames.shared
     @EnvironmentObject private var sharedModel: SharedModel
     /// The player's Mac, asked its builds while their page shows.
     @StateObject private var macBuilds = CartoucheMacBuildsWatch()
+    #else
+    /// The games built for this Mac and the Builder's setup, which the
+    /// guide's steps read.
+    @ObservedObject private var console = CartoucheMacConsole.shared
+    @ObservedObject private var stats = CartoucheGameStats.shared
+    #endif
+    @ObservedObject private var storage = CartoucheStorageSettings.shared
+    @ObservedObject private var reach = CartoucheStorageReach.shared
+    @ObservedObject private var telemetry = CartoucheTelemetry.shared
+    @ObservedObject private var guide = CartoucheGuide.shared
 
     private let catalog = CartoucheCatalog.shared
 
@@ -70,6 +88,7 @@ struct CartoucheSystemView: View {
     #endif
 
     var body: some View {
+        #if os(iOS)
         NavigationStack {
             ScrollViewReader { reader in
                 List {
@@ -119,8 +138,27 @@ struct CartoucheSystemView: View {
         .onReceive(CartoucheGamepad.shared.inputs) { input in
             if input == .menu { close() }
         }
+        #else
+        // A page of the console's stack, which gives it its bar and its way
+        // back (ConsoleView.swift); the Builder's own sections are in
+        // ConsoleSystem.swift.
+        List {
+            setupSection
+            storageSection
+            CartoucheMacBuilderSection()
+            deviceSection
+            CartoucheMacUpdatesSection()
+            telemetrySection
+            cartoucheSection
+            reportSection
+        }
+        .tint(.primary)
+        .cartoucheStageBackground()
+        .navigationTitle(CartoucheText.systemTab)
+        #endif
     }
 
+    #if os(iOS)
     /// Back to the console.
     private func close() {
         sharedModel.selectedTab = .games
@@ -133,9 +171,11 @@ struct CartoucheSystemView: View {
         CartoucheRenewal.scheduleWarnings()
         Task { alertStatus = await CartoucheRenewal.alertStatus() }
     }
+    #endif
 
     // MARK: Setup
 
+    #if os(iOS)
     private var setupSection: some View {
         Section {
             NavigationLink {
@@ -167,13 +207,7 @@ struct CartoucheSystemView: View {
         } label: {
             LabeledContent {
                 HStack(spacing: 8) {
-                    if let step = progress.current {
-                        Text(CartoucheText.guideStatusStep(progress.number(of: step), progress.steps.count))
-                    } else {
-                        Label(CartoucheText.guideStatusDone, systemImage: "checkmark.circle.fill")
-                            .labelStyle(CartoucheTightLabelStyle())
-                            .foregroundStyle(Color.green)
-                    }
+                    guideStatus(progress)
                     // As the rows that open a page have it: a row with a
                     // status alone reads as a fact, not as a button.
                     Image(systemName: "chevron.forward")
@@ -187,31 +221,76 @@ struct CartoucheSystemView: View {
         }
         .tint(.primary)
     }
+    #else
+    /// The guide to a first game on this Mac (ConsoleGuide.swift), where the
+    /// iPhone has its setup: the Builder's assistant is its first step.
+    private var setupSection: some View {
+        Section {
+            NavigationLink(value: CartoucheMacConsoleView.Route.guide) {
+                LabeledContent {
+                    guideStatus(guide.progress())
+                } label: {
+                    Label(CartoucheText.guideTitle, systemImage: "flag.checkered")
+                }
+            }
+        }
+    }
+    #endif
+
+    /// Where the guide is: the step left, or done.
+    @ViewBuilder
+    private func guideStatus(_ progress: CartoucheGuide.Progress) -> some View {
+        if let step = progress.current {
+            Text(CartoucheText.guideStatusStep(progress.number(of: step), progress.steps.count))
+        } else {
+            Label(CartoucheText.guideStatusDone, systemImage: "checkmark.circle.fill")
+                .labelStyle(CartoucheTightLabelStyle())
+                .foregroundStyle(Color.green)
+        }
+    }
 
     // MARK: Storage
 
     private var storageSection: some View {
         Section {
+            #if os(iOS)
             NavigationLink {
                 CartoucheStorageView()
             } label: {
-                LabeledContent {
-                    if let offline = reach.offlineInUse.first {
-                        let away = CartoucheStorageOffline(offline)
-                        Label(away.short, systemImage: away.symbol)
-                            .lineLimit(1)
-                            .foregroundStyle(Color.orange)
-                    } else {
-                        Text(storage.location(.games)?.server.name ?? CartoucheText.storageNotSet)
-                            .lineLimit(1)
-                    }
-                } label: {
-                    Label(CartoucheText.storageTitle, systemImage: "externaldrive.fill")
-                }
+                storageRow
             }
+            #else
+            NavigationLink(value: CartoucheMacConsoleView.Route.storage) {
+                storageRow
+            }
+            #endif
         }
     }
 
+    private var storageRow: some View {
+        LabeledContent {
+            if let offline = reach.offlineInUse.first {
+                let away = CartoucheStorageOffline(offline)
+                Label(away.short, systemImage: away.symbol)
+                    .lineLimit(1)
+                    .foregroundStyle(Color.orange)
+            } else {
+                #if os(iOS)
+                Text(storage.location(.games)?.server.name ?? CartoucheText.storageNotSet)
+                    .lineLimit(1)
+                #else
+                // The player's connections, the same as the paired
+                // iPhones': this Mac's folders are the Builder's.
+                Text(CartoucheText.macStorageConnections(storage.servers.filter(\.travels).count))
+                    .lineLimit(1)
+                #endif
+            }
+        } label: {
+            Label(CartoucheText.storageTitle, systemImage: "externaldrive.fill")
+        }
+    }
+
+    #if os(iOS)
     // MARK: The Mac's builds
 
     /// The builds of the Mac paired in Storage, to follow and drive from
@@ -444,14 +523,15 @@ struct CartoucheSystemView: View {
             EmptyView()
         }
     }
+    #endif
 
     // MARK: This iPhone
 
     private var deviceSection: some View {
-        let device = catalog.device(CartoucheDevice.modelIdentifier)
-        return Section {
+        CartoucheSection {
             LabeledContent(CartoucheText.model, value: CartoucheDevice.modelIdentifier)
-            if let device {
+            #if os(iOS)
+            if let device = catalog.device(CartoucheDevice.modelIdentifier) {
                 LabeledContent(CartoucheText.chip, value: device.chip)
                 LabeledContent(CartoucheText.ram, value: CartoucheText.gigabytes(device.memoryGB))
             } else {
@@ -459,6 +539,13 @@ struct CartoucheSystemView: View {
                     mebibytes: Int(ProcessInfo.processInfo.physicalMemory / 1_048_576)))
             }
             LabeledContent("iOS", value: CartoucheDevice.iOSVersion)
+            #else
+            // Read on this Mac: the testers' list is of iPhones.
+            LabeledContent(CartoucheText.chip, value: CartoucheDevice.chip)
+            LabeledContent(CartoucheText.ram, value: CartoucheText.gigabytes(
+                Int((ProcessInfo.processInfo.physicalMemory + 536_870_912) / 1_073_741_824)))
+            LabeledContent("macOS", value: CartoucheDevice.iOSVersion)
+            #endif
             LabeledContent(CartoucheText.bcRequirement,
                            value: CartoucheDevice.supportsBCTextureCompression ? CartoucheText.gpuSupported : CartoucheText.gpuUnsupported)
         } header: {
@@ -473,6 +560,7 @@ struct CartoucheSystemView: View {
 
     // MARK: Updates
 
+    #if os(iOS)
     /// Signed with the player's own certificate, the section says that a
     /// version is out, which Cartouche does not install by itself.
     @ViewBuilder
@@ -570,28 +658,40 @@ struct CartoucheSystemView: View {
                 .font(.footnote)
         }
     }
+    #endif
 
     // MARK: Game measurements
 
     private var telemetrySection: some View {
         Section {
+            #if os(iOS)
             NavigationLink {
                 CartoucheTelemetryView()
             } label: {
-                LabeledContent {
-                    Text(telemetry.isOn ? CartoucheText.telemetryOn : CartoucheText.telemetryOff)
-                } label: {
-                    Label(CartoucheText.telemetryTitle, systemImage: "chart.bar.xaxis")
-                }
+                telemetryRow
             }
+            #else
+            NavigationLink(value: CartoucheMacConsoleView.Route.telemetry) {
+                telemetryRow
+            }
+            #endif
+        }
+    }
+
+    private var telemetryRow: some View {
+        LabeledContent {
+            Text(telemetry.isOn ? CartoucheText.telemetryOn : CartoucheText.telemetryOff)
+        } label: {
+            Label(CartoucheText.telemetryTitle, systemImage: "chart.bar.xaxis")
         }
     }
 
     // MARK: Cartouche
 
     private var cartoucheSection: some View {
-        Section {
+        CartoucheSection {
             LabeledContent(CartoucheText.version, value: version)
+            #if os(iOS)
             // What the last versions brought, which What's new showed after
             // their update (CartoucheWhatsNewView).
             if !CartoucheWhatsNew.carried.isEmpty {
@@ -604,9 +704,15 @@ struct CartoucheSystemView: View {
             if let basedOn {
                 LabeledContent(CartoucheText.basedOn, value: basedOn)
             }
+            #endif
             LabeledContent(CartoucheText.sheets, value: String(catalog.sheets.count))
         } header: {
+            #if os(iOS)
             Text(verbatim: "Cartouche")
+            #else
+            // The app the console is in.
+            Text(verbatim: "Cartouche Builder")
+            #endif
         } footer: {
             Text(CartoucheText.coversCredit)
         }
@@ -622,6 +728,7 @@ struct CartoucheSystemView: View {
         return text
     }
 
+    #if os(iOS)
     /// The versions of LiveContainer and SideStore that this build carries.
     private var basedOn: String? {
         let info = Bundle.main.infoDictionary ?? [:]
@@ -635,27 +742,40 @@ struct CartoucheSystemView: View {
         }
         return parts.isEmpty ? nil : parts.joined(separator: ", ")
     }
+    #endif
 
     // MARK: Report a problem
 
     private var reportSection: some View {
-        Section {
+        CartoucheSection {
+            #if os(iOS)
             NavigationLink {
                 CartoucheReportView()
             } label: {
                 Label(CartoucheText.reportTitle, systemImage: "exclamationmark.bubble")
             }
+            #else
+            NavigationLink(value: CartoucheMacConsoleView.Route.report) {
+                Label(CartoucheText.reportTitle, systemImage: "exclamationmark.bubble")
+            }
+            #endif
         } footer: {
+            #if os(iOS)
             // The model's measurement goes with the report, for testers'
             // iPhones to join catalog/devices.json.
             Text(catalog.device(CartoucheDevice.modelIdentifier) == nil
                  ? CartoucheText.reportFooter + " " + CartoucheText.reportNewDevice
                  : CartoucheText.reportFooter)
+            #else
+            // A Mac's report adds no device to Cartouche's list.
+            Text(CartoucheText.reportFooter)
+            #endif
         }
     }
 
     // MARK: Reset Cartouche
 
+    #if os(iOS)
     /// The reset's row: the gallery opens the page on it, at the page's
     /// end (openingSection).
     private static let resetRow = "reset"
@@ -673,8 +793,10 @@ struct CartoucheSystemView: View {
             Text(CartoucheText.resetFooter)
         }
     }
+    #endif
 }
 
+#if os(iOS)
 /// How to have Shortcuts renew Cartouche every night.
 @available(iOS 17.0, *)
 struct CartoucheNightlyRenewalView: View {
@@ -751,3 +873,4 @@ struct CartoucheNightlyRenewalView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 }
+#endif

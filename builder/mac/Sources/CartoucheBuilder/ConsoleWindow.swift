@@ -49,7 +49,8 @@ struct MainView: View {
     /// page, or with that game's info over it, or with the sheet of the
     /// game of that title ID, and a page of its saves or its log, or its
     /// System page, or the Storage, Game measurements or Report a problem
-    /// page that one opens, as the gallery shows it.
+    /// page that one opens, or the guide to a first game on this Mac, as
+    /// the gallery shows it.
     var showingLibrary = false
     var showingSettings = false
     var showingInfo = false
@@ -59,6 +60,7 @@ struct MainView: View {
     var showingStorage = false
     var showingMeasures = false
     var showingReport = false
+    var showingGuide = false
     /// The Mac's appearance, light or dark: the builder's.
     @State private var macScheme = MainView.scheme(of: NSApplication.shared.effectiveAppearance)
 
@@ -69,7 +71,8 @@ struct MainView: View {
                 CartoucheMacConsoleView(showingLibrary: showingLibrary, showingSettings: showingSettings, showingInfo: showingInfo,
                                         showingSheetOf: showingSheetOf, showingSaves: showingSaves?.console,
                                         showingSystem: showingSystem, showingStorage: showingStorage,
-                                        showingMeasures: showingMeasures, showingReport: showingReport)
+                                        showingMeasures: showingMeasures, showingReport: showingReport,
+                                        showingGuide: showingGuide)
                     .overlay(alignment: .top) { consoleBanner }
             case .builder:
                 ContentView()
@@ -203,9 +206,69 @@ enum ConsoleLink {
         console.onFolders = { [weak model] in model?.showBuilder(.iphone) }
         console.onUninstall = { [weak model] game in model?.askToRemove(app: game) }
         console.onInstall = { [weak model] titleID in model?.install(titleID: titleID) }
+        // The first step of the console's guide to a first game on this Mac:
+        // the setup assistant, over the console, and whether it was gone
+        // through, at once and at each change.
+        console.onSetup = { [weak model] in model?.openSetup() }
+        setupWatch = model.$config
+            .map { $0?.setupDone ?? false }
+            .removeDuplicates()
+            .receive(on: DispatchQueue.main)
+            .sink { CartoucheMacConsole.shared.isSetUp = $0 }
         startSaves(model)
         startMeasures(model)
+        startUpdates(model.updater)
         speak()
+    }
+
+    private static var setupWatch: AnyCancellable?
+
+    // MARK: Updates
+
+    /// The Builder's updates, on the console's System page as in its
+    /// settings: what the updater has, at once and at each change, and the
+    /// buttons it answers.
+    private static func startUpdates(_ updater: Updater) {
+        let updates = CartoucheMacUpdates.shared
+        updates.version = updater.current
+        updates.enabled = updater.enabled
+        updates.onCheck = { [weak updater] in Task { await updater?.check(force: true) } }
+        updates.onDownload = { [weak updater] in
+            guard let updater, case let .available(release) = updater.state else { return }
+            Task { await updater.download(release) }
+        }
+        updates.onRestart = { [weak updater] in Task { await updater?.install(relaunch: true) } }
+        updates.onAutomatic = { [weak updater] on in updater?.automatic = on }
+        updatesWatch = updater.$state.combineLatest(updater.$checked, updater.$automatic)
+            .receive(on: DispatchQueue.main)
+            .sink { state, checked, automatic in
+                updates.phase = ConsoleLink.phase(of: state)
+                updates.notes = ConsoleLink.release(of: state)?.page
+                updates.checked = checked
+                updates.automatic = automatic
+            }
+    }
+
+    private static var updatesWatch: AnyCancellable?
+
+    static func phase(of state: Updater.State) -> CartoucheMacUpdates.Phase {
+        switch state {
+        case .idle: return .idle
+        case .upToDate: return .upToDate
+        case .checking: return .checking
+        case let .available(release): return .available(release.version)
+        case let .downloading(release): return .downloading(release.version)
+        case let .ready(release): return .ready(release.version)
+        case .installing: return .installing
+        case let .failed(message): return .failed(message)
+        }
+    }
+
+    private static func release(of state: Updater.State) -> BuilderRelease? {
+        switch state {
+        case let .available(release), let .downloading(release), let .ready(release): return release
+        default: return nil
+        }
     }
 
     // MARK: Game measurements

@@ -55,12 +55,13 @@
     },
     "CartoucheGuide.swift": {
       "kind": "mac",
-      "why": "The way to a first game on a new iPhone (LocalDevVPN, Apple ID, a Mac): the Mac's is the Builder's setup assistant; the console's stand-in shows no guide.",
-      "mac": "CartoucheConsole/Mac/ConsoleStandIns.swift"
+      "why": "The way to a first game on a new iPhone (LocalDevVPN, Apple ID, a Mac): the Mac's own guide has its own steps, the Builder's setup assistant, a game built for the Mac, a game played there.",
+      "mac": "CartoucheConsole/Mac/ConsoleGuide.swift"
     },
     "CartoucheGuideView.swift": {
-      "kind": "iphone",
-      "why": "The first game's guide over the iPhone's console (CartoucheGuide)."
+      "kind": "mac",
+      "why": "The first game's guide over the iPhone's console, its steps the iPhone's: the Mac's is a page of the console, of its own steps; the card on the home is the iPhone's (CartoucheGuideCard).",
+      "mac": "CartoucheConsole/Mac/ConsoleGuide.swift"
     },
     "CartoucheImportPicker.swift": {
       "kind": "mac",
@@ -174,11 +175,6 @@
       "kind": "mac",
       "why": "Pairing the iPhone with a Mac, from the iPhone's side: the Builder's iPhone page is the Mac's side.",
       "mac": "CartoucheBuilder/BridgeView.swift"
-    },
-    "CartoucheSystemView.swift": {
-      "kind": "later",
-      "why": "The System page: with the console's measurements, its reports and the Mac's guide, which most of its rows are; System opens the Builder meanwhile, and a game's sheet says how the game fits this Mac.",
-      "step": 8
     },
     "CartoucheTV.swift": {
       "kind": "iphone",
