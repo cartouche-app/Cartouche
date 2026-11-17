@@ -11,7 +11,9 @@
 //  waiting their turn, each of which can leave the queue; the builds that
 //  failed, and why; every game of the Mac, where it is, with its build,
 //  Stop or Remove, and Follow; and the nightly build, on or off, and its
-//  time. The Mac's folders, its tools and an IPA's import stay on the Mac.
+//  time. Each build says what it is for, the iPhone, the Mac or both, and
+//  the part it makes now; a game's app for the Mac fails apart from its
+//  IPA (decision 126). The Mac's folders, its tools and an IPA's import stay on the Mac.
 //  A Mac whose app is a little older shows its builds and builds a game,
 //  and says to update its app for the rest. One too old to share its
 //  builds, 0.5.0 or older, no longer finds its updates by itself: the page
@@ -158,6 +160,11 @@ struct CartoucheMacBuildsPage: View {
                         Text(game.name)
                             .font(.headline)
                             .lineLimit(2)
+                        if let targets = build.targets {
+                            CartoucheMacBuildsSection.target(targets)
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(CartoucheTheme.indigo)
+                        }
                         ProgressView(value: min(max(game.progress ?? 0, 0), 1))
                             .tint(CartoucheTheme.indigo)
                         let detail = [game.progress.map(CartoucheMacBuildsSection.percent), game.step,
@@ -196,11 +203,19 @@ struct CartoucheMacBuildsPage: View {
         if !waiting.isEmpty {
             Section(CartoucheText.macBuildsWaiting) {
                 ForEach(Array(waiting.enumerated()), id: \.element.id) { index, game in
+                    let build = Self.build(game, in: builds)
                     HStack(spacing: 12) {
-                        Text(verbatim: "\(index + 1). \(game.name)")
-                            .lineLimit(2)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(verbatim: "\(index + 1). \(game.name)")
+                                .lineLimit(2)
+                            if let targets = build.targets {
+                                CartoucheMacBuildsSection.target(targets)
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                         Spacer(minLength: 8)
-                        if Self.build(game, in: builds).halt == .remove {
+                        if build.halt == .remove {
                             Button {
                                 watch.stopBuild(game.id)
                             } label: {
@@ -229,11 +244,10 @@ struct CartoucheMacBuildsPage: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(failure.game.name)
                             .lineLimit(2)
-                        Label(CartoucheText.macBuildsFailed(CartoucheMacBuildsSection.when(failure.date)),
-                              systemImage: "exclamationmark.triangle.fill")
+                        Label(Self.failed(failure), systemImage: "exclamationmark.triangle.fill")
                             .font(.footnote)
                             .foregroundStyle(.orange)
-                        if let error = failure.game.error, !error.isEmpty {
+                        if let error = failure.error, !error.isEmpty {
                             Text(error)
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
@@ -294,7 +308,7 @@ struct CartoucheMacBuildsPage: View {
     private func gameActions(_ build: CartoucheMacBuild) -> some View {
         if let action = build.action {
             Button {
-                watch.build(build.id)
+                watch.build(build.id, due: build.asksDue)
             } label: {
                 Label(CartoucheMacBuildsSection.title(action), systemImage: CartoucheMacBuildsSection.symbol(action))
             }
@@ -364,8 +378,37 @@ struct CartoucheMacBuildsPage: View {
         }
     }
 
-    /// A game's line in the Mac's games: where it is, in a few words.
+    /// When a build failed, and what for: its IPA, for the iPhone, or its
+    /// app, for the Mac; a Mac that does not say, when alone.
+    static func failed(_ failure: CartoucheBridgeBuilds.Done) -> String {
+        let when = CartoucheMacBuildsSection.when(failure.date)
+        switch failure.platform {
+        case .iPhone?: return CartoucheText.macBuildsFailedIPhone(when)
+        case .mac?: return CartoucheText.macBuildsFailedMac(when)
+        case nil: return CartoucheText.macBuildsFailed(when)
+        }
+    }
+
+    /// A game's line in the Mac's games: where it is, in a few words, then
+    /// what it is for, the iPhone, the Mac or both (decision 126).
     static func line(_ build: CartoucheMacBuild) -> String {
+        guard let targets = build.targets else { return state(build) }
+        return state(build) + " · " + target(targets.line)
+    }
+
+    /// What a game is for, in a word or two.
+    static func target(_ line: CartoucheBuildTargets.Line) -> String {
+        switch line {
+        case .iPhone: return CartoucheText.macGameForIPhone
+        case .mac: return CartoucheText.macGameForMac
+        case .both: return CartoucheText.macGameForBoth
+        case .iPhoneThenMac: return CartoucheText.macGameForIPhoneThenMac
+        case .macAfterIPhone: return CartoucheText.macGameForMacAfterIPhone
+        }
+    }
+
+    /// Where a game is, in a few words.
+    static func state(_ build: CartoucheMacBuild) -> String {
         switch build.status {
         case let .building(progress, _, _):
             if build.stopping { return CartoucheText.macBuildStopping }
@@ -386,6 +429,10 @@ struct CartoucheMacBuildsPage: View {
             return CartoucheText.macGameNoProfile
         case .ipaOnly:
             return CartoucheText.macGameIPAOnly
+        case .macDue:
+            return CartoucheText.macGameMacDue
+        case let .macFailed(at, _):
+            return at.map { CartoucheText.macGameMacFailedOn(CartoucheMacBuildsSection.when($0)) } ?? CartoucheText.macGameMacFailed
         }
     }
 
@@ -400,6 +447,8 @@ struct CartoucheMacBuildsPage: View {
         case .notFollowed: return "bell.slash"
         case .noProfile: return "questionmark.circle"
         case .ipaOnly: return "shippingbox"
+        case .macDue: return "laptopcomputer"
+        case .macFailed: return "exclamationmark.triangle"
         }
     }
 }

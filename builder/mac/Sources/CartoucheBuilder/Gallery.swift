@@ -403,10 +403,13 @@ enum Gallery {
             }
             if building {
                 // The library as the engine gives it while the batch runs:
-                // Kirby built in it, Mario Kart 8 Deluxe building, Metroid
-                // Dread waiting its turn, Super Mario Odyssey asked for since.
+                // Kirby built in it, for the iPhone and this Mac, Mario Kart
+                // 8 Deluxe building, Metroid Dread waiting its turn, Super
+                // Mario Odyssey and Breath of the Wild, built for the iPhone
+                // alone, asked for since (decision 126).
                 let states: [String: GameState] = ["01004D300C5AE000": .upToDate, "0100152000022000": .building,
-                                                   "010093801237C000": .queued, "0100000000010000": .queued]
+                                                   "010093801237C000": .queued, "0100000000010000": .queued,
+                                                   "01007EF00011E000": .queued]
                 for index in library.games.indices {
                     if let state = states[library.games[index].titleID] { library.games[index].state = state }
                 }
@@ -414,7 +417,8 @@ enum Gallery {
             let model = AppModel.sampled(library: library, status: building ? self.building : nil, storage: storage, config: config, info: info,
                                          unbuilt: page == .gameUnbuilt ? [Gallery.unbuilt.titleID: Gallery.unbuiltFigures] : [:])
             if building {
-                model.preview(queue: BuildQueue(games: [.init(titleID: "0100000000010000", force: true, batch: 4242, added: "")]))
+                model.preview(queue: BuildQueue(games: [.init(titleID: "0100000000010000", force: true, batch: 4242, added: ""),
+                                                        .init(titleID: "01007EF00011E000", force: true, batch: 4242, added: "")]))
             }
             switch page {
             case .library, .activity, .storage, .iphone: model.section = AppSection(rawValue: page.rawValue) ?? .library
@@ -643,11 +647,13 @@ enum Gallery {
       "pid": 4242, "scheduled": false, "state": "building", "started": "@-1500", "updated": "@-1", "head": "\(head)", "running": true,
       "games": [
         {"title_id": "01004D300C5AE000", "name": "Kirby and the Forgotten Land", "reasons": ["named"], "state": "built",
-         "started": "@-1500", "ended": "@-610", "duration": 890, "ipa": "/Volumes/Jeux/iPhone/Kirby and the Forgotten Land.ipa"},
+         "started": "@-1500", "ended": "@-610", "duration": 890, "ipa": "/Volumes/Jeux/iPhone/Kirby and the Forgotten Land.ipa",
+         "makes": ["ios", "mac"], "platform": "mac", "mac": "built", "mac_only": false, "mac_duration": 420},
         {"title_id": "0100152000022000", "name": "Mario Kart 8 Deluxe", "reasons": ["profile", "shared"], "state": "building", "stage": "shaders",
          "step": "Pipelines 1 412 / 2 300", "k": 1412, "n": 2300, "frac": 0.61, "overall": 0.68, "eta": 380, "started": "@-600",
-         "platform": "ios", "mac": "waiting", "mac_only": false},
-        {"title_id": "010093801237C000", "name": "Metroid Dread", "reasons": ["shared"], "state": "queued"}
+         "makes": ["ios", "mac"], "platform": "ios", "mac": "waiting", "mac_only": false},
+        {"title_id": "010093801237C000", "name": "Metroid Dread", "reasons": ["shared"], "state": "queued",
+         "makes": ["ios", "mac"], "platform": "ios", "mac": "waiting", "mac_only": false}
       ],
       "lines": [
         "Kirby and the Forgotten Land: IPA copied to the games folder (5.5 GB)",

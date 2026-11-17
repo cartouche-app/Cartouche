@@ -8,6 +8,7 @@
 //  still have every key the engine writes).
 //
 
+import CartoucheCore
 import Foundation
 import XCTest
 @testable import BuilderKit
@@ -284,28 +285,62 @@ final class EngineAnswerTests: XCTestCase {
         XCTAssertEqual(status.current.map(\.titleID), ["010093801237C000"])
     }
 
-    /// What the activity page says a stage is of, for a game built for the
-    /// iPhone and for this Mac: only when the stage's words do not say it.
-    func testTheStageOfABuildForBothSaysWhatItIsOf() throws {
-        func progress(_ stage: String, on platform: String, mac: String? = "building", macOnly: Bool = false) throws -> GameProgress {
-            var fields: [String: Any] = ["title_id": "0100152000022000", "name": "A game", "state": "building", "stage": stage, "platform": platform,
+    /// What a build makes, and the part it makes now (decision 126): as the
+    /// engine says once the batch planned the game; from an older engine,
+    /// by how the batch builds its Mac app; nothing for a game asked for
+    /// that the batch has not planned yet, which the app says from the
+    /// game's settings (Game.plannedTargets).
+    func testWhatABuildMakesAndThePartItMakesNow() throws {
+        func progress(_ state: String, makes: [String]?, on platform: String = "ios", mac: String? = nil,
+                      macOnly: Bool = false) throws -> GameProgress {
+            var fields: [String: Any] = ["title_id": "0100152000022000", "name": "A game", "state": state, "platform": platform,
                                          "mac_only": macOnly]
+            if let makes { fields["makes"] = makes }
             if let mac { fields["mac"] = mac }
             return try JSONDecoder().decode(GameProgress.self, from: JSONSerialization.data(withJSONObject: fields))
         }
-        // Its IPA first: the stages that do not name the iPhone.
-        XCTAssertEqual(try progress("extract", on: "ios").shownPlatform, .iPhone)
-        XCTAssertEqual(try progress("deliver", on: "ios").shownPlatform, .iPhone)
-        XCTAssertEqual(try progress("", on: "ios").shownPlatform, .iPhone)
-        XCTAssertNil(try progress("shaders", on: "ios").shownPlatform)
-        XCTAssertNil(try progress("ipa", on: "ios").shownPlatform)
-        // Then its app for this Mac, whose stages name it but the builder's own.
-        XCTAssertNil(try progress("Mac shaders", on: "mac").shownPlatform)
-        XCTAssertNil(try progress("mac_deliver", on: "mac").shownPlatform)
-        XCTAssertEqual(try progress("deliver", on: "mac").shownPlatform, .mac)
-        // Built for one of the two: nothing to tell apart.
-        XCTAssertNil(try progress("extract", on: "ios", mac: nil).shownPlatform)
-        XCTAssertNil(try progress("extract", on: "mac", macOnly: true).shownPlatform)
+        // As the engine says: its IPA now, its app for this Mac after it.
+        XCTAssertEqual(try progress("building", makes: ["ios", "mac"], mac: "waiting").targets?.line, .iPhoneThenMac)
+        XCTAssertEqual(try progress("building", makes: ["ios", "mac"], on: "mac", mac: "building").targets?.line, .macAfterIPhone)
+        XCTAssertEqual(try progress("building", makes: ["ios"]).targets?.line, .iPhone)
+        XCTAssertEqual(try progress("building", makes: ["mac"], on: "mac", mac: "building", macOnly: true).targets?.line, .mac)
+        // Its app for this Mac alone, its IPA up to date.
+        XCTAssertEqual(try progress("building", makes: ["mac"], on: "mac", mac: "building", macOnly: true).targets?.platforms, [.mac])
+        // Waiting its turn: what it will make, nothing made now.
+        let waiting = try progress("queued", makes: ["ios", "mac"], mac: "waiting")
+        XCTAssertEqual(waiting.targets?.line, .both)
+        XCTAssertNil(waiting.targets?.now)
+        // Asked for, not planned yet: nothing said.
+        XCTAssertNil(try progress("queued", makes: []).targets)
+        // From an older engine: by its Mac app; nothing without one.
+        XCTAssertEqual(try progress("building", makes: nil, on: "mac", mac: "building").targets?.line, .macAfterIPhone)
+        XCTAssertEqual(try progress("building", makes: nil, on: "mac", mac: "building", macOnly: true).targets?.line, .mac)
+        XCTAssertNil(try progress("building", makes: nil).targets)
+    }
+
+    /// What a game asked for makes until the batch plans it: what it is
+    /// built for, or its app for this Mac alone when that alone is due and
+    /// the build is not forced, as the planner does.
+    func testWhatAGameAskedForMakesBeforeThePlan() {
+        func game(_ state: GameState, reasons: [String] = [], ios: Bool = true, mac: Bool = true) -> Game {
+            Game(titleID: "0100152000022000", name: "A game", kind: "nsp", state: state, reasons: reasons,
+                 platforms: GamePlatforms(ios: ios, mac: mac))
+        }
+        XCTAssertEqual(game(.upToDate).plannedTargets(forced: true)?.platforms, [.iPhone, .mac])
+        XCTAssertEqual(game(.due, reasons: ["profile"]).plannedTargets(forced: false)?.platforms, [.iPhone, .mac])
+        // Its app for this Mac alone due: built alone, unless forced.
+        let macAlone = game(.due, reasons: ["mac_new"])
+        XCTAssertTrue(macAlone.dueForMacAppAlone)
+        XCTAssertEqual(macAlone.plannedTargets(forced: false)?.platforms, [.mac])
+        XCTAssertEqual(macAlone.plannedTargets(forced: true)?.platforms, [.iPhone, .mac])
+        XCTAssertFalse(game(.due, reasons: ["mac_new", "profile"]).dueForMacAppAlone)
+        XCTAssertFalse(game(.upToDate, reasons: ["mac_new"]).dueForMacAppAlone)
+        // Built for one of the two, or for neither.
+        XCTAssertEqual(game(.due, reasons: ["new"], mac: false).plannedTargets(forced: false)?.platforms, [.iPhone])
+        XCTAssertEqual(game(.due, reasons: ["new"], ios: false).plannedTargets(forced: false)?.platforms, [.mac])
+        XCTAssertNil(game(.due, ios: false, mac: false).plannedTargets(forced: true))
+        // From an engine older than the Mac's builds: its IPA alone.
+        XCTAssertEqual(Game(titleID: "0100152000022000", name: "A game", kind: "nsp", state: .upToDate).builtFor?.platforms, [.iPhone])
     }
 
     /// A batch on the last nxnative commit that built on this Mac, its

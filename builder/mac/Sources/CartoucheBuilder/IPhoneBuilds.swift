@@ -6,10 +6,13 @@
 //  on its page of the Mac's builds (System), and what it asks of them
 //  there, as this window's buttons do (BridgeServer's BridgeBuildsSource):
 //  the library, the games building and those waiting their turn, as the
-//  window shows them (BridgeBuilds.swift); a game built, Build what is due,
-//  Stop, Remove from the queue, Stop all, Follow, and the nightly build. A
-//  game no Mac built (Unbuilt.swift) is never built from the iPhone, which
-//  cannot answer the window's question: the iPhone says why.
+//  window shows them (BridgeBuilds.swift), with what each build makes, for
+//  the iPhone, for the Mac or both, and the part it makes now (decision
+//  126); a game built, its app for the Mac alone when that alone is due,
+//  Build what is due, Stop, Remove from the queue, Stop all, Follow, and
+//  the nightly build. A game no Mac built (Unbuilt.swift) is never built
+//  from the iPhone, which cannot answer the window's question: the iPhone
+//  says why.
 //
 
 import BuilderKit
@@ -23,12 +26,15 @@ extension BridgeController: BridgeBuildsSource {
         let nightly = model.config.map { CartoucheBridgeBuilds.Nightly(on: $0.schedule, hour: $0.scheduleHour, minute: $0.scheduleMinute) }
         let control = BridgeBuilds.Control(stoppable: { IPhoneBuilds.stoppable($0, model) }, stopping: { model.stopping($0) },
                                            due: model.dueOutsideBatch.count, nightly: nightly)
+        // A step in the iPhone's words, which say "the Mac", not "this Mac";
+        // what each build makes, as this window says it (decision 126).
         return BridgeBuilds.shared(games: model.library?.games ?? [], building: running ? model.status?.current ?? [] : [],
                                    waiting: model.waiting, running: model.isBuilding, ready: model.canBuild,
-                                   why: IPhoneBuilds.why(model), stage: stageText, control: control)
+                                   why: IPhoneBuilds.why(model), stage: { stageText($0, onIPhone: true) },
+                                   targets: { model.targets($0) }, control: control)
     }
 
-    func bridgeBuild(_ titleID: String) throws {
+    func bridgeBuild(_ titleID: String, due: Bool) throws {
         guard let model else { throw CartoucheBridgeError(.failed, IPhoneBuilds.starting) }
         guard let game = model.library?.game(titleID) else { throw CartoucheBridgeError(.notFound, titleID) }
         guard game.canBuild else { throw CartoucheBridgeError(.failed, IPhoneBuilds.ipaOnly) }
@@ -41,9 +47,10 @@ extension BridgeController: BridgeBuildsSource {
         guard BridgeBuilds.toBuild([titleID], due: [], never: Set(never.map(\.titleID))) != nil else {
             throw CartoucheBridgeError(.failed, IPhoneBuilds.unbuilt(never, model))
         }
-        // As its Build button: built again even up to date, unless due; due
-        // for its app for this Mac alone, its IPA is built again too.
-        model.build([titleID], force: game.state != .due || BridgeBuilds.dueForMacAppAlone(game))
+        // As its Build button: built again even up to date, unless due. Due
+        // for its app for this Mac alone, which an iPhone shows as up to date
+        // unless it says what is due (DUE), its IPA is built again too.
+        model.build([titleID], force: BridgeBuilds.forced(game, due: due))
     }
 
     func bridgeBuildDue() throws {

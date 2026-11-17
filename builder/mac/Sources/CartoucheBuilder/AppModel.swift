@@ -17,6 +17,7 @@
 
 import AppKit
 import BuilderKit
+import CartoucheCore
 import ServiceManagement
 import SwiftUI
 import UserNotifications
@@ -598,6 +599,18 @@ final class AppModel: ObservableObject {
             guard starting != nil, startingGames.contains(titleID) || adding.contains(titleID) else { return nil }
         }
         return GameProgress(titleID: titleID, name: library?.game(titleID)?.name ?? titleID, state: "queued")
+    }
+
+    /// What the build of PROGRESS makes, building or waiting its turn, and
+    /// the part it makes now (decision 126): as the batch planned it; for a
+    /// game asked for that it has not planned yet, as the game's settings
+    /// say, forced as it was asked, else as its Build button asks it
+    /// (Game.plannedTargets).
+    func targets(_ progress: GameProgress) -> CartoucheBuildTargets? {
+        if let targets = progress.targets { return targets }
+        guard progress.state == "queued" || progress.state == "building", let game = library?.game(progress.titleID) else { return nil }
+        let asked = queue.games.last { $0.titleID == progress.titleID }?.force
+        return game.plannedTargets(forced: asked ?? (game.state != .due))
     }
 
     /// Whether Stop stops more than one game: those of the batch running, or

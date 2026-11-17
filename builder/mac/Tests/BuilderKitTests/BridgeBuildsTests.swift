@@ -9,8 +9,10 @@
 //  and which can be stopped alone, what is due and the nightly build; then
 //  over a session, the Mac's info, its builds, a build asked for and the
 //  Mac's refusal in its own words, and the rest of what the window does,
-//  asked from the iPhone. What Cartouche makes of them is tested with
-//  Cartouche's (launcher/Tests/CartoucheCoreTests/CartoucheBridgeBuildsTests.swift).
+//  asked from the iPhone. What each build is for, the iPhone, the Mac or
+//  both, and the part it makes now, and a game's app for the Mac apart
+//  (decision 126). What Cartouche makes of them is tested with Cartouche's
+//  (launcher/Tests/CartoucheCoreTests/CartoucheBridgeBuildsTests.swift).
 //
 
 import CartoucheCore
@@ -95,9 +97,9 @@ private final class Builds: BridgeBuildsSource {
 
     func bridgeBuilds() -> CartoucheBridgeBuilds { shared }
 
-    func bridgeBuild(_ titleID: String) throws {
+    func bridgeBuild(_ titleID: String, due: Bool) throws {
         if let refusal { throw refusal }
-        asked.append(titleID)
+        asked.append(titleID + (due ? " due" : ""))
         shared.running = true
         if let index = shared.games.firstIndex(where: { $0.id == titleID }) {
             shared.games[index].state = "building"
@@ -239,14 +241,91 @@ final class BridgeBuildsTests: XCTestCase {
     }
 
     func testAGameDueForItsMacAppAloneIsUpToDateToTheIPhone() {
-        let macAlone = game("A", .due, reasons: ["mac_new"], built: "2026-11-10T07:00:00+00:00")
+        var macAlone = game("A", .due, reasons: ["mac_new"], built: "2026-11-10T07:00:00+00:00")
+        macAlone.platforms = GamePlatforms(ios: true, mac: true)
         XCTAssertTrue(BridgeBuilds.dueForMacAppAlone(macAlone))
         let shared = BridgeBuilds.game(macAlone, building: nil, turn: nil, stage: Self.stage)
         XCTAssertEqual(shared.state, "up_to_date")
         XCTAssertEqual(shared.reasons, [])
+        // Its app for the Mac, which an iPhone that knows reads as due.
+        XCTAssertEqual(shared.mac?.due, true)
+        XCTAssertNil(shared.mac?.built)
         XCTAssertFalse(BridgeBuilds.dueForMacAppAlone(game("A", .due, reasons: ["mac_new", "changes"])))
         XCTAssertFalse(BridgeBuilds.dueForMacAppAlone(game("A", .due)))
         XCTAssertFalse(BridgeBuilds.dueForMacAppAlone(game("A", .upToDate, reasons: ["mac_new"])))
+    }
+
+    func testABuildAskedFromTheIPhoneIsForcedAsTheWindowsButton() {
+        // Up to date: built again; due: what is due.
+        XCTAssertTrue(BridgeBuilds.forced(game("A", .upToDate, built: "2026-11-10T07:00:00+00:00"), due: false))
+        XCTAssertTrue(BridgeBuilds.forced(game("A", .upToDate, built: "2026-11-10T07:00:00+00:00"), due: true))
+        XCTAssertFalse(BridgeBuilds.forced(game("A", .due, reasons: ["changes"]), due: false))
+        // Due for its app for this Mac alone: that app alone when the iPhone
+        // asks for what is due; all of it again when it does not say, as
+        // an iPhone that showed it up to date asks.
+        let macAlone = game("A", .due, reasons: ["mac_behind"], built: "2026-11-10T07:00:00+00:00")
+        XCTAssertFalse(BridgeBuilds.forced(macAlone, due: true))
+        XCTAssertTrue(BridgeBuilds.forced(macAlone, due: false))
+    }
+
+    func testWhatEachBuildIsForIsShared() throws {
+        let both = GamePlatforms(ios: true, mac: true)
+        let built = "2026-11-10T07:00:00+00:00", appBuilt = "2026-11-10T08:00:00+00:00"
+        // Building its IPA, its app for this Mac after it.
+        var a = game("A", .due, reasons: ["changes"], built: built)
+        a.platforms = both
+        a.mac = GameMac(build: GameBuild(commit: "7bddb8c1e2f3", builtAt: appBuilt))
+        var building = GameProgress(titleID: "A", name: "Game A", state: "building", stage: "shaders")
+        building.makes = ["ios", "mac"]
+        building.mac = "waiting"
+        // Built for this Mac alone: its dates are its app's.
+        var b = game("B", .upToDate, built: built)
+        b.platforms = GamePlatforms(ios: false, mac: true)
+        b.mac = GameMac(build: GameBuild(commit: "7bddb8c1e2f3", builtAt: appBuilt),
+                        attempt: GameAttempt(commit: "7bddb8c1e2f3", at: "2026-11-11T07:00:00+00:00", result: "failed", error: "No Metal"))
+        // Its IPA up to date, its app's last build failed since.
+        var c = game("C", .upToDate, built: built)
+        c.platforms = both
+        c.mac = GameMac(build: GameBuild(commit: "7bddb8c1e2f3", builtAt: "2026-11-09T07:00:00+00:00"),
+                        attempt: GameAttempt(commit: "7bddb8c1e2f3", at: "2026-11-11T07:00:00+00:00", result: "failed", error: "No Metal"))
+        // Waiting its turn: for the iPhone alone, and for both, its app
+        // alone being due.
+        let d = game("D", .due, reasons: ["changes"], built: built)
+        var e = game("E", .due, reasons: ["mac_new"], built: built)
+        e.platforms = both
+        let waiting = [GameProgress(titleID: "D", name: "Game D", state: "queued"), GameProgress(titleID: "E", name: "Game E", state: "queued")]
+        let shared = BridgeBuilds.shared(games: [a, b, c, d, e], building: [building], waiting: waiting, running: true, ready: true,
+                                         why: nil, stage: Self.stage)
+        XCTAssertEqual(shared.games.map(\.platforms), [["ios", "mac"], ["mac"], ["ios", "mac"], ["ios"], ["ios", "mac"]])
+        XCTAssertEqual(shared.games.map(\.makes), [["ios", "mac"], nil, nil, ["ios"], ["mac"]])
+        XCTAssertEqual(shared.games.map(\.now), ["ios", nil, nil, nil, nil])
+        XCTAssertEqual(shared.games[0].mac?.builtDate, ISODate.parse(appBuilt))
+        XCTAssertEqual(shared.games[0].builtDate, ISODate.parse(built))
+        // Built for this Mac alone: its app's dates, and no app apart.
+        XCTAssertEqual(shared.games[1].builtDate, ISODate.parse(appBuilt))
+        XCTAssertEqual(shared.games[1].failedDate, ISODate.parse("2026-11-11T07:00:00+00:00"))
+        XCTAssertEqual(shared.games[1].error, "No Metal")
+        XCTAssertNil(shared.games[1].mac)
+        // Its app's failure apart from its IPA, which is up to date.
+        XCTAssertNil(shared.games[2].failed)
+        XCTAssertEqual(shared.games[2].mac?.failed, ISODate.parse("2026-11-11T07:00:00+00:00")?.timeIntervalSince1970)
+        XCTAssertEqual(shared.games[2].mac?.error, "No Metal")
+        XCTAssertEqual(shared.games[2].mac?.due, false)
+        // Built for the iPhone alone: no app for the Mac.
+        XCTAssertNil(shared.games[3].mac)
+
+        // As the app says what a build makes (AppModel.targets): the batch's
+        // plan, or the settings of a game it has not planned yet.
+        let told = BridgeBuilds.shared(games: [a, d], building: [building], waiting: [waiting[0]], running: true, ready: true, why: nil,
+                                       stage: Self.stage, targets: { _ in CartoucheBuildTargets([.mac], now: .mac) })
+        XCTAssertEqual(told.games.map(\.makes), [["mac"], ["mac"]])
+        XCTAssertEqual(told.games.map(\.now), ["mac", nil])
+        // A game of the batch the library does not show yet.
+        var alone = GameProgress(titleID: "F", name: "Game F", state: "building")
+        alone.makes = ["ios"]
+        let batchOnly = BridgeBuilds.shared(games: [], building: [alone], waiting: [], running: true, ready: true, why: nil, stage: Self.stage)
+        XCTAssertEqual(batchOnly.games.map(\.makes), [["ios"]])
+        XCTAssertEqual(batchOnly.games.map(\.now), ["ios"])
     }
 
     func testAGameNoMacBuiltIsLeftAsideFromTheIPhone() {
@@ -333,6 +412,11 @@ final class BridgeBuildsTests: XCTestCase {
         XCTAssertEqual(after.games.map(\.state), ["building"])
         let asked = await MainActor.run { builds.asked }
         XCTAssertEqual(asked, ["A"])
+        // What is due of it, as the Build button of its sheet: its app for
+        // the Mac alone, when that alone is due.
+        _ = try await client.build("A", due: true)
+        let askedDue = await MainActor.run { builds.asked }
+        XCTAssertEqual(askedDue, ["A", "A due"])
 
         // Without a game, and refused by the Mac, in its words.
         do {
@@ -349,7 +433,7 @@ final class BridgeBuildsTests: XCTestCase {
             XCTAssertEqual(error, CartoucheBridgeError(.failed, "The Mac is importing an IPA"))
         }
         let stillAsked = await MainActor.run { builds.asked }
-        XCTAssertEqual(stillAsked, ["A"])
+        XCTAssertEqual(stillAsked, ["A", "A due"])
         client.close()
         await serving.value
     }

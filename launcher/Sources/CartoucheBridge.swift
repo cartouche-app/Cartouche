@@ -324,9 +324,14 @@ public struct CartoucheBridgeRequest: Codable, Equatable {
     public var followed: Bool?
     /// nightly: the Mac's nightly build from now on.
     public var nightly: CartoucheBridgeBuilds.Nightly?
+    /// build: true to build what is due of the game, as the Build button of
+    /// its sheet on the Mac does: its app for the Mac alone, when that alone
+    /// is due. A Mac that does not know it builds the game again whole, as
+    /// it does when it is left out.
+    public var due: Bool?
 
     public init(_ op: Operation, path: String? = nil, offset: UInt64? = nil, count: Int? = nil, size: UInt64? = nil, upload: String? = nil,
-                game: String? = nil, followed: Bool? = nil, nightly: CartoucheBridgeBuilds.Nightly? = nil) {
+                game: String? = nil, followed: Bool? = nil, nightly: CartoucheBridgeBuilds.Nightly? = nil, due: Bool? = nil) {
         self.op = op
         self.path = path
         self.offset = offset
@@ -336,6 +341,7 @@ public struct CartoucheBridgeRequest: Codable, Equatable {
         self.game = game
         self.followed = followed
         self.nightly = nightly
+        self.due = due
     }
 }
 
@@ -845,10 +851,11 @@ public final class CartoucheBridgeClient {
     }
 
     /// Asks the Mac to build the game TITLE_ID, as the Build button of its
-    /// sheet there does: at once, or after the games of the batch running.
-    /// The Mac's builds once it is asked.
-    public func build(_ titleId: String) async throws -> CartoucheBridgeBuilds {
-        try await builds(CartoucheBridgeRequest(.build, game: titleId))
+    /// sheet there does: at once, or after the games of the batch running;
+    /// what is due of it (DUE: its app for the Mac alone, when that alone is
+    /// due), or all of it again. The Mac's builds once it is asked.
+    public func build(_ titleId: String, due: Bool = false) async throws -> CartoucheBridgeBuilds {
+        try await builds(CartoucheBridgeRequest(.build, game: titleId, due: due ? true : nil))
     }
 
     // What follows, only of a Mac whose info says hasBuildsControl; each

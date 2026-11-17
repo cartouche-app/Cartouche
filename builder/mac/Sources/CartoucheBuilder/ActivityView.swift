@@ -3,14 +3,16 @@
 //  Cartouche Builder
 //
 //  The builds: the game building now, its step and how far it is, the
-//  games waiting their turn, and what the last batch did. A game asked for
-//  while a batch runs waits its turn at the end of it, and each game can be
-//  taken out of it, the one building too: the batch goes on with the next.
-//  A batch goes on when the window, or the app, is closed; the Mac stays
-//  awake for it.
+//  games waiting their turn, and what the last batch did; what each build
+//  makes, for the iPhone, for this Mac or both, and the part it makes now
+//  (decision 126). A game asked for while a batch runs waits its turn at
+//  the end of it, and each game can be taken out of it, the one building
+//  too: the batch goes on with the next. A batch goes on when the window,
+//  or the app, is closed; the Mac stays awake for it.
 //
 
 import BuilderKit
+import CartoucheCore
 import SwiftUI
 
 struct ActivityView: View {
@@ -167,7 +169,13 @@ struct CurrentCard: View {
                                      "Arrête la construction de ce jeu : les jeux en attente se construisent ensuite."))
                         }
                     }
-                    Text(platform + stageText(progress.stage) + (progress.k.flatMap { k in progress.n.map { " · \(k)/\($0)" } } ?? ""))
+                    // What it makes, and the part it makes now.
+                    if let targets = model.targets(progress) {
+                        TargetLabel(targets: targets)
+                            .font(.callout.weight(.semibold))
+                            .foregroundStyle(Theme.indigo)
+                    }
+                    Text(stageText(progress.stage) + (progress.k.flatMap { k in progress.n.map { " · \(k)/\($0)" } } ?? ""))
                         .font(.callout)
                         .foregroundStyle(.secondary)
                     ProgressView(value: progress.overall ?? progress.frac ?? 0)
@@ -201,18 +209,6 @@ struct CurrentCard: View {
                     }
                 }
             }
-        }
-    }
-}
-
-extension CurrentCard {
-    /// What its stage is of, when the batch builds its app for this Mac too
-    /// and the stage's words do not say it.
-    var platform: String {
-        switch progress.shownPlatform {
-        case .mac: return tr("This Mac · ", "Ce Mac · ")
-        case .iPhone: return tr("iPhone · ", "iPhone · ")
-        case nil: return ""
         }
     }
 }
@@ -325,6 +321,12 @@ struct GameList: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(game.name)
                     .font(.callout.weight(.medium))
+                // Waiting its turn: what its build makes.
+                if game.state == "queued", let targets = model.targets(game) {
+                    TargetLabel(targets: targets)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 // Why it failed, or was skipped (a full disk, no room, no keys).
                 if let error = game.shownError {
                     Text(error)
@@ -383,15 +385,21 @@ struct GameList: View {
         .padding(.vertical, 8)
     }
 
+    /// How it went, and what for (decision 126): its IPA, for the iPhone,
+    /// its app for this Mac, or both; the IPA built and its Mac app not, the
+    /// line under its name says why.
     private func stateText(_ game: GameProgress) -> String {
         switch game.state {
         case "built" where game.mac == "built":
             // Its IPA and its Mac app, or its Mac app alone.
             let seconds = (game.macOnly == true ? 0 : game.duration ?? 0) + (game.macDuration ?? 0)
-            return (game.macOnly == true ? tr("Built for this Mac", "Construit pour ce Mac") : tr("Built, with its Mac app", "Construit, avec son app Mac"))
+            return (game.macOnly == true ? tr("Built for this Mac", "Construit pour ce Mac")
+                : tr("Built for the iPhone and this Mac", "Construit pour l’iPhone et ce Mac"))
                 + (seconds > 0 ? " · " + Format.duration(seconds) : "")
-        case "built": return tr("Built", "Construit") + (game.duration.map { " · " + Format.duration($0) } ?? "")
-        case "failed": return tr("Failed", "Échec")
+        case "built": return tr("Built for the iPhone", "Construit pour l’iPhone") + (game.duration.map { " · " + Format.duration($0) } ?? "")
+        // Its IPA, or its app for this Mac alone: its Mac app is built after
+        // its IPA, never without it.
+        case "failed": return game.macOnly == true ? tr("Failed for this Mac", "Échec pour ce Mac") : tr("Failed for the iPhone", "Échec pour l’iPhone")
         case "stopped": return tr("Stopped", "Arrêté")
         case "skipped": return tr("Skipped", "Passé")
         case "queued": return tr("Waiting", "En attente")

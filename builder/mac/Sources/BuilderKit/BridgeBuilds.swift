@@ -46,27 +46,35 @@ public enum BridgeBuilds {
     /// their turn, in their order, in the batch running or starting
     /// (RUNNING). READY: whether the Mac takes a build now; WHY not, in the
     /// player's words. STAGE names a build's step in the player's words.
-    /// CONTROL: what the window can do to them, which the iPhone does too.
+    /// TARGETS: what the build of a game building or waiting makes, and the
+    /// part it makes now (AppModel.targets: as the batch planned it, else
+    /// as the game's settings say). CONTROL: what the window can do to
+    /// them, which the iPhone does too.
     public static func shared(games: [Game], building: [GameProgress], waiting: [GameProgress], running: Bool,
-                              ready: Bool, why: String?, stage: (String?) -> String, control: Control? = nil) -> CartoucheBridgeBuilds {
+                              ready: Bool, why: String?, stage: (String?) -> String,
+                              targets: (GameProgress) -> CartoucheBuildTargets? = { $0.targets },
+                              control: Control? = nil) -> CartoucheBridgeBuilds {
         var now: [String: GameProgress] = [:]
         for progress in building where now[progress.titleID] == nil {
             now[progress.titleID] = progress
         }
         var turns: [String: Int] = [:]
-        var queue: [GameProgress] = []
+        var queue: [String: GameProgress] = [:]
+        var order: [GameProgress] = []
         for progress in waiting where now[progress.titleID] == nil && turns[progress.titleID] == nil {
-            queue.append(progress)
-            turns[progress.titleID] = queue.count
+            order.append(progress)
+            queue[progress.titleID] = progress
+            turns[progress.titleID] = order.count
         }
         var shared = games.map { game in
-            Self.game(game, building: now[game.titleID], turn: turns[game.titleID], stage: stage)
+            Self.game(game, building: now[game.titleID], turn: turns[game.titleID], waiting: queue[game.titleID], stage: stage,
+                      targets: targets)
         }
         // A game of the batch the library does not show yet: by the batch's
         // own words.
         var known = Set(games.map(\.titleID))
-        for progress in building + queue where known.insert(progress.titleID).inserted {
-            shared.append(Self.game(progress, turn: turns[progress.titleID], stage: stage))
+        for progress in building + order where known.insert(progress.titleID).inserted {
+            shared.append(Self.game(progress, turn: turns[progress.titleID], stage: stage, targets: targets))
         }
         guard let control else {
             return CartoucheBridgeBuilds(running: running, ready: ready, why: ready ? nil : why, games: shared)
@@ -82,20 +90,23 @@ public enum BridgeBuilds {
     }
 
     /// GAME of the library, building now (BUILDING), waiting its turn
-    /// (TURN), or as the library has it.
-    static func game(_ game: Game, building: GameProgress?, turn: Int?, stage: (String?) -> String) -> CartoucheBridgeBuilds.Game {
-        let built = game.build?.date
-        var failed: Date?
-        var error: String?
-        if let attempt = game.attempt, attempt.result == "failed", let at = attempt.date, built.map({ at > $0 }) ?? true {
-            failed = at
-            error = attempt.error.map(cut)
-        }
+    /// (TURN, WAITING), or as the library has it. What it is built for,
+    /// and, built for this Mac too, its app's own build and failure; built
+    /// for this Mac alone, its dates are its app's.
+    static func game(_ game: Game, building: GameProgress?, turn: Int?, waiting: GameProgress? = nil, stage: (String?) -> String,
+                     targets: (GameProgress) -> CartoucheBuildTargets? = { $0.targets }) -> CartoucheBridgeBuilds.Game {
+        let alone = game.onMac && !game.onIOS
+        let last = Self.last(alone ? game.mac?.build : game.build, alone ? game.mac?.attempt : game.attempt)
         var shared = CartoucheBridgeBuilds.Game(id: game.titleID, name: game.name, state: game.state.rawValue, reasons: game.reasons,
-                                                built: built, failed: failed, error: error, buildable: game.canBuild,
-                                                followed: game.canBuild ? game.followed : nil)
-        if dueForMacAppAlone(game) {
-            // Its IPA up to date: so it is to the iPhone.
+                                                built: last.built, failed: last.failed, error: last.error, buildable: game.canBuild,
+                                                followed: game.canBuild ? game.followed : nil, platforms: game.builtFor?.names ?? [])
+        if game.onIOS, game.onMac {
+            let app = Self.last(game.mac?.build, game.mac?.attempt)
+            shared.mac = CartoucheBridgeBuilds.MacApp(built: app.built, failed: app.failed, error: app.error, due: game.dueForMacAppAlone)
+        }
+        if game.dueForMacAppAlone {
+            // Its IPA up to date: so it is to an iPhone, which reads that its
+            // app for the Mac is due when it knows (mac.due).
             shared.state = GameState.upToDate.rawValue
             shared.reasons = []
         }
@@ -104,24 +115,32 @@ public enum BridgeBuilds {
             shared.progress = building.overall ?? building.frac
             shared.step = stage(building.stage)
             shared.left = building.eta.flatMap { $0 > 0 ? $0 : nil }
+            let made = targets(building)
+            shared.makes = made?.names
+            shared.now = made?.now?.rawValue
         } else if let turn {
             shared.state = "queued"
             shared.turn = turn
+            shared.makes = (waiting.flatMap(targets) ?? game.plannedTargets(forced: game.state != .due))?.names
         } else if game.state == .building || game.state == .queued {
             // The library read while the batch had it, which no longer does:
             // as it was before.
-            shared.state = built == nil ? GameState.due.rawValue : GameState.upToDate.rawValue
+            shared.state = last.built == nil ? GameState.due.rawValue : GameState.upToDate.rawValue
         }
         return shared
     }
 
     /// A game of the batch alone, building or waiting its turn (TURN).
-    static func game(_ progress: GameProgress, turn: Int?, stage: (String?) -> String) -> CartoucheBridgeBuilds.Game {
+    static func game(_ progress: GameProgress, turn: Int?, stage: (String?) -> String,
+                     targets: (GameProgress) -> CartoucheBuildTargets? = { $0.targets }) -> CartoucheBridgeBuilds.Game {
         var shared = CartoucheBridgeBuilds.Game(id: progress.titleID, name: progress.name, state: progress.state, reasons: progress.reasons ?? [])
+        let made = targets(progress)
+        shared.makes = made?.names
         if progress.state == "building" {
             shared.progress = progress.overall ?? progress.frac
             shared.step = stage(progress.stage)
             shared.left = progress.eta.flatMap { $0 > 0 ? $0 : nil }
+            shared.now = made?.now?.rawValue
         } else {
             shared.state = "queued"
             shared.turn = turn
@@ -129,11 +148,32 @@ public enum BridgeBuilds {
         return shared
     }
 
+    /// When BUILD was made, and when ATTEMPT, its last that did not build,
+    /// failed after it, and why, cut: a stop is no failure.
+    private static func last(_ build: GameBuild?, _ attempt: GameAttempt?) -> (built: Date?, failed: Date?, error: String?) {
+        let built = build?.date
+        guard let attempt, attempt.result == "failed", let at = attempt.date, built.map({ at > $0 }) ?? true else {
+            return (built, nil, nil)
+        }
+        return (built, at, attempt.error.map(cut))
+    }
+
     /// Whether GAME is due for its app for this Mac alone, by reasons of
-    /// that app (mac_…), its IPA up to date: a build the iPhone asks for
-    /// builds its IPA again, as for a game up to date.
+    /// that app (mac_…), its IPA up to date (Game.dueForMacAppAlone): an
+    /// iPhone that says what is due asks for that app alone, as the Build
+    /// button of its sheet; one that does not, for its IPA again too, as
+    /// for a game up to date (forced).
     public static func dueForMacAppAlone(_ game: Game) -> Bool {
-        game.state == .due && !game.reasons.isEmpty && game.reasons.allSatisfy { $0.hasPrefix("mac_") }
+        game.dueForMacAppAlone
+    }
+
+    /// Whether the build of GAME an iPhone asks for is forced, built again
+    /// even up to date, as its Build button on the Mac: unless due. Due
+    /// for its app for this Mac alone, which an iPhone that does not ask
+    /// for what is due (DUE) shows as up to date: forced, its IPA built
+    /// again too.
+    public static func forced(_ game: Game, due: Bool) -> Bool {
+        game.state != .due || (game.dueForMacAppAlone && !due)
     }
 
     /// What the Mac builds of the games an iPhone asks for, ASKED, what is

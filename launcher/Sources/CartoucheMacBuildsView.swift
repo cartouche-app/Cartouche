@@ -7,9 +7,12 @@
 //  Cartouche Builder its builds (CartoucheBridgeBuilds), every few seconds
 //  while it builds. When the Mac knows the game, from the player's dump or
 //  its IPA, the sheet shows where its build is (building, waiting its turn,
-//  up to date, improved by nxnative, failed), the button that asks the Mac
-//  to build it, at once or after the games of the batch running, as the
-//  game's Build button on the Mac does, the one that stops its build or
+//  up to date, improved by nxnative, failed), what it is for, the iPhone,
+//  the Mac or both, and of a game built for both, its app for the Mac apart
+//  when that alone is to build or failed (decision 126); the button that
+//  asks the Mac to build it, at once or after the games of the batch
+//  running, as the game's Build button on the Mac does, the one that stops
+//  its build or
 //  takes it out of the queue, and the way to all the Mac's builds
 //  (CartoucheMacBuildsPage.swift), which System opens too. Nothing shows
 //  away from the Mac, nor without one. A Cartouche Builder too old to share
@@ -218,9 +221,10 @@ final class CartoucheMacBuildsWatch: ObservableObject {
     }
 
     /// Asks the Mac to build the game TITLE_ID, at once or after the games
-    /// of the batch running.
-    func build(_ titleId: String) {
-        perform(.build(titleId)) { try await $0.build(titleId) }
+    /// of the batch running: what is due of it (DUE: its app for the Mac
+    /// alone, when that alone is due), else all of it again.
+    func build(_ titleId: String, due: Bool = false) {
+        perform(.build(titleId)) { try await $0.build(titleId, due: due) }
     }
 
     /// Asks the Mac to build what is due, at once or after the games of the
@@ -316,6 +320,10 @@ final class CartoucheMacBuildsWatch: ObservableObject {
     static func galleryAnswer(_ ask: Ask, in builds: CartoucheBridgeBuilds) -> CartoucheBridgeBuilds {
         var builds = builds
         func add(_ index: Int) {
+            // What a Mac builds of it: its app alone when that alone is due,
+            // else all it builds the game for, its IPA first.
+            let game = builds.games[index]
+            builds.games[index].makes = game.mac?.due == true ? ["mac"] : game.platforms
             if builds.running {
                 // After the games waiting, counted before it joins them.
                 let turn = builds.waiting.count + 1
@@ -325,6 +333,7 @@ final class CartoucheMacBuildsWatch: ObservableObject {
                 builds.running = true
                 builds.games[index].state = "building"
                 builds.games[index].progress = 0
+                builds.games[index].now = builds.games[index].makes?.first
             }
             builds.games[index].stoppable = true
         }
@@ -336,6 +345,8 @@ final class CartoucheMacBuildsWatch: ObservableObject {
             builds.games[index].left = nil
             builds.games[index].turn = nil
             builds.games[index].stoppable = nil
+            builds.games[index].makes = nil
+            builds.games[index].now = nil
         }
         /// The batch once a game left it: the next game builds, and those
         /// after it move up; with none, the batch ends.
@@ -345,6 +356,7 @@ final class CartoucheMacBuildsWatch: ObservableObject {
                 builds.games[index].state = "building"
                 builds.games[index].progress = 0
                 builds.games[index].turn = nil
+                builds.games[index].now = builds.games[index].makes?.first
             }
             for (turn, id) in builds.waiting.map(\.id).enumerated() {
                 if let index = builds.games.firstIndex(where: { $0.id == id }) { builds.games[index].turn = turn + 1 }
@@ -355,7 +367,8 @@ final class CartoucheMacBuildsWatch: ObservableObject {
         case let .build(titleId):
             if let index = builds.games.firstIndex(where: { $0.id == titleId }) { add(index) }
         case .due:
-            for index in builds.games.indices where builds.games[index].state == "due" { add(index) }
+            // Its app for the Mac alone too, when that alone is due.
+            for index in builds.games.indices where Self.isDue(builds.games[index]) { add(index) }
         case let .stop(titleId):
             if let index = builds.games.firstIndex(where: { $0.id == titleId }) {
                 takeOut(index)
@@ -376,8 +389,14 @@ final class CartoucheMacBuildsWatch: ObservableObject {
         case let .nightly(nightly):
             builds.nightly = nightly
         }
-        builds.due = builds.games.filter { $0.state == "due" }.count
+        builds.due = builds.games.filter(Self.isDue).count
         return builds
+    }
+
+    /// Whether the gallery's Mac builds GAME with what is due: due, or its
+    /// app for the Mac alone, as a Mac counts it.
+    private static func isDue(_ game: CartoucheBridgeBuilds.Game) -> Bool {
+        game.state == "due" || (game.state == "up_to_date" && game.mac?.due == true)
     }
     #endif
 }
@@ -418,8 +437,17 @@ struct CartoucheMacBuildsSection: View {
     var body: some View {
         if let builds = watch.builds, let build = CartoucheMacBuild.of(titleIds, in: builds) {
             Section {
-                status(build)
-                    .id(Self.anchor)
+                VStack(alignment: .leading, spacing: 6) {
+                    status(build)
+                    // What it is for, the iPhone, the Mac or both, and the
+                    // part its build makes now.
+                    if let targets = build.targets {
+                        Self.target(targets)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .id(Self.anchor)
                 if let action = build.action {
                     button(action, build: build)
                 }
@@ -503,12 +531,49 @@ struct CartoucheMacBuildsSection: View {
             Label(CartoucheText.macBuildNoProfile, systemImage: "questionmark.circle")
         case .ipaOnly:
             Label(CartoucheText.macBuildIPAOnly, systemImage: "shippingbox")
+        case .macDue:
+            Label(CartoucheText.macBuildMacDue, systemImage: "laptopcomputer")
+        case let .macFailed(at, error):
+            VStack(alignment: .leading, spacing: 4) {
+                Label(at.map { CartoucheText.macBuildMacFailedOn(Self.when($0)) } ?? CartoucheText.macBuildMacFailed,
+                      systemImage: "exclamationmark.triangle.fill")
+                if let error, !error.isEmpty {
+                    Text(error)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(6)
+                }
+            }
+        }
+    }
+
+    /// What a build is for, as a line (decision 126): the iPhone, the Mac
+    /// or both; building, the part it makes now.
+    static func target(_ targets: CartoucheBuildTargets) -> some View {
+        Label(targetText(targets.line), systemImage: targetSymbol(targets.line))
+    }
+
+    static func targetText(_ line: CartoucheBuildTargets.Line) -> String {
+        switch line {
+        case .iPhone: return CartoucheText.macBuildForIPhone
+        case .mac: return CartoucheText.macBuildForMac
+        case .both: return CartoucheText.macBuildForBoth
+        case .iPhoneThenMac: return CartoucheText.macBuildForIPhoneThenMac
+        case .macAfterIPhone: return CartoucheText.macBuildForMacAfterIPhone
+        }
+    }
+
+    static func targetSymbol(_ line: CartoucheBuildTargets.Line) -> String {
+        switch line {
+        case .iPhone, .iPhoneThenMac: return "iphone"
+        case .mac, .macAfterIPhone: return "laptopcomputer"
+        case .both: return "laptopcomputer.and.iphone"
         }
     }
 
     private func button(_ action: CartoucheMacBuild.Action, build: CartoucheMacBuild) -> some View {
         Button {
-            watch.build(build.id)
+            watch.build(build.id, due: build.asksDue)
         } label: {
             if watch.asking == .build(build.id) {
                 Label(CartoucheText.macBuildAsking, systemImage: "ellipsis.circle")
@@ -545,6 +610,7 @@ struct CartoucheMacBuildsSection: View {
         case .rebuild: return CartoucheText.macBuildActionRebuild
         case .buildAgain: return CartoucheText.macBuildActionAgain
         case .addToQueue: return CartoucheText.macBuildActionQueue
+        case .buildMac: return CartoucheText.macBuildActionMac
         }
     }
 
@@ -554,6 +620,7 @@ struct CartoucheMacBuildsSection: View {
         case .rebuild: return "sparkles"
         case .buildAgain: return "arrow.clockwise"
         case .addToQueue: return "text.badge.plus"
+        case .buildMac: return "laptopcomputer"
         }
     }
 

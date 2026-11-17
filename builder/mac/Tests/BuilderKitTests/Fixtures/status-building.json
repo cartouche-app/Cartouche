@@ -30,6 +30,10 @@
         "mac_log": "",
         "mac_only": false,
         "mac_room": {},
+        "makes": [
+          "ios",
+          "mac"
+        ],
         "message": "",
         "n": 2,
         "name": "Mario Kart World",

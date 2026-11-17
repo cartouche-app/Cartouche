@@ -376,7 +376,11 @@ class Batches(BatchHome):
         self.assertEqual((seen[0]["state"], seen[0]["running"]), ("preparing", True))
         self.assertEqual([(g["title_id"], g["name"], g["state"]) for g in seen[0]["games"]],
                          [(MKW, "Mario Kart World, as the app showed it", "queued")])
+        # What its build makes is not known before the plan: the app says it
+        # from the game's own settings until then.
+        self.assertEqual([g["makes"] for g in seen[0]["games"]], [[]])
         self.assertEqual([(g["title_id"], g["name"], g["state"]) for g in statuses.read(paths)["games"]], [(MKW, "Mario Kart World", "built")])
+        self.assertEqual([g["makes"] for g in statuses.read(paths)["games"]], [["ios", "mac"]])
         # Asked for again, up to date: not built, and no longer in the batch.
         plan, summary = self.run_due(only={MKW})
         self.assertEqual(summary.built, [])
@@ -454,6 +458,9 @@ class MacApps(BatchHome):
         for title_id, name in NAMES.items():
             game = games[title_id]
             self.assertEqual((game["state"], game["mac"], game["mac_app"], game["platform"], game["mac_only"]), ("built", "built", f"{name}.app", "mac", False))
+            # What its build made, for the app and the iPhone to say: the
+            # iPhone's, then this Mac's.
+            self.assertEqual(game["makes"], ["ios", "mac"], title_id)
         kinds = [kind for kind, title_id, _ in self.events if title_id == MKW]
         self.assertLess(kinds.index("built"), kinds.index("mac_start"))
         self.assertLess(kinds.index("mac_start"), kinds.index("mac_built"))
@@ -511,6 +518,8 @@ class MacApps(BatchHome):
         status = json.loads(ctx.paths.status.read_text())
         game = next(g for g in status["games"] if g["title_id"] == MKW)
         self.assertEqual((game["state"], game["mac"], game["mac_only"], game["ipa"]), ("built", "built", True, ""))
+        # Its build made this Mac's app alone.
+        self.assertEqual(game["makes"], ["mac"])
         # The notification counts the game once.
         runner = batch.Runner(ctx, plan, [], check_tools=False)
         runner.summary = summary
@@ -696,6 +705,10 @@ class MacApps(BatchHome):
         ctx = batch.context()
         self.assertFalse((ctx.workspace.build_folder(MKW) / "mac_runs.txt").exists())
         self.assertFalse((ctx.workspace.build_folder(ODYSSEY) / "runs.txt").exists())
+        # What each build made, as the app and the iPhone say it: the IPA
+        # alone, the Mac app alone.
+        status = json.loads(ctx.paths.status.read_text())
+        self.assertEqual({g["title_id"]: g["makes"] for g in status["games"]}, {MKW: ["ios"], ODYSSEY: ["mac"]})
         # Every game, in the settings.
         self.settings(mac=False)
         plan = batch.survey(batch.context(), update=False)

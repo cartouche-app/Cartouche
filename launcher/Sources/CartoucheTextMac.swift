@@ -65,10 +65,22 @@ extension CartoucheText {
     static var macBuildNotFollowed: String { s("mac.build.notFollowed", "Not followed on the Mac: built there only when you ask") }
     static var macBuildNoProfile: String { s("mac.build.noProfile", "nxnative has no profile for it yet: the Mac builds it once it has one") }
     static var macBuildIPAOnly: String { s("mac.build.ipaOnly", "Only its IPA is on the Mac: its dump is not in the Mac’s sources folder") }
+    static var macBuildMacDue: String { s("mac.build.macDue", "Its IPA is up to date, its app for the Mac is to build") }
+    static var macBuildMacFailed: String { s("mac.build.macFailed", "Its IPA is up to date, the last build of its app for the Mac failed") }
+    static func macBuildMacFailedOn(_ date: String) -> String { f("mac.build.macFailed.on", "Its IPA is up to date, the last build of its app for the Mac failed, %@", date) }
+
+    // What a build on the Mac makes (decision 126): its IPA, for the
+    // iPhone, its app, for the Mac, or both; building, the part it makes now.
+    static var macBuildForIPhone: String { s("mac.build.for.iphone", "For the iPhone") }
+    static var macBuildForMac: String { s("mac.build.for.mac", "For the Mac") }
+    static var macBuildForBoth: String { s("mac.build.for.both", "For the iPhone and the Mac") }
+    static var macBuildForIPhoneThenMac: String { s("mac.build.for.iphoneThenMac", "For the iPhone, then the Mac") }
+    static var macBuildForMacAfterIPhone: String { s("mac.build.for.macAfterIphone", "iPhone done, now the Mac") }
     static var macBuildActionBuild: String { s("mac.build.action.build", "Build on the Mac") }
     static var macBuildActionRebuild: String { s("mac.build.action.rebuild", "Rebuild on the Mac") }
     static var macBuildActionAgain: String { s("mac.build.action.again", "Build again on the Mac") }
     static var macBuildActionQueue: String { s("mac.build.action.queue", "Add to the Mac’s queue") }
+    static var macBuildActionMac: String { s("mac.build.action.mac", "Build its app for the Mac") }
     static var macBuildAsking: String { s("mac.build.asking", "Asking the Mac…") }
     static var macBuildStop: String { s("mac.build.stop", "Stop its build") }
     static var macBuildStopping: String { s("mac.build.stopping", "Stopping…") }
@@ -98,6 +110,8 @@ extension CartoucheText {
     static func macBuildsRemove(_ game: String) -> String { f("mac.builds.remove", "Remove %@ from the queue", game) }
     static var macBuildsFailures: String { s("mac.builds.failures", "Builds that failed") }
     static func macBuildsFailed(_ date: String) -> String { f("mac.builds.failed", "Failed %@", date) }
+    static func macBuildsFailedIPhone(_ date: String) -> String { f("mac.builds.failed.iphone", "Failed for the iPhone %@", date) }
+    static func macBuildsFailedMac(_ date: String) -> String { f("mac.builds.failed.mac", "Failed for the Mac %@", date) }
     static var macBuildsGames: String { s("mac.builds.games", "The Mac’s games") }
     static var macBuildsGamesFooter: String { s("mac.builds.games.footer", "The Mac builds a game it follows again when nxnative improves it, and a game it does not follow only when you ask.") }
     static func macBuildsGameActions(_ game: String) -> String { f("mac.builds.game.actions", "What to do with %@", game) }
@@ -114,4 +128,12 @@ extension CartoucheText {
     static var macGameNotFollowed: String { s("mac.game.notFollowed", "Not followed") }
     static var macGameNoProfile: String { s("mac.game.noProfile", "No nxnative profile yet") }
     static var macGameIPAOnly: String { s("mac.game.ipaOnly", "Its IPA alone, without its dump") }
+    static var macGameMacDue: String { s("mac.game.macDue", "Its Mac app is to build") }
+    static var macGameMacFailed: String { s("mac.game.macFailed", "Its Mac app failed") }
+    static func macGameMacFailedOn(_ date: String) -> String { f("mac.game.macFailed.on", "Its Mac app failed %@", date) }
+    static var macGameForIPhone: String { s("mac.game.for.iphone", "iPhone") }
+    static var macGameForMac: String { s("mac.game.for.mac", "Mac") }
+    static var macGameForBoth: String { s("mac.game.for.both", "iPhone and Mac") }
+    static var macGameForIPhoneThenMac: String { s("mac.game.for.iphoneThenMac", "iPhone, then Mac") }
+    static var macGameForMacAfterIPhone: String { s("mac.game.for.macAfterIphone", "Mac, iPhone done") }
 }

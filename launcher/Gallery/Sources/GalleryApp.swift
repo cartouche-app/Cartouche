@@ -1147,34 +1147,51 @@ enum GalleryMac {
     }
 
     /// Cartouche Builder at work on the Mac, as it tells Cartouche (work:
-    /// mac-builds): Mario Kart World building, Donkey Kong Bananza waiting
-    /// its turn, Link's Awakening built this morning, and three games the
+    /// mac-builds): Mario Kart World building, its IPA for the iPhone, then
+    /// its app for the Mac; Donkey Kong Bananza waiting its turn, for both;
+    /// Link's Awakening built for the iPhone this morning; and games the
     /// player has not installed: one whose last build failed yesterday,
-    /// one nxnative improved since its last build, and one the Mac does
-    /// not follow. What is due built every night at 3:30. Its words in the
-    /// gallery's language, as a Mac in that language says them (stageText
-    /// in the Mac's Theme.swift).
+    /// one nxnative improved since its last build, one the Mac does not
+    /// follow, one whose app for the Mac failed since its IPA was built,
+    /// one whose app for the Mac is to build, its IPA up to date, and one
+    /// built for the Mac alone (decision 126). What is due built every
+    /// night at 3:30. Its words in the gallery's language, as a Mac in
+    /// that language says them (stageText in the Mac's Theme.swift).
     static func builds(now: Date = Date()) -> CartoucheBridgeBuilds {
         let hour: TimeInterval = 3_600
         let french = CartoucheText.bundle.preferredLocalizations.first == "fr"
+        let both = ["ios", "mac"]
         return CartoucheBridgeBuilds(running: true, games: [
             .init(id: "0400C3F00006E000", name: "Mario Kart World", state: "building", reasons: ["changes"],
                   progress: 0.42, step: french ? "Compilation des shaders pour l’iPhone" : "Compiling shaders for the iPhone",
-                  left: 21 * 60, built: now.addingTimeInterval(-3 * 24 * hour), followed: true, stoppable: true, stopping: false),
+                  left: 21 * 60, built: now.addingTimeInterval(-3 * 24 * hour), followed: true, stoppable: true, stopping: false,
+                  platforms: both, makes: both, now: "ios",
+                  mac: CartoucheBridgeBuilds.MacApp(built: now.addingTimeInterval(-3 * 24 * hour + 1_800))),
             .init(id: "040074A01BF12000", name: "Donkey Kong Bananza", state: "queued", reasons: ["changes"], turn: 1,
-                  built: now.addingTimeInterval(-6 * 24 * hour), followed: true, stoppable: true, stopping: false),
+                  built: now.addingTimeInterval(-6 * 24 * hour), followed: true, stoppable: true, stopping: false,
+                  platforms: both, makes: both, mac: CartoucheBridgeBuilds.MacApp(built: now.addingTimeInterval(-6 * 24 * hour + 2_400))),
             .init(id: "01006BB00C6F0000", name: "The Legend of Zelda: Link's Awakening", state: "up_to_date",
-                  built: now.addingTimeInterval(-9 * hour), followed: true),
+                  built: now.addingTimeInterval(-9 * hour), followed: true, platforms: ["ios"]),
             .init(id: "01003FC01670C000", name: "13 Sentinels: Aegis Rim", state: "failed",
                   failed: now.addingTimeInterval(-26 * hour),
                   error: french ? "La construction de l’app s’est arrêtée\u{00A0}: Xcode n’a trouvé aucun SDK iOS."
                                 : "Building the app stopped: Xcode found no iOS SDK.",
-                  followed: true),
+                  followed: true, platforms: ["ios"]),
             .init(id: "0100B7C00933A000", name: "Pikmin 4", state: "due", reasons: ["changes"],
-                  built: now.addingTimeInterval(-12 * 24 * hour), followed: true),
+                  built: now.addingTimeInterval(-12 * 24 * hour), followed: true,
+                  platforms: both, mac: CartoucheBridgeBuilds.MacApp(built: now.addingTimeInterval(-12 * 24 * hour + 1_500))),
             .init(id: "0100000000010000", name: "Super Mario Odyssey", state: "not_followed",
-                  built: now.addingTimeInterval(-20 * 24 * hour), followed: false),
-        ], due: 1, nightly: CartoucheBridgeBuilds.Nightly(on: true, hour: 3, minute: 30))
+                  built: now.addingTimeInterval(-20 * 24 * hour), followed: false, platforms: ["ios"]),
+            .init(id: "01004D300C5AE000", name: "Kirby and the Forgotten Land", state: "up_to_date",
+                  built: now.addingTimeInterval(-20 * hour), followed: true, platforms: both,
+                  mac: CartoucheBridgeBuilds.MacApp(built: now.addingTimeInterval(-8 * 24 * hour), failed: now.addingTimeInterval(-19 * hour),
+                             error: french ? "Les shaders pour le Mac n’ont pas pu être compilés\u{00A0}: Metal a refusé un pipeline."
+                                           : "The shaders for the Mac could not be compiled: Metal refused a pipeline.")),
+            .init(id: "010093801237C000", name: "Metroid Dread", state: "up_to_date",
+                  built: now.addingTimeInterval(-2 * 24 * hour), followed: true, platforms: both, mac: CartoucheBridgeBuilds.MacApp(due: true)),
+            .init(id: "0400380020056000", name: "Splatoon Raiders", state: "up_to_date",
+                  built: now.addingTimeInterval(-4 * 24 * hour), followed: true, platforms: ["mac"]),
+        ], due: 2, nightly: CartoucheBridgeBuilds.Nightly(on: true, hour: 3, minute: 30))
     }
 
     private static func service(_ name: String) -> NWEndpoint {

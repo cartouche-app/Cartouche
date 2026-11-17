@@ -7,6 +7,7 @@
 //
 
 import BuilderKit
+import CartoucheCore
 import SwiftUI
 
 enum Theme {
@@ -101,10 +102,20 @@ struct GameLook {
         if let progress {
             if progress.state == "building" {
                 let percent = (progress.overall ?? progress.frac).map { " " + Format.percent($0) } ?? ""
-                // Its app for this Mac, after its IPA or alone.
-                text = (progress.buildsMac && progress.onMacNow ? tr("Building for this Mac", "Construction pour ce Mac") : tr("Building", "Construction")) + percent
+                // What it makes now: its IPA, for the iPhone, or its app for
+                // this Mac, after its IPA or alone (decision 126).
+                switch progress.targets?.now {
+                case .mac?:
+                    text = tr("Building for this Mac", "Construction pour ce Mac") + percent
+                    symbol = "macbook"
+                case .iPhone?:
+                    text = tr("Building for the iPhone", "Construction pour l’iPhone") + percent
+                    symbol = "iphone"
+                case nil:
+                    text = tr("Building", "Construction") + percent
+                    symbol = "hammer.fill"
+                }
                 color = Theme.indigo
-                symbol = progress.buildsMac && progress.onMacNow ? "macbook" : "hammer.fill"
             } else {
                 text = tr("Waiting its turn", "En attente")
                 color = .secondary
@@ -117,7 +128,7 @@ struct GameLook {
             let own = game.changeCounts?.own ?? 0
             if game.reasons == ["new"] {
                 text = tr("Never built", "Jamais construit")
-            } else if !game.reasons.isEmpty, game.reasons.allSatisfy({ $0.hasPrefix("mac_") }) {
+            } else if game.dueForMacAppAlone {
                 // Its IPA up to date, its app for this Mac to build.
                 text = tr("To build for this Mac", "À construire pour ce Mac")
                 color = .orange
@@ -229,10 +240,11 @@ func changeKindText(_ kind: String) -> String {
     }
 }
 
-/// A batch step's name, in the player's words. The steps whose words name
-/// the iPhone or this Mac are GameProgress.iPhoneStages and macStages
-/// (Models.swift), which the activity page names no other way.
-func stageText(_ stage: String?) -> String {
+/// A batch step's name, in the player's words: ON_IPHONE, as an iPhone
+/// shows it, which names "the Mac", not "this Mac". What the build makes,
+/// the iPhone's IPA, this Mac's app or both, its own line says (TargetLabel).
+func stageText(_ stage: String?, onIPhone: Bool = false) -> String {
+    if onIPhone, let mac = macStageOnIPhone(stage ?? "") { return mac }
     switch stage ?? "" {
     case "": return tr("Getting ready", "Préparation")
     case "unpack": return tr("Unpacking the game", "Décompression du jeu")
@@ -249,5 +261,47 @@ func stageText(_ stage: String?) -> String {
     case "Mac app": return tr("Packing the Mac app", "Assemblage de l’app Mac")
     case "mac_deliver": return tr("Putting the app on this Mac", "Mise en place de l’app sur ce Mac")
     default: return stage ?? ""
+    }
+}
+
+/// The steps of its app for the Mac whose words name this Mac, as an iPhone
+/// shows them: "the Mac".
+private func macStageOnIPhone(_ stage: String) -> String? {
+    switch stage {
+    case "Mac shaders": return tr("Compiling shaders for the Mac", "Compilation des shaders pour le Mac")
+    case "Mac host": return tr("Building the game for the Mac", "Construction du jeu pour le Mac")
+    case "Pipeline prebuild", "Pipeline archive", "Prewarm pipelines":
+        return tr("Preparing its graphics for the Mac", "Préparation de ses graphismes pour le Mac")
+    case "mac_deliver": return tr("Putting the app on the Mac", "Mise en place de l’app sur le Mac")
+    default: return nil
+    }
+}
+
+/// What a build makes, the iPhone's IPA, this Mac's app or both, and the
+/// part it makes now, in this window's words (decision 126): on the
+/// activity page, the queue, a game's sheet and the menu bar.
+struct TargetLabel: View {
+    let targets: CartoucheBuildTargets
+
+    var body: some View {
+        Label(targetText(targets.line), systemImage: targetSymbol(targets.line))
+    }
+}
+
+func targetText(_ line: CartoucheBuildTargets.Line) -> String {
+    switch line {
+    case .iPhone: return tr("For the iPhone", "Pour l’iPhone")
+    case .mac: return tr("For this Mac", "Pour ce Mac")
+    case .both: return tr("For the iPhone and this Mac", "Pour l’iPhone et ce Mac")
+    case .iPhoneThenMac: return tr("For the iPhone, then this Mac", "Pour l’iPhone, puis ce Mac")
+    case .macAfterIPhone: return tr("iPhone done, now this Mac", "iPhone fait, maintenant ce Mac")
+    }
+}
+
+func targetSymbol(_ line: CartoucheBuildTargets.Line) -> String {
+    switch line {
+    case .iPhone, .iPhoneThenMac: return "iphone"
+    case .mac, .macAfterIPhone: return "macbook"
+    case .both: return "macbook.and.iphone"
     }
 }

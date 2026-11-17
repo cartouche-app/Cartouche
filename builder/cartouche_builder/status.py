@@ -13,7 +13,10 @@ than the branch's newest, which does not build (fallback.py), as the batch
 does. A game also built for this Mac says how its Mac app went (mac:
 waiting, building, built, failed, stopped, skipped), after its IPA or alone
 (mac_only): it builds until both are done, the stage and progress being
-those of its platform now (platform). The file is written whole
+those of its platform now (platform). Once planned, a game says what its
+build makes (makes: "ios", its IPA for the iPhone, then "mac", its app for
+this Mac, or one of the two), which a game asked for does not say until
+the plan is made. The file is written whole
 each time (a temporary file renamed over it), at most a few times a second,
 so the app can read it whenever it likes: what came meanwhile is written
 once the interval is over, even when nothing comes after it (Xcode compiles
@@ -67,6 +70,10 @@ class Game:
     exit: int | None = None  # nxnative's exit code, when it ran
     failure: dict = field(default_factory=dict)  # the exception, where and errno (failure.py)
     room: dict = field(default_factory=dict)  # no room: the GB free and needed (batch.py)
+    # What its build makes, once planned: "ios" (its IPA, for the iPhone),
+    # then "mac" (its app for this Mac), or one of the two; empty for a game
+    # asked for, until the plan says.
+    makes: list[str] = field(default_factory=list)
     # Its Mac app (macapps.py): "" when the batch does not build it.
     platform: str = "ios"  # what its stage and progress are of now: "ios" (the IPA) or "mac"
     mac: str = ""  # waiting, building, built, failed, stopped, skipped
@@ -308,9 +315,11 @@ class Status:
 def _planned(entry) -> Game:
     """A game of the batch, waiting its turn: its IPA, and its Mac app after it or alone."""
     game = Game(entry.title_id, entry.game.display_name, list(entry.reasons), entry.detail)
-    if getattr(entry, "mac", False):
-        game.mac, game.mac_only = "waiting", bool(entry.mac_only)
-        game.platform = "mac" if entry.mac_only else "ios"
+    mac, alone = bool(getattr(entry, "mac", False)), bool(getattr(entry, "mac_only", False))
+    game.makes = ([] if alone else ["ios"]) + (["mac"] if mac else [])
+    if mac:
+        game.mac, game.mac_only = "waiting", alone
+        game.platform = "mac" if alone else "ios"
     return game
 
 
@@ -342,6 +351,7 @@ def _game_json(game: Game) -> dict:
         "exit": game.exit,
         "failure": game.failure,
         "room": game.room,
+        "makes": game.makes,
         "platform": game.platform,
         "mac": game.mac,
         "mac_only": game.mac_only,

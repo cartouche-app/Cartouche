@@ -8,6 +8,7 @@
 //  older or newer than the app still reads.
 //
 
+import CartoucheCore
 import Foundation
 
 public struct EngineFailure: Codable, Error, LocalizedError, Equatable {
@@ -571,6 +572,26 @@ public struct Game: Codable, Equatable, Identifiable {
     /// Built for this Mac, its app.
     public var onMac: Bool { platforms?.mac ?? false }
     public var hasMacApp: Bool { mac?.hasApp ?? false }
+
+    /// What it is built for, in the order a build makes them: its IPA, for
+    /// the iPhone, then its app, for this Mac; nil for neither.
+    public var builtFor: CartoucheBuildTargets? {
+        CartoucheBuildTargets((onIOS ? [.iPhone] : []) + (onMac ? [.mac] : []))
+    }
+
+    /// Due for its app for this Mac alone, by reasons of that app (mac_new,
+    /// mac_missing, mac_behind), its IPA up to date.
+    public var dueForMacAppAlone: Bool {
+        state == .due && !reasons.isEmpty && reasons.allSatisfy { $0.hasPrefix("mac_") }
+    }
+
+    /// What a build of it asked for makes, until the batch plans it
+    /// (decision 126): what it is built for, or its app for this Mac alone
+    /// when that alone is due and the build is not FORCED, as the planner
+    /// does (cartouche_builder/planner.py).
+    public func plannedTargets(forced: Bool) -> CartoucheBuildTargets? {
+        dueForMacAppAlone && !forced ? CartoucheBuildTargets([.mac]) : builtFor
+    }
 }
 
 // MARK: A batch
@@ -609,6 +630,10 @@ public struct GameProgress: Codable, Equatable {
     public var failure: FailureDetails?
     /// Skipped for the room kept free: the gigabytes free and needed.
     public var room: RoomFigures?
+    /// What its build makes, once the batch planned it (status.py):
+    /// "ios", its IPA for the iPhone, then "mac", its app for this Mac, or
+    /// one of the two; nil before the plan, and from an older engine.
+    public var makes: [String]?
     /// Its app for this Mac, when the batch builds it (status.py): "mac"
     /// when its stage and progress are of the Mac app, not of its IPA;
     /// how its Mac app went (waiting, building, built, failed, stopped,
@@ -629,7 +654,7 @@ public struct GameProgress: Codable, Equatable {
 
     enum CodingKeys: String, CodingKey {
         case name, reasons, detail, state, stage, step, k, n, frac, overall, eta, note, message, started, ended, error, log, ipa, duration
-        case commit, fallback, cause, exit, failure, room, platform, mac
+        case commit, fallback, cause, exit, failure, room, makes, platform, mac
         case titleID = "title_id"
         case macOnly = "mac_only"
         case macApp = "mac_app"
@@ -679,30 +704,20 @@ public struct GameProgress: Codable, Equatable {
     /// Its stage and progress are of its Mac app now.
     public var onMacNow: Bool { platform == "mac" }
 
-    /// What a game is built for: its IPA, for the iPhone, or its app, for this Mac.
-    public enum Platform: Equatable, Sendable {
-        case iPhone, mac
-    }
-
-    /// What its stage is of, as the activity page says it before the stage,
-    /// when the batch builds the game for the iPhone and for this Mac: nil
-    /// when it builds it for one of the two, or when the stage's own words
-    /// say it (the app's stageText).
-    public var shownPlatform: Platform? {
-        guard buildsMac, macOnly != true else { return nil }
-        let stage = stage ?? ""
-        if onMacNow {
-            return Self.macStages.contains(stage) ? nil : .mac
+    /// What its build makes, the iPhone's IPA then this Mac's app, or one
+    /// of the two, and, building, the one it makes now (decision 126): as
+    /// the engine says once the batch planned the game; from an older
+    /// engine, by how the batch builds its Mac app. Nil for a game asked
+    /// for that the batch has not planned yet, which the app says from the
+    /// game's own settings (Game.plannedTargets).
+    public var targets: CartoucheBuildTargets? {
+        let now = state == "building" ? CartoucheBuildTargets.Platform(rawValue: platform ?? "ios") : nil
+        if let makes, !makes.isEmpty {
+            return CartoucheBuildTargets(makes, now: now?.rawValue)
         }
-        return Self.iPhoneStages.contains(stage) ? nil : .iPhone
+        guard makes == nil, buildsMac else { return nil }
+        return CartoucheBuildTargets(macOnly == true ? [.mac] : [.iPhone, .mac], now: now)
     }
-
-    /// The stages whose words name the iPhone (stageText): its shaders, its IPA.
-    public static let iPhoneStages: Set<String> = ["shaders", "shader", "pack", "package", "ipa"]
-    /// The stages of an app for this Mac, whose words name this Mac
-    /// (stageText): nxnative's --platform mac-app, then macapps.py's.
-    public static let macStages: Set<String> = ["Mac shaders", "Mac host", "Pipeline prebuild", "Pipeline archive",
-                                                "Prewarm pipelines", "Mac app", "mac_deliver"]
 
     /// Why its Mac app was not built while its IPA was: the error of a
     /// game built for this Mac alone is its own (shownError).

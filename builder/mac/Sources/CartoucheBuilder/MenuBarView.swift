@@ -12,6 +12,7 @@
 
 import AppKit
 import BuilderKit
+import CartoucheCore
 import SwiftUI
 
 struct MenuBarLabel: View {
@@ -121,6 +122,13 @@ struct MenuBarView: View {
                         Text(progress.name)
                             .font(.callout.weight(.medium))
                             .lineLimit(1)
+                        // What it makes, and the part it makes now.
+                        if let targets = model.targets(progress) {
+                            TargetLabel(targets: targets)
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(Theme.indigo)
+                                .lineLimit(1)
+                        }
                         Text(stageText(progress.stage))
                             .font(.caption)
                             .foregroundStyle(.secondary)

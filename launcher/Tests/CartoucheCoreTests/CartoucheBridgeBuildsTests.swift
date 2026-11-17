@@ -9,6 +9,9 @@
 //  Mac to build it and the one that stops its build, and both over a
 //  session in memory, after info says the Mac shares them; then the rest of
 //  what the Mac's window does, asked of a Mac whose info says it takes it.
+//  What each build is for, the iPhone, the Mac or both, and the part it
+//  makes now, and a game's app for the Mac due or failed apart from its
+//  IPA (decision 126).
 //
 
 import Foundation
@@ -42,6 +45,13 @@ final class CartoucheBridgeBuildsTests: XCTestCase {
         XCTAssertNil(game.stopping)
         XCTAssertNil(builds.due)
         XCTAssertNil(builds.nightly)
+        // What a build is for, from a Mac that does not say: nothing of it.
+        XCTAssertNil(game.platforms)
+        XCTAssertNil(game.makes)
+        XCTAssertNil(game.now)
+        XCTAssertNil(game.mac)
+        XCTAssertNil(game.targets)
+        XCTAssertNil(game.macFailure)
 
         let empty = try JSONDecoder().decode(CartoucheBridgeBuilds.self, from: Data("{}".utf8))
         XCTAssertEqual(empty, CartoucheBridgeBuilds())
@@ -56,13 +66,119 @@ final class CartoucheBridgeBuildsTests: XCTestCase {
     func testTheBuildsGoThereAndBack() throws {
         let builds = CartoucheBridgeBuilds(running: true, ready: false, why: "Importing", games: [
             Game(id: "A", name: "Alpha", state: "building", reasons: ["changes"], progress: 0.5, step: "Packing the IPA", left: 90,
-                 followed: true, stoppable: false, stopping: true),
-            Game(id: "B", name: "Beta", state: "failed", built: now.addingTimeInterval(-2 * hour), failed: now, error: "No SDK", buildable: false),
+                 followed: true, stoppable: false, stopping: true, platforms: ["ios", "mac"], makes: ["ios", "mac"], now: "ios",
+                 mac: CartoucheBridgeBuilds.MacApp(built: now.addingTimeInterval(-3 * hour))),
+            Game(id: "B", name: "Beta", state: "failed", built: now.addingTimeInterval(-2 * hour), failed: now, error: "No SDK", buildable: false,
+                 platforms: ["ios", "mac"],
+                 mac: CartoucheBridgeBuilds.MacApp(built: now.addingTimeInterval(-5 * hour), failed: now.addingTimeInterval(-hour),
+                                                   error: "No Metal", due: true)),
         ], due: 3, nightly: CartoucheBridgeBuilds.Nightly(on: true, hour: 4, minute: 15))
         let back = try JSONDecoder().decode(CartoucheBridgeBuilds.self, from: JSONEncoder().encode(builds))
         XCTAssertEqual(back, builds)
         XCTAssertEqual(back.games[1].failedDate, now)
         XCTAssertEqual(back.games[1].builtDate, now.addingTimeInterval(-2 * hour))
+        XCTAssertEqual(back.games[0].mac?.builtDate, now.addingTimeInterval(-3 * hour))
+        XCTAssertEqual(back.games[1].mac?.due, true)
+
+        // A Mac app with what is wrong at its default: not due.
+        let app = try JSONDecoder().decode(CartoucheBridgeBuilds.MacApp.self, from: Data(#"{"built": "today", "due": "yes", "later": 1}"#.utf8))
+        XCTAssertEqual(app, CartoucheBridgeBuilds.MacApp())
+    }
+
+    // MARK: What a build is for
+
+    func testWhatABuildIsFor() {
+        typealias Targets = CartoucheBuildTargets
+        // In the order a build makes them, the one it makes now among them;
+        // nil with none the iPhone knows.
+        XCTAssertEqual(Targets(["mac", "ios"])?.platforms, [.iPhone, .mac])
+        XCTAssertEqual(Targets(["ios", "mac"], now: "mac")?.now, .mac)
+        XCTAssertNil(Targets(["ios"], now: "mac")?.now)
+        XCTAssertNil(Targets(["tv"]))
+        XCTAssertNil(Targets([String]?.none))
+        XCTAssertNil(Targets([Targets.Platform]()))
+        XCTAssertEqual(Targets(["mac", "tv"])?.names, ["mac"])
+        // Its line.
+        XCTAssertEqual(Targets(["ios"])?.line, .iPhone)
+        XCTAssertEqual(Targets(["mac"], now: "mac")?.line, .mac)
+        XCTAssertEqual(Targets(["ios", "mac"])?.line, .both)
+        XCTAssertEqual(Targets(["ios", "mac"], now: "ios")?.line, .iPhoneThenMac)
+        XCTAssertEqual(Targets(["ios", "mac"], now: "mac")?.line, .macAfterIPhone)
+
+        // Building: what its build makes, and the part it makes now; waiting
+        // its turn, what it will make; else what the Mac builds the game for.
+        let building = Game(id: "A", name: "Alpha", state: "building", platforms: ["ios", "mac"], makes: ["ios", "mac"], now: "mac")
+        XCTAssertEqual(building.targets?.line, .macAfterIPhone)
+        let waiting = Game(id: "A", name: "Alpha", state: "queued", turn: 1, platforms: ["ios", "mac"], makes: ["mac"], now: "mac")
+        XCTAssertEqual(waiting.targets?.line, .mac)
+        XCTAssertNil(waiting.targets?.now)
+        let upToDate = Game(id: "A", name: "Alpha", state: "up_to_date", built: now, platforms: ["ios", "mac"], makes: ["mac"])
+        XCTAssertEqual(upToDate.targets?.line, .both)
+        XCTAssertEqual(Game(id: "A", name: "Alpha", state: "due", platforms: ["mac"]).targets?.line, .mac)
+        // Building, from a Mac that does not say what its build makes: what
+        // it builds the game for.
+        XCTAssertEqual(Game(id: "A", name: "Alpha", state: "building", platforms: ["ios"]).targets?.line, .iPhone)
+        // On its sheet.
+        XCTAssertEqual(build(building, running: true).targets?.line, .macAfterIPhone)
+        XCTAssertNil(build(Game(id: "A", name: "Alpha", state: "up_to_date", built: now)).targets)
+    }
+
+    func testAGamesAppForTheMacIsDueOrFailsApart() {
+        let built = now.addingTimeInterval(-hour)
+        let app = CartoucheBridgeBuilds.MacApp(built: now.addingTimeInterval(-9 * hour), due: true)
+        // Its IPA up to date, its app for the Mac to build: built alone, as
+        // the Build button of its sheet on the Mac.
+        let due = build(Game(id: "A", name: "Alpha", state: "up_to_date", built: built, platforms: ["ios", "mac"], mac: app))
+        XCTAssertEqual(due.status, .macDue(built: built))
+        XCTAssertEqual(due.action, .buildMac)
+        XCTAssertTrue(due.asksDue)
+        // A batch running: after its games, its app alone still.
+        let queued = build(Game(id: "A", name: "Alpha", state: "up_to_date", built: built, platforms: ["ios", "mac"], mac: app), running: true)
+        XCTAssertEqual(queued.action, .addToQueue)
+        XCTAssertTrue(queued.asksDue)
+
+        // Its IPA up to date, its app's last build failed since its last.
+        let failedApp = CartoucheBridgeBuilds.MacApp(built: now.addingTimeInterval(-9 * hour), failed: now, error: "No Metal")
+        let failed = build(Game(id: "A", name: "Alpha", state: "up_to_date", built: built, platforms: ["ios", "mac"], mac: failedApp))
+        XCTAssertEqual(failed.status, .macFailed(at: now, error: "No Metal"))
+        XCTAssertEqual(failed.action, .buildAgain)
+        XCTAssertFalse(failed.asksDue)
+        // Built again since: up to date; never built, failed: failed.
+        let builtSince = CartoucheBridgeBuilds.MacApp(built: now, failed: now.addingTimeInterval(-2 * hour), error: "No Metal")
+        XCTAssertEqual(build(Game(id: "A", name: "Alpha", state: "up_to_date", built: built, mac: builtSince)).status, .upToDate(built: built))
+        XCTAssertEqual(build(Game(id: "A", name: "Alpha", state: "up_to_date", built: built, mac: CartoucheBridgeBuilds.MacApp(failed: now))).status,
+                       .macFailed(at: now, error: nil))
+        // Its IPA failed since its last build: said first.
+        let both = build(Game(id: "A", name: "Alpha", state: "failed", built: built, failed: now, error: "No SDK", mac: failedApp))
+        XCTAssertEqual(both.status, .failed(at: now, error: "No SDK"))
+        // Up to date, as the Mac says of a game whose app for the Mac alone
+        // is due: up to date to an iPhone that does not know.
+        XCTAssertFalse(build(Game(id: "A", name: "Alpha", state: "up_to_date", built: built)).asksDue)
+        XCTAssertEqual(build(Game(id: "A", name: "Alpha", state: "up_to_date", built: built)).action, .buildAgain)
+    }
+
+    func testEachFailureSaysWhatItWasFor() {
+        let builds = CartoucheBridgeBuilds(games: [
+            // Its IPA failed an hour ago, its app for the Mac three hours ago.
+            Game(id: "A", name: "Alpha", state: "failed", built: now.addingTimeInterval(-5 * hour), failed: now.addingTimeInterval(-hour),
+                 error: "No SDK", platforms: ["ios", "mac"],
+                 mac: CartoucheBridgeBuilds.MacApp(built: now.addingTimeInterval(-6 * hour), failed: now.addingTimeInterval(-3 * hour), error: "No Metal")),
+            // Built for the Mac alone: its own dates are its app's.
+            Game(id: "B", name: "Beta", state: "failed", failed: now.addingTimeInterval(-2 * hour), error: "No Metal either", platforms: ["mac"]),
+            // A Mac that does not say what for.
+            Game(id: "C", name: "Gamma", state: "failed", failed: now.addingTimeInterval(-4 * hour), error: "Stopped"),
+            // Building: none of its failures.
+            Game(id: "D", name: "Delta", state: "building", failed: now, platforms: ["ios", "mac"],
+                 mac: CartoucheBridgeBuilds.MacApp(failed: now)),
+        ])
+        let failures = builds.failures
+        XCTAssertEqual(failures.map(\.id), ["A", "B", "A mac", "C"])
+        XCTAssertEqual(failures.map(\.platform), [.iPhone, .mac, .mac, nil])
+        XCTAssertEqual(failures.map(\.error), ["No SDK", "No Metal either", "No Metal", "Stopped"])
+        XCTAssertEqual(failures.map(\.date), [-hour, -2 * hour, -3 * hour, -4 * hour].map(now.addingTimeInterval))
+        XCTAssertTrue(failures.allSatisfy(\.failed))
+        // A game's last build, its IPA's: its app's failure is apart.
+        XCTAssertEqual(builds.done().map(\.id), ["A", "B", "C"])
     }
 
     func testBuildingWaitingAndDone() {
@@ -223,7 +339,7 @@ final class CartoucheBridgeBuildsTests: XCTestCase {
         let after = CartoucheBridgeBuilds(running: true, games: [Game(id: "A", name: "Alpha", state: "building", built: now)])
         let serving = Task { () throws -> [CartoucheBridgeRequest] in
             var requests: [CartoucheBridgeRequest] = []
-            for _ in 0..<3 {
+            for _ in 0..<4 {
                 let (request, _) = try await server.receive(CartoucheBridgeRequest.self)
                 requests.append(request)
                 var response = CartoucheBridgeResponse()
@@ -243,10 +359,16 @@ final class CartoucheBridgeBuildsTests: XCTestCase {
         XCTAssertEqual(builds, before)
         let built = try await client.build("A")
         XCTAssertEqual(built, after)
+        // What is due of it: its app for the Mac alone, when that alone is.
+        _ = try await client.build("A", due: true)
         let requests = try await serving.value
-        XCTAssertEqual(requests.map(\.op), [.info, .builds, .build])
+        XCTAssertEqual(requests.map(\.op), [.info, .builds, .build, .build])
         XCTAssertEqual(requests[2].game, "A")
         XCTAssertNil(requests[1].game)
+        // Left out unless asked: a Mac that does not know it builds the game
+        // whole, as before.
+        XCTAssertNil(requests[2].due)
+        XCTAssertEqual(requests[3].due, true)
     }
 
     func testTheRestOfTheMacsWindowOverASession() async throws {

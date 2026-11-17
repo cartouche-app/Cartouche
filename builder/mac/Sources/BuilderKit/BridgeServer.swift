@@ -52,9 +52,11 @@ public protocol BridgeBuildsSource: AnyObject {
     /// The builds now (BridgeBuilds.shared).
     func bridgeBuilds() -> CartoucheBridgeBuilds
     /// Builds the game TITLE_ID, as its Build button does, at once or after
-    /// the games of the batch running. Throws what the iPhone shows when the
-    /// Mac cannot.
-    func bridgeBuild(_ titleID: String) throws
+    /// the games of the batch running: what is due of it (DUE: its app for
+    /// this Mac alone, when that alone is due), else all of it again, as
+    /// an iPhone that does not say asks. Throws what the iPhone shows when
+    /// the Mac cannot.
+    func bridgeBuild(_ titleID: String, due: Bool) throws
     /// Builds what is due, as Build what is due does: at once, or after the
     /// games of the batch running.
     func bridgeBuildDue() throws
@@ -398,7 +400,7 @@ public final class BridgeServer: @unchecked Sendable {
     static func ask(_ source: BridgeBuildsSource, _ request: CartoucheBridgeRequest) async throws {
         switch request.op {
         case .build:
-            try source.bridgeBuild(try game(of: request))
+            try source.bridgeBuild(try game(of: request), due: request.due == true)
         case .buildDue:
             try source.bridgeBuildDue()
         case .stop:
