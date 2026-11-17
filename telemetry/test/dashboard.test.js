@@ -824,13 +824,50 @@ test("what needs a look comes first, the most serious and the widest first", () 
   const byKey = Object.fromEntries(model.attention.map((item) => [item.key, item]));
   assert.deepEqual([byKey.signIn.cause, byKey.signIn.causeCopies, byKey.signIn.section], ["appleServer", 3, "parcours"]);
   assert.deepEqual([byKey.game.game, byKey.game.status], ["0100000000010000", "none"]);
-  assert.deepEqual([byKey.build.commit, byKey.build.failed, byKey.build.stage], ["deadbeef00aa", 3, "app build"]);
+  // Its game on each of the two Macs, though the first tried twice.
+  assert.deepEqual([byKey.build.commit, byKey.build.failed, byKey.build.regressions, byKey.build.stage], ["deadbeef00aa", 2, 0, "app build"]);
   assert.deepEqual([byKey.crash.signal, byKey.crash.pc, byKey.crash.count], [6, "__pthread_kill+0x8", 2]);
   assert.deepEqual([byKey.memory.game, byKey.memory.peak, byKey.memory.limit], ["0400C3F00006E000", 6000, 6143]);
   assert.deepEqual([byKey.newError.version, byKey.newError.origin, byKey.newError.stage, byKey.newError.count], ["0.11.2", "signIn", "account", 3]);
   assert.equal(model.attentionMore, 0);
   // Below the thresholds, nothing.
   assert.deepEqual(build([eventOf(1, "app.opened", {}), sessionOf(1), sessionOf(2)]).attention, []);
+});
+
+test("a commit counts each game of each Mac once, as its last try ended, and the games that built before apart", () => {
+  const mac = (n, name, game, fields) => eventOf(200 + n, name, fields, { device: "Mac16,7", ios: "27.2.1", cartouche: "0.6.1", game });
+  const [smo, botw, pokopia, oot, splatoon] = ["0100000000010000", "01007EF00011E000", "0400A3A01EE4C000", "0400486024DEC000", "0400380020056000"];
+  const split = { stage: "shader split", cause: "nxnative", reasons: "named" };
+  const model = build([
+    // Two Macs built their game with the commit before…
+    mac(1, "builder.built", smo, { nxnative: "aaaaaaaaaaaa" }),
+    mac(2, "builder.built", botw, { nxnative: "aaaaaaaaaaaa" }),
+    // …which no longer builds with the next one.
+    mac(1, "builder.failed", smo, { nxnative: "bbbbbbbbbbbb", ...split }),
+    mac(2, "builder.failed", botw, { nxnative: "bbbbbbbbbbbb", ...split }),
+    // A third Mac builds a game with it, and tries five times a game it never built, whose files stop the build.
+    mac(3, "builder.built", oot, { nxnative: "bbbbbbbbbbbb" }),
+    ...[1, 2, 3, 4, 5].map(() => mac(3, "builder.failed", pokopia, { nxnative: "bbbbbbbbbbbb", stage: "check v655360 files", cause: "nxnative", reasons: "forced,new" })),
+    // A fourth tries four times, with a later commit, a game it never built: nothing builds with that commit, on one Mac.
+    ...[1, 2, 3, 4].map(() => mac(4, "builder.failed", splatoon, { nxnative: "cccccccccccc", stage: "check v65536 files", cause: "crashed", reasons: "forced,new" })),
+  ]);
+  const commits = Object.fromEntries(model.builder.byCommit.map((row) => [row.commit, row]));
+  const pick = (row) => [row.built, row.failed, row.tries, row.regressions, row.regressedMacs, row.macs, row.failedMacs, row.stage];
+  assert.deepEqual(pick(commits.bbbbbbbbbbbb), [1, 3, 7, 2, 2, 3, 3, "shader split"]);
+  assert.deepEqual(pick(commits.cccccccccccc), [0, 1, 4, 0, 0, 1, 1, "check v65536 files"]);
+  assert.deepEqual(pick(commits.aaaaaaaaaaaa), [2, 0, 0, 0, 0, 2, 0, null]);
+  // What needs a look: the commit that broke two Macs' games, not the Mac that tries again and again.
+  assert.deepEqual(model.attention.filter((item) => item.key === "build").map((item) => [item.commit, item.copies, item.regressions, item.failed, item.stage]), [
+    ["bbbbbbbbbbbb", 2, 2, 3, "shader split"],
+  ]);
+  // The failures: each try, of a game on each of four Macs.
+  assert.deepEqual([model.builder.failed.count, model.builder.failed.macGames, model.builder.failed.macs], [11, 4, 4]);
+  // A game that builds again after a failure with the same commit counts as built.
+  const again = build([
+    mac(5, "builder.failed", smo, { nxnative: "dddddddddddd", stage: "check v0 files", cause: "nxnative", reasons: "new" }),
+    mac(5, "builder.built", smo, { nxnative: "dddddddddddd", reasons: "forced,new" }),
+  ]);
+  assert.deepEqual(pick(again.builder.byCommit[0]), [1, 0, 1, 0, 0, 1, 0, null]);
 });
 
 test("the sample data fills every section, and is the same each time", () => {

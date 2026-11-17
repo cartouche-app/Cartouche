@@ -436,7 +436,7 @@
 
     // What "À regarder" lists: how many points at most, and from how many
     // copies, iPhones, Macs or failures each kind is worth a look.
-    const ATTENTION = { items: 8, signInCopies: 3, gameIphones: 2, buildFailures: 3, newErrorCopies: 2, crashIphones: 2, memoryShare: 0.95 };
+    const ATTENTION = { items: 8, signInCopies: 3, gameIphones: 2, buildMacs: 2, newErrorCopies: 2, crashIphones: 2, memoryShare: 0.95 };
 
     // Every field of a session the page shows, so that a field the server
     // starts to send is not left out (telemetry/test/dashboard.test.js).
@@ -1067,6 +1067,20 @@
         const cleaned = mac("builder.cleaned");
         const paired = mac("builder.paired");
         const reasons = (list) => countBy(list.flatMap((event) => (text(event.fields.reasons) ?? "").split(",").filter(Boolean).map((reason) => ({ install: event.install, reason }))), (item) => item.reason);
+        // A game of a Mac. A player who builds a failing game again and again
+        // sends a failure each time: a commit counts each game of each Mac
+        // once, at its last try with it, and says apart how many tries failed.
+        const gameOfMac = (event) => event.install + "|" + gameId(event);
+        // When each game of each Mac first built (its seq). A failure after it
+        // is a regression: a game that built on that Mac and no longer does,
+        // what a commit nxnative broke does to the games it touches, where a
+        // game that never built may fail for its own files.
+        const firstBuilt = new Map();
+        for (const event of built) {
+            const key = gameOfMac(event);
+            if (!firstBuilt.has(key) || (event.seq ?? 0) < firstBuilt.get(key)) firstBuilt.set(key, event.seq ?? 0);
+        }
+        const regressed = (event) => firstBuilt.has(gameOfMac(event)) && firstBuilt.get(gameOfMac(event)) < (event.seq ?? 0);
         const builder = {
             macs: macs.length,
             events: macEvents.length,
@@ -1092,20 +1106,31 @@
             },
             failed: {
                 count: failed.length,
+                // The games of Macs the failures are of, and those Macs.
+                macGames: new Set(failed.map(gameOfMac)).size,
+                macs: new Set(failed.map((event) => event.install)).size,
                 stages: countBy(failed, (event) => text(event.fields.stage)),
                 reasons: reasons(failed),
                 games: countBy(failed, (event) => gameId(event)).map((row) => ({ ...row, name: gameOf(catalog, row.key).name })).slice(0, 8),
             },
             // What each nxnative commit gave the Macs that built with it, the
-            // latest first: a commit nxnative broke fails on every Mac.
+            // latest days first: each game of each Mac once, as its last try
+            // with the commit ended. A commit nxnative broke fails games that
+            // built before, on several Macs (regressions); a game a Mac never
+            // built, tried again and again, is one failure of that Mac's.
             byCommit: [...groupBy([...built, ...failed], (event) => text(event.fields.nxnative))]
                 .map(([commit, list]) => {
-                    const ok = list.filter((event) => event.name === "builder.built");
-                    const ko = list.filter((event) => event.name === "builder.failed");
+                    const last = latestBy(list, gameOfMac);
+                    const ok = last.filter((event) => event.name === "builder.built");
+                    const ko = last.filter((event) => event.name === "builder.failed");
+                    const back = ko.filter(regressed);
                     return {
                         commit,
                         built: ok.length,
                         failed: ko.length,
+                        tries: list.filter((event) => event.name === "builder.failed").length,
+                        regressions: back.length,
+                        regressedMacs: new Set(back.map((event) => event.install)).size,
                         macs: new Set(list.map((event) => event.install)).size,
                         failedMacs: new Set(ko.map((event) => event.install)).size,
                         games: new Set(list.map((event) => gameId(event)).filter(Boolean)).size,
@@ -1256,9 +1281,13 @@
                 attention.push({ key: "game", tone: judged.status === "none" ? "critical" : "serious", copies: judged.iphones, game: game.id, name: game.name, status: judged.status, bad: judged.ends.bad, sessions: judged.sessions, ends: judged.ends });
             }
         }
+        // A commit nxnative broke: games that built fail with it on several
+        // Macs, or no Mac builds anything with it. One Mac trying its games
+        // again and again is not enough.
         for (const commit of builder.byCommit) {
-            if (commit.commit && !commit.built && commit.failed >= ATTENTION.buildFailures) {
-                attention.push({ key: "build", tone: "serious", copies: commit.failedMacs, commit: commit.commit, failed: commit.failed, stage: commit.stage, last: commit.last, section: "builder" });
+            const broke = commit.regressedMacs >= ATTENTION.buildMacs;
+            if (commit.commit && (broke || (!commit.built && commit.failedMacs >= ATTENTION.buildMacs))) {
+                attention.push({ key: "build", tone: "serious", copies: broke ? commit.regressedMacs : commit.failedMacs, commit: commit.commit, failed: commit.failed, regressions: broke ? commit.regressions : 0, stage: commit.stage, last: commit.last, section: "builder" });
             }
         }
         for (const row of errorsView.byCode) {
@@ -2234,11 +2263,18 @@
                         ? "Aucune image affichée, sur " + plural(item.copies, "iPhone", "iPhones") + "."
                         : plural(item.bad, "partie", "parties") + " sur " + count(item.sessions) + " finie" + (item.bad > 1 ? "s" : "") + " mal (" + M.ENDS.filter((kind) => kind !== "ok" && kind !== "unknown" && item.ends[kind]).map((kind) => ENDS[kind].toLowerCase() + " " + count(item.ends[kind])).join(", ") + ").",
                 ];
-            case "build":
-                return [
-                    "nxnative " + item.commit.slice(0, 8) + " : aucune construction réussie",
-                    sentence(plural(item.failed, "échec", "échecs") + (item.stage ? ", surtout à l'étape « " + item.stage + " »" : "") + ", le dernier le " + dayText(item.last)),
-                ];
+            case "build": {
+                const where = (item.stage ? ", surtout à l'étape « " + item.stage + " »" : "") + ", le dernier le " + dayText(item.last);
+                return item.regressions
+                    ? [
+                        "nxnative " + item.commit.slice(0, 8) + " : des jeux qui se construisaient échouent",
+                        sentence(plural(item.regressions, "jeu déjà construit sur ces Macs échoue", "jeux déjà construits sur ces Macs échouent") + " avec lui" + where),
+                    ]
+                    : [
+                        "nxnative " + item.commit.slice(0, 8) + " : aucune construction réussie",
+                        sentence(plural(item.failed, "jeu en échec", "jeux en échec") + where),
+                    ];
+            }
             case "newError": {
                 const stage = item.stage ? (item.origin === "signIn" ? SIGN_IN_STAGES[item.stage] || item.stage : item.stage) : null;
                 return [
@@ -2668,12 +2704,13 @@
                 columns(b.daily.map((day) => ({ label: dayText(day.day), title: long.format(new Date(day.day + "T00:00:00Z")) + (day.failed ? " · " + plural(day.failed, "échec", "échecs") : ""), value: day.built + day.failed, figure: plural(day.built, "construit", "construits") + (day.failed ? ", " + plural(day.failed, "échec", "échecs") : ""), tone: day.failed && !day.built ? "var(--critical)" : "var(--s1)" })), { height: 120, label: "Constructions par jour" }),
                 facts([["Durée médiane", duration(has(b.built.seconds) ? b.built.seconds / 60 : null)], ["IPA médiane", has(b.built.ipaMB) ? n0.format(b.built.ipaMB) : DASH, "Mo"], ["Lots", count(b.batches.count)], ["Lot médian", duration(b.batches.minutes)]])),
             h("article", { class: "card span" }, h("h3", { text: "Par commit de nxnative" }),
-                h("p", { class: "sub", text: "Ce que chaque commit de nxnative a donné aux Macs qui ont construit avec, les plus récents d'abord : un commit que nxnative a cassé échoue sur tous les Macs." }),
+                h("p", { class: "sub", text: "Ce que chaque commit de nxnative a donné aux Macs qui ont construit avec, les jours les plus récents d'abord. Chaque jeu d'un Mac compte une fois, comme son dernier essai a fini : un jeu relancé dix fois ne fait qu'un échec. Une régression est un jeu que ce Mac construisait et qui échoue avec ce commit : un commit que nxnative a cassé en fait sur plusieurs Macs." }),
                 table([
                     { label: "Commit", mono: true, cell: (row) => row.commit ? row.commit.slice(0, 12) : "inconnu" },
                     { label: "Réussite", cell: (row) => h("span", { class: "verdict", "--tone": toneOf(row.built / Math.max(1, row.built + row.failed), 0.8, 0.5) }, h("i"), percent(row.built / Math.max(1, row.built + row.failed))), sort: (row) => row.built / Math.max(1, row.built + row.failed), numeric: true },
                     { label: "Construits", numeric: true, cell: (row) => count(row.built), sort: (row) => row.built },
-                    { label: "Échecs", numeric: true, cell: (row) => count(row.failed), sort: (row) => row.failed },
+                    { label: "Échecs", numeric: true, cell: (row) => [count(row.failed), row.tries > row.failed ? h("small", { text: " en " + plural(row.tries, "essai", "essais") }) : null], sort: (row) => row.failed },
+                    { label: "Régressions", numeric: true, cell: (row) => (row.regressions ? [count(row.regressions), h("small", { text: " sur " + plural(row.regressedMacs, "Mac", "Macs") })] : DASH), sort: (row) => row.regressions },
                     { label: "Macs", numeric: true, cell: (row) => [count(row.macs), row.failedMacs ? h("small", { text: " dont " + count(row.failedMacs) + " en échec" }) : null], sort: (row) => row.macs },
                     { label: "Jeux", numeric: true, cell: (row) => count(row.games), sort: (row) => row.games },
                     { label: "Étape des échecs", cell: (row) => row.stage || DASH },
@@ -2681,7 +2718,7 @@
                 ], b.byCommit, { empty: "Aucune construction sur cette période." })),
             card("Pourquoi construire", "Ce qui a fait construire chaque jeu, à nouveau ou pour la première fois.", ranked(b.built.reasons, (key) => REBUILD[key] || key),
                 h("p", { class: "foot", text: "Sources : " + (b.built.sources.map((item) => item.key + " (" + count(item.count) + ")").join(", ") || DASH) })),
-            card("Échecs", plural(b.failed.count, "échec", "échecs") + " de construction.",
+            card("Échecs", plural(b.failed.count, "échec", "échecs") + " de construction" + (b.failed.count ? ", de " + plural(b.failed.macGames, "jeu", "jeux") + " sur " + plural(b.failed.macs, "Mac", "Macs") + " : un jeu relancé compte à chaque essai." : "."),
                 ranked(b.failed.stages, (key) => "Étape " + key),
                 h("p", { class: "foot", text: "Raisons : " + (b.failed.reasons.map((item) => (REBUILD[item.key] || item.key) + " (" + count(item.count) + ")").join(", ") || DASH) + " · Jeux : " + (b.failed.games.map((item) => gameName(item.key, item.name)).join(", ") || DASH) })),
             card("Installation des outils et entretien", null,
