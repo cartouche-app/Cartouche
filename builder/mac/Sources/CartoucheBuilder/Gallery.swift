@@ -90,10 +90,7 @@ enum Gallery {
             }
         }
 
-        /// Whether the page is the help on naming, the sheet it is.
-        var isNaming: Bool { self == .names || self == .namesDumps }
-
-        var inEnglish: Bool { [.library, .game, .gameQueue, .setup, .menubar, .assistantWelcome, .assistantGames, .console, .names].contains(self) }
+        var inEnglish: Bool { [.library, .game, .gameQueue, .setup, .menubar, .assistantWelcome, .assistantGames, .console].contains(self) }
 
         /// The window as the app opens it: the settings as the Settings
         /// scene does, the menu bar's panel without a frame, the setup
@@ -107,6 +104,9 @@ enum Gallery {
             default: return [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
             }
         }
+
+        /// Whether the page is the help on naming, the sheet it is.
+        var isNaming: Bool { self == .names || self == .namesDumps }
     }
 
     /// Pictures AppKit drew itself, as ScreenCaptureKit could not take them.
@@ -138,6 +138,10 @@ enum Gallery {
         var saved = 0
         for language in ["fr", "en"] {
             L10n.use(language)
+            // The console speaks it too, as once the app read its settings
+            // (AppModel): its words show in the builder's, as the help on
+            // naming the games' title in the settings.
+            ConsoleLink.speak()
             for page in Page.allCases where language == "fr" || page.inEnglish {
                 for dark in page.isConsole ? [true] : language == "fr" ? [false, true] : [false] {
                     let file = folder.appendingPathComponent("\(page.rawValue)-\(language)-\(dark ? "dark" : "light").png")
@@ -177,9 +181,7 @@ enum Gallery {
         let controller: NSViewController
         switch page {
         case .names, .namesDumps:
-            // The sheet it is, as the setup assistant's steps are shown, in
-            // the language the console speaks, the app's.
-            ConsoleLink.speak()
+            // The sheet it is, as the setup assistant's steps are shown.
             controller = hosted(NamingHelp(onDumps: page == .namesDumps)
                                     .background(Color(nsColor: .windowBackgroundColor))
                                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous)),
