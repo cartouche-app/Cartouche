@@ -70,6 +70,14 @@ enum Gallery {
         // the top of the window: as the game page, whatever the Mac's
         // appearance.
         case gameAfterConsole = "game-after-console"
+        // A game whose shaders nxnative's newest commit splits otherwise
+        // than its profile says (decision 133), as Mario Kart World's since
+        // nxnative's 8d62601f of 16 November 2026: built in a batch from
+        // the commit before nxnative's splitter changed, alone, the other
+        // games from the newest, with what the batch said open, in a window
+        // as tall as the page; and its sheet once built, held there, down to
+        // its build.
+        case activitySplit = "activity-split", gameSplit = "game-split"
 
         /// Whether the page is the console's, which is always dark.
         var isConsole: Bool {
@@ -84,7 +92,8 @@ enum Gallery {
         /// Whether the page is in a window taller than the screen, as tall
         /// as the page, which AppKit would fit to the screen.
         var isTall: Bool {
-            isWholeSheet || [.storageMac, .iphoneGames, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport].contains(self)
+            isWholeSheet || [.storageMac, .iphoneGames, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport,
+                             .activitySplit, .gameSplit].contains(self)
         }
 
         /// The page of the sheet's saves it opens over the sheet.
@@ -130,6 +139,11 @@ enum Gallery {
             case .consoleReport: return CGSize(width: 1024, height: 1500)
             // The whole System page, down to Report a problem.
             case .consoleSystem: return CGSize(width: 1024, height: 980)
+            // The game building, the games built, and what the batch said.
+            case .activitySplit: return CGSize(width: 1024, height: 1060)
+            // The sheet down to its build: why it is up to date, and the
+            // commit it was built from.
+            case .gameSplit: return CGSize(width: 1024, height: 1150)
             // The window at its smallest, with a game's sheet whose
             // nxnative commits are a paragraph each, as nxnative writes them.
             case .gameNarrow: return CGSize(width: Columns.window.width, height: 680)
@@ -139,7 +153,8 @@ enum Gallery {
         }
 
         var inEnglish: Bool {
-            [.library, .game, .gameQueue, .setup, .menubar, .assistantWelcome, .assistantGames, .console, .consoleStorage].contains(self)
+            [.library, .game, .gameQueue, .setup, .menubar, .assistantWelcome, .assistantGames, .console, .consoleStorage,
+             .activitySplit, .gameSplit].contains(self)
         }
 
         /// The window as the app opens it: the settings as the Settings
@@ -184,7 +199,7 @@ enum Gallery {
             FileHandle.standardError.write(Data("gallery: the samples do not decode: \(error)\n".utf8))
             exit(1)
         }
-        loadCovers(samples.library.games.map(\.titleID) + [Gallery.unbuilt.titleID])
+        loadCovers(samples.library.games.map(\.titleID) + [Gallery.unbuilt.titleID, Gallery.splitTitleID])
         var saved = 0
         for language in ["fr", "en"] {
             L10n.use(language)
@@ -276,7 +291,7 @@ enum Gallery {
             } else {
                 // The window as the app shows it: the builder, below the
                 // switch to the console.
-                controller = hosted(MainView(), model)
+                controller = hosted(MainView(showingDetails: page == .activitySplit), model)
             }
         }
         let frame = CGRect(origin: CGPoint(x: 80, y: 80), size: size)
@@ -491,6 +506,16 @@ enum Gallery {
             if page == .gameUnbuilt {
                 library.games.append(Gallery.unbuilt)
             }
+            // Mario Kart World, built from the commit before nxnative's
+            // splitter changed: in the batch, Kirby building after it from
+            // the newest.
+            let split = page == .activitySplit
+            if split || page == .gameSplit {
+                library.games.append(Gallery.splitGame)
+            }
+            if split, let index = library.games.firstIndex(where: { $0.titleID == "01004D300C5AE000" }) {
+                library.games[index].state = .building
+            }
             if building {
                 // The library as the engine gives it while the batch runs:
                 // Kirby built in it, for the iPhone and this Mac, Mario Kart
@@ -504,7 +529,8 @@ enum Gallery {
                     if let state = states[library.games[index].titleID] { library.games[index].state = state }
                 }
             }
-            let model = AppModel.sampled(library: library, status: building ? self.building : nil, storage: storage, config: config, info: info,
+            let model = AppModel.sampled(library: library, status: building ? self.building : split ? Gallery.splitBatch : nil,
+                                         storage: storage, config: config, info: info,
                                          unbuilt: page == .gameUnbuilt ? [Gallery.unbuilt.titleID: Gallery.unbuiltFigures] : [:])
             if building {
                 model.preview(queue: BuildQueue(games: [.init(titleID: "0100000000010000", force: true, batch: 4242, added: ""),
@@ -513,14 +539,17 @@ enum Gallery {
             switch page {
             case .library, .activity, .storage, .iphone: model.section = AppSection(rawValue: page.rawValue) ?? .library
             case .storageMac: model.section = .storage
+            case .activitySplit: model.section = .activity
             case .iphoneTailscale, .iphoneGames: model.section = .iphone
-            case .libraryRoom, .game, .gameNarrow, .gameNewer, .gameQueue, .gameXcode, .gameUnbuilt, .gameAfterConsole: model.section = .library
+            case .libraryRoom, .game, .gameNarrow, .gameNewer, .gameQueue, .gameXcode, .gameUnbuilt, .gameAfterConsole, .gameSplit:
+                model.section = .library
             case .setup, .setupXcode: model.section = .setup
             default: break
             }
             if page == .game || page == .gameNarrow || page == .gameNewer || page == .gameAfterConsole { model.selection = "0100152000022000" }
             if page == .gameXcode { model.selection = "01004D300C5AE000" }
             if page == .gameUnbuilt { model.selection = Gallery.unbuilt.titleID }
+            if page == .gameSplit { model.selection = Gallery.splitTitleID }
             // A game up to date, while a batch runs: added to its queue.
             if page == .gameQueue { model.selection = "01006F8002326000" }
             if page == .setup || page == .assistantTools {
@@ -659,6 +688,83 @@ enum Gallery {
     }
 
     static let unbuiltFigures = UnbuiltGame(titleID: "0400A3A01EE4C000", macs: 4, failures: 8, hours: 4.7, stage: "iOS shaders")
+
+    /// Mario Kart World, whose shaders nxnative's newest commit splits
+    /// otherwise than its profile says, as its 8d62601f of 16 November 2026
+    /// did: built from 24e007be, the commit before nxnative's splitter
+    /// changed, its Mac app too, the others from the newest, and held
+    /// there until nxnative has a newer commit (decision 133), with what
+    /// the engine says of it (texts.py). Its folders and sizes are made up.
+    static let splitTitleID = "0400C3F00006E000"
+    static let beforeSplitter = "24e007bed7c2"
+
+    static var splitGame: Game {
+        let newest = String(head.prefix(12))
+        let held = tr("Up to date (built from nxnative \(beforeSplitter): nxnative \(newest), its newest commit, reads its shaders otherwise than its profile for now)",
+                      "À jour (construit avec nxnative \(beforeSplitter) : nxnative \(newest), son dernier commit, lit ses shaders autrement que son profil pour l'instant)")
+        let game: [String: Any] = [
+            "title_id": splitTitleID, "name": "Mario Kart World", "kind": "nup", "source": "/Volumes/Jeux/Switch/Mario Kart World",
+            "source_size": 21_474_836_480, "followed": true, "profile": true, "state": "up_to_date", "reasons": ["up_to_date"], "detail": held,
+            "ipa": ["name": "Mario Kart World.ipa", "path": "/Volumes/Jeux/iPhone/Mario Kart World.ipa", "size": 18_400_000_000,
+                    "present": true] as [String: Any],
+            "build": ["commit": beforeSplitter, "built_at": "@-1400", "version": "1.0.0", "duration": 3480, "origin": "app", "toolchain": "27.2",
+                      "size": 18_400_000_000] as [String: Any],
+            "platforms": ["ios": true, "mac": true],
+            "mac": ["folder": "/Volumes/Jeux/iPhone", "packed": true, "installs": "/Users/player/Applications", "reason": "up_to_date",
+                    "library": ["name": "Mario Kart World [0400C3F00006E000].app.zip",
+                                "path": "/Volumes/Jeux/iPhone/Mario Kart World [0400C3F00006E000].app.zip", "size": 18_600_000_000,
+                                "present": true] as [String: Any],
+                    "build": ["commit": beforeSplitter, "built_at": "@-700", "version": "1.0.0", "duration": 900,
+                              "size": 18_600_000_000] as [String: Any]] as [String: Any],
+        ]
+        return decoded(Game.self, game)
+    }
+
+    /// The batch that built it, as the engine says it (status.py, texts.py):
+    /// Mario Kart World built from the commit before nxnative's splitter
+    /// changed, the batch back to the newest, Kirby building from there.
+    static var splitBatch: BatchStatus {
+        let newest = String(head.prefix(12))
+        let name = "Mario Kart World"
+        let lines = [
+            "\(name): " + tr("nxnative \(newest) reads its shaders otherwise than its profile says (shader split): trying again from \(beforeSplitter), from before nxnative changed how it reads them…",
+                             "nxnative \(newest) lit ses shaders autrement que ne le dit son profil (« shader split ») : nouvel essai avec \(beforeSplitter), d'avant le changement de sa lecture des shaders…"),
+            tr("\(name): going to nxnative \(beforeSplitter), from before nxnative changed how it reads shaders…",
+               "\(name) : passage à nxnative \(beforeSplitter), d'avant le changement de sa lecture des shaders…"),
+            "\(name): " + tr("IPA copied to the games folder (18.4 GB)", "IPA copiée dans le dossier des jeux (18,4 Go)"),
+            tr("\(name) built from nxnative \(beforeSplitter): nxnative \(newest) reads its shaders otherwise than its profile for now. It is built from \(beforeSplitter) until nxnative has a newer commit; the other games are built from \(newest).",
+               "\(name) construit avec nxnative \(beforeSplitter) : nxnative \(newest) lit ses shaders autrement que son profil pour l'instant. Il se construit avec \(beforeSplitter) jusqu'à un commit plus récent de nxnative ; les autres jeux se construisent avec \(newest)."),
+            tr("Back to nxnative \(newest)…", "Retour à nxnative \(newest)…"),
+            "Kirby and the Forgotten Land: " + tr("extracted", "extrait"),
+            "Kirby and the Forgotten Land: shaders 1088/2410",
+        ]
+        let status: [String: Any] = [
+            "pid": 4242, "scheduled": false, "state": "building", "started": "@-4900", "updated": "@-1", "head": head, "latest": head, "running": true,
+            "games": [
+                ["title_id": splitTitleID, "name": name, "reasons": ["profile"], "state": "built", "started": "@-4900", "ended": "@-700",
+                 "duration": 4200, "ipa": "/Volumes/Jeux/iPhone/Mario Kart World.ipa", "commit": beforeSplitter, "fallback": true, "split": true,
+                 "makes": ["ios", "mac"], "platform": "mac", "mac": "built", "mac_only": false, "mac_duration": 900],
+                ["title_id": "01004D300C5AE000", "name": "Kirby and the Forgotten Land", "reasons": ["named"], "state": "building", "stage": "shaders",
+                 "step": tr("Pipelines 1,088 / 2,410", "Pipelines 1 088 / 2 410"), "k": 1088, "n": 2410, "frac": 0.45, "overall": 0.52, "eta": 520,
+                 "started": "@-640", "commit": newest, "fallback": false, "split": false, "makes": ["ios", "mac"], "platform": "ios", "mac": "waiting",
+                 "mac_only": false],
+            ] as [[String: Any]],
+            "lines": lines,
+        ]
+        return decoded(BatchStatus.self, status)
+    }
+
+    /// OBJECT, whose "@-SECONDS" are dates (dated), as the engine writes
+    /// it; a sample that does not decode ends the gallery, which says why.
+    static func decoded<Value: Decodable>(_ type: Value.Type, _ object: [String: Any]) -> Value {
+        do {
+            let json = try JSONSerialization.data(withJSONObject: object)
+            return try JSONDecoder().decode(type, from: dated(String(decoding: json, as: UTF8.self)))
+        } catch {
+            FileHandle.standardError.write(Data("gallery: a sample does not decode: \(error)\n".utf8))
+            exit(1)
+        }
+    }
 
     /// What the engine left aside in the sample sources folder, in the
     /// language of the page, as the engine says it (texts.py).

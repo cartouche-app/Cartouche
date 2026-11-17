@@ -334,6 +334,49 @@
       ]
     },
     {
+      "name": "iphone-sheet-new-release-whole",
+      "comment": "Ocarina of Time's sheet down to what the game needs, as the game measurements made it: its long title on two lines above its fit badge, its fit and its requirements.",
+      "screen": "sheet",
+      "sheet": "0400486024DEC000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "0400486024DEC000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 1366,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-sheet-new-release-results",
+      "comment": "Ocarina of Time's sheet on its results, which the game measurements wrote, as Cartouche says them in French.",
+      "screen": "sheet",
+      "sheet": "0400486024DEC000",
+      "category": "results",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "0400486024DEC000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-home-unknown-games",
       "screen": "games",
       "owned": [
@@ -1123,6 +1166,60 @@
       "name": "iphone-signing-own-certificate",
       "comment": "The import of the certificate a signing app on the iPhone signed Cartouche with (screen: signing, signing: iphone).",
       "screen": "signing",
+      "signing": "iphone",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-signing-wrong-password",
+      "comment": "The same, after an import whose password does not open the .p12 the player chose (work: signing-wrong-password).",
+      "screen": "signing",
+      "work": "signing-wrong-password",
+      "signing": "iphone",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-signing-profile-file",
+      "comment": "The same, after an import of the profile (.mobileprovision) the player chose in the certificate's place (work: signing-profile-file).",
+      "screen": "signing",
+      "work": "signing-profile-file",
+      "signing": "iphone",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-signing-no-own-profile",
+      "comment": "The same, in a Cartouche its signing app put no profile in (embedded.mobileprovision), after an import of the certificate (work: signing-no-own-profile).",
+      "screen": "signing",
+      "work": "signing-no-own-profile",
       "signing": "iphone",
       "owned": [],
       "setup": false,

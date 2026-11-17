@@ -176,6 +176,24 @@ class Engine:
         out = self.git("show", "-s", "--format=%ct", commit, check=False).strip()
         return int(out) if out.isdigit() else None
 
+    def last_change(self, at: str, *paths: str) -> str | None:
+        """The newest commit up to AT (AT itself included) that changed one
+        of PATHS: its full SHA, or None when none did. The partial clone
+        knows every commit's paths: no file is fetched."""
+        out = self.git("log", "-1", "--format=%H", at, "--", *paths, timeout=600).strip()
+        return out or None
+
+    def changes(self, since: str, at: str, *paths: str, limit: int) -> list[str]:
+        """The LIMIT newest commits after SINCE up to AT that changed one of
+        PATHS, newest first: their full SHAs. No file is fetched either."""
+        out = self.git("log", f"-{limit}", "--format=%H", f"{since}..{at}", "--", *paths, timeout=600)
+        return [line.strip() for line in out.splitlines() if line.strip()]
+
+    def parent(self, commit: str) -> str | None:
+        """COMMIT's first parent: its full SHA, or None for the first commit."""
+        out = self.git("rev-parse", "--verify", "--quiet", f"{commit}^1^{{commit}}", check=False).strip()
+        return out or None
+
     # ---- Profiles --------------------------------------------------------
 
     def profiles(self) -> dict[str, Profile]:

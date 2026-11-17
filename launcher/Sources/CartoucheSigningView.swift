@@ -17,6 +17,12 @@ struct CartoucheSigningView: View {
 
     private let onIPhone = CartoucheImportedSigning.isSignedOnIPhone
 
+    /// CERTIFICATE: one chosen already, as the gallery shows the page after
+    /// an import that failed.
+    init(certificate: Data? = nil) {
+        _certificate = State(initialValue: certificate)
+    }
+
     var body: some View {
         Form {
             Section {

@@ -323,6 +323,12 @@ struct CartoucheGameSheetView: View {
                         CartoucheFitBadge(fit: fit, owned: entry.app != nil)
                     }
                 }
+                // As tall as the title and its lines need, whatever the list
+                // offers: a list row first offers each part of the header a
+                // share of its height, less than the cartridge then gives it,
+                // and under the badge of a game with a sheet, a long title
+                // shrank to one line cut short, as Ocarina of Time's did.
+                .fixedSize(horizontal: false, vertical: true)
             }
 
             if let app = entry.app, actions.isRunning(app) {

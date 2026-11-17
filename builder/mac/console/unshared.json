@@ -163,6 +163,10 @@
       "kind": "iphone",
       "why": "The Apple ID sign-in for the built-in SideStore."
     },
+    "CartoucheSigningCheck.swift": {
+      "kind": "iphone",
+      "why": "Why a certificate imported for the iPhone's games does not go in: the file, its password and its key, then the profile of a Cartouche signed with the player's own certificate. A Mac game is signed by nxnative's build."
+    },
     "CartoucheSigningMaterial.swift": {
       "kind": "iphone",
       "why": "The certificate and profile an iPhone's games are signed with."

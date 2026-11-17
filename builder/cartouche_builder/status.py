@@ -10,7 +10,8 @@ turn while nxnative moves and the plan is made. A game not built says why
 skipped for the room kept free, the room free and needed); a game
 says the nxnative commit it was built from, and whether that is an older one
 than the branch's newest, which does not build (fallback.py), as the batch
-does. A game also built for this Mac says how its Mac app went (mac:
+does, or the one before nxnative's splitter changed, for its shaders alone
+(split, fallback.py). A game also built for this Mac says how its Mac app went (mac:
 waiting, building, built, failed, stopped, skipped), after its IPA or alone
 (mac_only): it builds until both are done, the stage and progress being
 those of its platform now (platform). Once planned, a game says what its
@@ -66,6 +67,7 @@ class Game:
     duration: float = 0.0
     commit: str = ""  # the nxnative commit it was built (or tried) from, 12 digits
     fallback: bool = False  # from an older commit, the newest not building
+    split: bool = False  # from the commit before nxnative's splitter changed, for this game alone (fallback.py)
     cause: str = ""  # why it was not built (causes.py)
     exit: int | None = None  # nxnative's exit code, when it ran
     failure: dict = field(default_factory=dict)  # the exception, where and errno (failure.py)
@@ -208,6 +210,7 @@ class Status:
                 self.write(force=True)
             elif kind == "commit":
                 game.commit, game.fallback = str(value.get("commit") or ""), bool(value.get("fallback"))
+                game.split = bool(value.get("split"))
                 self.write()
             elif kind == "cause":
                 game.cause = str(value.get("cause") or "")
@@ -347,6 +350,7 @@ def _game_json(game: Game) -> dict:
         "duration": round(game.duration, 1),
         "commit": game.commit,
         "fallback": game.fallback,
+        "split": game.split,
         "cause": game.cause,
         "exit": game.exit,
         "failure": game.failure,

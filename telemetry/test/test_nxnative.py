@@ -499,6 +499,11 @@ class NxnativePageTest(unittest.TestCase):
         # A game two Macs failed: too few to say.
         for mac in self.macs[:2]:
             self.event(mac, "builder.failed", game=SENTINELS, nxnative="aaaaaaaaaaaa", stage="app build", cause="nxnative", seconds=50)
+        # A game three Macs failed as a commit of nxnative split its shaders
+        # otherwise than its profile says, as Mario Kart World at 8d62601f:
+        # nxnative's doing, which its next commits mend, not the game's.
+        for mac in self.macs[:3]:
+            self.event(mac, "builder.failed", game="0400C3F00006E000", nxnative="aaaaaaaaaaaa", stage="shader split", cause="tables", seconds=740)
         self.run_page()
         found = json.loads((self.work / "page" / "unbuilt.json").read_text(encoding="utf-8"))
         self.assertEqual(found, {"schema": 1, "from": "2026-10-15", "to": "2026-11-11", "games": [

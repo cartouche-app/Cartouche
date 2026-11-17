@@ -16,6 +16,7 @@
         "exit": 1,
         "failure": {},
         "fallback": false,
+        "split": false,
         "frac": 1.0,
         "ipa": "",
         "k": 1,

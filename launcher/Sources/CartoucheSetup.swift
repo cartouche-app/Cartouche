@@ -439,8 +439,10 @@ final class CartoucheSetup: ObservableObject {
         guard CartoucheImportedSigning.isImportedInstall, !isImportingSigning else { return }
         isImportingSigning = true
         do {
+            // Signed on the iPhone, no profile in Cartouche: nothing the
+            // player chooses here can make up for it.
             guard let profile = profile ?? CartoucheImportedSigning.ownProfile else {
-                throw CartoucheImportedSigning.ImportError(message: CartoucheText.signingInvalidProfile, kind: "invalidProfile")
+                throw CartoucheImportedSigning.ImportError(.noOwnProfile, onIPhone: CartoucheImportedSigning.isSignedOnIPhone)
             }
             try await CartoucheImportedSigning.importMaterial(.init(certificate: certificate, password: password, profile: profile))
             signingProblem = nil

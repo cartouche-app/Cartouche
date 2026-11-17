@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "titleId": "0100152000022000",
+  "name": "Mario Kart 8 Deluxe",
+  "platform": "switch",
+  "requirements": {
+    "minimumIOS": "26.0",
+    "bcTextureCompression": true,
+    "increasedMemoryLimit": true
+  },
+  "results": [
+    {
+      "device": "iPhone19,4",
+      "iOS": "27.2.1",
+      "date": "2026-11-16",
+      "engine": "nxnative 0c078130f6db",
+      "status": "playable",
+      "peakMemoryMiB": 3582,
+      "notes": [
+        "Measured by Cartouche on 3 iPhones, 9 sessions from 2026-11-12 to 2026-11-16: 60 fps for 60 (median), 58.1 fps in the slowest 5% of the time, 12.6 stutters a minute. None ended badly."
+      ],
+      "measured": {
+        "iPhones": 3,
+        "sessions": 9,
+        "from": "2026-11-12",
+        "to": "2026-11-16",
+        "fps": 60,
+        "slowestFps": 58.1,
+        "targetFps": 60,
+        "stuttersPerMinute": 12.6,
+        "endedBadlyPercent": 0,
+        "nxnative": "0c078130f6db"
+      }
+    }
+  ]
+}

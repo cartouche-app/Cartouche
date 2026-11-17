@@ -66,7 +66,9 @@ enum CartoucheText {
                 str(ROOT / "launcher/Sources/CartoucheOwnSignature.swift"),
                 # The IPA for the player's own certificate of this version,
                 # which a copy signed elsewhere offers (isSignedElsewhere).
-                str(ROOT / "launcher/Sources/CartoucheRelease.swift"), str(adapter),
+                str(ROOT / "launcher/Sources/CartoucheRelease.swift"),
+                # Why a certificate chosen does not go in.
+                str(ROOT / "launcher/Sources/CartoucheSigningCheck.swift"), str(adapter),
             ], capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
 

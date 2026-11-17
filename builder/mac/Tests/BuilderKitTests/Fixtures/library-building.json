@@ -183,6 +183,7 @@
         "exit": null,
         "failure": {},
         "fallback": false,
+        "split": false,
         "frac": null,
         "ipa": "",
         "k": 2,

@@ -6,9 +6,12 @@ started it (locks/batch.lock). A game asked for while it runs waits its turn
 in the queue (queue.py): the batch takes it when it can start another game
 and builds it after its own, and ends once the queue is empty. nxnative's
 checkout moves only between batches, so every game of a batch is built from
-the same commit, but for one case: a game whose iOS app does not build at
+the same commit, but for two cases: a game whose iOS app does not build at
 the branch's newest commit, which makes the batch go to the last commit that
-built on this Mac once no other game builds (fallback.py).
+built on this Mac once no other game builds, and a game whose shaders the
+newest commit splits otherwise than its profile says, built alone from the
+commit before nxnative's splitter changed, the batch going back to the
+newest after it (fallback.py).
 
 The lock is also held a moment by what moves nxnative's checkout or the
 workspace outside a batch: the app's look at nxnative (api library
@@ -211,7 +214,8 @@ def survey(ctx: Context, update: bool = True, force: set[str] | None = None, log
     found = library.discover(ctx.config.path("sources"), {tid: p.name for tid, p in profiles.items()}, keys=ctx.config.path("keys"), cache=ctx.paths.identified)
     identity = toolchain.identity(toolchain.environment(ctx.paths)) if sys.platform == "darwin" else ""
     games = [g for g in found.games if g.title_id in only] if only else found.games
-    result = plan(games, ctx.engine, head, profiles, ctx.store, ctx.config, ctx.config.path("games"), identity, force, mac=macapps.place(ctx.config))
+    result = plan(games, ctx.engine, head, profiles, ctx.store, ctx.config, ctx.config.path("games"), identity, force, mac=macapps.place(ctx.config),
+                  held=fallback.splits(ctx.paths))
     result.issues = found.issues
     return result
 
@@ -229,14 +233,17 @@ def update_engine(ctx: Context, log=None) -> tuple[str | None, str | None]:
 
 @dataclass
 class _Trial:
-    """A game built again from the last commit that built, after its app
-    build failed at the branch's newest (BROKEN): alone, while the others
-    wait (Runner._next)."""
+    """A game built again from an older commit (GOOD), alone, while the others
+    wait (Runner._next): the last commit that built, after its app build
+    failed at the branch's newest (BROKEN); or ("split") the commit before
+    nxnative's splitter changed, after its split at BROKEN made other tables
+    than its profile's, the others building from BROKEN again after it."""
 
     broken: str
     good: str
     title_id: str
     state: str = "waiting"  # waiting (for the others to end), building, ended
+    kind: str = "app_build"  # or "split"
 
 
 @dataclass
@@ -284,6 +291,8 @@ class Runner:
         if self.latest != self.commit and self.latest in fallback.broken(ctx.paths):
             self.fallback = {"from": self.latest, "to": self.commit}
         self._trial: _Trial | None = None
+        # A game's split trial, while it waits for the others or builds.
+        self._split: _Trial | None = None
         self._lock = threading.Lock()
         # The games waiting their turn, and those building: under _turns.
         self._pending: deque[Entry] = deque(self.entries)
@@ -389,10 +398,9 @@ class Runner:
         waits and none builds."""
         with self._turns:
             while not self.stop.is_set():
-                if self._trial is not None and self._trial.state != "ended":
-                    # A game builds again from the last commit that built,
-                    # alone: the others wait to know which commit they build
-                    # from.
+                if self._alone() is not None:
+                    # A game builds again from an older commit, alone: the
+                    # others wait to know which commit they build from.
                     self._turns.wait(timeout=1.0)
                     continue
                 self._sync()
@@ -497,6 +505,9 @@ class Runner:
         # The commit it builds from, and is recorded at if it fails.
         commit = self.commit
         self.on_event("commit", title_id, {"commit": commit[:12], "fallback": self.fallback is not None})
+        # Its trial of the commit before nxnative's splitter changed, while it
+        # builds from there, its Mac app too (fallback.py).
+        split: _Trial | None = None
         dump: Path | None = None
         work: Path | None = None
         result: builds.Result | None = None
@@ -584,6 +595,10 @@ class Runner:
                             # The newest commit is not the cause: the failure is
                             # recorded at it, which the next batch builds from.
                             commit = trial.broken
+                if not result.ok and result.cause == "tables" and not stop.is_set():
+                    # Its shaders split otherwise than its profile says: from
+                    # the commit before nxnative's splitter changed, alone.
+                    result, commit, split = self._split_walk(entry, commit, nxnative, result, print_, identity, stop)
                 if not result.ok:
                     if result.stopped:
                         raise _Stopped(result.error)
@@ -618,6 +633,8 @@ class Runner:
                     dirty=info.dirty,
                 )
                 ctx.store.built(title_id, build)
+                if split is not None:
+                    self._split_built(split, game.display_name, print_)
                 if not keep_ipa:
                     for leftover in (out, out.with_name(out.name + ".idx")):
                         leftover.unlink(missing_ok=True)
@@ -634,6 +651,10 @@ class Runner:
             if not self._failure(entry, error, stop, result, began, commit, print_, identity, log_path, writing, mac=entry.mac_only):
                 raise
         finally:
+            if split is not None and split.state != "ended":
+                # Built from the older commit, its Mac app too: the others build
+                # from the commit they started from.
+                self._split_over(split, game.display_name, built=True, stopped=stop.is_set())
             if stop.taken_out:
                 queues.forget(ctx.paths, {title_id})
             if dump is not None:
@@ -710,6 +731,7 @@ class Runner:
         began = time.monotonic()
         commit = self.commit
         result: builds.Result | None = None
+        split: _Trial | None = None
         place = macapps.place(ctx.config)
         folder = place.library
         writing: Path | None = work
@@ -730,16 +752,25 @@ class Runner:
             # them whatever it is asked.
             keep_extracted = True if ctx.engine.supports("--keep-extracted") else None
             args = builds.command(self.python, ctx.engine.build_script, source, work, out, keys, ctx.config.game_language, keep_extracted, platform="mac-app")
-            result = builds.run(
-                args,
-                ctx.engine.root,
-                toolchain.environment(ctx.paths),
-                log_path,
-                on_progress=lambda progress: self.on_event("progress", title_id, progress),
-                on_message=lambda message: self.on_event("message", title_id, message),
-                stop=stop,
-                on_game=lambda event: keep_icon(ctx.paths, title_id, event.get("icon")),
-            )
+
+            def nxnative() -> builds.Result:
+                return builds.run(
+                    args,
+                    ctx.engine.root,
+                    toolchain.environment(ctx.paths),
+                    log_path,
+                    on_progress=lambda progress: self.on_event("progress", title_id, progress),
+                    on_message=lambda message: self.on_event("message", title_id, message),
+                    stop=stop,
+                    on_game=lambda event: keep_icon(ctx.paths, title_id, event.get("icon")),
+                )
+
+            result = nxnative()
+            if not result.ok and result.cause == "tables" and entry.mac_only and not stop.is_set():
+                # For this Mac alone, its shaders split otherwise than its
+                # profile says: from the commit before nxnative's splitter
+                # changed, as an IPA would (an IPA's split is its Mac app's).
+                result, commit, split = self._split_walk(entry, commit, nxnative, result, print_, identity, stop, mac=True)
             if not result.ok:
                 if result.stopped:
                     raise _Stopped(result.error)
@@ -796,6 +827,8 @@ class Runner:
                 dirty=info.dirty,
             )
             ctx.store.mac_built(title_id, build)
+            if split is not None:
+                self._split_built(split, entry.game.display_name, print_)
             if copied is not None:
                 ctx.store.mac_copied(title_id, copied)
             with self._lock:
@@ -805,6 +838,8 @@ class Runner:
             if not self._failure(entry, error, stop, result, began, commit, print_, identity, log_path, writing, mac=True):
                 raise
         finally:
+            if split is not None and split.state != "ended":
+                self._split_over(split, entry.game.display_name, built=True, stopped=stop.is_set())
             macapps.forget_built(out)
 
     def _mac_copy(self, entry: Entry, place: macapps.Place, app: Path, built_at: str, commit: str, stop: "_Stop") -> MacCopy | None:
@@ -835,7 +870,7 @@ class Runner:
         from an older commit already, tried one, or knows none."""
         ctx = self.ctx
         with self._turns:
-            if self._trial is not None or self.commit != self.latest:
+            if self._trial is not None or self._split is not None or self.commit != self.latest:
                 return None
             try:
                 good = fallback.good(ctx.engine, ctx.store, ctx.paths, self.commit)
@@ -881,6 +916,150 @@ class Runner:
             finally:
                 trial.state = "ended"
                 self._turns.notify_all()
+
+    def _alone(self) -> _Trial | None:
+        """The trial of the game that builds alone now, if one does."""
+        for trial in (self._trial, self._split):
+            if trial is not None and trial.state != "ended":
+                return trial
+        return None
+
+    # ---- One game's shaders, split otherwise than its profile says ----------
+
+    def _split_back(self, entry: Entry, at: str, print_: str, identity: str, stop: "_Stop", mac: bool = False,
+                    walked: frozenset[str] = frozenset()) -> _Trial | None:
+        """After ENTRY's shader split at AT made other tables than its
+        profile's: the trial of the newest commit before a change of
+        nxnative's splitter (fallback.split_back) that did not fail to build
+        these files already, nor in this batch (WALKED), once no other game
+        builds and the checkout went there. None when there is none left,
+        which is said unless this batch tried one, or while another game
+        builds alone. _Skipped when the game's IPA (its Mac app, for this Mac
+        alone: MAC) is from there or newer."""
+        ctx, title_id, name = self.ctx, entry.title_id, entry.game.display_name
+        try:
+            candidates = fallback.split_back(ctx.engine, title_id, at)
+        except (EngineError, OSError) as error:
+            self.log(str(error), title_id)
+            return None
+        failed = set(fallback.tried(fallback.splits(ctx.paths).get(title_id), print_)) | walked
+        left = [older for older in candidates if older not in failed]
+        if not left:
+            if candidates and not walked:
+                self.log(t("split.tried", name=name, old=", ".join(older[:12] for older in candidates)), title_id)
+            return None
+        older = left[0]
+        built = self._built_from(entry, older, print_, identity, mac)
+        if built:
+            # The newest that builds it is what the player has: nothing to
+            # build again, and nothing failed of the game's own.
+            self._mark_split(title_id, at, built, True, print_)
+            words = t("split.kept_mac" if mac else "split.kept", new=at[:12], old=built[:12])
+            self.log(f"{name}: {words}", title_id)
+            raise _Skipped(words, "tables")
+        with self._turns:
+            if self._alone() is not None:
+                return None
+            trial = self._split = _Trial(at, older, title_id, kind="split")
+            try:
+                self.on_event("message", title_id, t("split.retry", new=at[:12], old=older[:12]))
+                # The games building end first, at the commit they started from.
+                while self._building - {title_id} and not stop.is_set():
+                    self._turns.wait(timeout=1.0)
+                if stop.is_set() or not self._move(older, t("split.moving", name=name, old=older[:12])):
+                    return None
+                trial.state = "building"
+                return trial
+            finally:
+                if trial.state != "building":
+                    trial.state = "ended"
+                    self._split = None
+                    self._turns.notify_all()
+
+    def _built_from(self, entry: Entry, older: str, print_: str, identity: str, mac: bool) -> str | None:
+        """The commit the game's IPA (its Mac app: MAC) was built from, its
+        full SHA, when that is OLDER or a newer one, from the same files and
+        tools, and the games folder still has it."""
+        ctx = self.ctx
+        record = ctx.store.get(entry.title_id)
+        build = record.mac if mac else record.build
+        there = entry.mac_app if mac else entry.ipa
+        if build is None or there is None or not there.exists():
+            return None
+        if (build.fingerprint and build.fingerprint != print_) or (build.toolchain and identity and build.toolchain != identity):
+            return None
+        base = ctx.engine.resolve(build.commit)
+        if base and (base == older or ctx.engine.is_ancestor(older, base)):
+            return base
+        return None
+
+    def _split_walk(self, entry: Entry, at: str, nxnative, failed: builds.Result, print_: str, identity: str, stop: "_Stop",
+                    mac: bool = False) -> tuple[builds.Result, str, _Trial | None]:
+        """ENTRY built again by NXNATIVE from the commit before each change of
+        nxnative's splitter, newest first (_split_back), after its split at
+        AT made other tables than its profile's (FAILED), until one builds
+        it, or one fails otherwise than by its split: the result that
+        counts, the commit it is recorded at, and the trial that built it,
+        which goes on for its Mac app (_split_over). FAILED, the newer
+        commit's result, counts when none builds it, unless it was stopped,
+        or failed for the Mac's sake (a full disk, its Xcode): that is said,
+        and the commit tried again at the next batch. A commit that did not
+        build these files is not tried again for them."""
+        title_id, name = entry.title_id, entry.game.display_name
+        # Each commit once, even if nxnative.json could not keep it.
+        walked: frozenset[str] = frozenset()
+        while not stop.is_set():
+            trial = self._split_back(entry, at, print_, identity, stop, mac=mac, walked=walked)
+            if trial is None:
+                break
+            walked |= {trial.good}
+            self.on_event("commit", title_id, {"commit": trial.good[:12], "fallback": True, "split": True})
+            again: builds.Result | None = None
+            try:
+                again = nxnative()
+            finally:
+                if again is None or not again.ok:
+                    stopped = stop.is_set() or (again is not None and again.stopped)
+                    # A full disk, the Mac's Xcode: not these files' failure.
+                    macs = again is not None and again.cause in ("no_space", "metal")
+                    if again is not None and not stopped and not macs:
+                        self._mark_split(title_id, at, trial.good, False, print_)
+                    self._split_over(trial, name, built=False, stopped=stopped or macs)
+                    self.on_event("commit", title_id, {"commit": at[:12], "fallback": self.fallback is not None})
+            if again.ok:
+                return again, trial.good, trial
+            if again.stopped or again.cause in ("no_space", "metal"):
+                # Stopped, or the Mac's failure, not its files': said as it
+                # is, and tried again at the next batch.
+                return again, at, None
+            if again.cause != "tables":
+                break
+        return failed, at, None
+
+    def _split_built(self, trial: _Trial, name: str, print_: str) -> None:
+        """The game built from the trial's older commit: held there until
+        nxnative has a newer commit than the trial's (planner.py)."""
+        self._mark_split(trial.title_id, trial.broken, trial.good, True, print_)
+        self.log(t("split.built", name=name, old=trial.good[:12], new=trial.broken[:12]), trial.title_id)
+
+    def _split_over(self, trial: _Trial, name: str, built: bool, stopped: bool) -> None:
+        """The split trial's end: the checkout goes back to the commit the
+        others build from, and they go on."""
+        with self._turns:
+            try:
+                if not built and not stopped:
+                    self.log(t("split.not_built", name=name, old=trial.good[:12], new=trial.broken[:12]), trial.title_id)
+                self._move(trial.broken, t("fallback.back", new=trial.broken[:12]))
+            finally:
+                trial.state = "ended"
+                self._split = None
+                self._turns.notify_all()
+
+    def _mark_split(self, title_id: str, newest: str, older: str, built: bool, print_: str) -> None:
+        try:
+            fallback.mark_split(self.ctx.paths, title_id, newest, older, built, print_)
+        except OSError as error:
+            self.log(f"{self.ctx.paths.engine_state.name}: {disks.describe(error, self.ctx.paths.root)}")
 
     def _move(self, commit: str, saying: str) -> bool:
         """Moves nxnative's checkout to COMMIT, while no game builds from it."""

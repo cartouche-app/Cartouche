@@ -29,6 +29,15 @@ enum GalleryState {
     static var signing: CartoucheSigningMode = .account
     /// What that signature gives Cartouche (GalleryScenario.ownSignature).
     static var ownSignature: CartoucheOwnSignature?
+    /// The profile in Cartouche (CartoucheImportedSigning.ownProfile), for
+    /// the imports of the works signing-…: none, as in the simulator's app,
+    /// for a Cartouche its signing app put no profile in (work:
+    /// signing-no-own-profile).
+    static var ownProfile: Data?
+    /// What iOS answers the .p12 of those imports (SecPKCS12Import), which
+    /// the gallery stands in for: a password that does not open it (work:
+    /// signing-wrong-password).
+    static var pkcs12Status: Int32?
     /// LocalDevVPN is connected (CartoucheVPN.isConnected), whatever the
     /// interfaces of the Mac under the simulator (work: device-…).
     static var vpnConnected = false
