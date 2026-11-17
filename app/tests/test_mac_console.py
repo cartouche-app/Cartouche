@@ -25,7 +25,11 @@ which builds the iPhone's console screens for the Mac:
   each language's table where the console reads it;
 - the console's Storage page, the iPhone's with This Mac's folders in place
   of its games folder and saves folder (Mac/ConsoleStorage.swift), has the
-  rows those sections open, as the UI tests know them.
+  rows those sections open, as the UI tests know them;
+- the shared files write days, numbers and lists in the console's language
+  (CartoucheText.locale), which the app's settings may choose other than
+  the Mac's, never in the Mac's (Locale.current): on the iPhone, the two are
+  one.
 
 Run from the repository root: python3 -m unittest discover -s app/tests -v
 """
@@ -131,6 +135,16 @@ def footers_cut_on_the_mac(swift: str):
         if not re.search(r"\bCartoucheSection\b", code):
             found.append(index + 1)
     return found
+
+
+def written_in_the_macs_language(swift: str):
+    """The lines of SWIFT that the Mac compiles and that write a day, a
+    number or a list with `.formatted(…)` and no locale: in the Mac's
+    language, Locale.current, rather than in the console's,
+    CartoucheText.locale (CartoucheText.dateAndTime, or
+    `.locale(CartoucheText.locale)` on the style)."""
+    return [(number, code) for number, code in outside_iphone_parts(swift, NOT_ON_THE_MAC)
+            if ".formatted(" in STRING.sub('""', code) and "locale" not in code]
 
 
 def own_names(swift: str):
@@ -266,6 +280,28 @@ class MacConsoleSources(unittest.TestCase):
                 self.assertEqual(found, [], "wrap them in #if os(iOS), or give the Mac its own in Mac/")
                 imports = [code.strip() for _, code in lines if re.match(r"\s*(?:@\w+\s+)?import UIKit\b", code)]
                 self.assertEqual(imports, [], "import UIKit only under #if canImport(UIKit)")
+
+    def test_the_shared_files_write_in_the_consoles_language(self):
+        """A day, a number or a list in the language the console speaks,
+        which the Builder's settings may choose other than the Mac's: "17
+        nov. 2026 à 9:59" in French on a Mac in English, as on an iPhone."""
+        found = []
+        for link in sorted(SHARED.iterdir()):
+            found += [f"{link.name}:{number}: {code.strip()}"
+                      for number, code in written_in_the_macs_language(link.read_text(encoding="utf-8"))]
+        self.assertEqual(found, [], "use CartoucheText.dateAndTime, or .locale(CartoucheText.locale) on the style")
+
+    def test_the_check_sees_a_day_in_the_macs_language(self):
+        swift = """
+let sent = date.formatted(date: .abbreviated, time: .shortened)
+let kept = CartoucheText.dateAndTime(date)
+let names = list.formatted(.list(type: .and).locale(CartoucheText.locale))
+let said = Text(".formatted(")
+#if os(iOS)
+let iPhone = date.formatted()
+#endif
+"""
+        self.assertEqual([number for number, _ in written_in_the_macs_language(swift)], [2])
 
     def test_the_shared_files_name_only_what_the_console_has(self):
         """A launcher file the console links that starts using a name of a

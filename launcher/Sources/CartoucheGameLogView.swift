@@ -163,10 +163,10 @@ struct CartoucheGameLogView: View {
     static func details(of log: CartoucheGameLogDigest) -> String {
         var parts: [String] = []
         if let start = log.created ?? log.modified {
-            var when = start.formatted(date: .abbreviated, time: .shortened)
+            var when = CartoucheText.dateAndTime(start)
             if let end = log.modified, log.created != nil, end > start {
-                when += " – " + end.formatted(date: Calendar.current.isDate(start, inSameDayAs: end) ? .omitted : .abbreviated,
-                                              time: .shortened)
+                let day: Date.FormatStyle.DateStyle = Calendar.current.isDate(start, inSameDayAs: end) ? .omitted : .abbreviated
+                when += " – " + end.formatted(Date.FormatStyle(date: day, time: .shortened).locale(CartoucheText.locale))
             }
             parts.append(when)
         }

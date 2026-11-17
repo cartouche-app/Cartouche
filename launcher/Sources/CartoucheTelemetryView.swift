@@ -35,7 +35,7 @@ struct CartoucheTelemetryView: View {
             }
             CartoucheSection {
                 LabeledContent(CartoucheText.telemetryLastSent,
-                               value: telemetry.lastSent.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? CartoucheText.telemetryNever)
+                               value: telemetry.lastSent.map(CartoucheText.dateAndTime) ?? CartoucheText.telemetryNever)
                 LabeledContent(CartoucheText.telemetrySentCount, value: String(telemetry.sent))
                 LabeledContent(CartoucheText.telemetryWaiting, value: String(telemetry.waiting))
                 if let report = telemetry.lastReport {

@@ -598,7 +598,7 @@ enum CartoucheText {
     /// The games of the games folder built without their game files whose
     /// romfs.img is not there, by their names.
     static func storageGameFilesMissing(_ names: [String]) -> String {
-        let list = names.formatted(.list(type: .and))
+        let list = names.formatted(.list(type: .and).locale(locale))
         if names.count == 1 {
             return f("storage.gameFiles.missing.one", "%@ was built without its game files: put its romfs.img beside its IPA, and Cartouche installs the two together.", list)
         }
@@ -607,7 +607,7 @@ enum CartoucheText {
     /// The images of game files no IPA of the games folder needs, by their
     /// paths in it.
     static func storageGameFilesLoose(_ names: [String]) -> String {
-        let list = names.formatted(.list(type: .and))
+        let list = names.formatted(.list(type: .and).locale(locale))
         if names.count == 1 {
             return f("storage.gameFiles.loose.one", "%@: a game’s files, but no IPA here was built to go with them. Put beside them the IPA nxnative built with them, or build the game with Cartouche Builder.", list)
         }
