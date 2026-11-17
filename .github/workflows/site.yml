@@ -2,15 +2,16 @@ name: Showcase site
 
 # Publishes the showcase page, site/, on GitHub Pages, at
 # https://cartouche.cloud/. When the page changes on main, it runs the page's
-# tests, then keeps index.html, favicon.svg, the download page and CNAME alone
-# on the branch gh-pages, which Pages serves: Settings › Pages › Build and
-# deployment, Deploy from a branch, gh-pages, / (root). CNAME names the
-# domain, which Pages serves the site at and sends its old address,
-# cartouche-app.github.io/Cartouche, on to: a publication without it would
-# drop the domain (domain/README.md). Nothing else of the repository is
-# published (site/README.md). Each download
-# link gets the newest file of its releases on the way: the Builder and
-# Installer workflows run this one again once they have published a release.
+# tests, then keeps index.html, the download page, the page for an address the
+# site does not have (404.html), the icons, the picture shown where a link to
+# the site is shared (social.png) and CNAME alone on the branch gh-pages, which
+# Pages serves: Settings › Pages › Build and deployment, Deploy from a branch,
+# gh-pages, / (root). CNAME names the domain, which Pages serves the site at
+# and sends its old address, cartouche-app.github.io/Cartouche, on to: a
+# publication without it would drop the domain (domain/README.md). Nothing
+# else of the repository is published (site/README.md). Each download link
+# gets the newest file of its releases on the way: the Builder and Installer
+# workflows run this one again once they have published a release.
 # The Full test pass checks the page and its links, and publishes nothing
 # (full-pass.yml).
 
@@ -64,7 +65,7 @@ jobs:
       - name: The files Pages serves
         run: |
           mkdir -p build/site/download
-          cp site/index.html site/favicon.svg site/CNAME build/site/
+          cp site/index.html site/404.html site/favicon.svg site/apple-touch-icon.png site/social.png site/CNAME build/site/
           cp site/download/index.html build/site/download/
           python3 site/tools/downloads.py --repository "$GITHUB_REPOSITORY" \
             build/releases.json build/site/index.html build/site/download/index.html > build/downloads.md

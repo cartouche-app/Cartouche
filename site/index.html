@@ -9,14 +9,26 @@
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#090A11">
 <meta name="referrer" content="no-referrer">
+<link rel="canonical" href="https://cartouche.cloud/">
+<!-- What a link to the site shows where it is shared (Discord, Reddit,
+     Messages…): social.png, drawn from tools/social.html, with no image of
+     a game. -->
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="Cartouche">
+<meta property="og:url" content="https://cartouche.cloud/">
 <meta property="og:title" content="Cartouche for iPhone, iPad and Mac">
 <meta property="og:description" content="Your games, on iPhone, iPad and Mac: Cartouche turns an iPhone or an iPad into a console for the games nxnative runs natively, from your own copies.">
+<meta property="og:image" content="https://cartouche.cloud/social.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Cartouche’s icon beside “Your games, on iPhone, iPad and Mac.”">
 <meta property="og:locale" content="en_US">
 <meta property="og:locale:alternate" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
 <!-- The games' covers, from IGDB as in the app. -->
 <link rel="preconnect" href="https://images.igdb.com">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <script>
     // The page's language before it is drawn: the visitor's choice, else the browser's.
     (function () {
@@ -39,7 +51,7 @@
         --stage: #090A11;
         --ink: #F6F6FA;
         --ink-2: rgba(246, 246, 250, .7);
-        --ink-3: rgba(246, 246, 250, .48);
+        --ink-3: rgba(246, 246, 250, .56);
         --line: rgba(255, 255, 255, .1);
         --indigo: #4F46E5;
         --pink: #EC4899;
@@ -245,7 +257,9 @@
     @media (max-width: 699px) {
         .hero .device { --w: 402 !important; --h: 874 !important; max-width: 290px !important; }
     }
-    .hint { margin-top: 18px; text-align: center; color: var(--ink-3); font-size: .9rem; }
+    /* Above the devices over it (the iPad and the iPhone of #ipad-mac stand
+       on z-index 1 and 2): their shadows are drawn under it, not over it. */
+    .hint { position: relative; z-index: 3; margin-top: 18px; text-align: center; color: var(--ink-3); font-size: .9rem; }
     @media (hover: none) { .hint__keys { display: none; } }
     .hint kbd {
         display: inline-block;
@@ -881,9 +895,15 @@
     @media (max-width: 760px) { .keeps { grid-template-columns: minmax(0, 1fr); } }
     .note { display: flex; gap: 12px; align-items: center; margin-top: 30px; color: var(--ink-2); }
     .note svg { width: 22px; height: 22px; flex: none; color: var(--stored); }
+    .note b { color: var(--ink); font-weight: 600; }
+    .prose .note { margin-top: 4px; }
 
     .perks { list-style: none; display: grid; gap: 26px; margin: 34px 0 0; padding: 0; }
-    @media (min-width: 640px) and (max-width: 939px) { .perks { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (min-width: 640px) and (max-width: 939px) {
+        .perks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        /* Three of them on two columns: the third takes the whole row. */
+        .perks--three .perk:last-child:nth-child(odd) { grid-column: 1 / -1; }
+    }
     .perk { display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 16px; }
     .perk .tag-icon { margin: 0; }
 
@@ -1246,6 +1266,17 @@
     .step .actions { margin-top: 16px; }
     /* The Installer's two buttons: one width, side by side or one above the other. */
     .step .actions .btn { flex: 1 1 0; min-width: max-content; max-width: 18rem; justify-content: center; margin-top: 0; }
+    /* On a phone, a step's number and title share a row, and its text and
+       buttons take the whole width under them: each button's words on one line. */
+    @media (max-width: 520px) {
+        .step { grid-template-columns: 44px minmax(0, 1fr); gap: 8px 14px; align-items: center; }
+        .step__n { width: 44px; height: 44px; font-size: 1.15rem; }
+        .step > div { display: contents; }
+        .step > div > :not(h3) { grid-column: 1 / -1; }
+        .step > div > .btn { justify-content: center; margin-top: 4px; }
+        .step .actions { margin-top: 4px; }
+        .step .actions .btn { max-width: none; }
+    }
     .step p a, .guide a { color: var(--ink); }
     .guide { margin-top: 30px; padding-left: 70px; }
     @media (max-width: 520px) { .guide { padding-left: 0; } }
@@ -1316,6 +1347,7 @@
         <symbol id="i-pause" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path fill="#fff" d="M8.8 7.6h2.2v8.8H8.8zm4.2 0h2.2v8.8H13z"/></symbol>
         <symbol id="i-pausebars" viewBox="0 0 24 24"><path fill="currentColor" d="M6.5 4.5H10v15H6.5zm7.5 0h3.5v15H14z"/></symbol>
         <symbol id="i-laptop" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="4.5" y="5" width="15" height="10.5" rx="1.6"/><path stroke-linecap="round" d="M2.5 19h19"/></g></symbol>
+        <symbol id="i-tv" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="2.5" y="4.5" width="19" height="12.5" rx="2"/><path stroke-linecap="round" d="M8.5 20.5h7"/></g></symbol>
         <symbol id="i-flag" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M5 21V4.5M5 4.5h13.5v9H5"/><path fill="currentColor" d="M5 4.5h4.5V9H5zM14 4.5h4.5V9H14zM9.5 9H14v4.5H9.5z"/></symbol>
         <symbol id="i-building" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M4.5 3h8A1.5 1.5 0 0 1 14 4.5V21H3V4.5A1.5 1.5 0 0 1 4.5 3Zm1 3v2h2V6h-2Zm4 0v2h2V6h-2Zm-4 4v2h2v-2h-2Zm4 0v2h2v-2h-2Zm-4 4v2h2v-2h-2Zm4 0v2h2v-2h-2ZM15 9h4.5A1.5 1.5 0 0 1 21 10.5V21h-6V9Zm1.5 3v2h2v-2h-2Zm0 4v2h2v-2h-2Z"/></symbol>
         <symbol id="i-bolt" viewBox="0 0 24 24"><path fill="currentColor" d="M13.6 2 4.8 13.4h6.1L9.8 22l9.4-12h-6.3z"/></symbol>
@@ -1507,6 +1539,7 @@
                     <div class="prose">
                         <p lang="fr">Le bouton Home, sur l’écran ou sur la manette, ramène la console sans quitter le jeu. Il reste en pause là où vous l’avez laissé : Reprendre y retourne, Quitter l’arrête.</p>
                         <p lang="en">The Home button, on screen or on the controller, brings back the console without ending the game. It stays paused where you left it: Resume goes back to it, Quit ends it.</p>
+                        <p class="note"><svg aria-hidden="true"><use href="#i-tv"/></svg><span lang="fr"><b>Sur la télé</b>, par câble ou par AirPlay, le jeu s’affiche seul, comme une console sur son dock, et l’iPhone garde les commandes.</span><span lang="en"><b>On a TV</b>, by cable or AirPlay, the game shows there alone, like a console on its dock, and the iPhone keeps the controls.</span></p>
                         <p class="small"><span lang="fr">Un jeu qui a besoin de plus de mémoire démarre à la place de Cartouche.</span><span lang="en">A game that needs more memory starts in Cartouche’s place.</span></p>
                     </div>
                 </div>
@@ -1555,7 +1588,7 @@
                     <p class="label"><span lang="fr">En coulisse</span><span lang="en">Behind the scenes</span></p>
                     <h2><span lang="fr">Il s’occupe du reste.</span><span lang="en">It takes care of the rest.</span></h2>
                     <ul class="perks">
-                        <li class="perk"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-refresh"/></svg></span><div><h3><span lang="fr">Signé et renouvelé</span><span lang="en">Signed and renewed</span></h3><p><span lang="fr">Le SideStore intégré renouvelle sa signature de 7 jours depuis la page Système, ou chaque nuit par une automatisation Raccourcis. Cartouche prévient 24 h et 6 h avant.</span><span lang="en">The built-in SideStore renews its seven-day signature from the System page, or every night from a Shortcuts automation. Cartouche warns you 24 h and 6 h before.</span></p></div></li>
+                        <li class="perk"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-refresh"/></svg></span><div><h3><span lang="fr">Signé et renouvelé</span><span lang="en">Signed and renewed</span></h3><p><span lang="fr">Le SideStore intégré renouvelle tout seul sa signature de 7 jours quand vous ouvrez Cartouche dans ses 3 derniers jours, ou depuis la page Système, ou chaque nuit par une automatisation Raccourcis. Cartouche prévient 24 h et 6 h avant.</span><span lang="en">The built-in SideStore renews its seven-day signature by itself when you open Cartouche in its last 3 days, or from the System page, or every night from a Shortcuts automation. Cartouche warns you 24 h and 6 h before.</span></p></div></li>
                         <li class="perk"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-download"/></svg></span><div><h3><span lang="fr">Mis à jour sans ordinateur</span><span lang="en">Updated without a computer</span></h3><p><span lang="fr">Cartouche propose ses nouvelles versions sur la console et les installe lui-même. Vos jeux et vos sauvegardes restent.</span><span lang="en">Cartouche offers its new versions over the console and installs them itself. Your games and saves stay.</span></p></div></li>
                         <li class="perk"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-hidden"/></svg></span><div><h3><span lang="fr">Hors de vue</span><span lang="en">Out of sight</span></h3><p><span lang="fr">Cartouche s’appuie sur LiveContainer et SideStore sans jamais les montrer. Vos jeux tournent dans Cartouche et ne comptent pas dans la limite de trois apps d’un compte gratuit.</span><span lang="en">Cartouche is built on LiveContainer and SideStore and never shows them. Your games run inside Cartouche and don’t count against a free account’s limit of three apps.</span></p></div></li>
                         <li class="perk"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-copy"/></svg></span><div><h3><span lang="fr">Une erreur ? Copiez le rapport.</span><span lang="en">An error? Copy the report.</span></h3><p><span lang="fr">Sous chaque erreur, un bouton copie ce qu’il faut pour la comprendre, sans mot de passe ni adresse.</span><span lang="en">Under each error, a button copies what it takes to understand it, with no password or address.</span></p></div></li>
@@ -1688,6 +1721,10 @@
                     <details>
                         <summary><span lang="fr">Cartouche marche-t-il sur iPad et sur Mac ?</span><span lang="en">Does Cartouche work on iPad and on a Mac?</span></summary>
                         <p><span lang="fr">Sur un iPad à puce M1 ou plus récente, c’est la même app que sur l’iPhone, installée de la même façon, qui dit « iPad » partout où elle parle de votre appareil. Sur un Mac à puce Apple, <a href="#builder">Cartouche Builder</a> construit chacun de vos jeux pour le Mac aussi et le lance, avec les mêmes sauvegardes que votre iPhone et votre iPad.</span><span lang="en">On an iPad with an M1 chip or newer, it is the same app as on the iPhone, installed the same way, which says “iPad” wherever it speaks of your device. On a Mac with Apple silicon, <a href="#builder">Cartouche Builder</a> builds each of your games for the Mac too and plays it there, with the same saves as your iPhone and iPad.</span></p>
+                    </details>
+                    <details>
+                        <summary><span lang="fr">Puis-je jouer sur ma télé ?</span><span lang="en">Can I play on my TV?</span></summary>
+                        <p><span lang="fr">Oui : reliez l’iPhone à la télé par un câble, ou recopiez son écran par AirPlay sur une Apple TV ou une télé compatible. La télé montre le jeu seul, sans ses commandes, que l’iPhone garde. Il n’y a pas de version pour Apple TV : c’est l’iPhone qui fait tourner le jeu et l’envoie à la télé.</span><span lang="en">Yes: connect the iPhone to the TV with a cable, or mirror its screen with AirPlay to an Apple TV or a TV that has AirPlay. The TV shows the game alone, without its controls, which stay on the iPhone. There is no Apple TV version: the iPhone runs the game and sends it to the TV.</span></p>
                     </details>
                     <details>
                         <summary><span lang="fr">Puis-je utiliser mon propre certificat ?</span><span lang="en">Can I use my own signing certificate?</span></summary>

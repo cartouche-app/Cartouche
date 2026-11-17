@@ -11,7 +11,11 @@ firmware, nor to a server of the project (docs/decisions.md, 40). Its only
 downloads are the project's own programs for a computer, the Cartouche
 Installer and Cartouche Builder, each a file of their releases marked for
 the publication to give its newest one (site/tools/downloads.py), as the
-download page, download/index.html, gives them too.
+download page, download/index.html, gives them too. Its only pictures are
+its own drawings, never a game's: the icon an iPhone puts on its Home
+Screen, and the picture a link to the site shows where it is shared
+(social.png, drawn from tools/social.html). 404.html is the page GitHub Pages
+serves for an address the site does not have.
 
 A catalog change that touches a game of the page (its name, its covers, where
 nxnative plays it) fails here: update the list at the top of the page's
@@ -30,6 +34,7 @@ from pathlib import Path
 SITE = Path(__file__).resolve().parents[1]
 PAGE = SITE / "index.html"
 DOWNLOAD_PAGE = SITE / "download" / "index.html"
+NOT_FOUND_PAGE = SITE / "404.html"
 CATALOG = SITE.parent / "catalog"
 
 # The files the site offers, straight from this repository's releases: the
@@ -72,9 +77,23 @@ GAME_FILES = re.compile(
 )
 
 # Files the site is made of, and nothing else: no image of a game. CNAME
-# names the site's domain for GitHub Pages.
+# names the site's domain for GitHub Pages. Its two pictures, each by its name
+# and size: the icon an iPhone puts on its Home Screen (Cartouche's, from
+# app/icon) and the picture a link to the site shows where it is shared, drawn
+# from tools/social.html.
 SITE_FILES = {".html", ".svg", ".md", ".py"}
-SITE_NAMES = {"CNAME"}
+PICTURES = {"apple-touch-icon.png": (180, 180), "social.png": (1200, 630)}
+SITE_NAMES = {"CNAME", *PICTURES}
+
+# The site's address, at its domain.
+SITE_URL = "https://" + (SITE / "CNAME").read_text(encoding="utf-8").strip() + "/"
+
+
+def png_size(path: Path) -> tuple[int, int]:
+    """A PNG's width and height, from its header."""
+    data = path.read_bytes()[:24]
+    assert data[:8] == b"\x89PNG\r\n\x1a\n" and data[12:16] == b"IHDR", f"{path.name} is not a PNG"
+    return int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big")
 
 # What the page may say of a game: its status on the page, and where
 # nxnative must play it for the page to say so.
@@ -134,6 +153,28 @@ def read_page(path: Path = PAGE) -> tuple[str, Page]:
 def download_of(href: str) -> str | None:
     """The file of the site's downloads a link gives, if it gives one."""
     return next((key for key, pattern in DOWNLOADS.items() if pattern.fullmatch(href)), None)
+
+
+def check_shared(test: unittest.TestCase, page: Page, address: str) -> None:
+    """A page's own address, at the site's domain, and what a link to it
+    shows where it is shared (Discord, Reddit, Messages…): the site's own
+    picture, social.png, and its icon for an iPhone's Home Screen."""
+    links = {attrs.get("rel"): attrs.get("href", "") for tag, attrs in page.tags if tag == "link"}
+    metas = {attrs.get("property", attrs.get("name")): attrs.get("content", "") for tag, attrs in page.tags if tag == "meta"}
+    test.assertEqual(links.get("canonical"), address)
+    test.assertEqual(metas.get("og:url"), address)
+    test.assertEqual(metas.get("og:site_name"), "Cartouche")
+    test.assertTrue(metas.get("og:title") and metas.get("og:description"))
+    test.assertEqual(metas.get("og:image"), SITE_URL + "social.png")
+    test.assertEqual((metas.get("og:image:width"), metas.get("og:image:height")), tuple(str(n) for n in PICTURES["social.png"]))
+    test.assertTrue(metas.get("og:image:alt"))
+    test.assertEqual(metas.get("twitter:card"), "summary_large_image")
+    # Every address the page gives other sites is the site's own.
+    for name, content in metas.items():
+        if "//" in content:
+            test.assertTrue(content.startswith(SITE_URL), f"<meta {name}> names {content!r}")
+    icon = links.get("apple-touch-icon", "")
+    test.assertRegex(icon, r"^(?:\.\./|/)?apple-touch-icon\.png$")
 
 
 # What a page says to its visitor besides its elements' text.
@@ -202,9 +243,12 @@ class SiteTests(unittest.TestCase):
                 self.assertNotRegex(value, r"^(?:[a-z][a-z0-9+.-]*:|//)", f"<{tag} {name}> loads {value!r}")
             if tag == "link":
                 href = attrs.get("href", "")
-                # A connection made early to IGDB's image server, nothing loaded.
+                # A connection made early to IGDB's image server, nothing
+                # loaded, and the page's own address, at the site's domain.
                 if attrs.get("rel") == "preconnect":
                     self.assertEqual(href, IGDB_HOST)
+                elif attrs.get("rel") == "canonical":
+                    self.assertEqual(href, SITE_URL)
                 else:
                     self.assertNotRegex(href, r"^(?:[a-z][a-z0-9+.-]*:|//)", f"<link> loads {href!r}")
             self.assertNotIn(tag, ("iframe", "embed", "object", "form", "base", "video", "audio"), f"the page has an <{tag}>")
@@ -230,6 +274,9 @@ class SiteTests(unittest.TestCase):
                 self.assertEqual(set(re.findall(r"navigator\.(\w+)", self.text)), {"languages", "language"})
                 continue
             self.assertNotIn(call, self.code)
+
+    def test_a_shared_link_shows_the_sites_own_picture(self) -> None:
+        check_shared(self, self.page, SITE_URL)
 
     def test_links_only_to_the_projects_repositories_and_igdb(self) -> None:
         for href in self.links():
@@ -271,6 +318,9 @@ class SiteTests(unittest.TestCase):
                 self.assertTrue(path.suffix in SITE_FILES or path.name in SITE_NAMES, f"{path.relative_to(SITE)} is not a file the site is made of")
                 self.assertLess(path.stat().st_size, 512 * 1024, f"{path.relative_to(SITE)} is too large for the site")
         self.assertEqual(sorted(p.name for p in SITE.glob("*.svg")), ["favicon.svg"])
+        self.assertEqual(sorted(p.relative_to(SITE).as_posix() for p in SITE.rglob("*.png")), sorted(PICTURES))
+        for name, size in PICTURES.items():
+            self.assertEqual(png_size(SITE / name), size, name)
 
     def test_downloads_are_the_installer_and_the_builder(self) -> None:
         # Each button gives the file itself, Mac and Windows for the
@@ -281,7 +331,7 @@ class SiteTests(unittest.TestCase):
         self.assertEqual(buttons, ["builder", "installer-mac", "installer-windows", "builder"])
 
     def test_no_server_address_or_secret(self) -> None:
-        for path in [PAGE, DOWNLOAD_PAGE, SITE / "favicon.svg"]:
+        for path in [PAGE, DOWNLOAD_PAGE, NOT_FOUND_PAGE, SITE / "favicon.svg", SITE / "tools" / "social.html"]:
             # Drawings' numbers aside: an icon's path can read like an address.
             text = re.sub(r'\s(?:d|points|viewBox|transform)="[^"]*"', "", path.read_text(encoding="utf-8"))
             for pattern, what in (
@@ -372,6 +422,21 @@ class SiteTests(unittest.TestCase):
                 if game["status"] == "stored":
                     self.assertIn("stored", game, name)
 
+    def test_the_hints_stand_above_the_devices_shadows(self) -> None:
+        # A device is positioned, and its shadow falls on the hint under it:
+        # drawn over the hint's text, it made it hard to read. The hint is
+        # positioned too, above the devices that #ipad-mac lifts.
+        styles = re.sub(r"/\*.*?\*/", "", self.text, flags=re.S)
+        rules = [(selector.strip(), body) for selector, body in re.findall(r"([^{}]+)\{([^{}]*)\}", styles)]
+        hint = [body for selector, body in rules if selector == ".hint"]
+        self.assertEqual(len(hint), 1)
+        self.assertRegex(hint[0], r"position:\s*relative")
+        level = re.search(r"z-index:\s*(\d+)", hint[0])
+        self.assertIsNotNone(level, "the hint has no z-index")
+        lifted = [int(z) for selector, body in rules if selector.startswith(".duo >") for z in re.findall(r"z-index:\s*(\d+)", body)]
+        self.assertTrue(lifted)
+        self.assertGreater(int(level.group(1)), max(lifted))
+
     def test_the_page_shows_only_igdbs_images_of_its_games(self) -> None:
         for tag, attrs in self.page.tags:
             self.assertNotEqual(tag, "img", "the page's images are its games', which its script shows")
@@ -401,7 +466,7 @@ class DownloadPageTests(unittest.TestCase):
         for tag, attrs in self.page.tags:
             for name in ("src", "srcset", "poster", "data", "action", "formaction"):
                 self.assertNotRegex(attrs.get(name, ""), r"^(?:[a-z][a-z0-9+.-]*:|//)", f"<{tag} {name}> loads {attrs.get(name)!r}")
-            if tag == "link":
+            if tag == "link" and attrs.get("rel") != "canonical":
                 self.assertNotRegex(attrs.get("href", ""), r"^(?:[a-z][a-z0-9+.-]*:|//)", f"<link> loads {attrs.get('href')!r}")
             self.assertNotIn(tag, ("iframe", "embed", "object", "form", "base", "video", "audio", "img"), f"the page has an <{tag}>")
             if tag == "script":
@@ -447,6 +512,9 @@ class DownloadPageTests(unittest.TestCase):
         discord = [attrs["href"] for tag, attrs in self.page.tags if tag == "a" and "discord" in attrs.get("href", "")]
         self.assertEqual(discord, [DISCORD])
 
+    def test_a_shared_link_shows_the_sites_own_picture(self) -> None:
+        check_shared(self, self.page, SITE_URL + "download/")
+
     def test_the_same_files_as_the_site(self) -> None:
         text, page = read_page()
         self.assertEqual(check_downloads(self, self.text, self.page), check_downloads(self, text, page))
@@ -466,6 +534,75 @@ class DownloadPageTests(unittest.TestCase):
             "Cartouche contains and downloads no games, no keys and no firmware: you build your games from your own copies.",
         ):
             self.assertIn(sentence, self.text)
+
+
+class NotFoundPageTests(unittest.TestCase):
+    """404.html: what GitHub Pages serves for an address the site does not
+    have, at any depth, so its links and icons start from the site's root.
+    Back to the site, or to its downloads."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.text, cls.page = read_page(NOT_FOUND_PAGE)
+        cls.code = "\n".join(text for attrs, text in cls.page.scripts)
+
+    def test_loads_nothing_from_another_site_and_sends_nothing(self) -> None:
+        for tag, attrs in self.page.tags:
+            for name in ("src", "srcset", "poster", "data", "action", "formaction"):
+                self.assertNotIn(name, attrs, f"<{tag} {name}>")
+            if tag == "link":
+                self.assertRegex(attrs.get("href", ""), r"^/[\w.-]+$", f"<link> loads {attrs.get('href')!r}")
+            self.assertNotIn(tag, ("iframe", "embed", "object", "form", "base", "video", "audio", "img"), f"the page has an <{tag}>")
+            if tag == "script":
+                self.assertNotIn("src", attrs, "the page's script is its own, inline")
+        for style in self.page.styles:
+            self.assertNotIn("@import", style)
+            self.assertNotIn("url(", style)
+        self.assertRegex(self.text, r'<meta name="referrer" content="no-referrer">')
+        self.assertRegex(self.text, r'<meta name="robots" content="noindex">')
+        self.assertNotRegex(self.code, r"https?:")
+        for call in ("fetch(", "XMLHttpRequest", "sendBeacon", "WebSocket", "EventSource", "document.cookie", "import(", "new Image", "Worker(", "window.open", "location"):
+            self.assertNotIn(call, self.code)
+        self.assertEqual(set(re.findall(r"navigator\.(\w+)", self.text)), {"languages", "language"})
+
+    def test_links_back_to_the_site_from_any_address(self) -> None:
+        hrefs = [attrs.get("href", "") for tag, attrs in self.page.tags if tag == "a"]
+        self.assertIn("/", hrefs)
+        self.assertIn("/download/", hrefs)
+        for href in hrefs:
+            if href.startswith("#"):
+                self.assertIn(href[1:], self.page.ids, f"{href} leads nowhere on the page")
+            elif href.startswith("/"):
+                self.assertIn(href, ("/", "/download/"), f"the page links to {href!r}")
+            else:
+                self.assertTrue(any(p.fullmatch(href) for p in ALLOWED_LINKS), f"the page links to {href!r}")
+        for tag, attrs in self.page.tags:
+            if tag == "use":
+                href = attrs.get("href", "")
+                self.assertTrue(href.startswith("#") and href[1:] in self.page.ids, f"<use> of {href!r}")
+        self.assertEqual([attrs["href"] for tag, attrs in self.page.tags if tag == "a" and "discord" in attrs.get("href", "")], [DISCORD])
+
+    def test_every_text_in_both_languages(self) -> None:
+        body = self.text[self.text.index("<body>"):]
+        pairs = re.findall(r'<(\w+)\b[^>]*\slang="(fr|en)"', body)
+        self.assertEqual([tag for tag, lang in pairs if lang == "fr"], [tag for tag, lang in pairs if lang == "en"])
+        self.assertGreater(len(pairs), 10)
+        self.assertEqual(len(re.findall(r"data-label-fr=", self.text)), len(re.findall(r"data-label-en=", self.text)))
+        self.assertIn('data-fr="', self.text)
+        self.assertIn('data-en="', self.text)
+
+
+class Publication(unittest.TestCase):
+    """What the Showcase site workflow keeps on gh-pages, which Pages serves."""
+
+    def test_it_publishes_every_file_the_site_serves(self) -> None:
+        workflow = (SITE.parent / ".github" / "workflows" / "site.yml").read_text(encoding="utf-8")
+        copied = re.search(r"\n\s+cp ([^\n]*) build/site/\n", workflow)
+        self.assertIsNotNone(copied, "site.yml copies the site's files to build/site/")
+        self.assertEqual(sorted(copied.group(1).split()), sorted("site/" + name for name in ["index.html", "404.html", "favicon.svg", "CNAME", *PICTURES]))
+        self.assertIn("cp site/download/index.html build/site/download/", workflow)
+        for name in ["index.html", "404.html", "favicon.svg", "CNAME", *PICTURES]:
+            self.assertTrue((SITE / name).is_file(), name)
 
 
 class Domain(unittest.TestCase):

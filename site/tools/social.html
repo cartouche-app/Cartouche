@@ -1,0 +1,77 @@
+<!doctype html>
+<!-- The site's picture for links shared on Discord, Reddit, Messages and
+     the like (og:image): 1200 x 630, Cartouche's own drawing, with no image
+     of a game. Drawn again with Chrome, from the repository's root:
+       chromium --headless --hide-scrollbars --force-device-scale-factor=1 \
+         --window-size=1200,630 --screenshot=site/social.png site/tools/social.html
+     then check that site/social.png is 1200 x 630 and under 512 KB
+     (site/tests/test_site.py). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Cartouche: the site's picture for shared links</title>
+<style>
+    html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; }
+    body {
+        position: relative;
+        background:
+            radial-gradient(62% 80% at 0% 0%, rgba(79, 70, 229, .58), transparent 70%),
+            radial-gradient(52% 74% at 100% 100%, rgba(236, 72, 153, .42), transparent 72%),
+            radial-gradient(34% 46% at 80% 36%, rgba(122, 115, 255, .22), transparent 72%),
+            #090A11;
+        color: #F6F6FA;
+        font-family: "Inter Display", "SF Pro Display", Inter, system-ui, -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
+    }
+    .text { position: absolute; left: 80px; top: 70px; width: 700px; }
+    .wordmark { display: flex; align-items: center; gap: 16px; }
+    .wordmark svg { width: 30px; height: 40px; }
+    .wordmark b {
+        font-weight: 800;
+        font-size: 46px;
+        letter-spacing: -.01em;
+        background: linear-gradient(90deg, #7A73FF, #EC4899);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+    h1 { margin: 34px 0 0; font-weight: 800; font-size: 84px; line-height: .98; letter-spacing: -.03em; }
+    p { margin: 26px 0 0; max-width: 620px; font-family: Inter, system-ui, sans-serif; font-size: 25px; line-height: 1.4; color: rgba(246, 246, 250, .74); }
+    .chips { display: flex; gap: 12px; margin-top: 30px; }
+    .chips span {
+        padding: 10px 20px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .08);
+        box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, .18);
+        font-family: Inter, system-ui, sans-serif;
+        font-size: 21px;
+        font-weight: 500;
+    }
+    .icon { position: absolute; right: 92px; top: 150px; width: 300px; height: 300px; transform: rotate(-8deg); filter: drop-shadow(0 34px 60px rgba(30, 27, 75, .9)) drop-shadow(0 0 70px rgba(122, 115, 255, .35)); }
+</style>
+</head>
+<body>
+<div class="text">
+    <div class="wordmark">
+        <svg viewBox="0 0 18 24" aria-hidden="true"><defs><linearGradient id="g-brand" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4F46E5"/><stop offset="1" stop-color="#EC4899"/></linearGradient></defs><rect x=".35" y=".6" width="17.3" height="22.8" rx="1.9" fill="url(#g-brand)"/><rect x="5.15" y="3.2" width="7.7" height="1.2" rx=".6" fill="#fff" fill-opacity=".55"/><rect x="5.15" y="5.85" width="7.7" height="1.2" rx=".6" fill="#fff" fill-opacity=".55"/></svg>
+        <b>Cartouche</b>
+    </div>
+    <h1>Your games,<br>on iPhone, iPad<br>and Mac.</h1>
+    <p>Install, start and keep the games nxnative runs natively, from your own copies.</p>
+    <div class="chips"><span>Free software</span><span>Free Apple account</span><span>Controller or touch</span></div>
+</div>
+<!-- Cartouche's icon (app/icon/svg/light.svg), with the corners iOS gives it. -->
+<svg class="icon" viewBox="0 0 1024 1024" aria-hidden="true">
+  <defs><clipPath id="corners"><rect width="1024" height="1024" rx="228"/></clipPath><clipPath id="body"><path d="M311 152 h402 a64 64 0 0 1 64 64 v592 a64 64 0 0 1 -64 64 h-402 a64 64 0 0 1 -64 -64 v-592 a64 64 0 0 1 64 -64 z"/></clipPath><linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFDB7E"/><stop offset="1" stop-color="#E8A535"/></linearGradient><linearGradient id="background" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4F46E5"/><stop offset="1" stop-color="#EC4899"/></linearGradient><linearGradient id="label" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4F46E5"/><stop offset="1" stop-color="#EC4899"/></linearGradient><radialGradient id="shine" cx="0.2" cy="0.1" r="0.8"><stop offset="0" stop-color="#FFFFFF" stop-opacity="0.25"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient><linearGradient id="shell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E9EAF4"/></linearGradient><filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="22" stdDeviation="26" flood-color="#1E1B4B" flood-opacity="0.4"/></filter></defs>
+  <g clip-path="url(#corners)">
+  <rect width="1024" height="1024" fill="url(#background)"/>
+  <rect width="1024" height="1024" fill="url(#shine)"/>
+  <path d="M311 152 h402 a64 64 0 0 1 64 64 v592 a64 64 0 0 1 -64 64 h-402 a64 64 0 0 1 -64 -64 v-592 a64 64 0 0 1 64 -64 z" fill="url(#shell)" filter="url(#shadow)"/>
+  <rect x="382" y="202" width="260" height="14" rx="7" fill="#D3D5E3"/><rect x="382" y="236" width="260" height="14" rx="7" fill="#D3D5E3"/><rect x="382" y="270" width="260" height="14" rx="7" fill="#D3D5E3"/>
+  <rect x="297" y="310" width="430" height="344" rx="38" fill="url(#label)"/>
+  <g fill="#FFFFFF"><rect x="345" y="461.0" width="148" height="42" rx="11"/><rect x="398" y="408.0" width="42" height="148" rx="11"/><circle cx="575" cy="514.0" r="32"/><circle cx="647" cy="450.0" r="32"/></g>
+  <g clip-path="url(#body)"><path d="M319 912 V790 a22 22 0 0 1 22 -22 h342 a22 22 0 0 1 22 22 V912 z" fill="#2C2A4A"/><rect x="341.0" y="786" width="36.9" height="104" rx="6" fill="url(#gold)"/><rect x="391.9" y="786" width="36.9" height="104" rx="6" fill="url(#gold)"/><rect x="442.7" y="786" width="36.9" height="104" rx="6" fill="url(#gold)"/><rect x="493.6" y="786" width="36.9" height="104" rx="6" fill="url(#gold)"/><rect x="544.4" y="786" width="36.9" height="104" rx="6" fill="url(#gold)"/><rect x="595.3" y="786" width="36.9" height="104" rx="6" fill="url(#gold)"/><rect x="646.1" y="786" width="36.9" height="104" rx="6" fill="url(#gold)"/></g>
+  </g>
+</svg>
+</body>
+</html>
