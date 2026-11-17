@@ -38,6 +38,11 @@ public struct BuilderHome: Equatable, Sendable {
     /// the nightly run leaves aside those this Mac never built either.
     public var unbuilt: URL { root.appendingPathComponent("unbuilt.json") }
     public var bridge: URL { root.appendingPathComponent("bridge.json") }
+    /// The passwords, secret keys and Google sign-ins of the player's
+    /// connections to their storage, the console's Storage page's and the
+    /// paired iPhones' (CartoucheStorageSettings, in the console):
+    /// readable only by the player's account.
+    public var connections: URL { root.appendingPathComponent("connections.json") }
     public var logs: URL { root.appendingPathComponent("logs", isDirectory: true) }
     public var engine: URL { root.appendingPathComponent("nxnative", isDirectory: true) }
     public var saves: URL { root.appendingPathComponent("Saves", isDirectory: true) }

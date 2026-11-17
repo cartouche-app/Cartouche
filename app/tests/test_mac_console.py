@@ -9,6 +9,10 @@ which builds the iPhone's console screens for the Mac:
   whole of the iPhone's app, and its changes to come, on the Mac);
 - the Builder's workflow builds the app again when one of those files or the
   launcher's words change (.github/workflows/builder.yml);
+- the console reaches the player's storage as the app does: SMBClient from
+  its submodule, which the workflow checks out, swift-nio-ssh and swift-nio
+  at the app's versions, and the packages they bring pinned as the app pins
+  them (app/patches/livecontainer/0007);
 - none of those files uses, outside an iPhone-only part, a name of UIKit's
   or of the iPhone's SwiftUI that the Mac does not have, but those the
   console's shims give it (Mac/ConsoleShims.swift), nor a name of the
@@ -33,6 +37,7 @@ import unittest
 from pathlib import Path
 
 from test_launcher_strings import placeholders
+from test_storage_tests import added_file, pins
 
 ROOT = Path(__file__).resolve().parents[2]
 LAUNCHER = ROOT / "launcher" / "Sources"
@@ -43,6 +48,7 @@ CATALOG = LAUNCHER / "Cartouche.xcstrings"
 MAC_STRINGS = ROOT / "builder" / "mac" / "console" / "strings.json"
 UNSHARED = ROOT / "builder" / "mac" / "console" / "unshared.json"
 MAC_SOURCES = ROOT / "builder" / "mac" / "Sources"
+MAC_PACKAGE = ROOT / "builder" / "mac"
 PLAN_STEPS = range(7, 10)  # the plan's steps still to come after this one (docs/decisions/095.md)
 WRITER = ROOT / "builder" / "mac" / "console" / "strings.py"
 LANGUAGES = ("en", "fr")
@@ -58,9 +64,10 @@ IPHONE_ONLY = re.compile(
 # The conditions of an iPhone-only part.
 IPHONE_CONDITION = re.compile(r"^(?:os\(iOS\)|canImport\(UIKit\))(?:\s*\|\|\s*os\((?:iOS|visionOS|tvOS)\))*$")
 # The conditions of a part the console never builds: the iPhone's alone,
-# the launcher's gallery (CARTOUCHE_GALLERY, which the Builder does not
-# define), and the packages the console does not link (SMB, SFTP).
-_ELSEWHERE = r"(?:os\((?:iOS|visionOS|tvOS)\)|canImport\((?:UIKit|NIOSSH|SMBClient)\)|CARTOUCHE_GALLERY)"
+# and the launcher's gallery (CARTOUCHE_GALLERY, which the Builder does not
+# define). The console links the packages of SMB and SFTP, as the app does
+# (builder/mac/Package.swift): their parts are built.
+_ELSEWHERE = r"(?:os\((?:iOS|visionOS|tvOS)\)|canImport\(UIKit\)|CARTOUCHE_GALLERY)"
 NOT_ON_THE_MAC = re.compile(rf"^{_ELSEWHERE}(?:\s*\|\|\s*{_ELSEWHERE})*$")
 # The launcher's own names, and LiveContainer's, as the console's files use
 # them, where one is declared, and a string, whose words are no names.
@@ -238,11 +245,13 @@ class MacConsoleSources(unittest.TestCase):
         swift = "\n".join([
             "struct CartoucheThing {}", "#if os(iOS)", "let a = CartoucheRenewals.shared", "#endif",
             "#if CARTOUCHE_GALLERY", "let b = CartoucheGalleryOnly()", "#else", "let c = CartoucheThing()", "#endif",
-            "#if canImport(NIOSSH)", "let d = CartoucheSFTPServer.self", "#endif",
+            "#if canImport(UIKit)", "let d = CartoucheUIKitOnly()", "#endif",
+            # SMB's and SFTP's parts: the console builds them.
+            "#if canImport(NIOSSH)", "let g = CartoucheSFTPMissing.self", "#endif",
             "let e = CartoucheMissing.shared // CartoucheInAComment", 'let f = "CartoucheInAString"',
         ])
         declared, used = own_names(swift)
-        self.assertEqual(sorted(used - declared), ["CartoucheMissing"])
+        self.assertEqual(sorted(used - declared), ["CartoucheMissing", "CartoucheSFTPMissing"])
 
     def test_the_check_sees_an_unguarded_name(self):
         swift = "\n".join([
@@ -254,6 +263,45 @@ class MacConsoleSources(unittest.TestCase):
         self.assertEqual([number for number, code in lines if IPHONE_ONLY.search(code)], [7])
         self.assertNotIn(2, [number for number, _ in lines])
         self.assertIn(4, [number for number, _ in lines])
+
+
+class MacConsolePackages(unittest.TestCase):
+    """The packages the shared storage files need, SMB's and SFTP's, as the
+    app builds them: their parts are built for the Mac (NOT_ON_THE_MAC)."""
+
+    def test_pins_the_packages_the_app_pins(self):
+        app = pins(json.loads(added_file("Package.resolved")))
+        mac = pins(json.loads((MAC_PACKAGE / "Package.resolved").read_text(encoding="utf-8")))
+        self.assertEqual(mac, app)
+
+    def test_asks_for_the_versions_the_app_asks_for(self):
+        project = added_file("project.pbxproj")
+        manifest = (MAC_PACKAGE / "Package.swift").read_text(encoding="utf-8")
+        for name in ("swift-nio-ssh", "swift-nio"):
+            url = re.escape(f"https://github.com/apple/{name}.git")
+            app = re.search(url + r'";\s*requirement = \{\s*kind = exactVersion;\s*version = ([0-9.]+);', project)
+            mac = re.search(r'\.package\(url: "' + url + r'", exact: "([0-9.]+)"\)', manifest)
+            self.assertIsNotNone(app, f"the app does not pin {name} to a version")
+            self.assertIsNotNone(mac, f"builder/mac/Package.swift does not pin {name} to a version")
+            self.assertEqual(mac.group(1), app.group(1), name)
+        self.assertIn('.package(path: "../../app/SMBClient")', manifest)
+        console = manifest.split('name: "CartoucheConsole"', 1)[1].split(".target(", 1)[0]
+        for product in ("SMBClient", "NIOSSH", "NIOCore", "NIOPosix"):
+            self.assertIn(f'.product(name: "{product}"', console, product)
+
+    def test_the_workflow_checks_out_smbclient_before_it_builds(self):
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        job = workflow.split("\n  mac:\n", 1)[1].split("\n  keep:\n", 1)[0]
+        self.assertIn("git submodule update --init app/SMBClient", job,
+                      "the console builds SMBClient from its submodule: the mac job checks it out")
+        checkout = job.index("actions/checkout@")
+        submodule = job.index("git submodule update --init app/SMBClient")
+        self.assertLess(checkout, submodule)
+        self.assertLess(submodule, job.index("swift test --package-path builder/mac"))
+        # A new SMBClient builds the app again.
+        trigger = workflow.split("pull_request:", 1)[1].split("workflow_dispatch:", 1)[0]
+        self.assertIn('- "app/SMBClient"', trigger)
+        self.assertIn("app/SMBClient telemetry/test/builder-reports.json", workflow)
 
 
 class MacConsoleWords(unittest.TestCase):
@@ -282,6 +330,15 @@ class MacConsoleWords(unittest.TestCase):
                 self.assertEqual(sorted(values), list(LANGUAGES))
                 self.assertTrue(all(values[language].strip() for language in LANGUAGES))
                 self.assertEqual(placeholders(values["fr"]), placeholders(values["en"]))
+
+    def test_french_spacing(self):
+        # As the launcher's words (test_launcher_strings.py): a no-break
+        # space before the French colon and semicolon, which then never
+        # starts a line.
+        for section in ("overrides", "strings"):
+            for key, values in self.mac.get(section, {}).items():
+                with self.subTest(key=key):
+                    self.assertIsNone(re.search(r"[^\u00a0\u202f][:;](?:\s|$)", values["fr"]), values["fr"])
 
     def test_the_console_files_words_are_the_macs_own(self):
         """The words the console's own files speak (Mac/, CartoucheText's

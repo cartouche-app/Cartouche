@@ -18,16 +18,17 @@ import Foundation
 import XCTest
 @testable import BuilderKit
 
-/// One end of a connection in memory; frames go to the other end.
-private final class Pipe: CartoucheBridgeTransport, @unchecked Sendable {
+/// One end of a connection in memory; frames go to the other end. The
+/// connections' tests use it too (BridgeConnectionsTests.swift).
+final class MemoryPipe: CartoucheBridgeTransport, @unchecked Sendable {
     private let lock = NSLock()
     private var frames: [Data] = []
     private var waiting: CheckedContinuation<Data, Error>?
     private var closed = false
-    weak var other: Pipe?
+    weak var other: MemoryPipe?
 
-    static func pair() -> (Pipe, Pipe) {
-        let a = Pipe(), b = Pipe()
+    static func pair() -> (MemoryPipe, MemoryPipe) {
+        let a = MemoryPipe(), b = MemoryPipe()
         a.other = b
         b.other = a
         return (a, b)
@@ -282,7 +283,7 @@ final class BridgeBuildsTests: XCTestCase {
         let key = Data(repeating: 5, count: 32)
         let device = UUID().uuidString
         server.devices.add(id: device, name: "iPhone de test", key: key)
-        let (phoneSide, macSide) = Pipe.pair()
+        let (phoneSide, macSide) = MemoryPipe.pair()
         let serving = Task { await server.open(macSide) }
         let channel = try await CartoucheBridgeHandshake.client(phoneSide, device: device, key: key, mac: server.devices.macID)
         return (CartoucheBridgeClient(channel: channel, address: nil), serving)

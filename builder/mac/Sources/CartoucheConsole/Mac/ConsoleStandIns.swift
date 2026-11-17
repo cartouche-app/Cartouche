@@ -437,12 +437,53 @@ enum CartoucheReports {
                                            device: "\(model) (\(memory) GB)", language: language, facts: [])
     }
 
+    // MARK: The player's storage
+
+    /// A report on the connection to SERVER, as its form on the Storage
+    /// page holds it, which failed with ERROR, as the iPhone's: what the
+    /// player typed in the form is taken out of reports first, as it is not
+    /// in their settings yet.
+    static func connectionFailed(to server: CartoucheStorageServer, error: Error) -> CartoucheReport {
+        redactTyped(servers: [server.host], names: [server.name, server.share], accounts: [server.username])
+        var facts: [CartoucheReport.Fact] = []
+        if let port = server.port {
+            facts.append(.init("Port", String(port)))
+        }
+        if server.kind == .s3 {
+            let host = server.host.lowercased()
+            facts.append(.init("S3 server", host.contains("amazonaws.com") ? "Amazon S3" : "the player's own"))
+            facts.append(.init("Connection", host.hasPrefix("http://") ? "HTTP" : "HTTPS"))
+            if let region = server.region {
+                facts.append(.init("Region", region))
+            }
+        }
+        // A server that does not answer from here: its address may be
+        // wrong, or the Mac away from its network.
+        let message = (error as? CartoucheStorageOffline).map {
+            $0.isSignedOut || $0.isMac ? $0.localizedDescription : CartoucheText.storageOfflineCheck($0.name)
+        } ?? error.localizedDescription
+        return make(.storage, CartoucheText.storageConnectFailed, message: message, error: error,
+                    step: "Connecting to " + kindName(server.kind), stage: "connect", facts: facts)
+    }
+
+    /// What the player typed since the console opened that their settings
+    /// do not hold yet: what a form names before it is saved.
+    private static var typed = CartoucheRedaction()
+
+    /// Takes what the player just typed out of reports, as their own.
+    static func redactTyped(servers: [String] = [], names: [String] = [], accounts: [String] = []) {
+        typed.servers += servers.filter { !typed.servers.contains($0) }
+        typed.names += names.filter { !typed.names.contains($0) }
+        typed.accounts += accounts.filter { !typed.accounts.contains($0) }
+    }
+
     /// What the player's settings name, which a report never holds: their
     /// servers' addresses, the names of their places, their shared folders
-    /// and buckets, the paths of their folders and their user names.
+    /// and buckets, the paths of their folders and their user names; and
+    /// what they typed since the console opened.
     static func redaction() -> CartoucheRedaction {
         let settings = CartoucheStorageSettings.shared
-        var redaction = CartoucheRedaction()
+        var redaction = typed
         for server in settings.servers {
             redaction.servers.append(server.host)
             redaction.names.append(server.name)

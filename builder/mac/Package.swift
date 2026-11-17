@@ -7,6 +7,7 @@
 // Python) does the work; the app runs its JSON commands and follows its
 // batches.
 //
+//     git submodule update --init app/SMBClient
 //     swift build -c release --package-path builder/mac
 //     builder/mac/bundle.sh "$HOME/Applications"     # the .app, signed ad hoc
 //     swift test --package-path builder/mac
@@ -22,6 +23,14 @@ let package = Package(
     dependencies: [
         // The bridge to Cartouche (launcher/Sources/CartoucheBridge.swift).
         .package(path: "../../launcher"),
+        // The console's storage reaches the player's shared folders over
+        // SMB and their servers over SFTP, as Cartouche on the iPhone does:
+        // SMBClient and swift-nio-ssh pinned as the app pins them, the
+        // submodule app/SMBClient and Package.resolved, which matches the one
+        // of app/patches/livecontainer/0007 (app/tests/test_storage_tests.py).
+        .package(path: "../../app/SMBClient"),
+        .package(url: "https://github.com/apple/swift-nio-ssh.git", exact: "0.15.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", exact: "2.104.0"),
     ],
     targets: [
         .target(
@@ -37,6 +46,12 @@ let package = Package(
         // CartoucheCore, each its own copy: the app imports it in one file.
         .target(
             name: "CartoucheConsole",
+            dependencies: [
+                .product(name: "SMBClient", package: "SMBClient"),
+                .product(name: "NIOSSH", package: "swift-nio-ssh"),
+                .product(name: "NIOCore", package: "swift-nio"),
+                .product(name: "NIOPosix", package: "swift-nio"),
+            ],
             path: "Sources/CartoucheConsole"
         ),
         .executableTarget(

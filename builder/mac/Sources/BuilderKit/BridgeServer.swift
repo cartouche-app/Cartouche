@@ -22,6 +22,13 @@
 //  queue, stops them all, follows a game or not, builds every night or not;
 //  its info says so as well (hasBuildsControl).
 //
+//  A paired iPhone gives the player's connections to their storage, a NAS,
+//  a bucket, a server or a Google Drive, with their passwords, and takes
+//  those of the Storage page of Cartouche's console on the Mac, which the
+//  app keeps the same as the iPhone's from then on
+//  (BridgeConnectionsSource, CartoucheConnections.swift); its info says so
+//  (hasConnections).
+//
 
 import CartoucheCore
 import Foundation
@@ -67,6 +74,17 @@ public protocol BridgeBuildsSource: AnyObject {
     func bridgeNightly(_ nightly: CartoucheBridgeBuilds.Nightly) throws
 }
 
+/// The Mac's connections to the player's storage, those of the Storage
+/// page of Cartouche's console, for the paired iPhones.
+@MainActor
+public protocol BridgeConnectionsSource: AnyObject {
+    /// Takes THEIRS, a paired iPhone's connections with those it removed,
+    /// as the ones changed last, and gives the Mac's once it took them,
+    /// with those removed on either side; throws when it could not take
+    /// them, which leaves the iPhone's as they are.
+    func bridgeConnections(_ theirs: [CartoucheConnection]) throws -> [CartoucheConnection]
+}
+
 public final class BridgeServer: @unchecked Sendable {
     public enum State: Equatable, Sendable {
         case stopped
@@ -95,6 +113,7 @@ public final class BridgeServer: @unchecked Sendable {
     private var activity: NSObjectProtocol?
     private var generation = 0
     private weak var _builds: BridgeBuildsSource?
+    private weak var _connections: BridgeConnectionsSource?
 
     public init(devices: BridgeDevices, name: String) {
         self.devices = devices
@@ -139,6 +158,21 @@ public final class BridgeServer: @unchecked Sendable {
         set {
             lock.lock()
             _builds = newValue
+            lock.unlock()
+        }
+    }
+
+    /// What takes the iPhones' connections and gives the Mac's: none, and
+    /// the Mac's info says it takes none.
+    public var connections: BridgeConnectionsSource? {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return _connections
+        }
+        set {
+            lock.lock()
+            _connections = newValue
             lock.unlock()
         }
     }
@@ -366,6 +400,9 @@ public final class BridgeServer: @unchecked Sendable {
             if request.op.isBuilds {
                 response = await answerBuilds(request)
                 data = Data()
+            } else if request.op == .connections {
+                response = await answerConnections(request)
+                data = Data()
             } else {
                 (response, data) = session.handle(request, body: body)
             }
@@ -390,6 +427,20 @@ public final class BridgeServer: @unchecked Sendable {
             return .failure(error.kind, error.message)
         } catch {
             return .failure(.failed, error.localizedDescription)
+        }
+    }
+
+    /// The Mac's connections, once it took the iPhone's REQUEST gives: the
+    /// app answers on the main actor.
+    func answerConnections(_ request: CartoucheBridgeRequest) async -> CartoucheBridgeResponse {
+        guard let source = connections else { return .failure(.notFound, "connections") }
+        guard let theirs = request.connections else { return .failure(.protocolError, "connections") }
+        do {
+            var response = CartoucheBridgeResponse()
+            response.connections = try await MainActor.run { try source.bridgeConnections(theirs) }
+            return response
+        } catch {
+            return .failure(.failed, "connections")
         }
     }
 
@@ -524,6 +575,7 @@ final class Session {
             response.readOnly = false
             response.hasBuilds = server?.builds != nil
             response.hasBuildsControl = server?.builds != nil
+            response.hasConnections = server?.connections != nil
         case .list:
             let place = try resolve(request.path)
             guard let place else {
@@ -617,6 +669,9 @@ final class Session {
         case .builds, .build, .buildDue, .stop, .stopAll, .follow, .nightly:
             // The server asks the app (BridgeServer.answerBuilds).
             throw CartoucheBridgeError(.notFound, "builds")
+        case .connections:
+            // The server asks the app (BridgeServer.answerConnections).
+            throw CartoucheBridgeError(.notFound, "connections")
         }
         return (response, Data())
     }

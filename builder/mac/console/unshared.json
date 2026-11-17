@@ -200,30 +200,10 @@
       "kind": "iphone",
       "why": "Choosing how the iPhone's games are signed."
     },
-    "CartoucheStorageDriveView.swift": {
-      "kind": "later",
-      "why": "The player's Google Drive on the Storage page: with the console's storage and the library the iPhone and the Mac share.",
-      "step": 7
-    },
     "CartoucheStorageMacView.swift": {
       "kind": "mac",
       "why": "Pairing the iPhone with a Mac, from the iPhone's side: the Builder's iPhone page is the Mac's side.",
       "mac": "CartoucheBuilder/BridgeView.swift"
-    },
-    "CartoucheStorageSFTP.swift": {
-      "kind": "later",
-      "why": "An SFTP server of the player's: with the console's storage and the library the iPhone and the Mac share.",
-      "step": 7
-    },
-    "CartoucheStorageSMB.swift": {
-      "kind": "later",
-      "why": "A shared folder over SMB: with the console's storage and the library the iPhone and the Mac share.",
-      "step": 7
-    },
-    "CartoucheStorageView.swift": {
-      "kind": "later",
-      "why": "The Storage page: with the console's storage and the library the iPhone and the Mac share.",
-      "step": 7
     },
     "CartoucheSystemView.swift": {
       "kind": "later",

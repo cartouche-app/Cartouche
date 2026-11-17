@@ -46,13 +46,15 @@ struct MainView: View {
     @EnvironmentObject private var bridge: BridgeController
     /// The console with every game open, with its first game's settings
     /// page, or with that game's info over it, or with the sheet of the
-    /// game of that title ID, and a page of its saves, as the gallery shows
-    /// it.
+    /// game of that title ID, and a page of its saves, or its System page,
+    /// or the Storage page that one opens, as the gallery shows it.
     var showingLibrary = false
     var showingSettings = false
     var showingInfo = false
     var showingSheetOf: String?
     var showingSaves: ConsoleSavesPage?
+    var showingSystem = false
+    var showingStorage = false
     /// The Mac's appearance, light or dark: the builder's.
     @State private var macScheme = MainView.scheme(of: NSApplication.shared.effectiveAppearance)
 
@@ -61,7 +63,8 @@ struct MainView: View {
             switch model.interface {
             case .console:
                 CartoucheMacConsoleView(showingLibrary: showingLibrary, showingSettings: showingSettings, showingInfo: showingInfo,
-                                        showingSheetOf: showingSheetOf, showingSaves: showingSaves?.console)
+                                        showingSheetOf: showingSheetOf, showingSaves: showingSaves?.console,
+                                        showingSystem: showingSystem, showingStorage: showingStorage)
                     .overlay(alignment: .top) { consoleBanner }
             case .builder:
                 ContentView()
@@ -189,10 +192,36 @@ enum ConsoleLink {
         console.onQuit = { [weak model] game in model?.askToQuit(app: game) }
         console.onImport = { [weak model] in model?.showBuilder(.library) }
         console.onSystem = { [weak model] in model?.showBuilder(nil) }
+        // This Mac's folders, on the console's Storage page: the Builder's
+        // iPhone page shows them, the saves folder changed there.
+        console.onFolders = { [weak model] in model?.showBuilder(.iphone) }
         console.onUninstall = { [weak model] game in model?.askToRemove(app: game) }
         console.onInstall = { [weak model] titleID in model?.install(titleID: titleID) }
         startSaves(model)
         speak()
+    }
+
+    // MARK: The player's storage
+
+    /// Keeps the passwords, secret keys and Google sign-ins of the
+    /// connections of the console's Storage page in FILE from now on
+    /// (BuilderHome.connections): once, as the app starts, before the
+    /// bridge takes a paired iPhone's.
+    static func keepConnections(in file: URL) {
+        CartoucheMacConsole.keepConnectionSecrets(in: file)
+    }
+
+    /// Takes THEIRS, a paired iPhone's connections as JSON, and gives this
+    /// Mac's once it took them, the same JSON (BridgeController): nil for
+    /// what is no list of connections.
+    static func takeConnections(_ theirs: Data) -> Data? {
+        CartoucheMacConsole.shared.takeConnections(theirs)
+    }
+
+    /// The Builder's games folder and saves folder, which the console's
+    /// Storage page shows under This Mac.
+    static func showFolders(games: URL?, saves: URL?) {
+        CartoucheMacConsole.shared.showFolders(games: games, saves: saves)
     }
 
     // MARK: A game's saves

@@ -13012,13 +13012,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Only storage of your own, with your own account: Cartouche keeps the password, the secret key or the Google sign-in in this iPhone’s keychain."
+            "value" : "Only storage of your own, with your own account: Cartouche keeps the password, the secret key or the Google sign-in in this iPhone’s keychain. The Mac you pair with Cartouche Builder keeps the same connections, passwords included, over the bridge’s encryption."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uniquement votre propre stockage, avec votre propre compte : Cartouche garde le mot de passe, la clé secrète ou la connexion Google dans le trousseau de cet iPhone."
+            "value" : "Uniquement votre propre stockage, avec votre propre compte : Cartouche garde le mot de passe, la clé secrète ou la connexion Google dans le trousseau de cet iPhone. Le Mac que vous associez avec Cartouche Builder garde les mêmes connexions, mots de passe compris, par le chiffrement du pont."
           }
         }
       }

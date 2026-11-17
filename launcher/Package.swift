@@ -30,6 +30,7 @@ let package = Package(
             sources: [
                 "CartoucheBridge.swift",
                 "CartoucheBridgeBuilds.swift",
+                "CartoucheConnections.swift",
                 "CartoucheCoverList.swift",
                 "CartoucheDeviceWords.swift",
                 "CartoucheDrive.swift",

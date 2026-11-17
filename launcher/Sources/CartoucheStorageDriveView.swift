@@ -6,12 +6,17 @@
 //  the form that adds it, with the ID of the player's own OAuth client and
 //  the guide that makes one; Google's sign-in page, in the sheet iOS shows
 //  for it; and Sign in again, in one tap, once Google ended the sign-in.
-//  The Drive itself is in CartoucheStorageDrive.swift.
+//  The Drive itself is in CartoucheStorageDrive.swift. Cartouche's console
+//  on the Mac shows the same form, Google's page over its window.
 //
 
 import AuthenticationServices
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#else
+import AppKit
+#endif
 
 // MARK: Google's sign-in page
 
@@ -60,6 +65,7 @@ final class CartoucheDriveWebSignIn: NSObject, ASWebAuthenticationPresentationCo
 
     /// The window in front, which the sheet shows over.
     private static func window() -> ASPresentationAnchor {
+        #if canImport(UIKit)
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
         if let window = scenes.flatMap(\.windows).first(where: \.isKeyWindow) ?? scenes.first?.windows.first {
             return window
@@ -68,6 +74,10 @@ final class CartoucheDriveWebSignIn: NSObject, ASWebAuthenticationPresentationCo
             return UIWindow(windowScene: scene)
         }
         return ASPresentationAnchor(frame: .zero)
+        #else
+        // The console's window, on the Mac.
+        return NSApplication.shared.keyWindow ?? NSApplication.shared.mainWindow ?? NSApplication.shared.windows.first ?? ASPresentationAnchor()
+        #endif
     }
 }
 
@@ -166,12 +176,14 @@ struct CartoucheStorageDriveForm: View {
 
     var body: some View {
         Form {
-            Section {
+            CartoucheSection {
                 TextField(CartoucheText.storageDriveClientField, text: $clientText, axis: .vertical)
                     .lineLimit(1 ... 3)
                     .font(.callout.monospaced())
+                    #if os(iOS)
                     .keyboardType(.asciiCapable)
                     .textInputAutocapitalization(.never)
+                    #endif
                     .autocorrectionDisabled()
                 if client == nil, !clientText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     Text(CartoucheText.storageDriveBadClient)
@@ -188,7 +200,7 @@ struct CartoucheStorageDriveForm: View {
             } footer: {
                 Text(CartoucheText.storageDriveClientFooter)
             }
-            Section {
+            CartoucheSection {
                 if !server.host.isEmpty {
                     LabeledContent(CartoucheText.storageDriveAccount) {
                         Text(server.host)
@@ -233,9 +245,14 @@ struct CartoucheStorageDriveForm: View {
                 Text(CartoucheText.storageNameTitle)
             }
         }
+        // In boxes, as on the iPhone: a form on the Mac lines its titles up
+        // in a column of their own otherwise.
+        .formStyle(.grouped)
         .cartoucheStageBackground()
         .navigationTitle(isNew ? CartoucheText.storageAddDrive : server.name)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button(CartoucheText.cancel) { dismiss() }
@@ -331,7 +348,8 @@ struct CartoucheDriveGuideView: View {
         ]
     }
 
-    /// Cartouche's own bundle ID, as installed on this iPhone.
+    /// Cartouche's own bundle ID, as installed on this iPhone; on the Mac,
+    /// Cartouche Builder's, whose console signs in with the same client.
     private var bundleID: String { Bundle.main.bundleIdentifier ?? "" }
 
     var body: some View {
@@ -366,7 +384,12 @@ struct CartoucheDriveGuideView: View {
                             Text(CartoucheText.storageDriveBundleID)
                         }
                         Button {
+                            #if canImport(UIKit)
                             UIPasteboard.general.string = bundleID
+                            #else
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(bundleID, forType: .string)
+                            #endif
                             copied = true
                         } label: {
                             Label(copied ? CartoucheText.storageDriveCopied : CartoucheText.storageDriveCopy,
@@ -390,7 +413,9 @@ struct CartoucheDriveGuideView: View {
         }
         .cartoucheStageBackground()
         .navigationTitle(CartoucheText.storageDriveGuideTitle)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 }
 

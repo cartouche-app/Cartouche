@@ -167,6 +167,11 @@ enum ConsoleGallery {
                           : CartoucheMacGameSaves(lastSync: copies[0].date, fetched: copies[1].date)
         console.showSaves(folder: CartoucheMacSavesFolder(name: nas, path: "/Volumes/Partage/Cartouche/Saves"),
                           games: [sheetGame: saves])
+        // The Storage page: the NAS's folders under This Mac, and made-up
+        // connections, kept in memory only.
+        console.showFolders(games: URL(fileURLWithPath: "/Volumes/Jeux", isDirectory: true),
+                            saves: URL(fileURLWithPath: "/Volumes/Partage/Cartouche/Saves", isDirectory: true))
+        console.showStorageForGallery(language: language)
         console.speak(language)
     }
 

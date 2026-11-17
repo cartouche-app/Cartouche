@@ -180,6 +180,9 @@ final class AppModel: ObservableObject {
     func start() async {
         guard !started, !sample else { return }
         started = true
+        // The secrets of the console's connections, in the Builder's folder:
+        // before the console or a paired iPhone saves one.
+        ConsoleLink.keepConnections(in: home.connections)
         show(read: Engine.cachedLibrary(home), since: switches.mark)
         status = Engine.readStatus(home)
         queue = Engine.readQueue(home)

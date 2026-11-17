@@ -31,6 +31,11 @@
 //  Mac a little older does not know these requests, and ends the session on
 //  one: Cartouche asks its info first.
 //
+//  A Mac whose info says hasConnections also takes the player's connections
+//  to their storage, a NAS, a bucket, a server or a Google Drive with their
+//  passwords, and gives its own, so that both keep the same
+//  (CartoucheConnections.swift).
+//
 //  This file is shared: Cartouche compiles it with the launcher, Cartouche
 //  Builder through the CartoucheCore package (launcher/Package.swift). It
 //  needs only Foundation, CryptoKit and Network.
@@ -302,6 +307,10 @@ public struct CartoucheBridgeRequest: Codable, Equatable {
         /// batch, follow a game or not, build every night or not. Only of a
         /// Mac whose info says it takes them (hasBuildsControl).
         case buildDue, stop, stopAll, follow, nightly
+        /// The iPhone's connections to the player's storage, for the Mac's,
+        /// which it keeps the same from then on: only of a Mac whose info
+        /// says it takes them (hasConnections).
+        case connections
 
         /// Whether the Mac's app answers it, with its builds.
         public var isBuilds: Bool {
@@ -324,9 +333,12 @@ public struct CartoucheBridgeRequest: Codable, Equatable {
     public var followed: Bool?
     /// nightly: the Mac's nightly build from now on.
     public var nightly: CartoucheBridgeBuilds.Nightly?
+    /// connections: the iPhone's, with those it removed.
+    public var connections: [CartoucheConnection]?
 
     public init(_ op: Operation, path: String? = nil, offset: UInt64? = nil, count: Int? = nil, size: UInt64? = nil, upload: String? = nil,
-                game: String? = nil, followed: Bool? = nil, nightly: CartoucheBridgeBuilds.Nightly? = nil) {
+                game: String? = nil, followed: Bool? = nil, nightly: CartoucheBridgeBuilds.Nightly? = nil,
+                connections: [CartoucheConnection]? = nil) {
         self.op = op
         self.path = path
         self.offset = offset
@@ -336,6 +348,7 @@ public struct CartoucheBridgeRequest: Codable, Equatable {
         self.game = game
         self.followed = followed
         self.nightly = nightly
+        self.connections = connections
     }
 }
 
@@ -374,8 +387,14 @@ public struct CartoucheBridgeResponse: Codable, Equatable {
     /// (buildDue, stop, stopAll, follow, nightly).
     public var hasBuilds: Bool?
     public var hasBuildsControl: Bool?
+    /// info: whether the Mac takes the player's connections, and gives its
+    /// own (connections).
+    public var hasConnections: Bool?
     /// builds, build and the rest: the Mac's builds, after what was asked.
     public var builds: CartoucheBridgeBuilds?
+    /// connections: the Mac's, once it took the iPhone's, with those
+    /// removed on either side.
+    public var connections: [CartoucheConnection]?
 
     public init() {}
 
@@ -888,6 +907,16 @@ public final class CartoucheBridgeClient {
             throw CartoucheBridgeError(.protocolError, "no builds")
         }
         return builds
+    }
+
+    /// Gives the Mac MINE, the iPhone's connections with those it removed,
+    /// and gets the Mac's once it took them; ask only a Mac whose info says
+    /// it takes them (hasConnections).
+    public func connections(_ mine: [CartoucheConnection]) async throws -> [CartoucheConnection] {
+        guard let theirs = try await call(CartoucheBridgeRequest(.connections, connections: mine)).0.connections else {
+            throw CartoucheBridgeError(.protocolError, "no connections")
+        }
+        return theirs
     }
 
     public func close() {

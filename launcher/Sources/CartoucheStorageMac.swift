@@ -19,6 +19,11 @@
 //  iPhone's ID for the Mac is the server's own UUID: two Macs cannot tell
 //  they serve the same iPhone.
 //
+//  The player's connections to their storage go to the Mac, and its own
+//  come back, so that both have the same (CartoucheConnectionsExchange):
+//  after a pairing, after each change here, and when Cartouche comes to
+//  the front.
+//
 
 import Combine
 import Foundation
@@ -304,6 +309,114 @@ enum CartoucheMacStorage {
             return try await work()
         } catch let error as CartoucheBridgeError {
             throw explained(error, mac: mac, path: path)
+        }
+    }
+}
+
+// MARK: The connections the Mac takes
+
+/// The player's connections to their storage, given to each paired Mac
+/// with their secrets, and the Mac's taken, so that both have the same
+/// (CartoucheConnections.swift): after a pairing, a moment after a server
+/// that goes over the bridge was saved or removed here, and when Cartouche
+/// comes to the front, at most every ten minutes then. A Mac away, closed
+/// or too old to take them is asked again the next time; none of it makes
+/// a report.
+@MainActor
+final class CartoucheConnectionsExchange: ObservableObject {
+    static let shared = CartoucheConnectionsExchange()
+
+    /// When each Mac last took the connections, by its server's ID.
+    @Published private(set) var last: [UUID: Date] = [:]
+    /// How long Cartouche coming to the front leaves them, after they last
+    /// went to every Mac, in seconds.
+    static let interval: TimeInterval = 10 * 60
+
+    private let settings: CartoucheStorageSettings
+    private var watching: AnyCancellable?
+    private var running: Task<Void, Never>?
+    private var again = false
+
+    init(settings: CartoucheStorageSettings = .shared) {
+        self.settings = settings
+    }
+
+    /// From now on, a moment after each change here.
+    func start() {
+        guard watching == nil else { return }
+        watching = settings.connectionsChanged
+            .debounce(for: .seconds(2), scheduler: DispatchQueue.main)
+            .sink { [weak self] in self?.exchange() }
+    }
+
+    /// Cartouche came to the front: unless every Mac took them within the
+    /// interval.
+    func cameForward(now: Date = Date()) {
+        start()
+        let macs = settings.servers.filter { $0.kind == .mac }
+        guard macs.contains(where: { now.timeIntervalSince(last[$0.id] ?? .distantPast) >= Self.interval }) else { return }
+        exchange()
+    }
+
+    /// With each paired Mac; once more after the exchange under way.
+    func exchange() {
+        guard running == nil else {
+            again = true
+            return
+        }
+        running = Task { [self] in
+            repeat {
+                again = false
+                await exchangeOnce()
+            } while again
+            running = nil
+        }
+    }
+
+    /// Whether an exchange is under way: the tests wait for its end.
+    var isExchanging: Bool { running != nil }
+
+    private func exchangeOnce() async {
+        for mac in settings.servers where mac.kind == .mac {
+            if await Self.exchange(with: mac, settings: settings) {
+                last[mac.id] = Date()
+            }
+        }
+    }
+
+    /// Gives the Mac of SERVER the connections, and takes its own: whether
+    /// the Mac took them. A Mac too old to take them leaves them as they
+    /// are.
+    static func exchange(with server: CartoucheStorageServer, settings: CartoucheStorageSettings) async -> Bool {
+        let remote: CartoucheRemote
+        do {
+            remote = try await CartoucheStorage.connect(server, settings: settings)
+        } catch {
+            NSLog("[Cartouche] the connections wait for the Mac: %@", error.localizedDescription)
+            return false
+        }
+        let took = await give(to: remote, settings: settings)
+        await remote.disconnect()
+        return took
+    }
+
+    /// The connections given to the Mac REMOTE, and its own taken. The
+    /// journal says how many, never which.
+    private static func give(to remote: CartoucheRemote, settings: CartoucheStorageSettings) async -> Bool {
+        guard let mac = remote as? CartoucheMacRemote else { return false }
+        do {
+            guard try await mac.client.info().hasConnections == true else {
+                NSLog("[Cartouche] the Mac takes no connections: its Cartouche Builder is older")
+                return false
+            }
+            let theirs = try await mac.client.connections(settings.connections())
+            let changed = settings.take(theirs)
+            NSLog("[Cartouche] the Mac took the connections and gave %ld, %@", theirs.filter { !$0.removed }.count,
+                  changed ? "which changed some here" : "the same as here")
+            return true
+        } catch {
+            NSLog("[Cartouche] the Mac did not take the connections: %@", error.localizedDescription)
+            return false
         }
     }
 }

@@ -10,7 +10,8 @@
 //  a NAS without having installed them here, as the iPhone's console knows
 //  the IPAs of its games folder; it does what the player asks of them:
 //  Play starts a game's app, Install installs a game from the NAS, how far
-//  it is over the console, Import and System lead to the app's own pages.
+//  it is over the console, Import leads to the app's own pages, System to
+//  the console's (ConsoleSystem.swift), its storage and the Builder.
 //  Game settings opens the game's settings page in place of its sheet, the
 //  way back to the sheet above it, where the controller's L and R change
 //  the category and B goes back, as on the iPhone; the page's last button
@@ -66,8 +67,15 @@ public final class CartoucheMacConsole: ObservableObject {
     /// Import, on the home or the sheet of a game the player has no copy
     /// of: the Builder adds games.
     public var onImport: () -> Void = {}
-    /// System, on the home's dock.
+    /// Cartouche Builder, from the console's System page.
     public var onSystem: () -> Void = {}
+    /// Change in the Builder, under This Mac on the Storage page: the page
+    /// of the Builder where the player chooses its games folder and its
+    /// saves folder.
+    public var onFolders: () -> Void = {}
+    /// The Builder's games folder and saves folder, as This Mac shows them
+    /// on the Storage page (ConsoleStorage.swift).
+    @Published private(set) var folders = CartoucheMacFolders(games: nil, saves: nil)
     /// Removes the game from this Mac; the app asks the player first.
     public var onUninstall: (_ game: URL) -> Void = { _ in }
     /// Install, on a game the Builder keeps on a NAS: the app installs it
@@ -139,6 +147,13 @@ public final class CartoucheMacConsole: ObservableObject {
         if folder.games != stored || folder.serverName != place {
             folder.showForMac(stored, server: place)
         }
+    }
+
+    /// The Builder's games folder and saves folder, which This Mac shows
+    /// on the Storage page.
+    public func showFolders(games: URL?, saves: URL?) {
+        let shown = CartoucheMacFolders(games: games, saves: saves)
+        if shown != folders { folders = shown }
     }
 
     /// Install, on a game of the games folder.
@@ -244,16 +259,22 @@ public struct CartoucheMacConsoleView: View {
 
     enum Route: Hashable {
         case library
+        /// The console's System page (ConsoleSystem.swift), and its Storage
+        /// page, the iPhone's.
+        case system, storage
     }
 
     /// The console on its home, or with every game open (SHOWINGLIBRARY),
     /// or with the settings page of its first game on this Mac beside it
     /// (SHOWINGSETTINGS), or that game's info over it (SHOWINGINFO), or the
     /// sheet of the game of the title ID SHOWINGSHEETOF beside it, with the
-    /// page of its saves SHOWINGSAVES open, as the app's gallery shows it.
+    /// page of its saves SHOWINGSAVES open, or with its System page open
+    /// (SHOWINGSYSTEM), or the Storage page under it (SHOWINGSTORAGE), as
+    /// the app's gallery shows it.
     public init(showingLibrary: Bool = false, showingSettings: Bool = false, showingInfo: Bool = false,
-                showingSheetOf titleID: String? = nil, showingSaves: CartoucheMacSavesPage? = nil) {
-        _path = State(initialValue: showingLibrary ? [.library] : [])
+                showingSheetOf titleID: String? = nil, showingSaves: CartoucheMacSavesPage? = nil,
+                showingSystem: Bool = false, showingStorage: Bool = false) {
+        _path = State(initialValue: showingLibrary ? [.library] : showingStorage ? [.system, .storage] : showingSystem ? [.system] : [])
         opensSettings = showingSettings
         opensInfo = showingInfo
         opensSheetOf = titleID
@@ -335,7 +356,7 @@ public struct CartoucheMacConsoleView: View {
                 onLibrary: { path.append(.library) },
                 onSetup: {},
                 onTab: { tab in
-                    if tab == .system { console.onSystem() }
+                    if tab == .system, path.last != .system { path.append(.system) }
                 },
                 zoom: path.isEmpty ? zoom : nil,
                 // Beside the console, the sheet describes the game in focus.
@@ -355,6 +376,12 @@ public struct CartoucheMacConsoleView: View {
                             onBack: { if !path.isEmpty { path.removeLast() } },
                             zoom: zoom,
                             onFocus: { focus($0) })
+                    case .system:
+                        CartoucheMacSystemView { console.onSystem() }
+                            .cartoucheConsolePage(CartoucheText.systemTab, back: CartoucheText.macBackToConsole)
+                    case .storage:
+                        CartoucheStorageView()
+                            .cartoucheConsolePage(CartoucheText.storageTitle, back: CartoucheText.systemTab)
                     }
                 }
         }

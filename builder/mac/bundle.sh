@@ -54,13 +54,14 @@ for size in 16 32 128 256 512; do
 done
 iconutil -c icns "$icons/AppIcon.iconset" -o "$app/Contents/Resources/AppIcon.icns"
 
-# What macOS says when the bridge first listens on the network, in French
-# for a Mac in French.
+# What macOS says when the bridge first listens on the network, or the
+# console first reaches the player's NAS or server, in French for a Mac in
+# French.
 cat >"$app/Contents/Resources/en.lproj/InfoPlist.strings" <<'STRINGS'
-"NSLocalNetworkUsageDescription" = "Cartouche on your iPhone finds this Mac on your Wi-Fi to install your games from it and keep your saves here.";
+"NSLocalNetworkUsageDescription" = "Cartouche on your iPhone finds this Mac on your Wi-Fi to install your games from it and keep your saves here, and Cartouche’s console reaches your NAS and your servers there.";
 STRINGS
 cat >"$app/Contents/Resources/fr.lproj/InfoPlist.strings" <<'STRINGS'
-"NSLocalNetworkUsageDescription" = "Cartouche sur votre iPhone trouve ce Mac sur votre Wi-Fi pour y installer vos jeux et y garder vos sauvegardes.";
+"NSLocalNetworkUsageDescription" = "Cartouche sur votre iPhone trouve ce Mac sur votre Wi-Fi pour y installer vos jeux et y garder vos sauvegardes, et la console de Cartouche y atteint votre NAS et vos serveurs.";
 STRINGS
 
 cat >"$app/Contents/Info.plist" <<PLIST
@@ -104,10 +105,11 @@ cat >"$app/Contents/Info.plist" <<PLIST
   <key>NSHumanReadableCopyright</key>
   <string>Cartouche, AGPL-3.0</string>
   <key>NSLocalNetworkUsageDescription</key>
-  <string>Cartouche on your iPhone finds this Mac on your Wi-Fi to install your games from it and keep your saves here.</string>
+  <string>Cartouche on your iPhone finds this Mac on your Wi-Fi to install your games from it and keep your saves here, and Cartouche’s console reaches your NAS and your servers there.</string>
   <key>NSBonjourServices</key>
   <array>
     <string>_cartouche._tcp</string>
+    <string>_smb._tcp</string>
   </array>
   <key>CartoucheTelemetryURL</key>
   <string>$telemetry</string>

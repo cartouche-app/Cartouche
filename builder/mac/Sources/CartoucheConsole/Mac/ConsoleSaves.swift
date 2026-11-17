@@ -373,30 +373,33 @@ extension View {
     /// saves or its Switch saves: its title, and the way back to the sheet
     /// above it, which Escape takes too, as the settings page has them
     /// (ConsoleView.swift), rather than in the window's toolbar, which the
-    /// console's two stacks share.
-    func cartoucheConsolePage(_ title: String) -> some View {
-        modifier(CartoucheConsolePage(title: title))
+    /// console's two stacks share. A page the console's home opens, as
+    /// System, says where its way back goes: BACK.
+    func cartoucheConsolePage(_ title: String, back: String = CartoucheText.backToSheet) -> some View {
+        modifier(CartoucheConsolePage(title: title, backTitle: back))
     }
 }
 
 private struct CartoucheConsolePage: ViewModifier {
     let title: String
+    let backTitle: String
     @Environment(\.dismiss) private var dismiss
 
     func body(content: Content) -> some View {
         content
             .navigationBarBackButtonHidden(true)
             .safeAreaInset(edge: .top, spacing: 0) {
-                CartoucheConsoleBar(title: title) { dismiss() }
+                CartoucheConsoleBar(title: title, back: { dismiss() }, backTitle: backTitle)
             }
     }
 }
 
 /// The bar above a page beside the console: its title, and the way back to
-/// the game's sheet, which Escape takes too.
+/// the game's sheet, or BACKTITLE's page, which Escape takes too.
 struct CartoucheConsoleBar: View {
     let title: String
     let back: () -> Void
+    var backTitle = CartoucheText.backToSheet
 
     var body: some View {
         ZStack {
@@ -405,7 +408,7 @@ struct CartoucheConsoleBar: View {
                 .lineLimit(1)
             HStack {
                 Button(action: back) {
-                    Label(CartoucheText.backToSheet, systemImage: "chevron.backward")
+                    Label(backTitle, systemImage: "chevron.backward")
                 }
                 .buttonStyle(.borderless)
                 .keyboardShortcut(.cancelAction)

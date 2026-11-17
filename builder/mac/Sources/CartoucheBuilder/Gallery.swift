@@ -38,10 +38,12 @@ enum Gallery {
         // window as tall as it, again with the newest copy of its saves
         // waiting for the game's update, a newer version having written it,
         // with the copies of its saves and its Switch saves, the pages its
-        // saves open.
+        // saves open; its System page, and the Storage page that one opens,
+        // with the player's connections.
         case console, consoleLibrary = "console-library", consoleSettings = "console-settings", consoleInfo = "console-info"
         case consoleSheet = "console-sheet", consoleSheetNewer = "console-sheet-newer"
         case consoleSaves = "console-saves", consoleSwitchSave = "console-switch-save"
+        case consoleSystem = "console-system", consoleStorage = "console-storage"
         // What the window's height leaves out: the settings' Builds tab, and
         // the storage page down to the games on this Mac, in a window as
         // tall as it.
@@ -55,7 +57,7 @@ enum Gallery {
         /// Whether the page is the console's, which is always dark.
         var isConsole: Bool {
             [.console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet, .consoleSheetNewer, .consoleSaves,
-             .consoleSwitchSave].contains(self)
+             .consoleSwitchSave, .consoleSystem, .consoleStorage].contains(self)
         }
 
         /// Whether the page is a game's whole sheet, in a window as tall.
@@ -91,6 +93,8 @@ enum Gallery {
             case .settings, .settingsBuilds: return SettingsTab.size
             case .storageMac: return CGSize(width: 1024, height: 1440)
             case .consoleSheet, .consoleSheetNewer: return CGSize(width: 1024, height: 1640)
+            // This Mac and every connection, down to the footer.
+            case .consoleStorage: return CGSize(width: 1024, height: 1260)
             // The window at its smallest, with a game's sheet whose
             // nxnative commits are a paragraph each, as nxnative writes them.
             case .gameNarrow: return CGSize(width: Columns.window.width, height: 680)
@@ -99,7 +103,9 @@ enum Gallery {
             }
         }
 
-        var inEnglish: Bool { [.library, .game, .gameQueue, .setup, .menubar, .assistantWelcome, .assistantGames, .console].contains(self) }
+        var inEnglish: Bool {
+            [.library, .game, .gameQueue, .setup, .menubar, .assistantWelcome, .assistantGames, .console, .consoleStorage].contains(self)
+        }
 
         /// The window as the app opens it: the settings as the Settings
         /// scene does, the menu bar's panel without a frame, the setup
@@ -187,14 +193,16 @@ enum Gallery {
         switch page {
         case .settings, .settingsBuilds:
             controller = settings(model, open: page == .settingsBuilds ? .builds : .general)
-        case .console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet, .consoleSheetNewer, .consoleSaves, .consoleSwitchSave:
+        case .console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet, .consoleSheetNewer, .consoleSaves, .consoleSwitchSave,
+             .consoleSystem, .consoleStorage:
             ConsoleGallery.prepare(language: L10n.code, newer: page == .consoleSheetNewer)
             model.show(.console)
             let sheet = page.isWholeSheet || page.savesPage != nil
             controller = hosted(MainView(showingLibrary: page == .consoleLibrary, showingSettings: page == .consoleSettings,
                                          showingInfo: page == .consoleInfo,
                                          showingSheetOf: sheet ? ConsoleGallery.sheetGame : nil,
-                                         showingSaves: page.savesPage), model)
+                                         showingSaves: page.savesPage,
+                                         showingSystem: page == .consoleSystem, showingStorage: page == .consoleStorage), model)
         case .gameAfterConsole:
             // The console first, in the window, as the player had it.
             ConsoleGallery.prepare(language: L10n.code)
@@ -219,7 +227,7 @@ enum Gallery {
             }
         }
         let frame = CGRect(origin: CGPoint(x: 80, y: 80), size: size)
-        let window: NSWindow = page == .storageMac || page.isWholeSheet
+        let window: NSWindow = page == .storageMac || page.isWholeSheet || page == .consoleStorage
             ? TallWindow(contentRect: frame, styleMask: page.styleMask, backing: .buffered, defer: false)
             : KeyWindow(contentRect: frame, styleMask: page.styleMask, backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false

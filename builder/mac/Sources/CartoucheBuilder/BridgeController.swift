@@ -6,7 +6,9 @@
 //  the iPhones paired, and the request of a new one, asked in a small
 //  window of its own in front of everything, with the code to compare.
 //  The builds a paired iPhone sees, and the build it asks for, are the
-//  model's (IPhoneBuilds.swift).
+//  model's (IPhoneBuilds.swift); its connections to the player's storage
+//  are those of the console's Storage page (ConsoleLink), both sides
+//  keeping the same.
 //
 
 import AppKit
@@ -89,6 +91,7 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
     func attach(model: AppModel) {
         self.model = model
         server?.builds = self
+        server?.connections = self
         if enabled { start() }
     }
 
@@ -116,6 +119,8 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
         let saves = self.saves
         try? FileManager.default.createDirectory(at: saves, withIntermediateDirectories: true)
         server?.roots = BridgeRoots(games: games, saves: saves)
+        // The same folders, under This Mac on the console's Storage page.
+        ConsoleLink.showFolders(games: games, saves: saves)
     }
 
     private func start() {
@@ -194,6 +199,23 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
         NSApp.activate()
         made.makeKeyAndOrderFront(nil)
         panel = made
+    }
+}
+
+// MARK: The player's storage
+
+/// A paired iPhone's connections to the player's storage, and the Mac's,
+/// those of the console's Storage page (BridgeServer's
+/// BridgeConnectionsSource): the console takes them and gives its own, as
+/// JSON from CartoucheCore's type to its own copy of it and back.
+extension BridgeController: BridgeConnectionsSource {
+    func bridgeConnections(_ theirs: [CartoucheConnection]) throws -> [CartoucheConnection] {
+        guard let given = try? JSONEncoder().encode(theirs),
+              let kept = ConsoleLink.takeConnections(given),
+              let mine = try? JSONDecoder().decode([CartoucheConnection].self, from: kept) else {
+            throw CartoucheBridgeError(.failed, "connections")
+        }
+        return mine
     }
 }
 

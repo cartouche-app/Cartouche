@@ -36,6 +36,11 @@ final class FakeMac: @unchecked Sendable {
     private var codes: [String] = []
     private var entries: [String: Entry] = ["Games": .folder, "Saves": .folder]
     private var uploads: [String: (path: String, data: Data)] = [:]
+    /// The player's connections it keeps, as Cartouche Builder's console
+    /// does; nil for a Mac too old to take them, whose info says nothing
+    /// of them.
+    private var connections: [CartoucheConnection]?
+    private var given: [[CartoucheConnection]] = []
     private var listener: NWListener?
     private let queue = DispatchQueue(label: "Fake Mac")
     private(set) var port = 0
@@ -110,6 +115,28 @@ final class FakeMac: @unchecked Sendable {
         lock.lock()
         keys[device] = nil
         lock.unlock()
+    }
+
+    /// Takes the player's connections from now on, with KEPT, those it
+    /// has, as a Cartouche Builder that does.
+    func takeConnections(_ kept: [CartoucheConnection] = []) {
+        lock.lock()
+        connections = kept
+        lock.unlock()
+    }
+
+    /// The connections it keeps; nil while it takes none.
+    var keptConnections: [CartoucheConnection]? {
+        lock.lock()
+        defer { lock.unlock() }
+        return connections
+    }
+
+    /// The connections each iPhone gave it, in order.
+    var givenConnections: [[CartoucheConnection]] {
+        lock.lock()
+        defer { lock.unlock() }
+        return given
     }
 
     func entry(_ path: String) -> Entry? {
@@ -188,6 +215,7 @@ final class FakeMac: @unchecked Sendable {
         case .info:
             response.name = name
             response.readOnly = false
+            if connections != nil { response.hasConnections = true }
         case .list:
             guard path.isEmpty || entries[path] == .folder else { return (.failure(.notFound, path), Data()) }
             response.items = entries.filter { Self.parent($0.key) == path }
@@ -240,6 +268,15 @@ final class FakeMac: @unchecked Sendable {
         case .builds, .build, .buildDue, .stop, .stopAll, .follow, .nightly:
             // A Mac without builds to show, whose info does not say it has some.
             return (.failure(.notFound, "builds"), Data())
+        case .connections:
+            // Those it keeps, the iPhone's among them, as Cartouche
+            // Builder's console takes them.
+            guard let kept = connections else { return (.failure(.notFound, "connections"), Data()) }
+            guard let theirs = request.connections else { return (.failure(.protocolError, "connections"), Data()) }
+            given.append(theirs)
+            let merged = CartoucheConnections.merged(kept, theirs)
+            connections = merged
+            response.connections = merged
         }
         return (response, Data())
     }
