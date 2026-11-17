@@ -179,8 +179,9 @@ $PB -c "Add :BGTaskSchedulerPermittedIdentifiers: string $BUNDLE_ID.transfer.*" 
 # the banner iOS shows as it comes on: Cartouche is a console. A game that
 # runs behind the console (launcher/Sources/CartoucheGameHost.swift) gets the
 # controllers' input only with it, as one in LiveContainer's multitasking
-# windows does (LiveContainer issue 1587), and every game gets the most of
-# the CPU and GPU, and the controllers' lowest latency.
+# windows does (LiveContainer issue 1587), and only while its process has
+# the keyboard, which it asks for (docs/decisions/123.md); every game gets
+# the most of the CPU and GPU, and the controllers' lowest latency.
 $PB -c "Delete :LSApplicationCategoryType" "$APP/Info.plist" 2>/dev/null || true
 $PB -c "Add :LSApplicationCategoryType string public.app-category.games" "$APP/Info.plist"
 for KEY in GCSupportsGameMode LSSupportsGameMode; do

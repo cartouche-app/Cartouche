@@ -6,14 +6,17 @@
 //  Objective-C in the app: UIKit, as LiveContainer's own headers bring it
 //  in; LiveContainer's unpacker (unarchive.h, from app/LiveContainer, which
 //  harness.sh copies into Build/LiveContainer); the private initializer of
-//  a game's preferences (FoundationPrivate.h); and the private Security
+//  a game's preferences (FoundationPrivate.h); the private Security
 //  calls CartoucheDevice.swift makes, answered as an iPhone with Increased
-//  Memory Limit would, as the launcher's gallery answers them.
+//  Memory Limit would, as the launcher's gallery answers them; and how a
+//  game's process asks for the keyboard, which brings it the controllers
+//  (launcher/LiveProcessSupport/CartoucheGuestControllers.h).
 //
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import "unarchive.h"
+#import "../../LiveProcessSupport/CartoucheGuestControllers.h"
 
 @interface NSUserDefaults (HarnessPrivate)
 - (instancetype)_initWithSuiteName:(NSString *)suiteName container:(NSURL *)container;

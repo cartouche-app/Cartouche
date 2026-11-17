@@ -11,7 +11,9 @@
 //  in the same order. The tests play the game's part, and iOS's: the game
 //  writes its memory where Cartouche reads it and posts the presses of a
 //  controller's Home button (launcher/LiveProcessSupport/CartoucheGuest.m),
-//  and iOS may kill it. On a TV, LiveContainer opens a second scene of the
+//  and iOS may kill it. How the game's process asks for the keyboard,
+//  which brings it the controllers, runs in the harness's own scene
+//  (CartoucheGuestControllers.m, Tests/ControllerTests.swift). On a TV, LiveContainer opens a second scene of the
 //  game's process (app/patches/livecontainer/0012), which the game fills
 //  with its picture: the harness's stands in with a view of its own.
 //
@@ -288,11 +290,12 @@ class AppSceneViewController: UIViewController {
 
     /// The game's memory, as its process writes it every two seconds in
     /// the app group (CartoucheGuest.m): FOOTPRINT now, at most PEAK, and
-    /// AVAILABLE more before iOS's limit; and whether the process has
+    /// AVAILABLE more before iOS's limit; whether the process has
     /// Increased Memory Limit, as its signature gives it, nil when it could
-    /// not tell.
+    /// not tell; and CONTROLLERPRESS, the last press of a controller's
+    /// button that reached the game, if one has.
     func writeMemory(footprintMiB: UInt64, availableMiB: UInt64, peakMiB: UInt64? = nil, started: Date = Date(),
-                     increasedMemoryLimit: Bool? = true) {
+                     increasedMemoryLimit: Bool? = true, controllerPress: Date? = nil) {
         guard let file = CartoucheGameMemoryReading.file else { return }
         try? FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
         let footprint = footprintMiB << 20
@@ -311,6 +314,9 @@ class AppSceneViewController: UIViewController {
         ]
         if let increasedMemoryLimit {
             reading["increasedMemoryLimit"] = NSNumber(value: increasedMemoryLimit)
+        }
+        if let controllerPress {
+            reading["controllerPress"] = controllerPress
         }
         (reading as NSDictionary).write(to: file, atomically: true)
     }

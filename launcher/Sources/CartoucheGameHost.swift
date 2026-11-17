@@ -23,7 +23,12 @@
 //
 //  The game's own process measures its memory, and posts the presses of a
 //  controller's Home button while the game has the controller
-//  (launcher/LiveProcessSupport/CartoucheGuest.m).
+//  (launcher/LiveProcessSupport/CartoucheGuest.m). It asks for the
+//  keyboard, without showing one, while the game is on screen: iOS hands
+//  a controller's presses to the process that has the keyboard, and
+//  nothing in a game started without nxnative's settings screen asked for
+//  it (CartoucheGuestControllers.m). It notes the last press that reached
+//  it, which the journal says once, as the game pauses or ends.
 //
 
 import AVFAudio
@@ -61,6 +66,9 @@ final class CartoucheGameHost {
     /// The scene's capture state, watched while the game runs
     /// (watchScreens).
     private var captureWatch: (scene: UIWindowScene, registration: any UITraitChangeRegistration)?
+    /// Whether the journal says yet that the controller's presses reach the
+    /// game.
+    private var notedControllerPresses = false
 
     private init() {}
 
@@ -172,6 +180,9 @@ final class CartoucheGameHost {
     /// The console over the game, which pauses.
     func showConsole() {
         guard app != nil, isInFront, let window else { return }
+        if let scene {
+            noteControllerPresses(in: CartoucheGameMemoryReading.last(pid: Int(scene.pid)))
+        }
         isInFront = false
         // The console turns as the iPad is held: the game's screen lets go
         // of the way it was turned.
@@ -345,6 +356,7 @@ final class CartoucheGameHost {
             return
         }
         let reading = CartoucheGameMemoryReading.last(pid: Int(vc.pid))
+        noteControllerPresses(in: reading)
         let quit = quitting
         let wasInFront = isInFront
         // Why the game's process ended, when LiveProcess ended it on an
@@ -390,7 +402,18 @@ final class CartoucheGameHost {
         app = nil
         isInFront = false
         quitting = false
+        notedControllerPresses = false
         backToConsole()
+    }
+
+    /// Says once in the journal, as the game pauses or ends, that the
+    /// controller's presses reached it, when READING, its process's last,
+    /// has one: a player's report then says whether the game had its
+    /// controller.
+    private func noteControllerPresses(in reading: CartoucheGameMemoryReading?) {
+        guard !notedControllerPresses, let app, reading?.lastControllerPress != nil else { return }
+        notedControllerPresses = true
+        CartoucheReports.note(app.displayName + ": the controller's presses reach the game")
     }
 
     /// The console's window has the screen again, upright or sideways as

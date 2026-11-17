@@ -34,6 +34,16 @@
 //                    Without it, iOS gives the game a fraction of what
 //                    Cartouche has with it: 3,376 MiB against 8,192 on an
 //                    iPhone with 12 GB (docs/decisions.md, 67)
+//        controllerPress
+//                    the last time a press of a controller's button reached
+//                    the game's process (date), missing until one has: then
+//                    the game had its controller, which Cartouche's journal
+//                    says (docs/decisions/123.md)
+//
+//  - The controllers: iOS hands their presses to the process that has the
+//    keyboard, and the game's process asks for it, without showing one,
+//    while the game's scene is active, as the game comes on screen and
+//    comes back from the console (CartoucheGuestControllers.m).
 //
 //  - The Home button of a controller: nxnative leaves it to the game
 //    without a use (DmGamepad.m). A press shows Cartouche's console, as the
@@ -48,9 +58,11 @@
 #include <dlfcn.h>
 #include <mach/mach.h>
 #include <os/proc.h>
+#include <stdatomic.h>
 #include <stddef.h>
 #include <unistd.h>
 #import "../../LiveContainer/LCSharedUtils.h"
+#import "CartoucheGuestControllers.h"
 
 static dispatch_queue_t measureQueue;
 static dispatch_source_t measureTimer;
@@ -60,6 +72,9 @@ static NSMutableDictionary *reading;
 static NSMutableArray *sizes;
 static CGSize lastSize;
 static uint64_t highestPeak;
+/// The last press of a controller's button that reached this process, in
+/// seconds since the reference date of NSDate, 0 before the first.
+static _Atomic double lastPress;
 
 /// The memory the game uses and the most it has used, as iOS counts them.
 static BOOL CartoucheGuestFootprint(uint64_t *footprint, uint64_t *peak) {
@@ -108,8 +123,9 @@ static CGSize CartoucheGuestScreenSize(void) {
     return scene ? scene.coordinateSpace.bounds.size : CGSizeZero;
 }
 
-/// On measureQueue.
-static void CartoucheGuestRecord(CGSize size) {
+/// On measureQueue: SIZE, the game's screen now, and PRESS, the last press
+/// of a controller's button that reached the game, if one has.
+static void CartoucheGuestRecord(CGSize size, NSDate *press) {
     uint64_t footprint = 0, peak = 0;
     if (!CartoucheGuestFootprint(&footprint, &peak)) return;
     uint64_t available = (uint64_t)os_proc_available_memory();
@@ -134,6 +150,7 @@ static void CartoucheGuestRecord(CGSize size) {
     reading[@"available"] = @(available);
     reading[@"limit"] = @(footprint + available);
     reading[@"sizes"] = [sizes copy];
+    if (press) reading[@"controllerPress"] = press;
     [reading writeToFile:memoryFile atomically:YES];
 }
 
@@ -142,10 +159,34 @@ static void CartoucheGuestMeasure(void) {
     // keep busy: the reading waits for it, the game never waits.
     dispatch_async(dispatch_get_main_queue(), ^{
         CGSize size = CartoucheGuestScreenSize();
+        // The keyboard again, for the controllers, once a text field of the
+        // game's or one of its menus has let it go.
+        UIWindowScene *scene = gameScene;
+        if (scene && scene.activationState == UISceneActivationStateForegroundActive) {
+            CartoucheGuestTakeControllers(scene);
+        }
+        double pressed = atomic_load(&lastPress);
+        NSDate *press = pressed > 0 ? [NSDate dateWithTimeIntervalSinceReferenceDate:pressed] : nil;
         dispatch_async(measureQueue, ^{
-            CartoucheGuestRecord(size);
+            CartoucheGuestRecord(size, press);
         });
     });
+}
+
+/// Notes each press of CONTROLLER's buttons that reaches the game, but
+/// Home's and Share's, which iOS keeps for itself unless asked: on the
+/// buttons alone, whose handlers nxnative leaves alone, never on the whole
+/// gamepad, whose handler is nxnative's (DmGamepad.m).
+static void CartoucheGuestWatchPresses(GCController *controller) {
+    NSDictionary<NSString *, GCControllerButtonInput *> *buttons = controller.physicalInputProfile.buttons;
+    for (NSString *name in buttons) {
+        GCControllerButtonInput *button = buttons[name];
+        if ([name isEqualToString:GCInputButtonHome] || [name isEqualToString:GCInputButtonShare]
+            || button.pressedChangedHandler) continue;
+        button.pressedChangedHandler = ^(GCControllerButtonInput *input, float value, BOOL pressed) {
+            if (pressed) atomic_store(&lastPress, NSDate.timeIntervalSinceReferenceDate);
+        };
+    }
 }
 
 static void CartoucheGuestWatchHomeButton(GCController *controller) {
@@ -178,15 +219,29 @@ void CartoucheGuestStart(NSDictionary *appInfo) {
             gameScene = (UIWindowScene *)scene;
         }
     }];
+    // The controllers while the game's scene is active: on screen, as the
+    // game shows and as it comes back from the console.
+    [NSNotificationCenter.defaultCenter addObserverForName:UISceneDidActivateNotification object:nil
+                                                     queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
+        UIWindowScene *scene = gameScene;
+        if (scene && note.object == scene) CartoucheGuestTakeControllers(scene);
+    }];
+    [NSNotificationCenter.defaultCenter addObserverForName:UISceneWillDeactivateNotification object:nil
+                                                     queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
+        UIWindowScene *scene = gameScene;
+        if (scene && note.object == scene) CartoucheGuestLeaveControllers(scene);
+    }];
 
     homeNotification = [@"CartoucheGameHome." stringByAppendingString:container];
     for (GCController *controller in GCController.controllers) {
         CartoucheGuestWatchHomeButton(controller);
+        CartoucheGuestWatchPresses(controller);
     }
     [NSNotificationCenter.defaultCenter addObserverForName:GCControllerDidConnectNotification object:nil
                                                      queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
         if ([note.object isKindOfClass:GCController.class]) {
             CartoucheGuestWatchHomeButton(note.object);
+            CartoucheGuestWatchPresses(note.object);
         }
     }];
 
@@ -205,7 +260,7 @@ void CartoucheGuestStart(NSDictionary *appInfo) {
 
     measureQueue = dispatch_queue_create("Cartouche.GameMemory", DISPATCH_QUEUE_SERIAL);
     dispatch_async(measureQueue, ^{
-        CartoucheGuestRecord(CGSizeZero);
+        CartoucheGuestRecord(CGSizeZero, nil);
     });
     measureTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, measureQueue);
     dispatch_source_set_timer(measureTimer, dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), 2 * NSEC_PER_SEC, NSEC_PER_SEC / 2);

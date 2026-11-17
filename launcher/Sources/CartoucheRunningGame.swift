@@ -102,6 +102,10 @@ struct CartoucheGameMemoryReading {
     let hasIncreasedMemoryLimit: Bool?
     /// Each size its screen took, the first one included: the last 100.
     let sizes: [Size]
+    /// The last press of a controller's button that reached the game's
+    /// process, nil until one has: iOS hands the presses to the process
+    /// that has the keyboard (CartoucheGuestControllers.m).
+    let lastControllerPress: Date?
 
     var footprintMiB: Int { Int(footprintBytes / 1_048_576) }
     var peakMiB: Int { Int(peakBytes / 1_048_576) }
@@ -153,6 +157,7 @@ struct CartoucheGameMemoryReading {
             return Size(time: time, width: width, height: height,
                         footprintBytes: (size["footprint"] as? NSNumber)?.uint64Value ?? 0)
         }
+        lastControllerPress = plist["controllerPress"] as? Date
     }
 }
 

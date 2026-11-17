@@ -45,6 +45,10 @@ targets:
           - "CartoucheRootView.swift"
       - path: ../Sources/Cartouche.xcstrings
         buildPhase: resources
+      # How the game's process asks for the keyboard, which brings it the
+      # controllers: the tests run it in the harness's own scene
+      # (Tests/ControllerTests.swift).
+      - path: ../LiveProcessSupport/CartoucheGuestControllers.m
       - path: Build/LiveContainer/LiveContainerSwiftUI/Models/LCAppModel.swift
       - path: Build/LiveContainer/LiveContainerSwiftUI/Models/LCContainer.swift
       - path: Build/LiveContainer/LiveContainerSwiftUI/Utilities

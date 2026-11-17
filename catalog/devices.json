@@ -18,6 +18,14 @@
       ]
     },
     {
+      "identifier": "iPhone18,3",
+      "chip": "A19",
+      "memoryGB": 8,
+      "measurements": [
+        { "date": "2026-11-16", "iOS": "27.2", "increasedMemoryLimit": true, "appMemoryLimitMiB": 6144 }
+      ]
+    },
+    {
       "identifier": "iPhone19,2",
       "chip": "A20 Pro",
       "memoryGB": 12,
