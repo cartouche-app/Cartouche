@@ -152,6 +152,13 @@ final class OfflineTests: XCTestCase {
         reach.noteOpeningLocalDevVPN(tailscaleOn: false)
         reach.tailscaleSeen(false)
         XCTAssertNil(reach.tailscaleTurnedOff)
+        // Nor when Tailscale goes off long after Cartouche opened
+        // LocalDevVPN with it on: the player turned it off.
+        reach.tailscaleSeen(true)
+        reach.noteOpeningLocalDevVPN(tailscaleOn: true, at: Date().addingTimeInterval(-CartoucheTailscaleReminder.opening - 60))
+        reach.tailscaleSeen(false)
+        XCTAssertNil(reach.tailscaleTurnedOff)
+        XCTAssertNil(UserDefaults.standard.object(forKey: CartoucheTailscaleReminder.key))
     }
 
     func testSaysAServerThatRefusesTheConnectionIsOffline() async throws {

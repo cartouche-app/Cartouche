@@ -194,6 +194,18 @@ public enum CartoucheTailscaleReminder {
     /// How long Cartouche says so at most, in seconds: the player may keep
     /// Tailscale off.
     public static let lasts: TimeInterval = 12 * 3_600
+    /// How long after Cartouche opened LocalDevVPN, Tailscale on, Tailscale
+    /// seen off is LocalDevVPN's doing rather than the player's, in seconds:
+    /// LocalDevVPN connects and brings Cartouche back within seconds
+    /// (decision 98), and Tailscale stays on until it has connected.
+    public static let opening: TimeInterval = 10 * 60
+
+    /// Whether Tailscale, seen off at NOW, went off for the LocalDevVPN
+    /// Cartouche opened at OPENED with Tailscale on.
+    public static func turnedOff(byOpeningAt opened: Date, seenOffAt now: Date) -> Bool {
+        let since = now.timeIntervalSince(opened)
+        return since >= 0 && since < opening
+    }
 
     /// Whether to say it now: LocalDevVPN turned Tailscale off at
     /// TURNED_OFF, Tailscale is still off (TAILSCALE_ON), and nothing that

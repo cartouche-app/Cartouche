@@ -213,4 +213,18 @@ final class CartoucheTailscaleTests: XCTestCase {
         // A clock set back.
         XCTAssertFalse(CartoucheTailscaleReminder.shows(turnedOff: off, tailscaleOn: false, busy: false, at: off.addingTimeInterval(-60)))
     }
+
+    /// LocalDevVPN, which Cartouche opened with Tailscale on, connects and
+    /// brings Cartouche back within seconds: Tailscale seen off then went
+    /// off for it, and long after, by the player's hand.
+    func testTailscaleOffSoonAfterCartoucheOpenedLocalDevVPNWentOffForIt() {
+        let opened = Date(timeIntervalSince1970: 1_800_000_000)
+        XCTAssertTrue(CartoucheTailscaleReminder.turnedOff(byOpeningAt: opened, seenOffAt: opened.addingTimeInterval(2)))
+        XCTAssertTrue(CartoucheTailscaleReminder.turnedOff(byOpeningAt: opened, seenOffAt: opened.addingTimeInterval(5 * 60)))
+        XCTAssertFalse(CartoucheTailscaleReminder.turnedOff(byOpeningAt: opened,
+                                                            seenOffAt: opened.addingTimeInterval(CartoucheTailscaleReminder.opening)))
+        XCTAssertFalse(CartoucheTailscaleReminder.turnedOff(byOpeningAt: opened, seenOffAt: opened.addingTimeInterval(3_600)))
+        // A clock set back.
+        XCTAssertFalse(CartoucheTailscaleReminder.turnedOff(byOpeningAt: opened, seenOffAt: opened.addingTimeInterval(-60)))
+    }
 }

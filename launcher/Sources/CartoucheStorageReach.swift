@@ -243,26 +243,31 @@ final class CartoucheStorageReach: ObservableObject {
     /// Cartouche opens LocalDevVPN, for what the built-in SideStore does:
     /// LocalDevVPN turns Tailscale off, if it is on (TAILSCALE_ON), which
     /// the console then says once it is.
-    func noteOpeningLocalDevVPN(tailscaleOn: Bool = CartoucheTailscale.isConnected) {
+    func noteOpeningLocalDevVPN(tailscaleOn: Bool = CartoucheTailscale.isConnected, at now: Date = Date()) {
         guard tailscaleOn else { return }
-        tailscaleGoingOff = Date()
+        tailscaleGoingOff = now
         CartoucheReports.note("Tailscale is connected: LocalDevVPN turns it off")
     }
 
-    /// Tailscale as the iPhone has it now, CONNECTED or not, as the network
-    /// changes and as Cartouche comes to the front: off once Cartouche
+    /// Tailscale as the iPhone has it NOW, CONNECTED or not, as the network
+    /// changes and as Cartouche comes to the front: off soon after Cartouche
     /// opened LocalDevVPN, LocalDevVPN turned it off; on, the player turned
     /// it on again.
-    func tailscaleSeen(_ connected: Bool) {
+    func tailscaleSeen(_ connected: Bool, at now: Date = Date()) {
         if connected != tailscaleConnected { tailscaleConnected = connected }
         if connected {
-            tailscaleGoingOff = nil
+            // Still on while LocalDevVPN, just opened, connects: the opening
+            // waits for Tailscale to go off, for a while.
+            if let since = tailscaleGoingOff, !CartoucheTailscaleReminder.turnedOff(byOpeningAt: since, seenOffAt: now) {
+                tailscaleGoingOff = nil
+            }
             guard tailscaleTurnedOff != nil else { return }
             tailscaleTurnedOff = nil
             UserDefaults.standard.removeObject(forKey: CartoucheTailscaleReminder.key)
             CartoucheReports.note("Tailscale is connected again")
         } else if let since = tailscaleGoingOff {
             tailscaleGoingOff = nil
+            guard CartoucheTailscaleReminder.turnedOff(byOpeningAt: since, seenOffAt: now) else { return }
             tailscaleTurnedOff = since
             UserDefaults.standard.set(since, forKey: CartoucheTailscaleReminder.key)
         }
