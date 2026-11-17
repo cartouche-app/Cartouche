@@ -26,6 +26,9 @@ enum Gallery {
         // What stops a build before it starts: too little room on the Mac,
         // an Xcode older than nxnative's, a game no Mac built yet.
         case libraryRoom = "library-room", gameXcode = "game-xcode", gameUnbuilt = "game-unbuilt", setupXcode = "setup-xcode"
+        // A game's sheet whose newest copy of its saves waits for the
+        // game's update, a newer version of the game having written it.
+        case gameNewer = "game-newer"
         case assistantWelcome = "assistant-welcome", assistantTools = "assistant-tools", assistantSources = "assistant-sources"
         case assistantGames = "assistant-games", assistantKeys = "assistant-keys", assistantBuilds = "assistant-builds"
         case assistantIPhone = "assistant-iphone", assistantDone = "assistant-done"
@@ -426,11 +429,11 @@ enum Gallery {
             switch page {
             case .library, .activity, .storage, .iphone: model.section = AppSection(rawValue: page.rawValue) ?? .library
             case .storageMac: model.section = .storage
-            case .libraryRoom, .game, .gameNarrow, .gameQueue, .gameXcode, .gameUnbuilt: model.section = .library
+            case .libraryRoom, .game, .gameNarrow, .gameNewer, .gameQueue, .gameXcode, .gameUnbuilt: model.section = .library
             case .setup, .setupXcode: model.section = .setup
             default: break
             }
-            if page == .game || page == .gameNarrow { model.selection = "0100152000022000" }
+            if page == .game || page == .gameNarrow || page == .gameNewer { model.selection = "0100152000022000" }
             if page == .gameXcode { model.selection = "01004D300C5AE000" }
             if page == .gameUnbuilt { model.selection = Gallery.unbuilt.titleID }
             // A game up to date, while a batch runs: added to its queue.
@@ -478,13 +481,18 @@ enum Gallery {
             let saves = URL(fileURLWithPath: info.home).appendingPathComponent("Saves", isDirectory: true)
             model.bridge.preview(devices: iphones, connected: [iphones[0].id], games: config.games, name: "MacBook Air", saves: saves)
             // Mario Kart 8 Deluxe played on this Mac, the iPhone's saves come
-            // before its last game; Super Mario Odyssey playing now.
+            // before its last game, or, on game-newer, held back, version
+            // 3.0.4 of the game on the iPhone having written the newest copy
+            // and this Mac's being 3.0.3; Super Mario Odyssey playing now.
             let odyssey = MacGameApp(url: URL(fileURLWithPath: "/Users/player/Applications/Super Mario Odyssey.app"),
                                      titleID: "0100000000010000", name: "Super Mario Odyssey")
             model.macGames.preview(folder: saves,
                                    playing: page == .menubar ? [MacGameRun(app: odyssey, pid: 0, started: now.addingTimeInterval(-1500), fromBuilder: true)] : [],
-                                   last: ["0100152000022000": MacSaveEvent(at: now.addingTimeInterval(-26 * 60), when: .before, step: "fetch",
-                                                                           fetched: "2026-11-13T18-02-00Z.zip")])
+                                   last: ["0100152000022000": page == .gameNewer
+                                       ? MacSaveEvent(at: now.addingTimeInterval(-26 * 60), when: .before, step: MacSaveEvent.heldBack,
+                                                      newer: "3.0.4", game: "3.0.3")
+                                       : MacSaveEvent(at: now.addingTimeInterval(-26 * 60), when: .before, step: "fetch",
+                                                      fetched: "2026-11-13T18-02-00Z.zip")])
             if page == .menubar {
                 let release = BuilderRelease(version: "0.3.0", tag: "builder-v0.3.0", notes: "",
                                              page: URL(string: "https://github.com/cartouche-app/Cartouche/releases/tag/builder-v0.3.0")!,
