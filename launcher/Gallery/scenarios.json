@@ -334,49 +334,6 @@
       ]
     },
     {
-      "name": "iphone-sheet-new-release-whole",
-      "comment": "Preview for pull request #258 only, removed before its merge: Ocarina of Time's sheet, down to what it needs.",
-      "screen": "sheet",
-      "sheet": "0400486024DEC000",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "0400486024DEC000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 1366,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sheet-new-release-results",
-      "comment": "Preview for pull request #258 only, removed before its merge: Ocarina of Time's sheet on its testers' results.",
-      "screen": "sheet",
-      "sheet": "0400486024DEC000",
-      "category": "results",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "0400486024DEC000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
       "name": "iphone-home-unknown-games",
       "screen": "games",
       "owned": [
