@@ -71,7 +71,8 @@ extension CartoucheMacConsole {
 
 /// This Mac, on the Storage page in place of the iPhone's games folder and
 /// saves folder: the Builder's own, which the player changes in the
-/// Builder.
+/// Builder, and the row of those sections that opens how to name the
+/// games.
 struct CartoucheMacFoldersSection: View {
     @ObservedObject private var console = CartoucheMacConsole.shared
 
@@ -83,6 +84,12 @@ struct CartoucheMacFoldersSection: View {
         CartoucheSection {
             row(CartoucheText.storageGamesFolder, symbol: "square.stack.3d.up.fill", folder: console.folders.games)
             row(CartoucheText.storageSavesFolder, symbol: "clock.arrow.circlepath", folder: console.folders.saves)
+            // How to name the games, their saves and the dumps: under the
+            // games folder on the iPhone, under This Mac's folders here.
+            NavigationLink(value: CartoucheMacConsoleView.Route.naming) {
+                Label(CartoucheText.namingOpen, systemImage: "text.badge.checkmark")
+            }
+            .accessibilityIdentifier(CartoucheStorageView.namingRow)
             Button {
                 console.onFolders()
             } label: {

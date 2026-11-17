@@ -22,7 +22,10 @@ which builds the iPhone's console screens for the Mac:
 - the Mac's own words (builder/mac/console/strings.json) say what the
   launcher's say, with the same placeholders, those of the console's own
   files are there as the files say them, and console/strings.py writes
-  each language's table where the console reads it.
+  each language's table where the console reads it;
+- the console's Storage page, the iPhone's with This Mac's folders in place
+  of its games folder and saves folder (Mac/ConsoleStorage.swift), has the
+  rows those sections open, as the UI tests know them.
 
 Run from the repository root: python3 -m unittest discover -s app/tests -v
 """
@@ -51,6 +54,8 @@ MAC_SOURCES = ROOT / "builder" / "mac" / "Sources"
 MAC_PACKAGE = ROOT / "builder" / "mac"
 PLAN_STEPS = range(7, 10)  # the plan's steps still to come after this one (docs/decisions/095.md)
 WRITER = ROOT / "builder" / "mac" / "console" / "strings.py"
+STORAGE_PAGE = LAUNCHER / "CartoucheStorageView.swift"
+MAC_STORAGE = CONSOLE / "Mac" / "ConsoleStorage.swift"
 LANGUAGES = ("en", "fr")
 
 # Names the Mac does not have: UIKit's, and the iPhone's alone in SwiftUI.
@@ -135,6 +140,66 @@ def own_names(swift: str):
     declared = {name for code in codes for name in DECLARATION.findall(code)}
     used = {name for code in codes for name in OWN_NAME.findall(code)}
     return declared, used
+
+
+def _block(code: str, opening: int) -> str:
+    """The text between the brace at OPENING and the one that closes it."""
+    depth = 0
+    for at in range(opening, len(code)):
+        depth += {"{": 1, "}": -1}.get(code[at], 0)
+        if depth == 0:
+            return code[opening + 1:at]
+    raise ValueError("a block that does not close")
+
+
+def _code(swift: str) -> str:
+    """SWIFT without its strings' words nor its comments."""
+    return "\n".join(STRING.sub('""', line).split("//", 1)[0] for line in swift.splitlines())
+
+
+def type_body(swift: str, name: str) -> str:
+    """The body of the type NAME that SWIFT declares."""
+    code = _code(swift)
+    match = re.search(rf"\b(?:struct|class|enum|extension)\s+{name}\b[^{{]*", code)
+    if not match:
+        raise ValueError(f"no {name}")
+    return _block(code, match.end())
+
+
+def members(body: str):
+    """The bodies of the functions and computed properties of a type's BODY,
+    by their names."""
+    found = {}
+    for match in re.finditer(r"\bfunc\s+(\w+)\s*(?:<[^>]*>)?\(|\bvar\s+(\w+)\s*:[^=\n{]*\{", body):
+        if match.group(1):
+            # Past its parameters, to its body.
+            depth, at = 0, match.end() - 1
+            while True:
+                depth += {"(": 1, ")": -1}.get(body[at], 0)
+                if depth == 0:
+                    break
+                at += 1
+            opening = body.find("{", at)
+        else:
+            opening = match.end() - 1
+        found[match.group(1) or match.group(2)] = _block(body, opening)
+    return found
+
+
+def rows_of(swift: str, page: str, section: str):
+    """The identifiers that the rows of SECTION, a part of the type PAGE
+    that SWIFT declares, are given, as `Self.<name>`, through the parts of
+    PAGE it calls too."""
+    parts = members(type_body(swift, page))
+    rows, seen, waiting = set(), set(), [section]
+    while waiting:
+        name = waiting.pop()
+        if name in seen or name not in parts:
+            continue
+        seen.add(name)
+        rows |= set(re.findall(r"\.accessibilityIdentifier\(Self\.(\w+)\)", parts[name]))
+        waiting += [other for other in parts if re.search(rf"\b{other}\b", parts[name])]
+    return rows
 
 
 def load_writer():
@@ -384,6 +449,44 @@ class MacConsoleWords(unittest.TestCase):
             self.assertEqual(english["sheet.onThisIPhone"], "On this Mac")
             for key in sorted(set(self.catalog) - set(self.mac["overrides"]))[:50]:
                 self.assertEqual(french[key], self.catalog[key]["localizations"]["fr"]["stringUnit"]["value"])
+
+
+class MacConsoleStorage(unittest.TestCase):
+    """The console's Storage page, the iPhone's (CartoucheStorageView.swift)
+    with This Mac's folders, the Builder's, in place of its games folder and
+    saves folder (CartoucheMacFoldersSection, Mac/ConsoleStorage.swift)."""
+
+    def test_this_macs_folders_have_the_rows_of_the_sections_they_stand_for(self):
+        rows = rows_of(STORAGE_PAGE.read_text(), "CartoucheStorageView", "placeSection")
+        # How to name the games, under the games folder: the check sees it.
+        self.assertIn("namingRow", rows)
+        mac = type_body(MAC_STORAGE.read_text(), "CartoucheMacFoldersSection")
+        for row in sorted(rows):
+            self.assertTrue(f"CartoucheStorageView.{row}" in mac,
+                            f"The iPhone's games folder or saves folder has the row {row}, This Mac's folders not")
+
+    def test_the_check_follows_a_row_through_the_parts_a_section_calls(self):
+        swift = """
+struct Page: View {
+    static let tapped = "page.tapped"
+    static let elsewhere = "page.elsewhere"
+    var body: some View {
+        List { part(.one) }
+    }
+    private func part(_ which: Which) -> some View {
+        Section { link }
+    }
+    private var link: some View {
+        Button("Go {") {}
+            .accessibilityIdentifier(Self.tapped)
+    }
+    private var other: some View {
+        Text("}").accessibilityIdentifier(Self.elsewhere)
+    }
+}
+"""
+        self.assertEqual(rows_of(swift, "Page", "part"), {"tapped"})
+        self.assertEqual(rows_of(swift, "Page", "body"), {"tapped"})
 
 
 if __name__ == "__main__":

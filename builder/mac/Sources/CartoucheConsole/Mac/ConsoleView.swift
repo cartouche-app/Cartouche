@@ -275,8 +275,8 @@ public struct CartoucheMacConsoleView: View {
         case library
         /// The console's System page (ConsoleSystem.swift), and its
         /// Storage, Game measurements and Report a problem pages, the
-        /// iPhone's.
-        case system, storage, telemetry, report
+        /// iPhone's; and how to name the games, from the Storage page.
+        case system, storage, telemetry, report, naming
     }
 
     /// The console on its home, or with every game open (SHOWINGLIBRARY),
@@ -410,6 +410,9 @@ public struct CartoucheMacConsoleView: View {
                     case .report:
                         CartoucheReportView()
                             .cartoucheConsolePage(CartoucheText.reportTitle, back: CartoucheText.systemTab)
+                    case .naming:
+                        CartoucheNamingView()
+                            .cartoucheConsolePage(CartoucheText.namingTitle, back: CartoucheText.storageTitle)
                     }
                 }
         }
