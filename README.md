@@ -121,6 +121,7 @@ Cartouche ships no games, no keys and no firmware, and never downloads them: it 
 | [`catalog/`](catalog/) | What the app knows about games and devices: nxnative's list of games, covers' IDs, compatibility sheets, device memory limits |
 | [`guard/`](guard/) | The publish guard, which refuses to publish anything that looks like game content |
 | [`telemetry/`](telemetry/) | The server Cartouche and Cartouche Builder send their measurements and problem reports to, a Cloudflare Worker, and the project's dashboard beside it |
+| [`domain/`](domain/) | The DNS records of cartouche.cloud, Cartouche's domain, which the Domain workflow keeps at Cloudflare |
 | [`site/`](site/) | The showcase page, on [GitHub Pages](https://cartouche-app.github.io/Cartouche/): Cartouche's screens rebuilt in HTML around games of nxnative's list, their covers loaded from IGDB, in French and English |
 | [`docs/`](docs/) | Getting started, architecture, roadmap, decisions, and this page's pictures ([docs/images](docs/images/README.md)) |
 

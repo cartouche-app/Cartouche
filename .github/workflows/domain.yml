@@ -1,0 +1,62 @@
+name: Domain
+
+# Keeps the DNS records of cartouche.cloud, Cartouche's domain, at Cloudflare
+# as domain/records.json says (domain/README.md): on main when the file
+# changes, and from the Actions tab, with "plan" to see what would change and
+# change nothing. It changes only the records it made itself, in one batch,
+# and leaves the zone's others as they are. It takes the secret
+# CLOUDFLARE_DOMAIN_TOKEN of the environment cloudflare, an account token
+# limited to the zone, and does nothing while it is not set. Then it asks
+# public resolvers whether they answer the file's records, as GitHub Pages
+# reads them for the site's certificate. The CI tests the file and the script
+# on every pull request (ci.yml, Domain), and the Full test pass with it.
+
+on:
+  push:
+    branches: [main]
+    paths: ["domain/**", ".github/workflows/domain.yml"]
+  workflow_dispatch:
+    inputs:
+      plan:
+        description: "Say what would change in the zone, and change nothing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# One change of the zone at a time, the last one wins.
+concurrency:
+  group: domain
+  cancel-in-progress: false
+
+jobs:
+  records:
+    name: cartouche.cloud's records
+    # The zone takes main's file alone: a branch's run would apply its own.
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: cloudflare
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Tests
+        run: python3 -m unittest discover -s domain/tests -v
+      - name: The zone's records, as the file says
+        env:
+          CLOUDFLARE_DOMAIN_TOKEN: ${{ secrets.CLOUDFLARE_DOMAIN_TOKEN }}
+          PLAN: ${{ inputs.plan }}
+        run: |
+          if [ "$PLAN" = "true" ]; then set -- --plan; fi
+          python3 domain/sync.py domain/records.json "$@"
+      # Cloudflare's name servers answer at once; a resolver that asked
+      # before may keep its empty answer for the zone's half hour.
+      - name: What public resolvers answer
+        if: ${{ !inputs.plan }}
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_DOMAIN_TOKEN != '' }}
+        run: |
+          if [ "$HAS_TOKEN" != "true" ]; then exit 0; fi
+          python3 domain/sync.py domain/records.json --resolve --wait 900
