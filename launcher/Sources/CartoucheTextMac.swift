@@ -101,8 +101,8 @@ extension CartoucheText {
     static var macBuildsDue: String { s("mac.builds.due", "Build what is due") }
     static var macBuildsAddDue: String { s("mac.builds.due.add", "Add what is due") }
     static var macBuildsDueNone: String { s("mac.builds.due.none", "Nothing is due on the Mac.") }
-    static var macBuildsDueOne: String { s("mac.builds.due.one", "1 game is due: nxnative improved it, or it was never built.") }
-    static func macBuildsDueMany(_ count: Int) -> String { f("mac.builds.due.many", "%lld games are due: nxnative improved them, or they were never built.", count) }
+    static var macBuildsDueOne: String { s("mac.builds.due.one", "1 game is due: nxnative improved it, it was never built, or only its app for the Mac is left to build.") }
+    static func macBuildsDueMany(_ count: Int) -> String { f("mac.builds.due.many", "%lld games are due: nxnative improved them, they were never built, or only their app for the Mac is left to build.", count) }
     static var macBuildsStopAll: String { s("mac.builds.stopAll", "Stop all") }
     static var macBuildsBuilding: String { s("mac.builds.building", "Building") }
     static var macBuildsWaiting: String { s("mac.builds.waiting", "Waiting their turn") }

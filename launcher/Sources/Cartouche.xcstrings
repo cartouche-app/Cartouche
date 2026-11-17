@@ -3271,13 +3271,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld games are due: nxnative improved them, or they were never built."
+            "value" : "%lld games are due: nxnative improved them, they were never built, or only their app for the Mac is left to build."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld jeux sont à construire : nxnative les a améliorés, ou ils n’ont jamais été construits."
+            "value" : "%lld jeux sont à construire : nxnative les a améliorés, ils n’ont jamais été construits, ou seule leur app pour le Mac reste à construire."
           }
         }
       }
@@ -3305,13 +3305,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1 game is due: nxnative improved it, or it was never built."
+            "value" : "1 game is due: nxnative improved it, it was never built, or only its app for the Mac is left to build."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "1 jeu est à construire : nxnative l’a amélioré, ou il n’a jamais été construit."
+            "value" : "1 jeu est à construire : nxnative l’a amélioré, il n’a jamais été construit, ou seule son app pour le Mac reste à construire."
           }
         }
       }

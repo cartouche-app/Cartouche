@@ -439,9 +439,9 @@ struct CartoucheMacBuildsSection: View {
             Section {
                 VStack(alignment: .leading, spacing: 6) {
                     status(build)
-                    // What it is for, the iPhone, the Mac or both, and the
-                    // part its build makes now.
-                    if let targets = build.targets {
+                    // What it is for, the iPhone, the Mac or both; building,
+                    // under its first line (status).
+                    if let targets = build.targets, !Self.isBuilding(build) {
                         Self.target(targets)
                             .font(.footnote)
                             .foregroundStyle(.secondary)
@@ -494,6 +494,13 @@ struct CartoucheMacBuildsSection: View {
             VStack(alignment: .leading, spacing: 6) {
                 Label(progress.map { CartoucheText.macBuildBuilding(Self.percent($0)) } ?? CartoucheText.macBuildBuildingNow,
                       systemImage: "hammer.fill")
+                // What its build makes, and the part it makes now, as the
+                // page of the Mac's builds says it.
+                if let targets = build.targets {
+                    Self.target(targets)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(CartoucheTheme.indigo)
+                }
                 ProgressView(value: progress ?? 0)
                     .tint(CartoucheTheme.indigo)
                 let detail = [step, left.map { CartoucheText.macBuildLeft(CartoucheText.duration(seconds: $0)) }]
@@ -545,6 +552,13 @@ struct CartoucheMacBuildsSection: View {
                 }
             }
         }
+    }
+
+    /// Whether BUILD is building now: its line of what it is for goes under
+    /// its first line, as on the page of the Mac's builds.
+    private static func isBuilding(_ build: CartoucheMacBuild) -> Bool {
+        if case .building = build.status { return true }
+        return false
     }
 
     /// What a build is for, as a line (decision 127): the iPhone, the Mac
