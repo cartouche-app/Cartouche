@@ -498,6 +498,28 @@
       ]
     },
     {
+      "name": "iphone-sheet-saves-newer",
+      "comment": "The sheet of the player's game brought down to its saves, whose newest copy version 1.2.0 of the game wrote, newer than this iPhone's: it waits for the game's update.",
+      "screen": "sheet-saves",
+      "sheet": "0400C3F00006E000",
+      "work": "saves-newer",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-switch-save",
       "comment": "A game's saves between the Switch and this iPhone, the sheet's game's, with the save JKSV exported for it read: what it holds, Continue this game here, and Make the ZIP for JKSV.",
       "screen": "switch-save",

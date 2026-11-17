@@ -128,21 +128,57 @@ enum ConsoleGallery {
     }
 
     /// The console with the gallery's games, speaking LANGUAGE ("fr" or "en"),
-    /// the saves of the sheet's game kept in step with a NAS's share.
-    static func prepare(language: String) {
-        show()
+    /// the saves of the sheet's game kept in step with a NAS's share: the
+    /// newest copy came, or, NEWER, it waits for the game's update, version
+    /// 1.2.0 of the game having written it and this Mac's app being 1.0.0.
+    static func prepare(language: String, newer: Bool = false) {
+        if let covers = makeGames() {
+            let deadline = Date().addingTimeInterval(60)
+            while !covers.loaded && Date() < deadline {
+                RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            }
+        }
+        show(language: language, newer: newer)
+    }
+
+    /// As prepare(language:newer:), from a task of the main actor: the
+    /// layout check's. Spun inside such a task, prepare(language:newer:)'s
+    /// run loop does not run the covers' task, also the main actor's, which
+    /// waits for it to end: the layout check waited the whole minute (17
+    /// November).
+    static func prepareInTask(language: String, newer: Bool = false) async {
+        if let covers = makeGames() {
+            let deadline = Date().addingTimeInterval(60)
+            while !covers.loaded && Date() < deadline {
+                try? await Task.sleep(for: .milliseconds(50))
+            }
+        }
+        show(language: language, newer: newer)
+    }
+
+    /// The games and the NAS's in the console, speaking LANGUAGE, the
+    /// newest copy of the sheet's game's saves waiting for its update when
+    /// NEWER.
+    private static func show(language: String, newer: Bool) {
         let console = CartoucheMacConsole.shared
         let nas = language == "fr" ? "le NAS" : "the NAS"
         console.show(games: apps, kept: kept, keptIn: nas)
+        let saves = newer ? CartoucheMacGameSaves(lastSync: copies[0].date, newer: "1.2.0", game: "1.0.0")
+                          : CartoucheMacGameSaves(lastSync: copies[0].date, fetched: copies[1].date)
         console.showSaves(folder: CartoucheMacSavesFolder(name: nas, path: "/Volumes/Partage/Cartouche/Saves"),
-                          games: [sheetGame: CartoucheMacGameSaves(lastSync: copies[0].date, fetched: copies[1].date)])
+                          games: [sheetGame: saves])
         console.speak(language)
     }
 
-    /// The games' apps, made once, shown by the console, and their covers
-    /// loaded, a minute at most.
-    private static func show() {
-        guard folder == nil else { return }
+    /// Whether the covers are loaded, as the task loading them says.
+    private final class Covers {
+        var loaded = false
+    }
+
+    /// The games' apps, made once, shown by the console, their covers
+    /// loading: nil when they were made before.
+    private static func makeGames() -> Covers? {
+        guard folder == nil else { return nil }
         let folder = FileManager.default.temporaryDirectory
             .appendingPathComponent("cartouche-gallery-\(UUID().uuidString)", isDirectory: true)
         self.folder = folder
@@ -181,16 +217,12 @@ enum ConsoleGallery {
         console.showForGallery(playTimes: playTimes, sizes: sizes)
         console.show(games: apps, kept: kept)
 
-        final class Done { var value = false }
-        let done = Done()
+        let covers = Covers()
         Task { @MainActor in
             await console.loadCovers(everyGame: true)
-            done.value = true
+            covers.loaded = true
         }
-        let deadline = Date().addingTimeInterval(60)
-        while !done.value && Date() < deadline {
-            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
-        }
+        return covers
     }
 
     /// The games' apps go once the pictures are taken.

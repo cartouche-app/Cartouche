@@ -30,6 +30,13 @@
 //    the saves here go after the game. A copy that goes as the newest is
 //    named after the newest one there, so that it is the newest whatever
 //    the iPhones' clocks say.
+//  - Each copy names the version of the game that wrote its saves, in its
+//    zip's comment, which older Cartouches leave aside. A game older than
+//    the newest copy's never takes it, nor puts its own saves over it: they
+//    go as a copy of their own date under it, and the newest copy waits for
+//    the game to be updated (heldBack). A copy without a version, made by
+//    an older Cartouche, or a version that does not read as numbers, holds
+//    nothing back.
 //
 //  Platform-independent: tested on its own by launcher/Package.swift.
 //  Public for Cartouche Builder, which keeps the saves of a game played on
@@ -63,11 +70,15 @@ public struct CartoucheSaveCopy: Hashable {
     public let date: Date
     /// What it holds, from its zip's central directory, once read.
     public var content: String?
+    /// The version of the game that wrote its saves, from its zip's
+    /// comment, once read; nil for a copy that names none.
+    public var gameVersion: String?
 
-    public init(name: String, date: Date, content: String? = nil) {
+    public init(name: String, date: Date, content: String? = nil, gameVersion: String? = nil) {
         self.name = name
         self.date = date
         self.content = content
+        self.gameVersion = gameVersion
     }
 }
 
@@ -84,12 +95,17 @@ public struct CartoucheSaveBase: Codable, Hashable {
     public var content: String?
     /// How the saves here looked then (CartoucheLocalSaves.look).
     public var look: String
+    /// The version of the game the copy names, when it was known: the
+    /// newest copy's, when it is the base's, needs no reading then. Nil for
+    /// a base an older Cartouche left.
+    public var gameVersion: String?
 
-    public init(place: String, copy: String, content: String?, look: String) {
+    public init(place: String, copy: String, content: String?, look: String, gameVersion: String? = nil) {
         self.place = place
         self.copy = copy
         self.content = content
         self.look = look
+        self.gameVersion = gameVersion
     }
 }
 
@@ -164,6 +180,73 @@ public enum CartoucheSaveSync {
         // The same second: this iPhone's, as nxnative keeps its own.
         if newest.date > here.written { return fetching ? .keepAndFetch : .keep }
         return .send
+    }
+
+    // MARK: The game's version
+
+    /// Whether STEP would bring the newest copy here, or put the saves here
+    /// over it, so that its game's version must be known first.
+    public static func needsCopyVersion(_ step: CartoucheSaveStep) -> Bool {
+        step == .fetch || step == .keepAndFetch || step == .send
+    }
+
+    /// STEP, as step() gave it, when the newest copy's saves were written by
+    /// version COPY of the game and the game here is version GAME: a game
+    /// older than the copy's never takes it, nor puts its saves over it, so
+    /// that it never reads saves a newer version wrote, and the player keeps
+    /// what they played there. The saves here go as a copy of their own date
+    /// under the newest one instead, and it waits for the game's update.
+    public static func heldBack(_ step: CartoucheSaveStep, copy: String?, game: String?) -> CartoucheSaveStep {
+        guard isNewer(copy, than: game) else { return step }
+        switch step {
+        case .fetch: return .none
+        case .keepAndFetch, .send: return .keep
+        case .none, .same, .compare, .keep: return step
+        }
+    }
+
+    /// Whether VERSION is newer than OTHER, both as a game's version shows
+    /// it, "1.2.0": numbers, compared one by one, a missing one 0. False
+    /// when either is missing or does not read as numbers.
+    public static func isNewer(_ version: String?, than other: String?) -> Bool {
+        guard let mine = numbers(of: version), let theirs = numbers(of: other) else { return false }
+        for index in 0 ..< max(mine.count, theirs.count) {
+            let a = index < mine.count ? mine[index] : 0
+            let b = index < theirs.count ? theirs[index] : 0
+            if a != b { return a > b }
+        }
+        return false
+    }
+
+    private static func numbers(of version: String?) -> [Int]? {
+        guard let version = version?.trimmingCharacters(in: .whitespaces), !version.isEmpty else { return nil }
+        let parts = version.split(separator: ".", omittingEmptySubsequences: false)
+        let numbers = parts.compactMap { part -> Int? in
+            guard !part.isEmpty, part.count <= 9, part.allSatisfy({ $0.isASCII && $0.isNumber }) else { return nil }
+            return Int(part)
+        }
+        return numbers.count == parts.count ? numbers : nil
+    }
+
+    /// A copy's zip comment, which names the version of the game that wrote
+    /// its saves: {"gameVersion":"1.2.0"}. Empty for no version.
+    public static func comment(gameVersion: String?) -> Data {
+        guard let version = gameVersion?.trimmingCharacters(in: .whitespaces), !version.isEmpty,
+              let data = try? JSONSerialization.data(withJSONObject: ["gameVersion": String(version.prefix(64))],
+                                                     options: [.sortedKeys])
+        else { return Data() }
+        return data
+    }
+
+    /// The version of the game a copy's zip COMMENT names; nil for none, as
+    /// in a copy an older Cartouche made.
+    public static func gameVersion(inComment comment: Data) -> String? {
+        guard !comment.isEmpty,
+              let object = try? JSONSerialization.jsonObject(with: comment) as? [String: Any],
+              let version = (object["gameVersion"] as? String)?.trimmingCharacters(in: .whitespaces),
+              !version.isEmpty
+        else { return nil }
+        return version
     }
 
     // MARK: The copies' names
@@ -301,8 +384,10 @@ public enum CartoucheSaveSync {
     // MARK: Copies
 
     /// The saves' folders, files and links in DOCUMENTS, as a zip with paths
-    /// from Documents: save/..., save_device/...
-    public static func writeZip(ofSavesIn documents: URL, to sink: CartoucheByteSink) async throws {
+    /// from Documents: save/..., save_device/...; its comment names
+    /// GAMEVERSION, the version of the game that wrote them, when known.
+    public static func writeZip(ofSavesIn documents: URL, to sink: CartoucheByteSink,
+                                gameVersion: String? = nil) async throws {
         let writer = CartoucheZipWriter(sink: sink)
         for folder in folders {
             let root = documents.appendingPathComponent(folder, isDirectory: true)
@@ -329,7 +414,7 @@ public enum CartoucheSaveSync {
                 }
             }
         }
-        try await writer.finish()
+        try await writer.finish(comment: comment(gameVersion: gameVersion))
     }
 
     /// Whether ENTRIES are those of a copy of saves: each in save/ or

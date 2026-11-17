@@ -40,15 +40,22 @@ public struct CartoucheMacGameSaves: Equatable, Sendable {
     /// Whether nxnative's own cloud saves keep them, chosen in the game's
     /// settings: the Builder leaves them alone.
     public var inCloud: Bool
+    /// The version of the game the newest copy names, newer than this Mac's
+    /// app, GAME: the copy waits for the game's update, and the saves played
+    /// here go to the saves folder as a copy of their own meanwhile.
+    public var newer: String?
+    public var game: String?
 
     public init(lastSync: Date? = nil, fetched: Date? = nil, kept: Date? = nil, waiting: Bool = false,
-                failure: String? = nil, inCloud: Bool = false) {
+                failure: String? = nil, inCloud: Bool = false, newer: String? = nil, game: String? = nil) {
         self.lastSync = lastSync
         self.fetched = fetched
         self.kept = kept
         self.waiting = waiting
         self.failure = failure
         self.inCloud = inCloud
+        self.newer = newer
+        self.game = game
     }
 }
 
@@ -89,6 +96,9 @@ public enum CartoucheMacSaveError: Error, Equatable {
     case offline
     /// The copy does not read whole, or holds more than a game's saves.
     case unreadable
+    /// A newer version of the game wrote the copy, COPY, than this Mac's
+    /// app, GAME: it stays where it is.
+    case newerGame(copy: String, game: String)
 }
 
 extension CartoucheMacSaveError: LocalizedError {
@@ -97,6 +107,7 @@ extension CartoucheMacSaveError: LocalizedError {
         case .busy: return CartoucheText.savesRunning
         case .offline: return CartoucheText.savesWaitingHere
         case .unreadable: return CartoucheText.savesCopyUnreadable
+        case .newerGame(let copy, let game): return CartoucheText.savesPutBackNewer(copy, game)
         }
     }
 }
@@ -171,6 +182,9 @@ final class CartoucheSaveBackups: ObservableObject {
     @Published private(set) var isSyncing = false
     @Published private(set) var lastSync: [String: Date] = [:]
     @Published private(set) var news: [String: CartoucheSaveNews] = [:]
+    /// The games whose newest copy waits for the game's update, a newer
+    /// version of it having written it.
+    @Published private(set) var newer: [String: CartoucheSaveNewer] = [:]
     @Published private(set) var waiting: Set<String> = []
     /// The games whose saves nxnative's own cloud saves keep.
     @Published private(set) var inCloud: Set<String> = []
@@ -214,6 +228,7 @@ final class CartoucheSaveBackups: ObservableObject {
         }
         var lastSync: [String: Date] = [:]
         var news: [String: CartoucheSaveNews] = [:]
+        var newer: [String: CartoucheSaveNewer] = [:]
         var waiting: Set<String> = []
         var inCloud: Set<String> = []
         var failures: [String: String] = [:]
@@ -223,12 +238,14 @@ final class CartoucheSaveBackups: ObservableObject {
             if saves.fetched != nil || saves.kept != nil {
                 news[key] = CartoucheSaveNews(fetched: saves.fetched, kept: saves.kept)
             }
+            if let copy = saves.newer { newer[key] = CartoucheSaveNewer(copy: copy, game: saves.game ?? "") }
             if saves.waiting { waiting.insert(key) }
             if saves.inCloud { inCloud.insert(key) }
             if let failure = saves.failure { failures[key] = failure }
         }
         if lastSync != self.lastSync { self.lastSync = lastSync }
         if news != self.news { self.news = news }
+        if newer != self.newer { self.newer = newer }
         if waiting != self.waiting { self.waiting = waiting }
         if inCloud != self.inCloud { self.inCloud = inCloud }
         guard failures != self.failures else { return }
@@ -287,6 +304,9 @@ final class CartoucheSaveBackups: ObservableObject {
             try await onPutBack(backup.path, titleID)
         } catch CartoucheMacSaveError.offline {
             throw away()
+        } catch CartoucheMacSaveError.newerGame(let copy, let game) {
+            // As the iPhone says it.
+            throw CartoucheSaveNewerGame(copy: copy, game: game)
         }
         there()
         // The player put it back: no news to tell of it.

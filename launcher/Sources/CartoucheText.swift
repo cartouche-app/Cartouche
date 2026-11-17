@@ -727,6 +727,12 @@ enum CartoucheText {
         f("saves.kept", "Newer saves are in your saves folder: they come when the game next starts. This iPhone’s are kept there as the copy of %@.", kept)
     }
     static func savesFooter(_ kept: Int) -> String { f("saves.footer", "Cartouche keeps these saves in step with your saves folder: the newest come when the game is installed and before it starts, and go there after each game. When both changed, the newest win and the others stay as a copy. The %lld newest copies are kept.", kept) }
+    static func savesNewerGame(_ copy: String, _ game: String) -> String {
+        f("saves.newerGame", "The newest copy of these saves comes from version %1$@ of the game, newer than the one installed here (%2$@): it comes once the game is updated. Until then, the saves played here go to your saves folder as a copy of their own.", copy, game)
+    }
+    static func savesPutBackNewer(_ copy: String, _ game: String) -> String {
+        f("saves.putBack.newer", "This copy comes from version %1$@ of the game, newer than the one installed here (%2$@): update the game to put it back.", copy, game)
+    }
     static func savesPutBackAction(_ date: String) -> String { f("saves.putBack.action", "Put back the copy of %@", date) }
     static func savesPutBackDone(_ date: String) -> String { f("saves.putBack.done", "The copy of %@ is back in place.", date) }
     static var savesCopyFailed: String { s("saves.failed.copy", "The saves were not synced") }

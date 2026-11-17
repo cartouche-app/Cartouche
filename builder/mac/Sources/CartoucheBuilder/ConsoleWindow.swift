@@ -54,6 +54,8 @@ struct MainView: View {
     var showingInfo = false
     var showingSheetOf: String?
     var showingSaves: ConsoleSavesPage?
+    /// The Mac's appearance, light or dark: the builder's.
+    @State private var macScheme = MainView.scheme(of: NSApplication.shared.effectiveAppearance)
 
     var body: some View {
         Group {
@@ -72,6 +74,19 @@ struct MainView: View {
             ToolbarItem(placement: .principal) {
                 InterfaceSwitch()
             }
+        }
+        // The window dark while the console is in it, as the iPhone's
+        // console always is, and in the Mac's appearance for the builder,
+        // said every time, never left to nothing: when the console's dark
+        // gave way to nothing, SwiftUI gave the window back the Mac's light
+        // appearance but kept the builder in the console's colours, its
+        // words white on white, until the window was drawn again (on a
+        // player's Mac in light mode, 17 November; the layout check takes
+        // the window to the console and back, LayoutCheck.swift).
+        .preferredColorScheme(model.interface == .console ? .dark : macScheme)
+        .onReceive(NSApplication.shared.publisher(for: \.effectiveAppearance)) { appearance in
+            let scheme = MainView.scheme(of: appearance)
+            if scheme != macScheme { macScheme = scheme }
         }
         .sheet(isPresented: $model.showSetup) {
             SetupAssistant(start: model.setupStep)
@@ -113,6 +128,11 @@ struct MainView: View {
     private func showInstall() {
         let name = model.installing.map { model.game($0)?.name ?? $0 }
         ConsoleLink.showInstall(name, step: model.installMessage)
+    }
+
+    /// Light or dark, as APPEARANCE is.
+    private static func scheme(of appearance: NSAppearance) -> ColorScheme {
+        appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua ? .dark : .light
     }
 
     /// What went wrong, above the console as above the builder's pages: a
@@ -248,13 +268,16 @@ enum ConsoleLink {
             let event = games.last[titleID]
             let moved = event.flatMap { $0.offline || $0.failed ? nil : $0.at }
             let news = event.flatMap { ["fetch", "keep", "keepAndFetch"].contains($0.step) ? $0 : nil }
+            // The newest copy waits for the game's update, the saves of
+            // this Mac kept under it meanwhile, which that says.
+            let held = event.flatMap { $0.step == MacSaveEvent.heldBack ? $0 : nil }
             saves[titleID] = CartoucheMacGameSaves(
                 lastSync: [games.checked[titleID], moved].compactMap { $0 }.max(),
                 fetched: news?.fetchedDate, kept: news?.keptDate, waiting: event?.offline == true,
                 failure: event?.failed == true
                     ? event?.failure ?? tr("Its saves could not be kept in step.", "Ses sauvegardes n’ont pas pu être mises en phase.")
                     : nil,
-                inCloud: games.cloud[titleID] != nil)
+                inCloud: games.cloud[titleID] != nil, newer: held?.newer, game: held?.game)
         }
         CartoucheMacConsole.shared.showSaves(folder: folder, games: saves)
     }
@@ -265,6 +288,7 @@ enum ConsoleLink {
         case .offline: return .offline
         case .busy: return .busy
         case .unreadable: return .unreadable
+        case .newerGame(let copy, let game): return .newerGame(copy: copy, game: game)
         }
     }
 
