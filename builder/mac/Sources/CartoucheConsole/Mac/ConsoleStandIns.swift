@@ -7,8 +7,10 @@
 //  installs and starts games with LiveContainer), the game running, its
 //  setup (a certificate and a pairing file), its Apple ID, its first
 //  game's guide, the game behind the console, the iPhone's model, memory
-//  limit, signature and its renewals, how a game fits it, the journal of
-//  its reports and its measurements.
+//  limit, signature and its renewals, how a game fits it, where a game
+//  keeps its saves, the journal of its reports and its measurements. The
+//  saves themselves, which the Builder keeps in step, are in
+//  ConsoleSaves.swift.
 //  A Mac plays the games nxnative built for it, each in its own app: the
 //  console has nothing to set up, no limit of memory from iOS, no signature
 //  that expires, nothing behind it. A game fits it by the iPhone's rule
@@ -63,9 +65,30 @@ final class CartoucheGameActions: ObservableObject {
     /// of the player's and keeps nothing (ConsoleSettings.swift).
     var keepsChoicesInMemory = false
 
-    /// The game's saves on this Mac come with the Mac's saves page; until
-    /// then, the sheet has no saves section.
-    func saves(of app: LCAppModel) -> CartoucheSaveTarget? { nil }
+    /// The game's saves on this Mac, in nxnative's folder of the game's,
+    /// dataRoot/<title ID>, whose save and save_device hold them, as the
+    /// iPhone's game's Documents do; keyed by the game's title ID, as the
+    /// Builder keeps them in step (ConsoleSaves.swift). Nil for an app that
+    /// is not an nxnative game, or a game that never started here, which
+    /// has no folder yet.
+    func saves(of app: LCAppModel) -> CartoucheSaveTarget? {
+        guard let titleId = titleId(of: app) else { return nil }
+        let documents = dataRoot.appendingPathComponent(titleId, isDirectory: true)
+        guard FileManager.default.fileExists(atPath: documents.path) else { return nil }
+        return CartoucheSaveTarget(key: CartoucheSaveBackups.key(titleId), name: app.displayName, titleId: titleId,
+                                   documents: documents)
+    }
+
+    /// Where the game keeps its saves, its folder made now if it never
+    /// started here, as nxnative makes it at the game's first start: for a
+    /// save the player brings from their Switch before then
+    /// (CartoucheSwitchSaveView).
+    func savesToImport(of app: LCAppModel) -> CartoucheSaveTarget? {
+        guard let titleId = titleId(of: app) else { return nil }
+        try? FileManager.default.createDirectory(at: dataRoot.appendingPathComponent(titleId, isDirectory: true),
+                                                 withIntermediateDirectories: true)
+        return saves(of: app)
+    }
 
     /// The game's app and its data folder, for its size and its play time
     /// (CartoucheGameStats), which the Builder counts there as the iPhone's
@@ -431,6 +454,30 @@ enum CartoucheReports {
     }
 }
 
+/// Copy the report, under what went wrong, as on the iPhone
+/// (CartoucheReporting.swift): its text, redacted, on the pasteboard.
+struct CartoucheReportButton: View {
+    let report: CartoucheReport
+    @State private var copied = false
+
+    var body: some View {
+        Button {
+            CartoucheReports.copy(report)
+            copied = true
+        } label: {
+            Label(copied ? CartoucheText.reportCopied : CartoucheText.reportCopy,
+                  systemImage: copied ? "checkmark.circle.fill" : "doc.on.doc")
+                .contentTransition(.symbolEffect(.replace))
+        }
+        .accessibilityHint(CartoucheText.reportHint)
+        .task(id: copied) {
+            guard copied else { return }
+            try? await Task.sleep(for: .seconds(2))
+            copied = false
+        }
+    }
+}
+
 // MARK: Measurements
 
 /// Cartouche's measurements of the games and of its own events
@@ -443,12 +490,3 @@ final class CartoucheTelemetry {
     func event(_ name: String, game: String? = nil, fields: [String: CartoucheTelemetryValue] = [:]) {}
 }
 
-// MARK: Saves
-
-/// A game's saves on its sheet come with the Mac's saves page.
-struct CartoucheSavesSection: View {
-    let target: CartoucheSaveTarget
-    let isRunning: Bool
-
-    var body: some View { EmptyView() }
-}

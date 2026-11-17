@@ -594,6 +594,12 @@ public struct MacSaveEvent: Codable, Equatable, Sendable {
 
     /// The step of a copy the player put back from Cartouche's console.
     public static let putBack = "putBack"
+
+    /// The date the saves that came were written, and those of the Mac
+    /// kept as a copy under a newer one, as their copies' names say: what
+    /// the game's sheet in Cartouche's console tells, as the iPhone's.
+    public var fetchedDate: Date? { fetched.flatMap(CartoucheSaveSync.date(inName:)) }
+    public var keptDate: Date? { kept.flatMap(CartoucheSaveSync.date(inName:)) }
 }
 
 /// When a game's saves are kept in step.

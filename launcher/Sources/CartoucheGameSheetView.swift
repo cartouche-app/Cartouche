@@ -186,18 +186,12 @@ struct CartoucheGameSheetView: View {
                 CartoucheMacBuildsSection(titleIds: macTitleIds, isOwned: entry.isOwned, watch: macBuilds)
                 #endif
 
-                // The game's saves, with, on the iPhone, its saves between the
-                // player's Switch and this iPhone; the Mac's come with its
-                // saves page (builder/mac/console/unshared.json).
-                #if os(iOS)
+                // The game's saves, with its saves between the player's
+                // Switch and this iPhone; on the Mac, those the Builder keeps
+                // in step there (Mac/ConsoleSaves.swift).
                 if let app = entry.app, let game = switchGame(of: app) {
                     CartoucheSavesSection(target: game.target, isRunning: actions.isRunning(app), switchGame: game)
                 }
-                #else
-                if let app = entry.app, let saves = actions.saves(of: app) {
-                    CartoucheSavesSection(target: saves, isRunning: actions.isRunning(app))
-                }
-                #endif
 
                 if entry.isOwned {
                     infoSection
@@ -293,7 +287,6 @@ struct CartoucheGameSheetView: View {
         #endif
     }
 
-    #if os(iOS)
     /// The game's saves, and the game, for its saves between the player's
     /// Switch and this iPhone; nil for an app that is not an nxnative game.
     private func switchGame(of app: LCAppModel) -> CartoucheSwitchSaveGame? {
@@ -305,7 +298,6 @@ struct CartoucheGameSheetView: View {
                                        makeTarget: { actions.savesToImport(of: app) },
                                        isRunningNow: { actions.isRunning(app) })
     }
-    #endif
 
     // MARK: Header
 

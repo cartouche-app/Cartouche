@@ -267,6 +267,8 @@ struct CartoucheSaveCopiesView: View {
         .navigationTitle(CartoucheText.savesPutBack)
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #else
+        .cartoucheConsolePage(CartoucheText.savesPutBack)
         #endif
         .overlay {
             if restoring {

@@ -324,6 +324,31 @@ final class CartoucheStorageSettings: ObservableObject {
         persist()
     }
 
+    #if os(macOS)
+    /// The Mac's saves folder, as Cartouche Builder keeps the saves of the
+    /// games played on this Mac in step with it, for a game's sheet in
+    /// Cartouche's console (Mac/ConsoleSaves.swift): a folder named NAME,
+    /// at PATH, kept in memory only; nil for none, the saves staying on
+    /// this Mac.
+    func showMacSaves(name: String?, path: String) {
+        guard let name else {
+            if !servers.isEmpty || !places.isEmpty {
+                servers = []
+                places = [:]
+            }
+            return
+        }
+        let server = CartoucheStorageServer(id: Self.macSavesID, kind: .folder, name: name)
+        let place = CartoucheStoragePlace(server: server.id, path: path)
+        guard servers != [server] || places != [.saves: place] else { return }
+        servers = [server]
+        places = [.saves: place]
+    }
+
+    /// The Mac's saves folder's ID, the same each time.
+    static let macSavesID = UUID(uuidString: "6D616373-6176-4573-A000-000000000001")!
+    #endif
+
     #if CARTOUCHE_GALLERY
     /// SERVER, with the games folder and the saves folder on it, for the
     /// launcher's gallery (launcher/Gallery): kept in memory only.

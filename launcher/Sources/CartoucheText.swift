@@ -987,6 +987,16 @@ enum CartoucheText {
         return f("unit.kb", "%@\u{00A0}KB", kilobytes)
     }
 
+    /// A file's size as the system writes it, "48 KB", "1.2 MB": on the
+    /// Mac, in the language the console speaks.
+    static func fileSize(_ bytes: UInt64) -> String {
+        #if os(macOS)
+        return Int64(clamping: bytes).formatted(.byteCount(style: .file).locale(locale))
+        #else
+        return ByteCountFormatter.string(fromByteCount: Int64(clamping: bytes), countStyle: .file)
+        #endif
+    }
+
     /// "23.4 GB", in decimal gigabytes as iOS counts storage.
     static func storageAmount(bytes: Int64) -> String {
         let formatter = NumberFormatter()

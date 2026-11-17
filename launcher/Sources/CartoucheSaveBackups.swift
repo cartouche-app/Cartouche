@@ -90,6 +90,13 @@ final class CartoucheSaveBackups: ObservableObject {
     /// Whether the player chose a saves folder.
     var isOn: Bool { settings.location(.saves) != nil }
 
+    /// Why the last sync failed, and the report on it, as TARGET's sheet
+    /// shows it: on the iPhone, whose syncs go in rounds, the last round's
+    /// for every game; on the Mac, each game's own (Mac/ConsoleSaves.swift).
+    func problem(of target: CartoucheSaveTarget) -> CartoucheReport? {
+        problemReport
+    }
+
     /// After a game: sends the saves of the TARGETS that changed since they
     /// were last in step with the saves folder, unless syncs are under way.
     /// What the folder has new for the others comes at their next start.

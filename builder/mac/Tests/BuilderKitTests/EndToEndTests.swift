@@ -319,6 +319,20 @@ final class EndToEndTests: XCTestCase {
         heard.removeAll()
         _ = try await macGames.play(titleID)
         try await eventually("the game playing", timeout: 30) { macGames.isPlaying(titleID) }
+        // Meanwhile its saves are its own: what the console's sheet asks of
+        // them waits for it to end.
+        do {
+            _ = try await macGames.syncNow(titleID)
+            XCTFail("its saves were synced under the game")
+        } catch {
+            XCTAssertEqual(error as? MacSavesError, .busy)
+        }
+        do {
+            try await macGames.change(titleID) { _ in XCTFail("its saves were changed under the game") }
+            XCTFail("its saves were changed under the game")
+        } catch {
+            XCTAssertEqual(error as? MacSavesError, .busy)
+        }
         let asked = Date()
         macGames.quit(titleID, grace: 1)
         try await eventually("the game ended and its saves went", timeout: 30) {
@@ -328,6 +342,34 @@ final class EndToEndTests: XCTestCase {
         XCTAssertTrue(heard.contains("started \(titleID) builder"), "\(heard)")
         // Its log does not say how it ended: never a crash.
         XCTAssertTrue(heard.contains("ended \(titleID) unknown -"), "\(heard)")
+
+        // Once it ended, the console's sheet lists its copies, the newest
+        // first: the iPhone's and this Mac's, one after the other.
+        let listed = try await macGames.copies(titleID)
+        XCTAssertEqual(listed.count, 4)
+        XCTAssertEqual(listed.map(\.date), listed.map(\.date).sorted(by: >))
+        // It puts the oldest back, the iPhone's first: this Mac's saves had
+        // gone already, and the copy put back goes as the newest one, for the
+        // iPhone to take at its next start.
+        let oldest = try XCTUnwrap(listed.last)
+        try await macGames.putBack(oldest.name, of: titleID)
+        XCTAssertEqual(macGames.last[titleID]?.step, MacSaveEvent.putBack)
+        let progress = games.appendingPathComponent("\(titleID)/save/progress.txt")
+        XCTAssertEqual(try String(contentsOf: progress, encoding: .utf8), "iPhone 1\n")
+        let afterPutBack = try await macGames.copies(titleID)
+        XCTAssertEqual(afterPutBack.count, 5)
+        let newest = try await unpack(gameFolder.appendingPathComponent(try XCTUnwrap(afterPutBack.first).name), into: root)
+        XCTAssertEqual(newest, ["save/progress.txt": "iPhone 1\n"])
+        // A save from the Switch takes the place of the game's, in the
+        // builder's turn, and goes as the newest copy.
+        heard.removeAll()
+        try await macGames.change(titleID) { documents in
+            try Data("Switch\n".utf8).write(to: documents.appendingPathComponent("save/progress.txt"))
+        }
+        try await eventually("the Switch's saves went", timeout: 30) { heard.contains("saves \(titleID) after send false") }
+        let switchCopy = try await macGames.copies(titleID)
+        let sentFromSwitch = try await unpack(gameFolder.appendingPathComponent(try XCTUnwrap(switchCopy.first).name), into: root)
+        XCTAssertEqual(sentFromSwitch, ["save/progress.txt": "Switch\n"])
         // Nothing of this Mac's own nxnative folders was touched.
         XCTAssertFalse(FileManager.default.fileExists(atPath: MacSavesFolder.nxnativeFolder.appendingPathComponent(titleID).path))
     }

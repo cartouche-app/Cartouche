@@ -634,10 +634,16 @@ public final class MacGames: ObservableObject {
         let titleID = titleID.uppercased()
         guard !isBusy(titleID) else { throw MacSavesError.busy }
         let documents = games.appendingPathComponent(titleID, isDirectory: true)
+        let quiet = apps[titleID].map(Self.quiet) ?? { true }
         preparing.insert(titleID)
         let result: T
         do {
-            result = try await keeper.change { try change(documents) }
+            result = try await keeper.change {
+                // A game started from the Dock while a sync ended keeps the
+                // saves it found, as under a sync.
+                guard quiet() else { throw MacSavesError.busy }
+                return try change(documents)
+            }
         } catch {
             preparing.remove(titleID)
             throw error

@@ -32,16 +32,28 @@ enum Gallery {
         // Cartouche's console on this Mac (ConsoleGallery.swift): its home,
         // every game, a game's settings page beside them, a game's info over
         // them, and the whole sheet of a game played on this Mac, in a
-        // window as tall as it.
+        // window as tall as it, with the copies of its saves and its Switch
+        // saves, the pages its saves open.
         case console, consoleLibrary = "console-library", consoleSettings = "console-settings", consoleInfo = "console-info"
-        case consoleSheet = "console-sheet"
+        case consoleSheet = "console-sheet", consoleSaves = "console-saves", consoleSwitchSave = "console-switch-save"
         // What the window's height leaves out: the settings' Builds tab, and
         // the storage page down to the games on this Mac, in a window as
         // tall as it.
         case settingsBuilds = "settings-builds", storageMac = "storage-mac"
 
         /// Whether the page is the console's, which is always dark.
-        var isConsole: Bool { [.console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet].contains(self) }
+        var isConsole: Bool {
+            [.console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet, .consoleSaves, .consoleSwitchSave].contains(self)
+        }
+
+        /// The page of the sheet's saves it opens over the sheet.
+        var savesPage: ConsoleSavesPage? {
+            switch self {
+            case .consoleSaves: return .copies
+            case .consoleSwitchSave: return .switchSaves
+            default: return nil
+            }
+        }
 
         /// The setup assistant's step the page shows.
         var step: SetupStep? {
@@ -63,7 +75,7 @@ enum Gallery {
             switch self {
             case .settings, .settingsBuilds: return SettingsTab.size
             case .storageMac: return CGSize(width: 1024, height: 1440)
-            case .consoleSheet: return CGSize(width: 1024, height: 1300)
+            case .consoleSheet: return CGSize(width: 1024, height: 1640)
             // The window at its smallest, with a game's sheet whose
             // nxnative commits are a paragraph each, as nxnative writes them.
             case .gameNarrow: return CGSize(width: Columns.window.width, height: 680)
@@ -157,12 +169,14 @@ enum Gallery {
         switch page {
         case .settings, .settingsBuilds:
             controller = settings(model, open: page == .settingsBuilds ? .builds : .general)
-        case .console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet:
+        case .console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet, .consoleSaves, .consoleSwitchSave:
             ConsoleGallery.prepare(language: L10n.code)
             model.show(.console)
+            let sheet = page == .consoleSheet || page.savesPage != nil
             controller = hosted(MainView(showingLibrary: page == .consoleLibrary, showingSettings: page == .consoleSettings,
                                          showingInfo: page == .consoleInfo,
-                                         showingSheetOf: page == .consoleSheet ? ConsoleGallery.sheetGame : nil), model)
+                                         showingSheetOf: sheet ? ConsoleGallery.sheetGame : nil,
+                                         showingSaves: page.savesPage), model)
         case .menubar, .menubarBuilding:
             let panel = hosted(MenuBarView().background(Color(nsColor: .windowBackgroundColor)), model)
             size.height = ceil(panel.sizeThatFits(in: CGSize(width: size.width, height: 2000)).height)
@@ -190,7 +204,7 @@ enum Gallery {
         switch page {
         case .settings: window.title = SettingsTab.general.title
         case .settingsBuilds: window.title = SettingsTab.builds.title
-        case .console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet: window.title = "Cartouche"
+        case _ where page.isConsole: window.title = "Cartouche"
         default: window.title = "Cartouche Builder"
         }
         if page == .settings || page == .settingsBuilds {

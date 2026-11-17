@@ -169,8 +169,8 @@
     },
     "CartoucheSaveBackups.swift": {
       "kind": "mac",
-      "why": "The games' saves kept in step with the saves folder: on the Mac, with the same CartoucheSaveSync, by MacSaves.",
-      "mac": "BuilderKit/MacSaves.swift"
+      "why": "The iPhone keeps its games' saves in step itself, in rounds, with UIKit's time in the background; on the Mac, the Builder keeps those of the games played there in step (BuilderKit/MacSaves.swift, MacGames.swift), and the console's stand-in shows what it did and asks it for the rest (Mac/ConsoleSaves.swift).",
+      "mac": "CartoucheConsole/Mac/ConsoleSaves.swift"
     },
     "CartoucheSetup.swift": {
       "kind": "iphone",
@@ -225,21 +225,6 @@
       "why": "The Storage page: with the console's storage and the library the iPhone and the Mac share.",
       "step": 7
     },
-    "CartoucheSwitchSave.swift": {
-      "kind": "later",
-      "why": "A save exported on the player's Switch with JKSV or Checkpoint, checked and put in place of a game's save, and the save it replaced kept and put back: on the Mac, with the console's storage and saves, where a game's saves are those of nxnative's app for the Mac (MacSaves).",
-      "step": 7
-    },
-    "CartoucheSwitchSaveArchive.swift": {
-      "kind": "later",
-      "why": "The folder or ZIP archive of a save exported on the Switch, read, and a game's save made into a ZIP archive for JKSV: on the Mac, with the console's storage and saves.",
-      "step": 7
-    },
-    "CartoucheSwitchSaveView.swift": {
-      "kind": "later",
-      "why": "A game's saves between the player's Switch and this iPhone, which the sheet's saves section opens (CartoucheStorageView.swift): on the Mac, with the console's storage and saves.",
-      "step": 7
-    },
     "CartoucheSystemView.swift": {
       "kind": "later",
       "why": "The System page: with the console's measurements, its reports and the Mac's guide, which most of its rows are; System opens the Builder meanwhile, and a game's sheet says how the game fits this Mac.",
@@ -266,11 +251,6 @@
     "CartoucheTextShortcuts.swift": {
       "kind": "iphone",
       "why": "The words of Siri and Home Screen (CartoucheShortcuts.swift, CartoucheGameShortcutsView.swift), the iPhone's alone."
-    },
-    "CartoucheTextSwitchSave.swift": {
-      "kind": "later",
-      "why": "The words of a game's saves between the player's Switch and this iPhone (CartoucheSwitchSaveView.swift): on the Mac, with the console's storage and saves.",
-      "step": 7
     },
     "CartoucheUpdateView.swift": {
       "kind": "mac",

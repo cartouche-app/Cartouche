@@ -17,9 +17,10 @@
 //  starts the game on nxnative's settings window. The game's info, its
 //  name, platform, genre, summary and cover, opens over the console.
 //
-//  This is the console's only public part: the app imports it in one file,
-//  so that its names never meet those of the launcher's other library,
-//  CartoucheCore, which shares some of its files.
+//  This is the console's public part, with a game's saves
+//  (ConsoleSaves.swift): the app imports it in one file, so that its names
+//  never meet those of the launcher's other library, CartoucheCore, which
+//  shares some of its files.
 //
 
 import SwiftUI
@@ -229,12 +230,16 @@ public struct CartoucheMacConsoleView: View {
     @State private var settingsID: String?
     /// The game whose info the player changes, over the console.
     @State private var editingInfo: CartoucheEntry?
+    /// Whether the page of the sheet's saves the gallery asks for is open.
+    @State private var showsSavesPage: Bool
     /// Whether the console opens on the settings page of its first game on
     /// this Mac, or with that game's info over it, or with the sheet of the
-    /// game of that title ID beside it: the app's gallery's.
+    /// game of that title ID beside it, and a page of its saves over the
+    /// sheet: the app's gallery's.
     private let opensSettings: Bool
     private let opensInfo: Bool
     private let opensSheetOf: String?
+    private let opensSavesPage: CartoucheMacSavesPage?
     @Namespace private var zoom
 
     enum Route: Hashable {
@@ -244,14 +249,16 @@ public struct CartoucheMacConsoleView: View {
     /// The console on its home, or with every game open (SHOWINGLIBRARY),
     /// or with the settings page of its first game on this Mac beside it
     /// (SHOWINGSETTINGS), or that game's info over it (SHOWINGINFO), or the
-    /// sheet of the game of the title ID SHOWINGSHEETOF beside it, as the
-    /// app's gallery shows it.
+    /// sheet of the game of the title ID SHOWINGSHEETOF beside it, with the
+    /// page of its saves SHOWINGSAVES open, as the app's gallery shows it.
     public init(showingLibrary: Bool = false, showingSettings: Bool = false, showingInfo: Bool = false,
-                showingSheetOf titleID: String? = nil) {
+                showingSheetOf titleID: String? = nil, showingSaves: CartoucheMacSavesPage? = nil) {
         _path = State(initialValue: showingLibrary ? [.library] : [])
         opensSettings = showingSettings
         opensInfo = showingInfo
         opensSheetOf = titleID
+        opensSavesPage = titleID == nil ? nil : showingSaves
+        _showsSavesPage = State(initialValue: titleID != nil && showingSaves != nil)
     }
 
     /// Nothing open beside the console or over it that takes the
@@ -366,6 +373,9 @@ public struct CartoucheMacConsoleView: View {
                     onInstallStored: { console.install($0) },
                     onEditInfo: { editingInfo = entry })
                     .id(entry.id)
+                    .navigationDestination(isPresented: $showsSavesPage) {
+                        savesPage(of: entry)
+                    }
             }
         }
         // The settings page takes the controller: L and R change the
@@ -399,22 +409,31 @@ public struct CartoucheMacConsoleView: View {
         }
         .toggleStyle(.switch)
         .safeAreaInset(edge: .top, spacing: 0) {
-            ZStack {
-                Text(CartoucheText.gameSettings)
-                    .font(.headline)
-                    .lineLimit(1)
-                HStack {
-                    Button(action: closeSettings) {
-                        Label(CartoucheText.backToSheet, systemImage: "chevron.backward")
-                    }
-                    .buttonStyle(.borderless)
-                    .keyboardShortcut(.cancelAction)
-                    Spacer(minLength: 0)
+            CartoucheConsoleBar(title: CartoucheText.gameSettings, back: closeSettings)
+        }
+    }
+
+    /// The page of the sheet's saves the gallery opens, as the sheet's rows
+    /// open it (CartoucheSavesSection).
+    @ViewBuilder
+    private func savesPage(of entry: CartoucheEntry) -> some View {
+        if let app = entry.app {
+            switch opensSavesPage {
+            case .copies:
+                if let target = actions.saves(of: app) {
+                    CartoucheSaveCopiesView(target: target)
                 }
+            case .switchSaves:
+                CartoucheSwitchSaveView(
+                    game: CartoucheSwitchSaveGame(name: entry.name, titleId: entry.titleId,
+                                                  version: CartoucheInstalledBuilds.installedBuild(of: app).version,
+                                                  isSwitch2: entry.platform == "switch2", target: actions.saves(of: app),
+                                                  makeTarget: { actions.savesToImport(of: app) },
+                                                  isRunningNow: { actions.isRunning(app) }),
+                    isRunning: actions.isRunning(app))
+            case nil:
+                EmptyView()
             }
-            .padding(.horizontal, 16)
-            .frame(height: 44)
-            .background(.bar)
         }
     }
 

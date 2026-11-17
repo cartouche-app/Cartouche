@@ -603,6 +603,16 @@ final class MacSavesTests: XCTestCase {
         XCTAssertEqual(sentSaves, ["save/slot0.bin": "switch 2"])
     }
 
+    func testAnEventSaysWhenTheSavesThatCameAndThoseKeptWereWritten() {
+        let event = MacSaveEvent(at: t0, when: .round, step: "keepAndFetch", fetched: CartoucheSaveSync.fileName(t0.addingTimeInterval(-600)),
+                                 kept: CartoucheSaveSync.fileName(t0.addingTimeInterval(-1200)))
+        XCTAssertEqual(event.fetchedDate, t0.addingTimeInterval(-600))
+        XCTAssertEqual(event.keptDate, t0.addingTimeInterval(-1200))
+        let none = MacSaveEvent(at: t0, when: .after, step: "send", sent: CartoucheSaveSync.fileName(t0))
+        XCTAssertNil(none.fetchedDate)
+        XCTAssertNil(none.keptDate)
+    }
+
     // MARK: What does not go
 
     func testAShareNotMountedIsOfflineAndTheMacsSavesStay() async throws {

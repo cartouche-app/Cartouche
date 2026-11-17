@@ -13,6 +13,11 @@
 //  - this iPhone's save as a ZIP archive JKSV restores on the Switch,
 //    shared from here, as to Files on the microSD card, or to a Mac.
 //
+//  The same page on the Mac, in Cartouche's console, for the games played
+//  there: the Builder keeps their saves in step with the saves folder
+//  (builder/mac/Sources/CartoucheConsole/Mac/ConsoleSaves.swift), and the
+//  ZIP for JKSV is saved where the player chooses, as on the microSD card.
+//
 
 import SwiftUI
 import UniformTypeIdentifiers
@@ -108,7 +113,11 @@ struct CartoucheSwitchSaveView: View {
         }
         .cartoucheStageBackground()
         .navigationTitle(CartoucheText.switchSaveTitle)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #else
+        .cartoucheConsolePage(CartoucheText.switchSaveTitle)
+        #endif
         .overlay {
             if reading || working || making {
                 ProgressView()
@@ -173,7 +182,7 @@ struct CartoucheSwitchSaveView: View {
 
     private func foundSection(_ found: Found) -> some View {
         let export = found.pick.export
-        let size = ByteCountFormatter.string(fromByteCount: Int64(clamping: export.size), countStyle: .file)
+        let size = CartoucheText.fileSize(export.size)
         return Section {
             LabeledContent(CartoucheText.switchSaveGame,
                            value: export.meta == nil ? CartoucheText.switchSaveUnchecked : CartoucheText.switchSaveChecked)
@@ -235,7 +244,7 @@ struct CartoucheSwitchSaveView: View {
             }
             .disabled(isRunning || working)
         } footer: {
-            Text(CartoucheText.switchSavePutBackFooter(before.date.formatted(date: .abbreviated, time: .shortened)))
+            Text(CartoucheText.switchSavePutBackFooter(CartoucheText.dateAndTime(before.date)))
         }
     }
 
@@ -245,10 +254,17 @@ struct CartoucheSwitchSaveView: View {
                 Text(CartoucheText.switchSaveSendNone)
                     .foregroundStyle(.secondary)
             } else if let archive {
+                #if os(macOS)
+                // Saved where the player chooses, as on the microSD card
+                // in the Mac's reader.
+                CartoucheSaveFileButton(file: archive)
+                    .disabled(isRunning)
+                #else
                 ShareLink(item: archive) {
                     Label(CartoucheText.switchSaveSendShare(archive.lastPathComponent), systemImage: "square.and.arrow.up")
                 }
                 .disabled(isRunning)
+                #endif
             } else {
                 Button {
                     Task { await makeArchive() }

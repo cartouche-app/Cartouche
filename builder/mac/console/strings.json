@@ -4,6 +4,10 @@
       "en": "Remove from this Mac",
       "fr": "Retirer de ce Mac"
     },
+    "errorReport.hint": {
+      "en": "Copies what went wrong, with the versions of Cartouche and macOS, without any password or server address.",
+      "fr": "Copie ce qui s’est passé, avec les versions de Cartouche et de macOS, sans mot de passe ni adresse de serveur."
+    },
     "gameInfo.footer": {
       "en": "What you change here stays on this Mac.",
       "fr": "Ce que vous changez ici reste sur ce Mac."
@@ -31,6 +35,34 @@
     "running.paused": {
       "en": "Running in its own window.",
       "fr": "En cours, dans sa propre fenêtre."
+    },
+    "saves.fetched.kept": {
+      "en": "The newest saves, of %1$@, came from your saves folder. This Mac’s are kept there as the copy of %2$@.",
+      "fr": "Les sauvegardes les plus récentes, du %1$@, sont arrivées de votre dossier des sauvegardes. Celles de ce Mac y sont gardées : copie du %2$@."
+    },
+    "saves.footer": {
+      "en": "Cartouche Builder keeps these saves in step with your saves folder: the newest come before the game starts and while it does not run, and go there after each game. When both changed, the newest win and the others stay as a copy. The %lld newest copies are kept.",
+      "fr": "Cartouche Builder synchronise ces sauvegardes avec votre dossier des sauvegardes : les plus récentes arrivent avant chaque lancement et tant que le jeu ne tourne pas, et y repartent après chaque partie. Si les deux ont changé, les plus récentes l’emportent et les autres restent en copie. Les %lld copies les plus récentes sont gardées."
+    },
+    "saves.kept": {
+      "en": "Newer saves are in your saves folder: they come to this Mac next. This Mac’s are kept there as the copy of %@.",
+      "fr": "Des sauvegardes plus récentes sont dans votre dossier des sauvegardes : elles arrivent ensuite sur ce Mac. Celles de ce Mac y sont gardées : copie du %@."
+    },
+    "saves.noFolder": {
+      "en": "Keeping the saves of the games played on this Mac in step is off: turn it on in the Builder, under Games played on this Mac.",
+      "fr": "La synchronisation des sauvegardes des jeux joués sur ce Mac est désactivée : activez-la dans le Builder, sous « Jeux joués sur ce Mac »."
+    },
+    "saves.putBack.footer": {
+      "en": "Putting back a copy replaces this game’s saves on this Mac. Cartouche sends the current ones to your saves folder first, and the copy put back becomes the newest one there, which your other devices take too.",
+      "fr": "Remettre une copie remplace les sauvegardes de ce jeu sur ce Mac. Cartouche envoie d’abord les actuelles dans votre dossier des sauvegardes, et la copie remise y devient la plus récente, que vos autres appareils prennent aussi."
+    },
+    "saves.putBack.message": {
+      "en": "It replaces the game’s saves on this Mac. Cartouche sends them to your saves folder first, so you can come back to them.",
+      "fr": "Elle remplace les sauvegardes du jeu sur ce Mac. Cartouche les envoie d’abord dans votre dossier des sauvegardes : vous pourrez y revenir."
+    },
+    "saves.waiting.game": {
+      "en": "These saves are waiting for your saves folder: they go as soon as it is there.",
+      "fr": "Ces sauvegardes attendent votre dossier des sauvegardes : elles partent dès qu’il est là."
     },
     "setting.language.iPhone": {
       "en": "Mac language",
@@ -104,9 +136,57 @@
       "en": "Not tried on this Mac yet",
       "fr": "Pas encore essayé sur ce Mac"
     },
+    "storage.offline": {
+      "en": "Cartouche cannot reach %@ from this Mac: mount its shared folder in the Finder, and the saves go as soon as it is there.",
+      "fr": "Cartouche ne peut pas joindre %@ depuis ce Mac : montez son dossier partagé dans le Finder, et les sauvegardes partiront dès qu’il sera là."
+    },
     "summary.credit.translated": {
       "en": "Description: IGDB.com, translated by the Mac",
       "fr": "Description : IGDB.com, traduite par le Mac"
+    },
+    "switchSave.import.footer": {
+      "en": "The game on your Switch should not be newer than this Mac’s: a game may not read the save of a newer version.",
+      "fr": "Le jeu de votre Switch ne doit pas être plus récent que celui de ce Mac : un jeu ne lit pas toujours la sauvegarde d’une version plus récente."
+    },
+    "switchSave.import.intro": {
+      "en": "On your Switch, export this game’s save with JKSV or Checkpoint, then choose its folder or its ZIP here: on the microSD card in a card reader, on this Mac or on your NAS.",
+      "fr": "Sur votre Switch, exportez la sauvegarde de ce jeu avec JKSV ou Checkpoint, puis choisissez ici son dossier ou son ZIP : sur la carte microSD dans un lecteur de cartes, sur ce Mac ou sur votre NAS."
+    },
+    "switchSave.import.message": {
+      "en": "It replaces this game’s save on this Mac, which Cartouche keeps here: you can put it back.",
+      "fr": "Elle remplace la sauvegarde de ce jeu sur ce Mac, que Cartouche garde ici : vous pourrez la remettre."
+    },
+    "switchSave.import.message.folder": {
+      "en": "It replaces this game’s save on this Mac, which Cartouche keeps here: you can put it back. It then goes to your saves folder, as the newest copy.",
+      "fr": "Elle remplace la sauvegarde de ce jeu sur ce Mac, que Cartouche garde ici : vous pourrez la remettre. Elle part ensuite dans votre dossier des sauvegardes, comme la copie la plus récente."
+    },
+    "switchSave.import.sending": {
+      "en": "It goes to your saves folder too, for your other devices.",
+      "fr": "Elle part aussi dans votre dossier des sauvegardes, pour vos autres appareils."
+    },
+    "switchSave.problem.case": {
+      "en": "Two of its files differ only by their capitals, %1$@ and %2$@: this Mac cannot keep both.",
+      "fr": "Deux de ses fichiers ne diffèrent que par leurs majuscules, %1$@ et %2$@ : ce Mac ne peut pas garder les deux."
+    },
+    "switchSave.problem.cloudPull": {
+      "en": "nxnative did not finish bringing this game’s save from its cloud saves: start the game once, then come back.",
+      "fr": "nxnative n’a pas fini de ramener la sauvegarde de ce jeu depuis son cloud : lancez le jeu une fois, puis revenez."
+    },
+    "switchSave.putBack.footer": {
+      "en": "Cartouche kept this Mac’s save when the game from your Switch replaced it, on %@.",
+      "fr": "Cartouche a gardé la sauvegarde de ce Mac quand la partie de votre Switch l’a remplacée, le %@."
+    },
+    "switchSave.putBack.message": {
+      "en": "It replaces the game from your Switch on this Mac, which Cartouche keeps too.",
+      "fr": "Elle remplace la partie de votre Switch sur ce Mac, que Cartouche garde aussi."
+    },
+    "switchSave.send.none": {
+      "en": "This game has no save on this Mac yet.",
+      "fr": "Ce jeu n’a pas encore de sauvegarde sur ce Mac."
+    },
+    "switchSave.version": {
+      "en": "Version on this Mac",
+      "fr": "Version sur ce Mac"
     }
   },
   "strings": {
@@ -114,9 +194,21 @@
       "en": "This Mac: %1$@, macOS %2$@",
       "fr": "Ce Mac : %1$@, macOS %2$@"
     },
+    "mac.file.save": {
+      "en": "Save %@…",
+      "fr": "Enregistrer %@…"
+    },
+    "mac.file.saved": {
+      "en": "Saved in %@.",
+      "fr": "Enregistré dans %@."
+    },
     "mac.requirement": {
       "en": "Apple chip, macOS %@ or later",
       "fr": "Puce Apple, macOS %@ ou ultérieur"
+    },
+    "mac.saves.cloud": {
+      "en": "Its saves go through nxnative’s own cloud saves, chosen in its settings: Cartouche Builder leaves them to it.",
+      "fr": "Ses sauvegardes passent par le cloud de nxnative, choisi dans ses réglages : Cartouche Builder les lui laisse."
     },
     "mac.settings.back": {
       "en": "Back to the game",

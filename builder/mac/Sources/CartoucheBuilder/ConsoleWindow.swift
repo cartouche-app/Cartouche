@@ -17,6 +17,7 @@
 import AppKit
 import BuilderKit
 import CartoucheConsole
+import Combine
 import SwiftUI
 
 /// What the window shows.
@@ -45,18 +46,20 @@ struct MainView: View {
     @EnvironmentObject private var bridge: BridgeController
     /// The console with every game open, with its first game's settings
     /// page, or with that game's info over it, or with the sheet of the
-    /// game of that title ID, as the gallery shows it.
+    /// game of that title ID, and a page of its saves, as the gallery shows
+    /// it.
     var showingLibrary = false
     var showingSettings = false
     var showingInfo = false
     var showingSheetOf: String?
+    var showingSaves: ConsoleSavesPage?
 
     var body: some View {
         Group {
             switch model.interface {
             case .console:
                 CartoucheMacConsoleView(showingLibrary: showingLibrary, showingSettings: showingSettings, showingInfo: showingInfo,
-                                        showingSheetOf: showingSheetOf)
+                                        showingSheetOf: showingSheetOf, showingSaves: showingSaves?.console)
                     .overlay(alignment: .top) { consoleBanner }
             case .builder:
                 ContentView()
@@ -124,6 +127,20 @@ struct MainView: View {
     }
 }
 
+/// A page of a game's saves the console opens over its sheet, for the
+/// gallery (Gallery.swift, which does not import the console): the copies
+/// of the saves, or the game's Switch saves.
+enum ConsoleSavesPage {
+    case copies, switchSaves
+
+    var console: CartoucheMacSavesPage {
+        switch self {
+        case .copies: return .copies
+        case .switchSaves: return .switchSaves
+        }
+    }
+}
+
 /// Console | Builder, at the top of the window.
 struct InterfaceSwitch: View {
     @EnvironmentObject private var model: AppModel
@@ -154,7 +171,100 @@ enum ConsoleLink {
         console.onSystem = { [weak model] in model?.showBuilder(nil) }
         console.onUninstall = { [weak model] game in model?.askToRemove(app: game) }
         console.onInstall = { [weak model] titleID in model?.install(titleID: titleID) }
+        startSaves(model)
         speak()
+    }
+
+    // MARK: A game's saves
+
+    /// What the games' sheets ask of their saves on this Mac, which the
+    /// builder keeps in step (MacGames), and what they show of them, from
+    /// now on.
+    private static func startSaves(_ model: AppModel) {
+        let console = CartoucheMacConsole.shared
+        // The gallery's console shows saves of its own, and keeps none.
+        guard !model.sample else { return }
+        let games = model.macGames
+        console.onSyncSaves = { [weak games] titleID in
+            guard let games else { return }
+            do {
+                if try await games.syncNow(titleID)?.offline == true { throw CartoucheMacSaveError.offline }
+            } catch let error as MacSavesError {
+                throw consoleError(error)
+            }
+        }
+        console.onSaveCopies = { [weak games] titleID in
+            guard let games else { return [] }
+            do {
+                return try await games.copies(titleID).map { CartoucheMacSaveCopy(name: $0.name, date: $0.date, size: $0.size) }
+            } catch let error as MacSavesError {
+                throw consoleError(error)
+            }
+        }
+        console.onPutBackSave = { [weak games] name, titleID in
+            guard let games else { throw CartoucheMacSaveError.offline }
+            do {
+                try await games.putBack(name, of: titleID)
+            } catch let error as MacSavesError {
+                throw consoleError(error)
+            }
+        }
+        console.onChangeSaves = { [weak games] titleID, change in
+            guard let games else { throw CartoucheMacSaveError.busy }
+            do {
+                return try await games.change(titleID) { _ in try change() }
+            } catch let error as MacSavesError {
+                throw consoleError(error)
+            }
+        }
+        // Each change, once it is made: the values in place.
+        savesWatch = games.$last.combineLatest(games.$checked, games.$folder, games.$cloud)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak games] _ in
+                guard let games else { return }
+                showSaves(of: games)
+            }
+    }
+
+    private static var savesWatch: AnyCancellable?
+    private static weak var savesOf: MacGames?
+
+    /// The saves of the games played on this Mac, as their sheets show
+    /// them, and the saves folder, named in the app's language.
+    private static func showSaves(of games: MacGames) {
+        savesOf = games
+        // Away: it was not there when last tried, and has not been since.
+        let away = games.last.values.filter(\.offline).map(\.at).max().map { offline in
+            games.checked.values.max().map { offline > $0 } ?? true
+        } ?? false
+        let folder = games.folder.map { folder in
+            CartoucheMacSavesFolder(name: folder.root.path.hasPrefix("/Volumes/") ? tr("the NAS", "le NAS")
+                                        : tr("the saves folder", "le dossier des sauvegardes"),
+                                    path: folder.root.path, isAway: away)
+        }
+        var saves: [String: CartoucheMacGameSaves] = [:]
+        for titleID in Set(games.last.keys).union(games.checked.keys).union(games.cloud.keys) {
+            let event = games.last[titleID]
+            let moved = event.flatMap { $0.offline || $0.failed ? nil : $0.at }
+            let news = event.flatMap { ["fetch", "keep", "keepAndFetch"].contains($0.step) ? $0 : nil }
+            saves[titleID] = CartoucheMacGameSaves(
+                lastSync: [games.checked[titleID], moved].compactMap { $0 }.max(),
+                fetched: news?.fetchedDate, kept: news?.keptDate, waiting: event?.offline == true,
+                failure: event?.failed == true
+                    ? event?.failure ?? tr("Its saves could not be kept in step.", "Ses sauvegardes n’ont pas pu être mises en phase.")
+                    : nil,
+                inCloud: games.cloud[titleID] != nil)
+        }
+        CartoucheMacConsole.shared.showSaves(folder: folder, games: saves)
+    }
+
+    /// What the builder says when it did not do what the console asked.
+    private static func consoleError(_ error: MacSavesError) -> CartoucheMacSaveError {
+        switch error {
+        case .offline: return .offline
+        case .busy: return .busy
+        case .unreadable: return .unreadable
+        }
     }
 
     /// The games built for this Mac, by their apps, and KEPT, the games
@@ -186,8 +296,10 @@ enum ConsoleLink {
         CartoucheMacConsole.shared.showRunning(run?.app.url, inFront: inFront)
     }
 
-    /// The app's language, which the console speaks too.
+    /// The app's language, which the console speaks too, the saves
+    /// folder's name with it.
     static func speak() {
         CartoucheMacConsole.shared.speak(L10n.code)
+        if let games = savesOf { showSaves(of: games) }
     }
 }

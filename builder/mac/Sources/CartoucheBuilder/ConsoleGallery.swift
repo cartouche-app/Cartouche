@@ -5,15 +5,17 @@
 //  Cartouche's console in the gallery (Gallery.swift): its home with the
 //  sheet of the game in focus beside it, every game, a game's settings page
 //  in place of its sheet, its info over the console, and the whole sheet of
-//  a game played on this Mac, as the console shows the games built for this
-//  Mac, and one a NAS keeps that is not installed here, in the window as
-//  the app shows it (MainView). The games are real ones nxnative builds,
-//  with their covers from IGDB as the console shows them; their apps are
-//  the gallery's own, empty but for their Info.plist and the list of
-//  settings nxnative gives a game on the Mac, in a temporary folder, their
-//  play time and their sizes made up, the NAS's file is only a name, and
-//  nothing of the player's is read or kept: no data folder of nxnative's,
-//  no game's preferences, no play time, no question to Cartouche's server.
+//  a game played on this Mac, with the pages its saves open, as the console
+//  shows the games built for this Mac, and one a NAS keeps that is not
+//  installed here, in the window as the app shows it (MainView). The games
+//  are real ones nxnative builds, with their covers from IGDB as the
+//  console shows them; their apps are the gallery's own, empty but for
+//  their Info.plist and the list of settings nxnative gives a game on the
+//  Mac, in a temporary folder, their play time and their sizes made up, as
+//  are the saves of the sheet's game and their copies; the NAS's file is
+//  only a name, and nothing of the player's is read or kept: no data folder
+//  of nxnative's, no saves folder, no game's preferences, no play time, no
+//  question to Cartouche's server.
 //  Like ConsoleWindow.swift, this file imports the console and not
 //  CartoucheCore, whose names it shares.
 //
@@ -104,11 +106,36 @@ enum ConsoleGallery {
     private static var folder: URL?
     private static var apps: [URL] = []
 
-    /// The console with the gallery's games, speaking LANGUAGE ("fr" or "en").
+    /// The copies of the sheet's game's saves in the saves folder, made up:
+    /// the newest synced a few minutes ago, the others on the days before.
+    static let copies: [CartoucheMacSaveCopy] = {
+        let made: [(ago: TimeInterval, size: UInt64)] = [(12 * 60, 1_310_720), (21 * 3_600, 1_298_432), (46 * 3_600, 1_261_568),
+                                                         (5 * 86_400, 1_179_648)]
+        let now = (Date().timeIntervalSince1970 / 60).rounded(.down) * 60
+        return made.map { copy in
+            let date = Date(timeIntervalSince1970: now - copy.ago)
+            return CartoucheMacSaveCopy(name: ConsoleGallery.copyName(date), date: date, size: copy.size)
+        }
+    }()
+
+    /// A copy's name, as Cartouche names them: its date, in UTC.
+    private static func copyName(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        formatter.dateFormat = "yyyy-MM-dd'T'HH-mm-ss'Z'"
+        return formatter.string(from: date) + ".zip"
+    }
+
+    /// The console with the gallery's games, speaking LANGUAGE ("fr" or "en"),
+    /// the saves of the sheet's game kept in step with a NAS's share.
     static func prepare(language: String) {
         show()
         let console = CartoucheMacConsole.shared
-        console.show(games: apps, kept: kept, keptIn: language == "fr" ? "le NAS" : "the NAS")
+        let nas = language == "fr" ? "le NAS" : "the NAS"
+        console.show(games: apps, kept: kept, keptIn: nas)
+        console.showSaves(folder: CartoucheMacSavesFolder(name: nas, path: "/Volumes/Partage/Cartouche/Saves"),
+                          games: [sheetGame: CartoucheMacGameSaves(lastSync: copies[0].date, fetched: copies[1].date)])
         console.speak(language)
     }
 
@@ -145,6 +172,12 @@ enum ConsoleGallery {
         console.asksServer = false
         console.keepsChoicesInMemory = true
         console.dataFolder = folder.appendingPathComponent("nxnative", isDirectory: true)
+        // The sheet's game's saves, a file of made-up bytes, for its saves
+        // section and its Switch saves; their copies, without a saves folder.
+        let saves = console.dataFolder.appendingPathComponent(sheetGame + "/save", isDirectory: true)
+        try? FileManager.default.createDirectory(at: saves, withIntermediateDirectories: true)
+        try? Data(repeating: 0x2A, count: 4_096).write(to: saves.appendingPathComponent("save.dat"))
+        console.onSaveCopies = { _ in copies }
         console.showForGallery(playTimes: playTimes, sizes: sizes)
         console.show(games: apps, kept: kept)
 
