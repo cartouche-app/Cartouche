@@ -385,6 +385,20 @@ final class CartoucheBridgeTests: XCTestCase {
         XCTAssertNil(before.tailscale)
         XCTAssertEqual(before.name, "MacBook Air")
     }
+
+    /// The causes the measurements give the bridge's errors
+    /// (CartoucheFailure.bridgeCauses) are those of kinds it has, as their
+    /// domain carries them, "CartoucheBridge.timeout": a kind renamed here
+    /// would leave its errors "other" again.
+    func testTheMeasurementsKnowTheBridgesKinds() {
+        for kind in CartoucheFailure.bridgeCauses.keys {
+            XCTAssertNotNil(CartoucheBridgeError.Kind(rawValue: kind), kind)
+        }
+        for kind in [CartoucheBridgeError.Kind.timeout, .closed] {
+            let error = NSError(domain: CartoucheFailure.bridgeDomain + kind.rawValue, code: 0)
+            XCTAssertEqual(CartoucheFailure.of(error).cause, .network, kind.rawValue)
+        }
+    }
 }
 
 /// The devices the Mac kept, from its task.

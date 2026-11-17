@@ -39,7 +39,8 @@
 //    shares;
 //  - what iOS keeps of the app: its signature and profile, the alerts
 //    before it expires, its permissions, and its other preferences, such
-//    as those of Apple's own frameworks.
+//    as those of Apple's own frameworks; and the folders iOS keeps for
+//    itself in its container, emptied, as Documents/Inbox.
 //
 //  Platform-independent: tested on its own by launcher/Package.swift.
 //
@@ -259,7 +260,14 @@ enum CartoucheResetPlan {
 
     /// Erases the files of Cartouche's HOME but those KEPT, and the folders
     /// that lead to them, and Cartouche's own folder in APPGROUP. A link is
-    /// removed, never followed. What could not go comes back.
+    /// removed, never followed. A folder that does not go as a whole goes
+    /// item by item, then the folder itself: what could not go comes back,
+    /// by the deepest items that did not. A folder that holds nothing more
+    /// is not one of them: iOS keeps some for itself, which the app may
+    /// empty but never remove, as Documents/Inbox, where iOS puts what
+    /// other apps open Cartouche with, since iOS 9 (NSCocoaErrorDomain 513,
+    /// "Operation not permitted"): the first two resets on an iPhone, in
+    /// 0.13.1, each stopped on one item left, most likely it (17 November).
     static func eraseFiles(home: URL, appGroup: URL?, keeping kept: [URL],
                            fileManager: FileManager = .default) -> [Failure] {
         let home = home.resolvingSymlinksInPath()
@@ -271,8 +279,21 @@ enum CartoucheResetPlan {
                 try fileManager.removeItem(at: item)
             } catch {
                 // Gone meanwhile, as a file a cache drops: not a failure.
-                guard (try? fileManager.attributesOfItem(atPath: item.path)) != nil else { return }
-                failures.append(Failure(path: path, reason: describe(error)))
+                guard exists(item, fileManager) else { return }
+                guard isFolder(item, fileManager) else {
+                    failures.append(Failure(path: path, reason: describe(error)))
+                    return
+                }
+                // What it holds, item by item: what did not go says where.
+                let before = failures.count
+                erase(item, shownAs: path)
+                guard failures.count == before else { return }
+                do {
+                    try fileManager.removeItem(at: item)
+                } catch {
+                    guard exists(item, fileManager), !isEmpty(item, fileManager) else { return }
+                    failures.append(Failure(path: path, reason: describe(error)))
+                }
             }
         }
 
@@ -298,11 +319,55 @@ enum CartoucheResetPlan {
         }
         if let appGroup {
             let own = appGroup.appendingPathComponent(appGroupFolder, isDirectory: true)
-            if (try? fileManager.attributesOfItem(atPath: own.path)) != nil {
+            if exists(own, fileManager) {
                 remove(own, shownAs: "AppGroup/" + appGroupFolder)
             }
         }
         return failures
+    }
+
+    // MARK: Measuring what was left
+
+    /// The folders a failure's place is told by, in the telemetry, under
+    /// the first part of its path: Cartouche's own, LiveContainer's and
+    /// SideStore's, and those iOS makes in an app's container. Any other
+    /// name, as one of the player's files in Cartouche's own space in Files,
+    /// is told as "…".
+    static let measuredFolders: Set<String> = ownFolders.union([
+        "Caches", "Application Support", "Preferences", "Cookies", "WebKit", "HTTPStorages", "SplashBoard",
+        "Saved Application State", "Logs", appGroupFolder, "storage", "SideStore",
+        "CartoucheInstall", "CartoucheSaves", "CartoucheSwitchSave", "GameInfo", "Game logs",
+    ])
+
+    /// What a reset left, for the telemetry (app.reset's `left`): the place
+    /// of each of FAILURES by the first part of its path, and the second
+    /// when it is one of measuredFolders or iOS's own, named com.apple.,
+    /// with why, by its error's domain and code: "Documents/Inbox
+    /// NSCocoaErrorDomain 513". Never a file's name, nor what an Inbox iOS
+    /// makes for the document picker is named after, Cartouche's bundle ID,
+    /// which may hold the team's. Each place once, at most four: nil for
+    /// none.
+    static func measured(_ failures: [Failure]) -> String? {
+        var places: [String] = []
+        for failure in failures {
+            let parts = failure.path.split(separator: "/").map(String.init)
+            guard let root = parts.first else { continue }
+            var place = root
+            if parts.count > 1 {
+                let second = parts[1]
+                if measuredFolders.contains(second) || second.hasPrefix("com.apple.") {
+                    place += "/" + second + (parts.count > 2 ? "/…" : "")
+                } else if second.hasSuffix("-Inbox") {
+                    place += "/…-Inbox" + (parts.count > 2 ? "/…" : "")
+                } else {
+                    place += "/…"
+                }
+            }
+            let told = place + " " + failure.reason
+            if !places.contains(told) { places.append(told) }
+        }
+        guard !places.isEmpty else { return nil }
+        return String(places.prefix(4).joined(separator: "; ").prefix(160))
     }
 
     // MARK: Helpers
@@ -310,6 +375,16 @@ enum CartoucheResetPlan {
     /// Whether ITEM is a folder, not a link to one.
     private static func isFolder(_ item: URL, _ fileManager: FileManager) -> Bool {
         (try? fileManager.attributesOfItem(atPath: item.path))?[.type] as? FileAttributeType == .typeDirectory
+    }
+
+    /// Whether ITEM is there, a link that leads nowhere among them.
+    private static func exists(_ item: URL, _ fileManager: FileManager) -> Bool {
+        (try? fileManager.attributesOfItem(atPath: item.path)) != nil
+    }
+
+    /// Whether FOLDER holds nothing: not when it cannot be read.
+    private static func isEmpty(_ folder: URL, _ fileManager: FileManager) -> Bool {
+        (try? fileManager.contentsOfDirectory(atPath: folder.path))?.isEmpty ?? false
     }
 
     /// The parts of ITEM's path under FOLDER, both read through their links,

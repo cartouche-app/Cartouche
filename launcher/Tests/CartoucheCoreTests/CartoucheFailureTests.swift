@@ -414,6 +414,29 @@ final class CartoucheFailureTests: XCTestCase {
         }
     }
 
+    /// The bridge to the player's Mac says its error's kind in its domain
+    /// (CartoucheStorageMac.explained): a Mac that stopped answering, or a
+    /// connection to it that broke, is the network, as for any server, and
+    /// no longer "other"; what the Mac answered says the rest.
+    func testCausesOfTheMacsBridge() {
+        func bridge(_ kind: String) -> NSError {
+            NSError(domain: CartoucheFailure.bridgeDomain + kind, code: 0,
+                    userInfo: [NSLocalizedDescriptionKey: "The connection to “Mac de Ad” was lost."])
+        }
+        let cases: [(String, CartoucheFailure.Cause)] = [
+            ("timeout", .network), ("closed", .network), ("notFound", .storageNotFound),
+            ("denied", .storagePermission), ("notPaired", .storageCredentials),
+            ("busy", .other), ("failed", .other),
+        ]
+        for (kind, cause) in cases {
+            XCTAssertEqual(CartoucheFailure.of(bridge(kind), stage: "gamesFolder").cause, cause, kind)
+        }
+        XCTAssertEqual(bridge("timeout").domain, "CartoucheBridge.timeout", "as reports and the telemetry show it")
+        // Under a save's sync, as the saves folder on the Mac fails.
+        let sync = NSError(domain: "Wrapper", code: 1, userInfo: [NSUnderlyingErrorKey: bridge("closed")])
+        XCTAssertEqual(CartoucheFailure.of(sync, stage: "savesSync").fields["cause"], .text("network"))
+    }
+
     func testStatusesOfTheStorageProtocols() {
         let cases: [(CartoucheFailure.ProtocolStatus, CartoucheFailure.Cause)] = [
             (.init(kind: .smb, status: 0xC000_006D), .storageCredentials),

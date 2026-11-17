@@ -76,6 +76,14 @@ SIGNALS = {4: "SIGILL", 5: "SIGTRAP", 6: "SIGABRT", 7: "SIGEMT", 8: "SIGFPE", 9:
 CAUSES = {"gpuLost": "GPU access revoked"}
 GPU_LOST_READER = 4
 
+# A line no session drew a frame of, though its sessions lasted this long in
+# all, may be a game that runs while nxnative writes none of the summary
+# lines Cartouche counts frames from, as much as one stuck on a black
+# screen: Super Mario Galaxy, 15 sessions and 11 hours on 7 installs, none
+# with a summary line (17 November). Its sessions are not said to have drawn
+# no frame. The dashboard's rule (UNCOUNTED_MINUTES, telemetry/dashboard).
+UNCOUNTED_MINUTES = 30
+
 # The sessions one day received, a page at a time, with D1's parameters as
 # text. A session sent again because its log grew is the same session with
 # a higher seq.
@@ -243,6 +251,12 @@ class Group:
         return Counter(e for e in (ending(s) for s in self.sessions) if e)
 
     @property
+    def uncounted(self) -> bool:
+        """No session drew a frame, though they lasted UNCOUNTED_MINUTES or
+        more in all: nxnative's log may have no summary line for the game."""
+        return not any(drew_frames(s) for s in self.sessions) and self.hours * 60 >= UNCOUNTED_MINUTES
+
+    @property
     def gpu_lost(self) -> int | None:
         """The crashes nxnative ended when the system took the GPU away from
         the game; none when Cartouche read no session of the group so as to
@@ -334,7 +348,7 @@ def figures(group: Group) -> str:
         fmt(group.figure("stutters")), "–" if share is None else f"{share:.0%}", fmt(group.figure("stall")),
         fmt(group.figure("prepare"), 1), fmt(group.peak), f"{group.hot} of {len(group.sessions)}",
         str(endings["crash"]), fmt(group.gpu_lost), str(endings["boot-failed"]), str(endings["memory-likely"]),
-        str(endings["no-frame"]),
+        "no summary line" if group.uncounted else str(endings["no-frame"]),
     ])
 
 
@@ -442,7 +456,10 @@ def page(catalog: Catalog, sessions: list[dict], events: list[dict], first: dt.d
         "A session's commit is the first 12 digits of `DMCommit` in the game's `Info.plist`; Cartouche 0.11.2 and "
         "before did not send it. Target fps is the rate most of the line's sessions asked for.",
         "- Reached serious heat: the sessions iOS put in its serious thermal state. Drew no frame: the session ended "
-        "before nxnative's first summary line, whatever its end.",
+        "before nxnative's first summary line, whatever its end. A line none of whose sessions wrote one, though they "
+        f"lasted {UNCOUNTED_MINUTES} minutes or more in all, says no summary line instead: the game may run while "
+        "nxnative writes no `[nvn]` timing, on-screen or power line for it, as much as stay on a black screen, and "
+        "its frame figures show –.",
         "- GPU lost: the crashes nxnative ended once the system took the GPU away from the game for the GPU errors it "
         "caused (`[RED] GPU access revoked`), as the crashes' cause says too. Cartouche tells them from its reading "
         f"{GPU_LOST_READER} of the log on: before it, such a session is a crash like any other abort, and a line "
@@ -458,12 +475,16 @@ def page(catalog: Catalog, sessions: list[dict], events: list[dict], first: dt.d
         "nxnative's stage of each failed game's last try.",
         "",
     ]
+    uncounted = sorted(catalog.name(key[0]) for key, group in by_game.items()
+                       if len(group.installs) >= MIN_INSTALLS and group.uncounted)
     summary = [f"## nxnative's page, {first} to {last}", "",
                f"{len(sessions)} game sessions from {len(installs)} installs; "
                f"{sum(1 for g in by_game.values() if len(g.installs) >= MIN_INSTALLS)} games, "
                f"{sum(1 for g in by_model.values() if len(g.installs) >= MIN_INSTALLS)} lines by model and "
                f"{sum(1 for g in by_commit.values() if len(g.installs) >= MIN_INSTALLS)} by commit "
                f"on {MIN_INSTALLS} installs or more; {named} sessions name their nxnative commit.", ""]
+    if uncounted:
+        summary += ["Played long without a summary line in their logs: " + ", ".join(uncounted) + ".", ""]
     return "\n".join(lines), summary
 
 

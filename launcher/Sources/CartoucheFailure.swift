@@ -406,11 +406,33 @@ extension CartoucheFailure {
         return CartoucheFailure(cause, stage: stage, fraction: fraction, seconds: seconds, details: details)
     }
 
+    /// The domain of the errors of the bridge to the player's Mac, after
+    /// which comes their kind (CartoucheStorageMac.explained):
+    /// "CartoucheBridge.timeout".
+    static let bridgeDomain = "CartoucheBridge."
+
+    /// The causes the bridge's errors stand for, by their kind
+    /// (CartoucheBridgeError.Kind): the Mac that stopped answering, or the
+    /// connection to it that broke, is the network, as for any server;
+    /// the others say what the Mac answered. Before, all were "other": 15
+    /// errors on 11 copies of 0.13.1, saves and games folders (17 November).
+    static let bridgeCauses: [String: Cause] = [
+        "timeout": .network,
+        "closed": .network,
+        "notFound": .storageNotFound,
+        "denied": .storagePermission,
+        "notPaired": .storageCredentials,
+    ]
+
     /// What an error of iOS says by its domain and code, when it says one of
-    /// the causes Cartouche tells apart.
+    /// the causes Cartouche tells apart, and an error of the bridge to the
+    /// player's Mac by its kind.
     static func cause(ofSystemError error: Error) -> Cause? {
         if error is CancellationError { return .cancelled }
         let bridged = error as NSError
+        if bridged.domain.hasPrefix(bridgeDomain) {
+            return bridgeCauses[String(bridged.domain.dropFirst(bridgeDomain.count))]
+        }
         switch (bridged.domain, bridged.code) {
         case (NSURLErrorDomain, NSURLErrorCancelled):
             return .cancelled

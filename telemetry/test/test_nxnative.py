@@ -229,6 +229,38 @@ class NxnativePageTest(unittest.TestCase):
         self.assertEqual((line["Peak MiB"], line["Sessions"], line["Crashed"], line["Drew no frame"]),
                          ("4,700", "6", "1", "1"))
 
+    def test_long_sessions_without_a_summary_line_are_not_said_to_draw_no_frame(self):
+        """Super Mario Galaxy was played 11 hours on 7 installs, none of its
+        sessions with nxnative's summary lines (17 November): its line says
+        so, rather than that its sessions drew no frame. A game whose short
+        sessions drew no frame still says how many."""
+        for phone in self.phones[:3]:
+            self.session(phone, game=SENTINELS, frames=None, fps=None, targetFps=None, stutters=None, minutes=40.0,
+                         end={"kind": "quit"})
+        for phone in self.phones[3:6]:
+            self.session(phone, frames=None, fps=None, minutes=0.4, end={"kind": "quit"})
+        self.run_page()
+        page = self.page()
+        by_game = {row["Game"]: row for row in rows(page, "By game")}
+        sentinels = by_game[f"13 Sentinels: Aegis Rim `{SENTINELS}`"]
+        self.assertEqual((sentinels["Sessions"], sentinels["Hours"], sentinels["FPS median"], sentinels["Drew no frame"]),
+                         ("3", "2.0", "–", "no summary line"))
+        self.assertEqual(by_game[MKW_NAME]["Drew no frame"], "3")
+        by_model = rows(page, "By game and model")
+        self.assertEqual(sorted(row["Drew no frame"] for row in by_model), ["3", "no summary line"])
+        self.assertIn("says no summary line instead", page)
+        summary = (self.work / "summary.md").read_text(encoding="utf-8")
+        self.assertIn(f"Played long without a summary line in their logs: 13 Sentinels: Aegis Rim `{SENTINELS}`.",
+                      summary)
+
+        # Under half an hour in all, they may as well have drawn nothing.
+        self.cloudflare.sql.execute("DELETE FROM reports")
+        for phone in self.phones[:3]:
+            self.session(phone, game=SENTINELS, frames=None, fps=None, minutes=9.0, end={"kind": "quit"})
+        self.run_page()
+        line = rows(self.page(), "By game")[0]
+        self.assertEqual((line["Sessions"], line["Drew no frame"]), ("3", "3"))
+
     def test_sessions_that_are_not_nxnatives_doing_are_set_apart(self):
         for phone in self.phones[:3]:
             self.session(phone)

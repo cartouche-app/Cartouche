@@ -169,15 +169,20 @@ final class CartoucheReset: ObservableObject {
                               + (found.signedIn ? "the Apple ID" : "no Apple ID") + "; "
                               + "\(failures.count) items left, in " + String(format: "%.1f s", seconds), own: true)
         // Its number and its reports not sent yet stay: the next start
-        // sends it.
-        CartoucheTelemetry.shared.event("app.reset", fields: [
+        // sends it, with where what could not go lay, by Cartouche's own
+        // folders, never a file's name.
+        var fields: [String: CartoucheTelemetryValue] = [
             "games": .number(Double(found.games)),
             "storages": .number(Double(found.storages)),
             "signedIn": .flag(found.signedIn),
             "savesLost": .number(Double(savesLost)),
             "failures": .number(Double(failures.count)),
             "seconds": .number((seconds * 10).rounded() / 10),
-        ])
+        ]
+        if let left = CartoucheResetPlan.measured(failures) {
+            fields["left"] = .text(left)
+        }
+        CartoucheTelemetry.shared.event("app.reset", fields: fields)
         guard failures.isEmpty else {
             let shown = failures.prefix(10).map { failure in
                 CartoucheReport.Fact("Left", Self.shortPath(failure.path) + ": " + failure.reason)
