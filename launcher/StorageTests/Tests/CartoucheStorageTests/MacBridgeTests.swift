@@ -9,8 +9,11 @@
 //  pairing refused, signing in at the last address, and at once after
 //  pairing with a Mac slow to write the pairing down, a Mac that forgot
 //  this iPhone, another Mac at its address, a Mac gone, then files listed,
-//  read, written, given up and removed. It needs no server, so it always
-//  runs.
+//  read, written, given up and removed. Through Tailscale: a Mac away from
+//  home reached at its address in the tailnet (the test's loopback stands
+//  in for it), not tried there while Tailscale is off, and its addresses
+//  there kept as its Cartouche Builder tells them. It needs no server, so
+//  it always runs.
 //  Bonjour needs a real network: the Mac's side of it is in builder/mac's
 //  tests (BridgeSessionTests), its words in Cartouche's.
 //
@@ -41,6 +44,7 @@ final class FakeMac: @unchecked Sendable {
     /// of them.
     private var connections: [CartoucheConnection]?
     private var given: [[CartoucheConnection]] = []
+    private var tailnet: [String]?
     private var listener: NWListener?
     private let queue = DispatchQueue(label: "Fake Mac")
     private(set) var port = 0
@@ -93,6 +97,14 @@ final class FakeMac: @unchecked Sendable {
     func slowToWrite(_ seconds: TimeInterval) {
         lock.lock()
         writing = seconds
+        lock.unlock()
+    }
+
+    /// Tells TAILNET in its info, its addresses in the player's tailnet,
+    /// as Cartouche Builder does with Tailscale on the Mac.
+    func tell(tailnet: [String]?) {
+        lock.lock()
+        self.tailnet = tailnet
         lock.unlock()
     }
 
@@ -216,6 +228,7 @@ final class FakeMac: @unchecked Sendable {
             response.name = name
             response.readOnly = false
             if connections != nil { response.hasConnections = true }
+            response.tailscale = tailnet
         case .list:
             guard path.isEmpty || entries[path] == .folder else { return (.failure(.notFound, path), Data()) }
             response.items = entries.filter { Self.parent($0.key) == path }
@@ -455,6 +468,64 @@ final class MacBridgeTests: XCTestCase {
         }
         XCTAssertLessThan(Date().timeIntervalSince(started),
                           CartoucheMacStorage.lastAddressPatience + CartoucheMacStorage.lookupPatience + 2)
+    }
+
+    // MARK: Through Tailscale
+
+    /// SERVER away from home: its last address never answers (TEST-NET-1,
+    /// RFC 5737), and the test's loopback stands for its address in the
+    /// tailnet, where the fake Mac listens.
+    private func awayFromHome(_ server: CartoucheStorageServer) -> CartoucheStorageServer {
+        var away = server
+        away.host = "192.0.2.1"
+        away.tailnet = ["127.0.0.1"]
+        return away
+    }
+
+    func testAMacAwayFromHomeIsReachedThroughTailscale() async throws {
+        let (server, secret) = try await pair()
+        let away = awayFromHome(server)
+        let started = Date()
+        let remote = try await CartoucheMacStorage.connect(away, secret: secret, settings: settings(), tailscale: true)
+        XCTAssertLessThan(Date().timeIntervalSince(started), CartoucheMacStorage.lastAddressPatience,
+                          "through Tailscale, without waiting for the last address to give up, nor for Bonjour")
+        let top = try await remote.list("")
+        XCTAssertEqual(top.map(\.name), ["Games", "Saves"])
+        await remote.disconnect()
+        let answers = await CartoucheMacStorage.answers(away, tailscale: true)
+        XCTAssertTrue(answers, "it takes a connection through Tailscale")
+    }
+
+    func testWithTailscaleOffTheMacAwayFromHomeIsOfflineAndSaysToTurnItOn() async throws {
+        let (server, secret) = try await pair()
+        let away = awayFromHome(server)
+        let started = Date()
+        do {
+            _ = try await CartoucheMacStorage.connect(away, secret: secret, settings: settings(), tailscale: false)
+            XCTFail("tried the Mac's address in the tailnet with Tailscale off")
+        } catch {
+            // As LocalDevVPN leaves it: offline, no report, and how to
+            // reach the Mac again.
+            XCTAssertTrue(error is CartoucheStorageOffline, String(describing: error))
+            XCTAssertEqual(error.localizedDescription, CartoucheText.storageMacOfflineTailscaleOff(server.name))
+        }
+        XCTAssertLessThan(Date().timeIntervalSince(started),
+                          CartoucheMacStorage.lastAddressPatience + CartoucheMacStorage.lookupPatience + 2)
+    }
+
+    func testTheMacsAddressesInTheTailnetAreKeptAsItTellsThem() async throws {
+        // Cartouche Builder tells them with Tailscale on the Mac; the iPhone
+        // keeps them beside the Mac's last address, for away from home.
+        let (server, secret) = try await pair()
+        mac.tell(tailnet: ["100.101.102.103", "fd7a:115c:a1e0::1"])
+        let kept = settings()
+        kept.save(server, secret: nil)
+        let remote = try await CartoucheMacStorage.connect(server, secret: secret, settings: kept, tailscale: false)
+        await remote.disconnect()
+        let now = try XCTUnwrap(kept.server(server.id))
+        XCTAssertEqual(now.host, "127.0.0.1", "its last address stays")
+        XCTAssertEqual(now.port, mac.port)
+        XCTAssertEqual(now.tailnet, ["100.101.102.103", "fd7a:115c:a1e0::1"])
     }
 
     func testAnIPAAndSavesGoBothWays() async throws {

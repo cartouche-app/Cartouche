@@ -329,6 +329,7 @@ struct CartoucheRedaction: Equatable, Sendable {
             }
             // Any other address.
             text = Self.replace(Self.localHost, in: text, with: Self.server)
+            text = Self.replace(Self.tailnetName, in: text, with: Self.server)
             text = Self.replace(Self.ipv4, in: text, with: Self.address)
             return Self.replaceIPv6(in: text)
         }
@@ -371,6 +372,11 @@ struct CartoucheRedaction: Equatable, Sendable {
         #"(?:/private)?/var/(?:mobile/Containers|containers)/(?:Data|Shared|Bundle)/(?:Application|AppGroup)/[0-9A-Fa-f\-]{36}"#)
     /// A Bonjour name: "nas.local", "MacBook-Air.local".
     private static let localHost = regex(#"(?<![A-Za-z0-9\-.])[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.local(?![A-Za-z0-9\-])"#)
+    /// A device's name in the player's tailnet, as Tailscale's MagicDNS
+    /// answers it: "macbook-air.tail1234.ts.net", and under
+    /// beta.tailscale.net for a tailnet made before 2022.
+    private static let tailnetName = regex(
+        #"(?<![A-Za-z0-9\-.])[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.(?:ts\.net|beta\.tailscale\.net)(?![A-Za-z0-9\-])"#, ignoringCase: true)
     private static let ipv4 = regex(#"(?<![0-9.])(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?![0-9]|\.[0-9])"#)
     /// Groups of hexadecimal digits between colons, as an IPv6 address
     /// writes them: kept only with "::" or seven colons, so that a time of

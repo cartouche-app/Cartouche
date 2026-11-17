@@ -18,11 +18,11 @@ final class CartoucheRenewalRulesTests: XCTestCase {
     private func situation(daysLeft: Int? = 2, canRenew: Bool = true, isSetUp: Bool = true, vpn: Bool = true,
                            busy: Bool = false, paused: Bool = false, playing: Bool = false,
                            lastTry: Date? = nil, revoked: Bool = false,
-                           noLiveProcess: Bool = false) -> CartoucheAutomaticRenewal.Situation {
+                           noLiveProcess: Bool = false, tailscale: Bool = false) -> CartoucheAutomaticRenewal.Situation {
         CartoucheAutomaticRenewal.Situation(daysLeft: daysLeft, canRenew: canRenew, isSetUp: isSetUp, vpnConnected: vpn,
                                             sideStoreBusy: busy, signInsPaused: paused, gameRunning: playing,
                                             lastTry: lastTry, certificateRevoked: revoked,
-                                            liveProcessMissing: noLiveProcess)
+                                            liveProcessMissing: noLiveProcess, tailscaleConnected: tailscale)
     }
 
     /// Why a renewal failed, as Cartouche reads what the built-in SideStore
@@ -113,6 +113,26 @@ final class CartoucheRenewalRulesTests: XCTestCase {
     func testWaitsForLocalDevVPN() {
         XCTAssertEqual(wait(situation(vpn: false)), .vpn)
         XCTAssertNil(wait(situation(vpn: true)))
+    }
+
+    /// iOS keeps one VPN at a time: LocalDevVPN, which the renewal connects,
+    /// turns Tailscale off until the player turns it on again. While it is
+    /// on, Cartouche renews itself in the last two days alone, under 48
+    /// hours, and counts no try before.
+    func testWithTailscaleOnWaitsForTheLastTwoDays() {
+        for days in [3, 2] {
+            XCTAssertEqual(wait(situation(daysLeft: days, vpn: false, tailscale: true)), .tailscale, "\(days) days left")
+        }
+        for days in [1, 0, -1] {
+            XCTAssertEqual(wait(situation(daysLeft: days, vpn: false, tailscale: true)), .vpn, "\(days) days left")
+        }
+        XCTAssertEqual(CartoucheAutomaticRenewal.tailscaleDays, 1)
+        // Without Tailscale, from three days left as ever.
+        XCTAssertEqual(wait(situation(daysLeft: 3, vpn: false, tailscale: false)), .vpn)
+        // LocalDevVPN connected already turns nothing off.
+        XCTAssertNil(wait(situation(daysLeft: 3, vpn: true, tailscale: true)))
+        // Nor does it make a signature with more days due.
+        XCTAssertEqual(wait(situation(daysLeft: 5, vpn: false, tailscale: true)), .notDue)
     }
 
     /// SideStore takes one action at a time: another, started meanwhile,

@@ -6,8 +6,9 @@
 //  address that never answers, or a port of this Mac no server listens on.
 //  Cartouche says the server is offline within its patience, a few
 //  seconds, instead of waiting for TCP to give up over a minute later, on
-//  every protocol; and it tells when the server answers again. No server
-//  of servers.sh is needed: these run with or without them.
+//  every protocol; and it tells when the server answers again. A server
+//  only Tailscale reaches, with Tailscale off here, says to turn it on. No
+//  server of servers.sh is needed: these run with or without them.
 //
 
 import Foundation
@@ -82,6 +83,84 @@ final class OfflineTests: XCTestCase {
 
     /// Refused at once, as by a NAS whose service is off, or by another
     /// device at its address on another network: offline at once too.
+    // MARK: Through Tailscale
+
+    func testSaysToTurnTailscaleOnForAServerOnlyItReaches() {
+        // By its MagicDNS name or its address in the tailnet, with Tailscale
+        // off here: LocalDevVPN turned it off, or the player did.
+        for (kind, host) in [(CartoucheStorageServer.Kind.smb, "nas.tail1234.ts.net"), (.sftp, "100.101.102.103"),
+                             (.ftp, "fd7a:115c:a1e0::2")] {
+            let offline = CartoucheStorageOffline(server(kind, host: host), tailscale: false)
+            XCTAssertEqual(offline.tailscale, .off, host)
+            XCTAssertEqual(offline.localizedDescription, CartoucheText.storageOfflineTailscaleOff("NAS"), host)
+            XCTAssertEqual(offline.short, CartoucheText.storageOfflineTailscaleOffShort("NAS"), host)
+        }
+        // Tailscale on, or a server of the player's network: offline, as
+        // ever.
+        let on = CartoucheStorageOffline(server(.smb, host: "nas.tail1234.ts.net"), tailscale: true)
+        XCTAssertEqual(on.tailscale, .none)
+        XCTAssertEqual(on.localizedDescription, CartoucheText.storageOffline("NAS"))
+        let home = CartoucheStorageOffline(server(.smb, host: "192.168.1.2"), tailscale: false)
+        XCTAssertEqual(home.tailscale, .none)
+        XCTAssertEqual(home.localizedDescription, CartoucheText.storageOffline("NAS"))
+        XCTAssertEqual(home.short, CartoucheText.storageOfflineShort("NAS"))
+    }
+
+    func testSaysToTurnTailscaleOnForTheMacAwayFromHome() {
+        var mac = CartoucheStorageServer(kind: .mac, name: "MacBook Air", host: "192.168.1.20", port: Int(CartoucheBridge.port))
+        mac.macID = UUID().uuidString
+        // Before its Cartouche Builder told its addresses in the tailnet.
+        XCTAssertEqual(CartoucheStorageOffline(mac, tailscale: false).localizedDescription, CartoucheText.storageMacOffline("MacBook Air"))
+        mac.tailnet = ["100.101.102.103"]
+        XCTAssertEqual(CartoucheStorageOffline(mac, tailscale: false).localizedDescription,
+                       CartoucheText.storageMacOfflineTailscaleOff("MacBook Air"))
+        XCTAssertEqual(CartoucheStorageOffline(mac, tailscale: true).localizedDescription,
+                       CartoucheText.storageMacOfflineTailscale("MacBook Air"))
+        // Paired by its Tailscale name, from afar.
+        let named = CartoucheStorageServer(kind: .mac, name: "MacBook Air", host: "macbook-air.tail1234.ts.net", port: Int(CartoucheBridge.port))
+        XCTAssertEqual(CartoucheStorageOffline(named, tailscale: false).tailscale, .off)
+    }
+
+    @MainActor
+    func testSaysTailscaleIsOffOnceLocalDevVPNTurnedItOff() async {
+        // Kept across launches, in the app's defaults.
+        UserDefaults.standard.removeObject(forKey: CartoucheTailscaleReminder.key)
+        defer { UserDefaults.standard.removeObject(forKey: CartoucheTailscaleReminder.key) }
+        let reach = CartoucheStorageReach(settings: CartoucheStorageSettings(defaults: UserDefaults(suiteName: "OfflineTests." + UUID().uuidString)!))
+        reach.tailscaleSeen(true)
+        // Cartouche opens LocalDevVPN to renew itself: Tailscale is still on
+        // until LocalDevVPN connects.
+        reach.noteOpeningLocalDevVPN(tailscaleOn: true)
+        reach.tailscaleSeen(true)
+        XCTAssertNil(reach.tailscaleTurnedOff)
+        reach.tailscaleSeen(false)
+        let turnedOff = reach.tailscaleTurnedOff
+        XCTAssertNotNil(turnedOff)
+        XCTAssertFalse(reach.tailscaleConnected)
+        XCTAssertEqual(UserDefaults.standard.object(forKey: CartoucheTailscaleReminder.key) as? Date, turnedOff)
+        XCTAssertTrue(CartoucheTailscaleReminder.shows(turnedOff: reach.tailscaleTurnedOff, tailscaleOn: reach.tailscaleConnected,
+                                                       busy: false, at: Date()))
+        // The player turns it on again.
+        reach.tailscaleSeen(true)
+        XCTAssertNil(reach.tailscaleTurnedOff)
+        XCTAssertNil(UserDefaults.standard.object(forKey: CartoucheTailscaleReminder.key))
+
+        // Off by the player, without LocalDevVPN: nothing to say.
+        reach.tailscaleSeen(false)
+        XCTAssertNil(reach.tailscaleTurnedOff)
+        // Nor when LocalDevVPN opens with Tailscale off.
+        reach.noteOpeningLocalDevVPN(tailscaleOn: false)
+        reach.tailscaleSeen(false)
+        XCTAssertNil(reach.tailscaleTurnedOff)
+        // Nor when Tailscale goes off long after Cartouche opened
+        // LocalDevVPN with it on: the player turned it off.
+        reach.tailscaleSeen(true)
+        reach.noteOpeningLocalDevVPN(tailscaleOn: true, at: Date().addingTimeInterval(-CartoucheTailscaleReminder.opening - 60))
+        reach.tailscaleSeen(false)
+        XCTAssertNil(reach.tailscaleTurnedOff)
+        XCTAssertNil(UserDefaults.standard.object(forKey: CartoucheTailscaleReminder.key))
+    }
+
     func testSaysAServerThatRefusesTheConnectionIsOffline() async throws {
         let port = try await closedPort()
         let quickly = Self.slack

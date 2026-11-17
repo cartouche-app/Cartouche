@@ -43,23 +43,50 @@ struct CartoucheStorageView: View {
     // the synthesized initializer private.
     init() {}
 
+    /// Whether the page opens scrolled down to Tailscale, for the launcher's
+    /// gallery (launcher/Gallery); never in Cartouche.
+    #if CARTOUCHE_GALLERY
+    static var opensOnTailscale = false
+    #else
+    static let opensOnTailscale = false
+    #endif
+
+    /// Tailscale's row, which the gallery opens the page on.
+    private static let tailscaleRow = "tailscale"
+
     var body: some View {
-        List {
-            Section {
-                Text(CartoucheText.storageIntro)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+        ScrollViewReader { reader in
+            List {
+                Section {
+                    Text(CartoucheText.storageIntro)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                #if os(macOS)
+                // This Mac's folders, the Builder's (ConsoleStorage.swift).
+                CartoucheMacFoldersSection()
+                #else
+                placeSection(.games)
+                placeSection(.saves)
+                #endif
+                serversSection
+                #if os(iOS)
+                // The iPhone's way home from afar. A Mac's Tailscale is its
+                // own, which Cartouche Builder tells the iPhone about
+                // (BridgeServer.swift); the console reaches this Mac's
+                // folders itself.
+                tailscaleSection
+                #endif
             }
-            #if os(macOS)
-            // This Mac's folders, the Builder's (ConsoleStorage.swift).
-            CartoucheMacFoldersSection()
-            #else
-            placeSection(.games)
-            placeSection(.saves)
-            #endif
-            serversSection
+            .cartoucheStageBackground()
+            .task {
+                guard Self.opensOnTailscale else { return }
+                // Once the list has laid out its rows; the section's header
+                // shows above its first row.
+                try? await Task.sleep(for: .milliseconds(500))
+                reader.scrollTo(Self.tailscaleRow, anchor: UnitPoint(x: 0.5, y: 0.6))
+            }
         }
-        .cartoucheStageBackground()
         .navigationTitle(CartoucheText.storageTitle)
         .sheet(item: $editing) { server in
             NavigationStack {
@@ -153,7 +180,7 @@ struct CartoucheStorageView: View {
                             .foregroundStyle(Color.orange)
                     }
                     if offline {
-                        let away = CartoucheStorageOffline(server)
+                        let away = CartoucheStorageOffline(server, tailscale: reach.tailscaleConnected)
                         Label(away.localizedDescription, systemImage: away.symbol)
                             .font(.footnote)
                             .foregroundStyle(Color.orange)
@@ -176,7 +203,7 @@ struct CartoucheStorageView: View {
                 } else if offline {
                     // As the games folder's lines: what waits, and a way to
                     // try the server again, or to sign in to the Drive again.
-                    let away = CartoucheStorageOffline(server)
+                    let away = CartoucheStorageOffline(server, tailscale: reach.tailscaleConnected)
                     Label(away.localizedDescription, systemImage: away.symbol)
                         .font(.footnote)
                         .foregroundStyle(Color.orange)
@@ -359,6 +386,37 @@ struct CartoucheStorageView: View {
             #else
             Text(CartoucheText.storageServersFooter)
             #endif
+        }
+    }
+
+    // MARK: Away from home
+
+    /// Tailscale, which the player installs apart: whether it is connected
+    /// here, and what it does for their storage (CartoucheTailscale.swift).
+    private var tailscaleSection: some View {
+        CartoucheSection {
+            LabeledContent {
+                Text(reach.tailscaleConnected ? CartoucheText.storageTailscaleConnected : CartoucheText.storageTailscaleOff)
+                    .foregroundStyle(reach.tailscaleConnected ? Color.green : Color.secondary)
+            } label: {
+                Label {
+                    Text(verbatim: "Tailscale")
+                } icon: {
+                    Image(systemName: "network")
+                }
+            }
+            .id(Self.tailscaleRow)
+            if !reach.tailscaleConnected {
+                // Its page shows Open once Tailscale is on this iPhone: it
+                // has no link of its own that Cartouche could open.
+                Link(destination: CartoucheTailscale.appStore) {
+                    Label(CartoucheText.storageTailscaleAppStore, systemImage: "arrow.up.forward.app")
+                }
+            }
+        } header: {
+            Text(CartoucheText.storageTailscaleTitle)
+        } footer: {
+            Text(CartoucheText.storageTailscaleFooter)
         }
     }
 

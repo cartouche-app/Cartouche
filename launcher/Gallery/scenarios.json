@@ -1638,6 +1638,27 @@
       ]
     },
     {
+      "name": "iphone-nightly-renewal-tailscale",
+      "comment": "Renew every night down to Tailscale: LocalDevVPN turns it off, and Tailscale's Connect action, last, turns it on again.",
+      "screen": "nightly",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "category": "tailscale"
+    },
+    {
       "name": "iphone-storage",
       "screen": "storage",
       "owned": [
@@ -1878,6 +1899,113 @@
       "work": "mac-offline"
     },
     {
+      "name": "iphone-storage-mac-tailscale-off",
+      "comment": "The player's Mac out of reach away from home, its addresses in the tailnet known and Tailscale off on this iPhone, as LocalDevVPN leaves it: turn Tailscale on.",
+      "screen": "storage",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "mac-tailscale-off"
+    },
+    {
+      "name": "iphone-storage-tailscale-off",
+      "comment": "The same, the Storage page scrolled down to Tailscale: off, with its App Store page.",
+      "screen": "storage",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "mac-tailscale-off",
+      "category": "tailscale"
+    },
+    {
+      "name": "iphone-storage-tailscale",
+      "comment": "The Storage page scrolled down to Tailscale, connected on this iPhone, the player's Mac paired with its addresses in the tailnet.",
+      "screen": "storage",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "mac-tailscale",
+      "category": "tailscale"
+    },
+    {
+      "name": "iphone-storage-mac-tailscale",
+      "comment": "The player's Mac's own form, with its address in the tailnet beside the last one, as its Cartouche Builder told it.",
+      "screen": "storage-mac",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "mac-tailscale"
+    },
+    {
+      "name": "iphone-storage-mac-away",
+      "comment": "Add your Mac away from home, Tailscale connected: no Mac nearby, and the Mac paired by its Tailscale name or address.",
+      "screen": "storage-mac",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "tailscale"
+    },
+    {
       "name": "iphone-storage-drive",
       "screen": "storage-drive",
       "owned": [
@@ -1954,6 +2082,27 @@
         0
       ],
       "work": "drive-signed-out"
+    },
+    {
+      "name": "iphone-home-tailscale-turned-off",
+      "comment": "The home after Cartouche renewed itself with Tailscale on: LocalDevVPN turned Tailscale off, and the top bar says so until it is on again, opening Tailscale's page of the App Store.",
+      "screen": "games",
+      "owned": [
+        "040074A01BF12000",
+        "0400C3F00006E000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "tailscale-turned-off"
     },
     {
       "name": "iphone-telemetry",

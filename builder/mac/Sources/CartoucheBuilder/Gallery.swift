@@ -55,6 +55,9 @@ enum Gallery {
         // the storage page down to the games on this Mac, in a window as
         // tall as it.
         case settingsBuilds = "settings-builds", storageMac = "storage-mac"
+        // The iPhone page with Tailscale on this Mac, and its address there
+        // (BridgeView.swift); the iPhone page above has it off.
+        case iphoneTailscale = "iphone-tailscale"
         // The game page of the builder in the window that showed the
         // console just before, the player back from it with the switch at
         // the top of the window: as the game page, whatever the Mac's
@@ -487,6 +490,7 @@ enum Gallery {
             switch page {
             case .library, .activity, .storage, .iphone: model.section = AppSection(rawValue: page.rawValue) ?? .library
             case .storageMac: model.section = .storage
+            case .iphoneTailscale: model.section = .iphone
             case .libraryRoom, .game, .gameNarrow, .gameNewer, .gameQueue, .gameXcode, .gameUnbuilt, .gameAfterConsole: model.section = .library
             case .setup, .setupXcode: model.section = .setup
             default: break
@@ -537,7 +541,9 @@ enum Gallery {
                              paired: now.addingTimeInterval(-2 * 86_400), seen: now.addingTimeInterval(-26 * 3600)),
             ]
             let saves = URL(fileURLWithPath: info.home).appendingPathComponent("Saves", isDirectory: true)
-            model.bridge.preview(devices: iphones, connected: [iphones[0].id], games: config.games, name: "MacBook Air", saves: saves)
+            // A made-up address in the tailnet, never one of the project's.
+            model.bridge.preview(devices: iphones, connected: [iphones[0].id], games: config.games, name: "MacBook Air", saves: saves,
+                                 tailnet: page == .iphoneTailscale ? ["100.101.102.103", "fd7a:115c:a1e0::1"] : [])
             // Mario Kart 8 Deluxe played on this Mac, the iPhone's saves come
             // before its last game, or, on game-newer, held back, version
             // 3.0.4 of the game on the iPhone having written the newest copy

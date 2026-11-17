@@ -473,6 +473,9 @@ final class CartoucheTelemetry: ObservableObject {
             // The Apple ID's, or the player's own certificate, given by the
             // Cartouche Installer or on the iPhone (docs/imported-signing.md).
             "signing": .text(CartoucheImportedSigning.mode.rawValue),
+            // Whether Tailscale is connected, which the player installs
+            // apart: never their tailnet, its names or its addresses.
+            "tailscale": .flag(CartoucheTailscale.isConnected),
         ]
         // What it is made of: never the Apple ID, only whether there is one.
         fields.merge(setup.facts.fields) { _, made in made }

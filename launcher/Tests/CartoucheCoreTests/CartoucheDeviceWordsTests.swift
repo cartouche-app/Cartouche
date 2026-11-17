@@ -68,8 +68,9 @@ final class CartoucheDeviceWordsTests: XCTestCase {
     func testEveryTextOfCartoucheOnAnIPad() throws {
         let keeps: Set<String> = [
             "reason.gpu", "results.measured", "saves.putBack.footer", "setting.option.duoScreen",
-            "status.iphone.long", "status.iphone.short", "status.mac.long", "storage.mac.busy",
-            "storage.mac.how", "storage.mac.offline", "storage.saves.footer", "switchSave.import.sending",
+            "status.iphone.long", "status.iphone.short", "status.mac.long", "storage.mac.address.unanswered",
+            "storage.mac.busy", "storage.mac.how", "storage.mac.offline", "storage.mac.offline.tailscale",
+            "storage.mac.offline.tailscaleOff", "storage.saves.footer", "switchSave.import.sending",
             "system.memory.footer",
             "system.memory.footer.behind", "telemetry.footer",
         ]

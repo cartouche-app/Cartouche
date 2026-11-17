@@ -49,6 +49,12 @@ final class CartoucheReportTests: XCTestCase {
         XCTAssertEqual(shapes.redact("GET https://bucket.s3.amazonaws.com/a?b=c failed"), "GET <address> failed")
         XCTAssertEqual(shapes.redact("Connection to 10.0.0.7:445 timed out"), "Connection to <address>:445 timed out")
         XCTAssertEqual(shapes.redact("Server macbook-air.local closed"), "Server <server> closed")
+        // In the player's tailnet (Tailscale): its names and its addresses.
+        XCTAssertEqual(shapes.redact("Server macbook-air.tail1234.ts.net closed"), "Server <server> closed")
+        XCTAssertEqual(shapes.redact("Could not reach NAS.Tail1234.TS.NET:445."), "Could not reach <server>:445.")
+        XCTAssertEqual(shapes.redact("mac.example.com.beta.tailscale.net refused"), "<server> refused")
+        XCTAssertEqual(shapes.redact("Connection to 100.101.102.103:47920 timed out"), "Connection to <address>:47920 timed out")
+        XCTAssertEqual(shapes.redact("No route to fd7a:115c:a1e0::3"), "No route to <address>")
         XCTAssertEqual(shapes.redact("No route to 2a01:e0a:1b2:3c40::1"), "No route to <address>")
         XCTAssertEqual(shapes.redact("No route to fe80::1c2b:3a4d%en0"), "No route to <address>")
         XCTAssertEqual(shapes.redact("No route to 2001:0db8:85a3:0000:0000:8a2e:0370:7334"), "No route to <address>")
@@ -67,7 +73,8 @@ final class CartoucheReportTests: XCTestCase {
         let shapes = CartoucheRedaction.shapes
         for text in ["11-10 07:12:03 Installing Mario Kart World", "Cartouche 0.9.0, iOS 27.1, SideStore 0.7.0",
                      "8.41 GB (8,412,345,678 bytes)", "NSPOSIXErrorDomain 28", "SMB 3.1.1", "2026-11-10 07:12:03 +0100",
-                     "Mario Kart World [0400C3F00006E000].ipa", "550 Requested action not taken."] {
+                     "Mario Kart World [0400C3F00006E000].ipa", "550 Requested action not taken.",
+                     "Tailscale is off on this iPhone", "Connected through ts.network"] {
             XCTAssertEqual(shapes.redact(text), text)
         }
     }

@@ -201,7 +201,7 @@ enum CartoucheReports {
     /// failed with ERROR. What the player typed in the form is taken out of
     /// reports first: it is not in their settings yet.
     static func connectionFailed(to server: CartoucheStorageServer, error: Error) -> CartoucheReport {
-        redactTyped(servers: [server.host], names: [server.name, server.share], accounts: [server.username])
+        redactTyped(servers: [server.host] + (server.tailnet ?? []), names: [server.name, server.share], accounts: [server.username])
         var facts: [CartoucheReport.Fact] = []
         if let port = server.port {
             facts.append(.init("Port", String(port)))
@@ -217,7 +217,7 @@ enum CartoucheReports {
         // A server that does not answer from here: its address may be wrong,
         // or the iPhone, or the Mac, away from its network.
         let message = (error as? CartoucheStorageOffline).map {
-            $0.isSignedOut || $0.isMac ? $0.localizedDescription : CartoucheText.storageOfflineCheck($0.name)
+            $0.isSignedOut || $0.isMac || $0.tailscale == .off ? $0.localizedDescription : CartoucheText.storageOfflineCheck($0.name)
         } ?? error.localizedDescription
         return make(.storage, CartoucheText.storageConnectFailed, message: message, error: error,
                     step: "Connecting to " + kindName(server.kind), stage: "connect", facts: facts)
@@ -284,6 +284,12 @@ enum CartoucheReports {
             facts.append(.init("Signature", days < 0 ? "expired" : "\(days) days left"))
         }
         facts.append(storage())
+        // The tunnel up: LocalDevVPN, which the built-in SideStore needs,
+        // or Tailscale, which reaches the player's servers away from home;
+        // iOS keeps one at a time.
+        let tunnels = [CartoucheVPN.isConnected ? "LocalDevVPN" : nil, CartoucheTailscale.isConnected ? "Tailscale" : nil]
+            .compactMap { $0 }
+        facts.append(.init("VPN", tunnels.isEmpty ? "none" : tunnels.joined(separator: ", ")))
         return CartoucheReport.Environment(cartouche: cartouche, basedOn: bases.isEmpty ? nil : bases.joined(separator: ", "),
                                            system: system, device: device, language: language, facts: facts)
     }
@@ -463,6 +469,7 @@ enum CartoucheReports {
         var redaction = typed
         for server in settings.servers {
             redaction.servers.append(server.host)
+            redaction.servers.append(contentsOf: server.tailnet ?? [])
             redaction.names.append(server.name)
             redaction.names.append(server.share)
             redaction.accounts.append(server.username)
