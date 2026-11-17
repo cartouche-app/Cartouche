@@ -1,0 +1,42 @@
+name: Appearance research
+
+# Research for the pull request of the builder's words after the console in
+# light mode (17 November), removed before it is merged: a window as the
+# app's, on a Mac in light mode, through the console and back, for each way
+# of making the console's window dark (.github/appearance-research).
+
+on:
+  push:
+    branches:
+      - claude/project-thread-ogpyl2
+    paths:
+      - ".github/appearance-research/**"
+      - ".github/workflows/appearance-research.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Probe
+    runs-on: xcode-27
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode_27.2.app
+          xcodebuild -version
+      - name: Probe
+        timeout-minutes: 10
+        run: .github/appearance-research/run.sh "$RUNNER_TEMP/probe"
+      - name: Keep the pictures
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: appearance-research
+          path: ${{ runner.temp }}/probe/pictures
+          retention-days: 7
+          if-no-files-found: warn
