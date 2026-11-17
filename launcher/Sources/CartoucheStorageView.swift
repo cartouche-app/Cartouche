@@ -241,6 +241,11 @@ struct CartoucheStorageView: View {
     private var namingLink: some View {
         NavigationLink {
             CartoucheNamingView()
+                #if os(macOS)
+                // Beside the console, the way back above it, as the Storage
+                // page's own.
+                .cartoucheConsolePage(CartoucheText.namingTitle, back: CartoucheText.storageTitle)
+                #endif
         } label: {
             Label(CartoucheText.namingOpen, systemImage: "text.badge.checkmark")
         }
