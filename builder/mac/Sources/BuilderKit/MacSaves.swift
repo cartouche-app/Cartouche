@@ -22,6 +22,9 @@
 //    the saves written last win, the others kept as a copy of their date.
 //  - The newest copy comes when the game is about to start, and while it
 //    does not run; the saves of the Mac go after each game.
+//  - A copy can be put back from the game's sheet in Cartouche's console,
+//    as on the iPhone: the saves of the Mac go to the folder first, and the
+//    copy put back becomes the newest one there, which the iPhones take.
 //  - Saves the Mac kept in step with another saves folder, and did not
 //    change since, are no news for the one the player chose since: they
 //    stay in the other, and this one's newest copy comes in their place
@@ -97,7 +100,7 @@ public struct MacSaveCopyInfo: Hashable, Identifiable, Sendable {
 
 /// The player's saves folder, as this Mac keeps its games' saves in step
 /// with it.
-public final class MacSavesFolder {
+public final class MacSavesFolder: Sendable {
     /// nxnative's folder of each game's own on this Mac.
     public static var nxnativeFolder: URL {
         URL(fileURLWithPath: NSHomeDirectory(), isDirectory: true)
@@ -278,6 +281,46 @@ public final class MacSavesFolder {
             outcome.base = try await fetch(newest, into: documents, from: folder, quiet: quiet)
             outcome.fetched = newest.name
         }
+        return outcome
+    }
+
+    /// Puts the copy NAME back as GAME's saves on this Mac, as the player
+    /// chose it in Cartouche's console, as Cartouche puts one back on the
+    /// iPhone (its CartoucheSavesFolder.putBack): the saves of the Mac go to
+    /// the folder first, unless it has them already, and the copy put back
+    /// then goes there as the newest one, which the player's iPhones take at
+    /// their next start, rather than the one that was the newest. QUIET, as
+    /// for a sync: the game still does not run, just before the copy takes
+    /// the place of its saves.
+    public func putBack(_ name: String, of game: MacSaveGame, base given: CartoucheSaveBase?,
+                        quiet: @Sendable () -> Bool = { true }) async throws -> MacSaveOutcome {
+        guard reachable else { throw MacSavesError.offline }
+        let base = given?.place == place ? given : nil
+        let documents = self.documents(of: game.titleID)
+        let folder = gameFolder(of: game)
+        var names = copyNames(in: folder)
+        guard names.contains(name), let date = CartoucheSaveSync.date(inName: name) else {
+            throw MacSavesError.unreadable(name)
+        }
+        var outcome = MacSaveOutcome(step: .fetch, base: base)
+        if let here = CartoucheSaveSync.saves(in: documents),
+           !(base.map { $0.look == here.look && names.contains($0.copy) } ?? false) {
+            let sent = CartoucheSaveSync.sendName(written: here.written, after: names.last.flatMap(CartoucheSaveSync.date(inName:)))
+            // The copy to put back stays, even the oldest one.
+            _ = try await send(documents, here, as: sent, to: folder, sparing: name)
+            names = copyNames(in: folder)
+            outcome.kept = sent
+        }
+        let fetched = try await fetch(CartoucheSaveCopy(name: name, date: date), into: documents, from: folder, quiet: quiet)
+        outcome.fetched = name
+        outcome.base = fetched
+        // The newest one already, or a copy of no save.
+        guard name != names.last, let here = CartoucheSaveSync.saves(in: documents) else { return outcome }
+        var put = here
+        put.content = fetched.content
+        let newest = CartoucheSaveSync.sendName(written: here.written, after: names.last.flatMap(CartoucheSaveSync.date(inName:)))
+        outcome.base = try await send(documents, put, as: newest, to: folder)
+        outcome.sent = newest
         return outcome
     }
 
@@ -524,7 +567,8 @@ public struct MacSaveEvent: Codable, Equatable, Sendable {
     public var at: Date
     /// Before the game started, after it, or while it did not run.
     public var when: MacSaveMoment
-    /// What was done (CartoucheSaveStep), or "offline", "failed".
+    /// What was done (CartoucheSaveStep), "putBack" for a copy the player
+    /// put back, or "offline", "failed".
     public var step: String
     /// The copy that came, by name: its date is when its saves were written.
     public var fetched: String?
@@ -547,6 +591,9 @@ public struct MacSaveEvent: Codable, Equatable, Sendable {
 
     public var offline: Bool { step == "offline" }
     public var failed: Bool { step == "failed" }
+
+    /// The step of a copy the player put back from Cartouche's console.
+    public static let putBack = "putBack"
 }
 
 /// When a game's saves are kept in step.
@@ -623,6 +670,9 @@ public actor MacSaveKeeper {
     /// another call in while one waits on the disk, and two syncs of a game
     /// at once would both move its saves.
     private var queue: Task<Void, Never>?
+    /// When each game's saves were last kept in step, whether a copy moved
+    /// or not, by title ID: since the builder opened.
+    private var checked: [String: Date] = [:]
 
     public init(store: MacSaveStore) {
         self.store = store
@@ -647,12 +697,67 @@ public actor MacSaveKeeper {
         return await this.value
     }
 
+    /// Puts the copy NAME back as GAME's saves on this Mac, from FOLDER, as
+    /// the player chose it in Cartouche's console (MacSavesFolder.putBack),
+    /// once the syncs asked for before ended: the event it records, a put
+    /// back ("putBack"). It throws what kept it from going (MacSavesError):
+    /// the last event stays as it was then.
+    @discardableResult
+    public func putBack(_ name: String, of game: MacSaveGame, in folder: MacSavesFolder, now: Date = Date(),
+                        quiet: @escaping @Sendable () -> Bool = { true }) async throws -> MacSaveEvent {
+        let previous = queue
+        let this = Task { () -> Result<MacSaveEvent, Error> in
+            _ = await previous?.value
+            return await self.runPutBack(name, of: game, in: folder, now: now, quiet: quiet)
+        }
+        queue = Task { _ = await this.value }
+        return try await this.value.get()
+    }
+
+    /// Runs CHANGE on a game's saves on this Mac, as the player asked in
+    /// Cartouche's console (a save from their Switch put in place of the
+    /// game's, or the one it replaced put back), once the syncs asked for
+    /// before ended, and none starts meanwhile: what it gives, or throws.
+    public func change<T: Sendable>(_ change: @escaping @Sendable () throws -> T) async throws -> T {
+        let previous = queue
+        let this = Task { () -> Result<T, Error> in
+            _ = await previous?.value
+            return Result { try change() }
+        }
+        queue = Task { _ = await this.value }
+        return try await this.value.get()
+    }
+
+    private func runPutBack(_ name: String, of game: MacSaveGame, in folder: MacSavesFolder, now: Date,
+                            quiet: @Sendable () -> Bool) async -> Result<MacSaveEvent, Error> {
+        var record = store.record(game.titleID)
+        do {
+            let outcome = try await folder.putBack(name, of: game, base: record.base, quiet: quiet)
+            checked[game.titleID] = now
+            record.base = outcome.base
+            let event = MacSaveEvent(at: now, when: .round, step: MacSaveEvent.putBack, fetched: outcome.fetched,
+                                     kept: outcome.kept, sent: outcome.sent)
+            record.last = event
+            store.set(game.titleID, record)
+            return .success(event)
+        } catch {
+            return .failure(error)
+        }
+    }
+
+    /// When GAME's saves were last kept in step, a copy moving or not; nil
+    /// when they were not since the builder opened.
+    public func lastChecked(_ titleID: String) -> Date? {
+        checked[titleID.uppercased()]
+    }
+
     private func run(_ game: MacSaveGame, in folder: MacSavesFolder, when: MacSaveMoment, now: Date,
                      quiet: @Sendable () -> Bool) async -> MacSaveEvent? {
         var record = store.record(game.titleID)
         let event: MacSaveEvent?
         do {
             let outcome = try await folder.sync(game, base: record.base, fetching: when != .after, quiet: quiet)
+            checked[game.titleID] = now
             record.base = outcome.base
             event = outcome.moved
                 ? MacSaveEvent(at: now, when: when, step: outcome.step.rawValue, fetched: outcome.fetched, kept: outcome.kept, sent: outcome.sent)

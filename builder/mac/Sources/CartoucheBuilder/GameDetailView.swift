@@ -726,6 +726,9 @@ struct MacPlayCard: View {
         case "keepAndFetch":
             return tr("Newer saves came from the saves folder \(when); this Mac’s were kept as a copy.",
                       "Des sauvegardes plus récentes sont arrivées du dossier des sauvegardes \(when) ; celles de ce Mac ont été gardées en copie.")
+        case MacSaveEvent.putBack:
+            return tr("A copy was put back \(when), from Cartouche’s console: it is the newest one in the saves folder now.",
+                      "Une copie a été remise \(when), depuis la console de Cartouche : c’est maintenant la plus récente du dossier des sauvegardes.")
         case "offline":
             return tr("The saves folder could not be reached \(when): this Mac’s saves stay as they are until it can be.",
                       "Le dossier des sauvegardes était injoignable \(when) : celles de ce Mac restent telles quelles en attendant.")

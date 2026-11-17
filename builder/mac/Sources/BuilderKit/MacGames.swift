@@ -88,6 +88,9 @@ public final class MacGames: ObservableObject {
     @Published public private(set) var preparing: Set<String> = []
     /// What each game's saves did last, by title ID.
     @Published public private(set) var last: [String: MacSaveEvent] = [:]
+    /// When each game's saves were last kept in step, a copy moving or not,
+    /// by title ID: since the builder opened.
+    @Published public private(set) var checked: [String: Date] = [:]
     /// The folder nxnative's own cloud saves go through, for each game
     /// whose player chose one, by title ID.
     @Published public private(set) var cloud: [String: String] = [:]
@@ -533,16 +536,117 @@ public final class MacGames: ObservableObject {
         }
     }
 
-    private func sync(_ app: MacGameApp, in folder: MacSavesFolder, when: MacSaveMoment) async {
+    @discardableResult
+    private func sync(_ app: MacGameApp, in folder: MacSavesFolder, when: MacSaveMoment) async -> MacSaveEvent? {
         // A copy takes the place of the saves only while no program of the
         // game runs, looked at again just before: one started from the Dock
         // meanwhile keeps the saves it found.
-        let event = await keeper.sync(app.saveGame, in: folder, when: when, quiet: {
-            MacGames.pids(inside: app, programs: MacGames.runningPrograms()).isEmpty
-        })
-        guard let event else { return }
+        let event = await keeper.sync(app.saveGame, in: folder, when: when, quiet: Self.quiet(app))
+        await noteChecked(app)
+        guard let event else { return nil }
         last[app.titleID] = event
         news?(.saves(titleID: app.titleID, event: event, onShare: folder.onShare))
+        return event
+    }
+
+    /// Whether no program of APP runs, looked at again each time it is asked.
+    private nonisolated static func quiet(_ app: MacGameApp) -> @Sendable () -> Bool {
+        { MacGames.pids(inside: app, programs: MacGames.runningPrograms()).isEmpty }
+    }
+
+    /// When APP's saves were last kept in step, as the keeper says.
+    private func noteChecked(_ app: MacGameApp) async {
+        guard let date = await keeper.lastChecked(app.titleID), checked[app.titleID] != date else { return }
+        checked[app.titleID] = date
+    }
+
+    // MARK: What Cartouche's console asks
+
+    /// Whether TITLE_ID's game plays, starts, or runs a program of its app:
+    /// its saves stay as they are meanwhile.
+    public func isBusy(_ titleID: String) -> Bool {
+        let titleID = titleID.uppercased()
+        guard let app = apps[titleID] else { return false }
+        return playing[titleID] != nil || preparing.contains(titleID) || !pids(of: app).isEmpty
+    }
+
+    /// Keeps TITLE_ID's saves in step now, as the player asked from its
+    /// sheet in Cartouche's console: the newest copy comes when it is the
+    /// one to keep, the saves of this Mac go when they changed. What moved,
+    /// nil when nothing did, or the event that says why nothing could, the
+    /// saves folder away (offline) or failing (failed). It throws busy while
+    /// the game plays or starts, offline when the builder keeps no saves of
+    /// the game's.
+    public func syncNow(_ titleID: String) async throws -> MacSaveEvent? {
+        let titleID = titleID.uppercased()
+        guard let app = apps[titleID], let folder, keepsSaves(titleID) else { throw MacSavesError.offline }
+        guard !sample else { return nil }
+        guard !isBusy(titleID) else { throw MacSavesError.busy }
+        let asked = Date()
+        let event = await sync(app, in: folder, when: .round)
+        if let date = checked[titleID], date >= asked { return event }
+        // Nothing went through: the folder away or failing as it was before,
+        // which the last event says, or the game started meanwhile.
+        if let last = last[titleID], last.offline || last.failed { return last }
+        throw MacSavesError.busy
+    }
+
+    /// TITLE_ID's copies in the saves folder, the newest first, read off the
+    /// main thread: none when the builder keeps no saves of the game's. It
+    /// throws offline when the saves folder is not there, a share not
+    /// mounted.
+    public func copies(_ titleID: String) async throws -> [MacSaveCopyInfo] {
+        let titleID = titleID.uppercased()
+        guard let app = apps[titleID], let folder, keepsSaves(titleID) else { return [] }
+        let game = app.saveGame
+        return try await Task.detached(priority: .userInitiated) {
+            guard folder.reachable else { throw MacSavesError.offline }
+            return folder.copies(of: game)
+        }.value
+    }
+
+    /// Puts the copy NAME back as TITLE_ID's saves on this Mac, as the
+    /// player chose it on its sheet in Cartouche's console: this Mac's saves
+    /// go to the saves folder first, and the copy put back becomes the
+    /// newest one there (MacSavesFolder.putBack). It throws busy while the
+    /// game plays or starts, offline when the saves folder is not there,
+    /// unreadable for a copy that does not read whole.
+    public func putBack(_ name: String, of titleID: String) async throws {
+        let titleID = titleID.uppercased()
+        guard let app = apps[titleID], let folder, keepsSaves(titleID) else { throw MacSavesError.offline }
+        guard !sample else { return }
+        guard !isBusy(titleID) else { throw MacSavesError.busy }
+        preparing.insert(titleID)
+        defer { preparing.remove(titleID) }
+        let event = try await keeper.putBack(name, of: app.saveGame, in: folder, quiet: Self.quiet(app))
+        await noteChecked(app)
+        last[titleID] = event
+        news?(.saves(titleID: titleID, event: event, onShare: folder.onShare))
+    }
+
+    /// Runs CHANGE on TITLE_ID's saves on this Mac, in DOCUMENTS, nxnative's
+    /// folder of the game's own, as the player asked from its sheet in
+    /// Cartouche's console (a save from their Switch put in place, or the
+    /// one it replaced put back), once the syncs under way ended, none
+    /// starting meanwhile; then the saves go to the saves folder, when the
+    /// builder keeps them. It throws busy while the game plays or starts.
+    public func change<T: Sendable>(_ titleID: String, _ change: @escaping @Sendable (_ documents: URL) throws -> T) async throws -> T {
+        let titleID = titleID.uppercased()
+        guard !isBusy(titleID) else { throw MacSavesError.busy }
+        let documents = games.appendingPathComponent(titleID, isDirectory: true)
+        preparing.insert(titleID)
+        let result: T
+        do {
+            result = try await keeper.change { try change(documents) }
+        } catch {
+            preparing.remove(titleID)
+            throw error
+        }
+        preparing.remove(titleID)
+        if let app = apps[titleID], let folder, keepsSaves(titleID), !sample {
+            Task { await self.sync(app, in: folder, when: .after) }
+        }
+        return result
     }
 
     /// The folders nxnative's own cloud saves go through, read again.

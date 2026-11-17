@@ -417,6 +417,192 @@ final class MacSavesTests: XCTestCase {
         XCTAssertEqual(left.first, CartoucheSaveSync.fileName(t0.addingTimeInterval(3 * 60)))
     }
 
+    // MARK: Putting a copy back
+
+    func testACopyPutBackComesAndBecomesTheNewestWhichTheIPhoneTakes() async throws {
+        let folder = try makeFolder()
+        try write(["slot0.bin": "mac 1"], in: mac, at: t0)
+        let first = try await folder.sync(game, base: nil, fetching: false)
+        let oldest = try XCTUnwrap(first.sent)
+        // The iPhone played, then the Mac, each sending its saves.
+        try write(["slot0.bin": "iPhone 2"], in: iPhone, at: t0.addingTimeInterval(600))
+        let iPhones = CartoucheSaveSync.sendName(written: t0.addingTimeInterval(600), after: t0)
+        try await iPhoneCopy(of: iPhone, named: iPhones)
+        let fetched = try await folder.sync(game, base: first.base, fetching: true)
+        XCTAssertEqual(fetched.step, .fetch)
+        try write(["slot0.bin": "mac 3"], in: mac, at: t0.addingTimeInterval(1200))
+        let sent = try await folder.sync(game, base: fetched.base, fetching: false)
+        XCTAssertEqual(sent.step, .send)
+        let base = try XCTUnwrap(sent.base)
+        let before = names(in: gameFolder)
+        XCTAssertEqual(before, [oldest, iPhones, try XCTUnwrap(sent.sent)])
+
+        // The player puts back the oldest copy from the console: the Mac's
+        // saves are in the folder already, so nothing is kept again.
+        let putBack = try await folder.putBack(oldest, of: game, base: base)
+        XCTAssertEqual(putBack.step, .fetch)
+        XCTAssertNil(putBack.kept, "the saves it replaced were in the folder already")
+        XCTAssertEqual(putBack.fetched, oldest)
+        XCTAssertEqual(try read(mac), ["save/slot0.bin": "mac 1"])
+        // It goes again as the newest copy, which the iPhone reads.
+        let newest = try XCTUnwrap(putBack.sent)
+        XCTAssertEqual(names(in: gameFolder), before + [newest])
+        let sentAgain = try await unpack(gameFolder.appendingPathComponent(newest))
+        XCTAssertEqual(sentAgain, ["save/slot0.bin": "mac 1"])
+        let newBase = try XCTUnwrap(putBack.base)
+        XCTAssertEqual(newBase.copy, newest)
+        XCTAssertEqual(newBase.place, "mac|" + saves.standardizedFileURL.path)
+        // Both sides the same since: nothing moves, before a game or after.
+        for fetching in [true, false] {
+            let again = try await folder.sync(game, base: newBase, fetching: fetching)
+            XCTAssertEqual(again.step, .none)
+        }
+    }
+
+    func testPuttingBackSendsTheMacsSavesFirstWhenTheFolderLacksThem() async throws {
+        let folder = try makeFolder()
+        try write(["slot0.bin": "mac 1"], in: mac, at: t0)
+        let first = try await folder.sync(game, base: nil, fetching: false)
+        let copy = try XCTUnwrap(first.sent)
+        // Played since, its saves not sent yet, as with the builder closed.
+        try write(["slot0.bin": "mac 2"], in: mac, at: t0.addingTimeInterval(600))
+        let putBack = try await folder.putBack(copy, of: game, base: first.base)
+        let kept = try XCTUnwrap(putBack.kept)
+        XCTAssertEqual(kept, "2026-11-12T18-12-00Z.zip")
+        let keptSaves = try await unpack(gameFolder.appendingPathComponent(kept))
+        XCTAssertEqual(keptSaves, ["save/slot0.bin": "mac 2"])
+        XCTAssertEqual(try read(mac), ["save/slot0.bin": "mac 1"])
+        // The copy put back is the newest again, after the one kept.
+        let newest = try XCTUnwrap(putBack.sent)
+        XCTAssertEqual(names(in: gameFolder), [copy, kept, newest])
+        let sentAgain = try await unpack(gameFolder.appendingPathComponent(newest))
+        XCTAssertEqual(sentAgain, ["save/slot0.bin": "mac 1"])
+        XCTAssertEqual(putBack.base?.copy, newest)
+    }
+
+    func testTheNewestCopyPutBackIsNotSentAgain() async throws {
+        let folder = try makeFolder()
+        try write(["slot0.bin": "iPhone 1"], in: iPhone, at: t0)
+        let name = CartoucheSaveSync.fileName(t0)
+        try await iPhoneCopy(of: iPhone, named: name)
+        // A game without saves on this Mac yet: nothing to keep first.
+        let putBack = try await folder.putBack(name, of: game, base: nil)
+        XCTAssertNil(putBack.kept)
+        XCTAssertNil(putBack.sent)
+        XCTAssertEqual(putBack.base?.copy, name)
+        XCTAssertEqual(try read(mac), ["save/slot0.bin": "iPhone 1"])
+        XCTAssertEqual(names(in: gameFolder), [name])
+    }
+
+    func testACopyIsNeverPutBackAwayFromTheFolderUnderAGameOrUnread() async throws {
+        let share = root.appendingPathComponent("Volumes/NAS/Saves", isDirectory: true)
+        let away = MacSavesFolder(root: share, games: root.appendingPathComponent("nxnative", isDirectory: true),
+                                  scratch: root.appendingPathComponent("scratch", isDirectory: true))
+        try write(["slot0.bin": "mac 1"], in: mac, at: t0)
+        do {
+            _ = try await away.putBack(CartoucheSaveSync.fileName(t0), of: game, base: nil)
+            XCTFail("a share not mounted puts nothing back")
+        } catch {
+            XCTAssertEqual(error as? MacSavesError, .offline)
+        }
+        let folder = try makeFolder()
+        let first = try await folder.sync(game, base: nil, fetching: false)
+        let copy = try XCTUnwrap(first.sent)
+        // A copy that is not there.
+        do {
+            _ = try await folder.putBack(CartoucheSaveSync.fileName(t0.addingTimeInterval(-60)), of: game, base: first.base)
+            XCTFail("only a copy of the folder is put back")
+        } catch {
+            XCTAssertEqual(error as? MacSavesError, .unreadable(CartoucheSaveSync.fileName(t0.addingTimeInterval(-60))))
+        }
+        // The game started from the Dock meanwhile: its saves stay.
+        try write(["slot0.bin": "mac 2"], in: mac, at: t0.addingTimeInterval(600))
+        do {
+            _ = try await folder.putBack(copy, of: game, base: first.base, quiet: { false })
+            XCTFail("a copy never comes under a game playing")
+        } catch {
+            XCTAssertEqual(error as? MacSavesError, .busy)
+        }
+        XCTAssertEqual(try read(mac), ["save/slot0.bin": "mac 2"])
+        // A copy that is no zip: the saves of the Mac stay, kept in the folder.
+        let broken = CartoucheSaveSync.fileName(t0.addingTimeInterval(-120))
+        try Data("PK no zip".utf8).write(to: gameFolder.appendingPathComponent(broken))
+        do {
+            _ = try await folder.putBack(broken, of: game, base: first.base)
+            XCTFail("a copy that is no zip is never put back")
+        } catch {
+            XCTAssertEqual(error as? MacSavesError, .unreadable(broken))
+        }
+        XCTAssertEqual(try read(mac), ["save/slot0.bin": "mac 2"])
+        XCTAssertEqual(names(in: root.appendingPathComponent("scratch", isDirectory: true)), [])
+    }
+
+    func testTheKeeperRecordsAPutBackAndWhenTheSavesWereLastInStep() async throws {
+        let folder = try makeFolder()
+        let store = MacSaveStore(url: root.appendingPathComponent("saves.json"))
+        let keeper = MacSaveKeeper(store: store)
+        try write(["slot0.bin": "mac 1"], in: mac, at: t0)
+        _ = await keeper.sync(game, in: folder, when: .after, now: t0)
+        let copy = try XCTUnwrap(store.record(game.titleID).last?.sent)
+        try write(["slot0.bin": "mac 2"], in: mac, at: t0.addingTimeInterval(600))
+        _ = await keeper.sync(game, in: folder, when: .after, now: t0.addingTimeInterval(600))
+        // Nothing moved: still in step, at that time.
+        let none = await keeper.sync(game, in: folder, when: .round, now: t0.addingTimeInterval(660))
+        XCTAssertNil(none)
+        let checked = await keeper.lastChecked(game.titleID)
+        XCTAssertEqual(checked, t0.addingTimeInterval(660))
+        let event = try await keeper.putBack(copy, of: game, in: folder, now: t0.addingTimeInterval(720))
+        XCTAssertEqual(event.step, MacSaveEvent.putBack)
+        XCTAssertEqual(event.fetched, copy)
+        XCTAssertNil(event.kept)
+        let newest = try XCTUnwrap(event.sent)
+        XCTAssertEqual(store.record(game.titleID).last, event)
+        XCTAssertEqual(store.record(game.titleID).base?.copy, newest)
+        let afterPutBack = await keeper.lastChecked(game.titleID)
+        XCTAssertEqual(afterPutBack, t0.addingTimeInterval(720))
+        XCTAssertEqual(try read(mac), ["save/slot0.bin": "mac 1"])
+        // A copy that cannot come leaves the record as it was.
+        do {
+            _ = try await keeper.putBack(CartoucheSaveSync.fileName(t0.addingTimeInterval(-60)), of: game, in: folder)
+            XCTFail("only a copy of the folder is put back")
+        } catch {
+            XCTAssertEqual(error as? MacSavesError, .unreadable(CartoucheSaveSync.fileName(t0.addingTimeInterval(-60))))
+        }
+        XCTAssertEqual(store.record(game.titleID).last, event)
+    }
+
+    func testAChangeOfTheSavesGoesAsTheNewestCopyAfter() async throws {
+        let folder = try makeFolder()
+        let store = MacSaveStore(url: root.appendingPathComponent("saves.json"))
+        let keeper = MacSaveKeeper(store: store)
+        try write(["slot0.bin": "mac 1"], in: mac, at: t0)
+        _ = await keeper.sync(game, in: folder, when: .after, now: t0)
+        // A save from the Switch put in place, in the keeper's turn: what
+        // the change gives comes back, and what it throws.
+        let mac = self.mac
+        let written = t0.addingTimeInterval(900)
+        let changed = try await keeper.change { () -> String in
+            let url = mac.appendingPathComponent("save/slot0.bin")
+            try Data("switch 2".utf8).write(to: url)
+            try FileManager.default.setAttributes([.modificationDate: written], ofItemAtPath: url.path)
+            return "changed"
+        }
+        XCTAssertEqual(changed, "changed")
+        do {
+            _ = try await keeper.change { () -> Int in throw MacSavesError.busy }
+            XCTFail("what a change throws comes back")
+        } catch {
+            XCTAssertEqual(error as? MacSavesError, .busy)
+        }
+        // The sync after it sends it as the newest copy, for the iPhones.
+        let sent = await keeper.sync(game, in: folder, when: .after, now: t0.addingTimeInterval(960))
+        XCTAssertEqual(sent?.step, "send")
+        let newest = try XCTUnwrap(sent?.sent)
+        XCTAssertEqual(names(in: gameFolder).last, newest)
+        let sentSaves = try await unpack(gameFolder.appendingPathComponent(newest))
+        XCTAssertEqual(sentSaves, ["save/slot0.bin": "switch 2"])
+    }
+
     // MARK: What does not go
 
     func testAShareNotMountedIsOfflineAndTheMacsSavesStay() async throws {
