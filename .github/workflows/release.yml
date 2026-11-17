@@ -7,13 +7,14 @@ name: Release
 # (app/scripts/own_certificate_ipa.py, docs/imported-signing.md), runs the
 # publish guard on both and attaches them to a GitHub release. main takes no
 # push, this workflow's included: it pushes the branch release/v<version>,
-# which adds the release to app/sidestore-source.json, and its summary links
-# the pull request to open from it. Once that pull request is merged,
-# Cartouche's built-in SideStore finds the release and offers the update on
-# the iPhone. Nothing is published before the Full test pass, every test of
-# the repository, has passed on the commit (full-pass.yml): once the IPA is
-# built, the workflow waits for the pass the merge of the version started, or
-# starts one.
+# which adds the release to app/sidestore-source.json once both IPAs,
+# downloaded again from the addresses it gives, are the ones it lists, and
+# its summary links the pull request to open from it, with what it checked.
+# Once that pull request is merged, Cartouche's built-in SideStore finds the
+# release and offers the update on the iPhone. Nothing is published before
+# the Full test pass, every test of the repository, has passed on the commit
+# (full-pass.yml): once the IPA is built, the workflow waits for the pass the
+# merge of the version started, or starts one.
 # How to cut a release: app/releases/README.md.
 
 on:
@@ -224,6 +225,14 @@ jobs:
             --own-certificate-url "https://github.com/clabeuhtegrite/Cartouche/releases/download/$TAG/Cartouche-$VERSION-Own-Certificate.ipa" \
             --notes "app/releases/$VERSION.md" \
             --version "$VERSION"
+          # Both IPAs downloaded again, as iPhones and the Cartouche Installer
+          # will, from the addresses the source gives: their size and SHA-256
+          # are the source's and GitHub's for the assets, so that the pull
+          # request "Source: Cartouche X" can be opened as soon as this run
+          # ends, with these lines (app/scripts/check_release_downloads.py).
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" > build/release.json
+          python3 app/scripts/check_release_downloads.py --version "$VERSION" \
+            --release build/release.json --summary build/downloads.md
           git add app/sidestore-source.json
           git -c user.name="github-actions[bot]" \
               -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
@@ -235,5 +244,8 @@ jobs:
             echo "## Cartouche $VERSION is published"
             echo
             echo "iPhones see it once [the pull request from \`$BRANCH\`]($COMPARE), \"Source: Cartouche $VERSION\", is merged, after CI."
+            echo "Its IPAs were downloaded again from the addresses the source gives, and checked: it can be opened now, with these lines in its *How it was tested*:"
+            echo
+            cat build/downloads.md
           } >> "$GITHUB_STEP_SUMMARY"
           echo "::notice::open the pull request from $BRANCH and merge it: $COMPARE"

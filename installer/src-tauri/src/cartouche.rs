@@ -87,7 +87,9 @@ fn version_key(version: &str) -> Vec<u64> {
         .collect()
 }
 
-/// The highest version the source lists.
+/// The highest version the source lists. app/tests/test_installer_source.py
+/// reads the source as this does, for a pull request that changes only the
+/// source, which does not build the installer.
 fn latest_in(source: &str) -> Result<Release, AppError> {
     let source: Source = serde_json::from_str(source)
         .map_err(|e| AppError::Download(format!("Cartouche's source does not read: {e}")))?;

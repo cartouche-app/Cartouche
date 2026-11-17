@@ -56,7 +56,7 @@ On Windows, isideload's cryptography needs Strawberry Perl, make, and the Visual
 
 ## CI and publishing
 
-[`.github/workflows/installer.yml`](../.github/workflows/installer.yml) runs on every pull request that touches `installer/` or Cartouche's source, which its tests read: on a Mac and on Windows, the tests and the window's tests, then on the Mac the app for Apple silicon and Intel in a disk image, and on Windows the setup. Both are kept with the run for 30 days.
+[`.github/workflows/installer.yml`](../.github/workflows/installer.yml) runs on every pull request that touches `installer/`: on a Mac and on Windows, the tests and the window's tests, then on the Mac the app for Apple silicon and Intel in a disk image, and on Windows the setup. Both are kept with the run for 30 days. A pull request that changes only Cartouche's source, as the Release workflow's *Source: Cartouche X* does, builds neither: on every pull request, the CI's *App sources* reads the source as the installer does, its structs and `latest_in`, and fails should the installer read it otherwise ([`app/tests/test_installer_source.py`](../app/tests/test_installer_source.py)).
 
 To publish a version:
 
