@@ -10,7 +10,10 @@
 //  English in its note and its engine; the devices an iPad's result counts
 //  are iPads; a sheet made before `measured` said how sessions ended badly,
 //  or which builds they reported, says what it can. What testers wrote stays
-//  theirs, for the iPhone to translate.
+//  theirs, for the iPhone to translate. The Game measurements workflow
+//  writes the repository's sheets again each week, and new ones: what these
+//  tests read of them holds for any figures, and the figures they check one
+//  by one are their own copies.
 //
 
 import Foundation
@@ -50,8 +53,20 @@ final class CartoucheMeasuredNoteTests: XCTestCase {
         try JSONDecoder().decode(CartoucheMeasured.self, from: Data(json.utf8))
     }
 
-    /// The results of the repository's sheet of Mario Kart World, as the app
-    /// reads them.
+    /// Mario Kart World's first two results the game measurements made, of
+    /// the sessions of 11 and 12 November, as sheets.py wrote them: on
+    /// iPhone19,4 with figures, on iPhone18,2 without. Those sessions did not
+    /// report their nxnative builds yet.
+    private static let firstOnIPhone19_4 = """
+        {"iPhones": 4, "sessions": 9, "from": "2026-11-11", "to": "2026-11-12", "fps": 32.2, "targetFps": 60,
+         "stuttersPerMinute": 83, "endedBadlyPercent": 33.3, "endedBadly": {"crashes": 3}}
+        """
+    private static let firstOnIPhone18_2 = """
+        {"iPhones": 3, "sessions": 5, "from": "2026-11-11", "to": "2026-11-12", "targetFps": 60, "endedBadlyPercent": 20,
+         "endedBadly": {"didNotStart": 1}}
+        """
+
+    /// A result of a game's sheet, as the app reads it.
     private struct Result: Decodable {
         let device: String
         let engine: String
@@ -59,41 +74,64 @@ final class CartoucheMeasuredNoteTests: XCTestCase {
         let measured: CartoucheMeasured?
     }
 
+    private struct Sheet: Decodable {
+        let results: [Result]
+    }
+
+    /// The results of the repository's sheet of Mario Kart World.
     private func repositorysResults() throws -> [Result] {
         let data = try Data(contentsOf: Self.root.appendingPathComponent("catalog/games/0400C3F00006E000.json"))
-        struct Sheet: Decodable { let results: [Result] }
         return try JSONDecoder().decode(Sheet.self, from: data).results
+    }
+
+    /// The results Cartouche's game measurements made, of every sheet of the
+    /// repository, each with its sheet's file.
+    private func repositorysMeasuredResults() throws -> [(sheet: String, result: Result)] {
+        let folder = Self.root.appendingPathComponent("catalog/games", isDirectory: true)
+        let files = try FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)
+            .filter { $0.pathExtension == "json" }
+            .sorted { $0.lastPathComponent < $1.lastPathComponent }
+        var found: [(sheet: String, result: Result)] = []
+        for file in files {
+            let sheet = try JSONDecoder().decode(Sheet.self, from: Data(contentsOf: file))
+            for result in sheet.results where result.measured != nil {
+                found.append((sheet: file.lastPathComponent, result: result))
+            }
+        }
+        return found
     }
 
     // MARK: Tests
 
     func testInEnglishItSaysWhatSheetsPyWritesButForTheDates() throws {
-        let results = try repositorysResults().filter { $0.measured != nil }
-        XCTAssertEqual(results.count, 2)
+        // Each result the game measurements made, whatever its figures and
+        // whichever game's sheet it is on.
+        let results = try repositorysMeasuredResults()
+        XCTAssertFalse(results.isEmpty, "the sheets of catalog/games have results the game measurements made")
         let catalogsEnglish = try catalogWords("en", locale: englishLocale)
-        for result in results {
+        for (sheet, result) in results {
+            let which = "\(sheet), \(result.device)"
             let measured = try XCTUnwrap(result.measured)
             let period = CartoucheMeasuredNote.period(from: measured.from, to: measured.to, locale: englishLocale)
-            let written = try XCTUnwrap(result.notes?.first)
+            let written = try XCTUnwrap(result.notes?.first, which)
                 .replacingOccurrences(of: " sessions from \(measured.from) to \(measured.to)", with: " sessions (\(period))")
             let note = CartoucheMeasuredNote.note(measured, device: result.device, words: english)
-            XCTAssertEqual(note, written, result.device)
-            XCTAssertEqual(CartoucheMeasuredNote.note(measured, device: result.device, words: catalogsEnglish), note)
-            XCTAssertEqual(CartoucheMeasuredNote.engine(measured, written: result.engine, words: english), result.engine)
+            XCTAssertEqual(note, written, which)
+            XCTAssertEqual(CartoucheMeasuredNote.note(measured, device: result.device, words: catalogsEnglish), note, which)
+            XCTAssertEqual(CartoucheMeasuredNote.engine(measured, written: result.engine, words: english), result.engine, which)
         }
     }
 
     func testInFrenchEveryWordNumberAndDateIsFrench() throws {
         let french = try french()
-        let results = try repositorysResults()
         let period = CartoucheMeasuredNote.period(from: "2026-11-11", to: "2026-11-12", locale: frenchLocale)
         XCTAssertTrue(period.contains("nov.") && !period.contains("2026-11"), period)
 
-        let figures = try XCTUnwrap(results.first { $0.device == "iPhone19,4" && $0.measured != nil }?.measured)
+        let figures = try measured(Self.firstOnIPhone19_4)
         let note = CartoucheMeasuredNote.note(figures, device: "iPhone19,4", words: french)
         XCTAssertEqual(note, "Mesuré par Cartouche sur 4 iPhone, 9 sessions (\(period))\u{00A0}: 32,2 i/s sur 60 (médiane), "
                        + "83 saccades par minute. 3 sessions se sont mal terminées\u{00A0}: 3 plantages.")
-        let noFigures = try XCTUnwrap(results.first { $0.device == "iPhone18,2" }?.measured)
+        let noFigures = try measured(Self.firstOnIPhone18_2)
         XCTAssertEqual(CartoucheMeasuredNote.note(noFigures, device: "iPhone18,2", words: french),
                        "Mesuré par Cartouche sur 3 iPhone, 5 sessions (\(period)). 1 session s’est mal terminée\u{00A0}: 1 n’a pas démarré.")
         XCTAssertEqual(CartoucheMeasuredNote.engine(figures, written: "nxnative, its build not reported", words: french),
@@ -211,15 +249,15 @@ final class CartoucheMeasuredNoteTests: XCTestCase {
 
         // A measured result: Cartouche's words, but for a note a tester
         // added, and an engine an older sheet wrote its own way.
-        let measured = try XCTUnwrap(results.first { $0.device == "iPhone19,4" && $0.measured != nil }?.measured)
+        let figures = try measured(Self.firstOnIPhone19_4)
         let said = CartoucheMeasuredNote.lines(device: "iPhone19,4", engine: "nxnative, its build not reported",
                                                notes: ["Measured by Cartouche on 4 iPhones...", "Tested docked too."],
-                                               measured: measured, words: french)
+                                               measured: figures, words: french)
         XCTAssertEqual(said.engine, .said("nxnative, version non indiquée"))
-        XCTAssertEqual(said.notes, [.said(CartoucheMeasuredNote.note(measured, device: "iPhone19,4", words: french)),
+        XCTAssertEqual(said.notes, [.said(CartoucheMeasuredNote.note(figures, device: "iPhone19,4", words: french)),
                                     .written("Tested docked too.")])
         let older = CartoucheMeasuredNote.lines(device: "iPhone19,4", engine: "nxnative 6c3aeb3d70a1 and 2 other builds",
-                                                notes: [], measured: measured, words: french)
+                                                notes: [], measured: figures, words: french)
         XCTAssertEqual(older.engine, .written("nxnative 6c3aeb3d70a1 and 2 other builds"))
         XCTAssertEqual(older.notes.count, 1)
     }

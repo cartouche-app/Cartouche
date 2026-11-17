@@ -12,6 +12,16 @@ app-reports.json.
 - the status follows from how the sessions ended and the frame rate;
 - testers' results stay, a measured result of a model measured again is
   replaced, and the sheet stays valid for its schema and the publish guard;
+- a game of nxnative's list without a sheet gets one once three iPhones of a
+  model played it, named by its main release's title ID, which says what
+  the game needs: the iOS and the GPU nxnative needs, and Increased Memory
+  Limit when its peak, with the room Cartouche keeps, does not fit in the
+  most an app had without it; a game played on fewer of each model, or that
+  nxnative's list does not have, gets none;
+- any sheet comes to need Increased Memory Limit once its peak does, and
+  never stops needing it;
+- the job that commits the sheets takes only those of the catalog, or new
+  ones of games of nxnative's list, named by their title ID;
 - without the secrets, nothing is read.
 
 Run from the repository root: python3 -m unittest discover -s telemetry/test -v
@@ -19,6 +29,7 @@ Run from the repository root: python3 -m unittest discover -s telemetry/test -v
 
 import copy
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -55,6 +66,13 @@ NXNATIVE = {"schema": 1, "nxnative": "0123456789abcdef0123456789abcdef01234567",
     {"titleId": MKW, "name": "Mario Kart World", "platform": "switch2", "genre": "racing",
      "status": "iphone", "engine": "Nintendo's engine", "build": "1.0.0", "sdk": "20.0.0"},
 ]}
+# The catalog's memory limits, as devices.json measured them: an app had
+# 3,376 MiB without Increased Memory Limit, and 8,192 with it.
+DEVICES = {"schema": 1, "devices": [
+    {"identifier": "iPhone19,4", "chip": "A20 Pro", "memoryGB": 12, "measurements": [
+        {"date": "2026-11-04", "iOS": "27.3", "increasedMemoryLimit": False, "appMemoryLimitMiB": 3376},
+        {"date": "2026-11-10", "iOS": "27.3", "increasedMemoryLimit": True, "appMemoryLimitMiB": 8192}]},
+]}
 TESTER = {"device": "iPhone19,4", "iOS": "27.3", "date": "2026-11-05", "engine": "nxnative 0d9b6358",
           "status": "playable", "notes": ["Ran smoothly at 1080p in handheld mode."]}
 SHEET = {"schema": 1, "titleId": MKW, "name": "Mario Kart World", "platform": "switch2",
@@ -89,6 +107,7 @@ class SheetsTest(unittest.TestCase):
         self.catalog = self.work / "catalog"
         (self.catalog / "games").mkdir(parents=True)
         (self.catalog / "nxnative.json").write_text(json.dumps(NXNATIVE, indent=2) + "\n", encoding="utf-8")
+        (self.catalog / "devices.json").write_text(json.dumps(DEVICES, indent=2) + "\n", encoding="utf-8")
         (self.catalog / "games" / f"{MKW}.json").write_text(json.dumps(SHEET, indent=2) + "\n", encoding="utf-8")
         self.phones = [str(uuid.uuid4()) for _ in range(5)]
 
@@ -373,16 +392,24 @@ class SheetsTest(unittest.TestCase):
         builds = ("6c3aeb3d70a1", "6c3aeb3d70a1", "aaaaaaaaaaaa", "bbbbbbbbbbbbbbbbbbbb")
         for i, build in enumerate(builds):
             self.session(self.phones[i % 3], nxnative=build)
+        # A game nxnative's list does not have, on three iPhones of a model.
         for phone in self.phones[:3]:
             self.session(phone, game="0100F2C0115B6000")
-        for phone, game in zip(self.phones[:3], (SENTINELS, SENTINELS_JAPAN, SENTINELS_JAPAN)):
-            self.session(phone, game=game)
+        # A game of the list on three iPhones, but two of a model at most.
+        for phone, device in zip(self.phones[:3], ("iPhone19,4", "iPhone19,4", "iPhone18,2")):
+            self.session(phone, game=SENTINELS, device=device)
         result = self.run_sheets()
         measured = self.measured()["iPhone19,4"]
         self.assertEqual(measured["engine"], "nxnative 6c3aeb3d70a1 and 2 other builds")
         self.assertEqual((measured["measured"]["nxnative"], measured["measured"]["otherBuilds"]), ("6c3aeb3d70a1", 2))
-        self.assertIn(f"with no sheet: 13 Sentinels: Aegis Rim ({SENTINELS}, 3 iPhones), "
+        self.assertIn("Played on 3 iPhones or more, but on fewer than 3 of each model, so with no sheet yet: "
+                      f"13 Sentinels: Aegis Rim ({SENTINELS}, 3 iPhones).", result.stdout)
+        self.assertIn("Played on 3 iPhones or more, with no sheet, not being in nxnative's list: "
                       "0100F2C0115B6000 (3 iPhones).", result.stdout)
+        self.assertNotIn("Left out", result.stdout, "a game with no sheet has no model left out")
+        self.assertIsNone(self.written(SENTINELS))
+        self.assertIsNone(self.written("0100F2C0115B6000"))
+        self.assertEqual(sorted(path.name for path in (self.work / "sheets").iterdir()), [f"{MKW}.json"])
 
     def test_sessions_that_report_no_build_leave_it_out(self):
         for phone in self.phones[:3]:
@@ -393,6 +420,175 @@ class SheetsTest(unittest.TestCase):
         self.assertNotIn("nxnative", result["measured"])
         self.assertNotIn("otherBuilds", result["measured"])
         self.assert_valid(self.written())
+
+    # MARK: New sheets
+
+    def test_a_game_without_a_sheet_gets_one_once_three_iphones_of_a_model_played_it(self):
+        # 13 Sentinels has no sheet: three iPhones of a model, one of them
+        # with the Japanese release, and two of another model, which gets no
+        # result.
+        for phone, game, peak in zip(self.phones[:3], (SENTINELS, SENTINELS_JAPAN, SENTINELS), (1800, 2000, 2100)):
+            self.session(phone, game=game, memory={"peakMiB": peak})
+        for phone in self.phones[3:5]:
+            self.session(phone, game=SENTINELS, device="iPhone18,2")
+        result = self.run_sheets()
+        self.assertEqual(self.output(), "changed=true\n")
+        sheet = self.written(SENTINELS)
+        self.assertIsNotNone(sheet, "the game's first sheet, named by its main release's title ID")
+        self.assertIsNone(self.written(SENTINELS_JAPAN))
+        # nxnative's name and platform; what nxnative needs of every game;
+        # and a peak of 2,100 MiB, which leaves the 512 MiB of room under
+        # the 3,376 an app had without Increased Memory Limit.
+        self.assertEqual({key: sheet[key] for key in ("schema", "titleId", "name", "platform", "requirements")}, {
+            "schema": 1, "titleId": SENTINELS, "name": "13 Sentinels: Aegis Rim", "platform": "switch",
+            "requirements": {"minimumIOS": "26.0", "bcTextureCompression": True, "increasedMemoryLimit": False}})
+        self.assertEqual(list(sheet), ["schema", "titleId", "name", "platform", "requirements", "results"])
+        self.assertEqual([r["device"] for r in sheet["results"]], ["iPhone19,4"])
+        entry = sheet["results"][0]
+        self.assertEqual((entry["status"], entry["peakMemoryMiB"], entry["measured"]["iPhones"]), ("playable", 2100, 3))
+        self.assert_valid(sheet)
+        self.assertIn("| 13 Sentinels: Aegis Rim | iPhone19,4 | 3 | 3 | playable |", result.stdout)
+        self.assertIn(f"New sheets, of games played on 3 iPhones or more of a model: 13 Sentinels: Aegis Rim "
+                      f"({SENTINELS}).", result.stdout)
+        self.assertIn("Left out: 1 model of a game with a sheet, played on fewer than 3 iPhones.", result.stdout)
+        self.assertIn(f"Sheets changed: {SENTINELS}.json.", result.stdout)
+        self.assertIsNone(self.written(MKW), "Mario Kart World's sheet, which nobody played, stays as it is")
+
+        # Taken into the catalog, it is a sheet like the others: the same
+        # sessions again change nothing.
+        shutil.copy(self.work / "sheets" / f"{SENTINELS}.json", self.catalog / "games" / f"{SENTINELS}.json")
+        shutil.rmtree(self.work / "sheets")
+        self.run_sheets()
+        self.assertIsNone(self.written(SENTINELS))
+
+    def test_a_new_sheet_needs_increased_memory_limit_when_its_peak_does_not_fit_without_it(self):
+        # The highest of the iPhones' peaks, 2,865 MiB, leaves 511 under the
+        # 3,376 an app had without the capability: less than the 512 of
+        # room Cartouche keeps under it (docs/decisions.md, 48).
+        for phone, peak in zip(self.phones[:3], (2700, 2865, 2800)):
+            self.session(phone, game=SENTINELS, memory={"peakMiB": peak})
+        self.run_sheets()
+        sheet = self.written(SENTINELS)
+        self.assertEqual(sheet["results"][0]["peakMemoryMiB"], 2865)
+        self.assertTrue(sheet["requirements"]["increasedMemoryLimit"])
+        self.assert_valid(sheet)
+
+        # 2,864 MiB leaves the room: the game fits without it.
+        self.cloudflare.sql.execute("DELETE FROM reports")
+        shutil.rmtree(self.work / "sheets")
+        for phone, peak in zip(self.phones[:3], (2700, 2864, 2800)):
+            self.session(phone, game=SENTINELS, memory={"peakMiB": peak})
+        self.run_sheets()
+        self.assertFalse(self.written(SENTINELS)["requirements"]["increasedMemoryLimit"])
+
+    def test_a_new_sheet_needs_nothing_more_than_was_measured(self):
+        # A peak of 5,000 MiB on two iPhones only: no peak is given, and
+        # nothing says that the game needs Increased Memory Limit.
+        self.session(self.phones[0], game=SENTINELS, memory={"peakMiB": 5000})
+        self.session(self.phones[1], game=SENTINELS, memory={"peakMiB": 5000})
+        self.session(self.phones[2], game=SENTINELS, memory=None, frames=None, fps=None, stutters=None,
+                     end={"kind": "crash", "signal": 6})
+        self.run_sheets()
+        sheet = self.written(SENTINELS)
+        self.assertNotIn("peakMemoryMiB", sheet["results"][0])
+        self.assertFalse(sheet["requirements"]["increasedMemoryLimit"])
+        self.assert_valid(sheet)
+
+        # Nor when devices.json measured no app without the capability.
+        devices = copy.deepcopy(DEVICES)
+        devices["devices"][0]["measurements"] = [m for m in devices["devices"][0]["measurements"]
+                                                 if m["increasedMemoryLimit"]]
+        (self.catalog / "devices.json").write_text(json.dumps(devices), encoding="utf-8")
+        self.session(self.phones[2], game=SENTINELS, memory={"peakMiB": 5000})
+        shutil.rmtree(self.work / "sheets")
+        self.run_sheets()
+        sheet = self.written(SENTINELS)
+        self.assertEqual(sheet["results"][0]["peakMemoryMiB"], 5000)
+        self.assertFalse(sheet["requirements"]["increasedMemoryLimit"])
+
+    def test_a_game_that_does_not_run_gets_a_sheet_that_says_so(self):
+        for phone in self.phones[:3]:
+            self.session(phone, game=SENTINELS, frames=None, fps=None, stutters=None, memory={"peakMiB": 40},
+                         end={"kind": "boot-failed"})
+        self.run_sheets()
+        sheet = self.written(SENTINELS)
+        self.assertEqual(sheet["results"][0]["status"], "does-not-run")
+        self.assertNotIn("peakMemoryMiB", sheet["results"][0])
+        self.assertFalse(sheet["requirements"]["increasedMemoryLimit"])
+        self.assert_valid(sheet)
+
+    def test_a_sheet_comes_to_need_increased_memory_limit_once_its_peak_does(self):
+        sheet = {"schema": 1, "titleId": SENTINELS, "name": "13 Sentinels: Aegis Rim", "platform": "switch",
+                 "requirements": {"minimumIOS": "26.0", "bcTextureCompression": True, "increasedMemoryLimit": False},
+                 "results": [{**TESTER, "notes": ["Ran well."]}]}
+        path = self.catalog / "games" / f"{SENTINELS}.json"
+        path.write_text(json.dumps(sheet, indent=2) + "\n", encoding="utf-8")
+        for phone, peak in zip(self.phones[:3], (3100, 2000, 2500)):
+            self.session(phone, game=SENTINELS, memory={"peakMiB": peak})
+        self.run_sheets()
+        written = self.written(SENTINELS)
+        self.assertEqual(written["requirements"],
+                         {"minimumIOS": "26.0", "bcTextureCompression": True, "increasedMemoryLimit": True})
+        self.assertEqual(written["results"][0], sheet["results"][0], "the tester's result stays as it was")
+        self.assert_valid(written)
+
+        # Measured lower afterwards, it still needs it: what the
+        # measurements showed, they never take back.
+        path.write_text(json.dumps(written, indent=2) + "\n", encoding="utf-8")
+        self.cloudflare.sql.execute("DELETE FROM reports")
+        shutil.rmtree(self.work / "sheets")
+        for phone in self.phones[:3]:
+            self.session(phone, game=SENTINELS, memory={"peakMiB": 1500})
+        self.run_sheets()
+        self.assertTrue(self.written(SENTINELS)["requirements"]["increasedMemoryLimit"])
+
+    def test_the_job_that_commits_the_sheets_takes_those_of_the_catalog_and_new_ones_of_nxnatives_list(self):
+        written = self.work / "sheets"
+        written.mkdir()
+
+        def take():
+            return subprocess.run(
+                [sys.executable, str(SHEETS), "--catalog", str(self.catalog), "--take", str(written)],
+                env=environment(self.server), capture_output=True, text=True, timeout=60)
+
+        mkw = dict(SHEET, results=[TESTER, {**TESTER, "date": "2026-11-12"}])
+        sentinels = dict(SHEET, titleId=SENTINELS, name="13 Sentinels: Aegis Rim", platform="switch")
+        (written / f"{MKW}.json").write_text(json.dumps(mkw), encoding="utf-8")
+        (written / f"{SENTINELS}.json").write_text(json.dumps(sentinels), encoding="utf-8")
+        result = take()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.splitlines(), [f"{SENTINELS}.json (new)", f"{MKW}.json"])
+        self.assertEqual(json.loads((self.catalog / "games" / f"{MKW}.json").read_text(encoding="utf-8")), mkw)
+        self.assertEqual(json.loads((self.catalog / "games" / f"{SENTINELS}.json").read_text(encoding="utf-8")),
+                         sentinels)
+
+        # Not a sheet of a game nxnative's list does not have, nor one of
+        # another region's release, nor a sheet under another game's name,
+        # nor anything else: none is taken then. A name that is not a
+        # sheet's is said as JSON writes it, on the error's line.
+        refused = {
+            "0100F2C0115B6000.json": json.dumps(dict(SHEET, titleId="0100F2C0115B6000")),
+            f"{SENTINELS_JAPAN}.json": json.dumps(dict(sentinels, titleId=SENTINELS_JAPAN)),
+            f"{SENTINELS}.json": json.dumps(dict(SHEET, name="13 Sentinels: Aegis Rim")),
+            "notes.txt": "hello",
+            f"{SENTINELS}.json\n::notice::taken": json.dumps(sentinels),
+        }
+        for name, value in refused.items():
+            shutil.rmtree(written)
+            written.mkdir()
+            (written / f"{MKW}.json").write_text(json.dumps(dict(mkw, name="Changed")), encoding="utf-8")
+            (written / name).write_text(value, encoding="utf-8")
+            result = take()
+            self.assertEqual(result.returncode, 1, name)
+            said = name if re.fullmatch(r"[0-9A-F]{16}\.json", name) else json.dumps(name)
+            self.assertIn(f"::error::{said} ", result.stderr)
+            self.assertNotIn("\n::notice::", "\n" + result.stderr + result.stdout)
+            self.assertEqual(json.loads((self.catalog / "games" / f"{MKW}.json").read_text(encoding="utf-8")), mkw,
+                             "nothing is taken")
+        self.assertEqual(json.loads((self.catalog / "games" / f"{SENTINELS}.json").read_text(encoding="utf-8")),
+                         sentinels)
+        self.assertEqual(sorted(path.name for path in (self.catalog / "games").iterdir()),
+                         [f"{SENTINELS}.json", f"{MKW}.json"])
 
     def test_without_the_secrets_nothing_is_read(self):
         self.session(self.phones[0])
