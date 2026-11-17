@@ -183,7 +183,7 @@ struct CartoucheSwitchSaveView: View {
     private func foundSection(_ found: Found) -> some View {
         let export = found.pick.export
         let size = CartoucheText.fileSize(export.size)
-        return Section {
+        return CartoucheSection {
             LabeledContent(CartoucheText.switchSaveGame,
                            value: export.meta == nil ? CartoucheText.switchSaveUnchecked : CartoucheText.switchSaveChecked)
             LabeledContent(CartoucheText.switchSaveKind,
@@ -202,7 +202,6 @@ struct CartoucheSwitchSaveView: View {
             Text(verbatim: found.pick.url.lastPathComponent)
         } footer: {
             Text(CartoucheText.switchSaveImportFooter)
-                .cartoucheFooter()
         }
     }
 
@@ -237,7 +236,7 @@ struct CartoucheSwitchSaveView: View {
     }
 
     private func putBackSection(_ before: CartoucheSwitchSaveBackup) -> some View {
-        Section {
+        CartoucheSection {
             Button {
                 askingPutBack = true
             } label: {
@@ -246,12 +245,11 @@ struct CartoucheSwitchSaveView: View {
             .disabled(isRunning || working)
         } footer: {
             Text(CartoucheText.switchSavePutBackFooter(CartoucheText.dateAndTime(before.date)))
-                .cartoucheFooter()
         }
     }
 
     private var sendSection: some View {
-        Section {
+        CartoucheSection {
             if !hasSave {
                 Text(CartoucheText.switchSaveSendNone)
                     .foregroundStyle(.secondary)
@@ -279,7 +277,6 @@ struct CartoucheSwitchSaveView: View {
             Text(CartoucheText.switchSaveSendHeader)
         } footer: {
             Text(CartoucheText.switchSaveSendFooter)
-                .cartoucheFooter()
         }
     }
 

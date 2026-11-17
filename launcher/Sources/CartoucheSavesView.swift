@@ -49,7 +49,7 @@ struct CartoucheSavesSection: View {
     #endif
 
     var body: some View {
-        Section {
+        CartoucheSection {
             if let target {
                 rows(of: target)
             }
@@ -69,7 +69,6 @@ struct CartoucheSavesSection: View {
         } footer: {
             if let target, !isLeftToCloud(target) {
                 Text(CartoucheText.savesFooter(CartoucheSaveBackups.kept))
-                    .cartoucheFooter()
             }
         }
     }
@@ -228,7 +227,7 @@ struct CartoucheSaveCopiesView: View {
                         .foregroundStyle(Color.orange)
                 }
             }
-            Section {
+            CartoucheSection {
                 if let copies {
                     ForEach(copies) { copy in
                         Button {
@@ -262,7 +261,6 @@ struct CartoucheSaveCopiesView: View {
                 }
             } footer: {
                 Text(CartoucheText.savesPutBackFooter)
-                    .cartoucheFooter()
             }
         }
         .cartoucheStageBackground()

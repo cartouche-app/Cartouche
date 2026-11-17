@@ -312,7 +312,7 @@ struct CartoucheGameSettingsView: View {
             if let category = model.currentCategory {
                 // One section for every category, so that the bar over it
                 // stays put as the player moves between them.
-                Section {
+                CartoucheSection {
                     #if os(iOS)
                     if category == CartoucheGameSettingsModel.savesCategory {
                         cloudSaves
@@ -336,7 +336,7 @@ struct CartoucheGameSettingsView: View {
             }
             if model.canChange {
                 if !model.settings.isEmpty {
-                    Section {
+                    CartoucheSection {
                         Button(CartoucheText.settingsReset) { model.reset() }
                             .disabled(!model.changed)
                     } footer: {
@@ -345,7 +345,7 @@ struct CartoucheGameSettingsView: View {
                 }
             }
             if !model.settings.isEmpty {
-                Section {
+                CartoucheSection {
                     Button(CartoucheText.settingsNxnativeScreen, action: onNxnativeScreen)
                 } footer: {
                     footer(CartoucheText.settingsNxnativeScreenFooter)
@@ -367,8 +367,11 @@ struct CartoucheGameSettingsView: View {
         #endif
     }
 
+    /// A section's footer, on as many lines as it takes.
     private func footer(_ text: String) -> some View {
-        Text(text).cartoucheFooter()
+        Text(text)
+            .lineLimit(nil)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     /// Over the category's rows: the bar of the categories when there are

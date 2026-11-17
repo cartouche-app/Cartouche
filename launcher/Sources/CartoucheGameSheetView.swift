@@ -509,14 +509,13 @@ struct CartoucheGameSheetView: View {
     /// What the player says of their game; for a game Cartouche does not
     /// know, what IGDB has of it by its name, or that it has nothing yet.
     private var infoSection: some View {
-        Section {
+        CartoucheSection {
             Button(action: onEditInfo) {
                 Label(CartoucheText.gameInfoEdit, systemImage: "square.and.pencil")
             }
         } footer: {
             if entry.isUnknown, entry.playerCover == nil {
                 Text(entry.found.map { CartoucheText.gameInfoFound($0.name) } ?? CartoucheText.gameInfoNotFound)
-                    .cartoucheFooter()
             }
         }
     }

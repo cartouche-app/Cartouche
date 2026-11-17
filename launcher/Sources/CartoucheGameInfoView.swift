@@ -93,7 +93,6 @@ struct CartoucheGameInfoView: View {
             } footer: {
                 if entry.isUnknown {
                     Text(entry.found.map { CartoucheText.gameInfoFound($0.name) } ?? CartoucheText.gameInfoNotFound)
-                        .cartoucheFooter()
                 }
             }
 
@@ -112,7 +111,6 @@ struct CartoucheGameInfoView: View {
                 }
             } footer: {
                 Text(CartoucheText.gameInfoFooter)
-                    .cartoucheFooter()
             }
 
             Section {
@@ -126,7 +124,6 @@ struct CartoucheGameInfoView: View {
             } footer: {
                 if entry.ownSummary != nil {
                     Text(CartoucheText.gameInfoSummaryFooter)
-                        .cartoucheFooter()
                 }
             }
 
