@@ -15,6 +15,7 @@
 //
 
 import AppKit
+import Combine
 import ScreenCaptureKit
 import SwiftUI
 
@@ -33,6 +34,9 @@ enum Strategy: String, CaseIterable {
     /// preferredColorScheme always said: dark for the console, the Mac's for
     /// the builder.
     case explicit
+    /// The same, the Mac's read from the app's appearance as it changes, as
+    /// the app would.
+    case observed
 }
 
 @main
@@ -111,12 +115,23 @@ struct Root: View {
                 .fixedSize()
             }
         }
-        if probe.strategy == .explicit {
+        switch probe.strategy {
+        case .explicit:
             content.preferredColorScheme(probe.console ? .dark : Steps.macScheme)
-        } else {
+        case .observed:
+            content
+                .preferredColorScheme(probe.console ? .dark : macScheme)
+                .onReceive(NSApp.publisher(for: \.effectiveAppearance)) { appearance in
+                    let scheme: ColorScheme = appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua ? .dark : .light
+                    Steps.say("the app's appearance: \(appearance.name.rawValue), the builder's scheme \(scheme == .dark ? "dark" : "light")")
+                    if scheme != macScheme { macScheme = scheme }
+                }
+        default:
             content
         }
     }
+
+    @State private var macScheme: ColorScheme = .light
 }
 
 struct ConsoleStandIn: View {
@@ -159,7 +174,7 @@ struct ConsoleStandIn: View {
             page.background(DarkWindow(after: false))
         case .viewAfter:
             page.background(DarkWindow(after: true))
-        case .windowFirst, .explicit:
+        case .windowFirst, .explicit, .observed:
             page
         }
     }
@@ -325,12 +340,29 @@ enum Steps {
         let again = await picture(window, "5-builder-after-the-console-again")
         say("the builder after the console, again: \(state(window))")
         if let first, let again { say("  against the first picture: " + Compare.describe(first, again)) }
+        // The Mac turned dark while the console shows, then the builder:
+        // dark, as the Mac; then the Mac light again.
+        Probe.shared.show(console: true)
+        try? await Task.sleep(for: .seconds(2))
+        NSApp.appearance = NSAppearance(named: .darkAqua)
+        try? await Task.sleep(for: .seconds(1))
+        say("the console, the Mac turned dark: \(state(window))")
+        Probe.shared.show(console: false)
+        try? await Task.sleep(for: .seconds(2))
+        _ = await picture(window, "6-builder-the-mac-dark")
+        say("the builder, the Mac dark: \(state(window))")
+        NSApp.appearance = NSAppearance(named: .aqua)
+        try? await Task.sleep(for: .seconds(2))
+        let light = await picture(window, "7-builder-the-mac-light-again")
+        say("the builder, the Mac light again: \(state(window))")
+        if let first, let light { say("  against the first picture: " + Compare.describe(first, light)) }
         exit(0)
     }
 
     static func state(_ window: NSWindow) -> String {
         let seen = Probe.seen.map { "\($0.key) \($0.value == .dark ? "dark" : "light")" }.sorted().joined(separator: ", ")
-        return "window \(window.appearance?.name.rawValue ?? "nil"), effective \(window.effectiveAppearance.name.rawValue); "
+        return "app \(NSApp.appearance?.name.rawValue ?? "nil"), effective \(NSApp.effectiveAppearance.name.rawValue); "
+            + "window \(window.appearance?.name.rawValue ?? "nil"), effective \(window.effectiveAppearance.name.rawValue); "
             + "SwiftUI's schemes: \(seen)"
     }
 

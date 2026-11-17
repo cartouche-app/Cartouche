@@ -32,13 +32,11 @@ PLIST
 xcrun --sdk macosx swiftc -parse-as-library -O -o "$app/Contents/MacOS/Probe" "$here/Probe.swift"
 codesign --force --sign - "$app"
 
-for strategy in preferred windowFirst viewDuring viewAfter explicit; do
+for strategy in preferred observed; do
   echo "== $strategy"
   "$app/Contents/MacOS/Probe" -strategy "$strategy" -pictures "$pictures" 2>&1 || echo "✗ $strategy ended with $?"
 done
 
 echo "== the console of each, against the app's own"
-for strategy in windowFirst viewDuring viewAfter explicit; do
-  "$app/Contents/MacOS/Probe" --compare "$pictures/preferred-2-console.png" "$pictures/$strategy-2-console.png" || true
-done
+"$app/Contents/MacOS/Probe" --compare "$pictures/preferred-2-console.png" "$pictures/observed-2-console.png" || true
 ls "$pictures"
