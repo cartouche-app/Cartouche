@@ -3,12 +3,13 @@ name: Game measurements
 # Each week, sums up the game sessions the telemetry server received into the
 # results of the game sheets in catalog/games/ (telemetry/sheets.py,
 # telemetry/README.md#game-sheets): one result for each iPhone model that at
-# least three iPhones played a game on in the last 28 days. It reads the D1
-# database with the secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID of
-# the environment cloudflare, and does nothing while they are not set. main
-# takes no push: the sheets that changed go on the branch
-# catalog-measurements, and the summary links the pull request to open from
-# it, on Thursday, a day before the week's version.
+# least three iPhones played a game on in the last 28 days. A game of
+# nxnative's list that has no sheet gets one with its first result. It reads
+# the D1 database with the secrets CLOUDFLARE_API_TOKEN and
+# CLOUDFLARE_ACCOUNT_ID of the environment cloudflare, and does nothing while
+# they are not set. main takes no push: the sheets that changed, and the new
+# ones, go on the branch catalog-measurements, and the summary links the pull
+# request to open from it, each Thursday morning, and lists the new sheets.
 
 on:
   schedule:
@@ -48,8 +49,9 @@ jobs:
           retention-days: 14
           if-no-files-found: error
 
-  # The only job that can write holds no secret and runs git and gh only: it
-  # commits the sheets the first job wrote.
+  # The only job that can write holds no secret and runs git, gh and the
+  # check of telemetry/sheets.py only: it commits the sheets the first job
+  # wrote.
   keep:
     name: Keep the sheets on a branch
     needs: sum
@@ -71,16 +73,12 @@ jobs:
           path: build/sheets
       - name: Push them to catalog-measurements
         run: |
-          for sheet in build/sheets/*; do
-            name="$(basename "$sheet")"
-            # Only sheets main has already, by their title ID.
-            if [[ ! "$name" =~ ^[0-9A-F]{16}\.json$ ]] || [ ! -f "catalog/games/$name" ]; then
-              echo "::error::$name is not a sheet of catalog/games"
-              exit 1
-            fi
-            cp "$sheet" "catalog/games/$name"
-          done
+          # Only sheets main has already, or new ones of games of
+          # catalog/nxnative.json, each named by its title ID: none
+          # otherwise.
+          python3 telemetry/sheets.py --catalog catalog --take build/sheets
           git add catalog/games
+          NEW="$(git diff --cached --name-only --diff-filter=A -- catalog/games)"
           DAY="$(date -u +%Y-%m-%d)"
           git -c user.name="github-actions[bot]" \
               -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
@@ -93,5 +91,11 @@ jobs:
             echo "## The game sheets changed"
             echo
             echo "They are on \`$BRANCH\`: open [its pull request]($COMPARE) and merge it after CI."
+            if [ -n "$NEW" ]; then
+              echo
+              echo "New sheets, which change their games' pages in Cartouche, and where the games start: show the pull request's screenshots (Launcher screens) before it is merged."
+              echo
+              while read -r sheet; do echo "- $sheet"; done <<< "$NEW"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
           echo "::notice::open the pull request from $BRANCH and merge it: $COMPARE"
