@@ -29,6 +29,9 @@ enum Gallery {
         case assistantWelcome = "assistant-welcome", assistantTools = "assistant-tools", assistantSources = "assistant-sources"
         case assistantGames = "assistant-games", assistantKeys = "assistant-keys", assistantBuilds = "assistant-builds"
         case assistantIPhone = "assistant-iphone", assistantDone = "assistant-done"
+        // The settings' Folders tab, where the dumps folder and the games
+        // folder are chosen.
+        case settingsFolders = "settings-folders"
         // Cartouche's console on this Mac (ConsoleGallery.swift): its home,
         // every game, a game's settings page beside them, a game's info over
         // them, and the whole sheet of a game played on this Mac, in a
@@ -73,7 +76,7 @@ enum Gallery {
         var size: CGSize {
             if step != nil { return SetupAssistant.size }
             switch self {
-            case .settings, .settingsBuilds: return SettingsTab.size
+            case .settings, .settingsBuilds, .settingsFolders: return SettingsTab.size
             case .storageMac: return CGSize(width: 1024, height: 1440)
             case .consoleSheet: return CGSize(width: 1024, height: 1640)
             // The window at its smallest, with a game's sheet whose
@@ -93,7 +96,7 @@ enum Gallery {
         var styleMask: NSWindow.StyleMask {
             if step != nil { return [.borderless] }
             switch self {
-            case .settings, .settingsBuilds: return [.titled, .closable]
+            case .settings, .settingsBuilds, .settingsFolders: return [.titled, .closable]
             case .menubar, .menubarBuilding: return [.borderless]
             default: return [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
             }
@@ -167,6 +170,8 @@ enum Gallery {
         var size = page.size
         let controller: NSViewController
         switch page {
+        case .settingsFolders:
+            controller = settings(model, open: .folders)
         case .settings, .settingsBuilds:
             controller = settings(model, open: page == .settingsBuilds ? .builds : .general)
         case .console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet, .consoleSaves, .consoleSwitchSave:
@@ -204,10 +209,11 @@ enum Gallery {
         switch page {
         case .settings: window.title = SettingsTab.general.title
         case .settingsBuilds: window.title = SettingsTab.builds.title
+        case .settingsFolders: window.title = SettingsTab.folders.title
         case _ where page.isConsole: window.title = "Cartouche"
         default: window.title = "Cartouche Builder"
         }
-        if page == .settings || page == .settingsBuilds {
+        if page == .settings || page == .settingsBuilds || page == .settingsFolders {
             window.toolbarStyle = .preference
         }
         if page.step != nil {
