@@ -333,7 +333,8 @@ class SheetsTest(unittest.TestCase):
     def test_the_status_follows_how_the_sessions_ended_and_the_frame_rate(self):
         crash = {"kind": "crash", "signal": 11, "pc": "main+0x10"}
         cases = {
-            "iPhone17,1": ([{"frames": None, "fps": None, "end": {"kind": "boot-failed"}}] * 3, "does-not-run"),
+            "iPhone17,1": ([{"frames": None, "fps": None, "minutes": 0.2, "end": {"kind": "boot-failed"}}] * 3,
+                           "does-not-run"),
             "iPhone17,2": ([{"end": crash}, {"end": {"kind": "memory-likely"}}, {}], "boots"),
             "iPhone17,3": ([{"end": crash}] + [{}] * 8, "playable-with-issues"),
             "iPhone17,4": ([{"fps": {"median": 50.0, "low5": 45.0}}] * 3, "playable-with-issues"),
@@ -509,13 +510,31 @@ class SheetsTest(unittest.TestCase):
     def test_a_game_that_does_not_run_gets_a_sheet_that_says_so(self):
         for phone in self.phones[:3]:
             self.session(phone, game=SENTINELS, frames=None, fps=None, stutters=None, memory={"peakMiB": 40},
-                         end={"kind": "boot-failed"})
+                         minutes=0.3, end={"kind": "boot-failed"})
         self.run_sheets()
         sheet = self.written(SENTINELS)
         self.assertEqual(sheet["results"][0]["status"], "does-not-run")
         self.assertNotIn("peakMemoryMiB", sheet["results"][0])
         self.assertFalse(sheet["requirements"]["increasedMemoryLimit"])
         self.assert_valid(sheet)
+
+    def test_long_sessions_that_drew_no_frame_make_no_result(self):
+        # nxnative may write none of the summary lines Cartouche counts
+        # frames from, as for Super Mario Galaxy: sessions that lasted half
+        # an hour or more in all, with no frame, do not say the game does
+        # not run. Ten minutes each, on three iPhones of a model.
+        for phone in self.phones[:3]:
+            self.session(phone, game=SENTINELS, frames=None, fps=None, stutters=None, minutes=10.0)
+            self.session(phone, device="iPhone18,2", frames=None, fps=None, stutters=None, minutes=10.0)
+        result = self.run_sheets()
+        self.assertIsNone(self.written(SENTINELS), "a game whose sessions counted no frame gets no sheet")
+        self.assertIsNone(self.written(), "Mario Kart World's sheet gets no result for iPhone18,2")
+        self.assertIn("No result, as none of their sessions drew a frame, though they lasted 30 minutes or more in all "
+                      "(nxnative may write no summary line for the game, as much as it may stay on a black screen): "
+                      "13 Sentinels: Aegis Rim on iPhone19,4 (3 iPhones, 0.5 hours), "
+                      "Mario Kart World on iPhone18,2 (3 iPhones, 0.5 hours).", result.stdout)
+        self.assertNotIn("so with no sheet yet", result.stdout)
+        self.assertIn("No sheet changed.", result.stdout)
 
     def test_a_sheet_comes_to_need_increased_memory_limit_once_its_peak_does(self):
         sheet = {"schema": 1, "titleId": SENTINELS, "name": "13 Sentinels: Aegis Rim", "platform": "switch",

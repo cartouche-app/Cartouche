@@ -79,8 +79,18 @@ ENDED_BADLY_KEYS = {"crash": "crashes", "memory-likely": "outOfMemory", "boot-fa
 # the slowest 5% of a session of twenty minutes under 5 fps.
 SLOWEST_READER = 2
 
+# A model none of whose sessions drew a frame, though they lasted this long
+# in all, may be playing a game for which nxnative writes none of the
+# summary lines Cartouche counts frames from, as much as one stuck on a
+# black screen: Super Mario Galaxy, 11 hours on 7 installs in November, none
+# with a summary line. It makes no result, rather than one that says the
+# game does not run, as the nxnative page and the dashboard say it
+# (UNCOUNTED_MINUTES in nxnative.py and telemetry/dashboard).
+UNCOUNTED_MINUTES = 30
+
 # The status of a model's result:
-#   does-not-run          no session drew a frame;
+#   does-not-run          no session drew a frame, and they lasted less than
+#                         UNCOUNTED_MINUTES in all;
 #   boots                 half of the sessions or more ended badly;
 #   playable-with-issues  a tenth of them or more ended badly, or the median
 #                         frame rate is under 90 % of the rate the game asks
@@ -114,6 +124,7 @@ MINIMUM_IOS = "26.0"
 SESSIONS = (
     "SELECT id, install, session, seq, day, device, ios, game, "
     "json_extract(body, '$.nxnative') AS nxnative, "
+    "json_extract(body, '$.minutes') AS minutes, "
     "json_extract(body, '$.frames') AS frames, "
     "json_extract(body, '$.fps.median') AS fps, "
     "json_extract(body, '$.fps.low5') AS slowest, "
@@ -284,6 +295,16 @@ class Result:
         return sum(1 for s in self.sessions if drew_frames(s))
 
     @property
+    def minutes(self) -> float:
+        return sum(number(s.get("minutes")) or 0 for s in self.sessions)
+
+    @property
+    def uncounted(self) -> bool:
+        """No session drew a frame, though they lasted UNCOUNTED_MINUTES or
+        more in all: nxnative's log may have no summary line for the game."""
+        return self.played == 0 and self.minutes >= UNCOUNTED_MINUTES
+
+    @property
     def status(self) -> str:
         sessions = len(self.sessions)
         badly = sum(self.ended_badly.values()) / sessions
@@ -394,11 +415,13 @@ class Result:
 
 
 def results(sessions: list[dict], sheet_of: dict[str, str]) -> tuple[
-        dict[str, list[Result]], Counter, dict[str, set[str]], dict[str, set[str]]]:
+        dict[str, list[Result]], Counter, dict[str, set[str]], dict[str, set[str]], dict[str, list[Result]]]:
     """What the sessions make, by the title ID of the sheet their game has or
     gets (sheet_of): the results of each sheet; how many of its game's
     models too few iPhones played on; the iPhones that played it. Then the
-    iPhones that played each game of no sheet nor of nxnative's list."""
+    iPhones that played each game of no sheet nor of nxnative's list, and by
+    sheet, the models whose sessions drew no frame in UNCOUNTED_MINUTES or
+    more, which make no result (Result.uncounted)."""
     phones: dict[tuple[str, str], dict[str, list[dict]]] = defaultdict(lambda: defaultdict(list))
     unlisted: dict[str, set[str]] = defaultdict(set)
     for session in sessions:
@@ -411,6 +434,7 @@ def results(sessions: list[dict], sheet_of: dict[str, str]) -> tuple[
             continue
         phones[(sheet, session["device"])][session["install"]].append(session)
     found: dict[str, list[Result]] = defaultdict(list)
+    uncounted: dict[str, list[Result]] = defaultdict(list)
     too_few: Counter = Counter()
     iphones: dict[str, set[str]] = defaultdict(set)
     for (sheet, device), by_install in sorted(phones.items()):
@@ -418,8 +442,9 @@ def results(sessions: list[dict], sheet_of: dict[str, str]) -> tuple[
         if len(by_install) < MIN_IPHONES:
             too_few[sheet] += 1
             continue
-        found[sheet].append(Result(device, [IPhone(by_install[i]) for i in sorted(by_install)]))
-    return found, too_few, iphones, unlisted
+        result = Result(device, [IPhone(by_install[i]) for i in sorted(by_install)])
+        (uncounted if result.uncounted else found)[sheet].append(result)
+    return found, too_few, iphones, unlisted, uncounted
 
 
 def merged(sheet: dict, measured: list[Result]) -> dict:
@@ -564,7 +589,7 @@ def run(catalog: Path, out: Path, today: dt.date, cloudflare: Cloudflare) -> tup
     first, last = today - dt.timedelta(days=WINDOW_DAYS), today - dt.timedelta(days=1)
     database = cloudflare.database(DATABASE)
     sessions = read_sessions(cloudflare, database, first, last)
-    found, too_few, iphones, unlisted = results(sessions, sheet_of)
+    found, too_few, iphones, unlisted, uncounted = results(sessions, sheet_of)
 
     changed, new = [], []
     lines = [f"## Game measurements, {first} to {last}", "",
@@ -596,8 +621,15 @@ def run(catalog: Path, out: Path, today: dt.date, cloudflare: Cloudflare) -> tup
     if left_out:
         lines += [f"Left out: {left_out} model{'s' if left_out > 1 else ''} of a game with a sheet, "
                   f"played on fewer than {MIN_IPHONES} iPhones.", ""]
+    if uncounted:
+        lines += [f"No result, as none of their sessions drew a frame, though they lasted {UNCOUNTED_MINUTES} minutes "
+                  "or more in all (nxnative may write no summary line for the game, as much as it may stay on a black "
+                  "screen): " + ", ".join(
+                      f"{(sheets[game][1] if game in sheets else games[game])['name']} on {result.device} "
+                      f"({len(result.iphones)} iPhones, {shown(result.minutes / 60)} hours)"
+                      for game, measured in sorted(uncounted.items()) for result in measured) + ".", ""]
     waiting = {game: len(installs) for game, installs in sorted(iphones.items())
-               if game not in sheets and game not in found and len(installs) >= MIN_IPHONES}
+               if game not in sheets and game not in found and game not in uncounted and len(installs) >= MIN_IPHONES}
     if waiting:
         lines += [f"Played on {MIN_IPHONES} iPhones or more, but on fewer than {MIN_IPHONES} of each model, "
                   "so with no sheet yet: " + ", ".join(
