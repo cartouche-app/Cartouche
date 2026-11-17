@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "titleId": "010015100B514000",
+  "name": "Super Mario Bros. Wonder",
+  "platform": "switch",
+  "requirements": {
+    "minimumIOS": "26.0",
+    "bcTextureCompression": true,
+    "increasedMemoryLimit": true
+  },
+  "results": [
+    {
+      "device": "iPhone19,4",
+      "iOS": "27.3",
+      "date": "2026-11-16",
+      "engine": "nxnative f4b7e77c907b and 2 other builds",
+      "status": "playable",
+      "peakMemoryMiB": 4065,
+      "notes": [
+        "Measured by Cartouche on 5 iPhones, 24 sessions from 2026-11-12 to 2026-11-16: 59.7 fps for 60 (median), 56.3 fps in the slowest 5% of the time, 25.1 stutters a minute. None ended badly."
+      ],
+      "measured": {
+        "iPhones": 5,
+        "sessions": 24,
+        "from": "2026-11-12",
+        "to": "2026-11-16",
+        "fps": 59.7,
+        "slowestFps": 56.3,
+        "targetFps": 60,
+        "stuttersPerMinute": 25.1,
+        "endedBadlyPercent": 0,
+        "nxnative": "f4b7e77c907b",
+        "otherBuilds": 2
+      }
+    }
+  ]
+}

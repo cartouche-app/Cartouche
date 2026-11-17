@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "titleId": "0400486024DEC000",
+  "name": "The Legend of Zelda: Ocarina of Time",
+  "platform": "switch2",
+  "requirements": {
+    "minimumIOS": "26.0",
+    "bcTextureCompression": true,
+    "increasedMemoryLimit": true
+  },
+  "results": [
+    {
+      "device": "iPhone18,2",
+      "iOS": "27.2",
+      "date": "2026-11-16",
+      "engine": "nxnative 3a28152fe705 and 2 other builds",
+      "status": "playable-with-issues",
+      "peakMemoryMiB": 6687,
+      "notes": [
+        "Measured by Cartouche on 7 iPhones, 51 sessions from 2026-11-12 to 2026-11-16: 30 fps for 30 (median), 30 fps in the slowest 5% of the time, 34.2 stutters a minute. 8 sessions ended badly: 6 out of memory, 1 did not start, 1 crash."
+      ],
+      "measured": {
+        "iPhones": 7,
+        "sessions": 51,
+        "from": "2026-11-12",
+        "to": "2026-11-16",
+        "fps": 30,
+        "slowestFps": 30,
+        "targetFps": 30,
+        "stuttersPerMinute": 34.2,
+        "endedBadlyPercent": 15.7,
+        "endedBadly": {
+          "didNotStart": 1,
+          "crashes": 1,
+          "outOfMemory": 6
+        },
+        "nxnative": "3a28152fe705",
+        "otherBuilds": 2
+      }
+    },
+    {
+      "device": "iPhone19,4",
+      "iOS": "27.2.1",
+      "date": "2026-11-16",
+      "engine": "nxnative 3a28152fe705 and 11 other builds",
+      "status": "playable",
+      "peakMemoryMiB": 7496,
+      "notes": [
+        "Measured by Cartouche on 11 iPhones, 103 sessions from 2026-11-12 to 2026-11-16: 30.2 fps for 30 (median), 24.4 fps in the slowest 5% of the time, 32.5 stutters a minute. 9 sessions ended badly: 5 crashes, 4 out of memory."
+      ],
+      "measured": {
+        "iPhones": 11,
+        "sessions": 103,
+        "from": "2026-11-12",
+        "to": "2026-11-16",
+        "fps": 30.2,
+        "slowestFps": 24.4,
+        "targetFps": 30,
+        "stuttersPerMinute": 32.5,
+        "endedBadlyPercent": 8.7,
+        "endedBadly": {
+          "crashes": 5,
+          "outOfMemory": 4
+        },
+        "nxnative": "3a28152fe705",
+        "otherBuilds": 11
+      }
+    }
+  ]
+}
