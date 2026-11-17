@@ -118,6 +118,9 @@ public enum CartoucheMacSavesPage: Sendable {
     case copies
     /// Its saves between the player's Switch and this Mac.
     case switchSaves
+    /// What the game wrote of its last sessions, to share
+    /// (CartoucheGameLogView).
+    case log
 }
 
 extension CartoucheMacConsole {

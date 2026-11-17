@@ -3,12 +3,13 @@
 //  Cartouche on the Mac
 //
 //  The console's System page on the Mac, which its dock's System opens,
-//  until the iPhone's comes to the Mac with its reports and its guide
+//  until the iPhone's comes to the Mac with its guide
 //  (CartoucheSystemView.swift, step 8 of the plan): the player's storage,
 //  the iPhone's Storage page, its connections the same as the paired
 //  iPhones'; the game measurements, the iPhone's page, of the telemetry
-//  the Builder sends (ConsoleTelemetry.swift); and Cartouche Builder,
-//  which System opened before.
+//  the Builder sends (ConsoleTelemetry.swift); Report a problem, the
+//  iPhone's page (CartoucheReportView.swift); and Cartouche Builder, which
+//  System opened before.
 //
 
 import SwiftUI
@@ -56,6 +57,15 @@ struct CartoucheMacSystemView: View {
                         Label(CartoucheText.telemetryTitle, systemImage: "chart.bar.xaxis")
                     }
                 }
+            }
+            // As on the iPhone's System page, whose footer adds that a
+            // report adds an iPhone to Cartouche's list: a Mac's adds none.
+            CartoucheSection {
+                NavigationLink(value: CartoucheMacConsoleView.Route.report) {
+                    Label(CartoucheText.reportTitle, systemImage: "exclamationmark.bubble")
+                }
+            } footer: {
+                Text(CartoucheText.reportFooter)
             }
             CartoucheSection {
                 Button(action: onBuilder) {

@@ -183,6 +183,9 @@ final class AppModel: ObservableObject {
         // The secrets of the console's connections, in the Builder's folder:
         // before the console or a paired iPhone saves one.
         ConsoleLink.keepConnections(in: home.connections)
+        // The console's journal and reports there too, before it notes a
+        // step.
+        ConsoleLink.keepReports(in: home.console)
         show(read: Engine.cachedLibrary(home), since: switches.mark)
         status = Engine.readStatus(home)
         queue = Engine.readQueue(home)

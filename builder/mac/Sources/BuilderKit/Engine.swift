@@ -51,6 +51,10 @@ public struct BuilderHome: Equatable, Sendable {
     /// The logs of the games played on this Mac that the console read, each
     /// session reported once (CartoucheConsole's ConsoleTelemetry.swift).
     public var sessions: URL { root.appendingPathComponent("sessions.json") }
+    /// The console's journal and its last reports of what went wrong,
+    /// Journal.txt and Reports.json, as the iPhone's Cartouche keeps them
+    /// (CartoucheConsole's CartoucheReporting.swift).
+    public var console: URL { root.appendingPathComponent("Console", isDirectory: true) }
     /// The copies of saves that come, unpacked there first.
     public var savesScratch: URL { root.appendingPathComponent("Saves scratch", isDirectory: true) }
 }

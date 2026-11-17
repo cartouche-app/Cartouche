@@ -12,6 +12,10 @@
 //  private repository, as a problem report. Nothing leaves until the
 //  player taps one or the other (CartoucheGameLogShare.swift).
 //
+//  The console on the Mac has the same page, from the sheet of a game
+//  played there: the logs nxnative's app for the Mac writes of the game,
+//  <title ID>.log and <title ID>.prev.log in ~/Library/Logs/nxnative.
+//
 
 import SwiftUI
 
@@ -51,7 +55,7 @@ struct CartoucheGameLogView: View {
 
     var body: some View {
         List {
-            Section {
+            CartoucheSection {
                 if let loaded {
                     if loaded.share.logs.isEmpty {
                         Text(CartoucheText.gameLogNone)
@@ -68,7 +72,7 @@ struct CartoucheGameLogView: View {
                 Text(CartoucheText.gameLogFooter)
             }
 
-            Section {
+            CartoucheSection {
                 if let zip = loaded?.zip {
                     ShareLink(item: zip, subject: Text(verbatim: zip.deletingPathExtension().lastPathComponent)) {
                         Label(CartoucheText.gameLogShare, systemImage: "square.and.arrow.up")
@@ -90,7 +94,7 @@ struct CartoucheGameLogView: View {
             }
 
             if let endpoint = CartoucheTelemetry.endpoint {
-                Section {
+                CartoucheSection {
                     TextField(CartoucheText.gameLogWhatPrompt, text: $what, axis: .vertical)
                         .lineLimit(2...8)
                     Button {
@@ -107,6 +111,10 @@ struct CartoucheGameLogView: View {
                     NavigationLink {
                         if let share = toSend {
                             CartoucheGameLogSentView(share: share, tileKey: tileKey)
+                                #if os(macOS)
+                                // Beside the console, the way back above it.
+                                .cartoucheConsolePage(CartoucheText.gameLogWhatIsSent, back: CartoucheText.gameLogTitle)
+                                #endif
                         }
                     } label: {
                         Label(CartoucheText.gameLogWhatIsSent, systemImage: "doc.text.magnifyingglass")
@@ -119,7 +127,11 @@ struct CartoucheGameLogView: View {
         }
         .cartoucheStageBackground(key: tileKey)
         .navigationTitle(CartoucheText.gameLogTitle)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #else
+        .cartoucheConsolePage(CartoucheText.gameLogTitle)
+        #endif
         .task { await load() }
         .onChange(of: what) {
             if sending != .sending {
@@ -202,9 +214,12 @@ struct CartoucheGameLogView: View {
     @MainActor
     private func load() async {
         guard loaded == nil else { return }
-        let files = folder.files
+        let found = folder.logs
+        let files = found.map { $0.url }
+        // By the names the summary knows them by, on the Mac as well.
+        let names = found.map { $0.name }
         let logs = await Task.detached(priority: .userInitiated) {
-            files.compactMap { CartoucheGameLogDigest.read($0, name: $0.lastPathComponent) }
+            zip(files, names).compactMap { CartoucheGameLogDigest.read($0, name: $1) }
         }.value
         let share = Self.share(of: folder, logs: logs)
         loaded = Loaded(share: share)
@@ -271,7 +286,7 @@ struct CartoucheGameLogSentView: View {
     var body: some View {
         List {
             if let submission {
-                Section {
+                CartoucheSection {
                     Text(verbatim: submission.title)
                         .font(.headline)
                         .textSelection(.enabled)
@@ -292,7 +307,9 @@ struct CartoucheGameLogSentView: View {
         }
         .cartoucheStageBackground(key: tileKey)
         .navigationTitle(CartoucheText.gameLogWhatIsSent)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .task {
             let share = self.share
             submission = await Task.detached(priority: .userInitiated) {

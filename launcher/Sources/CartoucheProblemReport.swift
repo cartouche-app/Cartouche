@@ -184,8 +184,8 @@ struct CartoucheProblemReport {
             $0.trimmingCharacters(in: .whitespaces)
         } ?? ""
         if firstLine.isEmpty {
-            return "Cartouche \(Self.short(environment.cartouche)) on \(Self.short(environment.device)), "
-                + "iOS \(Self.short(environment.system))"
+            return "\(environment.appShown) \(Self.short(environment.cartouche)) on \(Self.short(environment.device)), "
+                + "\(environment.systemShown) \(Self.short(environment.system))"
         }
         guard firstLine.count > 72 else { return firstLine }
         // Emoji take several of the 256 code units of GitHub's titles.

@@ -12,9 +12,10 @@
 //  console shows them; their apps are the gallery's own, empty but for
 //  their Info.plist and the list of settings nxnative gives a game on the
 //  Mac, in a temporary folder, their play time and their sizes made up, as
-//  are the saves of the sheet's game and their copies; the NAS's file is
-//  only a name, and nothing of the player's is read or kept: no data folder
-//  of nxnative's, no saves folder, no game's preferences, no play time, no
+//  are the saves of the sheet's game and their copies, and the logs of its
+//  last two sessions; the NAS's file is only a name, and nothing of the
+//  player's is read or kept: no data folder or log of nxnative's, no saves
+//  folder, no game's preferences, no play time, no journal or report, no
 //  question to Cartouche's server.
 //  Like ConsoleWindow.swift, this file imports the console and not
 //  CartoucheCore, whose names it shares.
@@ -229,6 +230,7 @@ enum ConsoleGallery {
         console.asksServer = false
         console.keepsChoicesInMemory = true
         console.dataFolder = folder.appendingPathComponent("nxnative", isDirectory: true)
+        console.logsFolder = writeLogs(in: folder.appendingPathComponent("Logs/nxnative", isDirectory: true))
         // The sheet's game's saves, a file of made-up bytes, for its saves
         // section and its Switch saves; their copies, without a saves folder.
         let saves = console.dataFolder.appendingPathComponent(sheetGame + "/save", isDirectory: true)
@@ -244,6 +246,38 @@ enum ConsoleGallery {
             covers.loaded = true
         }
         return covers
+    }
+
+    /// The logs of the sheet's game's last two sessions in FOLDER, made up
+    /// as nxnative's app for the Mac writes them, the one before ending in a
+    /// crash; FOLDER, for the console to read them.
+    private static func writeLogs(in folder: URL) -> URL {
+        let start = [
+            "launcher: Mario Kart World (\(sheetGame)), host /Applications/Mario Kart World.app/Contents/MacOS/dmhost",
+            "launcher: env DM_FPS_TARGET=60 (saved choice)",
+            "[dm] build: commit 6c3aeb3d70a1, shader chain 844bf1a5ea8f, profile mkw",
+            "[dm] [nvn-mtl] pipeline prepare: 4210 lines (3000 shaders, 4000 render pipelines, 210 compute pipelines) in 6.20 s",
+            "[dm] [nvn] timing up to frame 300: frame time p50 16.67 / p95 17.80 / max 40.00 ms (300 frames)",
+        ].map { $0 + "\n" }.joined()
+        let now = Date()
+        let sessions: [(name: String, end: String, start: TimeInterval, minutes: Double)] = [
+            (sheetGame + ".log", "launcher: the host exited with 0\n", -3 * 3_600 - 25 * 60, 25),
+            (sheetGame + ".prev.log", "[dm] CRASH sig=11 (SIGSEGV) at main+0x1a2b3c\nlauncher: the host stopped on signal 11\n",
+             -4 * 3_600, 22),
+        ]
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        for session in sessions {
+            let file = folder.appendingPathComponent(session.name)
+            let started = now.addingTimeInterval(session.start)
+            // A longer session writes more: lines of its frames.
+            let frames = String(repeating: "[dm] [nvn] on-screen up to frame 600: 300 frames, dropped 0 (discarded 0), p99 17.50 ms\n",
+                                count: Int(session.minutes * 40))
+            try? Data((start + frames + session.end).utf8).write(to: file)
+            try? FileManager.default.setAttributes([.creationDate: started,
+                                                    .modificationDate: started.addingTimeInterval(session.minutes * 60)],
+                                                   ofItemAtPath: file.path)
+        }
+        return folder
     }
 
     /// The games' apps go once the pictures are taken.

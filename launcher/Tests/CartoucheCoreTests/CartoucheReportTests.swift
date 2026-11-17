@@ -171,6 +171,34 @@ final class CartoucheReportTests: XCTestCase {
         XCTAssertEqual(Array(lines[14...]), ["", "Last steps:", "11-10 07:02:11 Installing Mario Kart World", "11-10 07:12:03 Failed at 37 %"])
     }
 
+    func testAMacsReportNamesCartoucheBuilderAndMacOS() throws {
+        // The console's, in Cartouche Builder's window on a Mac.
+        let mac = CartoucheReport.Environment(
+            cartouche: "0.6.2", basedOn: nil, system: "26.1 (25B72)", device: "Mac16,10 (M4, 16 GB)", language: "fr (fr-FR)",
+            facts: [.init("Free on this Mac", "412.00 GB (412,000,000,000 bytes)"), .init("Storage", "saves on a folder of the Mac's")],
+            app: "Cartouche Builder", systemName: "macOS")
+        let report = CartoucheReport(origin: .saves, title: "Les sauvegardes n’ont pas été copiées", message: "Le disque est plein.",
+                                     environment: mac)
+        let lines = report.text(redactedBy: .shapes).components(separatedBy: "\n")
+        XCTAssertEqual(Array(lines[4...]), [
+            "Cartouche Builder: 0.6.2",
+            "macOS: 26.1 (25B72)",
+            "Device: Mac16,10 (M4, 16 GB)",
+            "Language: fr (fr-FR)",
+            "Free on this Mac: 412.00 GB (412,000,000,000 bytes)",
+            "Storage: saves on a folder of the Mac's",
+        ])
+        // Kept with the last reports, it says so again; the iPhone's, kept
+        // before a report could be a Mac's, still say Cartouche and iOS.
+        let data = try JSONEncoder().encode(report)
+        XCTAssertEqual(try JSONDecoder().decode(CartoucheReport.self, from: data), report)
+        let older = try JSONEncoder().encode(sample)
+        XCTAssertFalse(String(decoding: older, as: UTF8.self).contains("systemName"))
+        let read = try JSONDecoder().decode(CartoucheReport.self, from: older)
+        XCTAssertEqual(read.environment.appShown, "Cartouche")
+        XCTAssertEqual(read.environment.systemShown, "iOS")
+    }
+
     func testWhyItFailedFollowsTheError() throws {
         var report = sample
         report.failure = CartoucheFailure(.network, stage: "unpacking", fraction: 0.375, seconds: 312.4,

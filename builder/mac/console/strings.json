@@ -32,6 +32,14 @@
       "en": "Needs about %1$@; a game may use %2$@ on this Mac.",
       "fr": "Nécessite environ %1$@ ; un jeu peut utiliser %2$@ sur ce Mac."
     },
+    "report.privacy": {
+      "en": "It leaves this Mac only when you send it, without passwords, server names or addresses or user names, even in what you write.",
+      "fr": "Il ne quitte ce Mac que si vous l’envoyez, sans mots de passe, noms ni adresses de serveurs ni noms d’utilisateur, même dans ce que vous écrivez."
+    },
+    "report.what.footer": {
+      "en": "Cartouche adds this Mac’s model and memory, the versions, and its last steps and errors.",
+      "fr": "Cartouche y ajoute le modèle et la mémoire de ce Mac, les versions, ses dernières étapes et erreurs."
+    },
     "running.paused": {
       "en": "Running in its own window.",
       "fr": "En cours, dans sa propre fenêtre."

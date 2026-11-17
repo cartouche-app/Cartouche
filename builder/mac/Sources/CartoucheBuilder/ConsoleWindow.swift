@@ -47,9 +47,9 @@ struct MainView: View {
     @EnvironmentObject private var bridge: BridgeController
     /// The console with every game open, with its first game's settings
     /// page, or with that game's info over it, or with the sheet of the
-    /// game of that title ID, and a page of its saves, or its System page,
-    /// or the Storage page or the Game measurements page that one opens, as
-    /// the gallery shows it.
+    /// game of that title ID, and a page of its saves or its log, or its
+    /// System page, or the Storage, Game measurements or Report a problem
+    /// page that one opens, as the gallery shows it.
     var showingLibrary = false
     var showingSettings = false
     var showingInfo = false
@@ -58,6 +58,7 @@ struct MainView: View {
     var showingSystem = false
     var showingStorage = false
     var showingMeasures = false
+    var showingReport = false
     /// The Mac's appearance, light or dark: the builder's.
     @State private var macScheme = MainView.scheme(of: NSApplication.shared.effectiveAppearance)
 
@@ -68,7 +69,7 @@ struct MainView: View {
                 CartoucheMacConsoleView(showingLibrary: showingLibrary, showingSettings: showingSettings, showingInfo: showingInfo,
                                         showingSheetOf: showingSheetOf, showingSaves: showingSaves?.console,
                                         showingSystem: showingSystem, showingStorage: showingStorage,
-                                        showingMeasures: showingMeasures)
+                                        showingMeasures: showingMeasures, showingReport: showingReport)
                     .overlay(alignment: .top) { consoleBanner }
             case .builder:
                 ContentView()
@@ -154,16 +155,17 @@ struct MainView: View {
     }
 }
 
-/// A page of a game's saves the console opens over its sheet, for the
-/// gallery (Gallery.swift, which does not import the console): the copies
-/// of the saves, or the game's Switch saves.
+/// A page the console opens over a game's sheet, for the gallery
+/// (Gallery.swift, which does not import the console): the copies of the
+/// game's saves, its Switch saves, or its log.
 enum ConsoleSavesPage {
-    case copies, switchSaves
+    case copies, switchSaves, log
 
     var console: CartoucheMacSavesPage {
         switch self {
         case .copies: return .copies
         case .switchSaves: return .switchSaves
+        case .log: return .log
         }
     }
 }
@@ -276,6 +278,14 @@ enum ConsoleLink {
     /// bridge takes a paired iPhone's.
     static func keepConnections(in file: URL) {
         CartoucheMacConsole.keepConnectionSecrets(in: file)
+    }
+
+    // MARK: Reports
+
+    /// Keeps the console's journal and its last reports in FOLDER from now
+    /// on (BuilderHome.console): once, as the app starts.
+    static func keepReports(in folder: URL) {
+        CartoucheMacConsole.keepReports(in: folder)
     }
 
     /// Takes THEIRS, a paired iPhone's connections as JSON, and gives this
