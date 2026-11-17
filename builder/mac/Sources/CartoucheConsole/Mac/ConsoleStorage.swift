@@ -218,7 +218,7 @@ struct CartoucheMacIPhoneGamesSection: View {
             Button(CartoucheText.macIPhoneGamesSendNow, systemImage: "arrow.up.circle", action: send)
                 .disabled(sending)
         } header: {
-            Text(CartoucheText.storageGamesFolder)
+            Text(CartoucheText.macIPhoneGamesHeader)
         } footer: {
             Text(CartoucheText.macIPhoneGamesFooter)
         }
@@ -297,7 +297,8 @@ extension CartoucheText {
     }
 
     /// The iPhone's games folder, on a connection, where the Builder sends
-    /// its games.
+    /// its games: named apart from This Mac's games folder above it.
+    static var macIPhoneGamesHeader: String { s("mac.storage.iPhoneGames.header", "The iPhone’s games folder") }
     static var macIPhoneGamesSent: String { s("mac.storage.iPhoneGames.sent", "Sent from this Mac") }
     static func macIPhoneGamesCount(_ sent: Int, _ total: Int) -> String {
         f("mac.storage.iPhoneGames.count", "%1$lld of %2$lld", sent, total)

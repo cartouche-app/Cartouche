@@ -374,6 +374,10 @@
       "en": "The games folder chosen on your iPhone: Cartouche Builder sends it each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent there install from the library. To change it, choose another on the iPhone.",
       "fr": "Le dossier des jeux choisi sur votre iPhone : Cartouche Builder y envoie aussi chaque IPA et chaque app Mac de son propre dossier des jeux, par la même connexion, les plus récentes d’abord, et n’y supprime jamais rien. Les apps Mac qu’un autre Mac y a envoyées s’installent depuis la bibliothèque. Pour en changer, choisissez-en un autre sur l’iPhone."
     },
+    "mac.storage.iPhoneGames.header": {
+      "en": "The iPhone’s games folder",
+      "fr": "Dossier des jeux de l’iPhone"
+    },
     "mac.storage.iPhoneGames.noRoom": {
       "en": "Not enough room there for the next game: %1$@ needed, %2$@ left. Once there is, this Mac’s games go on.",
       "fr": "Pas assez de place pour le jeu suivant : %1$@ nécessaires, %2$@ libres. Dès qu’il y en a, les jeux de ce Mac continuent de partir."
