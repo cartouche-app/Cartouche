@@ -9,6 +9,7 @@ Cartouche is LiveContainer with SideStore built in, plus our patches. Nothing he
 | `LiveContainer` | [LiveContainer/LiveContainer](https://github.com/LiveContainer/LiveContainer) | `9108ae62` (17 October 2026) |
 | `SideStore` | [LiveContainer/SideStore](https://github.com/LiveContainer/SideStore), branch `LiveContainerSupport` | `ee3cc16a` (17 October 2026) |
 | `tools/dylibify` | [LiveContainer/dylibify](https://github.com/LiveContainer/dylibify) | `5daf713d` |
+| `SMBClient` | [kishikawakatsumi/SMBClient](https://github.com/kishikawakatsumi/SMBClient), the player's shared folders over SMB, for the launcher and for Cartouche's console on the Mac | `66eafaa6` |
 
 To move to a newer upstream commit, update the submodule, check that every patch still applies, and say so in the pull request.
 

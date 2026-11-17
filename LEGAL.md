@@ -1,6 +1,6 @@
 # Legal
 
-Cartouche is a launcher. It is not affiliated with, endorsed by or sponsored by Nintendo, Apple or any game publisher, nor by the LiveContainer, SideStore or nxnative projects. All trademarks belong to their owners; game names appear only to say which games Cartouche supports.
+Cartouche is a launcher. It is not affiliated with, endorsed by or sponsored by Nintendo, Apple or any game publisher, nor by the LiveContainer, SideStore, iloader or nxnative projects. All trademarks belong to their owners; game names appear only to say which games Cartouche supports.
 
 ## What the project never contains or distributes
 
@@ -8,7 +8,7 @@ Cartouche is a launcher. It is not affiliated with, endorsed by or sponsored by 
 - console keys (`prod.keys`, `title.keys`) or firmware;
 - links to places that offer any of the above.
 
-The app has no catalogue of downloadable games and no way to download one: it installs only the player's own copies, from their files or from storage of their own that they sign in to with their own account, never from an address, a link or a public bucket. The project publishes only the app, as GitHub releases, and the catalog it carries, and the publish guard in [`guard/`](guard/) refuses to publish a file that looks like game content.
+The app has no catalogue of downloadable games and no way to download one: it installs only the player's own copies, from their files or from storage of their own that they sign in to with their own account, never from an address, a link or a public bucket. The project publishes only its apps, Cartouche, Cartouche Builder and the Cartouche Installer, as GitHub releases, the catalog Cartouche carries, and its site; the publish guard in [`guard/`](guard/) refuses to publish an IPA of Cartouche, or a file of the catalog, that looks like game content.
 
 ## Your games
 
@@ -16,7 +16,7 @@ Use only games you own, dumped from your own console with your own keys, as the 
 
 ## Issues and pull requests
 
-Issues, pull requests and discussions that contain or link to games, keys or firmware are closed and their content is removed.
+Issues, pull requests and discussions that contain or link to games, keys, firmware or IPAs built from games are closed and their content is removed, as are such messages on [Cartouche's Discord server](https://discord.gg/wG3DZjdAeF).
 
 ## Licence
 

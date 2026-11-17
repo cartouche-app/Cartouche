@@ -1,16 +1,16 @@
 # Publish guard
 
-`cartouche-guard` is the last check before Cartouche publishes anything: the IPA of each release and the catalog the app carries. It refuses a file, or any file inside an archive, that looks like game content, a console key or firmware, so that a mistake in a build script can never publish one. It fails closed: a file it cannot read is refused too.
+`cartouche-guard` is the last check before Cartouche publishes anything: the IPAs of each release, the one for an Apple account and the one for the player's own certificate, the catalog the app carries, and the covers Cartouche reads every day. It refuses a file, or any file inside an archive, that looks like game content, a console key or firmware, so that a mistake in a build script can never publish one. It fails closed: a file it cannot read is refused too.
 
 ```
 python3 -m venv .venv && .venv/bin/pip install -e "guard[dev]"
 .venv/bin/python -m unittest discover -s guard/tests -t guard/tests
 
 .venv/bin/cartouche-guard --kind app build/app/Cartouche.ipa
-.venv/bin/cartouche-guard --kind catalog catalog/devices.json catalog/games/*.json
+.venv/bin/cartouche-guard --kind catalog catalog/devices.json catalog/nxnative.json catalog/covers.json catalog/games/*.json
 ```
 
-CI runs it on the catalog in every pull request, and on the IPA in the App and Release workflows before anything is attached to a release.
+CI runs it on the catalog in every pull request; the App and Release workflows on both IPAs, before anything is attached to a release; and the Live covers workflow on the covers it keeps on the branch `live-covers`, each day before it pushes them.
 
 ## What it refuses
 

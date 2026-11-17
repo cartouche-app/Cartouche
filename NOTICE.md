@@ -20,6 +20,17 @@ Cartouche is built from these projects. Each keeps its own licence; their licenc
 
 The Swift packages that LiveContainer and SideStore resolve at build time are listed in their `Package.resolved` files.
 
+## Cartouche Builder
+
+The Mac app that builds the player's games with nxnative and shows Cartouche's console ([`builder/`](builder/README.md)) is under the AGPL-3.0, as the app; its console is built from the launcher's own sources.
+
+| Component | What it does in Cartouche Builder | Licence |
+| --- | --- | --- |
+| [SMBClient](https://github.com/kishikawakatsumi/SMBClient) (`app/SMBClient`, the app's own pin) | The console's connections to the player's shared folders (SMB 2 and 3) | MIT |
+| [swift-nio-ssh](https://github.com/apple/swift-nio-ssh) 0.15.0 and [swift-nio](https://github.com/apple/swift-nio) 2.104.0, by Apple, with swift-crypto, swift-asn1, swift-atomics, swift-collections and swift-system (pinned in [`builder/mac/Package.resolved`](builder/mac/Package.resolved)) | The console's connections to the player's SFTP servers | Apache-2.0 |
+
+What it installs on the Mac when the player asks, Xcode, Homebrew, `xcodegen`, `zstd`, `glslang`, Python and nxnative, keeps its own licence and is not part of it.
+
 ## Cartouche Installer
 
 The computer app that installs Cartouche the first time ([`installer/`](installer/README.md)) is under the MIT licence, as the project it is forked from; its [LICENSE](installer/LICENSE) keeps that project's notice.
