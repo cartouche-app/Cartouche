@@ -483,6 +483,11 @@ final class CartoucheTelemetry: ObservableObject {
         // never the team nor the profile.
         if let signature = CartoucheOwnSignature.current {
             fields.merge(signature.fields.mapValues { .text($0) }) { _, signed in signed }
+        } else if CartoucheImportedSigning.isImportedInstall {
+            // A profile Cartouche does not read: none in it, as two copies
+            // signed on the iPhone seemed to have on 16 November, or one
+            // that does not read.
+            fields["ownProfile"] = .text(CartoucheImportedSigning.ownProfile == nil ? "missing" : "unreadable")
         }
         if let days = CartoucheSignature.current().daysLeft {
             fields["signatureDays"] = .number(Double(days))

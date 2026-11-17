@@ -9,7 +9,6 @@ extension CartoucheText {
     static var signingProfileChosen: String { s("signing.profileChosen", "Choose another profile (.mobileprovision)") }
     static var signingPassword: String { s("signing.password", "Certificate password") }
     static var signingUse: String { s("signing.use", "Use this certificate") }
-    static var signingInvalidKey: String { s("signing.invalidKey", "This certificate does not open. Check its password, and that the .p12 holds its private key.") }
     static var signingInvalidProfile: String { s("signing.invalidProfile", "The provisioning profile is invalid, expired or does not match this certificate.") }
     static var signingReinstall: String { s("signing.reinstall", "If the profile Cartouche was installed with does not allow this certificate, install Cartouche again with it and its profile, from the Cartouche Installer.") }
     static var signingRefused: String { s("signing.refused", "iOS refused this certificate. Import another one, or install Cartouche again with a new certificate and its profile, from the Cartouche Installer.") }
@@ -19,11 +18,26 @@ extension CartoucheText {
     static var signingWait: String { s("signing.wait", "Wait for the current sign-in or update to finish before changing certificates.") }
     static var signingHandoffFailed: String { s("signing.handoffFailed", "Cartouche could not open the certificate the installer gave it. Install Cartouche again with your certificate and its profile.") }
 
+    // Why a certificate the player chose did not go in, each in words of
+    // its own (CartoucheSigningCheck.swift): the file chosen, its password,
+    // its key, then the profile.
+    static var signingProfileFile: String { s("signing.profileFile", "This file is a profile (.mobileprovision), not the certificate. Choose the .p12 file that came with it.") }
+    static var signingZipFile: String { s("signing.zipFile", "This file is a .zip. Tap it in the Files app first, which opens it as a folder, then choose the .p12 file in that folder.") }
+    static var signingNotCertificate: String { s("signing.notCertificate", "This file is not a certificate. Choose the file whose name ends in .p12.") }
+    static var signingPasswordNeeded: String { s("signing.passwordNeeded", "This certificate has a password. Type the one that came with it, then try again.") }
+    static var signingWrongPassword: String { s("signing.wrongPassword", "This password does not open this certificate. Type the one that came with the .p12, capital letters included.") }
+    static var signingWrongPasswordOnIPhone: String { s("signing.wrongPasswordOnIPhone", "This password does not open this certificate. Type the one that came with the .p12, which your signing app asked for too, capital letters included.") }
+    static var signingNoPrivateKey: String { s("signing.noPrivateKey", "This .p12 holds the certificate without its private key, which signing needs. Choose a .p12 exported with its private key.") }
+    static var signingUnreadableKey: String { s("signing.unreadableKey", "iOS cannot read this .p12: it may be damaged or incomplete. Download or copy it again, then choose it.") }
+    static var signingSignerRefused: String { s("signing.signerRefused", "Its password is right, but Cartouche cannot sign with this certificate. Export the .p12 again with its private key, or use another certificate.") }
+
     // Signed on the iPhone, by a signing app, from the IPA for the player's
     // own certificate (docs/imported-signing.md).
     static var signingHowOnIPhone: String { s("signing.howOnIPhone", "Choose the certificate (.p12) your signing app signed Cartouche with, and type its password. Cartouche reads its profile by itself. Neither an Apple ID nor LocalDevVPN is needed.") }
     static var signingOtherCertificate: String { s("signing.otherCertificate", "Cartouche was signed with another certificate. Choose that one, or sign Cartouche again with this one in your signing app.") }
     static var signingOnlyOwnCertificate: String { s("signing.onlyOwnCertificate", "Cartouche takes only the certificate it was signed with. To change certificates, sign Cartouche again with the new one in your signing app, then choose it here.") }
+    static var signingOwnProfileUnreadable: String { s("signing.ownProfileUnreadable", "Cartouche cannot read the profile your signing app signed it with. Sign Cartouche again in your signing app with your certificate and its profile (.mobileprovision), then choose the certificate here.") }
+    static var signingOwnProfileExpired: String { s("signing.ownProfileExpired", "The profile your signing app signed Cartouche with has expired. Sign Cartouche again with a valid profile, then choose the certificate here.") }
     static var signingRefusedOnIPhone: String { s("signing.refusedOnIPhone", "iOS refused this certificate, which may have been revoked. Sign Cartouche again with a valid certificate in your signing app, then choose that certificate here.") }
     static var signingUpdateOnIPhone: String { s("signing.updateOnIPhone", "Cartouche is signed with your own certificate and needs no renewal each week. When a new version is out, Cartouche says so: download it, sign it in your signing app as the first time, then install it over this one. Your games and saves stay.") }
     static var setupIntroOwnCertificate: String { s("setup.intro.ownCertificate", "One step, once on this iPhone: the certificate Cartouche signs your games with.") }

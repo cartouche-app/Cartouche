@@ -36,6 +36,9 @@ extension Words {
     static let signedElsewhereStep = "Sign the IPA for your own certificate" // signing.elsewhere.title
     static let signedElsewhere = "A signing app signed the IPA of Cartouche made for an Apple ID" // signing.elsewhere
     static let downloadVersion = "Download Cartouche %@"    // system.updates.download
+    static let profileFile = "This file is a profile (.mobileprovision), not the certificate" // signing.profileFile
+    static let wrongPasswordOnIPhone = "This password does not open this certificate. Type the one that came with the .p12, which your signing app asked for too" // signing.wrongPasswordOnIPhone
+    static let ownProfileUnreadable = "Cartouche cannot read the profile your signing app signed it with" // signing.ownProfileUnreadable
 }
 
 final class OwnCertificateUITests: ConsoleTestCase {
@@ -104,6 +107,28 @@ final class OwnCertificateUITests: ConsoleTestCase {
         tap(app.buttons[Words.done], "Done of the System page", in: app)
         expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)
         expectMainThreadAnswered(app)
+    }
+
+    /// A certificate the setup refused says why, in words of its own, on the
+    /// guide's step: a profile chosen in the certificate's place; a
+    /// password that does not open the .p12; a Cartouche its signing app
+    /// put no profile in, which no file chosen here makes up for. Up to
+    /// 0.13.1, the first two said "This certificate does not open. Check
+    /// its password, and that the .p12 holds its private key", and the
+    /// third that the profile, which the player does not choose, was
+    /// invalid.
+    @MainActor
+    func testSignedOnTheIPhoneACertificateRefusedSaysWhy() {
+        for (work, words) in [("signing-profile-file", Words.profileFile),
+                              ("signing-wrong-password", Words.wrongPasswordOnIPhone),
+                              ("signing-no-own-profile", Words.ownProfileUnreadable)] {
+            let app = launchGallery(Launch(setupDone: false, owned: [], work: work, signing: "iphone"))
+            expect(app.navigationBars[Words.guide].waitForExistence(timeout: Self.firstLaunch),
+                   "The guide did not open by itself (\(work))", in: app)
+            expect(element(beginningWith: words, in: app).waitForExistence(timeout: 15),
+                   "The guide's certificate step does not say \(words) (\(work))", in: app)
+            expectMainThreadAnswered(app)
+        }
     }
 
     /// A newer Cartouche on offer, signed on the iPhone: its IPA to

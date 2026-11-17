@@ -80,24 +80,23 @@ enum CartoucheImportedSigning {
                 throw ImportError(message: CartoucheText.signingWait, kind: "busy")
             }
         }
-        guard let team = LCUtils.getCertTeamId(withKeyData: material.certificate, password: material.password) else {
-            throw ImportError(message: CartoucheText.signingInvalidKey, kind: "invalidKey")
+        // What the file is, then what iOS says of its password and its key,
+        // each in words of its own (CartoucheSigningCheck.swift).
+        if let trouble = CartoucheSigningTrouble.ofFile(material.certificate) {
+            throw ImportError(trouble, onIPhone: onIPhone)
         }
-        var items: CFArray?
-        let options = [kSecImportExportPassphrase as String: material.password] as CFDictionary
-        guard SecPKCS12Import(material.certificate as CFData, options, &items) == errSecSuccess,
-              let first = (items as? [[String: Any]])?.first,
-              let value = first[kSecImportItemIdentity as String] else {
-            throw ImportError(message: CartoucheText.signingInvalidKey, kind: "invalidKey")
+        let (status, identities) = openPKCS12(material)
+        if let trouble = CartoucheSigningTrouble.ofKey(status: status, identities: identities.count, password: material.password) {
+            throw ImportError(trouble, onIPhone: onIPhone)
         }
-        let identity = value as! SecIdentity
         var certificate: SecCertificate?
-        guard SecIdentityCopyCertificate(identity, &certificate) == errSecSuccess, let certificate else {
-            throw ImportError(message: CartoucheText.signingInvalidKey, kind: "invalidKey")
+        guard SecIdentityCopyCertificate(identities[0], &certificate) == errSecSuccess, let certificate else {
+            throw ImportError(.noPrivateKey, onIPhone: onIPhone)
         }
-        guard let hostProfile = ownProfile else {
-            throw ImportError(message: CartoucheText.signingInvalidProfile, kind: "invalidProfile")
+        guard let team = LCUtils.getCertTeamId(withKeyData: material.certificate, password: material.password) else {
+            throw ImportError(.signerRefused, onIPhone: onIPhone)
         }
+        guard let hostProfile = ownProfile else { throw ImportError(.noOwnProfile, onIPhone: onIPhone) }
         #if CARTOUCHE_GALLERY
         let hostTeam = team
         #else
@@ -112,8 +111,12 @@ enum CartoucheImportedSigning {
             // Cartouche's own profile does not list this certificate: it is
             // not the one the signing app signed Cartouche with.
             throw ImportError(message: reinstall, kind: "reinstall")
+        } catch CartoucheSigningMaterial.Problem.mismatch {
+            throw ImportError(.mismatch, onIPhone: onIPhone)
+        } catch CartoucheSigningMaterial.Problem.expired {
+            throw ImportError(.expired, onIPhone: onIPhone)
         } catch {
-            throw ImportError(message: CartoucheText.signingInvalidProfile, kind: "invalidProfile")
+            throw ImportError(onIPhone ? .ownProfileUnreadable : .invalidProfile, onIPhone: onIPhone)
         }
         guard await CartoucheCertificate.works(candidate: material) else {
             throw ImportError(message: onIPhone ? CartoucheText.signingRefusedOnIPhone : CartoucheText.signingRefused,
@@ -126,6 +129,24 @@ enum CartoucheImportedSigning {
         // Only a timestamp is persisted in engine preferences. Credentials
         // are read directly from the keychain by the patched accessors.
         LCUtils.appGroupUserDefault.set(Date(), forKey: "LCCertificateUpdateDate")
+    }
+
+    /// What iOS answers MATERIAL's .p12 and password: its status, and the
+    /// identities it holds, each a certificate with its private key.
+    private static func openPKCS12(_ material: CartoucheSigningMaterial) -> (status: OSStatus, identities: [SecIdentity]) {
+        #if CARTOUCHE_GALLERY
+        // What iOS would answer the gallery's stand-in for a .p12 (work:
+        // signing-wrong-password).
+        if let status = GalleryState.pkcs12Status { return (status, []) }
+        #endif
+        var items: CFArray?
+        let options = [kSecImportExportPassphrase as String: material.password] as CFDictionary
+        let status = SecPKCS12Import(material.certificate as CFData, options, &items)
+        let identities = (items as? [[String: Any]] ?? []).compactMap { item -> SecIdentity? in
+            guard let value = item[kSecImportItemIdentity as String] else { return nil }
+            return (value as! SecIdentity)
+        }
+        return (status, identities)
     }
 
     struct ImportError: LocalizedError {
@@ -145,5 +166,32 @@ enum CartoucheImportedSigning {
         guard #available(iOS 17.0, *) else { return }
         let outcome = error.map { ($0 as? ImportError)?.kind ?? "other" } ?? "imported"
         CartoucheTelemetry.shared.event("signing.imported", fields: ["via": .text(via), "outcome": .text(outcome)])
+    }
+}
+
+extension CartoucheImportedSigning.ImportError {
+    /// TROUBLE, in the setup's words (CartoucheSigningCheck.swift): signed
+    /// on the iPhone (ON IPHONE), the player chose no profile, and signs
+    /// Cartouche again in their signing app; installed from a computer, they
+    /// chose the profile with the certificate.
+    init(_ trouble: CartoucheSigningTrouble, onIPhone: Bool) {
+        self.init(message: Self.words(for: trouble, onIPhone: onIPhone), kind: trouble.rawValue)
+    }
+
+    static func words(for trouble: CartoucheSigningTrouble, onIPhone: Bool) -> String {
+        switch trouble {
+        case .profileFile: return CartoucheText.signingProfileFile
+        case .zipFile: return CartoucheText.signingZipFile
+        case .notCertificate: return CartoucheText.signingNotCertificate
+        case .passwordNeeded: return CartoucheText.signingPasswordNeeded
+        case .wrongPassword: return onIPhone ? CartoucheText.signingWrongPasswordOnIPhone : CartoucheText.signingWrongPassword
+        case .noPrivateKey: return CartoucheText.signingNoPrivateKey
+        case .unreadableKey: return CartoucheText.signingUnreadableKey
+        case .signerRefused: return CartoucheText.signingSignerRefused
+        case .noOwnProfile, .ownProfileUnreadable:
+            return onIPhone ? CartoucheText.signingOwnProfileUnreadable : CartoucheText.signingInvalidProfile
+        case .expired: return onIPhone ? CartoucheText.signingOwnProfileExpired : CartoucheText.signingInvalidProfile
+        case .invalidProfile, .mismatch: return CartoucheText.signingInvalidProfile
+        }
     }
 }

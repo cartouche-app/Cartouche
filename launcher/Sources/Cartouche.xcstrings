@@ -10439,23 +10439,6 @@
         }
       }
     },
-    "signing.invalidKey" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This certificate does not open. Check its password, and that the .p12 holds its private key."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ce certificat ne s’ouvre pas. Vérifiez son mot de passe, et que le .p12 contient bien sa clé privée."
-          }
-        }
-      }
-    },
     "signing.invalidProfile" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10469,6 +10452,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ce profil n’est pas valide, a expiré ou ne correspond pas à ce certificat."
+          }
+        }
+      }
+    },
+    "signing.noPrivateKey" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This .p12 holds the certificate without its private key, which signing needs. Choose a .p12 exported with its private key."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce .p12 contient le certificat sans sa clé privée, qui sert à signer. Choisissez un .p12 exporté avec sa clé privée."
+          }
+        }
+      }
+    },
+    "signing.notCertificate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This file is not a certificate. Choose the file whose name ends in .p12."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce fichier n’est pas un certificat. Choisissez le fichier dont le nom finit par .p12."
           }
         }
       }
@@ -10507,6 +10524,40 @@
         }
       }
     },
+    "signing.ownProfileExpired" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The profile your signing app signed Cartouche with has expired. Sign Cartouche again with a valid profile, then choose the certificate here."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le profil avec lequel votre app de signature a signé Cartouche a expiré. Signez Cartouche à nouveau avec un profil valide, puis choisissez le certificat ici."
+          }
+        }
+      }
+    },
+    "signing.ownProfileUnreadable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche cannot read the profile your signing app signed it with. Sign Cartouche again in your signing app with your certificate and its profile (.mobileprovision), then choose the certificate here."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche ne lit pas le profil avec lequel votre app de signature l’a signé. Signez Cartouche à nouveau dans votre app de signature avec votre certificat et son profil (.mobileprovision), puis choisissez le certificat ici."
+          }
+        }
+      }
+    },
     "signing.password" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10524,6 +10575,23 @@
         }
       }
     },
+    "signing.passwordNeeded" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This certificate has a password. Type the one that came with it, then try again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce certificat a un mot de passe. Tapez celui qui l’accompagnait, puis réessayez."
+          }
+        }
+      }
+    },
     "signing.profileChosen" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10537,6 +10605,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Choisir un autre profil (.mobileprovision)"
+          }
+        }
+      }
+    },
+    "signing.profileFile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This file is a profile (.mobileprovision), not the certificate. Choose the .p12 file that came with it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce fichier est un profil (.mobileprovision), pas le certificat. Choisissez le fichier .p12 qui l’accompagnait."
           }
         }
       }
@@ -10592,6 +10677,23 @@
         }
       }
     },
+    "signing.signerRefused" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its password is right, but Cartouche cannot sign with this certificate. Export the .p12 again with its private key, or use another certificate."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Son mot de passe est le bon, mais Cartouche ne peut pas signer avec ce certificat. Exportez à nouveau le .p12 avec sa clé privée, ou utilisez un autre certificat."
+          }
+        }
+      }
+    },
     "signing.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10605,6 +10707,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Importer un certificat de signature"
+          }
+        }
+      }
+    },
+    "signing.unreadableKey" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS cannot read this .p12: it may be damaged or incomplete. Download or copy it again, then choose it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iOS ne lit pas ce .p12 : il est peut-être abîmé ou incomplet. Téléchargez-le ou copiez-le à nouveau, puis choisissez-le."
           }
         }
       }
@@ -10673,6 +10792,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Attendez la fin de la connexion ou de la mise à jour avant de changer de certificat."
+          }
+        }
+      }
+    },
+    "signing.wrongPassword" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This password does not open this certificate. Type the one that came with the .p12, capital letters included."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce mot de passe n’ouvre pas ce certificat. Tapez celui fourni avec le .p12, majuscules comprises."
+          }
+        }
+      }
+    },
+    "signing.wrongPasswordOnIPhone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This password does not open this certificate. Type the one that came with the .p12, which your signing app asked for too, capital letters included."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce mot de passe n’ouvre pas ce certificat. Tapez celui fourni avec le .p12, que votre app de signature vous a aussi demandé, majuscules comprises."
+          }
+        }
+      }
+    },
+    "signing.zipFile" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This file is a .zip. Tap it in the Files app first, which opens it as a folder, then choose the .p12 file in that folder."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce fichier est un .zip. Touchez-le d’abord dans l’app Fichiers, qui l’ouvre en dossier, puis choisissez le fichier .p12 de ce dossier."
           }
         }
       }

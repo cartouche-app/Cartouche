@@ -499,6 +499,9 @@ struct GalleryScenario {
         GalleryState.signing = signing == "iphone" ? .iPhone : signing == "installer" ? .installer : .account
         GalleryState.ownSignature = ownSignature
         GalleryState.ownProfile = signingTrial != nil && work != "signing-no-own-profile" ? Self.standInProfile : nil
+        // errSecAuthFailed, as iOS answers a password that does not open a
+        // .p12.
+        GalleryState.pkcs12Status = work == "signing-wrong-password" ? -25293 : nil
         GalleryState.certificateRefused = work == "certificate"
         GalleryState.appGroupMissing = work == "signed-elsewhere"
         GalleryState.liveProcessMissing = work?.hasSuffix("-no-liveprocess") == true
