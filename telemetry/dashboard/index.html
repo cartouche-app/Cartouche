@@ -381,7 +381,7 @@
     <div class="wrap">
         <nav class="jump" aria-label="Sections">
             <a href="#regarder">À regarder</a><a href="#parcours">Parcours</a><a href="#versions">Versions</a><a href="#jeux">Jeux</a><a href="#compatibilite">Par appareil</a>
-            <a href="#fins">Plantages</a><a href="#erreurs">Erreurs</a><a href="#builder">Builder</a>
+            <a href="#fins">Plantages</a><a href="#erreurs">Erreurs</a><a href="#builder">Builder</a><a href="#mac">Mac</a>
             <a href="#activite">Activité</a><a href="#fluidite">Fluidité</a><a href="#chaleur">Chaleur</a><a href="#memoire">Mémoire</a>
             <a href="#appareils">Appareils</a><a href="#installations">Installations</a><a href="#problemes">Problèmes</a><a href="#serveur">Serveur</a>
         </nav>
@@ -1227,6 +1227,47 @@
             })),
         };
 
+        // MARK: Games played on a Mac
+        // In nxnative's app for the Mac, read by Cartouche's console in its
+        // log: apart from the iPhones', which they would read as, each Mac
+        // counting once by the median of its own sessions. A game picked
+        // filters them too; a model or a version is an iPhone's.
+        const macSessions = latestSessions(all.sessions.filter((session) => fromMac(session) && (!filters.game || gameId(session) === filters.game)));
+        const macGames = [...groupBy(macSessions, gameId)]
+            .map(([id, list]) => {
+                const info = gameOf(catalog, id);
+                const judged = verdict(list);
+                const builds = countBy(list, (session) => session.nxnative);
+                return {
+                    id,
+                    name: info.name,
+                    cover: info.cover,
+                    macs: judged.iphones,
+                    sessions: list.length,
+                    minutes: sum(list.map((session) => session.minutes)),
+                    fps: judged.fps,
+                    low5: judged.low,
+                    target: judged.target,
+                    cadence: judged.cadence,
+                    stutters: judged.stutters,
+                    verdict: judged,
+                    models: countBy(list, (session) => session.device).map((row) => row.key),
+                    peak: judged.peak,
+                    ends: judged.ends,
+                    badShare: judged.badShare,
+                    gpuLost: list.filter((session) => session["end.cause"] === "gpuLost").length,
+                    build: builds[0]?.key ?? null,
+                    builds: builds.length,
+                    last: list.reduce((latest, session) => (session.day > latest ? session.day : latest), ""),
+                };
+            })
+            .sort((a, b) => b.minutes - a.minutes || b.sessions - a.sessions);
+        const macPlay = {
+            sessions: macSessions.length,
+            macs: new Set(macSessions.map((session) => session.install)).size,
+            minutes: sum(macSessions.map((session) => session.minutes)),
+        };
+
         const eventNames = countBy(events, (event) => text(event.name));
 
         // MARK: Journey
@@ -1428,7 +1469,7 @@
                 })(),
                 builds: built.length + failed.length ? { built: built.length, failed: failed.length, share: built.length / (built.length + failed.length) } : null,
                 macs: macs.length,
-                reports: reports.length + macEvents.length,
+                reports: reports.length + macEvents.length + macSessions.length,
             },
             daily,
             journey,
@@ -1453,6 +1494,8 @@
             installs,
             errors: errorsView,
             builder,
+            macGames,
+            macPlay,
             eventNames,
             problems: data.problems ?? null,
             server: {
@@ -1717,6 +1760,38 @@
             });
         });
         addMac(macs[0], dayIndex[Math.min(2, dayIndex.length - 1)], "builder.paired", { allowed: true });
+
+        // Their games played in nxnative's app for the Mac, read by
+        // Cartouche's console: a generator of their own, the iPhones' data
+        // staying as it was.
+        const macRand = random(20261117);
+        const macBetween = (low, high) => low + macRand() * (high - low);
+        const macHex = (length) => Array.from({ length }, () => Math.floor(macRand() * 16).toString(16)).join("");
+        dayIndex.forEach((day, d) => {
+            macs.forEach((macItem, m) => {
+                if (macRand() > 0.45) return;
+                const profile = profiles[(d * 3 + m) % Math.min(4, profiles.length)];
+                const minutes = round(macBetween(8, 95));
+                const fps = round(profile.target * Math.min(1, profile.quality * macBetween(1, 1.05)), 1);
+                const frameP50 = round(1000 / Math.max(fps, 1), 2);
+                const stutters = Math.round(minutes * macBetween(0.1, 1.2) * (1.4 - profile.quality));
+                const roll = macRand();
+                const end = roll < 0.03 ? { kind: "crash", signal: 11 } : roll < 0.05 ? { kind: "crash", cause: "gpuLost" } : roll < 0.08 ? { kind: "unknown" } : { kind: "quit" };
+                reports.push({
+                    kind: "session", install: macItem.install, seq: macItem.seq++, device: macItem.device, ios: macItem.ios, cartouche: "0.2.1", language: "fr",
+                    memoryLimitMiB: null, increasedMemoryLimit: null, day, game: profile.id, name: null,
+                    session: macHex(8), gameVersion: profile.version, nxnative: builds[0], nxnativeChanged: false,
+                    settings: { DM_FPS_TARGET: String(profile.target), DM_FULLSCREEN: "1" }, minutes, reader: GPU_LOST_READER,
+                    frames: Math.round(minutes * 60 * fps), targetFps: profile.target, "fps.median": fps, "fps.low5": round(fps * macBetween(0.86, 0.98), 1),
+                    "frameMs.p50": frameP50, "frameMs.p95": round(frameP50 * macBetween(1.03, 1.15), 2), "frameMs.p99": round(frameP50 * macBetween(1.2, 1.6), 2),
+                    "gpuMs.p50": round(frameP50 * macBetween(0.3, 0.5), 2), "gpuMs.p95": round(frameP50 * macBetween(0.5, 0.7), 2),
+                    "stutters.count": stutters, "stutters.perMinute": round(stutters / Math.max(minutes, 1), 1),
+                    "memory.peakMiB": Math.round(profile.peak * macBetween(1, 1.2)), "memory.exactPeak": false,
+                    "upscaler.kind": "metalfx", "upscaler.gpuMs": round(macBetween(0.6, 1.1), 2), audioUnderrunsPerMinute: 0,
+                    "end.kind": end.kind, "end.signal": end.signal ?? null, "end.cause": end.cause ?? null,
+                });
+            });
+        });
 
         // Four newcomers of the last days, who have not played yet: two the
         // Apple sign-in stopped, one that signed in and went no further, one
@@ -2332,18 +2407,19 @@
         if (reason.key === "slowest") return "5 % les plus lents à " + one(reason.low) + " im./s pour " + count(reason.target);
         return "";
     }
-    function verdictLines(judged) {
+    // The devices a verdict counts: iPhones, or Macs for a Mac's games.
+    function verdictLines(judged, devices = ["iPhone", "iPhones"]) {
         if (!judged) return [];
         return [
             STATUS_NOTES[judged.status],
             ...judged.reasons.map(reasonText),
-            plural(judged.sessions, "partie", "parties") + " sur " + plural(judged.iphones, "iPhone", "iPhones") + (judged.iphones < 3 ? " : peu de mesures" : ""),
+            plural(judged.sessions, "partie", "parties") + " sur " + plural(judged.iphones, ...devices) + (judged.iphones < 3 ? " : peu de mesures" : ""),
         ];
     }
-    function verdictPill(judged) {
+    function verdictPill(judged, devices) {
         if (!judged) return h("span", { class: "verdict quiet", "--tone": "var(--other)" }, h("i"), DASH);
         const pill = h("span", { class: "verdict" + (judged.iphones < 3 ? " quiet" : ""), "--tone": STATUS_TONES[judged.status] }, h("i"), STATUS[judged.status]);
-        return tipOn(pill, STATUS[judged.status], verdictLines(judged));
+        return tipOn(pill, STATUS[judged.status], verdictLines(judged, devices));
     }
 
     // MARK: Sections
@@ -2931,6 +3007,30 @@
         ];
     }
 
+    function macGamesTable(model, pickGame) {
+        const p = model.macPlay;
+        if (!model.macGames.length) return card("Jeux joués sur le Mac", null, empty("Aucune partie sur un Mac sur cette période."));
+        const builds = model.macGames.some((game) => game.build);
+        return h("article", { class: "card span" },
+            h("h3", { text: "Jeux joués sur le Mac" }),
+            h("p", { class: "sub", text: plural(p.sessions, "partie", "parties") + " sur " + plural(p.macs, "Mac", "Macs") + ", " + duration(p.minutes) + " de jeu, dans l'app de nxnative pour le Mac, que la console de Cartouche lit dans son journal. Le verdict suit les règles des fiches des jeux, chaque Mac comptant une fois par la médiane de ses parties ; les fiches et les autres sections ne comptent que les iPhones. Un clic sur un jeu filtre toute la page." }),
+            table([
+                { label: "Jeu", cell: gameCell, sort: (game) => gameName(game.id, game.name), numeric: false },
+                { label: "Verdict", cell: (game) => verdictPill(game.verdict, ["Mac", "Macs"]), sort: (game) => M.STATUSES.indexOf(game.verdict.status) * 1000 - game.verdict.iphones, numeric: false },
+                { label: "Macs", numeric: true, cell: (game) => count(game.macs), sort: (game) => game.macs },
+                { label: "Parties", numeric: true, cell: (game) => count(game.sessions), sort: (game) => game.sessions },
+                { label: "Temps", numeric: true, cell: (game) => duration(game.minutes), sort: (game) => game.minutes },
+                { label: "Images/s", numeric: true, cell: (game) => [one(game.fps), game.target ? h("small", { text: " / " + game.target }) : null], sort: (game) => game.cadence ?? -1 },
+                { label: "5 % lents", numeric: true, cell: (game) => one(game.low5), sort: (game) => game.low5 ?? -1 },
+                { label: "Saccades/min", numeric: true, cell: (game) => one(game.stutters), sort: (game) => game.stutters ?? -1 },
+                { label: "Pic mémoire", numeric: true, cell: (game) => mib(game.peak), sort: (game) => game.peak ?? -1 },
+                { label: "Fins", cell: (game) => h("div", { class: "endcell" }, endBar(game.ends), game.gpuLost ? h("small", { text: plural(game.gpuLost, "perte du GPU", "pertes du GPU") }) : null), sort: (game) => game.badShare ?? -1, numeric: true },
+                { label: "Modèles", cell: (game) => game.models.slice(0, 2).join(", ") + (game.models.length > 2 ? " +" + (game.models.length - 2) : ""), sort: (game) => game.models.length, numeric: false },
+                builds ? { label: "nxnative", mono: true, cell: (game) => [game.build ? game.build.slice(0, 8) : DASH, game.builds > 1 ? h("small", { text: " +" + (game.builds - 1) }) : null], sort: (game) => game.build || "", numeric: false } : null,
+                { label: "Dernière", numeric: true, cell: (game) => dayText(game.last), sort: (game) => game.last },
+            ].filter(Boolean), model.macGames, { pick: (game) => pickGame(game.id) }));
+    }
+
     function server(model) {
         const sv = model.server;
         const limit = 500 * 1024 * 1024;
@@ -3011,6 +3111,7 @@
             section("fins", "Fins de partie et plantages", "Comment les parties se terminent, et ce qui les arrête.", h("div", { class: "grid wide" }, endings(model))),
             section("erreurs", "Erreurs de Cartouche", "Ce qui échoue dans l'app, et ce que la version la plus récente fait encore.", h("div", { class: "grid wide" }, errors(model))),
             section("builder", "Cartouche Builder", "Les Macs qui construisent les jeux.", h("div", { class: "grid" }, builder(model))),
+            section("mac", "Jeux sur le Mac", "Les parties jouées sur les Macs, à part de celles des iPhones.", h("div", { class: "grid wide" }, macGamesTable(model, pickGame))),
             section("activite", "Activité", null, h("div", { class: "grid wide" }, activity(model), eventsCard(model), weekdays(model))),
             section("fluidite", "Fluidité", "Ce que nxnative a mesuré pendant les parties.", h("div", { class: "grid" }, fluidity(model))),
             section("chaleur", "Chaleur et énergie", null, h("div", { class: "grid" }, heat(model))),

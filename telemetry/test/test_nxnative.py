@@ -8,7 +8,8 @@ app-reports.json.
   installs gave shows –; the peak is each install's highest, of its sessions
   that drew a frame;
 - the sessions on iPhones without BC textures, those whose game process ran
-  without Increased Memory Limit, and those of changed builds are set apart;
+  without Increased Memory Limit, those of changed builds, and those played
+  on a Mac are set apart;
 - the lines by model and by commit, the crashes and the builds by commit
   show only what three installs, or three Macs, share; a commit, a model or
   a step fewer share is never named;
@@ -249,6 +250,21 @@ class NxnativePageTest(unittest.TestCase):
             "installs.", page)
         self.assertNotIn("iPhone15,4", page)
         self.assertIn("12 game sessions from 12 installs", page)
+
+    def test_the_sessions_played_on_a_mac_are_set_apart(self):
+        """Cartouche Builder reports the sessions of the games played on its
+        Mac, in nxnative's app for the Mac: the page sums up the iPhones'."""
+        for phone in self.phones[:3]:
+            self.session(phone)
+        for mac in self.macs[:3]:
+            self.session(mac, device="Mac16,12", ios="26.6", memoryLimitMiB=None, increasedMemoryLimit=None,
+                         end={"kind": "quit"})
+        self.run_page()
+        page = self.page()
+        self.assertEqual([(row["Game"], row["Installs"]) for row in rows(page, "By game")], [(MKW_NAME, "3")])
+        self.assertIn("Set apart: 3 sessions played on a Mac, in nxnative's app for the Mac, which this page does "
+                      "not sum up, from 3 installs.", page)
+        self.assertNotIn("Mac16,12", page)
 
     # MARK: What several installs share
 

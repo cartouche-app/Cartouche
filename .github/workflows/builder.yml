@@ -91,6 +91,7 @@ on:
       - "launcher/Sources/CartoucheSwitchSaveArchive.swift"
       - "launcher/Sources/CartoucheSwitchSaveView.swift"
       - "launcher/Sources/CartoucheTelemetryReport.swift"
+      - "launcher/Sources/CartoucheTelemetryView.swift"
       - "launcher/Sources/CartoucheText.swift"
       - "launcher/Sources/CartoucheTextDrive.swift"
       - "launcher/Sources/CartoucheTextGameInfo.swift"

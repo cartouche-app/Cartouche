@@ -211,6 +211,42 @@
     "switchSave.version": {
       "en": "Version on this Mac",
       "fr": "Version sur ce Mac"
+    },
+    "telemetry.erase": {
+      "en": "Erase what this Mac sent",
+      "fr": "Effacer les envois de ce Mac"
+    },
+    "telemetry.erase.failed": {
+      "en": "The server could not be reached. Try again when this Mac is online.",
+      "fr": "Le serveur est injoignable. Réessayez quand ce Mac est en ligne."
+    },
+    "telemetry.erase.message": {
+      "en": "The server deletes every report of this copy of Cartouche Builder, the console’s with them, which then sends under a new number.",
+      "fr": "Le serveur supprime tous les rapports de cette copie de Cartouche Builder, ceux de la console compris, qui envoie ensuite sous un nouveau numéro."
+    },
+    "telemetry.footer": {
+      "en": "After each game played on this Mac, Cartouche sends what nxnative measured while it ran, with the console’s and the Builder’s own events. They show which games run well on which Mac, and what to fix.",
+      "fr": "Après chaque partie sur ce Mac, Cartouche envoie ce que nxnative a mesuré pendant le jeu, avec les événements de la console et du Builder. Ils montrent quels jeux tournent bien sur quel Mac, et ce qu’il faut corriger."
+    },
+    "telemetry.noServer": {
+      "en": "This build of Cartouche Builder has no server to send to: it keeps nothing to send.",
+      "fr": "Cette version de Cartouche Builder n’a pas de serveur où envoyer : elle ne garde rien à envoyer."
+    },
+    "telemetry.what.device": {
+      "en": "This Mac’s model and macOS version, Cartouche Builder’s version and language, and a random number of this copy of Cartouche Builder.",
+      "fr": "Le modèle de ce Mac et sa version de macOS, la version et la langue de Cartouche Builder, et un numéro tiré au hasard pour cette copie de Cartouche Builder."
+    },
+    "telemetry.what.events": {
+      "en": "Each start of Cartouche Builder, the setup of the Mac’s tools, builds and their batches, games installed and played on this Mac and their saves kept in step, devices paired, imports, room freed, updates, changes to a game’s info, and errors, by their codes and the step they stopped at.",
+      "fr": "Chaque ouverture de Cartouche Builder, l’installation des outils du Mac, les constructions et leurs lots, les jeux installés et joués sur ce Mac et la synchronisation de leurs sauvegardes, les appareils jumelés, les imports, la place libérée, les mises à jour, les changements des infos d’un jeu et les erreurs, par leurs codes et l’étape où elles se sont arrêtées."
+    },
+    "telemetry.what.games": {
+      "en": "For each game session: frame rate, frame and GPU times, stutters and what caused them, shader preparation, memory, power, sound, how the game ended, and the game’s version and settings.",
+      "fr": "Pour chaque partie : images par seconde, temps d’image et du GPU, saccades et leurs causes, préparation des shaders, mémoire, énergie, son, la façon dont le jeu s’est arrêté, la version du jeu et ses réglages."
+    },
+    "telemetry.what.never": {
+      "en": "Never your Apple account, the names of this Mac and of your devices, your files and their paths, the addresses of your storage or the game’s log itself.",
+      "fr": "Jamais votre compte Apple, le nom de ce Mac ni de vos appareils, vos fichiers ni leurs chemins, les adresses de votre stockage ni le journal du jeu lui-même."
     }
   },
   "strings": {

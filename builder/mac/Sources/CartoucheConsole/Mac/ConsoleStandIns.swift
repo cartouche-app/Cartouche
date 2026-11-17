@@ -8,9 +8,9 @@
 //  setup (a certificate and a pairing file), its Apple ID, its first
 //  game's guide, the game behind the console, the iPhone's model, memory
 //  limit, signature and its renewals, how a game fits it, where a game
-//  keeps its saves, the journal of its reports and its measurements. The
-//  saves themselves, which the Builder keeps in step, are in
-//  ConsoleSaves.swift.
+//  keeps its saves and the journal of its reports. The saves themselves,
+//  which the Builder keeps in step, are in ConsoleSaves.swift, and its
+//  measurements, which the Builder sends, in ConsoleTelemetry.swift.
 //  A Mac plays the games nxnative built for it, each in its own app: the
 //  console has nothing to set up, no limit of memory from iOS, no signature
 //  that expires, nothing behind it. A game fits it by the iPhone's rule
@@ -518,16 +518,3 @@ struct CartoucheReportButton: View {
         }
     }
 }
-
-// MARK: Measurements
-
-/// Cartouche's measurements of the games and of its own events
-/// (CartoucheTelemetry.swift on the iPhone): the console's come with its
-/// System page, and until then an event is not kept.
-@MainActor
-final class CartoucheTelemetry {
-    static let shared = CartoucheTelemetry()
-
-    func event(_ name: String, game: String? = nil, fields: [String: CartoucheTelemetryValue] = [:]) {}
-}
-

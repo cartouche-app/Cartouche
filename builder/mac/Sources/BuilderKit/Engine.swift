@@ -48,6 +48,9 @@ public struct BuilderHome: Equatable, Sendable {
     public var saves: URL { root.appendingPathComponent("Saves", isDirectory: true) }
     /// What this Mac knows of the saves of the games played on it (MacSaves.swift).
     public var macSaves: URL { root.appendingPathComponent("mac-saves.json") }
+    /// The logs of the games played on this Mac that the console read, each
+    /// session reported once (CartoucheConsole's ConsoleTelemetry.swift).
+    public var sessions: URL { root.appendingPathComponent("sessions.json") }
     /// The copies of saves that come, unpacked there first.
     public var savesScratch: URL { root.appendingPathComponent("Saves scratch", isDirectory: true) }
 }

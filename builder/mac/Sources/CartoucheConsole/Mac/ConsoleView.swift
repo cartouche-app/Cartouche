@@ -260,8 +260,8 @@ public struct CartoucheMacConsoleView: View {
     enum Route: Hashable {
         case library
         /// The console's System page (ConsoleSystem.swift), and its Storage
-        /// page, the iPhone's.
-        case system, storage
+        /// and Game measurements pages, the iPhone's.
+        case system, storage, telemetry
     }
 
     /// The console on its home, or with every game open (SHOWINGLIBRARY),
@@ -269,12 +269,14 @@ public struct CartoucheMacConsoleView: View {
     /// (SHOWINGSETTINGS), or that game's info over it (SHOWINGINFO), or the
     /// sheet of the game of the title ID SHOWINGSHEETOF beside it, with the
     /// page of its saves SHOWINGSAVES open, or with its System page open
-    /// (SHOWINGSYSTEM), or the Storage page under it (SHOWINGSTORAGE), as
-    /// the app's gallery shows it.
+    /// (SHOWINGSYSTEM), or the Storage page under it (SHOWINGSTORAGE), or
+    /// its Game measurements page (SHOWINGMEASURES), as the app's gallery
+    /// shows it.
     public init(showingLibrary: Bool = false, showingSettings: Bool = false, showingInfo: Bool = false,
                 showingSheetOf titleID: String? = nil, showingSaves: CartoucheMacSavesPage? = nil,
-                showingSystem: Bool = false, showingStorage: Bool = false) {
-        _path = State(initialValue: showingLibrary ? [.library] : showingStorage ? [.system, .storage] : showingSystem ? [.system] : [])
+                showingSystem: Bool = false, showingStorage: Bool = false, showingMeasures: Bool = false) {
+        _path = State(initialValue: showingLibrary ? [.library] : showingStorage ? [.system, .storage]
+                        : showingMeasures ? [.system, .telemetry] : showingSystem ? [.system] : [])
         opensSettings = showingSettings
         opensInfo = showingInfo
         opensSheetOf = titleID
@@ -382,6 +384,9 @@ public struct CartoucheMacConsoleView: View {
                     case .storage:
                         CartoucheStorageView()
                             .cartoucheConsolePage(CartoucheText.storageTitle, back: CartoucheText.systemTab)
+                    case .telemetry:
+                        CartoucheTelemetryView()
+                            .cartoucheConsolePage(CartoucheText.telemetryTitle, back: CartoucheText.systemTab)
                     }
                 }
         }

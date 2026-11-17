@@ -290,6 +290,8 @@ public final class BuilderTelemetry: ObservableObject {
         var sent = 0
         var lastSent: Date?
         var lastVersion: String?
+        /// The last report made, as it is sent.
+        var lastReport: String?
 
         init() {
             install = BuilderTelemetry.newNumber()
@@ -306,6 +308,7 @@ public final class BuilderTelemetry: ObservableObject {
             sent = try values.decodeIfPresent(Int.self, forKey: .sent) ?? 0
             lastSent = try values.decodeIfPresent(Date.self, forKey: .lastSent)
             lastVersion = try values.decodeIfPresent(String.self, forKey: .lastVersion)
+            lastReport = try values.decodeIfPresent(String.self, forKey: .lastReport)
         }
     }
 
@@ -314,6 +317,9 @@ public final class BuilderTelemetry: ObservableObject {
     @Published public private(set) var waiting: Int
     @Published public private(set) var lastSent: Date?
     @Published public private(set) var isErasing = false
+    /// The last report made, as it is sent: Cartouche's console shows it
+    /// (System › Game measurements).
+    @Published public private(set) var lastReport: String?
 
     /// The language the app shows, sent with each report.
     public var language: String?
@@ -352,7 +358,12 @@ public final class BuilderTelemetry: ObservableObject {
         sent = state.sent
         waiting = state.queue.entries.count
         lastSent = state.lastSent
+        lastReport = state.lastReport
     }
+
+    /// Whether the app has a server to send to: a build without one keeps
+    /// and sends nothing.
+    public var hasServer: Bool { endpoint != nil }
 
     // MARK: Start
 
@@ -400,6 +411,7 @@ public final class BuilderTelemetry: ObservableObject {
         state.queue.removeAll()
         state.sent = 0
         state.lastSent = nil
+        state.lastReport = nil
         save()
         return true
     }
@@ -414,6 +426,21 @@ public final class BuilderTelemetry: ObservableObject {
         guard let report = TelemetryEvent(id: Self.newNumber(), seq: state.seq, context: context, name: name, game: game, fields: fields),
               let body = try? TelemetryFormat.json(report) else { return }
         state.queue.add(TelemetryQueue.Entry(id: report.id, created: Date(), body: body))
+        state.lastReport = body
+        save()
+        send()
+    }
+
+    /// Queues a report Cartouche's console made, a session of a game played
+    /// on this Mac (telemetry/README.md#cartouche-builder), if the player
+    /// has telemetry on and the app a server, and sends. MAKE is given this
+    /// copy's context and the report's number, and gives the report's random
+    /// number and body, or nil for none.
+    public func report(_ make: (TelemetryContext, Int) -> (id: String, body: String)?) {
+        guard state.isOn, endpoint != nil, let made = make(context, state.seq + 1) else { return }
+        state.seq += 1
+        state.queue.add(TelemetryQueue.Entry(id: made.id, created: Date(), body: made.body))
+        state.lastReport = made.body
         save()
         send()
     }
@@ -655,6 +682,7 @@ public final class BuilderTelemetry: ObservableObject {
         sent = state.sent
         waiting = state.queue.entries.count
         lastSent = state.lastSent
+        lastReport = state.lastReport
         guard let file, let data = try? JSONEncoder().encode(state) else { return }
         try? FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
         try? data.write(to: file, options: .atomic)

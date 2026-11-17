@@ -17,7 +17,9 @@ least three Macs tried and none built, which the app warns of before one is
 built (builder/mac/Sources/BuilderKit/Unbuilt.swift). Set apart, so that they do not read as nxnative's: the sessions on
 iPhones whose GPU reads no BC texture, which nxnative refuses; those whose
 game process ran without Increased Memory Limit, which is Cartouche's doing;
-and those of builds with changes of their own.
+and those of builds with changes of their own. Set apart too, as the page
+sums up the iPhones': the sessions played on a Mac, in nxnative's app for
+the Mac, which Cartouche Builder reports (telemetry/README.md#cartouche-builder).
 
 It reads the D1 database through Cloudflare's API, with the secrets
 CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID, and does nothing without
@@ -54,6 +56,8 @@ BRANCH = "nxnative-measurements"
 # iPhones whose GPU reads no BC texture: the A16 and older ones, iPhone15,x
 # and before. nxnative's iOS check refuses them for every game.
 IPHONE = re.compile(r"^iPhone([0-9]+),[0-9]+$")
+# A Mac's model identifier, as Cartouche Builder sends it.
+MAC = re.compile(r"^Mac[0-9]+,[0-9]+$")
 LAST_WITHOUT_BC = 15
 
 # A game process with this limit or less, while Cartouche had more, ran
@@ -157,6 +161,8 @@ def reads_bc(device: str | None) -> bool:
 
 def set_apart(session: dict) -> str | None:
     """Why the session does not count for nxnative, if it does not."""
+    if MAC.match(session.get("device") or ""):
+        return "mac"
     if not reads_bc(session.get("device")):
         return "gpu"
     process, limit = number(session.get("processLimit")), number(session.get("limitMiB"))
@@ -393,13 +399,14 @@ def page(catalog: Catalog, sessions: list[dict], events: list[dict], first: dt.d
         "",
     ]
     if apart:
-        said = {"gpu": "on iPhones whose GPU reads no BC texture (A16 and older), which nxnative refuses",
+        said = {"mac": "played on a Mac, in nxnative's app for the Mac, which this page does not sum up",
+                "gpu": "on iPhones whose GPU reads no BC texture (A16 and older), which nxnative refuses",
                 "memory": "whose game process ran without Increased Memory Limit, which is Cartouche's doing",
                 "changed": "of builds with changes of their own"}
         lines += ["Set apart: " + "; ".join(
             f"{apart[reason]} sessions {said[reason]}, from {installs_text(len(apart_installs[reason]))}"
             if len(apart_installs[reason]) >= MIN_INSTALLS else f"sessions {said[reason]}, from {installs_text(1)}"
-            for reason in ("gpu", "memory", "changed") if apart[reason]) + ".", ""]
+            for reason in ("mac", "gpu", "memory", "changed") if apart[reason]) + ".", ""]
 
     lines += table("By game", ["Game", "nxnative"], by_game,
                    lambda key, group: [catalog.name(key[0]), commits_text(group)],

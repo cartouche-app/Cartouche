@@ -3,10 +3,12 @@
 //  Cartouche on the Mac
 //
 //  The console's System page on the Mac, which its dock's System opens,
-//  until the iPhone's comes to the Mac with its measurements and its
-//  reports (CartoucheSystemView.swift, step 8 of the plan): the player's
-//  storage, the iPhone's Storage page, its connections the same as the
-//  paired iPhones', and Cartouche Builder, which System opened before.
+//  until the iPhone's comes to the Mac with its reports and its guide
+//  (CartoucheSystemView.swift, step 8 of the plan): the player's storage,
+//  the iPhone's Storage page, its connections the same as the paired
+//  iPhones'; the game measurements, the iPhone's page, of the telemetry
+//  the Builder sends (ConsoleTelemetry.swift); and Cartouche Builder,
+//  which System opened before.
 //
 
 import SwiftUI
@@ -14,6 +16,7 @@ import SwiftUI
 struct CartoucheMacSystemView: View {
     @ObservedObject private var settings = CartoucheStorageSettings.shared
     @ObservedObject private var reach = CartoucheStorageReach.shared
+    @ObservedObject private var telemetry = CartoucheTelemetry.shared
     /// Cartouche Builder, in the window in place of the console.
     let onBuilder: () -> Void
 
@@ -41,6 +44,16 @@ struct CartoucheMacSystemView: View {
                         }
                     } label: {
                         Label(CartoucheText.storageTitle, systemImage: "externaldrive.fill")
+                    }
+                }
+            }
+            // As on the iPhone's System page.
+            Section {
+                NavigationLink(value: CartoucheMacConsoleView.Route.telemetry) {
+                    LabeledContent {
+                        Text(telemetry.isOn ? CartoucheText.telemetryOn : CartoucheText.telemetryOff)
+                    } label: {
+                        Label(CartoucheText.telemetryTitle, systemImage: "chart.bar.xaxis")
                     }
                 }
             }

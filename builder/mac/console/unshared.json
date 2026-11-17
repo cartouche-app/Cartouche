@@ -215,14 +215,9 @@
       "why": "The game alone on a TV while the iPhone keeps its controls: a Mac shows the game on any of its displays itself."
     },
     "CartoucheTelemetry.swift": {
-      "kind": "later",
-      "why": "Cartouche's measurements of the games: the console's own on the Mac, told apart from the iPhone's on the dashboard; the Builder measures the Mac's builds and games meanwhile (builder.*).",
-      "step": 8
-    },
-    "CartoucheTelemetryView.swift": {
-      "kind": "later",
-      "why": "System › Game measurements: with the console's measurements on the Mac.",
-      "step": 8
+      "kind": "mac",
+      "why": "Cartouche's measurements on the iPhone: its switch, its queue and its number, the games' log.txt in LiveContainer's containers, and its own events, by UIKit's notifications. On the Mac, the console reads the sessions of the log nxnative's app for the Mac writes, with the same reader and the same report, and the Builder's telemetry keeps the switch, the queue and the number for both, and sends (BuilderKit/BuilderTelemetry.swift).",
+      "mac": "CartoucheConsole/Mac/ConsoleTelemetry.swift"
     },
     "CartoucheTextReset.swift": {
       "kind": "iphone",

@@ -30,6 +30,7 @@ import telemetry, { resetThrottle } from "../worker.js";
 const PAGE = readFileSync(new URL("../dashboard/index.html", import.meta.url), "utf8");
 const SCHEMA_SQL = readFileSync(new URL("../schema.sql", import.meta.url), "utf8");
 const APP_REPORTS = JSON.parse(readFileSync(new URL("./app-reports.json", import.meta.url), "utf8")).reports;
+const BUILDER_REPORTS = JSON.parse(readFileSync(new URL("./builder-reports.json", import.meta.url), "utf8")).reports;
 
 // The page's model, run as the browser runs it, here.
 const MODEL = /<script nonce="\{\{nonce\}\}" id="model">([\s\S]*?)<\/script>/.exec(PAGE)[1];
@@ -519,6 +520,39 @@ test("Cartouche Builder's Macs are not iPhones", () => {
   assert.deepEqual(model.builder.built.reasons.map((item) => item.key), ["named", "shared"]);
   assert.equal(model.builder.built.games[0].name, "Super Mario Odyssey");
   assert.ok(!model.eventNames.some((item) => item.key.startsWith("builder.")));
+});
+
+test("the games played on a Mac are set apart from the iPhones', each Mac once", () => {
+  // As Cartouche's console reads them in the log of nxnative's app for the Mac.
+  const played = BUILDER_REPORTS.find((report) => report.kind === "session");
+  const grown = { ...played, seq: played.seq + 3, minutes: 45 };
+  const other = { ...played, install: "0b1e2c3d-0000-4000-8000-000000000000", session: "0f0f0f0f-0000-4000-8000-000000000001", device: "Mac15,9", minutes: 12, end: { kind: "crash", cause: "gpuLost" } };
+  const opened = { schema: 1, kind: "event", seq: 1, install: played.install, cartouche: "0.2.1", device: "Mac16,12", ios: "26.6", name: "builder.opened", fields: { games: 3 } };
+  const model = M.build(answer([asRow(grown), asRow(other), asRow(played), asRow(opened), ...APP_REPORTS.map(asRow)]), CATALOG);
+  // Not an iPhone's: the iPhones' sections, filters and sums leave them out.
+  assert.equal(model.totals.iphones, 1);
+  assert.ok(model.games.every((game) => game.id !== played.game));
+  assert.ok(model.options.games.every((item) => item.value !== played.game));
+  assert.ok(model.options.devices.every((item) => !item.value.startsWith("Mac")));
+  assert.equal(model.totals.sessions, APP_REPORTS.filter((report) => report.kind === "session").length);
+  // Apart: the session read again once its log grew counts once, at its highest seq.
+  assert.deepEqual(model.macPlay, { sessions: 2, macs: 2, minutes: 57 });
+  const [game] = model.macGames;
+  assert.equal(game.id, played.game);
+  assert.equal(game.macs, 2);
+  assert.equal(game.sessions, 2);
+  assert.equal(game.minutes, 57);
+  assert.equal(game.ends.ok, 1);
+  assert.equal(game.ends.crash, 1);
+  assert.equal(game.gpuLost, 1);
+  assert.equal(game.fps, played.fps.median);
+  assert.equal(game.target, 60);
+  assert.deepEqual([...game.models].sort(), ["Mac15,9", "Mac16,12"]);
+  assert.equal(game.build, played.nxnative);
+  assert.equal(game.verdict.status, "boots", "one of two ended badly");
+  assert.equal(model.totals.reports, APP_REPORTS.length + 1 + 2);
+  // A game picked filters them too.
+  assert.equal(M.build(answer([asRow(played), ...APP_REPORTS.map(asRow)]), CATALOG, { game: "0400C3F00006E000" }).macGames.length, 0);
 });
 
 test("the filters scope everything to a game, a model or a version", () => {
@@ -1027,6 +1061,8 @@ test("the sample data fills every section, and is the same each time", () => {
     models: model.compatibility.models.length,
     attention: model.attention.length,
     commits: model.builder.byCommit.length,
+    macSessions: model.macPlay.sessions,
+    macGames: model.macGames.length,
   })) {
     assert.ok(value > 0, name);
   }

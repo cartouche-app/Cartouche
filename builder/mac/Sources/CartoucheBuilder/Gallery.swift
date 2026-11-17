@@ -44,11 +44,11 @@ enum Gallery {
         // waiting for the game's update, a newer version having written it,
         // with the copies of its saves and its Switch saves, the pages its
         // saves open; its System page, and the Storage page that one opens,
-        // with the player's connections.
+        // with the player's connections, and its Game measurements page.
         case console, consoleLibrary = "console-library", consoleSettings = "console-settings", consoleInfo = "console-info"
         case consoleSheet = "console-sheet", consoleSheetNewer = "console-sheet-newer"
         case consoleSaves = "console-saves", consoleSwitchSave = "console-switch-save"
-        case consoleSystem = "console-system", consoleStorage = "console-storage"
+        case consoleSystem = "console-system", consoleStorage = "console-storage", consoleMeasures = "console-measures"
         // What the window's height leaves out: the settings' Builds tab, and
         // the storage page down to the games on this Mac, in a window as
         // tall as it.
@@ -62,7 +62,7 @@ enum Gallery {
         /// Whether the page is the console's, which is always dark.
         var isConsole: Bool {
             [.console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet, .consoleSheetNewer, .consoleSaves,
-             .consoleSwitchSave, .consoleSystem, .consoleStorage].contains(self)
+             .consoleSwitchSave, .consoleSystem, .consoleStorage, .consoleMeasures].contains(self)
         }
 
         /// Whether the page is a game's whole sheet, in a window as tall.
@@ -101,6 +101,8 @@ enum Gallery {
             case .consoleSheet, .consoleSheetNewer: return CGSize(width: 1024, height: 1640)
             // This Mac and every connection, down to the footer.
             case .consoleStorage: return CGSize(width: 1024, height: 1260)
+            // What is sent, down to the way to erase it.
+            case .consoleMeasures: return CGSize(width: 1024, height: 1180)
             // The window at its smallest, with a game's sheet whose
             // nxnative commits are a paragraph each, as nxnative writes them.
             case .gameNarrow: return CGSize(width: Columns.window.width, height: 680)
@@ -215,7 +217,7 @@ enum Gallery {
         case .settings, .settingsBuilds:
             controller = settings(model, open: page == .settingsBuilds ? .builds : .general)
         case .console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet, .consoleSheetNewer, .consoleSaves, .consoleSwitchSave,
-             .consoleSystem, .consoleStorage:
+             .consoleSystem, .consoleStorage, .consoleMeasures:
             ConsoleGallery.prepare(language: L10n.code, newer: page == .consoleSheetNewer)
             model.show(.console)
             let sheet = page.isWholeSheet || page.savesPage != nil
@@ -223,7 +225,8 @@ enum Gallery {
                                          showingInfo: page == .consoleInfo,
                                          showingSheetOf: sheet ? ConsoleGallery.sheetGame : nil,
                                          showingSaves: page.savesPage,
-                                         showingSystem: page == .consoleSystem, showingStorage: page == .consoleStorage), model)
+                                         showingSystem: page == .consoleSystem, showingStorage: page == .consoleStorage,
+                                         showingMeasures: page == .consoleMeasures), model)
         case .gameAfterConsole:
             // The console first, in the window, as the player had it.
             ConsoleGallery.prepare(language: L10n.code)
@@ -248,7 +251,7 @@ enum Gallery {
             }
         }
         let frame = CGRect(origin: CGPoint(x: 80, y: 80), size: size)
-        let window: NSWindow = page == .storageMac || page.isWholeSheet || page == .consoleStorage
+        let window: NSWindow = page == .storageMac || page.isWholeSheet || page == .consoleStorage || page == .consoleMeasures
             ? TallWindow(contentRect: frame, styleMask: page.styleMask, backing: .buffered, defer: false)
             : KeyWindow(contentRect: frame, styleMask: page.styleMask, backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
