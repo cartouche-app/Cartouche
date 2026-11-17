@@ -76,6 +76,12 @@ enum Gallery {
         /// Whether the page is a game's whole sheet, in a window as tall.
         var isWholeSheet: Bool { self == .consoleSheet || self == .consoleSheetNewer }
 
+        /// Whether the page is in a window taller than the screen, as tall
+        /// as the page, which AppKit would fit to the screen.
+        var isTall: Bool {
+            isWholeSheet || [.storageMac, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport].contains(self)
+        }
+
         /// The page of the sheet's saves it opens over the sheet.
         var savesPage: ConsoleSavesPage? {
             switch self {
@@ -267,8 +273,7 @@ enum Gallery {
             }
         }
         let frame = CGRect(origin: CGPoint(x: 80, y: 80), size: size)
-        let window: NSWindow = page == .storageMac || page.isWholeSheet || page == .consoleStorage || page == .consoleMeasures
-            || page == .consoleReport
+        let window: NSWindow = page.isTall
             ? TallWindow(contentRect: frame, styleMask: page.styleMask, backing: .buffered, defer: false)
             : KeyWindow(contentRect: frame, styleMask: page.styleMask, backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
