@@ -8,7 +8,7 @@
 //  the library, the games building and those waiting their turn, as the
 //  window shows them (BridgeBuilds.swift), with what each build makes, for
 //  the iPhone, for the Mac or both, and the part it makes now (decision
-//  126); a game built, its app for the Mac alone when that alone is due,
+//  127); a game built, its app for the Mac alone when that alone is due,
 //  Build what is due, Stop, Remove from the queue, Stop all, Follow, and
 //  the nightly build. A game no Mac built (Unbuilt.swift) is never built
 //  from the iPhone, which cannot answer the window's question: the iPhone
@@ -27,7 +27,7 @@ extension BridgeController: BridgeBuildsSource {
         let control = BridgeBuilds.Control(stoppable: { IPhoneBuilds.stoppable($0, model) }, stopping: { model.stopping($0) },
                                            due: model.dueOutsideBatch.count, nightly: nightly)
         // A step in the iPhone's words, which say "the Mac", not "this Mac";
-        // what each build makes, as this window says it (decision 126).
+        // what each build makes, as this window says it (decision 127).
         return BridgeBuilds.shared(games: model.library?.games ?? [], building: running ? model.status?.current ?? [] : [],
                                    waiting: model.waiting, running: model.isBuilding, ready: model.canBuild,
                                    why: IPhoneBuilds.why(model), stage: { stageText($0, onIPhone: true) },

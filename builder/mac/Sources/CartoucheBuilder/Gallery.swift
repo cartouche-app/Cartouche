@@ -406,7 +406,7 @@ enum Gallery {
                 // Kirby built in it, for the iPhone and this Mac, Mario Kart
                 // 8 Deluxe building, Metroid Dread waiting its turn, Super
                 // Mario Odyssey and Breath of the Wild, built for the iPhone
-                // alone, asked for since (decision 126).
+                // alone, asked for since (decision 127).
                 let states: [String: GameState] = ["01004D300C5AE000": .upToDate, "0100152000022000": .building,
                                                    "010093801237C000": .queued, "0100000000010000": .queued,
                                                    "01007EF00011E000": .queued]

@@ -602,7 +602,7 @@ final class AppModel: ObservableObject {
     }
 
     /// What the build of PROGRESS makes, building or waiting its turn, and
-    /// the part it makes now (decision 126): as the batch planned it; for a
+    /// the part it makes now (decision 127): as the batch planned it; for a
     /// game asked for that it has not planned yet, as the game's settings
     /// say, forced as it was asked, else as its Build button asks it
     /// (Game.plannedTargets).

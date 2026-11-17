@@ -5,7 +5,7 @@
 //  The builds: the game building now, its step and how far it is, the
 //  games waiting their turn, and what the last batch did; what each build
 //  makes, for the iPhone, for this Mac or both, and the part it makes now
-//  (decision 126). A game asked for while a batch runs waits its turn at
+//  (decision 127). A game asked for while a batch runs waits its turn at
 //  the end of it, and each game can be taken out of it, the one building
 //  too: the batch goes on with the next. A batch goes on when the window,
 //  or the app, is closed; the Mac stays awake for it.
@@ -385,7 +385,7 @@ struct GameList: View {
         .padding(.vertical, 8)
     }
 
-    /// How it went, and what for (decision 126): its IPA, for the iPhone,
+    /// How it went, and what for (decision 127): its IPA, for the iPhone,
     /// its app for this Mac, or both; the IPA built and its Mac app not, the
     /// line under its name says why.
     private func stateText(_ game: GameProgress) -> String {

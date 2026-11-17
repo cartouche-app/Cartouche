@@ -586,7 +586,7 @@ public struct Game: Codable, Equatable, Identifiable {
     }
 
     /// What a build of it asked for makes, until the batch plans it
-    /// (decision 126): what it is built for, or its app for this Mac alone
+    /// (decision 127): what it is built for, or its app for this Mac alone
     /// when that alone is due and the build is not FORCED, as the planner
     /// does (cartouche_builder/planner.py).
     public func plannedTargets(forced: Bool) -> CartoucheBuildTargets? {
@@ -705,7 +705,7 @@ public struct GameProgress: Codable, Equatable {
     public var onMacNow: Bool { platform == "mac" }
 
     /// What its build makes, the iPhone's IPA then this Mac's app, or one
-    /// of the two, and, building, the one it makes now (decision 126): as
+    /// of the two, and, building, the one it makes now (decision 127): as
     /// the engine says once the batch planned the game; from an older
     /// engine, by how the batch builds its Mac app. Nil for a game asked
     /// for that the batch has not planned yet, which the app says from the

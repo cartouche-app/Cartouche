@@ -285,7 +285,7 @@ final class EngineAnswerTests: XCTestCase {
         XCTAssertEqual(status.current.map(\.titleID), ["010093801237C000"])
     }
 
-    /// What a build makes, and the part it makes now (decision 126): as the
+    /// What a build makes, and the part it makes now (decision 127): as the
     /// engine says once the batch planned the game; from an older engine,
     /// by how the batch builds its Mac app; nothing for a game asked for
     /// that the batch has not planned yet, which the app says from the

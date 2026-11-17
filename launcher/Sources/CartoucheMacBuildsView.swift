@@ -9,7 +9,7 @@
 //  its IPA, the sheet shows where its build is (building, waiting its turn,
 //  up to date, improved by nxnative, failed), what it is for, the iPhone,
 //  the Mac or both, and of a game built for both, its app for the Mac apart
-//  when that alone is to build or failed (decision 126); the button that
+//  when that alone is to build or failed (decision 127); the button that
 //  asks the Mac to build it, at once or after the games of the batch
 //  running, as the game's Build button on the Mac does, the one that stops
 //  its build or
@@ -547,7 +547,7 @@ struct CartoucheMacBuildsSection: View {
         }
     }
 
-    /// What a build is for, as a line (decision 126): the iPhone, the Mac
+    /// What a build is for, as a line (decision 127): the iPhone, the Mac
     /// or both; building, the part it makes now.
     static func target(_ targets: CartoucheBuildTargets) -> some View {
         Label(targetText(targets.line), systemImage: targetSymbol(targets.line))

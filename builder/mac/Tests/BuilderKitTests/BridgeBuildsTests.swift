@@ -11,7 +11,7 @@
 //  Mac's refusal in its own words, and the rest of what the window does,
 //  asked from the iPhone. What each build is for, the iPhone, the Mac or
 //  both, and the part it makes now, and a game's app for the Mac apart
-//  (decision 126). What Cartouche makes of them is tested with Cartouche's
+//  (decision 127). What Cartouche makes of them is tested with Cartouche's
 //  (launcher/Tests/CartoucheCoreTests/CartoucheBridgeBuildsTests.swift).
 //
 

@@ -11,7 +11,7 @@
 //  what the Mac's window does, asked of a Mac whose info says it takes it.
 //  What each build is for, the iPhone, the Mac or both, and the part it
 //  makes now, and a game's app for the Mac due or failed apart from its
-//  IPA (decision 126).
+//  IPA (decision 127).
 //
 
 import Foundation

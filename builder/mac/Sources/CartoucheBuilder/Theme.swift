@@ -103,7 +103,7 @@ struct GameLook {
             if progress.state == "building" {
                 let percent = (progress.overall ?? progress.frac).map { " " + Format.percent($0) } ?? ""
                 // What it makes now: its IPA, for the iPhone, or its app for
-                // this Mac, after its IPA or alone (decision 126).
+                // this Mac, after its IPA or alone (decision 127).
                 switch progress.targets?.now {
                 case .mac?:
                     text = tr("Building for this Mac", "Construction pour ce Mac") + percent
@@ -278,7 +278,7 @@ private func macStageOnIPhone(_ stage: String) -> String? {
 }
 
 /// What a build makes, the iPhone's IPA, this Mac's app or both, and the
-/// part it makes now, in this window's words (decision 126): on the
+/// part it makes now, in this window's words (decision 127): on the
 /// activity page, the queue, a game's sheet and the menu bar.
 struct TargetLabel: View {
     let targets: CartoucheBuildTargets

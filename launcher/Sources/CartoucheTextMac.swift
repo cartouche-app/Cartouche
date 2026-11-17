@@ -69,7 +69,7 @@ extension CartoucheText {
     static var macBuildMacFailed: String { s("mac.build.macFailed", "Its IPA is up to date, the last build of its app for the Mac failed") }
     static func macBuildMacFailedOn(_ date: String) -> String { f("mac.build.macFailed.on", "Its IPA is up to date, the last build of its app for the Mac failed, %@", date) }
 
-    // What a build on the Mac makes (decision 126): its IPA, for the
+    // What a build on the Mac makes (decision 127): its IPA, for the
     // iPhone, its app, for the Mac, or both; building, the part it makes now.
     static var macBuildForIPhone: String { s("mac.build.for.iphone", "For the iPhone") }
     static var macBuildForMac: String { s("mac.build.for.mac", "For the Mac") }

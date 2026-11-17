@@ -802,7 +802,7 @@ struct UnbuiltCard: View {
 
 /// A game building now, or waiting its turn: what its build makes, its
 /// IPA, for the iPhone, then its app for this Mac, or one of the two, and
-/// the part it makes now (decision 126).
+/// the part it makes now (decision 127).
 struct ProgressCard: View {
     @EnvironmentObject private var model: AppModel
     let progress: GameProgress

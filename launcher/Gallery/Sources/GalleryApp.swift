@@ -1154,7 +1154,7 @@ enum GalleryMac {
     /// one nxnative improved since its last build, one the Mac does not
     /// follow, one whose app for the Mac failed since its IPA was built,
     /// one whose app for the Mac is to build, its IPA up to date, and one
-    /// built for the Mac alone (decision 126). What is due built every
+    /// built for the Mac alone (decision 127). What is due built every
     /// night at 3:30. Its words in the gallery's language, as a Mac in
     /// that language says them (stageText in the Mac's Theme.swift).
     static func builds(now: Date = Date()) -> CartoucheBridgeBuilds {

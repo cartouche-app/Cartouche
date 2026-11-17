@@ -13,7 +13,7 @@
 //  Stop or Remove, and Follow; and the nightly build, on or off, and its
 //  time. Each build says what it is for, the iPhone, the Mac or both, and
 //  the part it makes now; a game's app for the Mac fails apart from its
-//  IPA (decision 126). The Mac's folders, its tools and an IPA's import stay on the Mac.
+//  IPA (decision 127). The Mac's folders, its tools and an IPA's import stay on the Mac.
 //  A Mac whose app is a little older shows its builds and builds a game,
 //  and says to update its app for the rest. One too old to share its
 //  builds, 0.5.0 or older, no longer finds its updates by itself: the page
@@ -390,7 +390,7 @@ struct CartoucheMacBuildsPage: View {
     }
 
     /// A game's line in the Mac's games: where it is, in a few words, then
-    /// what it is for, the iPhone, the Mac or both (decision 126).
+    /// what it is for, the iPhone, the Mac or both (decision 127).
     static func line(_ build: CartoucheMacBuild) -> String {
         guard let targets = build.targets else { return state(build) }
         return state(build) + " · " + target(targets.line)
