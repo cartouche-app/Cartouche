@@ -149,6 +149,13 @@
     }
     .gh svg { width: 20px; height: 20px; }
     @media (max-width: 919px) { .nav { display: none; } }
+    /* On a phone, Discord and GitHub side by side: a tighter bar, so the wordmark keeps its room. */
+    @media (max-width: 479px) {
+        .top__bar { gap: 6px; padding: 0 7px 0 14px; }
+        .gh { width: 36px; height: 36px; }
+        .gh svg { width: 18px; height: 18px; }
+        .lang button { padding: 7px 8px; }
+    }
 
     /* ---------- Type ---------- */
     h1, h2, h3 { margin: 0; font-family: var(--display); text-wrap: balance; }
@@ -1338,6 +1345,7 @@
         <symbol id="i-wifi" viewBox="0 0 16 12"><path fill="currentColor" d="M8 2.2c2.4 0 4.6.9 6.3 2.5l1.2-1.2A10.6 10.6 0 0 0 8 .5 10.6 10.6 0 0 0 .5 3.5l1.2 1.2A9 9 0 0 1 8 2.2Zm0 3.4c1.5 0 2.9.6 4 1.6l1.2-1.2A7.3 7.3 0 0 0 8 3.9a7.3 7.3 0 0 0-5.2 2.1L4 7.2a5.6 5.6 0 0 1 4-1.6Zm0 3.3c.6 0 1.2.2 1.6.6L8 11.2 6.4 9.5c.4-.4 1-.6 1.6-.6Z"/></symbol>
         <symbol id="i-battery" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.5" fill="none" stroke="currentColor" stroke-opacity=".4"/><rect x="2" y="2" width="20" height="9" rx="2" fill="currentColor"/><path fill="currentColor" fill-opacity=".4" d="M25 4.5v4c.8-.3 1.4-1.1 1.4-2s-.6-1.7-1.4-2Z"/></symbol>
         <symbol id="i-github" viewBox="0 0 16 16"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></symbol>
+        <symbol id="i-discord" viewBox="0 0 24 24"><path fill="currentColor" d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></symbol>
         <symbol id="i-sparkle" viewBox="0 0 24 24"><path fill="currentColor" d="M10 3.5c.6 4.4 2.1 5.9 6.5 6.5-4.4.6-5.9 2.1-6.5 6.5-.6-4.4-2.1-5.9-6.5-6.5 4.4-.6 5.9-2.1 6.5-6.5ZM18.5 13.5c.3 2.1.9 2.7 3 3-2.1.3-2.7.9-3 3-.3-2.1-.9-2.7-3-3 2.1-.3 2.7-.9 3-3ZM18 2c.2 1.5.7 2 2.2 2.2-1.5.2-2 .7-2.2 2.2-.2-1.5-.7-2-2.2-2.2 1.5-.2 2-.7 2.2-2.2Z"/></symbol>
         <symbol id="i-hammer" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M4.6 19.4 12.4 11.6"/><rect x="9" y="6.4" width="12" height="5.2" rx="1.4" fill="currentColor" transform="rotate(45 15 9)"/></symbol>
         <symbol id="i-wrench" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round"><path stroke-width="2.8" d="M5 19 11.7 12.3"/><path stroke-width="2.2" d="M19.5 8.2A4.6 4.6 0 1 1 15.8 4.5"/></g></symbol>
@@ -1368,6 +1376,7 @@
                 <button type="button" data-set-lang="fr" aria-pressed="false">FR</button>
                 <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
             </div>
+            <a class="gh" href="https://discord.gg/wG3DZjdAeF" data-label-fr="Le serveur Discord de Cartouche" data-label-en="Cartouche's Discord server" aria-label="Cartouche's Discord server"><svg aria-hidden="true"><use href="#i-discord"/></svg></a>
             <a class="gh" href="https://github.com/cartouche-app/Cartouche" data-label-fr="Le code de Cartouche sur GitHub" data-label-en="Cartouche's code on GitHub" aria-label="Cartouche's code on GitHub"><svg aria-hidden="true"><use href="#i-github"/></svg></a>
         </div>
     </header>
@@ -1700,6 +1709,10 @@
                         <summary><span lang="fr">Cartouche envoie-t-il des données ?</span><span lang="en">Does Cartouche send any data?</span></summary>
                         <p><span lang="fr">Des mesures de vos parties, comme les images par seconde et la mémoire, pour que les jeux tournent mieux sur iPhone et iPad ; jamais vos fichiers, vos sauvegardes ni vos comptes. Vous pouvez les couper dans Système › Mesures de jeu. Le détail est dans <a href="https://github.com/cartouche-app/Cartouche/blob/main/docs/privacy.md">la page Confidentialité</a>.</span><span lang="en">Measurements of your game sessions, such as frame rate and memory, so that games run better on iPhone and iPad; never your files, saves or accounts. You can turn them off in System › Game measurements. The details are on <a href="https://github.com/cartouche-app/Cartouche/blob/main/docs/privacy.md">the privacy page</a>.</span></p>
                     </details>
+                    <details>
+                        <summary><span lang="fr">Où trouver de l’aide ?</span><span lang="en">Where can I get help?</span></summary>
+                        <p><span lang="fr">Sur <a href="https://discord.gg/wG3DZjdAeF">le serveur Discord de Cartouche</a> : de l’aide pour l’iPhone, l’iPad et le Mac, les nouvelles de chaque version, et des coins en français, en espagnol et en allemand. Sous chaque erreur, Copier le rapport donne ce qu’il faut pour la comprendre, et un bug peut aussi aller sur GitHub, dans <a href="https://github.com/cartouche-app/Cartouche/issues/new/choose">une issue</a>.</span><span lang="en">On <a href="https://discord.gg/wG3DZjdAeF">Cartouche’s Discord server</a>: help for the iPhone, the iPad and the Mac, the news of each version, and corners in French, Spanish and German. Under each error, Copy the report gives what it takes to understand it, and a bug can also go to GitHub, as <a href="https://github.com/cartouche-app/Cartouche/issues/new/choose">an issue</a>.</span></p>
+                    </details>
                 </div>
             </div>
         </section>
@@ -1712,6 +1725,7 @@
                 <nav data-label-fr="Liens" data-label-en="Links" aria-label="Links">
                     <a href="download/"><span lang="fr">Téléchargements</span><span lang="en">Downloads</span></a>
                     <a href="https://github.com/cartouche-app/Cartouche">GitHub</a>
+                    <a href="https://discord.gg/wG3DZjdAeF">Discord</a>
                     <a href="https://github.com/cartouche-app/Cartouche/blob/main/LEGAL.md"><span lang="fr">Mentions légales</span><span lang="en">Legal</span></a>
                     <a href="https://github.com/cartouche-app/Cartouche/blob/main/docs/privacy.md"><span lang="fr">Confidentialité</span><span lang="en">Privacy</span></a>
                     <a href="https://github.com/cartouche-app/Cartouche/blob/main/docs/roadmap.md"><span lang="fr">Feuille de route</span><span lang="en">Roadmap</span></a>
