@@ -3,7 +3,8 @@
     python3 -m unittest discover -s domain/tests -v
 
 The file, domain/records.json, gives the site GitHub Pages' own addresses,
-with nothing in front of them, and lets no server send mail as the domain.
+with nothing in front of them, and has mail that claims the domain refused,
+beside the mail records that Cloudflare's Email Routing keeps for itself.
 The script, domain/sync.py, runs here against a stand-in for Cloudflare's API
 and for two resolvers over HTTPS: it changes only the records it made, in one
 batch, takes over a record made by hand that the file has too, leaves the
@@ -211,12 +212,18 @@ class TheRecords(unittest.TestCase):
             self.assertFalse(record.proxied, record.describe())
             self.assertNotIn("*", record.name)
 
-    def test_no_server_sends_mail_as_the_domain(self) -> None:
-        self.assertEqual([r.content for r in self.named("cartouche.cloud", "TXT") if r.content.startswith("v=spf1")], ["v=spf1 -all"])
+    def test_email_routing_keeps_the_mail_records_and_mail_claiming_the_domain_is_refused(self) -> None:
+        # Cloudflare's Email Routing forwards contact@cartouche.cloud, with MX,
+        # SPF and DKIM records of its own at the apex, locked in the
+        # dashboard: an SPF record of the file's beside its own would have
+        # mail servers take neither, and an MX record of the file's would send
+        # the mail elsewhere. No server sends mail as the domain, and DMARC
+        # has mail that claims to come from it refused.
+        self.assertEqual([r.describe() for r in self.records if sync.is_spf(r.type, r.content)], [])
+        self.assertEqual([r.describe() for r in self.records if r.type == "MX"], [])
         dmarc = self.named("_dmarc.cartouche.cloud", "TXT")
         self.assertEqual(len(dmarc), 1)
         self.assertTrue(dmarc[0].content.startswith("v=DMARC1; p=reject;"), dmarc[0].content)
-        self.assertEqual(self.named("cartouche.cloud", "MX"), [])
 
     def test_github_verifies_the_domain_for_the_organization(self) -> None:
         # The challenge GitHub showed the organization's owner in its
@@ -249,12 +256,19 @@ class TheRecords(unittest.TestCase):
             cname = {"type": "CNAME", "name": "www.cartouche.cloud", "content": GITHUB_PAGES_HOST, "why": "www"}
             with self.assertRaisesRegex(sync.Problem, "only record of its name"):
                 sync.load(write_records(directory, [cname, {**good, "name": "www.cartouche.cloud"}]))
+            spf = {"type": "TXT", "name": "cartouche.cloud", "content": "v=spf1 -all", "why": "No mail"}
+            with self.assertRaisesRegex(sync.Problem, "one SPF record at a name"):
+                sync.load(write_records(directory, [spf, {**spf, "content": "v=spf1 include:_spf.mx.cloudflare.net ~all"}]))
 
     def test_records_compare_as_dns_reads_them(self) -> None:
         self.assertEqual(sync.normalized("AAAA", "2606:50c0:8000:0000:0000:0000:0000:0153"), "2606:50c0:8000::153")
         self.assertEqual(sync.normalized("CNAME", "Cartouche-App.GitHub.io."), GITHUB_PAGES_HOST)
         self.assertEqual(sync.normalized("TXT", '"v=spf1 " "-all"'), "v=spf1 -all")
         self.assertEqual(sync.normalized("TXT", "v=spf1 -all"), "v=spf1 -all")
+        self.assertTrue(sync.is_spf("TXT", '"v=spf1 include:_spf.mx.cloudflare.net ~all"'))
+        self.assertTrue(sync.is_spf("TXT", '"v=spf1" " -all"'))
+        self.assertFalse(sync.is_spf("TXT", "v=spf10 -all"))
+        self.assertFalse(sync.is_spf("TXT", "google-site-verification=abc"))
         self.assertEqual(sync.unquote_txt(sync.quote_txt('a "b" \\ c')), 'a "b" \\ c')
         long = "k=" + "x" * 600
         self.assertEqual(sync.quote_txt(long).count('" "'), 2)
@@ -307,13 +321,13 @@ class TheScript(unittest.TestCase):
 
     def test_it_takes_over_the_same_record_made_by_hand_and_leaves_the_others(self) -> None:
         self.cloudflare.add(type="A", name="cartouche.cloud", content="185.199.108.153", comment="made by hand")
-        self.cloudflare.add(type="TXT", name="cartouche.cloud", content='"v=spf1 -all"')
+        self.cloudflare.add(type="TXT", name="_dmarc.cartouche.cloud", content='"v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s"')
         other = self.cloudflare.add(type="TXT", name="cartouche.cloud", content='"google-site-verification=abc"')
         status, out = self.sync()
         self.assertEqual(status, 0, out)
         self.assertEqual(len(self.cloudflare.records), len(self.records) + 1)
         self.assertEqual(self.cloudflare.records["r1"]["comment"], sync.MARK + "The site, on GitHub Pages")
-        self.assertEqual(self.cloudflare.records["r2"]["comment"], sync.MARK + "No server sends mail as cartouche.cloud")
+        self.assertEqual(self.cloudflare.records["r2"]["comment"], sync.MARK + "Mail that claims to come from cartouche.cloud is refused")
         self.assertIsNone(self.cloudflare.records[other]["comment"])
         self.assertEqual(len(self.cloudflare.batches[0]["patches"]), 2)
         self.assertIn("Left as they are, not the file's records:", out)
@@ -337,6 +351,36 @@ class TheScript(unittest.TestCase):
         self.assertEqual(status, 0, out)
         self.assertEqual(self.cloudflare.batches[1], {"patches": [{"id": www["id"], "comment": www["comment"], "ttl": 1, "proxied": False}]})
         self.assertFalse(self.cloudflare.records[www["id"]]["proxied"])
+
+    def test_it_leaves_email_routings_records_as_they_are(self) -> None:
+        # Email Routing's, for contact@cartouche.cloud: three MX records, its
+        # SPF record and its DKIM key, made and locked by Cloudflare.
+        routing = [
+            self.cloudflare.add(type="MX", name="cartouche.cloud", content="route1.mx.cloudflare.net", priority=12),
+            self.cloudflare.add(type="MX", name="cartouche.cloud", content="route2.mx.cloudflare.net", priority=45),
+            self.cloudflare.add(type="MX", name="cartouche.cloud", content="route3.mx.cloudflare.net", priority=78),
+            self.cloudflare.add(type="TXT", name="cartouche.cloud", content='"v=spf1 include:_spf.mx.cloudflare.net ~all"'),
+            self.cloudflare.add(type="TXT", name="cf2024-1._domainkey.cartouche.cloud", content='"v=DKIM1; h=sha256; k=rsa; p=MIIBIjANBg"'),
+        ]
+        before = {key: dict(self.cloudflare.records[key]) for key in routing}
+        status, out = self.sync()
+        self.assertEqual(status, 0, out)
+        self.assertEqual({key: self.cloudflare.records[key] for key in routing}, before)
+        self.assertEqual(self.zone() - {r.key() for r in self.records}, {sync.identity(r["type"], r["name"], r["content"], r.get("priority")) for r in before.values()})
+        self.assertIn("Left as they are, not the file's records:", out)
+        self.assertIn("include:_spf.mx.cloudflare.net", out)
+
+    def test_an_spf_record_beside_another_stops_it_before_anything_changes(self) -> None:
+        # Email Routing's SPF record at the apex, and one of the file's
+        # there: mail servers would take neither.
+        self.cloudflare.add(type="TXT", name="cartouche.cloud", content='"v=spf1 include:_spf.mx.cloudflare.net ~all"')
+        entries = json.loads(RECORDS.read_text())["records"]
+        spf = {"type": "TXT", "name": "cartouche.cloud", "content": "v=spf1 -all", "why": "No server sends mail as cartouche.cloud"}
+        with tempfile.TemporaryDirectory() as directory:
+            status, out = self.sync(records=write_records(directory, [*entries, spf]))
+        self.assertEqual(status, 1, out)
+        self.assertIn("cartouche.cloud has an SPF record that is not the file's, 'v=spf1 include:_spf.mx.cloudflare.net ~all'", out)
+        self.assertEqual(self.cloudflare.batches, [])
 
     def test_a_cname_beside_a_record_made_by_hand_stops_it_before_anything_changes(self) -> None:
         self.cloudflare.add(type="A", name="www.cartouche.cloud", content="192.0.2.1")
@@ -385,11 +429,12 @@ class TheResolvers(unittest.TestCase):
 
     def test_they_answer_the_files_records(self) -> None:
         self.fill()
-        self.cloudflare.add(type="TXT", name="cartouche.cloud", content='"google-site-verification=abc"')
+        # A challenge GitHub showed before the one of the file, say.
+        self.cloudflare.add(type="TXT", name="_github-pages-challenge-cartouche-app.cartouche.cloud", content='"0123456789abcdef0123"')
         status, out = run(str(RECORDS), "--resolve", environ={"DOMAIN_RESOLVERS": " ".join(self.resolvers)})
         self.assertEqual(status, 0, out)
         self.assertIn("Every resolver answers the file's records.", out)
-        self.assertIn("as the file says, and also google-site-verification=abc", out)
+        self.assertIn("as the file says, and also 0123456789abcdef0123", out)
 
     def test_a_missing_record_fails_once_the_wait_is_over(self) -> None:
         status, lines = sync.resolve(self.records, self.resolvers, wait=0)

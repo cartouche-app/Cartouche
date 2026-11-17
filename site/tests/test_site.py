@@ -484,6 +484,21 @@ class Domain(unittest.TestCase):
         self.assertTrue({"A", "AAAA"} <= kinds and "CNAME" not in kinds, kinds)
         self.assertIn({"type": "CNAME", "content": "cartouche-app.github.io"}, [{"type": r["type"], "content": r["content"]} for r in zone["records"] if r["name"] == "www." + name])
 
+    def test_the_app_and_the_guides_link_to_the_site_at_its_domain(self) -> None:
+        # The app's guide sends the Mac the site's Builder section, and the
+        # guides and READMEs link to its pages: at the domain, whose address
+        # does not hang on GitHub's. The old address only redirects.
+        name = (SITE / "CNAME").read_text(encoding="utf-8").strip()
+        root = SITE.parent
+        paths = [root / "README.md", *root.glob("*/README.md"), *(root / "docs").glob("*.md"), *(root / "launcher" / "Sources").glob("*.swift")]
+        for path in paths:
+            self.assertFalse("https://cartouche-app.github.io/Cartouche" in path.read_text(encoding="utf-8"), f"{path.relative_to(root)} links to the site's old address")
+        guide = (root / "launcher" / "Sources" / "CartoucheGuide.swift").read_text(encoding="utf-8")
+        found = re.search(r'static let builderPage = URL\(string: "([^"]+)"\)', guide)
+        self.assertIsNotNone(found, "CartoucheGuide.builderPage")
+        self.assertEqual(found.group(1), f"https://{name}/#builder")
+        self.assertIn("builder", read_page()[1].ids)
+
     def test_every_publication_keeps_it(self) -> None:
         # gh-pages is made again at each publication: without CNAME, GitHub
         # Pages would drop the domain, its records still pointing to GitHub.

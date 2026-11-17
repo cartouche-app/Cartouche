@@ -13,6 +13,9 @@ and proxy status the file says, and deletes those the file no longer has. A
 record of the zone without that mark, made by hand, by Email Routing or for a
 Worker's custom domain, stays as it is and is listed; a record of the file
 that is the same as one of them, by type, name and content, takes it over.
+Where a record of the file could not stand beside one of them, a CNAME beside
+any record of its name, an SPF record beside another, it stops before
+changing anything.
 With --plan, it says what it would change, and changes nothing. Without the
 token, it says so and changes nothing, as the telemetry's deploy does without
 its secrets.
@@ -31,6 +34,7 @@ import argparse
 import ipaddress
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -99,6 +103,11 @@ def normalized(kind: str, content: str) -> str:
 
 def host(name: str) -> str:
     return name.strip().lower().rstrip(".")
+
+
+def is_spf(kind: str, content: str) -> bool:
+    """An SPF record: a TXT record whose text starts with v=spf1 (RFC 7208)."""
+    return kind == "TXT" and re.match(r"v=spf1(\s|$)", unquote_txt(content).strip(), re.IGNORECASE) is not None
 
 
 def identity(kind: str, name: str, content: str, priority: int | None) -> tuple:
@@ -201,6 +210,9 @@ def check(zone: str, records: list[Record]) -> None:
     for name, kinds in types_by_name.items():
         if "CNAME" in kinds and len(kinds) > 1:
             raise Problem(f"{name}: a CNAME record is the only record of its name")
+    for name in types_by_name:
+        if sum(1 for r in records if r.name == name and is_spf(r.type, r.content)) > 1:
+            raise Problem(f"{name}: one SPF record at a name, or mail servers take none of them")
 
 
 class Cloudflare:
@@ -323,6 +335,15 @@ def plan(records: list[Record], existing: list[dict]) -> Plan:
                 raise Problem(
                     f"{want.name} has a {other['type']} record that is not the file's, and a CNAME is the only record "
                     "of its name: delete it in Cloudflare's dashboard, or put it in the file"
+                )
+    # One SPF record at a name: beside another, as Email Routing keeps its own
+    # at the apex, mail servers would take neither.
+    for want in records:
+        for other in result.others:
+            if host(other["name"]) == want.name and is_spf(want.type, want.content) and is_spf(other["type"], other["content"]):
+                raise Problem(
+                    f"{want.name} has an SPF record that is not the file's, {unquote_txt(other['content'])!r}, and a name has "
+                    "only one, or mail servers take neither: take the file's out, or delete the other in Cloudflare's dashboard"
                 )
     return result
 
