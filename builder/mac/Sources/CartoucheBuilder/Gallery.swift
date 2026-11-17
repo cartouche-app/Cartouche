@@ -115,6 +115,8 @@ enum Gallery {
             // What the player writes, the ways to send it, and the report
             // down to its last steps.
             case .consoleReport: return CGSize(width: 1024, height: 1500)
+            // The whole System page, down to Report a problem.
+            case .consoleSystem: return CGSize(width: 1024, height: 980)
             // The window at its smallest, with a game's sheet whose
             // nxnative commits are a paragraph each, as nxnative writes them.
             case .gameNarrow: return CGSize(width: Columns.window.width, height: 680)

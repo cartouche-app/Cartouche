@@ -26,6 +26,9 @@ which builds the iPhone's console screens for the Mac:
 - the console's Storage page, the iPhone's with This Mac's folders in place
   of its games folder and saves folder (Mac/ConsoleStorage.swift), has the
   rows those sections open, as the UI tests know them;
+- the console's System page, the iPhone's with the Builder's updates in
+  place of Cartouche's (Mac/ConsoleSystem.swift), shows the version once,
+  in the section of the app, as the iPhone does;
 - the shared files write days, numbers and lists in the console's language
   (CartoucheText.locale), which the app's settings may choose other than
   the Mac's, never in the Mac's (Locale.current): on the iPhone, the two are
@@ -60,6 +63,8 @@ PLAN_STEPS = range(7, 10)  # the plan's steps still to come after this one (docs
 WRITER = ROOT / "builder" / "mac" / "console" / "strings.py"
 STORAGE_PAGE = LAUNCHER / "CartoucheStorageView.swift"
 MAC_STORAGE = CONSOLE / "Mac" / "ConsoleStorage.swift"
+SYSTEM_PAGE = LAUNCHER / "CartoucheSystemView.swift"
+MAC_SYSTEM = CONSOLE / "Mac" / "ConsoleSystem.swift"
 LANGUAGES = ("en", "fr")
 
 # Names the Mac does not have: UIKit's, and the iPhone's alone in SwiftUI.
@@ -529,6 +534,23 @@ struct Page: View {
 """
         self.assertEqual(rows_of(swift, "Page", "part"), {"tapped"})
         self.assertEqual(rows_of(swift, "Page", "body"), {"tapped"})
+
+
+
+class MacConsoleSystem(unittest.TestCase):
+    """The console's System page, the iPhone's (CartoucheSystemView.swift)
+    with the Builder's updates in place of Cartouche's
+    (CartoucheMacUpdatesSection, Mac/ConsoleSystem.swift)."""
+
+    def test_the_version_shows_once_as_on_the_iphone(self):
+        # The iPhone has its version in its Cartouche section, which the Mac
+        # shows as Cartouche Builder, and its updates say only what the
+        # updater found: a Version row in the Mac's updates showed it twice,
+        # and empty in the gallery (17 November).
+        page = "\n".join(line for _, line in outside_iphone_parts(SYSTEM_PAGE.read_text()))
+        self.assertEqual(len(re.findall(r"LabeledContent\(CartoucheText\.version\b", page)), 1)
+        updates = type_body(MAC_SYSTEM.read_text(), "CartoucheMacUpdatesSection")
+        self.assertNotRegex(updates, r"CartoucheText\.version\b")
 
 
 if __name__ == "__main__":

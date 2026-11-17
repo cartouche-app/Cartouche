@@ -76,12 +76,14 @@ public final class CartoucheMacUpdates: ObservableObject {
 }
 
 /// System › Updates on the Mac: the Builder's, with what its settings have.
+/// As on the iPhone, it says what the updater found, and the version that
+/// runs is in the section of the app below it (Cartouche Builder), not here
+/// a second time.
 struct CartoucheMacUpdatesSection: View {
     @ObservedObject private var updates = CartoucheMacUpdates.shared
 
     var body: some View {
         CartoucheSection {
-            LabeledContent(CartoucheText.version, value: updates.version)
             state
             actions
             Toggle(CartoucheText.macUpdatesAutomatic, isOn: Binding(get: { updates.automatic }, set: { updates.onAutomatic($0) }))

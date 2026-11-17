@@ -179,6 +179,13 @@ enum ConsoleGallery {
         // reaches itself.
         CartoucheMacConsole.measuresServer = URL(string: "https://telemetry.example.invalid")
         console.showMeasures(CartoucheMacMeasures(isOn: true, sent: 48, waiting: 0, lastSent: copies[0].date, lastReport: lastReport))
+        // System › Updates: this copy, up to date when its updater last
+        // looked, an hour ago, as the app's would say; nothing asks GitHub.
+        let updates = CartoucheMacUpdates.shared
+        updates.version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0.0"
+        updates.enabled = true
+        updates.checked = Date().addingTimeInterval(-3_600)
+        updates.phase = .upToDate
         console.showGuideForGallery(played: !firstGame)
         console.speak(language)
     }
