@@ -75,7 +75,7 @@ extension CartoucheText {
     static var macBuildForMac: String { s("mac.build.for.mac", "For the Mac") }
     static var macBuildForBoth: String { s("mac.build.for.both", "For the iPhone and the Mac") }
     static var macBuildForIPhoneThenMac: String { s("mac.build.for.iphoneThenMac", "For the iPhone, then the Mac") }
-    static var macBuildForMacAfterIPhone: String { s("mac.build.for.macAfterIphone", "iPhone done, now the Mac") }
+    static var macBuildForMacAfterIPhone: String { s("mac.build.for.macAfterIphone", "Done for the iPhone, now for the Mac") }
     static var macBuildActionBuild: String { s("mac.build.action.build", "Build on the Mac") }
     static var macBuildActionRebuild: String { s("mac.build.action.rebuild", "Rebuild on the Mac") }
     static var macBuildActionAgain: String { s("mac.build.action.again", "Build again on the Mac") }
@@ -131,9 +131,4 @@ extension CartoucheText {
     static var macGameMacDue: String { s("mac.game.macDue", "Its Mac app is to build") }
     static var macGameMacFailed: String { s("mac.game.macFailed", "Its Mac app failed") }
     static func macGameMacFailedOn(_ date: String) -> String { f("mac.game.macFailed.on", "Its Mac app failed %@", date) }
-    static var macGameForIPhone: String { s("mac.game.for.iphone", "iPhone") }
-    static var macGameForMac: String { s("mac.game.for.mac", "Mac") }
-    static var macGameForBoth: String { s("mac.game.for.both", "iPhone and Mac") }
-    static var macGameForIPhoneThenMac: String { s("mac.game.for.iphoneThenMac", "iPhone, then Mac") }
-    static var macGameForMacAfterIPhone: String { s("mac.game.for.macAfterIphone", "Mac, iPhone done") }
 }

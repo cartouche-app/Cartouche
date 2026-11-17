@@ -2846,13 +2846,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iPhone done, now the Mac"
+            "value" : "Done for the iPhone, now for the Mac"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iPhone fait, maintenant le Mac"
+            "value" : "Fait pour l’iPhone, maintenant pour le Mac"
           }
         }
       }
@@ -3788,91 +3788,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sa dernière construction a échoué"
-          }
-        }
-      }
-    },
-    "mac.game.for.both" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iPhone and Mac"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iPhone et Mac"
-          }
-        }
-      }
-    },
-    "mac.game.for.iphone" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iPhone"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iPhone"
-          }
-        }
-      }
-    },
-    "mac.game.for.iphoneThenMac" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iPhone, then Mac"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iPhone, puis Mac"
-          }
-        }
-      }
-    },
-    "mac.game.for.mac" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mac"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mac"
-          }
-        }
-      }
-    },
-    "mac.game.for.macAfterIphone" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mac, iPhone done"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mac, iPhone fait"
           }
         }
       }

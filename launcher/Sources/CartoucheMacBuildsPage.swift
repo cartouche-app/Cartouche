@@ -390,21 +390,11 @@ struct CartoucheMacBuildsPage: View {
     }
 
     /// A game's line in the Mac's games: where it is, in a few words, then
-    /// what it is for, the iPhone, the Mac or both (decision 127).
+    /// what it is for, the iPhone, the Mac or both (decision 127), in the
+    /// words of its sheet, which an iPad says of itself.
     static func line(_ build: CartoucheMacBuild) -> String {
         guard let targets = build.targets else { return state(build) }
-        return state(build) + " · " + target(targets.line)
-    }
-
-    /// What a game is for, in a word or two.
-    static func target(_ line: CartoucheBuildTargets.Line) -> String {
-        switch line {
-        case .iPhone: return CartoucheText.macGameForIPhone
-        case .mac: return CartoucheText.macGameForMac
-        case .both: return CartoucheText.macGameForBoth
-        case .iPhoneThenMac: return CartoucheText.macGameForIPhoneThenMac
-        case .macAfterIPhone: return CartoucheText.macGameForMacAfterIPhone
-        }
+        return state(build) + " · " + CartoucheMacBuildsSection.targetText(targets.line)
     }
 
     /// Where a game is, in a few words.

@@ -294,7 +294,7 @@ func targetText(_ line: CartoucheBuildTargets.Line) -> String {
     case .mac: return tr("For this Mac", "Pour ce Mac")
     case .both: return tr("For the iPhone and this Mac", "Pour l’iPhone et ce Mac")
     case .iPhoneThenMac: return tr("For the iPhone, then this Mac", "Pour l’iPhone, puis ce Mac")
-    case .macAfterIPhone: return tr("iPhone done, now this Mac", "iPhone fait, maintenant ce Mac")
+    case .macAfterIPhone: return tr("Done for the iPhone, now for this Mac", "Fait pour l’iPhone, maintenant pour ce Mac")
     }
 }
 
