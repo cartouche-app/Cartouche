@@ -1481,16 +1481,18 @@ final class CartoucheGameActions: ObservableObject {
     // MARK: Saves
 
     /// Where the game keeps its saves: the Documents of the data folder it
-    /// starts with. Nil for an app that is not an nxnative game, or a game
-    /// that has no data folder yet: one installed while no saves folder was
-    /// chosen, which never started.
+    /// starts with, and the game's version, which each copy of them names.
+    /// Nil for an app that is not an nxnative game, or a game that has no
+    /// data folder yet: one installed while no saves folder was chosen,
+    /// which never started.
     func saves(of app: LCAppModel) -> CartoucheSaveTarget? {
         let catalog = CartoucheCatalog.shared
         guard let found = catalog.gameTitle(of: app), let bundleId = app.appInfo.bundleIdentifier(),
               let container = app.uiSelectedContainer ?? app.uiContainers.first else { return nil }
         let titleId = found.isEmpty ? catalog.titleId(matchingName: app.displayName) : found
         return CartoucheSaveTarget(key: bundleId + "|" + container.folderName, name: app.displayName, titleId: titleId,
-                                   documents: container.containerURL.appendingPathComponent("Documents", isDirectory: true))
+                                   documents: container.containerURL.appendingPathComponent("Documents", isDirectory: true),
+                                   gameVersion: CartoucheInstalledBuilds.installedBuild(of: app).version)
     }
 
     /// Where the game keeps its saves, its data folder made now if it never

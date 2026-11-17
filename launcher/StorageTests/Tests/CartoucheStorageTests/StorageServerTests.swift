@@ -598,6 +598,97 @@ class StorageServerTests: XCTestCase {
         XCTAssertTrue(phoneCopies.allSatisfy { CartoucheStoragePath.parent($0.path) == own })
     }
 
+    func testACopyOfANewerVersionOfTheGameWaitsForItsUpdate() async throws {
+        let remote = try await signIn()
+        let folder = try await scratchFolder(remote)
+        let scratchHere = try localFolder()
+        func round() -> CartoucheSavesFolder {
+            CartoucheSavesFolder(remote: remote, path: folder, place: "test|" + folder, scratch: scratchHere)
+        }
+        let gameFolder = CartoucheStoragePath.join(folder, "Essai de stockage [0100CA27C0DE0000]")
+        func copies() async throws -> [String] {
+            try await remote.list(gameFolder).map(\.name).filter { !$0.hasSuffix(".partial") }.sorted()
+        }
+        let morning = Date(timeIntervalSince1970: 1_794_292_800)
+
+        // An iPhone whose game was updated to 1.2.0 plays: its copy names
+        // the version, at its end.
+        let updated = CartoucheSaveTarget(key: "updated", name: "Essai de stockage", titleId: "0100CA27C0DE0000",
+                                          documents: try play("partie de la 1.2", written: morning), gameVersion: "1.2.0")
+        let sent = try await round().sync(updated, base: nil, fetching: false)
+        XCTAssertEqual(sent.step, .send)
+        XCTAssertNil(sent.newer)
+        let updatedBase = try XCTUnwrap(sent.base)
+        XCTAssertEqual(updatedBase.gameVersion, "1.2.0")
+        let newest = try await remote.open(CartoucheStoragePath.join(gameFolder, CartoucheSaveSync.fileName(morning)))
+        let archive = try await CartoucheZip.archive(of: newest)
+        XCTAssertEqual(CartoucheSaveSync.gameVersion(inComment: archive.comment), "1.2.0")
+
+        // Another, whose game is still 1.1.0, never takes it: not as the
+        // game is installed or starts,
+        let older = CartoucheSaveTarget(key: "older", name: "Essai de stockage", titleId: "0100CA27C0DE0000",
+                                        documents: try localFolder(), gameVersion: "1.1.0")
+        let waits = try await round().sync(older, base: nil, fetching: true)
+        XCTAssertEqual(waits.step, .none)
+        XCTAssertEqual(waits.newer, "1.2.0")
+        XCTAssertNil(CartoucheSaveSync.saves(in: older.documents))
+        // nor over the saves it plays meanwhile, which go under it as a copy
+        // of their own: the newest copy stays the 1.2.0's.
+        _ = try play("partie de la 1.1", written: morning + 600, in: older.documents)
+        let kept = try await round().sync(older, base: waits.base, fetching: false)
+        XCTAssertEqual(kept.step, .keep)
+        XCTAssertEqual(kept.newer, "1.2.0")
+        XCTAssertEqual(kept.kept, CartoucheSaveSync.fileName(morning - 1))
+        XCTAssertEqual(try party(in: older.documents), "partie de la 1.1")
+        var olderBase = try XCTUnwrap(kept.base)
+        XCTAssertEqual(olderBase.gameVersion, "1.1.0")
+        let afterKeep = try await copies()
+        XCTAssertEqual(afterKeep, [morning - 1, morning].map(CartoucheSaveSync.fileName))
+        let again = try await round().sync(older, base: olderBase, fetching: true)
+        XCTAssertEqual(again.step, .none)
+        XCTAssertEqual(again.newer, "1.2.0")
+        // nor when the player puts it back.
+        do {
+            _ = try await round().putBack(CartoucheSaveSync.fileName(morning), of: older, base: olderBase)
+            XCTFail("a copy of a newer version of the game was put back")
+        } catch let refused as CartoucheSaveNewerGame {
+            XCTAssertEqual(refused, CartoucheSaveNewerGame(copy: "1.2.0", game: "1.1.0"))
+        }
+        XCTAssertEqual(try party(in: older.documents), "partie de la 1.1")
+        let afterRefusal = try await copies()
+        XCTAssertEqual(afterRefusal, afterKeep)
+
+        // The 1.2.0 takes nothing of the 1.1.0's: its own are the newest.
+        let unchanged = try await round().sync(updated, base: updatedBase, fetching: true)
+        XCTAssertEqual(unchanged.step, .none)
+        XCTAssertNil(unchanged.newer)
+        XCTAssertEqual(try party(in: updated.documents), "partie de la 1.2")
+
+        // Once its game is updated, the newest copy comes, at its start.
+        let olderUpdated = CartoucheSaveTarget(key: "older", name: "Essai de stockage", titleId: "0100CA27C0DE0000",
+                                               documents: older.documents, gameVersion: "1.2.0")
+        let comes = try await round().sync(olderUpdated, base: olderBase, fetching: true)
+        XCTAssertEqual(comes.step, .fetch)
+        XCTAssertNil(comes.newer)
+        XCTAssertEqual(comes.fetched, CartoucheSaveSync.fileName(morning))
+        XCTAssertEqual(try party(in: older.documents), "partie de la 1.2")
+        olderBase = try XCTUnwrap(comes.base)
+        XCTAssertEqual(olderBase.gameVersion, "1.2.0")
+
+        // A copy an older Cartouche made names no version: it comes to any.
+        let unnamed = try play("partie d'un ancien Cartouche", written: morning + 1_200)
+        let upload = try await remote.create(CartoucheStoragePath.join(gameFolder, CartoucheSaveSync.fileName(morning + 1_200)), size: nil)
+        try await CartoucheSaveSync.writeZip(ofSavesIn: unnamed, to: upload)
+        try await upload.finish()
+        let oldest = CartoucheSaveTarget(key: "oldest", name: "Essai de stockage", titleId: "0100CA27C0DE0000",
+                                         documents: try localFolder(), gameVersion: "1.0.0")
+        let takes = try await round().sync(oldest, base: nil, fetching: true)
+        XCTAssertEqual(takes.step, .fetch)
+        XCTAssertNil(takes.newer)
+        XCTAssertEqual(try party(in: oldest.documents), "partie d'un ancien Cartouche")
+        XCTAssertNil(try XCTUnwrap(takes.base).gameVersion)
+    }
+
     // MARK: Where the account can write
 
     func testKnowsWhereItCanWrite() async throws {

@@ -321,6 +321,48 @@ final class CartoucheZipTests: XCTestCase {
         }
     }
 
+    func testAnArchivesCommentGoesAndComesBack() async throws {
+        let comment = Data(#"{"gameVersion":"1.2.0"}"#.utf8)
+        for zip64 in [false, true] {
+            let sink = MemorySink()
+            let writer = CartoucheZipWriter(sink: sink)
+            writer.alwaysZip64 = zip64
+            try await writer.addData("save/save0.bin", Data("partie".utf8))
+            try await writer.finish(comment: comment)
+            let archive = try await CartoucheZip.archive(of: MemorySource(sink.data))
+            XCTAssertEqual(archive.comment, comment)
+            XCTAssertEqual(archive.entries.map(\.name), ["save/save0.bin"])
+            let entries = try await CartoucheZip.entries(of: MemorySource(sink.data))
+            XCTAssertEqual(entries, archive.entries)
+            // Python, and the unzip of any computer, read it as it is.
+            let path = folder.appendingPathComponent("comment-\(zip64).zip")
+            try sink.data.write(to: path)
+            let said = try python("""
+                import sys, zipfile
+                with zipfile.ZipFile(sys.argv[1]) as z:
+                    assert z.testzip() is None
+                    assert z.read("save/save0.bin") == b"partie"
+                    print(z.comment.decode())
+                """, [path.path])
+            XCTAssertEqual(said.trimmingCharacters(in: .whitespacesAndNewlines), #"{"gameVersion":"1.2.0"}"#)
+        }
+        // None: an archive as before.
+        let sink = MemorySink()
+        let writer = CartoucheZipWriter(sink: sink)
+        try await writer.addData("save/save0.bin", Data("partie".utf8))
+        try await writer.finish()
+        let archive = try await CartoucheZip.archive(of: MemorySource(sink.data))
+        XCTAssertEqual(archive.comment, Data())
+        XCTAssertEqual(sink.data.suffix(2), Data([0, 0]))
+        // One longer than a zip can hold is refused.
+        let refused = CartoucheZipWriter(sink: MemorySink())
+        do {
+            try await refused.finish(comment: Data(count: 0x10000))
+            XCTFail("a comment of 65,536 bytes was written")
+        } catch is CartoucheZipError {
+        }
+    }
+
     func testCartoucheReadsWhatPythonWrites() async throws {
         let path = folder.appendingPathComponent("python.zip")
         _ = try python("""

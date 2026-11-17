@@ -65,8 +65,10 @@ GAME_FILES = re.compile(
     re.IGNORECASE,
 )
 
-# Files the site is made of, and nothing else: no image of a game.
+# Files the site is made of, and nothing else: no image of a game. CNAME
+# names the site's domain for GitHub Pages.
 SITE_FILES = {".html", ".svg", ".md", ".py"}
+SITE_NAMES = {"CNAME"}
 
 # What the page may say of a game: its status on the page, and where
 # nxnative must play it for the page to say so.
@@ -260,7 +262,7 @@ class SiteTests(unittest.TestCase):
         # of a game, which IGDB serves.
         for path in SITE.rglob("*"):
             if path.is_file() and "__pycache__" not in path.parts:
-                self.assertIn(path.suffix, SITE_FILES, f"{path.relative_to(SITE)} is not a file the site is made of")
+                self.assertTrue(path.suffix in SITE_FILES or path.name in SITE_NAMES, f"{path.relative_to(SITE)} is not a file the site is made of")
                 self.assertLess(path.stat().st_size, 512 * 1024, f"{path.relative_to(SITE)} is too large for the site")
         self.assertEqual(sorted(p.name for p in SITE.glob("*.svg")), ["favicon.svg"])
 
@@ -445,6 +447,30 @@ class DownloadPageTests(unittest.TestCase):
             "Cartouche contains and downloads no games, no keys and no firmware: you build your games from your own copies.",
         ):
             self.assertIn(sentence, self.text)
+
+
+class Domain(unittest.TestCase):
+    """site/CNAME, the site's domain, which GitHub Pages reads on gh-pages to
+    serve the site there and send its old address on to it."""
+
+    def test_it_names_the_domain_whose_records_point_to_github_pages(self) -> None:
+        text = (SITE / "CNAME").read_text(encoding="utf-8")
+        self.assertRegex(text, r"^[a-z0-9-]+(?:\.[a-z0-9-]+)+\n$", "CNAME holds one name, on one line")
+        name = text.strip()
+        # domain/records.json gives the name GitHub Pages' addresses, and
+        # www to the organization's site (domain/tests check them).
+        zone = json.loads((SITE.parent / "domain" / "records.json").read_text(encoding="utf-8"))
+        self.assertEqual(name, zone["zone"])
+        kinds = {r["type"] for r in zone["records"] if r["name"] == name}
+        self.assertTrue({"A", "AAAA"} <= kinds and "CNAME" not in kinds, kinds)
+        self.assertIn({"type": "CNAME", "content": "cartouche-app.github.io"}, [{"type": r["type"], "content": r["content"]} for r in zone["records"] if r["name"] == "www." + name])
+
+    def test_every_publication_keeps_it(self) -> None:
+        # gh-pages is made again at each publication: without CNAME, GitHub
+        # Pages would drop the domain, its records still pointing to GitHub.
+        workflow = (SITE.parent / ".github" / "workflows" / "site.yml").read_text(encoding="utf-8")
+        self.assertRegex(workflow, r"\n\s+cp [^\n]*\bsite/CNAME\b[^\n]* build/site/\n")
+        self.assertNotIn("github.io/${GITHUB_REPOSITORY", workflow)
 
 
 if __name__ == "__main__":

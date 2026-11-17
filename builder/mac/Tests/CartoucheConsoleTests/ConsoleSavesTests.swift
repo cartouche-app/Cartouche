@@ -124,6 +124,34 @@ final class ConsoleSavesTests: XCTestCase {
         XCTAssertNil(settings.location(.saves))
     }
 
+    func testTheSheetSaysTheNewestCopyWaitsForTheGamesUpdate() async throws {
+        let console = CartoucheMacConsole.shared
+        let backups = CartoucheSaveBackups.shared
+        let target = CartoucheSaveTarget(key: titleID, name: "Mario Kart 8 Deluxe", titleId: titleID, documents: root)
+        let synced = Date(timeIntervalSince1970: 1_794_000_000)
+        // Version 1.2.0 of the game wrote the newest copy, this Mac's app is
+        // 1.1.0: the sheet says it waits, as the iPhone's does.
+        console.showSaves(folder: folder, games: [titleID: CartoucheMacGameSaves(lastSync: synced, newer: "1.2.0", game: "1.1.0")])
+        XCTAssertEqual(backups.newer[titleID], CartoucheSaveNewer(copy: "1.2.0", game: "1.1.0"))
+        XCTAssertNil(backups.news[titleID])
+        // Putting it back is refused in the iPhone's words, without a report.
+        console.onPutBackSave = { _, _ in throw CartoucheMacSaveError.newerGame(copy: "1.2.0", game: "1.1.0") }
+        let copy = CartoucheSaveBackup(path: "2026-11-12T18-00-00Z.zip", date: synced, size: 1_310_720)
+        do {
+            try await backups.restore(copy, of: target)
+            XCTFail("a copy of a newer version of the game was put back")
+        } catch let refused as CartoucheSaveNewerGame {
+            XCTAssertEqual(refused, CartoucheSaveNewerGame(copy: "1.2.0", game: "1.1.0"))
+            XCTAssertEqual(refused.localizedDescription, CartoucheText.savesPutBackNewer("1.2.0", "1.1.0"))
+        }
+        XCTAssertNil(backups.problem(of: target))
+        XCTAssertFalse(backups.isSyncing)
+        // The game updated, the copy came: the sheet no longer says it.
+        console.showSaves(folder: folder, games: [titleID: CartoucheMacGameSaves(lastSync: synced, fetched: synced)])
+        XCTAssertNil(backups.newer[titleID])
+        XCTAssertEqual(backups.news[titleID], CartoucheSaveNews(fetched: synced))
+    }
+
     func testTheCopiesComeFromTheBuilderAndTheFolderAwaySaysSo() async throws {
         let console = CartoucheMacConsole.shared
         let backups = CartoucheSaveBackups.shared

@@ -5696,6 +5696,23 @@
         }
       }
     },
+    "saves.newerGame" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The newest copy of these saves comes from version %1$@ of the game, newer than the one installed here (%2$@): it comes once the game is updated. Until then, the saves played here go to your saves folder as a copy of their own."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La copie la plus récente de ces sauvegardes vient de la version %1$@ du jeu, plus récente que celle installée ici (%2$@) : elle viendra une fois le jeu mis à jour. D’ici là, les sauvegardes jouées ici partent dans votre dossier des sauvegardes comme une copie à part."
+          }
+        }
+      }
+    },
     "saves.noCopy" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5811,6 +5828,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Elle remplace les sauvegardes du jeu sur cet iPhone. Cartouche les envoie d’abord dans votre dossier des sauvegardes : vous pourrez y revenir."
+          }
+        }
+      }
+    },
+    "saves.putBack.newer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This copy comes from version %1$@ of the game, newer than the one installed here (%2$@): update the game to put it back."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette copie vient de la version %1$@ du jeu, plus récente que celle installée ici (%2$@) : mettez le jeu à jour pour la remettre."
           }
         }
       }

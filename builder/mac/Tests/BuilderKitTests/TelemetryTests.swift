@@ -247,6 +247,10 @@ final class TelemetryTests: XCTestCase {
                        ["place": .text("share"), "step": .text("offline"), "when": .text("round")])
         XCTAssertEqual(BuilderTelemetry.savesFields(step: "send", when: "after", onShare: false),
                        ["place": .text("mac"), "step": .text("send"), "when": .text("after")])
+        // The newest copy waits for the game's update: the step alone, never
+        // the versions.
+        XCTAssertEqual(BuilderTelemetry.savesFields(step: MacSaveEvent.heldBack, when: "before", onShare: true),
+                       ["place": .text("share"), "step": .text("heldBack"), "when": .text("before")])
         // Its app installed from a NAS, in place of an older copy.
         XCTAssertEqual(BuilderTelemetry.installedFields(bytes: 1_904_211_000, seconds: 37.6, again: true),
                        ["again": .flag(true), "appMB": .number(1904), "seconds": .number(38)])

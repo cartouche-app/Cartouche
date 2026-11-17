@@ -77,6 +77,13 @@ public struct CartoucheZipEntry: Hashable {
     }
 }
 
+/// An archive's entries, from its central directory, and the comment of its
+/// end record, empty when it has none.
+public struct CartoucheZipArchive: Hashable {
+    public let entries: [CartoucheZipEntry]
+    public let comment: Data
+}
+
 public enum CartoucheZip {
     static let localSignature: UInt32 = 0x0403_4B50
     static let centralSignature: UInt32 = 0x0201_4B50
@@ -87,6 +94,13 @@ public enum CartoucheZip {
     /// The archive's entries, from its central directory: two reads at its
     /// end, three for a Zip64 archive.
     public static func entries(of source: CartoucheByteSource) async throws -> [CartoucheZipEntry] {
+        try await archive(of: source).entries
+    }
+
+    /// The archive's entries, and the comment of its end record, which a
+    /// copy of a game's saves names the game's version in
+    /// (CartoucheSaveSync.gameVersion), read in the same two reads.
+    public static func archive(of source: CartoucheByteSource) async throws -> CartoucheZipArchive {
         let size = source.size
         guard size >= 22 else { throw CartoucheZipError("not a zip archive") }
         // The end record is the last 22 bytes, before a comment of up to
@@ -129,7 +143,9 @@ public enum CartoucheZip {
         }
         let directory = try await source.read(at: directoryOffset, count: Int(directorySize))
         guard directory.count == Int(directorySize) else { throw CartoucheZipError("the archive ended early") }
-        return try parseDirectory(directory, count: count, archiveSize: size)
+        let commentAt = tail.startIndex + endAt + 22
+        let comment = tail.subdata(in: commentAt ..< commentAt + Int(tail.uint16(at: endAt + 20)))
+        return CartoucheZipArchive(entries: try parseDirectory(directory, count: count, archiveSize: size), comment: comment)
     }
 
     static func parseDirectory(_ directory: Data, count: UInt64, archiveSize: UInt64) throws -> [CartoucheZipEntry] {
@@ -647,8 +663,11 @@ final class CartoucheZipWriter {
         }
     }
 
-    /// The central directory and the end records.
-    func finish() async throws {
+    /// The central directory and the end records, with COMMENT, at most
+    /// 65,535 bytes, which readers leave aside: a copy of a game's saves
+    /// names the game's version in it (CartoucheSaveSync.writeZip).
+    func finish(comment: Data = Data()) async throws {
+        guard comment.count <= 0xFFFF else { throw CartoucheZipError("the archive's comment is too long") }
         let directoryOffset = offset
         let directory = central
         try await emit(directory)
@@ -680,7 +699,8 @@ final class CartoucheZipWriter {
         end.appendUInt16(countField)
         end.appendUInt32(alwaysZip64 ? 0xFFFF_FFFF : UInt32(min(directorySize, 0xFFFF_FFFF)))
         end.appendUInt32(alwaysZip64 ? 0xFFFF_FFFF : UInt32(min(directoryOffset, 0xFFFF_FFFF)))
-        end.appendUInt16(0)
+        end.appendUInt16(UInt16(comment.count))
+        end.append(comment)
         try await emit(end)
         try await flush()
     }
