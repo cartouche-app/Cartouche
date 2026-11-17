@@ -22,10 +22,18 @@ struct CartoucheReport: Codable, Equatable, Sendable {
     struct Fact: Codable, Equatable, Sendable {
         let name: String
         let value: String
+        /// Whether VALUE is Cartouche's own words and numbers alone, never
+        /// a name, a message or a path from anywhere else, such as "the
+        /// games folder, on SMB" (CartoucheReports.place(_:as:)): a report
+        /// takes only what is shaped like an address out of it
+        /// (redacted(by:)). Nil for any other fact, and in the reports kept
+        /// before it.
+        let isOwn: Bool?
 
-        init(_ name: String, _ value: String) {
+        init(_ name: String, _ value: String, own: Bool = false) {
             self.name = name
             self.value = value
+            isOwn = own ? true : nil
         }
     }
 
@@ -170,11 +178,12 @@ extension CartoucheReport {
         report.message = redact(message)
         report.step = step.map(redact)
         report.error = error.map(redact)
-        report.facts = facts.map { Fact($0.name, redact($0.value)) }
         // Cartouche's own words, which the player's names would take with
         // them where a name is one of those words: "Storage: games on SMB"
-        // for a player whose user name is games.
+        // for a player whose user name is games. The environment's facts
+        // are all its own; a step's, those marked so.
         let shapes = CartoucheRedaction.shapes.redactor()
+        report.facts = facts.map { $0.isOwn == true ? Fact($0.name, shapes($0.value), own: true) : Fact($0.name, redact($0.value)) }
         report.environment.facts = environment.facts.map { Fact($0.name, shapes($0.value)) }
         report.journal = journal.map(redact)
         return report
@@ -279,6 +288,16 @@ struct CartoucheRedaction: Equatable, Sendable {
 
     func redact(_ text: String) -> String {
         redactor()(text)
+    }
+
+    /// TEXT redacted, but for the player's names when it is Cartouche's own
+    /// words and numbers alone (OWN), never a name, a message or a path
+    /// from anywhere else, as a line of the journal may be: only what is
+    /// shaped like an address goes from it then, so that a name of the
+    /// player's that is one of its words stays, "Saves sent to the saves
+    /// folder: 3 games" for a player whose user name is games.
+    func redact(_ text: String, own: Bool) -> String {
+        (own ? Self.shapes : self).redact(text)
     }
 
     /// redact(_:) for many texts, the player's names made into expressions

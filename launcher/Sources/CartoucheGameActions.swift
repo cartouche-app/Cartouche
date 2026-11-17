@@ -359,7 +359,7 @@ final class CartoucheGameActions: ObservableObject {
         guard work == nil, let location = CartoucheStorageSettings.shared.location(.games),
               startsNow(CartoucheInstallQuestion(source: .stored(game)), answered: asked) else { return }
         facts = [.init("IPA", game.fileName), .init("IPA size", CartoucheReport.bytes(Int64(clamping: game.size))),
-                 .init("From", CartoucheReports.place(.games))] + Self.buildFacts(game.build)
+                 CartoucheReports.place(.games, as: "From")] + Self.buildFacts(game.build)
         let model = DataManager.shared.model
         guard model.multiLCStatus != 2 else {
             fail(.install, CartoucheText.installFailed, message: "lc.appList.manageInPrimaryTip".loc, cause: .notPrimary)
@@ -938,7 +938,7 @@ final class CartoucheGameActions: ObservableObject {
         // says when the game was built (CartoucheGameBuild).
         let build = CartoucheInstalledBuilds.shared.build(of: app)
         let builtAt = build.builtAt
-        facts = [.init("To", CartoucheReports.place(.games))] + Self.buildFacts(build)
+        facts = [CartoucheReports.place(.games, as: "To")] + Self.buildFacts(build)
         work = CartoucheGameWork(kind: .exporting, name: app.displayName,
                                  step: CartoucheText.exportStep(location.server.name), fraction: 0, stage: "exporting",
                                  place: location.server.name)

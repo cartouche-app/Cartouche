@@ -295,7 +295,7 @@ final class CartoucheSaveBackups: ObservableObject {
     private func note(_ outcomes: [String: CartoucheSaveOutcome], of targets: [CartoucheSaveTarget]) {
         let sent = targets.filter { outcomes[$0.key]?.sent != nil }.count
         if sent > 0 {
-            CartoucheReports.note("Saves sent to the saves folder: \(sent) " + (sent == 1 ? "game" : "games"))
+            CartoucheReports.note("Saves sent to the saves folder: \(sent) " + (sent == 1 ? "game" : "games"), own: true)
         }
         for target in targets {
             guard let outcome = outcomes[target.key] else { continue }
@@ -322,7 +322,8 @@ final class CartoucheSaveBackups: ObservableObject {
         let added = Set(targets.map { $0.key }).subtracting(waiting)
         guard !added.isEmpty else { return }
         waiting.formUnion(added)
-        CartoucheReports.note("Saves waiting for the saves folder: \(waiting.count) " + (waiting.count == 1 ? "game" : "games"))
+        CartoucheReports.note("Saves waiting for the saves folder: \(waiting.count) " + (waiting.count == 1 ? "game" : "games"),
+                              own: true)
     }
 
     /// The saves folder, as a base names it: "<server ID>|<path>".

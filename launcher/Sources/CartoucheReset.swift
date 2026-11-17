@@ -100,7 +100,7 @@ final class CartoucheReset: ObservableObject {
     func sendSavesAtRisk(of apps: [LCAppModel]) async {
         guard !isSendingSaves, phase == nil else { return }
         isSendingSaves = true
-        CartoucheReports.note("Reset: sending the saves of \(targetsAtRisk.count) games before it")
+        CartoucheReports.note("Reset: sending the saves of \(targetsAtRisk.count) games before it", own: true)
         for target in targetsAtRisk {
             _ = await CartoucheSaveBackups.shared.syncNow(target)
         }
@@ -167,7 +167,7 @@ final class CartoucheReset: ObservableObject {
         let seconds = Date().timeIntervalSince(started)
         CartoucheReports.note("Reset: Cartouche erased: \(found.games) games, \(found.storages) storage places, "
                               + (found.signedIn ? "the Apple ID" : "no Apple ID") + "; "
-                              + "\(failures.count) items left, in " + String(format: "%.1f s", seconds))
+                              + "\(failures.count) items left, in " + String(format: "%.1f s", seconds), own: true)
         // Its number and its reports not sent yet stay: the next start
         // sends it.
         CartoucheTelemetry.shared.event("app.reset", fields: [

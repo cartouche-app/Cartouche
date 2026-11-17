@@ -106,6 +106,39 @@ final class CartoucheReportTests: XCTestCase {
         XCTAssertEqual(report.redacted(by: player).environment.facts.prefix(2), environment.facts.prefix(2))
     }
 
+    func testWhatCartouchesOwnWordsAloneMakeKeepsThem() throws {
+        // An install from the games folder, for a player whose user name is
+        // "games": a step's fact made of Cartouche's own words alone, marked
+        // so, stays whole, where the player's name took "the <account>
+        // folder"; the same words in a fact not marked so still lose it.
+        let player = CartoucheRedaction(accounts: ["games"])
+        var report = sample
+        report.facts = [.init("From", "the games folder, on SMB", own: true), .init("Place", "games, on SMB"),
+                        .init("To", "smb://nas.local/Games", own: true)]
+        let text = report.text(redactedBy: player)
+        let lines = text.components(separatedBy: "\n")
+        XCTAssertTrue(lines.contains("From: the games folder, on SMB"), text)
+        XCTAssertTrue(lines.contains("Place: <account>, on SMB"), text)
+        // What is shaped like an address goes from it all the same.
+        XCTAssertTrue(lines.contains("To: <address>"), text)
+        // A line of the journal made of Cartouche's own words alone, the
+        // same way.
+        let sent = "Saves sent to the saves folder: 3 games"
+        XCTAssertEqual(player.redact(sent, own: true), sent)
+        XCTAssertEqual(player.redact(sent, own: false), "Saves sent to the saves folder: 3 <account>")
+        XCTAssertEqual(player.redact("192.168.1.2 has 3 games", own: true), "<address> has 3 games")
+        // Kept and read again, as the reports kept are; a fact kept before
+        // the mark reads as one not marked.
+        let redacted = report.redacted(by: player)
+        XCTAssertEqual(try JSONDecoder().decode(CartoucheReport.self, from: JSONEncoder().encode(redacted)), redacted)
+        let kept = try JSONDecoder().decode(CartoucheReport.Fact.self, from: Data(#"{"name":"From","value":"x"}"#.utf8))
+        XCTAssertEqual(kept, .init("From", "x"))
+        XCTAssertNil(kept.isOwn)
+        // Nor does a fact not marked write the mark.
+        let unmarked = String(decoding: try JSONEncoder().encode(CartoucheReport.Fact("IPA", "x.ipa")), as: UTF8.self)
+        XCTAssertFalse(unmarked.contains("isOwn"), unmarked)
+    }
+
     // MARK: The text
 
     private var sample: CartoucheReport {

@@ -98,9 +98,12 @@ enum CartoucheReports {
 
     // MARK: The journal
 
-    /// Notes a step in the journal, redacted.
-    static func note(_ text: String) {
-        journalLines.note(redaction().redact(text))
+    /// Notes a step in the journal, redacted. OWN is for a line made of
+    /// Cartouche's own words and numbers alone, never of a name, a message
+    /// or a path from anywhere else: a name of the player's that is one of
+    /// its words stays in it ("Saves sent to the saves folder: 3 games").
+    static func note(_ text: String, own: Bool = false) {
+        journalLines.note(redaction().redact(text, own: own))
     }
 
     /// The journal's COUNT last lines, oldest first.
@@ -267,6 +270,13 @@ enum CartoucheReports {
     static func place(_ role: CartoucheStorageRole) -> String {
         guard let server = CartoucheStorageSettings.shared.location(role)?.server else { return "no \(role.rawValue) folder" }
         return "the \(role.rawValue) folder, on \(kindName(server.kind))"
+    }
+
+    /// "From: the games folder, on SMB": place(_:) as a step's fact, of
+    /// Cartouche's own words alone, which a player's name that is one of
+    /// them leaves whole (CartoucheReport.Fact.isOwn).
+    static func place(_ role: CartoucheStorageRole, as name: String) -> CartoucheReport.Fact {
+        .init(name, place(role), own: true)
     }
 
     /// iOS's build, "25B72".
