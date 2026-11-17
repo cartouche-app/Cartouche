@@ -290,7 +290,11 @@ public struct CartoucheMacConsoleView: View {
         // Another language: every word again.
         .id(console.language ?? "")
         .animation(.easeInOut(duration: 0.25), value: entries.owned.isEmpty)
-        .preferredColorScheme(.dark)
+        // Dark, as the iPhone's console always is: the window that shows it
+        // says so (MainView, in the Builder), and says the builder's scheme
+        // when it shows the builder instead. Said here, the window's dark
+        // would go with the console and leave the builder's words in the
+        // console's colours.
         .onAppear {
             if let entry = entries.owned.first(where: { $0.app != nil }), let app = entry.app {
                 if opensSettings { openSettings(app, of: entry) }
