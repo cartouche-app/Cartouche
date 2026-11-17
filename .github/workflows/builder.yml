@@ -37,6 +37,7 @@ on:
       - "launcher/Sources/CartoucheBridge.swift"
       - "launcher/Sources/CartoucheBridgeBuilds.swift"
       - "launcher/Sources/CartoucheCatalog.swift"
+      - "launcher/Sources/CartoucheConnections.swift"
       - "launcher/Sources/CartoucheCoverList.swift"
       - "launcher/Sources/CartoucheCovers.swift"
       - "launcher/Sources/CartoucheDrive.swift"
@@ -48,6 +49,9 @@ on:
       - "launcher/Sources/CartoucheGameInfoView.swift"
       - "launcher/Sources/CartoucheGameLanguage.swift"
       - "launcher/Sources/CartoucheGameLog.swift"
+      - "launcher/Sources/CartoucheGameLogShare.swift"
+      - "launcher/Sources/CartoucheGameLogView.swift"
+      - "launcher/Sources/CartoucheGameLogZip.swift"
       - "launcher/Sources/CartoucheGameLookup.swift"
       - "launcher/Sources/CartoucheGamePlace.swift"
       - "launcher/Sources/CartoucheGameResultsView.swift"
@@ -61,9 +65,14 @@ on:
       - "launcher/Sources/CartoucheHomeView.swift"
       - "launcher/Sources/CartoucheLibraryView.swift"
       - "launcher/Sources/CartoucheMeasuredNote.swift"
+      - "launcher/Sources/CartoucheNaming.swift"
+      - "launcher/Sources/CartoucheNamingView.swift"
       - "launcher/Sources/CartouchePlayTime.swift"
       - "launcher/Sources/CartouchePlayerInfo.swift"
+      - "launcher/Sources/CartoucheProblemReport.swift"
       - "launcher/Sources/CartoucheReport.swift"
+      - "launcher/Sources/CartoucheReportView.swift"
+      - "launcher/Sources/CartoucheReporting.swift"
       - "launcher/Sources/CartoucheResumingSource.swift"
       - "launcher/Sources/CartoucheRomfs.swift"
       - "launcher/Sources/CartoucheS3.swift"
@@ -73,22 +82,29 @@ on:
       - "launcher/Sources/CartoucheSignInMessage.swift"
       - "launcher/Sources/CartoucheStorage.swift"
       - "launcher/Sources/CartoucheStorageDrive.swift"
+      - "launcher/Sources/CartoucheStorageDriveView.swift"
       - "launcher/Sources/CartoucheStorageFTP.swift"
       - "launcher/Sources/CartoucheStorageFolder.swift"
       - "launcher/Sources/CartoucheStorageMac.swift"
       - "launcher/Sources/CartoucheStorageReach.swift"
       - "launcher/Sources/CartoucheStorageS3.swift"
+      - "launcher/Sources/CartoucheStorageSFTP.swift"
+      - "launcher/Sources/CartoucheStorageSMB.swift"
       - "launcher/Sources/CartoucheStorageSaves.swift"
+      - "launcher/Sources/CartoucheStorageView.swift"
       - "launcher/Sources/CartoucheStoredGames.swift"
       - "launcher/Sources/CartoucheSwitchSave.swift"
       - "launcher/Sources/CartoucheSwitchSaveArchive.swift"
       - "launcher/Sources/CartoucheSwitchSaveView.swift"
+      - "launcher/Sources/CartoucheTailscale.swift"
       - "launcher/Sources/CartoucheTelemetryReport.swift"
+      - "launcher/Sources/CartoucheTelemetryView.swift"
       - "launcher/Sources/CartoucheText.swift"
       - "launcher/Sources/CartoucheTextDrive.swift"
       - "launcher/Sources/CartoucheTextGameInfo.swift"
       - "launcher/Sources/CartoucheTextGuide.swift"
       - "launcher/Sources/CartoucheTextMac.swift"
+      - "launcher/Sources/CartoucheTextNaming.swift"
       - "launcher/Sources/CartoucheTextResults.swift"
       - "launcher/Sources/CartoucheTextSideStore.swift"
       - "launcher/Sources/CartoucheTextSigning.swift"
@@ -98,6 +114,8 @@ on:
       - "launcher/Sources/CartoucheTranslations.swift"
       - "launcher/Sources/CartoucheZip.swift"
       - "launcher/Sources/Cartouche.xcstrings"
+      # The SMB package the console's storage builds (builder/mac/Package.swift).
+      - "app/SMBClient"
       - "telemetry/test/builder-reports.json"
       - ".github/workflows/builder.yml"
   workflow_dispatch:
@@ -150,7 +168,7 @@ jobs:
           SHARED="$(find builder/mac/Sources/CartoucheConsole/Shared -name '*.swift' -exec basename {} \; | sort | sed 's|^|launcher/Sources/|')"
           # shellcheck disable=SC2086
           CHANGES="$(git diff --binary HEAD^1 HEAD -- builder launcher/Package.swift $SHARED launcher/Sources/Cartouche.xcstrings \
-            telemetry/test/builder-reports.json .github/workflows/builder.yml | sha256sum | cut -c1-64)"
+            app/SMBClient telemetry/test/builder-reports.json .github/workflows/builder.yml | sha256sum | cut -c1-64)"
           echo "key=builder-xcode-$XCODE_VERSION-$CHANGES" >> "$GITHUB_OUTPUT"
       - name: Was it built?
         id: memo
@@ -186,6 +204,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # The console's storage builds SMBClient from its submodule, as the
+      # app does (builder/mac/Package.swift).
+      - name: Check out SMBClient
+        run: git submodule update --init app/SMBClient
       - name: Select Xcode
         run: |
           sudo xcode-select -s "/Applications/Xcode_${XCODE_VERSION}.app"

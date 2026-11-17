@@ -9,6 +9,12 @@
 //  folder. A game's saves on its sheet, and their copies, which can be put
 //  back, are in CartoucheSavesView.swift.
 //
+//  Cartouche's console on the Mac shows the same page, its connections the
+//  same as the paired iPhones' (CartoucheConnections.swift): this Mac's
+//  folders, the Builder's, stand in place of the games folder and the saves
+//  folder (builder/mac, ConsoleStorage.swift), and neither a Mac nor a
+//  folder of Files is added there.
+//
 
 import Combine
 import Network
@@ -37,33 +43,66 @@ struct CartoucheStorageView: View {
     // the synthesized initializer private.
     init() {}
 
+    /// Whether the page opens scrolled down to Tailscale, for the launcher's
+    /// gallery (launcher/Gallery); never in Cartouche.
+    #if CARTOUCHE_GALLERY
+    static var opensOnTailscale = false
+    #else
+    static let opensOnTailscale = false
+    #endif
+
+    /// Tailscale's row, which the gallery opens the page on.
+    private static let tailscaleRow = "tailscale"
+
     var body: some View {
-        List {
-            Section {
-                Text(CartoucheText.storageIntro)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+        ScrollViewReader { reader in
+            List {
+                Section {
+                    Text(CartoucheText.storageIntro)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                #if os(macOS)
+                // This Mac's folders, the Builder's (ConsoleStorage.swift).
+                CartoucheMacFoldersSection()
+                #else
+                placeSection(.games)
+                placeSection(.saves)
+                #endif
+                serversSection
+                #if os(iOS)
+                // The iPhone's way home from afar. A Mac's Tailscale is its
+                // own, which Cartouche Builder tells the iPhone about
+                // (BridgeServer.swift); the console reaches this Mac's
+                // folders itself.
+                tailscaleSection
+                #endif
             }
-            placeSection(.games)
-            placeSection(.saves)
-            serversSection
+            .cartoucheStageBackground()
+            .task {
+                guard Self.opensOnTailscale else { return }
+                // Once the list has laid out its rows; the section's header
+                // shows above its first row.
+                try? await Task.sleep(for: .milliseconds(500))
+                reader.scrollTo(Self.tailscaleRow, anchor: UnitPoint(x: 0.5, y: 0.6))
+            }
         }
-        .cartoucheStageBackground()
         .navigationTitle(CartoucheText.storageTitle)
         .sheet(item: $editing) { server in
             NavigationStack {
+                #if os(iOS)
                 if server.kind == .mac {
                     CartoucheStorageMacForm(server: server)
-                } else if server.kind == .drive {
-                    CartoucheStorageDriveForm(server: server)
-                } else if server.kind == .s3 {
-                    CartoucheStorageS3Form(server: server)
-                } else if server.kind == .ftp || server.kind == .sftp {
-                    CartoucheStorageFTPForm(server: server)
                 } else {
-                    CartoucheStorageServerForm(server: server)
+                    form(server)
                 }
+                #else
+                form(server)
+                #endif
             }
+            #if os(macOS)
+            .frame(minWidth: 480, idealWidth: 520, minHeight: 540, idealHeight: 640)
+            #endif
             .preferredColorScheme(.dark)
         }
         .sheet(item: $browsing) { browsing in
@@ -81,6 +120,7 @@ struct CartoucheStorageView: View {
             }
             .preferredColorScheme(.dark)
         }
+        #if os(iOS)
         .sheet(isPresented: $choosingFolder) {
             CartoucheFolderPicker { url in
                 choosingFolder = false
@@ -88,12 +128,30 @@ struct CartoucheStorageView: View {
             }
             .ignoresSafeArea()
         }
+        #endif
+    }
+
+    /// The form of SERVER, by its kind.
+    @ViewBuilder
+    private func form(_ server: CartoucheStorageServer) -> some View {
+        if server.kind == .drive {
+            CartoucheStorageDriveForm(server: server)
+        } else if server.kind == .s3 {
+            CartoucheStorageS3Form(server: server)
+        } else if server.kind == .ftp || server.kind == .sftp {
+            CartoucheStorageFTPForm(server: server)
+        } else {
+            CartoucheStorageServerForm(server: server)
+        }
     }
 
     // MARK: The games folder and the saves folder
 
+    /// The row that opens how to name the games, which the UI tests tap.
+    static let namingRow = "storage.naming"
+
     private func placeSection(_ role: CartoucheStorageRole) -> some View {
-        Section {
+        CartoucheSection {
             if let place = settings.place(role), let server = settings.server(place.server) {
                 LabeledContent {
                     Text(Self.placeName(server: server, path: place.path))
@@ -122,7 +180,7 @@ struct CartoucheStorageView: View {
                             .foregroundStyle(Color.orange)
                     }
                     if offline {
-                        let away = CartoucheStorageOffline(server)
+                        let away = CartoucheStorageOffline(server, tailscale: reach.tailscaleConnected)
                         Label(away.localizedDescription, systemImage: away.symbol)
                             .font(.footnote)
                             .foregroundStyle(Color.orange)
@@ -141,10 +199,11 @@ struct CartoucheStorageView: View {
                     }
                     Button(CartoucheText.storageReadAgain, systemImage: "arrow.clockwise") { stored.refresh(evenIfOffline: true) }
                         .disabled(stored.isScanning)
+                    namingLink
                 } else if offline {
                     // As the games folder's lines: what waits, and a way to
                     // try the server again, or to sign in to the Drive again.
-                    let away = CartoucheStorageOffline(server)
+                    let away = CartoucheStorageOffline(server, tailscale: reach.tailscaleConnected)
                     Label(away.localizedDescription, systemImage: away.symbol)
                         .font(.footnote)
                         .foregroundStyle(Color.orange)
@@ -187,18 +246,34 @@ struct CartoucheStorageView: View {
             } else if settings.servers.isEmpty {
                 Text(CartoucheText.storageAddFirst)
                     .foregroundStyle(.secondary)
+                if role == .games { namingLink }
             } else {
                 Menu {
                     serverChoices(role)
                 } label: {
                     Label(CartoucheText.storageChooseFolder, systemImage: "folder.badge.plus")
                 }
+                if role == .games { namingLink }
             }
         } header: {
             Text(Self.title(role))
         } footer: {
             Text(role == .games ? CartoucheText.storageGamesFooter : CartoucheText.storageSavesFooter(CartoucheSaveBackups.kept))
         }
+    }
+
+    /// How the games here are named, their saves too, and the dumps
+    /// Cartouche Builder reads on a Mac: under the games folder's reading,
+    /// before the folder is changed, or under what to do first. On the Mac,
+    /// under This Mac's folders (ConsoleStorage.swift), which open it
+    /// beside the console.
+    private var namingLink: some View {
+        NavigationLink {
+            CartoucheNamingView()
+        } label: {
+            Label(CartoucheText.namingOpen, systemImage: "text.badge.checkmark")
+        }
+        .accessibilityIdentifier(Self.namingRow)
     }
 
     /// The servers to look for ROLE's folder on. A shared folder that lets
@@ -219,9 +294,19 @@ struct CartoucheStorageView: View {
 
     // MARK: Servers and folders
 
+    /// The servers the page lists: on the Mac, the player's connections,
+    /// not the saves folder the Builder keeps the games' saves in.
+    private var listed: [CartoucheStorageServer] {
+        #if os(macOS)
+        return settings.servers.filter(\.travels)
+        #else
+        return settings.servers
+        #endif
+    }
+
     private var serversSection: some View {
-        Section {
-            ForEach(settings.servers) { server in
+        CartoucheSection {
+            ForEach(listed) { server in
                 Button {
                     if server.kind != .folder { editing = server }
                 } label: {
@@ -248,11 +333,14 @@ struct CartoucheStorageView: View {
                     }
                 }
             }
+            #if os(iOS)
+            // The Mac pairs from its own side: its Builder's iPhone page.
             Button {
                 editing = CartoucheStorageServer(kind: .mac, name: "")
             } label: {
                 Label(CartoucheText.storageAddMac, systemImage: "laptopcomputer")
             }
+            #endif
             if CartoucheStorage.hasSMB {
                 Button {
                     editing = CartoucheStorageServer(kind: .smb, name: "")
@@ -282,15 +370,53 @@ struct CartoucheStorageView: View {
                     Label(CartoucheText.storageAddSFTP, systemImage: "lock.shield")
                 }
             }
+            #if os(iOS)
+            // A folder of Files, which only this device opens.
             Button {
                 choosingFolder = true
             } label: {
                 Label(CartoucheText.storageAddFolder, systemImage: "folder.badge.plus")
             }
+            #endif
         } header: {
             Text(CartoucheText.storageServers)
         } footer: {
+            #if os(macOS)
+            Text(CartoucheText.storageConnectionsFooter)
+            #else
             Text(CartoucheText.storageServersFooter)
+            #endif
+        }
+    }
+
+    // MARK: Away from home
+
+    /// Tailscale, which the player installs apart: whether it is connected
+    /// here, and what it does for their storage (CartoucheTailscale.swift).
+    private var tailscaleSection: some View {
+        CartoucheSection {
+            LabeledContent {
+                Text(reach.tailscaleConnected ? CartoucheText.storageTailscaleConnected : CartoucheText.storageTailscaleOff)
+                    .foregroundStyle(reach.tailscaleConnected ? Color.green : Color.secondary)
+            } label: {
+                Label {
+                    Text(verbatim: "Tailscale")
+                } icon: {
+                    Image(systemName: "network")
+                }
+            }
+            .id(Self.tailscaleRow)
+            if !reach.tailscaleConnected {
+                // Its page shows Open once Tailscale is on this iPhone: it
+                // has no link of its own that Cartouche could open.
+                Link(destination: CartoucheTailscale.appStore) {
+                    Label(CartoucheText.storageTailscaleAppStore, systemImage: "arrow.up.forward.app")
+                }
+            }
+        } header: {
+            Text(CartoucheText.storageTailscaleTitle)
+        } footer: {
+            Text(CartoucheText.storageTailscaleFooter)
         }
     }
 
@@ -420,14 +546,18 @@ struct CartoucheStorageServerForm: View {
                     }
                 }
             }
-            Section {
+            CartoucheSection {
                 TextField(CartoucheText.storageHost, text: $server.host)
+                    #if os(iOS)
                     .keyboardType(.URL)
                     .textInputAutocapitalization(.never)
+                    #endif
                     .autocorrectionDisabled()
                 TextField(CartoucheText.storageUser, text: $server.username)
                     .textContentType(.username)
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    #endif
                     .autocorrectionDisabled()
                 SecureField(isNew ? CartoucheText.storagePassword : CartoucheText.storagePasswordKept, text: $password)
                     .textContentType(.password)
@@ -436,7 +566,7 @@ struct CartoucheStorageServerForm: View {
             } footer: {
                 Text(CartoucheText.storageAccountFooter)
             }
-            Section {
+            CartoucheSection {
                 Button {
                     Task { await listShares() }
                 } label: {
@@ -480,9 +610,14 @@ struct CartoucheStorageServerForm: View {
                 Text(CartoucheText.storageNameTitle)
             }
         }
+        // In boxes, as on the iPhone: a form on the Mac lines its titles up
+        // in a column of their own otherwise.
+        .formStyle(.grouped)
         .cartoucheStageBackground()
         .navigationTitle(isNew ? CartoucheText.storageAddSMB : server.name)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button(CartoucheText.cancel) { dismiss() }
@@ -564,25 +699,33 @@ struct CartoucheStorageS3Form: View {
 
     var body: some View {
         Form {
-            Section {
+            CartoucheSection {
                 TextField(CartoucheText.storageS3Address, text: $server.host)
+                    #if os(iOS)
                     .keyboardType(.URL)
                     .textInputAutocapitalization(.never)
+                    #endif
                     .autocorrectionDisabled()
                 TextField(CartoucheText.storageS3Bucket, text: $server.share)
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    #endif
                     .autocorrectionDisabled()
                 TextField(CartoucheText.storageS3Region, text: $region)
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    #endif
                     .autocorrectionDisabled()
             } header: {
                 Text(CartoucheText.storageS3Server)
             } footer: {
                 Text(CartoucheText.storageS3ServerFooter)
             }
-            Section {
+            CartoucheSection {
                 TextField(CartoucheText.storageS3AccessKey, text: $server.username)
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    #endif
                     .autocorrectionDisabled()
                 SecureField(isNew ? CartoucheText.storageS3SecretKey : CartoucheText.storageS3SecretKeyKept, text: $secretKey)
                 if checking {
@@ -610,9 +753,14 @@ struct CartoucheStorageS3Form: View {
                 Text(CartoucheText.storageNameTitle)
             }
         }
+        // In boxes, as on the iPhone: a form on the Mac lines its titles up
+        // in a column of their own otherwise.
+        .formStyle(.grouped)
         .cartoucheStageBackground()
         .navigationTitle(isNew ? CartoucheText.storageAddS3 : server.name)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button(CartoucheText.cancel) { dismiss() }
@@ -699,16 +847,22 @@ struct CartoucheStorageFTPForm: View {
 
     var body: some View {
         Form {
-            Section {
+            CartoucheSection {
                 TextField(CartoucheText.storageHost, text: $server.host)
+                    #if os(iOS)
                     .keyboardType(.URL)
                     .textInputAutocapitalization(.never)
+                    #endif
                     .autocorrectionDisabled()
                 TextField(CartoucheText.storagePort(defaultPort), text: $port)
+                    #if os(iOS)
                     .keyboardType(.numberPad)
+                    #endif
                 TextField(CartoucheText.storageUser, text: $server.username)
                     .textContentType(.username)
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    #endif
                     .autocorrectionDisabled()
                 SecureField(isNew ? CartoucheText.storagePassword : CartoucheText.storagePasswordKept, text: $password)
                     .textContentType(.password)
@@ -745,9 +899,14 @@ struct CartoucheStorageFTPForm: View {
                 Text(CartoucheText.storageNameTitle)
             }
         }
+        // In boxes, as on the iPhone: a form on the Mac lines its titles up
+        // in a column of their own otherwise.
+        .formStyle(.grouped)
         .cartoucheStageBackground()
         .navigationTitle(isNew ? (isSFTP ? CartoucheText.storageAddSFTP : CartoucheText.storageAddFTP) : server.name)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button(CartoucheText.cancel) { dismiss() }
@@ -919,7 +1078,7 @@ struct CartoucheStorageFolderBrowser: View {
 
     var body: some View {
         List {
-            Section {
+            CartoucheSection {
                 Button {
                     onChoose(path)
                 } label: {
@@ -968,7 +1127,9 @@ struct CartoucheStorageFolderBrowser: View {
         }
         .cartoucheStageBackground()
         .navigationTitle(path.isEmpty ? server.name : CartoucheStoragePath.name(path))
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button(CartoucheText.storageNewFolder, systemImage: "folder.badge.plus") {

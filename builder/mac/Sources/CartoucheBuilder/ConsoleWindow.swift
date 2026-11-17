@@ -10,8 +10,9 @@
 //
 //  The console is CartoucheConsole's, the iPhone's screens (ConsoleView.swift
 //  there). It is imported only in files that do not import CartoucheCore,
-//  whose names it shares: this one and ConsoleGallery.swift. The rest of the
-//  app reaches it through ConsoleLink, with the games' apps and words.
+//  whose names it shares: this one, ConsoleGallery.swift and NamingHelp.swift.
+//  The rest of the app reaches it through ConsoleLink, with the games' apps
+//  and words.
 //
 
 import AppKit
@@ -46,20 +47,29 @@ struct MainView: View {
     @EnvironmentObject private var bridge: BridgeController
     /// The console with every game open, with its first game's settings
     /// page, or with that game's info over it, or with the sheet of the
-    /// game of that title ID, and a page of its saves, as the gallery shows
-    /// it.
+    /// game of that title ID, and a page of its saves or its log, or its
+    /// System page, or the Storage, Game measurements or Report a problem
+    /// page that one opens, as the gallery shows it.
     var showingLibrary = false
     var showingSettings = false
     var showingInfo = false
     var showingSheetOf: String?
     var showingSaves: ConsoleSavesPage?
+    var showingSystem = false
+    var showingStorage = false
+    var showingMeasures = false
+    var showingReport = false
+    /// The Mac's appearance, light or dark: the builder's.
+    @State private var macScheme = MainView.scheme(of: NSApplication.shared.effectiveAppearance)
 
     var body: some View {
         Group {
             switch model.interface {
             case .console:
                 CartoucheMacConsoleView(showingLibrary: showingLibrary, showingSettings: showingSettings, showingInfo: showingInfo,
-                                        showingSheetOf: showingSheetOf, showingSaves: showingSaves?.console)
+                                        showingSheetOf: showingSheetOf, showingSaves: showingSaves?.console,
+                                        showingSystem: showingSystem, showingStorage: showingStorage,
+                                        showingMeasures: showingMeasures, showingReport: showingReport)
                     .overlay(alignment: .top) { consoleBanner }
             case .builder:
                 ContentView()
@@ -71,6 +81,19 @@ struct MainView: View {
             ToolbarItem(placement: .principal) {
                 InterfaceSwitch()
             }
+        }
+        // The window dark while the console is in it, as the iPhone's
+        // console always is, and in the Mac's appearance for the builder,
+        // said every time, never left to nothing: when the console's dark
+        // gave way to nothing, SwiftUI gave the window back the Mac's light
+        // appearance but kept the builder in the console's colours, its
+        // words white on white, until the window was drawn again (on a
+        // player's Mac in light mode, 17 November; the layout check takes
+        // the window to the console and back, LayoutCheck.swift).
+        .preferredColorScheme(model.interface == .console ? .dark : macScheme)
+        .onReceive(NSApplication.shared.publisher(for: \.effectiveAppearance)) { appearance in
+            let scheme = MainView.scheme(of: appearance)
+            if scheme != macScheme { macScheme = scheme }
         }
         .sheet(isPresented: $model.showSetup) {
             SetupAssistant(start: model.setupStep)
@@ -114,6 +137,11 @@ struct MainView: View {
         ConsoleLink.showInstall(name, step: model.installMessage)
     }
 
+    /// Light or dark, as APPEARANCE is.
+    private static func scheme(of appearance: NSAppearance) -> ColorScheme {
+        appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua ? .dark : .light
+    }
+
     /// What went wrong, above the console as above the builder's pages: a
     /// game that did not start, or stopped unexpectedly.
     @ViewBuilder private var consoleBanner: some View {
@@ -127,16 +155,17 @@ struct MainView: View {
     }
 }
 
-/// A page of a game's saves the console opens over its sheet, for the
-/// gallery (Gallery.swift, which does not import the console): the copies
-/// of the saves, or the game's Switch saves.
+/// A page the console opens over a game's sheet, for the gallery
+/// (Gallery.swift, which does not import the console): the copies of the
+/// game's saves, its Switch saves, or its log.
 enum ConsoleSavesPage {
-    case copies, switchSaves
+    case copies, switchSaves, log
 
     var console: CartoucheMacSavesPage {
         switch self {
         case .copies: return .copies
         case .switchSaves: return .switchSaves
+        case .log: return .log
         }
     }
 }
@@ -169,10 +198,107 @@ enum ConsoleLink {
         console.onQuit = { [weak model] game in model?.askToQuit(app: game) }
         console.onImport = { [weak model] in model?.showBuilder(.library) }
         console.onSystem = { [weak model] in model?.showBuilder(nil) }
+        // This Mac's folders, on the console's Storage page: the Builder's
+        // iPhone page shows them, the saves folder changed there.
+        console.onFolders = { [weak model] in model?.showBuilder(.iphone) }
         console.onUninstall = { [weak model] game in model?.askToRemove(app: game) }
         console.onInstall = { [weak model] titleID in model?.install(titleID: titleID) }
         startSaves(model)
+        startMeasures(model)
         speak()
+    }
+
+    // MARK: Game measurements
+
+    /// The app's telemetry, as the console's System › Game measurements
+    /// shows it and turns it, the console's events, and the reports of the
+    /// sessions of the games played on this Mac, which the console reads in
+    /// their logs: one switch, one queue and one number for the app.
+    private static func startMeasures(_ model: AppModel) {
+        let console = CartoucheMacConsole.shared
+        let telemetry = model.telemetry
+        CartoucheMacConsole.measuresServer = telemetry.hasServer ? BuilderTelemetry.bundledEndpoint : nil
+        console.onMeasuresSwitch = { [weak telemetry] on in telemetry?.setOn(on) }
+        console.onMeasuresErase = { [weak telemetry] in
+            guard let telemetry else { return false }
+            return await telemetry.erase()
+        }
+        console.onMeasuresEvent = { [weak telemetry] name, game, fields in
+            telemetry?.event(name, game: game, fields: fields.mapValues(ConsoleLink.value))
+        }
+        console.onMeasuresReport = { [weak telemetry] make in
+            telemetry?.report { context, seq in
+                make(CartoucheMacTelemetryContext(install: context.install, version: context.cartouche, device: context.device,
+                                                  system: context.ios, language: context.language), seq)
+                    .map { (id: $0.id, body: $0.body) }
+            }
+        }
+        // At once, so that the first sessions read know the switch, then
+        // each change, once it is made: the values in place.
+        showMeasures(of: telemetry)
+        measuresWatch = telemetry.$isOn.combineLatest(telemetry.$sent, telemetry.$waiting, telemetry.$lastSent)
+            .combineLatest(telemetry.$lastReport)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak telemetry] _ in
+                guard let telemetry else { return }
+                ConsoleLink.showMeasures(of: telemetry)
+            }
+        console.keepSessions(in: model.home.sessions)
+    }
+
+    private static var measuresWatch: AnyCancellable?
+
+    private static func showMeasures(of telemetry: BuilderTelemetry) {
+        CartoucheMacConsole.shared.showMeasures(
+            CartoucheMacMeasures(isOn: telemetry.isOn, sent: telemetry.sent, waiting: telemetry.waiting,
+                                 lastSent: telemetry.lastSent, lastReport: telemetry.lastReport))
+    }
+
+    /// A field of a console's event, as the app's telemetry sends it.
+    private static func value(_ measure: CartoucheMacMeasure) -> TelemetryValue {
+        switch measure {
+        case .text(let text): return .text(text)
+        case .number(let number): return .number(number)
+        case .flag(let flag): return .flag(flag)
+        }
+    }
+
+    /// Has the console read the sessions of the games played on this Mac
+    /// that it has not read yet, and the app send their reports: PLAYING,
+    /// the games playing, by title ID, still write theirs.
+    static func readSessions(playing: Set<String>) {
+        CartoucheMacConsole.shared.readSessions(playing: playing)
+    }
+
+    // MARK: The player's storage
+
+    /// Keeps the passwords, secret keys and Google sign-ins of the
+    /// connections of the console's Storage page in FILE from now on
+    /// (BuilderHome.connections): once, as the app starts, before the
+    /// bridge takes a paired iPhone's.
+    static func keepConnections(in file: URL) {
+        CartoucheMacConsole.keepConnectionSecrets(in: file)
+    }
+
+    // MARK: Reports
+
+    /// Keeps the console's journal and its last reports in FOLDER from now
+    /// on (BuilderHome.console): once, as the app starts.
+    static func keepReports(in folder: URL) {
+        CartoucheMacConsole.keepReports(in: folder)
+    }
+
+    /// Takes THEIRS, a paired iPhone's connections as JSON, and gives this
+    /// Mac's once it took them, the same JSON (BridgeController): nil for
+    /// what is no list of connections.
+    static func takeConnections(_ theirs: Data) -> Data? {
+        CartoucheMacConsole.shared.takeConnections(theirs)
+    }
+
+    /// The Builder's games folder and saves folder, which the console's
+    /// Storage page shows under This Mac.
+    static func showFolders(games: URL?, saves: URL?) {
+        CartoucheMacConsole.shared.showFolders(games: games, saves: saves)
     }
 
     // MARK: A game's saves
@@ -247,13 +373,16 @@ enum ConsoleLink {
             let event = games.last[titleID]
             let moved = event.flatMap { $0.offline || $0.failed ? nil : $0.at }
             let news = event.flatMap { ["fetch", "keep", "keepAndFetch"].contains($0.step) ? $0 : nil }
+            // The newest copy waits for the game's update, the saves of
+            // this Mac kept under it meanwhile, which that says.
+            let held = event.flatMap { $0.step == MacSaveEvent.heldBack ? $0 : nil }
             saves[titleID] = CartoucheMacGameSaves(
                 lastSync: [games.checked[titleID], moved].compactMap { $0 }.max(),
                 fetched: news?.fetchedDate, kept: news?.keptDate, waiting: event?.offline == true,
                 failure: event?.failed == true
                     ? event?.failure ?? tr("Its saves could not be kept in step.", "Ses sauvegardes n’ont pas pu être mises en phase.")
                     : nil,
-                inCloud: games.cloud[titleID] != nil)
+                inCloud: games.cloud[titleID] != nil, newer: held?.newer, game: held?.game)
         }
         CartoucheMacConsole.shared.showSaves(folder: folder, games: saves)
     }
@@ -264,6 +393,7 @@ enum ConsoleLink {
         case .offline: return .offline
         case .busy: return .busy
         case .unreadable: return .unreadable
+        case .newerGame(let copy, let game): return .newerGame(copy: copy, game: game)
         }
     }
 

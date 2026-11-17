@@ -241,14 +241,25 @@ struct CartoucheGameLogFolder: Hashable {
     var titleId: String?
     /// The build installed.
     var build: CartoucheGameBuild?
-    /// The game's Documents folder, in its data folder.
+    /// The game's Documents folder, in its data folder; on a Mac, the
+    /// folder nxnative's app for the Mac writes every game's logs in.
     var documents: URL
+    /// The logs' names there, the last session's first: on a Mac,
+    /// "<title ID>.log" and "<title ID>.prev.log" (dm/mac/launcher.c).
+    var names = CartoucheGameLogShare.names
+
+    /// The logs the game wrote, the last session's first, each with the
+    /// name the summary knows it by, as on the iPhone: "log.txt", then
+    /// "log.prev.txt".
+    var logs: [(url: URL, name: String)] {
+        zip(names, CartoucheGameLogShare.names).compactMap { name, known in
+            let url = documents.appendingPathComponent(name)
+            return FileManager.default.fileExists(atPath: url.path) ? (url, known) : nil
+        }
+    }
 
     /// The logs the game wrote, the last session's first.
-    var files: [URL] {
-        CartoucheGameLogShare.names.map { documents.appendingPathComponent($0) }
-            .filter { FileManager.default.fileExists(atPath: $0.path) }
-    }
+    var files: [URL] { logs.map { $0.url } }
 }
 
 // MARK: One log
@@ -448,8 +459,8 @@ struct CartoucheGameLogShare {
         if !words.isEmpty {
             lines.append(Self.line("What happened", words))
         }
-        lines.append(Self.line("Cartouche", [environment.cartouche, environment.basedOn].compactMap { $0 }.joined(separator: ", ")))
-        lines.append(Self.line("iOS", environment.system))
+        lines.append(Self.line(environment.appShown, [environment.cartouche, environment.basedOn].compactMap { $0 }.joined(separator: ", ")))
+        lines.append(Self.line(environment.systemShown, environment.system))
         lines.append(Self.line("Device", environment.device))
         lines.append(Self.line("Language", environment.language))
         lines += environment.facts.map { Self.line($0.name, $0.value) }
@@ -585,8 +596,8 @@ struct CartoucheGameLogShare {
         let words = isCleaned ? self.words : Self.cleaned(self.words, by: cleaning.cleaner())
         let firstLine = words.split(whereSeparator: \.isNewline).first.map { $0.trimmingCharacters(in: .whitespaces) } ?? ""
         let title = firstLine.isEmpty
-            ? "\(game) log, Cartouche \(Self.short(environment.cartouche)) on \(Self.short(environment.device)), "
-                + "iOS \(Self.short(environment.system))"
+            ? "\(game) log, \(environment.appShown) \(Self.short(environment.cartouche)) on \(Self.short(environment.device)), "
+                + "\(environment.systemShown) \(Self.short(environment.system))"
             : "\(game) log: \(firstLine)"
         guard title.count > 120 else { return title }
         // The server takes 256 UTF-16 code units: emoji take several.

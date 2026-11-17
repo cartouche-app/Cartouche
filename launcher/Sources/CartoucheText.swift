@@ -362,6 +362,7 @@ enum CartoucheText {
     static var dailyStepVPN: String { s("daily.vpnAction", "Tap Next, choose New Blank Automation, then add the Enable LocalDevVPN action: it connects LocalDevVPN without opening it. An older LocalDevVPN calls it Start LocalDevVPN.") }
     static var dailyStepAction: String { s("daily.refreshAction", "Then add the Refresh All Apps action of Cartouche, not LiveContainer’s: Cartouche waits for LocalDevVPN to connect before it renews.") }
     static var dailyStepCheck: String { s("daily.step5", "Each renewal shows on the System page as the last renewal, and gives Cartouche seven more days.") }
+    static var dailyTailscale: String { s("daily.tailscale", "With Tailscale, add its Connect action last, among those of the Tailscale app: LocalDevVPN turned Tailscale off, and the automation turns it on again.") }
     static var openShortcuts: String { s("daily.openShortcuts", "Open Shortcuts") }
 
     // MARK: Installing, starting and uninstalling a game
@@ -598,7 +599,7 @@ enum CartoucheText {
     /// The games of the games folder built without their game files whose
     /// romfs.img is not there, by their names.
     static func storageGameFilesMissing(_ names: [String]) -> String {
-        let list = names.formatted(.list(type: .and))
+        let list = names.formatted(.list(type: .and).locale(locale))
         if names.count == 1 {
             return f("storage.gameFiles.missing.one", "%@ was built without its game files: put its romfs.img beside its IPA, and Cartouche installs the two together.", list)
         }
@@ -607,7 +608,7 @@ enum CartoucheText {
     /// The images of game files no IPA of the games folder needs, by their
     /// paths in it.
     static func storageGameFilesLoose(_ names: [String]) -> String {
-        let list = names.formatted(.list(type: .and))
+        let list = names.formatted(.list(type: .and).locale(locale))
         if names.count == 1 {
             return f("storage.gameFiles.loose.one", "%@: a game’s files, but no IPA here was built to go with them. Put beside them the IPA nxnative built with them, or build the game with Cartouche Builder.", list)
         }
@@ -620,7 +621,7 @@ enum CartoucheText {
     static var storageChooseFolder: String { s("storage.chooseFolder", "Choose a folder") }
     static var storageGamesFooter: String { s("storage.games.footer", "Your library shows the IPAs of this folder, ready to install. Copy a game here before you uninstall it.") }
     static var storageServers: String { s("storage.servers", "Places") }
-    static var storageServersFooter: String { s("storage.servers.footer", "Only storage of your own, with your own account: Cartouche keeps the password, the secret key or the Google sign-in in this iPhone’s keychain.") }
+    static var storageServersFooter: String { s("storage.servers.footer", "Only storage of your own, with your own account: Cartouche keeps the password, the secret key or the Google sign-in in this iPhone’s keychain. The Mac you pair with Cartouche Builder keeps the same connections, passwords included, over the bridge’s encryption.") }
     static var storageAddSMB: String { s("storage.addSMB", "Add a shared folder (SMB)") }
     static var storageAddFolder: String { s("storage.addFolder", "Add a folder in Files") }
     static var storageAddS3: String { s("storage.addS3", "Add S3 storage") }
@@ -703,6 +704,15 @@ enum CartoucheText {
     static func storageOfflineCheck(_ name: String) -> String { f("storage.offline.check", "%@ does not answer on this network: check its address, and that the iPhone is on its network or on your VPN.", name) }
     /// A few words, beside the server's name.
     static func storageOfflineShort(_ name: String) -> String { f("storage.offline.short", "%@ offline", name) }
+    static func storageOfflineTailscaleOff(_ name: String) -> String { f("storage.offline.tailscaleOff", "%@ answers only through Tailscale, which is off on this iPhone: turn it on in the Tailscale app, and Cartouche tries again at once.", name) }
+    static func storageOfflineTailscaleOffShort(_ name: String) -> String { f("storage.offline.tailscaleOff.short", "%@: Tailscale off", name) }
+    static var storageTailscaleTitle: String { s("storage.tailscale.title", "Away from home") }
+    static var tailscaleTurnedOffShort: String { s("tailscale.turnedOff.short", "Tailscale off") }
+    static var tailscaleTurnedOff: String { s("tailscale.turnedOff", "LocalDevVPN turned Tailscale off, as iOS keeps one VPN at a time: open Tailscale to turn it on again.") }
+    static var storageTailscaleConnected: String { s("storage.tailscale.connected", "Connected") }
+    static var storageTailscaleOff: String { s("storage.tailscale.off", "Off") }
+    static var storageTailscaleAppStore: String { s("storage.tailscale.appStore", "Tailscale on the App Store") }
+    static var storageTailscaleFooter: String { s("storage.tailscale.footer", "With Tailscale, installed apart on this iPhone and on your Mac or NAS, Cartouche reaches them wherever you are: your Mac by itself, a NAS by its name or its address in Tailscale. iOS keeps one VPN at a time: LocalDevVPN, which Cartouche connects to renew and update itself, turns Tailscale off until you turn it on again.") }
     static var storageTryAgain: String { s("storage.tryAgain", "Try again") }
 
     // MARK: A game's saves
@@ -727,6 +737,12 @@ enum CartoucheText {
         f("saves.kept", "Newer saves are in your saves folder: they come when the game next starts. This iPhone’s are kept there as the copy of %@.", kept)
     }
     static func savesFooter(_ kept: Int) -> String { f("saves.footer", "Cartouche keeps these saves in step with your saves folder: the newest come when the game is installed and before it starts, and go there after each game. When both changed, the newest win and the others stay as a copy. The %lld newest copies are kept.", kept) }
+    static func savesNewerGame(_ copy: String, _ game: String) -> String {
+        f("saves.newerGame", "The newest copy of these saves comes from version %1$@ of the game, newer than the one installed here (%2$@): it comes once the game is updated. Until then, the saves played here go to your saves folder as a copy of their own.", copy, game)
+    }
+    static func savesPutBackNewer(_ copy: String, _ game: String) -> String {
+        f("saves.putBack.newer", "This copy comes from version %1$@ of the game, newer than the one installed here (%2$@): update the game to put it back.", copy, game)
+    }
     static func savesPutBackAction(_ date: String) -> String { f("saves.putBack.action", "Put back the copy of %@", date) }
     static func savesPutBackDone(_ date: String) -> String { f("saves.putBack.done", "The copy of %@ is back in place.", date) }
     static var savesCopyFailed: String { s("saves.failed.copy", "The saves were not synced") }

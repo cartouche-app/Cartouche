@@ -4,7 +4,10 @@
 //
 //  System › Game measurements: the switch of Cartouche's telemetry
 //  (CartoucheTelemetry.swift), what it sends, the last report as it left,
-//  and the way to have the server erase what this iPhone sent.
+//  and the way to have the server erase what this iPhone sent. The
+//  console on the Mac shows the same page, of the telemetry Cartouche
+//  Builder keeps and sends (builder/mac/Sources/CartoucheConsole/Mac/
+//  ConsoleTelemetry.swift).
 //
 
 import SwiftUI
@@ -17,27 +20,31 @@ struct CartoucheTelemetryView: View {
 
     var body: some View {
         List {
-            Section {
+            CartoucheSection {
                 Toggle(CartoucheText.telemetrySend, isOn: Binding(get: { telemetry.isOn }, set: { telemetry.setOn($0) }))
             } footer: {
                 Text(CartoucheText.telemetryFooter)
             }
             Section {
                 Label(CartoucheText.telemetryWhatGames, systemImage: "gamecontroller")
-                Label(CartoucheText.telemetryWhatDevice, systemImage: "iphone")
+                Label(CartoucheText.telemetryWhatDevice, systemImage: CartoucheDevice.symbol)
                 Label(CartoucheText.telemetryWhatEvents, systemImage: "list.bullet.rectangle")
                 Label(CartoucheText.telemetryWhatNever, systemImage: "hand.raised")
             } header: {
                 Text(CartoucheText.telemetryWhat)
             }
-            Section {
+            CartoucheSection {
                 LabeledContent(CartoucheText.telemetryLastSent,
-                               value: telemetry.lastSent.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? CartoucheText.telemetryNever)
+                               value: telemetry.lastSent.map(CartoucheText.dateAndTime) ?? CartoucheText.telemetryNever)
                 LabeledContent(CartoucheText.telemetrySentCount, value: String(telemetry.sent))
                 LabeledContent(CartoucheText.telemetryWaiting, value: String(telemetry.waiting))
                 if let report = telemetry.lastReport {
                     NavigationLink(CartoucheText.telemetryLastReport) {
                         CartoucheTelemetryReportView(json: report)
+                            #if os(macOS)
+                            // Beside the console, the way back above it.
+                            .cartoucheConsolePage(CartoucheText.telemetryLastReport, back: CartoucheText.telemetryTitle)
+                            #endif
                     }
                 }
             } footer: {
@@ -45,7 +52,7 @@ struct CartoucheTelemetryView: View {
                     Text(CartoucheText.telemetryNoServer)
                 }
             }
-            Section {
+            CartoucheSection {
                 Button(CartoucheText.telemetryErase, role: .destructive) {
                     confirmingErase = true
                 }
@@ -62,7 +69,9 @@ struct CartoucheTelemetryView: View {
         }
         .cartoucheStageBackground()
         .navigationTitle(CartoucheText.telemetryTitle)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .confirmationDialog(CartoucheText.telemetryErase, isPresented: $confirmingErase, titleVisibility: .visible) {
             Button(CartoucheText.telemetryEraseConfirm, role: .destructive) {
                 Task { eraseFailed = !(await telemetry.erase()) }
@@ -73,7 +82,7 @@ struct CartoucheTelemetryView: View {
     }
 }
 
-/// A report as it left the iPhone, its keys one per line.
+/// A report as it left the iPhone, or the Mac, its keys one per line.
 @available(iOS 17.0, *)
 struct CartoucheTelemetryReportView: View {
     let json: String
@@ -96,6 +105,8 @@ struct CartoucheTelemetryReportView: View {
         }
         .cartoucheStageBackground()
         .navigationTitle(CartoucheText.telemetryLastReport)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
     }
 }

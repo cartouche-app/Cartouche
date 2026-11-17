@@ -124,12 +124,14 @@ final class TelemetryTests: XCTestCase {
 
     /// telemetry/test/builder-reports.json holds these reports, field for
     /// field, so that the Worker's tests check that the server keeps every
-    /// field the app sends (telemetry/test/worker.test.js).
+    /// field the app sends (telemetry/test/worker.test.js). Its sessions,
+    /// the games played on this Mac, are the console's
+    /// (CartoucheConsoleTests/ConsoleTelemetryTests.swift).
     func testTheServersTestsHaveEveryFieldTheAppSends() throws {
         let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
             .appendingPathComponent("../../../../telemetry/test/builder-reports.json").standardizedFileURL
         let file = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
-        let kept = try XCTUnwrap(file["reports"] as? [[String: Any]])
+        let kept = try XCTUnwrap(file["reports"] as? [[String: Any]]).filter { $0["kind"] as? String == TelemetryEvent.kind }
         let made = try madeEvents()
         let bodies = try made.map { try TelemetryFormat.json($0) }
         XCTAssertEqual(kept.count, made.count)
@@ -247,6 +249,10 @@ final class TelemetryTests: XCTestCase {
                        ["place": .text("share"), "step": .text("offline"), "when": .text("round")])
         XCTAssertEqual(BuilderTelemetry.savesFields(step: "send", when: "after", onShare: false),
                        ["place": .text("mac"), "step": .text("send"), "when": .text("after")])
+        // The newest copy waits for the game's update: the step alone, never
+        // the versions.
+        XCTAssertEqual(BuilderTelemetry.savesFields(step: MacSaveEvent.heldBack, when: "before", onShare: true),
+                       ["place": .text("share"), "step": .text("heldBack"), "when": .text("before")])
         // Its app installed from a NAS, in place of an older copy.
         XCTAssertEqual(BuilderTelemetry.installedFields(bytes: 1_904_211_000, seconds: 37.6, again: true),
                        ["again": .flag(true), "appMB": .number(1904), "seconds": .number(38)])
@@ -424,5 +430,55 @@ final class TelemetryTests: XCTestCase {
 
         let odd = BuilderTelemetry(file: nil, endpoint: nil, version: "dev")
         XCTAssertEqual(odd.context.cartouche, "0.0.0")
+    }
+
+    /// The console's reports, the sessions of the games played on this Mac
+    /// (CartoucheConsole/Mac/ConsoleTelemetry.swift), go in the app's queue
+    /// numbered after its events, and only with telemetry on and a server.
+    @MainActor
+    func testTheConsolesReportsGoInTheSameQueueAsTheEvents() throws {
+        // Nothing listens on the discard port: what is sent fails and waits.
+        let telemetry = BuilderTelemetry(file: nil, endpoint: try XCTUnwrap(URL(string: "http://127.0.0.1:9")), version: "0.2.1")
+        telemetry.event("builder.opened", fields: ["games": .count(3)])
+        XCTAssertEqual(telemetry.waiting, 1)
+        var asked: [Int] = []
+        telemetry.report { context, seq in
+            asked.append(seq)
+            XCTAssertEqual(context, telemetry.context)
+            return (id: "6a1d9e3c-0000-4000-8000-000000000027", body: #"{"kind":"session"}"#)
+        }
+        XCTAssertEqual(asked, [2], "numbered after the event")
+        XCTAssertEqual(telemetry.waiting, 2)
+        XCTAssertEqual(telemetry.lastReport, #"{"kind":"session"}"#)
+
+        telemetry.report { _, seq in
+            asked.append(seq)
+            return nil
+        }
+        XCTAssertEqual(telemetry.waiting, 2, "no report, nothing queued")
+        XCTAssertEqual(telemetry.lastReport, #"{"kind":"session"}"#)
+        telemetry.event("builder.paired", fields: ["allowed": .flag(true)])
+        telemetry.report { _, seq in
+            asked.append(seq)
+            return (id: "6a1d9e3c-0000-4000-8000-000000000028", body: #"{"kind":"session","seq":4}"#)
+        }
+        XCTAssertEqual(asked, [2, 3, 4], "a report not made takes no number")
+        XCTAssertEqual(telemetry.waiting, 4)
+
+        telemetry.setOn(false)
+        XCTAssertEqual(telemetry.waiting, 0)
+        telemetry.report { _, _ in
+            XCTFail("never asked with telemetry off")
+            return nil
+        }
+        let withoutServer = BuilderTelemetry(file: nil, endpoint: nil, version: "0.2.1")
+        withoutServer.report { _, _ in
+            XCTFail("never asked without a server")
+            return nil
+        }
+        XCTAssertEqual(withoutServer.waiting, 0)
+        XCTAssertNil(withoutServer.lastReport)
+        XCTAssertFalse(withoutServer.hasServer)
+        XCTAssertTrue(telemetry.hasServer)
     }
 }

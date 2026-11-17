@@ -9,6 +9,10 @@ which builds the iPhone's console screens for the Mac:
   whole of the iPhone's app, and its changes to come, on the Mac);
 - the Builder's workflow builds the app again when one of those files or the
   launcher's words change (.github/workflows/builder.yml);
+- the console reaches the player's storage as the app does: SMBClient from
+  its submodule, which the workflow checks out, swift-nio-ssh and swift-nio
+  at the app's versions, and the packages they bring pinned as the app pins
+  them (app/patches/livecontainer/0007);
 - none of those files uses, outside an iPhone-only part, a name of UIKit's
   or of the iPhone's SwiftUI that the Mac does not have, but those the
   console's shims give it (Mac/ConsoleShims.swift), nor a name of the
@@ -18,7 +22,14 @@ which builds the iPhone's console screens for the Mac:
 - the Mac's own words (builder/mac/console/strings.json) say what the
   launcher's say, with the same placeholders, those of the console's own
   files are there as the files say them, and console/strings.py writes
-  each language's table where the console reads it.
+  each language's table where the console reads it;
+- the console's Storage page, the iPhone's with This Mac's folders in place
+  of its games folder and saves folder (Mac/ConsoleStorage.swift), has the
+  rows those sections open, as the UI tests know them;
+- the shared files write days, numbers and lists in the console's language
+  (CartoucheText.locale), which the app's settings may choose other than
+  the Mac's, never in the Mac's (Locale.current): on the iPhone, the two are
+  one.
 
 Run from the repository root: python3 -m unittest discover -s app/tests -v
 """
@@ -33,6 +44,7 @@ import unittest
 from pathlib import Path
 
 from test_launcher_strings import placeholders
+from test_storage_tests import added_file, pins
 
 ROOT = Path(__file__).resolve().parents[2]
 LAUNCHER = ROOT / "launcher" / "Sources"
@@ -43,8 +55,11 @@ CATALOG = LAUNCHER / "Cartouche.xcstrings"
 MAC_STRINGS = ROOT / "builder" / "mac" / "console" / "strings.json"
 UNSHARED = ROOT / "builder" / "mac" / "console" / "unshared.json"
 MAC_SOURCES = ROOT / "builder" / "mac" / "Sources"
+MAC_PACKAGE = ROOT / "builder" / "mac"
 PLAN_STEPS = range(7, 10)  # the plan's steps still to come after this one (docs/decisions/095.md)
 WRITER = ROOT / "builder" / "mac" / "console" / "strings.py"
+STORAGE_PAGE = LAUNCHER / "CartoucheStorageView.swift"
+MAC_STORAGE = CONSOLE / "Mac" / "ConsoleStorage.swift"
 LANGUAGES = ("en", "fr")
 
 # Names the Mac does not have: UIKit's, and the iPhone's alone in SwiftUI.
@@ -58,9 +73,10 @@ IPHONE_ONLY = re.compile(
 # The conditions of an iPhone-only part.
 IPHONE_CONDITION = re.compile(r"^(?:os\(iOS\)|canImport\(UIKit\))(?:\s*\|\|\s*os\((?:iOS|visionOS|tvOS)\))*$")
 # The conditions of a part the console never builds: the iPhone's alone,
-# the launcher's gallery (CARTOUCHE_GALLERY, which the Builder does not
-# define), and the packages the console does not link (SMB, SFTP).
-_ELSEWHERE = r"(?:os\((?:iOS|visionOS|tvOS)\)|canImport\((?:UIKit|NIOSSH|SMBClient)\)|CARTOUCHE_GALLERY)"
+# and the launcher's gallery (CARTOUCHE_GALLERY, which the Builder does not
+# define). The console links the packages of SMB and SFTP, as the app does
+# (builder/mac/Package.swift): their parts are built.
+_ELSEWHERE = r"(?:os\((?:iOS|visionOS|tvOS)\)|canImport\(UIKit\)|CARTOUCHE_GALLERY)"
 NOT_ON_THE_MAC = re.compile(rf"^{_ELSEWHERE}(?:\s*\|\|\s*{_ELSEWHERE})*$")
 # The launcher's own names, and LiveContainer's, as the console's files use
 # them, where one is declared, and a string, whose words are no names.
@@ -121,6 +137,16 @@ def footers_cut_on_the_mac(swift: str):
     return found
 
 
+def written_in_the_macs_language(swift: str):
+    """The lines of SWIFT that the Mac compiles and that write a day, a
+    number or a list with `.formatted(…)` and no locale: in the Mac's
+    language, Locale.current, rather than in the console's,
+    CartoucheText.locale (CartoucheText.dateAndTime, or
+    `.locale(CartoucheText.locale)` on the style)."""
+    return [(number, code) for number, code in outside_iphone_parts(swift, NOT_ON_THE_MAC)
+            if ".formatted(" in STRING.sub('""', code) and "locale" not in code]
+
+
 def own_names(swift: str):
     """The launcher's names that SWIFT declares, and those it uses, in the
     parts the console builds."""
@@ -128,6 +154,66 @@ def own_names(swift: str):
     declared = {name for code in codes for name in DECLARATION.findall(code)}
     used = {name for code in codes for name in OWN_NAME.findall(code)}
     return declared, used
+
+
+def _block(code: str, opening: int) -> str:
+    """The text between the brace at OPENING and the one that closes it."""
+    depth = 0
+    for at in range(opening, len(code)):
+        depth += {"{": 1, "}": -1}.get(code[at], 0)
+        if depth == 0:
+            return code[opening + 1:at]
+    raise ValueError("a block that does not close")
+
+
+def _code(swift: str) -> str:
+    """SWIFT without its strings' words nor its comments."""
+    return "\n".join(STRING.sub('""', line).split("//", 1)[0] for line in swift.splitlines())
+
+
+def type_body(swift: str, name: str) -> str:
+    """The body of the type NAME that SWIFT declares."""
+    code = _code(swift)
+    match = re.search(rf"\b(?:struct|class|enum|extension)\s+{name}\b[^{{]*", code)
+    if not match:
+        raise ValueError(f"no {name}")
+    return _block(code, match.end())
+
+
+def members(body: str):
+    """The bodies of the functions and computed properties of a type's BODY,
+    by their names."""
+    found = {}
+    for match in re.finditer(r"\bfunc\s+(\w+)\s*(?:<[^>]*>)?\(|\bvar\s+(\w+)\s*:[^=\n{]*\{", body):
+        if match.group(1):
+            # Past its parameters, to its body.
+            depth, at = 0, match.end() - 1
+            while True:
+                depth += {"(": 1, ")": -1}.get(body[at], 0)
+                if depth == 0:
+                    break
+                at += 1
+            opening = body.find("{", at)
+        else:
+            opening = match.end() - 1
+        found[match.group(1) or match.group(2)] = _block(body, opening)
+    return found
+
+
+def rows_of(swift: str, page: str, section: str):
+    """The identifiers that the rows of SECTION, a part of the type PAGE
+    that SWIFT declares, are given, as `Self.<name>`, through the parts of
+    PAGE it calls too."""
+    parts = members(type_body(swift, page))
+    rows, seen, waiting = set(), set(), [section]
+    while waiting:
+        name = waiting.pop()
+        if name in seen or name not in parts:
+            continue
+        seen.add(name)
+        rows |= set(re.findall(r"\.accessibilityIdentifier\(Self\.(\w+)\)", parts[name]))
+        waiting += [other for other in parts if re.search(rf"\b{other}\b", parts[name])]
+    return rows
 
 
 def load_writer():
@@ -195,6 +281,28 @@ class MacConsoleSources(unittest.TestCase):
                 imports = [code.strip() for _, code in lines if re.match(r"\s*(?:@\w+\s+)?import UIKit\b", code)]
                 self.assertEqual(imports, [], "import UIKit only under #if canImport(UIKit)")
 
+    def test_the_shared_files_write_in_the_consoles_language(self):
+        """A day, a number or a list in the language the console speaks,
+        which the Builder's settings may choose other than the Mac's: "17
+        nov. 2026 à 9:59" in French on a Mac in English, as on an iPhone."""
+        found = []
+        for link in sorted(SHARED.iterdir()):
+            found += [f"{link.name}:{number}: {code.strip()}"
+                      for number, code in written_in_the_macs_language(link.read_text(encoding="utf-8"))]
+        self.assertEqual(found, [], "use CartoucheText.dateAndTime, or .locale(CartoucheText.locale) on the style")
+
+    def test_the_check_sees_a_day_in_the_macs_language(self):
+        swift = """
+let sent = date.formatted(date: .abbreviated, time: .shortened)
+let kept = CartoucheText.dateAndTime(date)
+let names = list.formatted(.list(type: .and).locale(CartoucheText.locale))
+let said = Text(".formatted(")
+#if os(iOS)
+let iPhone = date.formatted()
+#endif
+"""
+        self.assertEqual([number for number, _ in written_in_the_macs_language(swift)], [2])
+
     def test_the_shared_files_name_only_what_the_console_has(self):
         """A launcher file the console links that starts using a name of a
         file it does not link, such as the iPhone's renewals, needs a
@@ -238,11 +346,13 @@ class MacConsoleSources(unittest.TestCase):
         swift = "\n".join([
             "struct CartoucheThing {}", "#if os(iOS)", "let a = CartoucheRenewals.shared", "#endif",
             "#if CARTOUCHE_GALLERY", "let b = CartoucheGalleryOnly()", "#else", "let c = CartoucheThing()", "#endif",
-            "#if canImport(NIOSSH)", "let d = CartoucheSFTPServer.self", "#endif",
+            "#if canImport(UIKit)", "let d = CartoucheUIKitOnly()", "#endif",
+            # SMB's and SFTP's parts: the console builds them.
+            "#if canImport(NIOSSH)", "let g = CartoucheSFTPMissing.self", "#endif",
             "let e = CartoucheMissing.shared // CartoucheInAComment", 'let f = "CartoucheInAString"',
         ])
         declared, used = own_names(swift)
-        self.assertEqual(sorted(used - declared), ["CartoucheMissing"])
+        self.assertEqual(sorted(used - declared), ["CartoucheMissing", "CartoucheSFTPMissing"])
 
     def test_the_check_sees_an_unguarded_name(self):
         swift = "\n".join([
@@ -254,6 +364,45 @@ class MacConsoleSources(unittest.TestCase):
         self.assertEqual([number for number, code in lines if IPHONE_ONLY.search(code)], [7])
         self.assertNotIn(2, [number for number, _ in lines])
         self.assertIn(4, [number for number, _ in lines])
+
+
+class MacConsolePackages(unittest.TestCase):
+    """The packages the shared storage files need, SMB's and SFTP's, as the
+    app builds them: their parts are built for the Mac (NOT_ON_THE_MAC)."""
+
+    def test_pins_the_packages_the_app_pins(self):
+        app = pins(json.loads(added_file("Package.resolved")))
+        mac = pins(json.loads((MAC_PACKAGE / "Package.resolved").read_text(encoding="utf-8")))
+        self.assertEqual(mac, app)
+
+    def test_asks_for_the_versions_the_app_asks_for(self):
+        project = added_file("project.pbxproj")
+        manifest = (MAC_PACKAGE / "Package.swift").read_text(encoding="utf-8")
+        for name in ("swift-nio-ssh", "swift-nio"):
+            url = re.escape(f"https://github.com/apple/{name}.git")
+            app = re.search(url + r'";\s*requirement = \{\s*kind = exactVersion;\s*version = ([0-9.]+);', project)
+            mac = re.search(r'\.package\(url: "' + url + r'", exact: "([0-9.]+)"\)', manifest)
+            self.assertIsNotNone(app, f"the app does not pin {name} to a version")
+            self.assertIsNotNone(mac, f"builder/mac/Package.swift does not pin {name} to a version")
+            self.assertEqual(mac.group(1), app.group(1), name)
+        self.assertIn('.package(path: "../../app/SMBClient")', manifest)
+        console = manifest.split('name: "CartoucheConsole"', 1)[1].split(".target(", 1)[0]
+        for product in ("SMBClient", "NIOSSH", "NIOCore", "NIOPosix"):
+            self.assertIn(f'.product(name: "{product}"', console, product)
+
+    def test_the_workflow_checks_out_smbclient_before_it_builds(self):
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        job = workflow.split("\n  mac:\n", 1)[1].split("\n  keep:\n", 1)[0]
+        self.assertIn("git submodule update --init app/SMBClient", job,
+                      "the console builds SMBClient from its submodule: the mac job checks it out")
+        checkout = job.index("actions/checkout@")
+        submodule = job.index("git submodule update --init app/SMBClient")
+        self.assertLess(checkout, submodule)
+        self.assertLess(submodule, job.index("swift test --package-path builder/mac"))
+        # A new SMBClient builds the app again.
+        trigger = workflow.split("pull_request:", 1)[1].split("workflow_dispatch:", 1)[0]
+        self.assertIn('- "app/SMBClient"', trigger)
+        self.assertIn("app/SMBClient telemetry/test/builder-reports.json", workflow)
 
 
 class MacConsoleWords(unittest.TestCase):
@@ -282,6 +431,15 @@ class MacConsoleWords(unittest.TestCase):
                 self.assertEqual(sorted(values), list(LANGUAGES))
                 self.assertTrue(all(values[language].strip() for language in LANGUAGES))
                 self.assertEqual(placeholders(values["fr"]), placeholders(values["en"]))
+
+    def test_french_spacing(self):
+        # As the launcher's words (test_launcher_strings.py): a no-break
+        # space before the French colon and semicolon, which then never
+        # starts a line.
+        for section in ("overrides", "strings"):
+            for key, values in self.mac.get(section, {}).items():
+                with self.subTest(key=key):
+                    self.assertIsNone(re.search(r"[^\u00a0\u202f][:;](?:\s|$)", values["fr"]), values["fr"])
 
     def test_the_console_files_words_are_the_macs_own(self):
         """The words the console's own files speak (Mac/, CartoucheText's
@@ -327,6 +485,44 @@ class MacConsoleWords(unittest.TestCase):
             self.assertEqual(english["sheet.onThisIPhone"], "On this Mac")
             for key in sorted(set(self.catalog) - set(self.mac["overrides"]))[:50]:
                 self.assertEqual(french[key], self.catalog[key]["localizations"]["fr"]["stringUnit"]["value"])
+
+
+class MacConsoleStorage(unittest.TestCase):
+    """The console's Storage page, the iPhone's (CartoucheStorageView.swift)
+    with This Mac's folders, the Builder's, in place of its games folder and
+    saves folder (CartoucheMacFoldersSection, Mac/ConsoleStorage.swift)."""
+
+    def test_this_macs_folders_have_the_rows_of_the_sections_they_stand_for(self):
+        rows = rows_of(STORAGE_PAGE.read_text(), "CartoucheStorageView", "placeSection")
+        # How to name the games, under the games folder: the check sees it.
+        self.assertIn("namingRow", rows)
+        mac = type_body(MAC_STORAGE.read_text(), "CartoucheMacFoldersSection")
+        for row in sorted(rows):
+            self.assertTrue(f"CartoucheStorageView.{row}" in mac,
+                            f"The iPhone's games folder or saves folder has the row {row}, This Mac's folders not")
+
+    def test_the_check_follows_a_row_through_the_parts_a_section_calls(self):
+        swift = """
+struct Page: View {
+    static let tapped = "page.tapped"
+    static let elsewhere = "page.elsewhere"
+    var body: some View {
+        List { part(.one) }
+    }
+    private func part(_ which: Which) -> some View {
+        Section { link }
+    }
+    private var link: some View {
+        Button("Go {") {}
+            .accessibilityIdentifier(Self.tapped)
+    }
+    private var other: some View {
+        Text("}").accessibilityIdentifier(Self.elsewhere)
+    }
+}
+"""
+        self.assertEqual(rows_of(swift, "Page", "part"), {"tapped"})
+        self.assertEqual(rows_of(swift, "Page", "body"), {"tapped"})
 
 
 if __name__ == "__main__":

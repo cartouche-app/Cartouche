@@ -572,9 +572,8 @@ struct CartoucheGameSheetView: View {
                 }
             }
             // What the game wrote of its last sessions, for whoever helps
-            // the player: shared as it is, or sent to Cartouche cleaned. On
-            // the Mac, with the console's reports (decision 101).
-            #if os(iOS)
+            // the player: shared as it is, or sent to Cartouche cleaned; on
+            // the Mac, the logs nxnative's app for the Mac writes.
             if let logs = actions.logs(of: app), !logs.files.isEmpty {
                 NavigationLink {
                     CartoucheGameLogView(folder: logs, tileKey: entry.tileKey)
@@ -582,7 +581,6 @@ struct CartoucheGameSheetView: View {
                     Label(CartoucheText.gameLogRow, systemImage: "doc.text")
                 }
             }
-            #endif
             // Quit the game first.
             if !actions.isRunning(app) {
                 Button(role: .destructive) {

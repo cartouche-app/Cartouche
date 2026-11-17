@@ -29,9 +29,12 @@ struct CartoucheRootView: View {
                 CartoucheTelemetry.shared.start()
                 // A Files picker open when Cartouche last ended.
                 CartoucheImportPicker.noteLeftOpen()
+                // The player's connections, the same on the paired Mac.
+                CartoucheConnectionsExchange.shared.cameForward()
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
                 Self.clearBadge()
+                CartoucheConnectionsExchange.shared.cameForward()
             }
     }
 

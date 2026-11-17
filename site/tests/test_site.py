@@ -43,11 +43,17 @@ DOWNLOADS = {
     "installer-windows": re.compile(re.escape(REPOSITORY) + r"/releases/download/installer-v(\d+\.\d+\.\d+)/Cartouche-Installer-\1-Windows\.exe"),
 }
 
+# The project's Discord server, by the one invite its bot keeps, which never
+# expires (decided by Ad on 17 Nov).
+DISCORD = "https://discord.gg/wG3DZjdAeF"
+
 # Every absolute link the page may hold, whole: the repository and its pages,
-# the files above, nxnative, and IGDB, which the page credits.
+# the files above, the Discord server, nxnative, and IGDB, which the page credits.
 ALLOWED_LINKS = [
     re.compile(re.escape(REPOSITORY)),
     re.compile(re.escape(REPOSITORY) + r"/blob/main/[\w/.-]+\.md(?:#[\w-]+)?"),
+    re.compile(re.escape(REPOSITORY) + r"/issues/new/choose"),
+    re.compile(re.escape(DISCORD)),
     *DOWNLOADS.values(),
     re.compile(r"https://github\.com/seedds/nxnative"),
     re.compile(r"https://www\.igdb\.com"),
@@ -65,8 +71,10 @@ GAME_FILES = re.compile(
     re.IGNORECASE,
 )
 
-# Files the site is made of, and nothing else: no image of a game.
+# Files the site is made of, and nothing else: no image of a game. CNAME
+# names the site's domain for GitHub Pages.
 SITE_FILES = {".html", ".svg", ".md", ".py"}
+SITE_NAMES = {"CNAME"}
 
 # What the page may say of a game: its status on the page, and where
 # nxnative must play it for the page to say so.
@@ -260,7 +268,7 @@ class SiteTests(unittest.TestCase):
         # of a game, which IGDB serves.
         for path in SITE.rglob("*"):
             if path.is_file() and "__pycache__" not in path.parts:
-                self.assertIn(path.suffix, SITE_FILES, f"{path.relative_to(SITE)} is not a file the site is made of")
+                self.assertTrue(path.suffix in SITE_FILES or path.name in SITE_NAMES, f"{path.relative_to(SITE)} is not a file the site is made of")
                 self.assertLess(path.stat().st_size, 512 * 1024, f"{path.relative_to(SITE)} is too large for the site")
         self.assertEqual(sorted(p.name for p in SITE.glob("*.svg")), ["favicon.svg"])
 
@@ -306,6 +314,15 @@ class SiteTests(unittest.TestCase):
                 if key in game:
                     self.assertEqual(len(game[key]), 2, f"{game['name']}: {key}")
                     self.assertTrue(all(game[key]), f"{game['name']}: {key}")
+
+    def test_the_discord_server_by_its_one_invite(self) -> None:
+        # In the header beside GitHub, in the footer, and in the FAQ's answer on help.
+        discord = [attrs for tag, attrs in self.page.tags if tag == "a" and "discord" in attrs.get("href", "")]
+        self.assertEqual({attrs["href"] for attrs in discord}, {DISCORD})
+        self.assertEqual(len(discord), 4, "header, footer, and the FAQ's answer in French and in English")
+        self.assertIn('<a class="gh" href="' + DISCORD + '"', self.text)
+        self.assertIn('<use href="#i-discord"/>', self.text)
+        self.assertNotRegex(self.text, r"(?i)discord(?:app)?\.com/invite|discord\.gg/(?!wG3DZjdAeF\b)")
 
     def test_the_page_credits_igdb_and_provides_no_game(self) -> None:
         for sentence in (
@@ -426,6 +443,10 @@ class DownloadPageTests(unittest.TestCase):
         versions = check_downloads(self, self.text, self.page)
         self.assertEqual(sorted(versions), sorted(DOWNLOADS))
 
+    def test_the_discord_server_in_its_footer(self) -> None:
+        discord = [attrs["href"] for tag, attrs in self.page.tags if tag == "a" and "discord" in attrs.get("href", "")]
+        self.assertEqual(discord, [DISCORD])
+
     def test_the_same_files_as_the_site(self) -> None:
         text, page = read_page()
         self.assertEqual(check_downloads(self, self.text, self.page), check_downloads(self, text, page))
@@ -445,6 +466,45 @@ class DownloadPageTests(unittest.TestCase):
             "Cartouche contains and downloads no games, no keys and no firmware: you build your games from your own copies.",
         ):
             self.assertIn(sentence, self.text)
+
+
+class Domain(unittest.TestCase):
+    """site/CNAME, the site's domain, which GitHub Pages reads on gh-pages to
+    serve the site there and send its old address on to it."""
+
+    def test_it_names_the_domain_whose_records_point_to_github_pages(self) -> None:
+        text = (SITE / "CNAME").read_text(encoding="utf-8")
+        self.assertRegex(text, r"^[a-z0-9-]+(?:\.[a-z0-9-]+)+\n$", "CNAME holds one name, on one line")
+        name = text.strip()
+        # domain/records.json gives the name GitHub Pages' addresses, and
+        # www to the organization's site (domain/tests check them).
+        zone = json.loads((SITE.parent / "domain" / "records.json").read_text(encoding="utf-8"))
+        self.assertEqual(name, zone["zone"])
+        kinds = {r["type"] for r in zone["records"] if r["name"] == name}
+        self.assertTrue({"A", "AAAA"} <= kinds and "CNAME" not in kinds, kinds)
+        self.assertIn({"type": "CNAME", "content": "cartouche-app.github.io"}, [{"type": r["type"], "content": r["content"]} for r in zone["records"] if r["name"] == "www." + name])
+
+    def test_the_app_and_the_guides_link_to_the_site_at_its_domain(self) -> None:
+        # The app's guide sends the Mac the site's Builder section, and the
+        # guides and READMEs link to its pages: at the domain, whose address
+        # does not hang on GitHub's. The old address only redirects.
+        name = (SITE / "CNAME").read_text(encoding="utf-8").strip()
+        root = SITE.parent
+        paths = [root / "README.md", *root.glob("*/README.md"), *(root / "docs").glob("*.md"), *(root / "launcher" / "Sources").glob("*.swift")]
+        for path in paths:
+            self.assertFalse("https://cartouche-app.github.io/Cartouche" in path.read_text(encoding="utf-8"), f"{path.relative_to(root)} links to the site's old address")
+        guide = (root / "launcher" / "Sources" / "CartoucheGuide.swift").read_text(encoding="utf-8")
+        found = re.search(r'static let builderPage = URL\(string: "([^"]+)"\)', guide)
+        self.assertIsNotNone(found, "CartoucheGuide.builderPage")
+        self.assertEqual(found.group(1), f"https://{name}/#builder")
+        self.assertIn("builder", read_page()[1].ids)
+
+    def test_every_publication_keeps_it(self) -> None:
+        # gh-pages is made again at each publication: without CNAME, GitHub
+        # Pages would drop the domain, its records still pointing to GitHub.
+        workflow = (SITE.parent / ".github" / "workflows" / "site.yml").read_text(encoding="utf-8")
+        self.assertRegex(workflow, r"\n\s+cp [^\n]*\bsite/CNAME\b[^\n]* build/site/\n")
+        self.assertNotIn("github.io/${GITHUB_REPOSITORY", workflow)
 
 
 if __name__ == "__main__":

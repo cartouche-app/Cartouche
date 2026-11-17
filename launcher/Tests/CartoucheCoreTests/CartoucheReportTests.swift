@@ -49,6 +49,12 @@ final class CartoucheReportTests: XCTestCase {
         XCTAssertEqual(shapes.redact("GET https://bucket.s3.amazonaws.com/a?b=c failed"), "GET <address> failed")
         XCTAssertEqual(shapes.redact("Connection to 10.0.0.7:445 timed out"), "Connection to <address>:445 timed out")
         XCTAssertEqual(shapes.redact("Server macbook-air.local closed"), "Server <server> closed")
+        // In the player's tailnet (Tailscale): its names and its addresses.
+        XCTAssertEqual(shapes.redact("Server macbook-air.tail1234.ts.net closed"), "Server <server> closed")
+        XCTAssertEqual(shapes.redact("Could not reach NAS.Tail1234.TS.NET:445."), "Could not reach <server>:445.")
+        XCTAssertEqual(shapes.redact("mac.example.com.beta.tailscale.net refused"), "<server> refused")
+        XCTAssertEqual(shapes.redact("Connection to 100.101.102.103:47920 timed out"), "Connection to <address>:47920 timed out")
+        XCTAssertEqual(shapes.redact("No route to fd7a:115c:a1e0::3"), "No route to <address>")
         XCTAssertEqual(shapes.redact("No route to 2a01:e0a:1b2:3c40::1"), "No route to <address>")
         XCTAssertEqual(shapes.redact("No route to fe80::1c2b:3a4d%en0"), "No route to <address>")
         XCTAssertEqual(shapes.redact("No route to 2001:0db8:85a3:0000:0000:8a2e:0370:7334"), "No route to <address>")
@@ -67,7 +73,8 @@ final class CartoucheReportTests: XCTestCase {
         let shapes = CartoucheRedaction.shapes
         for text in ["11-10 07:12:03 Installing Mario Kart World", "Cartouche 0.9.0, iOS 27.1, SideStore 0.7.0",
                      "8.41 GB (8,412,345,678 bytes)", "NSPOSIXErrorDomain 28", "SMB 3.1.1", "2026-11-10 07:12:03 +0100",
-                     "Mario Kart World [0400C3F00006E000].ipa", "550 Requested action not taken."] {
+                     "Mario Kart World [0400C3F00006E000].ipa", "550 Requested action not taken.",
+                     "Tailscale is off on this iPhone", "Connected through ts.network"] {
             XCTAssertEqual(shapes.redact(text), text)
         }
     }
@@ -169,6 +176,34 @@ final class CartoucheReportTests: XCTestCase {
             "Storage: games on SMB, saves on S3",
         ])
         XCTAssertEqual(Array(lines[14...]), ["", "Last steps:", "11-10 07:02:11 Installing Mario Kart World", "11-10 07:12:03 Failed at 37 %"])
+    }
+
+    func testAMacsReportNamesCartoucheBuilderAndMacOS() throws {
+        // The console's, in Cartouche Builder's window on a Mac.
+        let mac = CartoucheReport.Environment(
+            cartouche: "0.6.2", basedOn: nil, system: "26.1 (25B72)", device: "Mac16,10 (M4, 16 GB)", language: "fr (fr-FR)",
+            facts: [.init("Free on this Mac", "412.00 GB (412,000,000,000 bytes)"), .init("Storage", "saves on a folder of the Mac's")],
+            app: "Cartouche Builder", systemName: "macOS")
+        let report = CartoucheReport(origin: .saves, title: "Les sauvegardes n’ont pas été copiées", message: "Le disque est plein.",
+                                     environment: mac)
+        let lines = report.text(redactedBy: .shapes).components(separatedBy: "\n")
+        XCTAssertEqual(Array(lines[4...]), [
+            "Cartouche Builder: 0.6.2",
+            "macOS: 26.1 (25B72)",
+            "Device: Mac16,10 (M4, 16 GB)",
+            "Language: fr (fr-FR)",
+            "Free on this Mac: 412.00 GB (412,000,000,000 bytes)",
+            "Storage: saves on a folder of the Mac's",
+        ])
+        // Kept with the last reports, it says so again; the iPhone's, kept
+        // before a report could be a Mac's, still say Cartouche and iOS.
+        let data = try JSONEncoder().encode(report)
+        XCTAssertEqual(try JSONDecoder().decode(CartoucheReport.self, from: data), report)
+        let older = try JSONEncoder().encode(sample)
+        XCTAssertFalse(String(decoding: older, as: UTF8.self).contains("systemName"))
+        let read = try JSONDecoder().decode(CartoucheReport.self, from: older)
+        XCTAssertEqual(read.environment.appShown, "Cartouche")
+        XCTAssertEqual(read.environment.systemShown, "iOS")
     }
 
     func testWhyItFailedFollowsTheError() throws {

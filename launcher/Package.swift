@@ -30,6 +30,7 @@ let package = Package(
             sources: [
                 "CartoucheBridge.swift",
                 "CartoucheBridgeBuilds.swift",
+                "CartoucheConnections.swift",
                 "CartoucheCoverList.swift",
                 "CartoucheDeviceWords.swift",
                 "CartoucheDrive.swift",
@@ -50,6 +51,7 @@ let package = Package(
                 "CartoucheGameSigning.swift",
                 "CartoucheInstallQuestions.swift",
                 "CartoucheMeasuredNote.swift",
+                "CartoucheNaming.swift",
                 "CartoucheOwnSignature.swift",
                 "CartouchePickerMeasures.swift",
                 "CartouchePlayTime.swift",
@@ -69,6 +71,7 @@ let package = Package(
                 "CartoucheSignInMessage.swift",
                 "CartoucheSwitchSave.swift",
                 "CartoucheSwitchSaveArchive.swift",
+                "CartoucheTailscale.swift",
                 "CartoucheTelemetryReport.swift",
                 "CartoucheTextResults.swift",
                 "CartoucheTranslations.swift",

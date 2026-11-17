@@ -8,9 +8,11 @@
 //  setup (a certificate and a pairing file), its Apple ID, its first
 //  game's guide, the game behind the console, the iPhone's model, memory
 //  limit, signature and its renewals, how a game fits it, where a game
-//  keeps its saves, the journal of its reports and its measurements. The
-//  saves themselves, which the Builder keeps in step, are in
-//  ConsoleSaves.swift.
+//  keeps its saves and writes its logs. The saves themselves, which the
+//  Builder keeps in step, are in ConsoleSaves.swift, and its measurements,
+//  which the Builder sends, in ConsoleTelemetry.swift; the reports and their
+//  journal are the iPhone's (CartoucheReporting.swift), in the Builder's
+//  folder.
 //  A Mac plays the games nxnative built for it, each in its own app: the
 //  console has nothing to set up, no limit of memory from iOS, no signature
 //  that expires, nothing behind it. A game fits it by the iPhone's rule
@@ -64,6 +66,9 @@ final class CartoucheGameActions: ObservableObject {
     /// than in the games' preferences: the gallery's, which reads nothing
     /// of the player's and keeps nothing (ConsoleSettings.swift).
     var keepsChoicesInMemory = false
+    /// Where nxnative's apps for the Mac write each game's logs, which its
+    /// sheet's Share the log reads.
+    var logsRoot = CartoucheMacSessions.nxnativeLogs
 
     /// The game's saves on this Mac, in nxnative's folder of the game's,
     /// dataRoot/<title ID>, whose save and save_device hold them, as the
@@ -88,6 +93,18 @@ final class CartoucheGameActions: ObservableObject {
         try? FileManager.default.createDirectory(at: dataRoot.appendingPathComponent(titleId, isDirectory: true),
                                                  withIntermediateDirectories: true)
         return saves(of: app)
+    }
+
+    /// Where the game's app writes its logs, for Share the log on its sheet
+    /// (CartoucheGameLogView): logsRoot/<title ID>.log of its last session
+    /// and <title ID>.prev.log of the one before, which nxnative's launcher
+    /// renames it to at the game's next start (dm/mac/launcher.c). Nil for
+    /// an app that is not an nxnative game.
+    func logs(of app: LCAppModel) -> CartoucheGameLogFolder? {
+        guard let titleId = titleId(of: app)?.uppercased() else { return nil }
+        return CartoucheGameLogFolder(game: app.displayName, titleId: titleId,
+                                      build: CartoucheInstalledBuilds.installedBuild(of: app),
+                                      documents: logsRoot, names: [titleId + ".log", titleId + ".prev.log"])
     }
 
     /// The game's app and its data folder, for its size and its play time
@@ -364,129 +381,3 @@ enum CartoucheFit: Hashable {
         }
     }
 }
-
-// MARK: Reports
-
-/// The journal the console's steps are noted in, and the reports of what
-/// went wrong, as the iPhone's CartoucheReporting.swift makes them: kept
-/// in memory on the Mac, whose reports come with its own page.
-@MainActor
-enum CartoucheReports {
-    private static let journalLines = CartoucheJournal(file: nil)
-    static let journalShown = 40
-
-    static func note(_ text: String) {
-        journalLines.note(redaction().redact(text))
-    }
-
-    static func journal(last count: Int) -> [String] {
-        journalLines.last(count)
-    }
-
-    static func make(_ origin: CartoucheReport.Origin, _ title: String, message: String, error: Error? = nil,
-                     step: String? = nil, fraction: Double? = nil, stage: String? = nil, seconds: Double? = nil,
-                     failure: CartoucheFailure? = nil, facts: [CartoucheReport.Fact] = [],
-                     inBackground: Bool = false) -> CartoucheReport {
-        let failure = failure ?? error.map { CartoucheFailure.of($0, stage: stage, fraction: fraction, seconds: seconds) }
-        let described = error.map { CartoucheReport.describe($0) }
-        note("Problem (" + origin.rawValue + "): " + title + ": " + message + (described.map { " [" + $0 + "]" } ?? "")
-             + (failure.map { " {" + $0.summary + "}" } ?? ""))
-        return CartoucheReport(origin: origin, title: title, message: message, step: step, fraction: fraction,
-                               error: described, failure: failure, facts: facts, environment: environment(),
-                               journal: journal(last: journalShown))
-    }
-
-    /// The report's text, redacted, to copy.
-    static func text(of report: CartoucheReport) -> String {
-        report.text(redactedBy: redaction())
-    }
-
-    /// Puts the report's text on the pasteboard.
-    static func copy(_ report: CartoucheReport) {
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(text(of: report), forType: .string)
-        note("Report copied: " + report.title)
-    }
-
-    /// "the games folder, on SMB": where a step reads or writes, without a name.
-    static func place(_ role: CartoucheStorageRole) -> String {
-        guard let server = CartoucheStorageSettings.shared.location(role)?.server else { return "no \(role.rawValue) folder" }
-        return "the \(role.rawValue) folder, on \(kindName(server.kind))"
-    }
-
-    static func kindName(_ kind: CartoucheStorageServer.Kind) -> String {
-        switch kind {
-        case .smb: return "SMB"
-        case .folder: return "a folder"
-        case .s3: return "S3"
-        case .ftp: return "FTP"
-        case .sftp: return "SFTP"
-        case .mac: return "Cartouche Builder on a Mac"
-        case .drive: return "Google Drive"
-        }
-    }
-
-    /// This Mac and this Cartouche, now.
-    static func environment() -> CartoucheReport.Environment {
-        let info = Bundle.main.infoDictionary ?? [:]
-        let cartouche = info["CFBundleShortVersionString"] as? String ?? "?"
-        let model = CartoucheDevice.modelIdentifier.isEmpty ? "?" : CartoucheDevice.modelIdentifier
-        let memory = ProcessInfo.processInfo.physicalMemory / 1_073_741_824
-        let language = (Bundle.main.preferredLocalizations.first ?? "?") + " (" + (Locale.preferredLanguages.first ?? "?") + ")"
-        return CartoucheReport.Environment(cartouche: cartouche, basedOn: nil, system: "macOS " + CartoucheDevice.iOSVersion,
-                                           device: "\(model) (\(memory) GB)", language: language, facts: [])
-    }
-
-    /// What the player's settings name, which a report never holds: their
-    /// servers' addresses, the names of their places, their shared folders
-    /// and buckets, the paths of their folders and their user names.
-    static func redaction() -> CartoucheRedaction {
-        let settings = CartoucheStorageSettings.shared
-        var redaction = CartoucheRedaction()
-        for server in settings.servers {
-            redaction.servers.append(server.host)
-            redaction.names.append(server.name)
-            redaction.names.append(server.share)
-            redaction.accounts.append(server.username)
-        }
-        redaction.paths = CartoucheStorageRole.allCases.compactMap { settings.place($0)?.path }
-        return redaction
-    }
-}
-
-/// Copy the report, under what went wrong, as on the iPhone
-/// (CartoucheReporting.swift): its text, redacted, on the pasteboard.
-struct CartoucheReportButton: View {
-    let report: CartoucheReport
-    @State private var copied = false
-
-    var body: some View {
-        Button {
-            CartoucheReports.copy(report)
-            copied = true
-        } label: {
-            Label(copied ? CartoucheText.reportCopied : CartoucheText.reportCopy,
-                  systemImage: copied ? "checkmark.circle.fill" : "doc.on.doc")
-                .contentTransition(.symbolEffect(.replace))
-        }
-        .accessibilityHint(CartoucheText.reportHint)
-        .task(id: copied) {
-            guard copied else { return }
-            try? await Task.sleep(for: .seconds(2))
-            copied = false
-        }
-    }
-}
-
-// MARK: Measurements
-
-/// Cartouche's measurements of the games and of its own events
-/// (CartoucheTelemetry.swift on the iPhone): the console's come with its
-/// System page, and until then an event is not kept.
-@MainActor
-final class CartoucheTelemetry {
-    static let shared = CartoucheTelemetry()
-
-    func event(_ name: String, game: String? = nil, fields: [String: CartoucheTelemetryValue] = [:]) {}
-}
-

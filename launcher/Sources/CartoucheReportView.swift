@@ -17,9 +17,12 @@
 //  catalog/devices.json, which holds nothing personal
 //  (CartoucheProblemReport.swift).
 //
+//  The console on the Mac has the same page, from its System page: the
+//  report says that Mac and Cartouche Builder, and holds no measurement
+//  for devices.json, which lists iPhones and iPads.
+//
 
 import SwiftUI
-import UIKit
 
 @available(iOS 17.0, *)
 struct CartoucheReportView: View {
@@ -59,7 +62,7 @@ struct CartoucheReportView: View {
         let parts = report?.parts ?? []
         let text = parts.joined(separator: "\n\n")
         List {
-            Section {
+            CartoucheSection {
                 TextField(CartoucheText.reportWhatPrompt, text: $what, axis: .vertical)
                     .lineLimit(5...12)
             } header: {
@@ -68,7 +71,7 @@ struct CartoucheReportView: View {
                 Text(CartoucheText.reportWhatFooter)
             }
 
-            Section {
+            CartoucheSection {
                 if let endpoint = CartoucheTelemetry.endpoint {
                     Button {
                         send(report, to: endpoint)
@@ -87,7 +90,7 @@ struct CartoucheReportView: View {
                 }
                 Button(copied ? CartoucheText.reportCopied : CartoucheText.reportCopy,
                        systemImage: copied ? "checkmark" : "doc.on.doc") {
-                    UIPasteboard.general.string = text
+                    CartoucheReports.copy(text: text)
                     copied = true
                 }
                 Button(CartoucheText.reportGitHub, systemImage: "ladybug") {
@@ -102,7 +105,7 @@ struct CartoucheReportView: View {
             }
             .disabled(report == nil)
 
-            Section {
+            CartoucheSection {
                 // One part each, so that typing lays out only the first.
                 ForEach(parts.indices, id: \.self) { index in
                     Text(verbatim: parts[index])
@@ -118,7 +121,9 @@ struct CartoucheReportView: View {
         }
         .cartoucheStageBackground()
         .navigationTitle(CartoucheText.reportTitle)
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .onAppear {
             if gathered == nil { gathered = Self.gather() }
         }
@@ -209,7 +214,8 @@ struct CartoucheReportView: View {
     }
 
     /// This iPhone's memory limit, now, as devices.json records it; nil on a
-    /// simulator, or when iOS gives no limit.
+    /// simulator, when iOS gives no limit, and on a Mac, which neither has
+    /// a model devices.json lists nor such a limit.
     @MainActor
     static func measurement(now: Date) -> CartoucheDeviceMeasurement? {
         let model = CartoucheDevice.modelIdentifier

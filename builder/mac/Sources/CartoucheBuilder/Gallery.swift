@@ -26,31 +26,59 @@ enum Gallery {
         // What stops a build before it starts: too little room on the Mac,
         // an Xcode older than nxnative's, a game no Mac built yet.
         case libraryRoom = "library-room", gameXcode = "game-xcode", gameUnbuilt = "game-unbuilt", setupXcode = "setup-xcode"
+        // A game's sheet whose newest copy of its saves waits for the
+        // game's update, a newer version of the game having written it.
+        case gameNewer = "game-newer"
         case assistantWelcome = "assistant-welcome", assistantTools = "assistant-tools", assistantSources = "assistant-sources"
         case assistantGames = "assistant-games", assistantKeys = "assistant-keys", assistantBuilds = "assistant-builds"
         case assistantIPhone = "assistant-iphone", assistantDone = "assistant-done"
+        // The settings' Folders tab, where the dumps folder and the games
+        // folder are chosen; and the help on naming what they hold, as the
+        // sheet it opens shows it, at its top and on the dumps folder, as
+        // the library opens it.
+        case settingsFolders = "settings-folders", names, namesDumps = "names-dumps"
         // Cartouche's console on this Mac (ConsoleGallery.swift): its home,
         // every game, a game's settings page beside them, a game's info over
         // them, and the whole sheet of a game played on this Mac, in a
-        // window as tall as it, with the copies of its saves and its Switch
-        // saves, the pages its saves open.
+        // window as tall as it, again with the newest copy of its saves
+        // waiting for the game's update, a newer version having written it,
+        // with the copies of its saves and its Switch saves, the pages its
+        // saves open, and its log; its System page, and the Storage page
+        // that one opens, with the player's connections, its Game
+        // measurements page and its Report a problem page.
         case console, consoleLibrary = "console-library", consoleSettings = "console-settings", consoleInfo = "console-info"
-        case consoleSheet = "console-sheet", consoleSaves = "console-saves", consoleSwitchSave = "console-switch-save"
+        case consoleSheet = "console-sheet", consoleSheetNewer = "console-sheet-newer"
+        case consoleSaves = "console-saves", consoleSwitchSave = "console-switch-save", consoleGameLog = "console-game-log"
+        case consoleSystem = "console-system", consoleStorage = "console-storage", consoleMeasures = "console-measures"
+        case consoleReport = "console-report"
         // What the window's height leaves out: the settings' Builds tab, and
         // the storage page down to the games on this Mac, in a window as
         // tall as it.
         case settingsBuilds = "settings-builds", storageMac = "storage-mac"
+        // The iPhone page with Tailscale on this Mac, and its address there
+        // (BridgeView.swift); the iPhone page above has it off.
+        case iphoneTailscale = "iphone-tailscale"
+        // The game page of the builder in the window that showed the
+        // console just before, the player back from it with the switch at
+        // the top of the window: as the game page, whatever the Mac's
+        // appearance.
+        case gameAfterConsole = "game-after-console"
 
         /// Whether the page is the console's, which is always dark.
         var isConsole: Bool {
-            [.console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet, .consoleSaves, .consoleSwitchSave].contains(self)
+            [.console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet, .consoleSheetNewer, .consoleSaves,
+             .consoleSwitchSave, .consoleGameLog, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport].contains(self)
         }
+
+        /// Whether the page is a game's whole sheet, in a window as tall.
+        var isWholeSheet: Bool { self == .consoleSheet || self == .consoleSheetNewer }
 
         /// The page of the sheet's saves it opens over the sheet.
         var savesPage: ConsoleSavesPage? {
             switch self {
             case .consoleSaves: return .copies
             case .consoleSwitchSave: return .switchSaves
+            case .consoleGameLog: return .log
             default: return nil
             }
         }
@@ -73,9 +101,17 @@ enum Gallery {
         var size: CGSize {
             if step != nil { return SetupAssistant.size }
             switch self {
-            case .settings, .settingsBuilds: return SettingsTab.size
+            case .names, .namesDumps: return NamingHelp.size
+            case .settings, .settingsBuilds, .settingsFolders: return SettingsTab.size
             case .storageMac: return CGSize(width: 1024, height: 1440)
-            case .consoleSheet: return CGSize(width: 1024, height: 1640)
+            case .consoleSheet, .consoleSheetNewer: return CGSize(width: 1024, height: 1640)
+            // This Mac and every connection, down to the footer.
+            case .consoleStorage: return CGSize(width: 1024, height: 1260)
+            // What is sent, down to the way to erase it.
+            case .consoleMeasures: return CGSize(width: 1024, height: 1180)
+            // What the player writes, the ways to send it, and the report
+            // down to its last steps.
+            case .consoleReport: return CGSize(width: 1024, height: 1500)
             // The window at its smallest, with a game's sheet whose
             // nxnative commits are a paragraph each, as nxnative writes them.
             case .gameNarrow: return CGSize(width: Columns.window.width, height: 680)
@@ -84,20 +120,25 @@ enum Gallery {
             }
         }
 
-        var inEnglish: Bool { [.library, .game, .gameQueue, .setup, .menubar, .assistantWelcome, .assistantGames, .console].contains(self) }
+        var inEnglish: Bool {
+            [.library, .game, .gameQueue, .setup, .menubar, .assistantWelcome, .assistantGames, .console, .consoleStorage].contains(self)
+        }
 
         /// The window as the app opens it: the settings as the Settings
         /// scene does, the menu bar's panel without a frame, the setup
         /// assistant as the sheet it is, without a title bar, which would
         /// add its height above it.
         var styleMask: NSWindow.StyleMask {
-            if step != nil { return [.borderless] }
+            if step != nil || isNaming { return [.borderless] }
             switch self {
-            case .settings, .settingsBuilds: return [.titled, .closable]
+            case .settings, .settingsBuilds, .settingsFolders: return [.titled, .closable]
             case .menubar, .menubarBuilding: return [.borderless]
             default: return [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
             }
         }
+
+        /// Whether the page is the help on naming, the sheet it is.
+        var isNaming: Bool { self == .names || self == .namesDumps }
     }
 
     /// Pictures AppKit drew itself, as ScreenCaptureKit could not take them.
@@ -129,6 +170,10 @@ enum Gallery {
         var saved = 0
         for language in ["fr", "en"] {
             L10n.use(language)
+            // The console speaks it too, as once the app read its settings
+            // (AppModel): its words show in the builder's, as the help on
+            // naming the games' title in the settings.
+            ConsoleLink.speak()
             for page in Page.allCases where language == "fr" || page.inEnglish {
                 for dark in page.isConsole ? [true] : language == "fr" ? [false, true] : [false] {
                     let file = folder.appendingPathComponent("\(page.rawValue)-\(language)-\(dark ? "dark" : "light").png")
@@ -163,20 +208,39 @@ enum Gallery {
     }
 
     private static func render(_ page: Page, samples: Samples, dark: Bool, to file: URL) -> Bool {
+        // The Mac in the page's mode, as the window: the builder's follows
+        // the Mac's (MainView).
+        NSApp.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
         let model = samples.model(for: page)
         var size = page.size
         let controller: NSViewController
         switch page {
+        case .names, .namesDumps:
+            // The sheet it is, as the setup assistant's steps are shown.
+            controller = hosted(NamingHelp(onDumps: page == .namesDumps)
+                                    .background(Color(nsColor: .windowBackgroundColor))
+                                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous)),
+                                model, bridged: false)
+        case .settingsFolders:
+            controller = settings(model, open: .folders)
         case .settings, .settingsBuilds:
             controller = settings(model, open: page == .settingsBuilds ? .builds : .general)
-        case .console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet, .consoleSaves, .consoleSwitchSave:
-            ConsoleGallery.prepare(language: L10n.code)
+        case .console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet, .consoleSheetNewer, .consoleSaves, .consoleSwitchSave,
+             .consoleGameLog, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport:
+            ConsoleGallery.prepare(language: L10n.code, newer: page == .consoleSheetNewer)
             model.show(.console)
-            let sheet = page == .consoleSheet || page.savesPage != nil
+            let sheet = page.isWholeSheet || page.savesPage != nil
             controller = hosted(MainView(showingLibrary: page == .consoleLibrary, showingSettings: page == .consoleSettings,
                                          showingInfo: page == .consoleInfo,
                                          showingSheetOf: sheet ? ConsoleGallery.sheetGame : nil,
-                                         showingSaves: page.savesPage), model)
+                                         showingSaves: page.savesPage,
+                                         showingSystem: page == .consoleSystem, showingStorage: page == .consoleStorage,
+                                         showingMeasures: page == .consoleMeasures, showingReport: page == .consoleReport), model)
+        case .gameAfterConsole:
+            // The console first, in the window, as the player had it.
+            ConsoleGallery.prepare(language: L10n.code)
+            model.show(.console)
+            controller = hosted(MainView(), model)
         case .menubar, .menubarBuilding:
             let panel = hosted(MenuBarView().background(Color(nsColor: .windowBackgroundColor)), model)
             size.height = ceil(panel.sizeThatFits(in: CGSize(width: size.width, height: 2000)).height)
@@ -196,7 +260,8 @@ enum Gallery {
             }
         }
         let frame = CGRect(origin: CGPoint(x: 80, y: 80), size: size)
-        let window: NSWindow = page == .storageMac || page == .consoleSheet
+        let window: NSWindow = page == .storageMac || page.isWholeSheet || page == .consoleStorage || page == .consoleMeasures
+            || page == .consoleReport
             ? TallWindow(contentRect: frame, styleMask: page.styleMask, backing: .buffered, defer: false)
             : KeyWindow(contentRect: frame, styleMask: page.styleMask, backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
@@ -204,13 +269,14 @@ enum Gallery {
         switch page {
         case .settings: window.title = SettingsTab.general.title
         case .settingsBuilds: window.title = SettingsTab.builds.title
+        case .settingsFolders: window.title = SettingsTab.folders.title
         case _ where page.isConsole: window.title = "Cartouche"
         default: window.title = "Cartouche Builder"
         }
-        if page == .settings || page == .settingsBuilds {
+        if page == .settings || page == .settingsBuilds || page == .settingsFolders {
             window.toolbarStyle = .preference
         }
-        if page.step != nil {
+        if page.step != nil || page.isNaming {
             window.isOpaque = false
             window.backgroundColor = .clear
         }
@@ -226,6 +292,11 @@ enum Gallery {
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
         wait(until: Date().addingTimeInterval(2.5))
+        // Then the builder, the switch turned as the player turns it.
+        if page == .gameAfterConsole {
+            model.show(.builder)
+            wait(until: Date().addingTimeInterval(2.5))
+        }
         // A game's info opens over the console in a sheet, a window of its
         // own, which the window server shows with the console's window
         // under it, as one: the picture is as large as both.
@@ -423,11 +494,12 @@ enum Gallery {
             switch page {
             case .library, .activity, .storage, .iphone: model.section = AppSection(rawValue: page.rawValue) ?? .library
             case .storageMac: model.section = .storage
-            case .libraryRoom, .game, .gameNarrow, .gameQueue, .gameXcode, .gameUnbuilt: model.section = .library
+            case .iphoneTailscale: model.section = .iphone
+            case .libraryRoom, .game, .gameNarrow, .gameNewer, .gameQueue, .gameXcode, .gameUnbuilt, .gameAfterConsole: model.section = .library
             case .setup, .setupXcode: model.section = .setup
             default: break
             }
-            if page == .game || page == .gameNarrow { model.selection = "0100152000022000" }
+            if page == .game || page == .gameNarrow || page == .gameNewer || page == .gameAfterConsole { model.selection = "0100152000022000" }
             if page == .gameXcode { model.selection = "01004D300C5AE000" }
             if page == .gameUnbuilt { model.selection = Gallery.unbuilt.titleID }
             // A game up to date, while a batch runs: added to its queue.
@@ -473,15 +545,22 @@ enum Gallery {
                              paired: now.addingTimeInterval(-2 * 86_400), seen: now.addingTimeInterval(-26 * 3600)),
             ]
             let saves = URL(fileURLWithPath: info.home).appendingPathComponent("Saves", isDirectory: true)
-            model.bridge.preview(devices: iphones, connected: [iphones[0].id], games: config.games, name: "MacBook Air", saves: saves)
+            // A made-up address in the tailnet, never one of the project's.
+            model.bridge.preview(devices: iphones, connected: [iphones[0].id], games: config.games, name: "MacBook Air", saves: saves,
+                                 tailnet: page == .iphoneTailscale ? ["100.101.102.103", "fd7a:115c:a1e0::1"] : [])
             // Mario Kart 8 Deluxe played on this Mac, the iPhone's saves come
-            // before its last game; Super Mario Odyssey playing now.
+            // before its last game, or, on game-newer, held back, version
+            // 3.0.4 of the game on the iPhone having written the newest copy
+            // and this Mac's being 3.0.3; Super Mario Odyssey playing now.
             let odyssey = MacGameApp(url: URL(fileURLWithPath: "/Users/player/Applications/Super Mario Odyssey.app"),
                                      titleID: "0100000000010000", name: "Super Mario Odyssey")
             model.macGames.preview(folder: saves,
                                    playing: page == .menubar ? [MacGameRun(app: odyssey, pid: 0, started: now.addingTimeInterval(-1500), fromBuilder: true)] : [],
-                                   last: ["0100152000022000": MacSaveEvent(at: now.addingTimeInterval(-26 * 60), when: .before, step: "fetch",
-                                                                           fetched: "2026-11-13T18-02-00Z.zip")])
+                                   last: ["0100152000022000": page == .gameNewer
+                                       ? MacSaveEvent(at: now.addingTimeInterval(-26 * 60), when: .before, step: MacSaveEvent.heldBack,
+                                                      newer: "3.0.4", game: "3.0.3")
+                                       : MacSaveEvent(at: now.addingTimeInterval(-26 * 60), when: .before, step: "fetch",
+                                                      fetched: "2026-11-13T18-02-00Z.zip")])
             if page == .menubar {
                 let release = BuilderRelease(version: "0.3.0", tag: "builder-v0.3.0", notes: "",
                                              page: URL(string: "https://github.com/cartouche-app/Cartouche/releases/tag/builder-v0.3.0")!,

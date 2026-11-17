@@ -10,7 +10,8 @@
 //  a NAS without having installed them here, as the iPhone's console knows
 //  the IPAs of its games folder; it does what the player asks of them:
 //  Play starts a game's app, Install installs a game from the NAS, how far
-//  it is over the console, Import and System lead to the app's own pages.
+//  it is over the console, Import leads to the app's own pages, System to
+//  the console's (ConsoleSystem.swift), its storage and the Builder.
 //  Game settings opens the game's settings page in place of its sheet, the
 //  way back to the sheet above it, where the controller's L and R change
 //  the category and B goes back, as on the iPhone; the page's last button
@@ -66,8 +67,15 @@ public final class CartoucheMacConsole: ObservableObject {
     /// Import, on the home or the sheet of a game the player has no copy
     /// of: the Builder adds games.
     public var onImport: () -> Void = {}
-    /// System, on the home's dock.
+    /// Cartouche Builder, from the console's System page.
     public var onSystem: () -> Void = {}
+    /// Change in the Builder, under This Mac on the Storage page: the page
+    /// of the Builder where the player chooses its games folder and its
+    /// saves folder.
+    public var onFolders: () -> Void = {}
+    /// The Builder's games folder and saves folder, as This Mac shows them
+    /// on the Storage page (ConsoleStorage.swift).
+    @Published private(set) var folders = CartoucheMacFolders(games: nil, saves: nil)
     /// Removes the game from this Mac; the app asks the player first.
     public var onUninstall: (_ game: URL) -> Void = { _ in }
     /// Install, on a game the Builder keeps on a NAS: the app installs it
@@ -95,6 +103,20 @@ public final class CartoucheMacConsole: ObservableObject {
     public var dataFolder: URL {
         get { CartoucheGameActions.shared.dataRoot }
         set { CartoucheGameActions.shared.dataRoot = newValue }
+    }
+
+    /// Where nxnative's apps write each game's logs on this Mac, which its
+    /// sheet's Share the log reads: ~/Library/Logs/nxnative/<title ID>.log.
+    public var logsFolder: URL {
+        get { CartoucheGameActions.shared.logsRoot }
+        set { CartoucheGameActions.shared.logsRoot = newValue }
+    }
+
+    /// Keeps the console's journal and the last reports of what went wrong
+    /// in FOLDER from now on, in Cartouche Builder's folder: once, as the
+    /// app starts. Until then, as in the gallery, they are in memory alone.
+    public static func keepReports(in folder: URL) {
+        CartoucheReports.keep(in: folder)
     }
 
     /// The play time and the size on this Mac, of the app and of its data,
@@ -139,6 +161,13 @@ public final class CartoucheMacConsole: ObservableObject {
         if folder.games != stored || folder.serverName != place {
             folder.showForMac(stored, server: place)
         }
+    }
+
+    /// The Builder's games folder and saves folder, which This Mac shows
+    /// on the Storage page.
+    public func showFolders(games: URL?, saves: URL?) {
+        let shown = CartoucheMacFolders(games: games, saves: saves)
+        if shown != folders { folders = shown }
     }
 
     /// Install, on a game of the games folder.
@@ -244,16 +273,27 @@ public struct CartoucheMacConsoleView: View {
 
     enum Route: Hashable {
         case library
+        /// The console's System page (ConsoleSystem.swift), and its
+        /// Storage, Game measurements and Report a problem pages, the
+        /// iPhone's; and how to name the games, from the Storage page.
+        case system, storage, telemetry, report, naming
     }
 
     /// The console on its home, or with every game open (SHOWINGLIBRARY),
     /// or with the settings page of its first game on this Mac beside it
     /// (SHOWINGSETTINGS), or that game's info over it (SHOWINGINFO), or the
     /// sheet of the game of the title ID SHOWINGSHEETOF beside it, with the
-    /// page of its saves SHOWINGSAVES open, as the app's gallery shows it.
+    /// page of its saves SHOWINGSAVES open, or with its System page open
+    /// (SHOWINGSYSTEM), or the Storage page under it (SHOWINGSTORAGE), or
+    /// its Game measurements page (SHOWINGMEASURES), or its Report a
+    /// problem page (SHOWINGREPORT), as the app's gallery shows it.
     public init(showingLibrary: Bool = false, showingSettings: Bool = false, showingInfo: Bool = false,
-                showingSheetOf titleID: String? = nil, showingSaves: CartoucheMacSavesPage? = nil) {
-        _path = State(initialValue: showingLibrary ? [.library] : [])
+                showingSheetOf titleID: String? = nil, showingSaves: CartoucheMacSavesPage? = nil,
+                showingSystem: Bool = false, showingStorage: Bool = false, showingMeasures: Bool = false,
+                showingReport: Bool = false) {
+        _path = State(initialValue: showingLibrary ? [.library] : showingStorage ? [.system, .storage]
+                        : showingMeasures ? [.system, .telemetry] : showingReport ? [.system, .report]
+                        : showingSystem ? [.system] : [])
         opensSettings = showingSettings
         opensInfo = showingInfo
         opensSheetOf = titleID
@@ -290,7 +330,11 @@ public struct CartoucheMacConsoleView: View {
         // Another language: every word again.
         .id(console.language ?? "")
         .animation(.easeInOut(duration: 0.25), value: entries.owned.isEmpty)
-        .preferredColorScheme(.dark)
+        // Dark, as the iPhone's console always is: the window that shows it
+        // says so (MainView, in the Builder), and says the builder's scheme
+        // when it shows the builder instead. Said here, the window's dark
+        // would go with the console and leave the builder's words in the
+        // console's colours.
         .onAppear {
             if let entry = entries.owned.first(where: { $0.app != nil }), let app = entry.app {
                 if opensSettings { openSettings(app, of: entry) }
@@ -299,6 +343,9 @@ public struct CartoucheMacConsoleView: View {
             if let titleID = opensSheetOf, let entry = entries.owned.first(where: { $0.titleId == titleID }) {
                 paneID = entry.id
             }
+            // The journal of the reports starts with the console, once, as
+            // the iPhone's with Cartouche.
+            CartoucheReports.noteStart()
             guard console.asksServer else { return }
             catalog.refreshCoversIfDue()
             catalog.lookUpGamesIfDue(among: entries)
@@ -331,7 +378,7 @@ public struct CartoucheMacConsoleView: View {
                 onLibrary: { path.append(.library) },
                 onSetup: {},
                 onTab: { tab in
-                    if tab == .system { console.onSystem() }
+                    if tab == .system, path.last != .system { path.append(.system) }
                 },
                 zoom: path.isEmpty ? zoom : nil,
                 // Beside the console, the sheet describes the game in focus.
@@ -351,6 +398,21 @@ public struct CartoucheMacConsoleView: View {
                             onBack: { if !path.isEmpty { path.removeLast() } },
                             zoom: zoom,
                             onFocus: { focus($0) })
+                    case .system:
+                        CartoucheMacSystemView { console.onSystem() }
+                            .cartoucheConsolePage(CartoucheText.systemTab, back: CartoucheText.macBackToConsole)
+                    case .storage:
+                        CartoucheStorageView()
+                            .cartoucheConsolePage(CartoucheText.storageTitle, back: CartoucheText.systemTab)
+                    case .telemetry:
+                        CartoucheTelemetryView()
+                            .cartoucheConsolePage(CartoucheText.telemetryTitle, back: CartoucheText.systemTab)
+                    case .report:
+                        CartoucheReportView()
+                            .cartoucheConsolePage(CartoucheText.reportTitle, back: CartoucheText.systemTab)
+                    case .naming:
+                        CartoucheNamingView()
+                            .cartoucheConsolePage(CartoucheText.namingTitle, back: CartoucheText.storageTitle)
                     }
                 }
         }
@@ -422,6 +484,10 @@ public struct CartoucheMacConsoleView: View {
             case .copies:
                 if let target = actions.saves(of: app) {
                     CartoucheSaveCopiesView(target: target)
+                }
+            case .log:
+                if let logs = actions.logs(of: app) {
+                    CartoucheGameLogView(folder: logs, tileKey: entry.tileKey)
                 }
             case .switchSaves:
                 CartoucheSwitchSaveView(

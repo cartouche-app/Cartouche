@@ -7,7 +7,11 @@
 //  folder. An iPhone pairs once, with a code shown on both screens. The
 //  games played on this Mac keep their saves in step with the iPhone's in
 //  that saves folder, or in Cartouche's saves folder on a share, which the
-//  page finds on the shares mounted here.
+//  page finds on the shares mounted here. With Tailscale, which the player
+//  installs apart on this Mac and on the iPhone, the paired iPhones reach
+//  this Mac away from home too: the page says whether it is on, and this
+//  Mac's address there, by which an iPhone pairs when Bonjour cannot see
+//  the Mac (CartoucheTailscale.swift).
 //
 
 import BuilderKit
@@ -27,6 +31,7 @@ struct BridgeView: View {
                 switchCard
                 if bridge.enabled {
                     howTo
+                    tailscale
                     folders
                     devices
                 }
@@ -142,6 +147,43 @@ struct BridgeView: View {
                 Step(number: 2, text: tr("Choose “\(bridge.name)” under Macs nearby.", "Choisissez « \(bridge.name) » sous Macs à proximité."))
                 Step(number: 3, text: tr("A code shows on both screens: allow the iPhone here if they are the same.",
                                          "Un code s’affiche sur les deux écrans : autorisez l’iPhone ici s’ils sont identiques."))
+            }
+        }
+    }
+
+    /// Tailscale on this Mac: on, its address in the player's tailnet,
+    /// which the paired iPhones learn and try away from home, and by which
+    /// one pairs from afar; off, where to get it.
+    private var tailscale: some View {
+        Card {
+            HStack(alignment: .top, spacing: 14) {
+                Image(systemName: "network")
+                    .font(.title3)
+                    .frame(width: 24)
+                    .foregroundStyle(bridge.tailnet.isEmpty ? Theme.indigo : Color.green)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(tr("Away from home, with Tailscale", "Hors de chez vous, avec Tailscale"))
+                        .font(.headline)
+                    if let address = bridge.tailnet.first {
+                        Text(tr("Tailscale is on here: the paired iPhones learn this Mac’s Tailscale address, and reach it there away from home when Tailscale is on. An iPhone away from home pairs by this address, under Add your Mac.",
+                                "Tailscale est allumé ici : les iPhone associés apprennent l’adresse Tailscale de ce Mac et l’y joignent hors de chez vous quand Tailscale est allumé. Un iPhone hors de chez vous s’associe par cette adresse, sous Ajouter votre Mac."))
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(address)
+                            .font(.callout.monospaced().weight(.medium))
+                            .textSelection(.enabled)
+                    } else {
+                        Text(tr("Install Tailscale on this Mac and on the iPhone, signed in to the same account: the iPhone then reaches this Mac away from home too.",
+                                "Installez Tailscale sur ce Mac et sur l’iPhone, connectés au même compte : l’iPhone joint alors ce Mac même hors de chez vous."))
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Link(tr("Download Tailscale for Mac", "Télécharger Tailscale pour Mac"), destination: CartoucheTailscale.macDownload)
+                            .font(.callout)
+                    }
+                }
+                Spacer(minLength: 0)
             }
         }
     }

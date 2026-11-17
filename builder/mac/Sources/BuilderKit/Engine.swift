@@ -38,11 +38,23 @@ public struct BuilderHome: Equatable, Sendable {
     /// the nightly run leaves aside those this Mac never built either.
     public var unbuilt: URL { root.appendingPathComponent("unbuilt.json") }
     public var bridge: URL { root.appendingPathComponent("bridge.json") }
+    /// The passwords, secret keys and Google sign-ins of the player's
+    /// connections to their storage, the console's Storage page's and the
+    /// paired iPhones' (CartoucheStorageSettings, in the console):
+    /// readable only by the player's account.
+    public var connections: URL { root.appendingPathComponent("connections.json") }
     public var logs: URL { root.appendingPathComponent("logs", isDirectory: true) }
     public var engine: URL { root.appendingPathComponent("nxnative", isDirectory: true) }
     public var saves: URL { root.appendingPathComponent("Saves", isDirectory: true) }
     /// What this Mac knows of the saves of the games played on it (MacSaves.swift).
     public var macSaves: URL { root.appendingPathComponent("mac-saves.json") }
+    /// The logs of the games played on this Mac that the console read, each
+    /// session reported once (CartoucheConsole's ConsoleTelemetry.swift).
+    public var sessions: URL { root.appendingPathComponent("sessions.json") }
+    /// The console's journal and its last reports of what went wrong,
+    /// Journal.txt and Reports.json, as the iPhone's Cartouche keeps them
+    /// (CartoucheConsole's CartoucheReporting.swift).
+    public var console: URL { root.appendingPathComponent("Console", isDirectory: true) }
     /// The copies of saves that come, unpacked there first.
     public var savesScratch: URL { root.appendingPathComponent("Saves scratch", isDirectory: true) }
 }

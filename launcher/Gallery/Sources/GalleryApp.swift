@@ -57,6 +57,9 @@
 //        storage-drive-guide             the steps that make that client
 //        storage-mac                     Add your Mac, the form that pairs
 //                                        this iPhone with a Mac nearby
+//        storage-names                   How to name your games, as the
+//                                        Storage page opens it, at its top
+//                                        or down to -GalleryCategory
 //        storage-smb                     Add a shared folder, with a NAS
 //                                        nearby (GallerySMB)
 //        switch-save                     the saves of the sheet's game
@@ -159,6 +162,16 @@
 //                                        waiting for it
 //        mac-refused                     no Mac nearby, iOS refusing
 //                                        Cartouche the local network
+//        mac-tailscale                   the player's Mac, paired, as the
+//                                        games folder and the saves folder,
+//                                        with its addresses in the tailnet,
+//                                        Tailscale connected on this iPhone;
+//                                        on Add your Mac (screen
+//                                        storage-mac), that Mac's own form
+//        mac-tailscale-off               the same Mac out of reach, away
+//                                        from home, Tailscale off on this
+//                                        iPhone, with two games' saves
+//                                        waiting for it
 //        mac-too-old                     the player's Mac, paired, whose
 //                                        app is 0.5.0 or older: too old to
 //                                        share its builds, and no longer
@@ -204,6 +217,11 @@
 //                                        folder in Files as the saves folder,
 //                                        which Cartouche's own sync uses
 //                                        (GallerySaves)
+//        saves-newer                     the same, the newest copy of the
+//                                        game's saves waiting for its update,
+//                                        version 1.2.0 of the game having
+//                                        written it, and this iPhone's being
+//                                        1.0.0
 //        sidestore-quit                  a sign-in whose built-in SideStore
 //                                        quit as it launched, LocalDevVPN
 //                                        connected
@@ -230,6 +248,13 @@
 //                                        player signed in with
 //        starting                        on the TV (screen tv), the game
 //                                        starting
+//        tailscale                       Tailscale connected on this iPhone,
+//                                        away from home: no Mac nearby on
+//                                        Add your Mac (screen storage-mac)
+//        tailscale-turned-off            Tailscale turned off half an hour
+//                                        ago by LocalDevVPN, which Cartouche
+//                                        connected to renew itself: the
+//                                        console's top bar says so
 //        stopped-on-error                the sheet's game's process ended on
 //                                        another error (CartoucheGameActions
 //                                        stoppedOnError)
@@ -270,6 +295,9 @@
 //                                        such as Controls
 //        cartouche.saves                 on a game's settings, its cloud
 //                                        saves
+//        dumps                           on how to name the games (screen
+//                                        storage-names), the page down to
+//                                        Cartouche Builder's dumps folder
 //        manage                          on the sheet, the sheet opened on
 //                                        the game's management
 //        nightly                         on the Mac's builds (screen
@@ -280,8 +308,14 @@
 //        results                         on a game's sheet, the testers'
 //                                        results, what they wrote in French
 //                                        as the iPhone translates it
+//        saves                           on how to name the games (screen
+//                                        storage-names), the page down to
+//                                        the saves folder
 //        signature                       on the System page, the page
 //                                        scrolled down to its signature
+//        tailscale                       on the Storage page or Renew every
+//                                        night (screen nightly), the page
+//                                        scrolled down to Tailscale
 //        update                          on the System page, the page
 //                                        scrolled down to its updates
 //
@@ -464,6 +498,14 @@ struct GalleryScenario {
             // The System page down to the scenario's section, or on the
             // Mac's builds, down to theirs.
             CartoucheSystemView.openingSection = screen == "system" ? category : nil
+            CartoucheStorageView.opensOnTailscale = screen == "storage" && category == "tailscale"
+            CartoucheNightlyRenewalView.opensOnTailscale = screen == "nightly" && category == "tailscale"
+            // Tailscale as the scenario has it, never as the Mac the
+            // simulator runs on does.
+            CartoucheStorageReach.shared.showTailscaleForGallery(["mac-tailscale", "tailscale"].contains(work))
+            if work == "tailscale-turned-off" {
+                CartoucheStorageReach.shared.showTailscaleTurnedOffForGallery()
+            }
             CartoucheSystemView.opensMacBuilds = screen == "mac-builds"
             CartoucheMacBuildsPage.openingRow = screen == "mac-builds" && category == "nightly" ? CartoucheMacBuildsPage.nightlyRow : nil
             if work == "renewing" {
@@ -588,6 +630,11 @@ struct GalleryScenario {
             if screen == "storage-smb" {
                 CartoucheStorageServerForm.gallery = GallerySMB.signIn(work)
             }
+            if work == "tailscale" {
+                // Away from home: Bonjour finds no Mac, and nothing refuses
+                // it the local network.
+                CartoucheMacBrowser.gallery = (found: [], refused: false)
+            }
             if ["mac-nearby", "mac-code", "mac-refused"].contains(work) {
                 let refused = work == "mac-refused"
                 CartoucheMacBrowser.gallery = (found: refused ? [] : GalleryMac.nearby, refused: refused)
@@ -595,8 +642,12 @@ struct GalleryScenario {
                     CartoucheMacPairing.gallery = (mac: GalleryMac.nearby[0], code: "482915")
                 }
             }
-            if work == "saves", let titleId = sheet ?? ownedTitles.first {
+            if work == "saves" || work == "saves-newer", let titleId = sheet ?? ownedTitles.first {
                 GallerySaves.prepare(titleId: titleId)
+                if work == "saves-newer" {
+                    CartoucheSaveBackups.shared.showNewerForGallery("org.nxnative." + titleId.lowercased() + "|gallery",
+                                                                    CartoucheSaveNewer(copy: "1.2.0", game: "1.0.0"))
+                }
                 if screen == "switch-save" {
                     // The save JKSV exported, picked as the page opens.
                     CartoucheSwitchSaveView.galleryPick = { await GallerySaves.switchExport() }
@@ -612,17 +663,21 @@ struct GalleryScenario {
             if work == "erasing" {
                 CartoucheReset.shared.showForGallery(.erasing)
             }
-            if ["mac", "mac-offline", "mac-builds", "mac-too-old"].contains(work) {
+            if ["mac", "mac-offline", "mac-builds", "mac-too-old", "mac-tailscale", "mac-tailscale-off"].contains(work) {
                 // The player's Mac, paired, with the games Cartouche Builder
                 // built in its Games folder; offline, away from home, the
                 // saves of two games wait for it; builds, Cartouche Builder
                 // at work, which the games' sheets and System show; too
-                // old, a Cartouche Builder 0.5.0, which shares no builds.
-                let mac = GalleryMac.paired()
+                // old, a Cartouche Builder 0.5.0, which shares no builds;
+                // Tailscale, its addresses in the tailnet known.
+                var mac = GalleryMac.paired()
+                if work == "mac-tailscale" || work == "mac-tailscale-off" {
+                    mac.tailnet = GalleryMac.tailnet
+                }
                 CartoucheStorageSettings.shared.showForGallery(mac, games: CartoucheBridge.gamesFolder,
                                                                saves: CartoucheBridge.savesFolder)
                 CartoucheStoredGames.shared.showForGallery(storedGames(in: CartoucheBridge.gamesFolder), server: mac.name)
-                if work == "mac-offline" {
+                if work == "mac-offline" || work == "mac-tailscale-off" {
                     CartoucheStorageReach.shared.showOfflineForGallery([mac.id])
                     CartoucheSaveBackups.shared.showWaitingForGallery(2)
                 }
@@ -1046,9 +1101,12 @@ struct CartoucheGalleryApp: App {
                 CartoucheStorageServerForm(server: GallerySMB.server(scenario.work))
             }
         case "storage-mac":
-            // As the Storage page opens it, for a Mac not paired yet.
+            // As the Storage page opens it, for a Mac not paired yet, or for
+            // the player's Mac (work mac-tailscale).
             NavigationStack {
-                CartoucheStorageMacForm(server: CartoucheStorageServer(kind: .mac, name: ""))
+                CartoucheStorageMacForm(server: scenario.work == "mac-tailscale"
+                                        ? CartoucheStorageSettings.shared.servers.first(where: { $0.kind == .mac }) ?? GalleryMac.paired()
+                                        : CartoucheStorageServer(kind: .mac, name: ""))
             }
         case "storage-drive":
             // As the Storage page opens it, to add a Google Drive.
@@ -1058,6 +1116,11 @@ struct CartoucheGalleryApp: App {
         case "storage-drive-guide":
             NavigationStack {
                 CartoucheDriveGuideView()
+            }
+        case "storage-names":
+            // As the Storage page opens it.
+            NavigationStack {
+                CartoucheNamingView(opening: scenario.category.flatMap(CartoucheNaming.Place.init(rawValue:)))
             }
         case "telemetry":
             NavigationStack {
@@ -1139,6 +1202,10 @@ enum GalleryMac {
         CartoucheNearbyMac(name: "MacBook Air", macID: id, endpoint: service("MacBook Air")),
         CartoucheNearbyMac(name: "Mac mini", macID: "c2e7a4d1-8b5f-4e3a-a6d9-1f4b7c0e9a28", endpoint: service("Mac mini")),
     ]
+
+    /// The Mac's addresses in the player's tailnet, as its Cartouche Builder
+    /// tells them with Tailscale on: made up, never the project's.
+    static let tailnet = ["100.101.102.103", "fd7a:115c:a1e0::1"]
 
     /// The Mac as Cartouche keeps it once paired, at the address it last
     /// reached it at.

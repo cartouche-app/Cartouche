@@ -223,6 +223,26 @@ final class CartoucheGameLogShareTests: XCTestCase {
         XCTAssertEqual(games.files.map(\.lastPathComponent), ["log.txt", "log.prev.txt"])
     }
 
+    func testAMacsLogsAreNamedByTheGamesTitleID() throws {
+        // nxnative's app for the Mac writes every game's logs in one folder,
+        // by title ID (dm/mac/launcher.c); the summary knows them by the
+        // iPhone's names.
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let mac = CartoucheGameLogFolder(game: "Mario Kart World", titleId: "0400C3F00006E000", documents: folder,
+                                         names: ["0400C3F00006E000.log", "0400C3F00006E000.prev.log"])
+        XCTAssertTrue(mac.logs.isEmpty)
+        try Data("x\n".utf8).write(to: folder.appendingPathComponent("0400C3F00006E000.prev.log"))
+        // Another game's.
+        try Data("x\n".utf8).write(to: folder.appendingPathComponent("0100152000022000.log"))
+        XCTAssertEqual(mac.files.map(\.lastPathComponent), ["0400C3F00006E000.prev.log"])
+        XCTAssertEqual(mac.logs.map { $0.name }, ["log.prev.txt"])
+        try Data("y\n".utf8).write(to: folder.appendingPathComponent("0400C3F00006E000.log"))
+        XCTAssertEqual(mac.files.map(\.lastPathComponent), ["0400C3F00006E000.log", "0400C3F00006E000.prev.log"])
+        XCTAssertEqual(mac.logs.map { $0.name }, ["log.txt", "log.prev.txt"])
+    }
+
     // MARK: What the player shares
 
     private let environment = CartoucheReport.Environment(
@@ -361,6 +381,18 @@ final class CartoucheGameLogShareTests: XCTestCase {
         // The server's own check of the fields (telemetry/worker.js).
         let fields = try XCTUnwrap(JSONSerialization.jsonObject(with: json) as? [String: Any])
         XCTAssertEqual(Set(fields.keys), ["schema", "id", "title", "what", "device", "ios", "version", "logs"])
+    }
+
+    func testAMacsSummaryNamesCartoucheBuilderAndMacOS() {
+        var share = share(lines: [30, 20])
+        share.environment = CartoucheReport.Environment(
+            cartouche: "0.6.2", basedOn: nil, system: "26.1 (25B72)", device: "Mac16,10 (M4, 16 GB)", language: "fr (fr-FR)",
+            facts: [.init("Free on this Mac", "412.00 GB (412,000,000,000 bytes)")], app: "Cartouche Builder", systemName: "macOS")
+        for summary in [share.summary, share.cleaned().summary] {
+            XCTAssertTrue(summary.contains("\nCartouche Builder: 0.6.2\nmacOS: 26.1 (25B72)\nDevice: Mac16,10 (M4, 16 GB)\n"), summary)
+            XCTAssertFalse(summary.contains("\niOS: "), summary)
+        }
+        XCTAssertEqual(share.title, "Mario Kart World log, Cartouche Builder 0.6.2 on Mac16,10, macOS 26.1")
     }
 
     func testTheIssuesTitle() {

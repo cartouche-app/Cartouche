@@ -142,6 +142,21 @@ final class CartoucheProblemReportTests: XCTestCase {
         XCTAssertEqual(long.title, String(repeating: "a", count: 71) + "…")
     }
 
+    func testAMacsReportIsCartoucheBuildersOnMacOS() {
+        // System › Report a problem in the console, in Cartouche Builder's
+        // window: no entry for devices.json, which holds no Mac.
+        let mac = CartoucheReport.Environment(
+            cartouche: "0.6.2", basedOn: nil, system: "26.1 (25B72)", device: "Mac16,10 (M4, 16 GB)", language: "fr (fr-FR)",
+            facts: [.init("Free on this Mac", "412.00 GB (412,000,000,000 bytes)")], app: "Cartouche Builder", systemName: "macOS")
+        let report = CartoucheProblemReport(what: "", environment: mac, journal: ["Console of Cartouche Builder 0.6.2 shown"],
+                                            date: date, redaction: player)
+        XCTAssertEqual(report.title, "Cartouche Builder 0.6.2 on Mac16,10, macOS 26.1")
+        XCTAssertEqual(report.parts.count, 1)
+        XCTAssertTrue(report.text.contains("\nCartouche Builder: 0.6.2\nmacOS: 26.1 (25B72)\nDevice: Mac16,10 (M4, 16 GB)\n"), report.text)
+        XCTAssertFalse(report.text.contains("\niOS: "), report.text)
+        XCTAssertFalse(CartoucheDeviceMeasurement.isModelIdentifier("Mac16,10"))
+    }
+
     func testErrorsAreSeparated() {
         let two = report(errors: ["First\nline\n", "Second"])
         XCTAssertTrue(two.text.hasSuffix("Last errors, newest first:\n\nFirst\nline\n\nSecond"))

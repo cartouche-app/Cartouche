@@ -366,6 +366,25 @@ final class CartoucheBridgeTests: XCTestCase {
         XCTAssertEqual(body, Data([1, 2, 3]))
         XCTAssertThrowsError(try CartoucheBridgeMessage.decode(CartoucheBridgeRequest.self, from: Data([0, 0, 1, 0])))
     }
+
+    func testInfoTellsTheMacsAddressesInTheTailnet() throws {
+        // With Tailscale on the Mac, its Cartouche Builder tells them; the
+        // iPhone tries them away from home (CartoucheStorageMac.swift).
+        var told = CartoucheBridgeResponse()
+        told.name = "MacBook Air"
+        told.tailscale = ["100.101.102.103", "fd7a:115c:a1e0::1"]
+        let data = try CartoucheBridgeMessage.encode(told, body: Data())
+        let (info, _) = try CartoucheBridgeMessage.decode(CartoucheBridgeResponse.self, from: data)
+        XCTAssertEqual(info.tailscale, ["100.101.102.103", "fd7a:115c:a1e0::1"])
+
+        // A Cartouche Builder older than this one says nothing of them.
+        var older = CartoucheBridgeResponse()
+        older.name = "MacBook Air"
+        let (before, _) = try CartoucheBridgeMessage.decode(CartoucheBridgeResponse.self,
+                                                            from: try CartoucheBridgeMessage.encode(older, body: Data()))
+        XCTAssertNil(before.tailscale)
+        XCTAssertEqual(before.name, "MacBook Air")
+    }
 }
 
 /// The devices the Mac kept, from its task.

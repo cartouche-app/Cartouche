@@ -32,25 +32,33 @@
       "en": "Needs about %1$@; a game may use %2$@ on this Mac.",
       "fr": "Nécessite environ %1$@ ; un jeu peut utiliser %2$@ sur ce Mac."
     },
+    "report.privacy": {
+      "en": "It leaves this Mac only when you send it, without passwords, server names or addresses or user names, even in what you write.",
+      "fr": "Il ne quitte ce Mac que si vous l’envoyez, sans mots de passe, noms ni adresses de serveurs ni noms d’utilisateur, même dans ce que vous écrivez."
+    },
+    "report.what.footer": {
+      "en": "Cartouche adds this Mac’s model and memory, the versions, and its last steps and errors.",
+      "fr": "Cartouche y ajoute le modèle et la mémoire de ce Mac, les versions, ses dernières étapes et erreurs."
+    },
     "running.paused": {
       "en": "Running in its own window.",
       "fr": "En cours, dans sa propre fenêtre."
     },
     "saves.fetched.kept": {
       "en": "The newest saves, of %1$@, came from your saves folder. This Mac’s are kept there as the copy of %2$@.",
-      "fr": "Les sauvegardes les plus récentes, du %1$@, sont arrivées de votre dossier des sauvegardes. Celles de ce Mac y sont gardées : copie du %2$@."
+      "fr": "Les sauvegardes les plus récentes, du %1$@, sont arrivées de votre dossier des sauvegardes. Celles de ce Mac y sont gardées : copie du %2$@."
     },
     "saves.footer": {
       "en": "Cartouche Builder keeps these saves in step with your saves folder: the newest come before the game starts and while it does not run, and go there after each game. When both changed, the newest win and the others stay as a copy. The %lld newest copies are kept.",
-      "fr": "Cartouche Builder synchronise ces sauvegardes avec votre dossier des sauvegardes : les plus récentes arrivent avant chaque lancement et tant que le jeu ne tourne pas, et y repartent après chaque partie. Si les deux ont changé, les plus récentes l’emportent et les autres restent en copie. Les %lld copies les plus récentes sont gardées."
+      "fr": "Cartouche Builder synchronise ces sauvegardes avec votre dossier des sauvegardes : les plus récentes arrivent avant chaque lancement et tant que le jeu ne tourne pas, et y repartent après chaque partie. Si les deux ont changé, les plus récentes l’emportent et les autres restent en copie. Les %lld copies les plus récentes sont gardées."
     },
     "saves.kept": {
       "en": "Newer saves are in your saves folder: they come to this Mac next. This Mac’s are kept there as the copy of %@.",
-      "fr": "Des sauvegardes plus récentes sont dans votre dossier des sauvegardes : elles arrivent ensuite sur ce Mac. Celles de ce Mac y sont gardées : copie du %@."
+      "fr": "Des sauvegardes plus récentes sont dans votre dossier des sauvegardes : elles arrivent ensuite sur ce Mac. Celles de ce Mac y sont gardées : copie du %@."
     },
     "saves.noFolder": {
       "en": "Keeping the saves of the games played on this Mac in step is off: turn it on in the Builder, under Games played on this Mac.",
-      "fr": "La synchronisation des sauvegardes des jeux joués sur ce Mac est désactivée : activez-la dans le Builder, sous « Jeux joués sur ce Mac »."
+      "fr": "La synchronisation des sauvegardes des jeux joués sur ce Mac est désactivée : activez-la dans le Builder, sous « Jeux joués sur ce Mac »."
     },
     "saves.putBack.footer": {
       "en": "Putting back a copy replaces this game’s saves on this Mac. Cartouche sends the current ones to your saves folder first, and the copy put back becomes the newest one there, which your other devices take too.",
@@ -58,11 +66,11 @@
     },
     "saves.putBack.message": {
       "en": "It replaces the game’s saves on this Mac. Cartouche sends them to your saves folder first, so you can come back to them.",
-      "fr": "Elle remplace les sauvegardes du jeu sur ce Mac. Cartouche les envoie d’abord dans votre dossier des sauvegardes : vous pourrez y revenir."
+      "fr": "Elle remplace les sauvegardes du jeu sur ce Mac. Cartouche les envoie d’abord dans votre dossier des sauvegardes : vous pourrez y revenir."
     },
     "saves.waiting.game": {
       "en": "These saves are waiting for your saves folder: they go as soon as it is there.",
-      "fr": "Ces sauvegardes attendent votre dossier des sauvegardes : elles partent dès qu’il est là."
+      "fr": "Ces sauvegardes attendent votre dossier des sauvegardes : elles partent dès qu’il est là."
     },
     "setting.language.iPhone": {
       "en": "Mac language",
@@ -136,9 +144,33 @@
       "en": "Not tried on this Mac yet",
       "fr": "Pas encore essayé sur ce Mac"
     },
+    "storage.drive.account.footer": {
+      "en": "Google asks you to let your client see, edit and delete the files of your Drive: Cartouche installs your games from there and keeps your saves there, in My Drive alone. Your sign-in stays in a file of Cartouche Builder’s folder that only your account can read.",
+      "fr": "Google vous demande de laisser votre client voir, modifier et supprimer les fichiers de votre Drive : Cartouche y installe vos jeux et y garde vos sauvegardes, dans Mon Drive seulement. Votre connexion reste dans un fichier du dossier de Cartouche Builder que seul votre compte peut lire."
+    },
+    "storage.drive.guide.intro": {
+      "en": "Once, for free, in Google Cloud, with the Google account of your Drive. Each button opens its step’s page in your browser.",
+      "fr": "Une fois, gratuitement, dans Google Cloud, avec le compte Google de votre Drive. Chaque bouton ouvre la page de son étape dans votre navigateur."
+    },
+    "storage.drive.weekly": {
+      "en": "While your project is in testing, Google ends the sign-in after 7 days: Cartouche then asks you to sign in again, in a few clicks, and your saves wait meanwhile. To sign in once for good, publish the app under Audience, when Google offers it.",
+      "fr": "Tant que votre projet est en test, Google met fin à la connexion au bout de 7 jours : Cartouche vous demande alors de vous reconnecter, en quelques clics, et vos sauvegardes attendent. Pour vous connecter une fois pour toutes, publiez l’app dans Audience, si Google le propose."
+    },
+    "storage.intro": {
+      "en": "Your games and saves on your own storage: a shared folder of your Mac, PC or NAS, an S3 bucket, an FTP or SFTP server, or your Google Drive.",
+      "fr": "Vos jeux et sauvegardes sur votre propre stockage : dossier partagé de votre Mac, PC ou NAS, bucket S3, serveur FTP ou SFTP, ou votre Google Drive."
+    },
     "storage.offline": {
       "en": "Cartouche cannot reach %@ from this Mac: mount its shared folder in the Finder, and the saves go as soon as it is there.",
-      "fr": "Cartouche ne peut pas joindre %@ depuis ce Mac : montez son dossier partagé dans le Finder, et les sauvegardes partiront dès qu’il sera là."
+      "fr": "Cartouche ne peut pas joindre %@ depuis ce Mac : montez son dossier partagé dans le Finder, et les sauvegardes partiront dès qu’il sera là."
+    },
+    "storage.offline.check": {
+      "en": "%@ does not answer on this network: check its address, and that this Mac is on its network or on your VPN.",
+      "fr": "%@ ne répond pas sur ce réseau : vérifiez son adresse, et que ce Mac est sur son réseau ou sur votre VPN."
+    },
+    "storage.s3.keys.footer": {
+      "en": "Keys of your own account, allowed to read and write this bucket. Cartouche signs each request with them, keeps the secret key in a file of Cartouche Builder’s folder that only your account can read, and never makes the bucket public.",
+      "fr": "Les clés de votre propre compte, autorisées à lire et écrire dans ce bucket. Cartouche signe chaque requête avec elles, garde la clé secrète dans un fichier du dossier de Cartouche Builder que seul votre compte peut lire, et ne rend jamais le bucket public."
     },
     "summary.credit.translated": {
       "en": "Description: IGDB.com, translated by the Mac",
@@ -146,19 +178,19 @@
     },
     "switchSave.import.footer": {
       "en": "The game on your Switch should not be newer than this Mac’s: a game may not read the save of a newer version.",
-      "fr": "Le jeu de votre Switch ne doit pas être plus récent que celui de ce Mac : un jeu ne lit pas toujours la sauvegarde d’une version plus récente."
+      "fr": "Le jeu de votre Switch ne doit pas être plus récent que celui de ce Mac : un jeu ne lit pas toujours la sauvegarde d’une version plus récente."
     },
     "switchSave.import.intro": {
       "en": "On your Switch, export this game’s save with JKSV or Checkpoint, then choose its folder or its ZIP here: on the microSD card in a card reader, on this Mac or on your NAS.",
-      "fr": "Sur votre Switch, exportez la sauvegarde de ce jeu avec JKSV ou Checkpoint, puis choisissez ici son dossier ou son ZIP : sur la carte microSD dans un lecteur de cartes, sur ce Mac ou sur votre NAS."
+      "fr": "Sur votre Switch, exportez la sauvegarde de ce jeu avec JKSV ou Checkpoint, puis choisissez ici son dossier ou son ZIP : sur la carte microSD dans un lecteur de cartes, sur ce Mac ou sur votre NAS."
     },
     "switchSave.import.message": {
       "en": "It replaces this game’s save on this Mac, which Cartouche keeps here: you can put it back.",
-      "fr": "Elle remplace la sauvegarde de ce jeu sur ce Mac, que Cartouche garde ici : vous pourrez la remettre."
+      "fr": "Elle remplace la sauvegarde de ce jeu sur ce Mac, que Cartouche garde ici : vous pourrez la remettre."
     },
     "switchSave.import.message.folder": {
       "en": "It replaces this game’s save on this Mac, which Cartouche keeps here: you can put it back. It then goes to your saves folder, as the newest copy.",
-      "fr": "Elle remplace la sauvegarde de ce jeu sur ce Mac, que Cartouche garde ici : vous pourrez la remettre. Elle part ensuite dans votre dossier des sauvegardes, comme la copie la plus récente."
+      "fr": "Elle remplace la sauvegarde de ce jeu sur ce Mac, que Cartouche garde ici : vous pourrez la remettre. Elle part ensuite dans votre dossier des sauvegardes, comme la copie la plus récente."
     },
     "switchSave.import.sending": {
       "en": "It goes to your saves folder too, for your other devices.",
@@ -166,11 +198,11 @@
     },
     "switchSave.problem.case": {
       "en": "Two of its files differ only by their capitals, %1$@ and %2$@: this Mac cannot keep both.",
-      "fr": "Deux de ses fichiers ne diffèrent que par leurs majuscules, %1$@ et %2$@ : ce Mac ne peut pas garder les deux."
+      "fr": "Deux de ses fichiers ne diffèrent que par leurs majuscules, %1$@ et %2$@ : ce Mac ne peut pas garder les deux."
     },
     "switchSave.problem.cloudPull": {
       "en": "nxnative did not finish bringing this game’s save from its cloud saves: start the game once, then come back.",
-      "fr": "nxnative n’a pas fini de ramener la sauvegarde de ce jeu depuis son cloud : lancez le jeu une fois, puis revenez."
+      "fr": "nxnative n’a pas fini de ramener la sauvegarde de ce jeu depuis son cloud : lancez le jeu une fois, puis revenez."
     },
     "switchSave.putBack.footer": {
       "en": "Cartouche kept this Mac’s save when the game from your Switch replaced it, on %@.",
@@ -187,6 +219,42 @@
     "switchSave.version": {
       "en": "Version on this Mac",
       "fr": "Version sur ce Mac"
+    },
+    "telemetry.erase": {
+      "en": "Erase what this Mac sent",
+      "fr": "Effacer les envois de ce Mac"
+    },
+    "telemetry.erase.failed": {
+      "en": "The server could not be reached. Try again when this Mac is online.",
+      "fr": "Le serveur est injoignable. Réessayez quand ce Mac est en ligne."
+    },
+    "telemetry.erase.message": {
+      "en": "The server deletes every report of this copy of Cartouche Builder, the console’s with them, which then sends under a new number.",
+      "fr": "Le serveur supprime tous les rapports de cette copie de Cartouche Builder, ceux de la console compris, qui envoie ensuite sous un nouveau numéro."
+    },
+    "telemetry.footer": {
+      "en": "After each game played on this Mac, Cartouche sends what nxnative measured while it ran, with the console’s and the Builder’s own events. They show which games run well on which Mac, and what to fix.",
+      "fr": "Après chaque partie sur ce Mac, Cartouche envoie ce que nxnative a mesuré pendant le jeu, avec les événements de la console et du Builder. Ils montrent quels jeux tournent bien sur quel Mac, et ce qu’il faut corriger."
+    },
+    "telemetry.noServer": {
+      "en": "This build of Cartouche Builder has no server to send to: it keeps nothing to send.",
+      "fr": "Cette version de Cartouche Builder n’a pas de serveur où envoyer : elle ne garde rien à envoyer."
+    },
+    "telemetry.what.device": {
+      "en": "This Mac’s model and macOS version, Cartouche Builder’s version and language, and a random number of this copy of Cartouche Builder.",
+      "fr": "Le modèle de ce Mac et sa version de macOS, la version et la langue de Cartouche Builder, et un numéro tiré au hasard pour cette copie de Cartouche Builder."
+    },
+    "telemetry.what.events": {
+      "en": "Each start of Cartouche Builder, the setup of the Mac’s tools, builds and their batches, games installed and played on this Mac and their saves kept in step, devices paired, imports, room freed, updates, changes to a game’s info, and errors, by their codes and the step they stopped at.",
+      "fr": "Chaque ouverture de Cartouche Builder, l’installation des outils du Mac, les constructions et leurs lots, les jeux installés et joués sur ce Mac et la synchronisation de leurs sauvegardes, les appareils jumelés, les imports, la place libérée, les mises à jour, les changements des infos d’un jeu et les erreurs, par leurs codes et l’étape où elles se sont arrêtées."
+    },
+    "telemetry.what.games": {
+      "en": "For each game session: frame rate, frame and GPU times, stutters and what caused them, shader preparation, memory, power, sound, how the game ended, and the game’s version and settings.",
+      "fr": "Pour chaque partie : images par seconde, temps d’image et du GPU, saccades et leurs causes, préparation des shaders, mémoire, énergie, son, la façon dont le jeu s’est arrêté, la version du jeu et ses réglages."
+    },
+    "telemetry.what.never": {
+      "en": "Never your Apple account, the names of this Mac and of your devices, your files and their paths, the addresses of your storage or the game’s log itself.",
+      "fr": "Jamais votre compte Apple, le nom de ce Mac ni de vos appareils, vos fichiers ni leurs chemins, les adresses de votre stockage ni le journal du jeu lui-même."
     }
   },
   "strings": {
@@ -208,11 +276,51 @@
     },
     "mac.saves.cloud": {
       "en": "Its saves go through nxnative’s own cloud saves, chosen in its settings: Cartouche Builder leaves them to it.",
-      "fr": "Ses sauvegardes passent par le cloud de nxnative, choisi dans ses réglages : Cartouche Builder les lui laisse."
+      "fr": "Ses sauvegardes passent par le cloud de nxnative, choisi dans ses réglages : Cartouche Builder les lui laisse."
     },
     "mac.settings.back": {
       "en": "Back to the game",
       "fr": "Retour au jeu"
+    },
+    "mac.storage.change": {
+      "en": "Change in Cartouche Builder",
+      "fr": "Changer dans Cartouche Builder"
+    },
+    "mac.storage.connections.footer": {
+      "en": "Only storage of your own, with your own account. The iPhones paired with this Mac have the same connections, passwords included, over the bridge’s encryption: they take the changes made here when Cartouche opens on them, and send theirs here as they make them. Cartouche Builder keeps the passwords and keys in a file of its folder that only your account can read, never in the Mac’s keychain.",
+      "fr": "Uniquement votre propre stockage, avec votre propre compte. Les iPhone associés à ce Mac ont les mêmes connexions, mots de passe compris, par le chiffrement du pont : ils prennent les changements faits ici quand Cartouche s’ouvre sur eux, et envoient ici les leurs dès qu’ils les font. Cartouche Builder garde les mots de passe et les clés dans un fichier de son dossier que seul votre compte peut lire, jamais dans le trousseau du Mac."
+    },
+    "mac.storage.connections.many": {
+      "en": "%lld connections",
+      "fr": "%lld connexions"
+    },
+    "mac.storage.connections.none": {
+      "en": "No connection",
+      "fr": "Aucune connexion"
+    },
+    "mac.storage.connections.one": {
+      "en": "1 connection",
+      "fr": "1 connexion"
+    },
+    "mac.storage.thisMac": {
+      "en": "This Mac",
+      "fr": "Ce Mac"
+    },
+    "mac.storage.thisMac.footer": {
+      "en": "Cartouche Builder’s folders, which your iPhones reach through it: its games folder keeps the games it builds, and its saves folder the saves of your games.",
+      "fr": "Les dossiers de Cartouche Builder, que vos iPhone atteignent à travers lui : son dossier des jeux garde les jeux qu’il construit, et son dossier des sauvegardes les sauvegardes de vos jeux."
+    },
+    "mac.system.back": {
+      "en": "Back to the console",
+      "fr": "Retour à la console"
+    },
+    "mac.system.builder": {
+      "en": "Open Cartouche Builder",
+      "fr": "Ouvrir Cartouche Builder"
+    },
+    "mac.system.builder.footer": {
+      "en": "Your games built for this Mac, their builds, this Mac’s folders and its iPhones: the Builder, in this window in place of the console.",
+      "fr": "Vos jeux construits pour ce Mac, leurs constructions, les dossiers de ce Mac et ses iPhone : le Builder, dans cette fenêtre à la place de la console."
     }
   }
 }

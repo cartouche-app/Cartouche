@@ -10,15 +10,23 @@
 //  name, nor a server's address, name or folder (CartoucheRedaction, from
 //  the player's settings).
 //
+//  The console on the Mac makes the same, with that Mac's and Cartouche
+//  Builder's state, in the Builder's folder (keep(in:)).
+//
 
 import SwiftUI
+#if canImport(UIKit)
 import UIKit
+#else
+import AppKit
+#endif
 #if canImport(SMBClient)
 import SMBClient
 #endif
 
 @MainActor
 enum CartoucheReports {
+    #if os(iOS)
     private static let folder = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         .appendingPathComponent("Cartouche", isDirectory: true)
 
@@ -33,6 +41,22 @@ enum CartoucheReports {
 
     private static let journalLines = CartoucheJournal(file: journalFile)
     private static let archive = CartoucheReportArchive(file: archiveFile)
+    #else
+    // The console's on the Mac, in memory until Cartouche Builder says
+    // where its folder is (keep(in:)), as the app starts: its gallery and
+    // its tests keep nothing.
+    private static var journalLines = CartoucheJournal(file: nil)
+    private static var archive = CartoucheReportArchive(file: nil)
+
+    /// Keeps the journal and the last reports in FOLDER from now on, in
+    /// Cartouche Builder's folder, or in memory alone for nil: once, as the
+    /// app starts, before the console notes anything.
+    static func keep(in folder: URL?) {
+        journalLines = CartoucheJournal(file: folder?.appendingPathComponent("Journal.txt"))
+        archive = CartoucheReportArchive(file: folder?.appendingPathComponent("Reports.json"))
+    }
+    #endif
+
     /// The last steps a report takes along.
     static let journalShown = 40
 
@@ -89,8 +113,18 @@ enum CartoucheReports {
 
     /// Puts the report's text on the pasteboard.
     static func copy(_ report: CartoucheReport) {
-        UIPasteboard.general.string = text(of: report)
+        copy(text: text(of: report))
         note("Report copied: " + report.title)
+    }
+
+    /// Puts TEXT on the pasteboard, as Copy the report does.
+    static func copy(text: String) {
+        #if canImport(UIKit)
+        UIPasteboard.general.string = text
+        #else
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        #endif
     }
 
     /// The last reports, the newest first, redacted.
@@ -128,12 +162,17 @@ enum CartoucheReports {
 
     private static var startNoted = false
 
-    /// Notes that Cartouche opened, once per launch.
+    /// Notes that Cartouche opened, once per launch; on the Mac, that the
+    /// console first showed.
     static func noteStart() {
         guard !startNoted else { return }
         startNoted = true
         let environment = environment()
+        #if os(iOS)
         note("Cartouche \(environment.cartouche) started, iOS \(environment.system), \(environment.device)")
+        #else
+        note("Console of Cartouche Builder \(environment.cartouche) shown, macOS \(environment.system), \(environment.device)")
+        #endif
     }
 
     /// Notes what Cartouche does with a game (CartoucheGameActions.work):
@@ -162,7 +201,7 @@ enum CartoucheReports {
     /// failed with ERROR. What the player typed in the form is taken out of
     /// reports first: it is not in their settings yet.
     static func connectionFailed(to server: CartoucheStorageServer, error: Error) -> CartoucheReport {
-        redactTyped(servers: [server.host], names: [server.name, server.share], accounts: [server.username])
+        redactTyped(servers: [server.host] + (server.tailnet ?? []), names: [server.name, server.share], accounts: [server.username])
         var facts: [CartoucheReport.Fact] = []
         if let port = server.port {
             facts.append(.init("Port", String(port)))
@@ -176,16 +215,17 @@ enum CartoucheReports {
             }
         }
         // A server that does not answer from here: its address may be wrong,
-        // or the iPhone away from its network.
+        // or the iPhone, or the Mac, away from its network.
         let message = (error as? CartoucheStorageOffline).map {
-            $0.isSignedOut || $0.isMac ? $0.localizedDescription : CartoucheText.storageOfflineCheck($0.name)
+            $0.isSignedOut || $0.isMac || $0.tailscale == .off ? $0.localizedDescription : CartoucheText.storageOfflineCheck($0.name)
         } ?? error.localizedDescription
         return make(.storage, CartoucheText.storageConnectFailed, message: message, error: error,
                     step: "Connecting to " + kindName(server.kind), stage: "connect", facts: facts)
     }
 
-    // MARK: What a report says of this iPhone
+    // MARK: What a report says of this iPhone, or of this Mac
 
+    #if os(iOS)
     /// This iPhone and this Cartouche, now.
     static func environment() -> CartoucheReport.Environment {
         let info = Bundle.main.infoDictionary ?? [:]
@@ -243,21 +283,64 @@ enum CartoucheReports {
         if let days = CartoucheSignature.current().daysLeft {
             facts.append(.init("Signature", days < 0 ? "expired" : "\(days) days left"))
         }
+        facts.append(storage())
+        // The tunnel up: LocalDevVPN, which the built-in SideStore needs,
+        // or Tailscale, which reaches the player's servers away from home;
+        // iOS keeps one at a time.
+        let tunnels = [CartoucheVPN.isConnected ? "LocalDevVPN" : nil, CartoucheTailscale.isConnected ? "Tailscale" : nil]
+            .compactMap { $0 }
+        facts.append(.init("VPN", tunnels.isEmpty ? "none" : tunnels.joined(separator: ", ")))
+        return CartoucheReport.Environment(cartouche: cartouche, basedOn: bases.isEmpty ? nil : bases.joined(separator: ", "),
+                                           system: system, device: device, language: language, facts: facts)
+    }
+    #else
+    /// This Mac and Cartouche Builder, whose window the console is in, now:
+    /// the Builder's version, macOS's, the Mac's model, chip and memory,
+    /// and what the iPhone's says of the player's storage. A Mac has no
+    /// signature, setup or memory limit of the iPhone's to say.
+    static func environment() -> CartoucheReport.Environment {
+        let info = Bundle.main.infoDictionary ?? [:]
+        let builder = info["CFBundleShortVersionString"] as? String ?? "?"
+        var system = CartoucheDevice.iOSVersion
+        if let build = systemBuild, !build.isEmpty {
+            system += " (" + build + ")"
+        }
+        let model = CartoucheDevice.modelIdentifier.isEmpty ? "?" : CartoucheDevice.modelIdentifier
+        let memoryGB = CartoucheDeviceMeasurement.memoryGB(physicalMemory: ProcessInfo.processInfo.physicalMemory)
+        let device = "\(model) (\(CartoucheDevice.chip), \(memoryGB) GB)"
+        let language = (Bundle.main.preferredLocalizations.first ?? "?") + " (" + (Locale.preferredLanguages.first ?? "?") + ")"
+        var facts: [CartoucheReport.Fact] = []
+        if let games = CartoucheDevice.gameMemoryMiB {
+            facts.append(.init("Memory for a game", "\(games) MiB, as Metal says"))
+        }
+        if let free = freeSpace {
+            facts.append(.init("Free on this Mac", CartoucheReport.bytes(free)))
+        }
+        facts.append(storage())
+        return CartoucheReport.Environment(cartouche: builder, basedOn: nil, system: system, device: device,
+                                           language: language, facts: facts, app: "Cartouche Builder", systemName: "macOS")
+    }
+    #endif
+
+    /// The places the player's storage gives, by their kind alone.
+    private static func storage() -> CartoucheReport.Fact {
         let settings = CartoucheStorageSettings.shared
         let places = CartoucheStorageRole.allCases.compactMap { role -> String? in
             guard let server = settings.location(role)?.server else { return nil }
             return "\(role.rawValue) on \(kindName(server.kind))" + (settings.isReadOnly(role) ? " (read-only)" : "")
         }
-        facts.append(.init("Storage", places.isEmpty ? "none" : places.joined(separator: ", ")))
-        return CartoucheReport.Environment(cartouche: cartouche, basedOn: bases.isEmpty ? nil : bases.joined(separator: ", "),
-                                           system: system, device: device, language: language, facts: facts)
+        return .init("Storage", places.isEmpty ? "none" : places.joined(separator: ", "))
     }
 
     /// "SMB", as a report names a kind of storage.
     static func kindName(_ kind: CartoucheStorageServer.Kind) -> String {
         switch kind {
         case .smb: return "SMB"
+        #if os(iOS)
         case .folder: return "a folder in Files"
+        #else
+        case .folder: return "a folder of the Mac's"
+        #endif
         case .s3: return "S3"
         case .ftp: return "FTP"
         case .sftp: return "SFTP"
@@ -279,7 +362,7 @@ enum CartoucheReports {
         .init(name, place(role), own: true)
     }
 
-    /// iOS's build, "25B72".
+    /// iOS's build, or macOS's, "25B72".
     private static let systemBuild: String? = {
         var size = 0
         guard sysctlbyname("kern.osversion", nil, &size, nil, 0) == 0, size > 0 else { return nil }
@@ -357,8 +440,10 @@ enum CartoucheReports {
 
     // MARK: What a report never holds
 
+    #if os(iOS)
     /// The team's name, which is the player's own on a free account.
     private static let teamName = CartoucheSignature.current().teamName
+    #endif
 
     /// What the player typed since Cartouche opened that their settings do
     /// not hold yet: a server they are adding, the Apple ID of a first
@@ -377,23 +462,31 @@ enum CartoucheReports {
     /// What the player's settings name: their servers' addresses, the names
     /// of their places, their shared folders and buckets, the paths of their
     /// folders, their user names and access key IDs, their Apple ID and their
-    /// team's name; and what they typed since Cartouche opened.
+    /// team's name, or on the Mac the names of its account; and what they
+    /// typed since Cartouche opened.
     static func redaction() -> CartoucheRedaction {
         let settings = CartoucheStorageSettings.shared
         var redaction = typed
         for server in settings.servers {
             redaction.servers.append(server.host)
+            redaction.servers.append(contentsOf: server.tailnet ?? [])
             redaction.names.append(server.name)
             redaction.names.append(server.share)
             redaction.accounts.append(server.username)
         }
         redaction.paths = CartoucheStorageRole.allCases.compactMap { settings.place($0)?.path }
+        #if os(iOS)
         if let appleID = CartoucheSetup.shared.appleID {
             redaction.accounts.append(appleID)
         }
         if let teamName {
             redaction.accounts.append(teamName)
         }
+        #else
+        // The Mac's account, which the paths of its folders and the
+        // system's messages name: "/Users/lou/…", "Lou Martin".
+        redaction.accounts += [NSUserName(), NSFullUserName()]
+        #endif
         return redaction
     }
 }

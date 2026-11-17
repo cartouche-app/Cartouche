@@ -181,6 +181,12 @@ final class AppModel: ObservableObject {
     func start() async {
         guard !started, !sample else { return }
         started = true
+        // The secrets of the console's connections, in the Builder's folder:
+        // before the console or a paired iPhone saves one.
+        ConsoleLink.keepConnections(in: home.connections)
+        // The console's journal and reports there too, before it notes a
+        // step.
+        ConsoleLink.keepReports(in: home.console)
         show(read: Engine.cachedLibrary(home), since: switches.mark)
         status = Engine.readStatus(home)
         queue = Engine.readQueue(home)
@@ -207,6 +213,9 @@ final class AppModel: ObservableObject {
         bridge.attach(model: self)
         ConsoleLink.start(self)
         startMacGames()
+        // The sessions of the games played since the app last read them,
+        // when the console shows its games already.
+        ConsoleLink.readSessions(playing: Set(macGames.playing.keys))
         let checked = library?.checked.flatMap(ISODate.parse)
         let stale = checked.map { Date().timeIntervalSince($0) > AppModel.checkInterval } ?? true
         // This read is the one the app's coming to the front would ask for.
@@ -1100,6 +1109,10 @@ final class AppModel: ObservableObject {
         }
         ConsoleLink.show(games: apps, kept: kept,
                          keptIn: gamesOnShare ? tr("the NAS", "le NAS") : tr("the games folder", "le dossier des jeux"))
+        // The sessions of the games it shows, played since the app last
+        // read them, from the Finder or the Dock too: the console reads the
+        // logs of its games only.
+        ConsoleLink.readSessions(playing: Set(macGames.playing.keys))
     }
 
     /// The saves folder of the bridge, the iPhone's, or none when the
@@ -1281,6 +1294,8 @@ final class AppModel: ObservableObject {
             telemetry.event("builder.played", game: run.app.titleID,
                             fields: BuilderTelemetry.playedFields(ended: ending.rawValue, exit: code, seconds: seconds,
                                                                   fromBuilder: run.fromBuilder, settings: run.settings))
+            // Its session, as nxnative's log measured it.
+            ConsoleLink.readSessions(playing: Set(macGames.playing.keys).subtracting([run.app.titleID.uppercased()]))
             // Started from here, the game filled the screen, Cartouche
             // behind it: Cartouche comes back as it ends, as a console does.
             if run.fromBuilder { comeBack() }

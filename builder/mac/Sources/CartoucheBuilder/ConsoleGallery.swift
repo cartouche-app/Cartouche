@@ -12,9 +12,10 @@
 //  console shows them; their apps are the gallery's own, empty but for
 //  their Info.plist and the list of settings nxnative gives a game on the
 //  Mac, in a temporary folder, their play time and their sizes made up, as
-//  are the saves of the sheet's game and their copies; the NAS's file is
-//  only a name, and nothing of the player's is read or kept: no data folder
-//  of nxnative's, no saves folder, no game's preferences, no play time, no
+//  are the saves of the sheet's game and their copies, and the logs of its
+//  last two sessions; the NAS's file is only a name, and nothing of the
+//  player's is read or kept: no data folder or log of nxnative's, no saves
+//  folder, no game's preferences, no play time, no journal or report, no
 //  question to Cartouche's server.
 //  Like ConsoleWindow.swift, this file imports the console and not
 //  CartoucheCore, whose names it shares.
@@ -128,21 +129,78 @@ enum ConsoleGallery {
     }
 
     /// The console with the gallery's games, speaking LANGUAGE ("fr" or "en"),
-    /// the saves of the sheet's game kept in step with a NAS's share.
-    static func prepare(language: String) {
-        show()
+    /// the saves of the sheet's game kept in step with a NAS's share: the
+    /// newest copy came, or, NEWER, it waits for the game's update, version
+    /// 1.2.0 of the game having written it and this Mac's app being 1.0.0.
+    static func prepare(language: String, newer: Bool = false) {
+        if let covers = makeGames() {
+            let deadline = Date().addingTimeInterval(60)
+            while !covers.loaded && Date() < deadline {
+                RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+            }
+        }
+        show(language: language, newer: newer)
+    }
+
+    /// As prepare(language:newer:), from a task of the main actor: the
+    /// layout check's. Spun inside such a task, prepare(language:newer:)'s
+    /// run loop does not run the covers' task, also the main actor's, which
+    /// waits for it to end: the layout check waited the whole minute (17
+    /// November).
+    static func prepareInTask(language: String, newer: Bool = false) async {
+        if let covers = makeGames() {
+            let deadline = Date().addingTimeInterval(60)
+            while !covers.loaded && Date() < deadline {
+                try? await Task.sleep(for: .milliseconds(50))
+            }
+        }
+        show(language: language, newer: newer)
+    }
+
+    /// The games and the NAS's in the console, speaking LANGUAGE, the
+    /// newest copy of the sheet's game's saves waiting for its update when
+    /// NEWER.
+    private static func show(language: String, newer: Bool) {
         let console = CartoucheMacConsole.shared
         let nas = language == "fr" ? "le NAS" : "the NAS"
         console.show(games: apps, kept: kept, keptIn: nas)
+        let saves = newer ? CartoucheMacGameSaves(lastSync: copies[0].date, newer: "1.2.0", game: "1.0.0")
+                          : CartoucheMacGameSaves(lastSync: copies[0].date, fetched: copies[1].date)
         console.showSaves(folder: CartoucheMacSavesFolder(name: nas, path: "/Volumes/Partage/Cartouche/Saves"),
-                          games: [sheetGame: CartoucheMacGameSaves(lastSync: copies[0].date, fetched: copies[1].date)])
+                          games: [sheetGame: saves])
+        // The Storage page: the NAS's folders under This Mac, and made-up
+        // connections, kept in memory only.
+        console.showFolders(games: URL(fileURLWithPath: "/Volumes/Jeux", isDirectory: true),
+                            saves: URL(fileURLWithPath: "/Volumes/Partage/Cartouche/Saves", isDirectory: true))
+        console.showStorageForGallery(language: language)
+        // System › Game measurements: on, reports sent, the last one a
+        // session of the sheet's game; a server, which the console never
+        // reaches itself.
+        CartoucheMacConsole.measuresServer = URL(string: "https://telemetry.example.invalid")
+        console.showMeasures(CartoucheMacMeasures(isOn: true, sent: 48, waiting: 0, lastSent: copies[0].date, lastReport: lastReport))
         console.speak(language)
     }
 
-    /// The games' apps, made once, shown by the console, and their covers
-    /// loaded, a minute at most.
-    private static func show() {
-        guard folder == nil else { return }
+    /// The last report System › Game measurements opens: a made-up session
+    /// of the sheet's game, as the console makes them.
+    static let lastReport = #"{"schema":1,"kind":"session","id":"6a1d9e3c-0000-4000-8000-000000000048","seq":48,"#
+        + #""install":"8c1f6c2e-7a2f-4e19-8c3d-2f6a9b0e1d7c","cartouche":"0.6.0","device":"Mac16,12","ios":"26.6","language":"fr","#
+        + #""session":"c4d1b8e0-7a2f-4e19-8c3d-2f6a9b0e1d7c","game":"0400C3F00006E000","gameVersion":"1.0.0","#
+        + #""nxnative":"6c3aeb3d70a1","nxnativeChanged":false,"settings":{"DM_FPS_TARGET":"60","DM_FULLSCREEN":"1"},"#
+        + #""minutes":42,"reader":4,"frames":151200,"targetFps":60,"fps":{"median":60,"low5":58},"#
+        + #""frameMs":{"p50":16.67,"p95":17.4,"p99":19.8},"gpuMs":{"p50":7.1,"p95":9.4},"droppedPercent":0.2,"#
+        + #""stutters":{"count":3,"perMinute":0.07,"shaders":2,"textures":0,"other":1},"memory":{"peakMiB":5210,"exactPeak":false},"#
+        + #""end":{"kind":"quit"}}"#
+
+    /// Whether the covers are loaded, as the task loading them says.
+    private final class Covers {
+        var loaded = false
+    }
+
+    /// The games' apps, made once, shown by the console, their covers
+    /// loading: nil when they were made before.
+    private static func makeGames() -> Covers? {
+        guard folder == nil else { return nil }
         let folder = FileManager.default.temporaryDirectory
             .appendingPathComponent("cartouche-gallery-\(UUID().uuidString)", isDirectory: true)
         self.folder = folder
@@ -172,6 +230,7 @@ enum ConsoleGallery {
         console.asksServer = false
         console.keepsChoicesInMemory = true
         console.dataFolder = folder.appendingPathComponent("nxnative", isDirectory: true)
+        console.logsFolder = writeLogs(in: folder.appendingPathComponent("Logs/nxnative", isDirectory: true))
         // The sheet's game's saves, a file of made-up bytes, for its saves
         // section and its Switch saves; their copies, without a saves folder.
         let saves = console.dataFolder.appendingPathComponent(sheetGame + "/save", isDirectory: true)
@@ -181,16 +240,44 @@ enum ConsoleGallery {
         console.showForGallery(playTimes: playTimes, sizes: sizes)
         console.show(games: apps, kept: kept)
 
-        final class Done { var value = false }
-        let done = Done()
+        let covers = Covers()
         Task { @MainActor in
             await console.loadCovers(everyGame: true)
-            done.value = true
+            covers.loaded = true
         }
-        let deadline = Date().addingTimeInterval(60)
-        while !done.value && Date() < deadline {
-            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        return covers
+    }
+
+    /// The logs of the sheet's game's last two sessions in FOLDER, made up
+    /// as nxnative's app for the Mac writes them, the one before ending in a
+    /// crash; FOLDER, for the console to read them.
+    private static func writeLogs(in folder: URL) -> URL {
+        let start = [
+            "launcher: Mario Kart World (\(sheetGame)), host /Applications/Mario Kart World.app/Contents/MacOS/dmhost",
+            "launcher: env DM_FPS_TARGET=60 (saved choice)",
+            "[dm] build: commit 6c3aeb3d70a1, shader chain 844bf1a5ea8f, profile mkw",
+            "[dm] [nvn-mtl] pipeline prepare: 4210 lines (3000 shaders, 4000 render pipelines, 210 compute pipelines) in 6.20 s",
+            "[dm] [nvn] timing up to frame 300: frame time p50 16.67 / p95 17.80 / max 40.00 ms (300 frames)",
+        ].map { $0 + "\n" }.joined()
+        let now = Date()
+        let sessions: [(name: String, end: String, start: TimeInterval, minutes: Double)] = [
+            (sheetGame + ".log", "launcher: the host exited with 0\n", -3 * 3_600 - 25 * 60, 25),
+            (sheetGame + ".prev.log", "[dm] CRASH sig=11 (SIGSEGV) at main+0x1a2b3c\nlauncher: the host stopped on signal 11\n",
+             -4 * 3_600, 22),
+        ]
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        for session in sessions {
+            let file = folder.appendingPathComponent(session.name)
+            let started = now.addingTimeInterval(session.start)
+            // A longer session writes more: lines of its frames.
+            let frames = String(repeating: "[dm] [nvn] on-screen up to frame 600: 300 frames, dropped 0 (discarded 0), p99 17.50 ms\n",
+                                count: Int(session.minutes * 40))
+            try? Data((start + frames + session.end).utf8).write(to: file)
+            try? FileManager.default.setAttributes([.creationDate: started,
+                                                    .modificationDate: started.addingTimeInterval(session.minutes * 60)],
+                                                   ofItemAtPath: file.path)
         }
+        return folder
     }
 
     /// The games' apps go once the pictures are taken.

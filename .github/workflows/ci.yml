@@ -128,3 +128,17 @@ jobs:
       # every text in both languages.
       - name: Tests
         run: python3 -m unittest discover -s site/tests -v
+
+  domain:
+    name: Domain
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # cartouche.cloud's records (domain/records.json): GitHub Pages' own
+      # addresses for the site, nothing in front of them, no wildcard, no
+      # mail sent as the domain; and the script that keeps them at Cloudflare,
+      # against a stand-in for its API (the Domain workflow applies them).
+      - name: Tests
+        run: python3 -m unittest discover -s domain/tests -v

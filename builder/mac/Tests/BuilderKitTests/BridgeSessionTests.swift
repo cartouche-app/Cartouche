@@ -62,6 +62,28 @@ final class BridgeSessionTests: XCTestCase {
         XCTAssertEqual(list.items?.first?.folder, false)
     }
 
+    func testInfoTellsTheMacsAddressesInTheTailnet() {
+        // An iPhone away from home reaches the Mac there, with Tailscale on
+        // both (CartoucheStorageMac.swift).
+        let withTailscale = BridgeServer(devices: BridgeDevices(url: folder.appendingPathComponent("tailnet.json")), name: "Mac de test",
+                                         tailnetAddresses: { ["100.101.102.103", "fd7a:115c:a1e0::1"] })
+        withTailscale.roots = BridgeRoots(games: games, saves: saves)
+        withExtendedLifetime(withTailscale) {
+            let (info, _) = Session(server: withTailscale, peer: "iphone").handle(CartoucheBridgeRequest(.info), body: Data())
+            XCTAssertNil(info.error)
+            XCTAssertEqual(info.tailscale, ["100.101.102.103", "fd7a:115c:a1e0::1"])
+        }
+
+        let without = BridgeServer(devices: BridgeDevices(url: folder.appendingPathComponent("none.json")), name: "Mac de test",
+                                   tailnetAddresses: { [] })
+        without.roots = BridgeRoots(games: games, saves: saves)
+        withExtendedLifetime(without) {
+            let (info, _) = Session(server: without, peer: "iphone").handle(CartoucheBridgeRequest(.info), body: Data())
+            XCTAssertNil(info.error)
+            XCTAssertNil(info.tailscale, "without Tailscale, none: the iPhone keeps those it knew")
+        }
+    }
+
     func testAFileIsReadAPieceAtATime() {
         let path = "Games/Mario Kart World [0400C3F00006E000].ipa"
         let (stat, _) = ask(CartoucheBridgeRequest(.stat, path: path))

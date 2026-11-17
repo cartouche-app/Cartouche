@@ -74,14 +74,16 @@ final class MacSavesTests: XCTestCase {
     }
 
     /// A copy of the saves in DOCUMENTS, made as Cartouche makes one on the
-    /// iPhone, named NAME in the game's folder of SAVES.
+    /// iPhone, named NAME in the game's folder of SAVES, by VERSION of the
+    /// game.
     @discardableResult
-    private func iPhoneCopy(of documents: URL, named name: String, folder: String? = nil, in saves: URL? = nil) async throws -> URL {
+    private func iPhoneCopy(of documents: URL, named name: String, folder: String? = nil, in saves: URL? = nil,
+                            version: String? = nil) async throws -> URL {
         let gameFolder = (saves ?? self.saves).appendingPathComponent(folder ?? MacSavesFolder.folderName(game), isDirectory: true)
         try FileManager.default.createDirectory(at: gameFolder, withIntermediateDirectories: true)
         let url = gameFolder.appendingPathComponent(name)
         let sink = try CartoucheFileSink(url)
-        try await CartoucheSaveSync.writeZip(ofSavesIn: documents, to: sink)
+        try await CartoucheSaveSync.writeZip(ofSavesIn: documents, to: sink, gameVersion: version)
         try sink.close()
         return url
     }
@@ -94,6 +96,11 @@ final class MacSavesTests: XCTestCase {
         let into = root.appendingPathComponent("unpacked-\(UUID().uuidString)", isDirectory: true)
         try await CartoucheZip.extract(source, entries: entries, into: into)
         return try read(into)
+    }
+
+    /// The version of the game a copy names.
+    private func version(of copy: URL) async throws -> String? {
+        CartoucheSaveSync.gameVersion(inComment: try await CartoucheZip.archive(of: CartoucheFileSource(copy)).comment)
     }
 
     private func names(in folder: URL) -> [String] {
@@ -754,6 +761,138 @@ final class MacSavesTests: XCTestCase {
         let first = await MacSaveKeeper(store: store).sync(game, in: other, when: .round, now: t0.addingTimeInterval(120))
         XCTAssertEqual(first?.step, "send")
         XCTAssertEqual(store.record(game.titleID).base?.place, "mac|" + root.appendingPathComponent("Other Saves").standardizedFileURL.path)
+    }
+
+    // MARK: A newer version of the game
+
+    func testACopyOfANewerVersionOfTheGameWaitsForItsUpdateOnTheMac() async throws {
+        let folder = try makeFolder()
+        let older = MacSaveGame(titleID: game.titleID, name: game.name, version: "1.1.0")
+        // The iPhone's game was updated to 1.2.0, and played there.
+        try write(["slot0.bin": "iPhone 1.2"], in: iPhone, at: t0)
+        let newest = CartoucheSaveSync.fileName(t0)
+        try await iPhoneCopy(of: iPhone, named: newest, version: "1.2.0")
+
+        // The Mac's app, built from 1.1.0, never takes it: not before a game,
+        let waits = try await folder.sync(older, base: nil, fetching: true)
+        XCTAssertEqual(waits.step, .none)
+        XCTAssertEqual(waits.newer, "1.2.0")
+        XCTAssertFalse(waits.moved)
+        XCTAssertEqual(try read(mac), [:])
+        // nor over the saves it plays meanwhile, which go under it as a copy
+        // of their own, naming their version: the newest stays the iPhone's.
+        try write(["slot0.bin": "mac 1.1"], in: mac, at: t0.addingTimeInterval(600))
+        let kept = try await folder.sync(older, base: waits.base, fetching: false)
+        XCTAssertEqual(kept.step, .keep)
+        XCTAssertEqual(kept.newer, "1.2.0")
+        let keptName = try XCTUnwrap(kept.kept)
+        XCTAssertEqual(keptName, CartoucheSaveSync.fileName(t0.addingTimeInterval(-1)))
+        XCTAssertEqual(names(in: gameFolder), [keptName, newest])
+        XCTAssertEqual(try read(mac), ["save/slot0.bin": "mac 1.1"])
+        let keptCopy = gameFolder.appendingPathComponent(keptName)
+        let keptSaves = try await unpack(keptCopy)
+        XCTAssertEqual(keptSaves, ["save/slot0.bin": "mac 1.1"])
+        let keptVersion = try await version(of: keptCopy)
+        XCTAssertEqual(keptVersion, "1.1.0")
+        let base = try XCTUnwrap(kept.base)
+        XCTAssertEqual(base.gameVersion, "1.1.0")
+        for fetching in [true, false] {
+            let again = try await folder.sync(older, base: base, fetching: fetching)
+            XCTAssertEqual(again.step, .none)
+            XCTAssertEqual(again.newer, fetching ? "1.2.0" : nil, "after a game, nothing would come")
+        }
+        // nor when the player puts it back from the console.
+        do {
+            _ = try await folder.putBack(newest, of: older, base: base)
+            XCTFail("a copy of a newer version of the game was put back")
+        } catch {
+            XCTAssertEqual(error as? MacSavesError, .newerGame(copy: "1.2.0", game: "1.1.0"))
+        }
+        XCTAssertEqual(try read(mac), ["save/slot0.bin": "mac 1.1"])
+        XCTAssertEqual(names(in: gameFolder), [keptName, newest])
+
+        // Built again from 1.2.0: the newest copy comes before its next game.
+        let updated = MacSaveGame(titleID: game.titleID, name: game.name, version: "1.2.0")
+        let comes = try await folder.sync(updated, base: base, fetching: true)
+        XCTAssertEqual(comes.step, .fetch)
+        XCTAssertNil(comes.newer)
+        XCTAssertEqual(comes.fetched, newest)
+        XCTAssertEqual(try read(mac), ["save/slot0.bin": "iPhone 1.2"])
+        XCTAssertEqual(comes.base?.gameVersion, "1.2.0")
+        // Its next copy names its version.
+        try write(["slot0.bin": "mac 1.2"], in: mac, at: t0.addingTimeInterval(1_200))
+        let sent = try await folder.sync(updated, base: comes.base, fetching: false)
+        XCTAssertEqual(sent.step, .send)
+        let sentVersion = try await version(of: gameFolder.appendingPathComponent(try XCTUnwrap(sent.sent)))
+        XCTAssertEqual(sentVersion, "1.2.0")
+    }
+
+    func testACopyThatNamesNoVersionOrAnOlderOneComesAsBefore() async throws {
+        let folder = try makeFolder()
+        // An older Cartouche's copy names none.
+        try write(["slot0.bin": "iPhone 1"], in: iPhone, at: t0)
+        try await iPhoneCopy(of: iPhone, named: CartoucheSaveSync.fileName(t0))
+        let game = MacSaveGame(titleID: self.game.titleID, name: self.game.name, version: "1.1.0")
+        let first = try await folder.sync(game, base: nil, fetching: true)
+        XCTAssertEqual(first.step, .fetch)
+        XCTAssertNil(first.newer)
+        XCTAssertEqual(try read(mac), ["save/slot0.bin": "iPhone 1"])
+        // One of an older version comes to a newer game too.
+        try write(["slot0.bin": "iPhone 2"], in: iPhone, at: t0.addingTimeInterval(600))
+        try await iPhoneCopy(of: iPhone, named: CartoucheSaveSync.fileName(t0.addingTimeInterval(600)), version: "1.0.0")
+        let second = try await folder.sync(game, base: first.base, fetching: true)
+        XCTAssertEqual(second.step, .fetch)
+        XCTAssertNil(second.newer)
+        XCTAssertEqual(try read(mac), ["save/slot0.bin": "iPhone 2"])
+        // An app that says no version holds nothing back.
+        try write(["slot0.bin": "iPhone 3"], in: iPhone, at: t0.addingTimeInterval(1_200))
+        try await iPhoneCopy(of: iPhone, named: CartoucheSaveSync.fileName(t0.addingTimeInterval(1_200)), version: "9.0.0")
+        let third = try await folder.sync(self.game, base: second.base, fetching: true)
+        XCTAssertEqual(third.step, .fetch)
+        XCTAssertEqual(try read(mac), ["save/slot0.bin": "iPhone 3"])
+    }
+
+    func testTheKeeperSaysOnceThatTheNewestCopyWaitsForTheGamesUpdate() async throws {
+        let folder = try makeFolder()
+        let store = MacSaveStore(url: root.appendingPathComponent("saves.json"))
+        let keeper = MacSaveKeeper(store: store)
+        let older = MacSaveGame(titleID: game.titleID, name: game.name, version: "1.1.0")
+        try write(["slot0.bin": "iPhone 1.2"], in: iPhone, at: t0)
+        try await iPhoneCopy(of: iPhone, named: CartoucheSaveSync.fileName(t0), version: "1.2.0")
+        let held = await keeper.sync(older, in: folder, when: .before, now: t0.addingTimeInterval(60))
+        XCTAssertEqual(held, MacSaveEvent(at: t0.addingTimeInterval(60), when: .before, step: MacSaveEvent.heldBack,
+                                          newer: "1.2.0", game: "1.1.0"))
+        XCTAssertEqual(store.record(game.titleID).last, held)
+        // Still waiting: told once, the time it started to kept.
+        let again = await keeper.sync(older, in: folder, when: .round, now: t0.addingTimeInterval(120))
+        XCTAssertNil(again)
+        XCTAssertEqual(store.record(game.titleID).last, held)
+        let checked = await keeper.lastChecked(game.titleID)
+        XCTAssertEqual(checked, t0.addingTimeInterval(120))
+        // The Mac's saves kept under it after a game: that is news.
+        try write(["slot0.bin": "mac 1.1"], in: mac, at: t0.addingTimeInterval(600))
+        let kept = await keeper.sync(older, in: folder, when: .after, now: t0.addingTimeInterval(660))
+        XCTAssertEqual(kept?.step, MacSaveEvent.heldBack)
+        XCTAssertEqual(kept?.kept, CartoucheSaveSync.fileName(t0.addingTimeInterval(-1)))
+        XCTAssertEqual(kept?.newer, "1.2.0")
+        XCTAssertEqual(kept?.keptDate, t0.addingTimeInterval(-1))
+        XCTAssertEqual(store.record(game.titleID).base?.copy, kept?.kept)
+        // Read again from its file, as at the Builder's next start.
+        XCTAssertEqual(MacSaveStore(url: root.appendingPathComponent("saves.json")).record(game.titleID).last, kept)
+        // Once the game is updated, it comes.
+        let updated = MacSaveGame(titleID: game.titleID, name: game.name, version: "1.2.0")
+        let fetched = await keeper.sync(updated, in: folder, when: .before, now: t0.addingTimeInterval(720))
+        XCTAssertEqual(fetched?.step, "fetch")
+        XCTAssertNil(fetched?.newer)
+        XCTAssertEqual(try read(mac), ["save/slot0.bin": "iPhone 1.2"])
+        // Put back to an app of 1.1.0, it is refused, and leaves the record.
+        do {
+            _ = try await keeper.putBack(CartoucheSaveSync.fileName(t0), of: older, in: folder)
+            XCTFail("a copy of a newer version of the game was put back")
+        } catch {
+            XCTAssertEqual(error as? MacSavesError, .newerGame(copy: "1.2.0", game: "1.1.0"))
+        }
+        XCTAssertEqual(store.record(game.titleID).last, fetched)
     }
 
     // MARK: Finding the folder on a share

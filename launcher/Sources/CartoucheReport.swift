@@ -37,7 +37,8 @@ struct CartoucheReport: Codable, Equatable, Sendable {
         }
     }
 
-    /// This iPhone and this Cartouche, when the report was made.
+    /// This iPhone and this Cartouche, or on a Mac that Mac and Cartouche
+    /// Builder, whose window the console is in, when the report was made.
     struct Environment: Codable, Equatable, Sendable {
         /// "0.9.0 (50e8079)": the version and the commit it was built from.
         var cartouche: String
@@ -54,6 +55,17 @@ struct CartoucheReport: Codable, Equatable, Sendable {
         /// (CartoucheReports.environment()), so that a report takes only
         /// what is shaped like an address out of them (redacted(by:)).
         var facts: [Fact]
+        /// The app the report comes from, whose version CARTOUCHE is, when
+        /// it is not Cartouche: "Cartouche Builder", whose window the
+        /// console is in on a Mac.
+        var app: String? = nil
+        /// SYSTEM's name, when it is not iOS: "macOS".
+        var systemName: String? = nil
+
+        /// "Cartouche", or the app the report comes from.
+        var appShown: String { app ?? "Cartouche" }
+        /// "iOS", or the system the report comes from.
+        var systemShown: String { systemName ?? "iOS" }
     }
 
     /// Where in Cartouche something went wrong, as a key that stays the
@@ -156,8 +168,8 @@ extension CartoucheReport {
         }
         lines += report.facts.map { Self.line($0.name, $0.value) }
         let environment = report.environment
-        lines.append(Self.line("Cartouche", [environment.cartouche, environment.basedOn].compactMap { $0 }.joined(separator: ", ")))
-        lines.append(Self.line("iOS", environment.system))
+        lines.append(Self.line(environment.appShown, [environment.cartouche, environment.basedOn].compactMap { $0 }.joined(separator: ", ")))
+        lines.append(Self.line(environment.systemShown, environment.system))
         lines.append(Self.line("Device", environment.device))
         lines.append(Self.line("Language", environment.language))
         lines += environment.facts.map { Self.line($0.name, $0.value) }
@@ -317,6 +329,7 @@ struct CartoucheRedaction: Equatable, Sendable {
             }
             // Any other address.
             text = Self.replace(Self.localHost, in: text, with: Self.server)
+            text = Self.replace(Self.tailnetName, in: text, with: Self.server)
             text = Self.replace(Self.ipv4, in: text, with: Self.address)
             return Self.replaceIPv6(in: text)
         }
@@ -359,6 +372,11 @@ struct CartoucheRedaction: Equatable, Sendable {
         #"(?:/private)?/var/(?:mobile/Containers|containers)/(?:Data|Shared|Bundle)/(?:Application|AppGroup)/[0-9A-Fa-f\-]{36}"#)
     /// A Bonjour name: "nas.local", "MacBook-Air.local".
     private static let localHost = regex(#"(?<![A-Za-z0-9\-.])[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.local(?![A-Za-z0-9\-])"#)
+    /// A device's name in the player's tailnet, as Tailscale's MagicDNS
+    /// answers it: "macbook-air.tail1234.ts.net", and under
+    /// beta.tailscale.net for a tailnet made before 2022.
+    private static let tailnetName = regex(
+        #"(?<![A-Za-z0-9\-.])[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.(?:ts\.net|beta\.tailscale\.net)(?![A-Za-z0-9\-])"#, ignoringCase: true)
     private static let ipv4 = regex(#"(?<![0-9.])(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?![0-9]|\.[0-9])"#)
     /// Groups of hexadecimal digits between colons, as an IPv6 address
     /// writes them: kept only with "::" or seven colons, so that a time of

@@ -12,12 +12,21 @@
 //
 //  The Mac is known by its ID in Cartouche Builder. Cartouche first tries
 //  the address it last reached the Mac at, which also answers through the
-//  player's VPN, where Bonjour does not go; then it looks for that ID on
-//  the network, so a new address from the router changes nothing.
+//  player's VPN, where Bonjour does not go, and, while Tailscale is on
+//  here, the Mac's addresses in the player's tailnet, which its Cartouche
+//  Builder tells (CartoucheTailscale.swift): away from home, Tailscale
+//  reaches it. Then it looks for that ID on the network, so a new address
+//  from the router changes nothing. A Mac Bonjour cannot see pairs by its
+//  Tailscale name or address, typed on the Storage page.
 //
 //  The paired key is the server's secret in the keychain, in base64. The
 //  iPhone's ID for the Mac is the server's own UUID: two Macs cannot tell
 //  they serve the same iPhone.
+//
+//  The player's connections to their storage go to the Mac, and its own
+//  come back, so that both have the same (CartoucheConnectionsExchange):
+//  after a pairing, after each change here, and when Cartouche comes to
+//  the front.
 //
 
 import Combine
@@ -139,11 +148,20 @@ final class CartoucheMacBrowser: ObservableObject {
 // MARK: Signing in
 
 enum CartoucheMacStorage {
-    /// How long the address the Mac was last reached at has to answer, in
-    /// seconds, before Cartouche looks for the Mac on the network.
+    /// How long the address the Mac was last reached at, and its addresses
+    /// in the tailnet, have to answer, in seconds, before Cartouche looks
+    /// for the Mac on the network.
     static let lastAddressPatience: TimeInterval = 3
     /// How long Bonjour has to find the Mac, in seconds.
     static let lookupPatience: TimeInterval = 4
+    /// How long the address the Mac was last reached at is tried alone, in
+    /// seconds, before its addresses in the tailnet are tried beside it: at
+    /// home, where both answer, the Wi-Fi's goes first.
+    static let tailnetHeadStart: TimeInterval = 0.3
+    /// How often Cartouche asks a Mac its addresses in the tailnet, on the
+    /// first connection after, in seconds: Tailscale gives a device the same
+    /// ones for good.
+    static let tailnetAskSpacing: TimeInterval = 3_600
 
     /// The iPhone's ID for the Mac of SERVER.
     static func deviceID(of server: CartoucheStorageServer) -> String {
@@ -156,33 +174,43 @@ enum CartoucheMacStorage {
         return key
     }
 
-    /// Where SERVER's Mac was last reached; nil before it was.
-    static func lastEndpoint(of server: CartoucheStorageServer) -> NWEndpoint? {
-        let host = server.host.trimmingCharacters(in: .whitespaces)
-        guard !host.isEmpty, let port = NWEndpoint.Port(rawValue: UInt16(clamping: server.port ?? Int(CartoucheBridge.port))) else {
-            return nil
-        }
-        return .hostPort(host: NWEndpoint.Host(host), port: port)
+    /// The addresses Cartouche tries for SERVER's Mac before it looks for
+    /// it with Bonjour, in order: where it was last reached, then, while
+    /// Tailscale is on here (TAILSCALE), its addresses in the tailnet; all
+    /// on the port it was last reached on, the Mac's one for all its
+    /// networks. None before it was reached.
+    static func addresses(of server: CartoucheStorageServer, tailscale: Bool) -> [(host: String, port: Int)] {
+        let port = server.port ?? Int(CartoucheBridge.port)
+        guard (1 ... 65535).contains(port) else { return [] }
+        return CartoucheTailscale.addressesToTry(host: server.host, tailnet: server.tailnet ?? [], tailscaleOn: tailscale)
+            .map { ($0, port) }
     }
 
-    /// Signs in to the Mac of SERVER with the paired key, SECRET.
-    static func connect(_ server: CartoucheStorageServer, secret: String,
-                        settings: CartoucheStorageSettings) async throws -> CartoucheRemote {
+    /// Signs in to the Mac of SERVER with the paired key, SECRET. TAILSCALE:
+    /// whether Tailscale is on here, and the Mac's addresses in the tailnet
+    /// are tried.
+    static func connect(_ server: CartoucheStorageServer, secret: String, settings: CartoucheStorageSettings,
+                        tailscale: Bool = CartoucheTailscale.isConnected) async throws -> CartoucheRemote {
         guard let key = pairedKey(secret), let macID = server.macID, !macID.isEmpty else {
             throw explained(CartoucheBridgeError(.notPaired), mac: server.name, path: "")
         }
         let device = deviceID(of: server)
-        // Where it was last: the Mac rarely moves, and Bonjour does not
-        // cross a VPN.
-        if let endpoint = lastEndpoint(of: server) {
+        // Where it was last, and where Tailscale reaches it: the Mac rarely
+        // moves, and Bonjour crosses neither a VPN nor Tailscale.
+        let endpoints = addresses(of: server, tailscale: tailscale).compactMap { address -> NWEndpoint? in
+            NWEndpoint.Port(rawValue: UInt16(address.port)).map { .hostPort(host: NWEndpoint.Host(address.host), port: $0) }
+        }
+        if !endpoints.isEmpty {
             do {
-                let client = try await CartoucheBridgeClient.connect(endpoint, device: device, key: key, mac: macID,
-                                                                    timeout: lastAddressPatience)
+                let client = try await CartoucheBridgeClient.connect(firstOf: endpoints, device: device, key: key, mac: macID,
+                                                                    headStart: tailnetHeadStart, timeout: lastAddressPatience)
                 return await remember(client, server: server, settings: settings)
             } catch let error as CartoucheBridgeError where [.notPaired, .protocolError].contains(error.kind) {
                 // The Mac itself answered: it forgot this iPhone, or speaks
                 // another version of the bridge.
                 throw explained(error, mac: server.name, path: "")
+            } catch is CancellationError {
+                throw CancellationError()
             } catch {
                 // Not there any more, or another Mac in its place.
             }
@@ -190,7 +218,7 @@ enum CartoucheMacStorage {
         guard let endpoint = await CartoucheMacBrowser.find(macID, timeout: lookupPatience) else {
             // Away from home, or Cartouche Builder closed: offline, which
             // makes no report (CartoucheStorageReach).
-            throw CartoucheStorageOffline(server)
+            throw CartoucheStorageOffline(server, tailscale: tailscale)
         }
         do {
             let client = try await CartoucheBridgeClient.connect(endpoint, device: device, key: key, mac: macID)
@@ -200,29 +228,65 @@ enum CartoucheMacStorage {
         }
     }
 
-    /// Whether the Mac of SERVER answers from here, at its last address or
+    /// Whether the Mac of SERVER answers from here, at its last address,
+    /// at one of the tailnet while Tailscale is on here (TAILSCALE), or
     /// found by Bonjour, without signing in: how Cartouche tries it again
     /// once it was offline.
-    static func answers(_ server: CartoucheStorageServer) async -> Bool {
-        if let address = CartoucheStorageReach.address(of: server),
-           await CartoucheStorageReach.knock(host: address.host, port: address.port,
-                                             patience: UInt64(lastAddressPatience * 1_000_000_000)) {
-            return true
+    static func answers(_ server: CartoucheStorageServer, tailscale: Bool = CartoucheTailscale.isConnected) async -> Bool {
+        let tried = Self.addresses(of: server, tailscale: tailscale)
+        if !tried.isEmpty {
+            let patience = UInt64(lastAddressPatience * 1_000_000_000)
+            let answered = await withTaskGroup(of: Bool.self) { group -> Bool in
+                for address in tried {
+                    group.addTask {
+                        await CartoucheStorageReach.knock(host: address.host, port: address.port, patience: patience)
+                    }
+                }
+                for await answered in group where answered {
+                    // The others give up at once.
+                    group.cancelAll()
+                    return true
+                }
+                return false
+            }
+            if answered { return true }
         }
         guard let macID = server.macID, !macID.isEmpty else { return false }
         return await CartoucheMacBrowser.find(macID, timeout: lookupPatience) != nil
     }
 
-    /// CLIENT as SERVER's remote, keeping the address it reached the Mac at
-    /// for the next time.
+    /// When Cartouche last asked each Mac its addresses in the tailnet, by
+    /// the server's ID, under its lock.
+    private static let askedLock = NSLock()
+    nonisolated(unsafe) private static var asked: [UUID: Date] = [:]
+
+    /// Whether to ask the Mac of SERVER its addresses in the tailnet now:
+    /// on the first connection since Cartouche started, then once in a
+    /// while (tailnetAskSpacing).
+    private static func asksTailnet(of server: UUID, at now: Date) -> Bool {
+        askedLock.lock()
+        defer { askedLock.unlock() }
+        if let last = asked[server], last <= now, now.timeIntervalSince(last) < tailnetAskSpacing { return false }
+        asked[server] = now
+        return true
+    }
+
+    /// CLIENT as SERVER's remote, keeping where it reached the Mac for the
+    /// next time, and the Mac's addresses in the tailnet, as its Cartouche
+    /// Builder tells them now and then.
     private static func remember(_ client: CartoucheBridgeClient, server: CartoucheStorageServer,
                                  settings: CartoucheStorageSettings) async -> CartoucheRemote {
-        if let address = usable(client.address), address != server.host || client.port != server.port {
+        // An older Cartouche Builder says nothing of them.
+        let told = asksTailnet(of: server.id, at: Date()) ? (try? await client.info())?.tailscale : nil
+        let known = CartoucheMacAddresses(host: server.host, port: server.port, tailnet: server.tailnet ?? [])
+        let now = known.reached(usable(client.address), port: client.port, told: told)
+        if now != known {
             await MainActor.run {
                 // As the player has it now, unless they removed it meanwhile.
                 guard var moved = settings.server(server.id) else { return }
-                moved.host = address
-                moved.port = client.port
+                moved.host = now.host
+                moved.port = now.port
+                moved.tailnet = now.tailnet.isEmpty ? nil : now.tailnet
                 settings.save(moved, secret: nil)
             }
         }
@@ -265,8 +329,13 @@ enum CartoucheMacStorage {
             if made.name.trimmingCharacters(in: .whitespaces).isEmpty {
                 made.name = paired.name.isEmpty ? name : paired.name
             }
-            made.host = usable(connection.remoteAddress) ?? ""
-            made.port = connection.remotePort
+            // Through Tailscale, the Mac's address in the tailnet, kept
+            // beside the one of the player's network.
+            let reached = CartoucheMacAddresses(host: made.host, port: made.port, tailnet: made.tailnet ?? [])
+                .reached(usable(connection.remoteAddress), port: connection.remotePort, told: nil)
+            made.host = reached.host
+            made.port = reached.port
+            made.tailnet = reached.tailnet.isEmpty ? nil : reached.tailnet
             return (made, paired.key.base64EncodedString())
         } catch let error as CartoucheBridgeError {
             if Task.isCancelled { throw CancellationError() }
@@ -304,6 +373,114 @@ enum CartoucheMacStorage {
             return try await work()
         } catch let error as CartoucheBridgeError {
             throw explained(error, mac: mac, path: path)
+        }
+    }
+}
+
+// MARK: The connections the Mac takes
+
+/// The player's connections to their storage, given to each paired Mac
+/// with their secrets, and the Mac's taken, so that both have the same
+/// (CartoucheConnections.swift): after a pairing, a moment after a server
+/// that goes over the bridge was saved or removed here, and when Cartouche
+/// comes to the front, at most every ten minutes then. A Mac away, closed
+/// or too old to take them is asked again the next time; none of it makes
+/// a report.
+@MainActor
+final class CartoucheConnectionsExchange: ObservableObject {
+    static let shared = CartoucheConnectionsExchange()
+
+    /// When each Mac last took the connections, by its server's ID.
+    @Published private(set) var last: [UUID: Date] = [:]
+    /// How long Cartouche coming to the front leaves them, after they last
+    /// went to every Mac, in seconds.
+    static let interval: TimeInterval = 10 * 60
+
+    private let settings: CartoucheStorageSettings
+    private var watching: AnyCancellable?
+    private var running: Task<Void, Never>?
+    private var again = false
+
+    init(settings: CartoucheStorageSettings = .shared) {
+        self.settings = settings
+    }
+
+    /// From now on, a moment after each change here.
+    func start() {
+        guard watching == nil else { return }
+        watching = settings.connectionsChanged
+            .debounce(for: .seconds(2), scheduler: DispatchQueue.main)
+            .sink { [weak self] in self?.exchange() }
+    }
+
+    /// Cartouche came to the front: unless every Mac took them within the
+    /// interval.
+    func cameForward(now: Date = Date()) {
+        start()
+        let macs = settings.servers.filter { $0.kind == .mac }
+        guard macs.contains(where: { now.timeIntervalSince(last[$0.id] ?? .distantPast) >= Self.interval }) else { return }
+        exchange()
+    }
+
+    /// With each paired Mac; once more after the exchange under way.
+    func exchange() {
+        guard running == nil else {
+            again = true
+            return
+        }
+        running = Task { [self] in
+            repeat {
+                again = false
+                await exchangeOnce()
+            } while again
+            running = nil
+        }
+    }
+
+    /// Whether an exchange is under way: the tests wait for its end.
+    var isExchanging: Bool { running != nil }
+
+    private func exchangeOnce() async {
+        for mac in settings.servers where mac.kind == .mac {
+            if await Self.exchange(with: mac, settings: settings) {
+                last[mac.id] = Date()
+            }
+        }
+    }
+
+    /// Gives the Mac of SERVER the connections, and takes its own: whether
+    /// the Mac took them. A Mac too old to take them leaves them as they
+    /// are.
+    static func exchange(with server: CartoucheStorageServer, settings: CartoucheStorageSettings) async -> Bool {
+        let remote: CartoucheRemote
+        do {
+            remote = try await CartoucheStorage.connect(server, settings: settings)
+        } catch {
+            NSLog("[Cartouche] the connections wait for the Mac: %@", error.localizedDescription)
+            return false
+        }
+        let took = await give(to: remote, settings: settings)
+        await remote.disconnect()
+        return took
+    }
+
+    /// The connections given to the Mac REMOTE, and its own taken. The
+    /// journal says how many, never which.
+    private static func give(to remote: CartoucheRemote, settings: CartoucheStorageSettings) async -> Bool {
+        guard let mac = remote as? CartoucheMacRemote else { return false }
+        do {
+            guard try await mac.client.info().hasConnections == true else {
+                NSLog("[Cartouche] the Mac takes no connections: its Cartouche Builder is older")
+                return false
+            }
+            let theirs = try await mac.client.connections(settings.connections())
+            let changed = settings.take(theirs)
+            NSLog("[Cartouche] the Mac took the connections and gave %ld, %@", theirs.filter { !$0.removed }.count,
+                  changed ? "which changed some here" : "the same as here")
+            return true
+        } catch {
+            NSLog("[Cartouche] the Mac did not take the connections: %@", error.localizedDescription)
+            return false
         }
     }
 }

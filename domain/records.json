@@ -1,0 +1,16 @@
+{
+  "zone": "cartouche.cloud",
+  "records": [
+    {"type": "A", "name": "cartouche.cloud", "content": "185.199.108.153", "why": "The site, on GitHub Pages"},
+    {"type": "A", "name": "cartouche.cloud", "content": "185.199.109.153", "why": "The site, on GitHub Pages"},
+    {"type": "A", "name": "cartouche.cloud", "content": "185.199.110.153", "why": "The site, on GitHub Pages"},
+    {"type": "A", "name": "cartouche.cloud", "content": "185.199.111.153", "why": "The site, on GitHub Pages"},
+    {"type": "AAAA", "name": "cartouche.cloud", "content": "2606:50c0:8000::153", "why": "The site, on GitHub Pages"},
+    {"type": "AAAA", "name": "cartouche.cloud", "content": "2606:50c0:8001::153", "why": "The site, on GitHub Pages"},
+    {"type": "AAAA", "name": "cartouche.cloud", "content": "2606:50c0:8002::153", "why": "The site, on GitHub Pages"},
+    {"type": "AAAA", "name": "cartouche.cloud", "content": "2606:50c0:8003::153", "why": "The site, on GitHub Pages"},
+    {"type": "CNAME", "name": "www.cartouche.cloud", "content": "cartouche-app.github.io", "why": "www, which GitHub Pages sends on to cartouche.cloud"},
+    {"type": "TXT", "name": "_github-pages-challenge-cartouche-app.cartouche.cloud", "content": "667309baa80ad90830dcd02c134013", "why": "GitHub verifies the domain for the organization cartouche-app"},
+    {"type": "TXT", "name": "_dmarc.cartouche.cloud", "content": "v=DMARC1; p=reject; sp=reject; adkim=s; aspf=s", "why": "Mail that claims to come from cartouche.cloud is refused"}
+  ]
+}

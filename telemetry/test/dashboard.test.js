@@ -30,6 +30,7 @@ import telemetry, { resetThrottle } from "../worker.js";
 const PAGE = readFileSync(new URL("../dashboard/index.html", import.meta.url), "utf8");
 const SCHEMA_SQL = readFileSync(new URL("../schema.sql", import.meta.url), "utf8");
 const APP_REPORTS = JSON.parse(readFileSync(new URL("./app-reports.json", import.meta.url), "utf8")).reports;
+const BUILDER_REPORTS = JSON.parse(readFileSync(new URL("./builder-reports.json", import.meta.url), "utf8")).reports;
 
 // The page's model, run as the browser runs it, here.
 const MODEL = /<script nonce="\{\{nonce\}\}" id="model">([\s\S]*?)<\/script>/.exec(PAGE)[1];
@@ -521,6 +522,39 @@ test("Cartouche Builder's Macs are not iPhones", () => {
   assert.ok(!model.eventNames.some((item) => item.key.startsWith("builder.")));
 });
 
+test("the games played on a Mac are set apart from the iPhones', each Mac once", () => {
+  // As Cartouche's console reads them in the log of nxnative's app for the Mac.
+  const played = BUILDER_REPORTS.find((report) => report.kind === "session");
+  const grown = { ...played, seq: played.seq + 3, minutes: 45 };
+  const other = { ...played, install: "0b1e2c3d-0000-4000-8000-000000000000", session: "0f0f0f0f-0000-4000-8000-000000000001", device: "Mac15,9", minutes: 12, end: { kind: "crash", cause: "gpuLost" } };
+  const opened = { schema: 1, kind: "event", seq: 1, install: played.install, cartouche: "0.2.1", device: "Mac16,12", ios: "26.6", name: "builder.opened", fields: { games: 3 } };
+  const model = M.build(answer([asRow(grown), asRow(other), asRow(played), asRow(opened), ...APP_REPORTS.map(asRow)]), CATALOG);
+  // Not an iPhone's: the iPhones' sections, filters and sums leave them out.
+  assert.equal(model.totals.iphones, 1);
+  assert.ok(model.games.every((game) => game.id !== played.game));
+  assert.ok(model.options.games.every((item) => item.value !== played.game));
+  assert.ok(model.options.devices.every((item) => !item.value.startsWith("Mac")));
+  assert.equal(model.totals.sessions, APP_REPORTS.filter((report) => report.kind === "session").length);
+  // Apart: the session read again once its log grew counts once, at its highest seq.
+  assert.deepEqual(model.macPlay, { sessions: 2, macs: 2, minutes: 57 });
+  const [game] = model.macGames;
+  assert.equal(game.id, played.game);
+  assert.equal(game.macs, 2);
+  assert.equal(game.sessions, 2);
+  assert.equal(game.minutes, 57);
+  assert.equal(game.ends.ok, 1);
+  assert.equal(game.ends.crash, 1);
+  assert.equal(game.gpuLost, 1);
+  assert.equal(game.fps, played.fps.median);
+  assert.equal(game.target, 60);
+  assert.deepEqual([...game.models].sort(), ["Mac15,9", "Mac16,12"]);
+  assert.equal(game.build, played.nxnative);
+  assert.equal(game.verdict.status, "boots", "one of two ended badly");
+  assert.equal(model.totals.reports, APP_REPORTS.length + 1 + 2);
+  // A game picked filters them too.
+  assert.equal(M.build(answer([asRow(played), ...APP_REPORTS.map(asRow)]), CATALOG, { game: "0400C3F00006E000" }).macGames.length, 0);
+});
+
 test("the filters scope everything to a game, a model or a version", () => {
   const [session, event] = APP_REPORTS;
   const other = { ...session, session: "0f0f0f0f-0000-4000-8000-000000000000", install: "11111111-2222-4333-8444-555555555555", device: "iPhone18,1", game: "0100000000010000", minutes: 10, end: undefined };
@@ -558,6 +592,18 @@ test("a game that ran behind the console is read against its process's limit, an
   assert.deepEqual(game.tightest, { peak: session.memory.peakMiB, limit: 5120, ratio: session.memory.peakMiB / 5120 });
   assert.equal(game.ends.ok, 1);
   assert.equal(game.ends.bad, 0);
+});
+
+test("a limit below the game's peak was not its own, and is not the one it came closest to", () => {
+  const [session] = APP_REPORTS;
+  // In 0.12, a game behind the console sent Cartouche's limit, below the game's own peak.
+  const behind = { ...session, process: { ...session.process, limitMiB: 3376 } };
+  const own = { ...session, session: "0f0f0f0f-0000-4000-8000-000000000000", memory: { ...session.memory, peakMiB: 5000 }, process: undefined };
+  const [game] = M.build(answer([asRow(behind), asRow(own)]), CATALOG).games;
+  assert.equal(game.peak, 5000);
+  assert.deepEqual(game.tightest, { peak: 5000, limit: 6143, ratio: 5000 / 6143 });
+  // Past every limit it sent, a game came close to none.
+  assert.equal(M.build(answer([asRow(behind)]), CATALOG).games[0].tightest, null);
 });
 
 test("errors by version of Cartouche, against its openings, the newest version first", () => {
@@ -658,6 +704,30 @@ test("a lost GPU is a crash of its own, counted from the reading of the log that
   assert.deepEqual(build([before]).endings.gpuLost, { count: 0, read: 0 });
 });
 
+test("a crash in the game's code goes by its address; an abort, whose address is the system's, by its game", () => {
+  assert.ok(["main+0x8903c8", "sdk+0x2c10", "subsdk1+0x10", "rtld+0x4"].every((pc) => M.GAME_CODE.test(pc)));
+  assert.ok(!["__pthread_kill+0x8", "objc_exception_throw+0x3c"].some((pc) => M.GAME_CODE.test(pc)));
+  const smo = "0100000000010000";
+  const segv = { kind: "crash", signal: 11, pc: "main+0x8903c8", lr: "main+0x8903bc" };
+  const abort = { kind: "crash", signal: 6, pc: "__pthread_kill+0x8", lr: "pthread_kill+0x10c" };
+  const { crashes } = build([
+    // The same address in the game's code, in two games on two iPhones: one bug.
+    sessionOf(1, { end: segv }),
+    sessionOf(2, { game: smo, end: segv }),
+    // Every abort stops in pthread_kill, whatever it was for: each game's apart, beside its sessions.
+    sessionOf(3, { end: abort }),
+    sessionOf(4, { game: smo, end: abort }),
+    sessionOf(5, { game: smo, end: abort }),
+    sessionOf(6, { game: smo }),
+  ]).endings;
+  assert.deepEqual(crashes.map((crash) => [crash.where, crash.signal, crash.pc, crash.game, crash.count, crash.iphones, crash.of]), [
+    ["code", 11, "main+0x8903c8", null, 2, 2, null],
+    ["system", 6, "__pthread_kill+0x8", smo, 2, 2, 4],
+    ["system", 6, "__pthread_kill+0x8", "0400C3F00006E000", 1, 1, 2],
+  ]);
+  assert.deepEqual(crashes[0].games, ["0400C3F00006E000", smo]);
+});
+
 test("a game's verdict follows the game sheets' rules, each iPhone counting once", () => {
   const status = (sessions) => {
     const { verdict } = build(sessions).games[0];
@@ -681,6 +751,17 @@ test("a game's verdict follows the game sheets' rules, each iPhone counting once
   const blank = (n) => sessionOf(n, { fps: undefined, frames: 0, end: { kind: "boot-failed" } });
   assert.deepEqual(status([blank(1), blank(2)]), ["none", ["noFrame"]]);
   assert.equal(M.verdict([]), null);
+});
+
+test("the games of each verdict, and those measured on three iPhones at least, as the game sheets ask", () => {
+  const good = (n, fields = {}) => sessionOf(n, { fps: { median: 59.5, low5: 50 }, reader: 2, ...fields });
+  const model = build([good(1), good(2), good(3), good(1, { game: "0400486024DEC000" }), sessionOf(4, { game: "0100000000010000", fps: undefined, frames: 0 })]);
+  assert.deepEqual(model.gameStatuses, [
+    { status: "playable", games: 2, measured: 1 },
+    { status: "issues", games: 0, measured: 0 },
+    { status: "boots", games: 0, measured: 0 },
+    { status: "none", games: 1, measured: 0 },
+  ]);
 });
 
 test("the players' journey: a step reached counts those before it, even unsaid", () => {
@@ -716,7 +797,7 @@ test("each version says how far its copies got, the newest first", () => {
   const newer = { cartouche: "0.11.2" };
   const model = build([
     eventOf(1, "app.opened", { setUp: false }, older),
-    eventOf(1, "error", { origin: "signIn", cause: "appleServer" }, older),
+    eventOf(1, "error", { origin: "signIn", cause: "appleServer", error: "SideSign.ServerError 1" }, older),
     eventOf(2, "app.opened", { setUp: true }, older),
     eventOf(2, "account.signedIn", {}, older),
     sessionOf(2, { ...older, end: { kind: "crash", signal: 11, pc: "main+0x10", lr: "main+0x0" } }),
@@ -729,7 +810,7 @@ test("each version says how far its copies got, the newest first", () => {
   assert.deepEqual(one.signIn, { ok: 1, failed: 1, copies: 2, okCopies: 1 });
   assert.deepEqual(one.setUp, { share: 0.5, known: 2 });
   assert.deepEqual([one.copies, one.opens, one.players, one.sessions, one.bad, one.errors], [2, 2, 1, 1, 1, 1]);
-  assert.deepEqual(one.topError, { origin: "signIn", cause: "appleServer", copies: 1, count: 1 });
+  assert.deepEqual(one.topError, { origin: "signIn", cause: "appleServer", error: "SideSign.ServerError 1", copies: 1, count: 1 });
   assert.deepEqual([two.copies, two.players, two.bad, two.errors, two.topError], [1, 1, 0, 0, null]);
   // A version picked leaves the others beside it.
   const picked = M.build(answer([eventOf(1, "app.opened", {}, older), eventOf(3, "app.opened", {}, newer)].map(asRow)), CATALOG, { version: "0.11.1" });
@@ -766,6 +847,17 @@ test("a measure that only ever says 0, as the GPU's busy time on iOS, says nothi
   assert.equal(build([sessionOf(3, { gpuBusyMsPerSecond: 610 }), sessionOf(4, { gpuBusyMsPerSecond: 700 })]).heat.gpuBusy, 655);
 });
 
+test("a game counts among the hot ones from half an hour measured", () => {
+  assert.equal(M.HOT_MINUTES, 30);
+  const heat = build([
+    // Twenty minutes of Mario Kart World, all of them hot: too few to tell.
+    sessionOf(1, { thermal: { nominal: 0, fair: 0, serious: 20, critical: 0 }, minutes: 20 }),
+    // Forty of Super Mario Odyssey, half of them hot.
+    sessionOf(2, { game: "0100000000010000", thermal: { nominal: 20, fair: 0, serious: 20, critical: 0 }, minutes: 40 }),
+  ]).heat;
+  assert.deepEqual(heat.byGame.map((game) => [game.id, game.hotShare, game.minutes, game.iphones]), [["0100000000010000", 0.5, 40, 1]]);
+});
+
 test("the page opens on the first day with a report, a week at least, within the window", () => {
   const window = { from: "2026-10-14", today: TODAY };
   assert.deepEqual(M.shownDays(window, [{ day: "2026-11-09" }, { day: TODAY }]), M.dayList("2026-11-04", TODAY));
@@ -793,20 +885,56 @@ test("an error only the newest version sent is new; one older versions sent is n
   assert.equal(build([eventOf(1, "error", signIn, { cartouche: "0.11.2" })]).errors.byCode[0].newIn, null);
 });
 
+test("the errors the newest version still sends come first, those it no longer sends last", () => {
+  assert.equal(M.GONE_COPIES, 10);
+  const error = (origin) => ({ origin, cause: "network", error: "NSPOSIXErrorDomain 60" });
+  const older = { cartouche: "0.11.1" };
+  const newer = { cartouche: "0.11.2" };
+  const reports = [
+    // Both versions sent it, on a copy each.
+    eventOf(1, "error", error("storage"), older),
+    eventOf(2, "error", error("storage"), newer),
+    // The older version alone, on three copies.
+    ...[3, 4, 5].map((n) => eventOf(n, "error", error("savesSync"), older)),
+    // The newest alone.
+    eventOf(6, "error", error("install"), newer),
+  ];
+  const states = (model) => model.errors.byCode.map((row) => [row.origin, row.state, row.lastIn]);
+  // Two copies run the newest version: too few to say it no longer sends an error.
+  assert.deepEqual(states(build(reports)), [
+    ["storage", "still", "0.11.2"],
+    ["install", "new", "0.11.2"],
+    ["savesSync", null, "0.11.1"],
+  ]);
+  // Ten copies run it: the older version's error is gone from it, and goes last.
+  const ten = [...reports, ...[7, 8, 9, 10, 11, 12, 13, 14].map((n) => eventOf(n, "app.opened", {}, newer))];
+  assert.deepEqual(states(build(ten)), [
+    ["storage", "still", "0.11.2"],
+    ["install", "new", "0.11.2"],
+    ["savesSync", "gone", "0.11.1"],
+  ]);
+  // With one version alone, none can tell.
+  assert.deepEqual(states(build([eventOf(1, "error", error("storage"), newer)])), [["storage", null, "0.11.2"]]);
+});
+
 test("what needs a look comes first, the most serious and the widest first", () => {
   const mac = (n, name, fields) => eventOf(100 + n, name, fields, { device: "Mac16,12", ios: "26.6", cartouche: "0.4.2", game: "0100000000010000" });
   const signIn = { origin: "signIn", cause: "appleServer", stage: "account", kind: "invalidResponseFormat", error: "SideSign.ServerError 1" };
-  const crash = { kind: "crash", signal: 6, pc: "__pthread_kill+0x8", lr: "pthread_kill+0x10c" };
+  const crash = { kind: "crash", signal: 11, pc: "main+0x8903c8", lr: "main+0x8903bc" };
+  const abort = { kind: "crash", signal: 6, pc: "__pthread_kill+0x8", lr: "pthread_kill+0x10c" };
   const model = build([
     // Three copies of the newest version stopped at the Apple sign-in, with an error no version sent before.
     ...[1, 2, 3].flatMap((n) => [eventOf(n, "app.opened", { setUp: false }, { cartouche: "0.11.2" }), eventOf(n, "error", signIn, { cartouche: "0.11.2" })]),
-    // A game that drew no frame on two iPhones.
-    ...[4, 5].map((n) => sessionOf(n, { game: "0100000000010000", fps: undefined, frames: 0 })),
-    // The same crash on two iPhones, three sessions that went well, and one at the edge of its memory.
+    // A game that drew no frame on two iPhones, in short sessions.
+    ...[4, 5].map((n) => sessionOf(n, { game: "0100000000010000", fps: undefined, frames: 0, minutes: 2 })),
+    // The same crash in the game's code on two iPhones, three sessions that went well, and one at the edge of its memory.
     ...[6, 7].map((n) => sessionOf(n, { end: crash })),
     sessionOf(8),
     sessionOf(9),
     sessionOf(10, { memory: { ...APP_REPORTS[0].memory, peakMiB: 6000 } }),
+    // Another game aborts on two iPhones of five.
+    ...[11, 12].map((n) => sessionOf(n, { game: "0400486024DEC000", end: abort })),
+    ...[13, 14, 15].map((n) => sessionOf(n, { game: "0400486024DEC000" })),
     // An nxnative commit no Mac could build with.
     mac(1, "builder.failed", { nxnative: "deadbeef00aa", stage: "app build", cause: "app_build" }),
     mac(1, "builder.failed", { nxnative: "deadbeef00aa", stage: "app build", cause: "app_build" }),
@@ -818,6 +946,7 @@ test("what needs a look comes first, the most serious and the widest first", () 
     ["game", "critical", 2],
     ["build", "serious", 2],
     ["crash", "serious", 2],
+    ["abort", "serious", 2],
     ["memory", "warning", 5],
     ["newError", "warning", 3],
   ]);
@@ -826,12 +955,42 @@ test("what needs a look comes first, the most serious and the widest first", () 
   assert.deepEqual([byKey.game.game, byKey.game.status], ["0100000000010000", "none"]);
   // Its game on each of the two Macs, though the first tried twice.
   assert.deepEqual([byKey.build.commit, byKey.build.failed, byKey.build.regressions, byKey.build.stage], ["deadbeef00aa", 2, 0, "app build"]);
-  assert.deepEqual([byKey.crash.signal, byKey.crash.pc, byKey.crash.count], [6, "__pthread_kill+0x8", 2]);
+  assert.deepEqual([byKey.crash.signal, byKey.crash.pc, byKey.crash.count], [11, "main+0x8903c8", 2]);
+  // An abort's address is the system's, whatever the game aborted for: it is the game's, with its sessions.
+  assert.deepEqual([byKey.abort.game, byKey.abort.signal, byKey.abort.count, byKey.abort.sessions], ["0400486024DEC000", 6, 2, 5]);
   assert.deepEqual([byKey.memory.game, byKey.memory.peak, byKey.memory.limit], ["0400C3F00006E000", 6000, 6143]);
   assert.deepEqual([byKey.newError.version, byKey.newError.origin, byKey.newError.stage, byKey.newError.count], ["0.11.2", "signIn", "account", 3]);
   assert.equal(model.attentionMore, 0);
   // Below the thresholds, nothing.
   assert.deepEqual(build([eventOf(1, "app.opened", {}), sessionOf(1), sessionOf(2)]).attention, []);
+});
+
+test("hours without a counted frame may be a log that does not count them, and a game's aborts are said once", () => {
+  assert.equal(M.UNCOUNTED_MINUTES, 30);
+  const smo = "0100000000010000";
+  const blank = (n, minutes) => sessionOf(n, { game: smo, fps: undefined, frames: 0, minutes });
+  const pick = (model) => model.attention.map((item) => [item.key, item.tone, item.game, item.uncounted ?? null, item.cause ?? null]);
+  // An hour on each of two iPhones without a frame counted: the verdict stays the game sheets', the point says why it may be.
+  const uncounted = build([blank(1, 60), blank(2, 60)]);
+  assert.equal(uncounted.games[0].verdict.status, "none");
+  assert.deepEqual(pick(uncounted), [["game", "serious", smo, true, null]]);
+  assert.equal(uncounted.attention[0].minutes, 120);
+  assert.deepEqual(pick(build([blank(1, 5), blank(2, 5)])), [["game", "critical", smo, false, null]]);
+  // A game that does not hold is not said again for its aborts; another game's, once, by its widest.
+  const abort = { kind: "crash", signal: 6, pc: "__pthread_kill+0x8", lr: "pthread_kill+0x10c" };
+  const model = build([
+    ...[1, 2].map((n) => sessionOf(n, { game: smo, end: abort })),
+    ...[3, 4].map((n) => sessionOf(n, { end: { ...abort, cause: "gpuLost" } })),
+    ...[5, 6].map((n) => sessionOf(n, { end: abort })),
+    ...[7, 8, 9, 10, 11, 12, 13, 14].map((n) => sessionOf(n)),
+  ]);
+  assert.deepEqual(pick(model), [["game", "serious", smo, false, null], ["abort", "serious", "0400C3F00006E000", null, "gpuLost"]]);
+  // Past eight points, the others wait for the page to ask.
+  const many = build([
+    eventOf(50, "app.opened", {}, { cartouche: "0.11.1" }),
+    ...Array.from({ length: 9 }, (_, index) => [1, 2].map((n) => eventOf(n, "error", { origin: "storage", cause: "network", error: "NSPOSIXErrorDomain " + (50 + index) }, { cartouche: "0.11.2" }))).flat(),
+  ]);
+  assert.deepEqual([many.attention.length, many.attentionMore, many.attentionRest.map((item) => item.key)], [8, 1, ["newError"]]);
 });
 
 test("a commit counts each game of each Mac once, as its last try ended, and the games that built before apart", () => {
@@ -902,6 +1061,8 @@ test("the sample data fills every section, and is the same each time", () => {
     models: model.compatibility.models.length,
     attention: model.attention.length,
     commits: model.builder.byCommit.length,
+    macSessions: model.macPlay.sessions,
+    macGames: model.macGames.length,
   })) {
     assert.ok(value > 0, name);
   }
@@ -1108,7 +1269,7 @@ test("the page draws every section of the sample data, and its charts", async ()
   // A lost GPU, in the crashes' table and among what needs a look.
   const text = page.main.textContent;
   assert.match(text, /Perte du GPU/);
-  assert.match(text, /Le même plantage, SIGABRT, perte du GPU/);
+  assert.match(text, /Super Mario Odyssey : perte du GPU/);
 });
 
 test("the page draws the reports Cartouche makes, as /data sends them", async () => {
@@ -1119,6 +1280,37 @@ test("the page draws the reports Cartouche makes, as /data sends them", async ()
   for (const id of JUMPS) assert.ok(page.sections.includes(id), `the section ${id}`);
   assert.match(page.main.textContent, /Mario Kart World/);
   assert.match(page.main.textContent, /Perte du GPU/);
+});
+
+test("a long table shows its first lines, and the others when asked", async () => {
+  const games = Array.from({ length: 25 }, (_, index) => "01000000000" + String(index).padStart(2, "0") + "000");
+  const page = await runPage({ answer: answer(games.map((game, index) => asRow(sessionOf(index + 1, { game })))) });
+  const section = page.main.childNodes.find((child) => child.id === "jeux");
+  const rows = () => [...section.descendants()].filter((node) => node.tagName === "TBODY").flatMap((body) => body.childNodes.filter((row) => row.tagName === "TR"));
+  assert.equal(rows().length, 20);
+  const more = [...section.descendants()].find((node) => node.tagName === "BUTTON" && node.textContent === "Voir les 5 autres jeux");
+  assert.ok(more, section.textContent);
+  const click = (button) => button.listeners.filter((item) => item.type === "click").forEach((item) => item.listener({ preventDefault() {} }));
+  click(more);
+  assert.equal(rows().length, 25);
+  assert.equal(more.textContent, "Réduire");
+  click(more);
+  assert.equal(rows().length, 20);
+});
+
+test("past eight points to look at, the page shows the others when asked", async () => {
+  const page = await runPage({
+    answer: answer([
+      eventOf(50, "app.opened", {}, { cartouche: "0.11.1" }),
+      ...Array.from({ length: 9 }, (_, index) => [1, 2].map((n) => eventOf(n, "error", { origin: "storage", cause: "network", error: "NSPOSIXErrorDomain " + (50 + index) }, { cartouche: "0.11.2" }))).flat(),
+    ].map(asRow)),
+  });
+  const points = () => [...page.main.descendants()].filter((node) => node.tagName === "OL" && node.className === "attention").flatMap((list) => list.childNodes.filter((item) => item.tagName === "LI"));
+  assert.equal(points().length, 8);
+  const more = [...page.main.descendants()].find((node) => node.tagName === "BUTTON" && node.textContent === "Voir l'autre point, moins répandu");
+  assert.ok(more, "the button for the ninth");
+  more.listeners.filter((item) => item.type === "click").forEach((item) => item.listener());
+  assert.equal(points().length, 9);
 });
 
 test("a page that cannot read its data says so, and draws nothing", async () => {
