@@ -108,6 +108,12 @@ struct CartoucheSavesSection: View {
                 Label(line, systemImage: news.kept == nil ? "arrow.down.circle.fill" : "arrow.triangle.branch")
                     .font(.footnote)
             }
+            // The newest copy waits for the game's update.
+            if let newer = backups.newer[target.key] {
+                Label(CartoucheText.savesNewerGame(newer.copy, newer.game), systemImage: "arrow.up.circle")
+                    .font(.footnote)
+                    .foregroundStyle(Color.orange)
+            }
             LabeledContent(CartoucheText.savesLastSync) {
                 if let date = backups.lastSync[target.key] {
                     Text(date, format: .relative(presentation: .named).locale(CartoucheText.locale))
@@ -201,6 +207,9 @@ struct CartoucheSaveCopiesView: View {
     /// the list, and for the last copy put back.
     @State private var offline: String?
     @State private var restoreOffline: String?
+    /// Why the last copy stays where it is: a newer version of the game
+    /// wrote it than the one installed here.
+    @State private var refused: String?
 
     init(target: CartoucheSaveTarget) {
         self.target = target
@@ -224,6 +233,11 @@ struct CartoucheSaveCopiesView: View {
             } else if let restoreOffline {
                 Section {
                     Label(restoreOffline, systemImage: "wifi.slash")
+                        .foregroundStyle(Color.orange)
+                }
+            } else if let refused {
+                Section {
+                    Label(refused, systemImage: "arrow.up.circle")
                         .foregroundStyle(Color.orange)
                 }
             }
@@ -322,12 +336,18 @@ struct CartoucheSaveCopiesView: View {
         restored = nil
         failure = nil
         restoreOffline = nil
+        refused = nil
         do {
             try await CartoucheSaveBackups.shared.restore(copy, of: target)
             restored = copy.date
             CartoucheReports.note("Saves of " + target.name + " put back from " + CartoucheReport.timestamp(copy.date))
         } catch let away as CartoucheStorageOffline {
             restoreOffline = away.localizedDescription
+        } catch let newer as CartoucheSaveNewerGame {
+            // No problem to report: the game's update lets it come.
+            refused = newer.localizedDescription
+            CartoucheReports.note("Saves of " + target.name + ": the copy of " + CartoucheReport.timestamp(copy.date)
+                                  + " is of a newer version of the game, not put back")
         } catch {
             failure = CartoucheReports.make(.saves, CartoucheText.savesPutBackFailed, message: error.localizedDescription,
                                             error: error, step: "Putting back a copy of " + target.name + "'s saves", stage: "savesPutBack",

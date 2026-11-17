@@ -128,14 +128,18 @@ enum ConsoleGallery {
     }
 
     /// The console with the gallery's games, speaking LANGUAGE ("fr" or "en"),
-    /// the saves of the sheet's game kept in step with a NAS's share.
-    static func prepare(language: String) {
+    /// the saves of the sheet's game kept in step with a NAS's share: the
+    /// newest copy came, or, NEWER, it waits for the game's update, version
+    /// 1.2.0 of the game having written it and this Mac's app being 1.0.0.
+    static func prepare(language: String, newer: Bool = false) {
         show()
         let console = CartoucheMacConsole.shared
         let nas = language == "fr" ? "le NAS" : "the NAS"
         console.show(games: apps, kept: kept, keptIn: nas)
+        let saves = newer ? CartoucheMacGameSaves(lastSync: copies[0].date, newer: "1.2.0", game: "1.0.0")
+                          : CartoucheMacGameSaves(lastSync: copies[0].date, fetched: copies[1].date)
         console.showSaves(folder: CartoucheMacSavesFolder(name: nas, path: "/Volumes/Partage/Cartouche/Saves"),
-                          games: [sheetGame: CartoucheMacGameSaves(lastSync: copies[0].date, fetched: copies[1].date)])
+                          games: [sheetGame: saves])
         console.speak(language)
     }
 

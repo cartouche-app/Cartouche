@@ -204,6 +204,11 @@
 //                                        folder in Files as the saves folder,
 //                                        which Cartouche's own sync uses
 //                                        (GallerySaves)
+//        saves-newer                     the same, the newest copy of the
+//                                        game's saves waiting for its update,
+//                                        version 1.2.0 of the game having
+//                                        written it, and this iPhone's being
+//                                        1.0.0
 //        sidestore-quit                  a sign-in whose built-in SideStore
 //                                        quit as it launched, LocalDevVPN
 //                                        connected
@@ -595,8 +600,12 @@ struct GalleryScenario {
                     CartoucheMacPairing.gallery = (mac: GalleryMac.nearby[0], code: "482915")
                 }
             }
-            if work == "saves", let titleId = sheet ?? ownedTitles.first {
+            if work == "saves" || work == "saves-newer", let titleId = sheet ?? ownedTitles.first {
                 GallerySaves.prepare(titleId: titleId)
+                if work == "saves-newer" {
+                    CartoucheSaveBackups.shared.showNewerForGallery("org.nxnative." + titleId.lowercased() + "|gallery",
+                                                                    CartoucheSaveNewer(copy: "1.2.0", game: "1.0.0"))
+                }
                 if screen == "switch-save" {
                     // The save JKSV exported, picked as the page opens.
                     CartoucheSwitchSaveView.galleryPick = { await GallerySaves.switchExport() }

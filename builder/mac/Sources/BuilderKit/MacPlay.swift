@@ -30,12 +30,18 @@ public struct MacGameApp: Hashable, Sendable {
     /// Its preferences domain: its saved choices and nxnative's cloud saves
     /// folder are kept there.
     public let bundleID: String
+    /// The version of the game it was built from, its
+    /// CFBundleShortVersionString, as nxnative copies it from the game's:
+    /// each copy of its saves names it, and a copy of a newer version never
+    /// comes to it. Nil when it does not say.
+    public let version: String?
 
-    public init(url: URL, titleID: String, name: String, bundleID: String? = nil) {
+    public init(url: URL, titleID: String, name: String, bundleID: String? = nil, version: String? = nil) {
         self.url = url.standardizedFileURL
         self.titleID = titleID.uppercased()
         self.name = name
         self.bundleID = bundleID ?? "org.nxnative." + titleID.uppercased()
+        self.version = version.flatMap { $0.isEmpty ? nil : $0 }
     }
 
     /// The app at URL, as its Info.plist says it; nil for an app that is no
@@ -47,10 +53,11 @@ public struct MacGameApp: Hashable, Sendable {
               let id = info["DMTitleID"] as? String, MacSavesFolder.isTitleID(id) else { return nil }
         let names = [info["CFBundleDisplayName"], info["CFBundleName"]].compactMap { $0 as? String }.filter { !$0.isEmpty }
         let name = names.first ?? url.deletingPathExtension().lastPathComponent
-        self.init(url: url, titleID: id, name: name, bundleID: (info["CFBundleIdentifier"] as? String).flatMap { $0.isEmpty ? nil : $0 })
+        self.init(url: url, titleID: id, name: name, bundleID: (info["CFBundleIdentifier"] as? String).flatMap { $0.isEmpty ? nil : $0 },
+                  version: info["CFBundleShortVersionString"] as? String)
     }
 
-    public var saveGame: MacSaveGame { MacSaveGame(titleID: titleID, name: name) }
+    public var saveGame: MacSaveGame { MacSaveGame(titleID: titleID, name: name, version: version) }
 }
 
 /// How a game ended, as its launcher says it in the last line of the log

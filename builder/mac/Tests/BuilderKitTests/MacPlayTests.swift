@@ -47,6 +47,14 @@ final class MacPlayTests: XCTestCase {
         XCTAssertEqual(found.name, "Mario Kart 8 Deluxe")
         XCTAssertEqual(found.bundleID, "org.nxnative.0100152000022000")
         XCTAssertEqual(found.saveGame, MacSaveGame(titleID: "0100152000022000", name: "Mario Kart 8 Deluxe"))
+        XCTAssertNil(found.version)
+        // The version of the game it was built from, as nxnative's packer
+        // writes it, which each copy of its saves names.
+        let built = try XCTUnwrap(MacGameApp(url: try app("MK8 1.2", ["DMTitleID": "0100152000022000", "CFBundleName": "MK8",
+                                                                       "CFBundleShortVersionString": "1.2.0"])))
+        XCTAssertEqual(built.version, "1.2.0")
+        XCTAssertEqual(built.saveGame, MacSaveGame(titleID: "0100152000022000", name: "MK8", version: "1.2.0"))
+        XCTAssertNil(MacGameApp(url: try app("MK8 none", ["DMTitleID": "0100152000022000", "CFBundleShortVersionString": ""]))?.version)
         // Packed with another bundle ID, a lower-case ID, no display name.
         let other = try XCTUnwrap(MacGameApp(url: try app("Kirby", ["DMTitleID": "01004d300c5ae000", "CFBundleName": "Kirby",
                                                                      "CFBundleIdentifier": "com.example.kirby"])))

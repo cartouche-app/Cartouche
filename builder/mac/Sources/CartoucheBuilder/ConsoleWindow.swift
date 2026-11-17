@@ -247,13 +247,16 @@ enum ConsoleLink {
             let event = games.last[titleID]
             let moved = event.flatMap { $0.offline || $0.failed ? nil : $0.at }
             let news = event.flatMap { ["fetch", "keep", "keepAndFetch"].contains($0.step) ? $0 : nil }
+            // The newest copy waits for the game's update, the saves of
+            // this Mac kept under it meanwhile, which that says.
+            let held = event.flatMap { $0.step == MacSaveEvent.heldBack ? $0 : nil }
             saves[titleID] = CartoucheMacGameSaves(
                 lastSync: [games.checked[titleID], moved].compactMap { $0 }.max(),
                 fetched: news?.fetchedDate, kept: news?.keptDate, waiting: event?.offline == true,
                 failure: event?.failed == true
                     ? event?.failure ?? tr("Its saves could not be kept in step.", "Ses sauvegardes n’ont pas pu être mises en phase.")
                     : nil,
-                inCloud: games.cloud[titleID] != nil)
+                inCloud: games.cloud[titleID] != nil, newer: held?.newer, game: held?.game)
         }
         CartoucheMacConsole.shared.showSaves(folder: folder, games: saves)
     }
@@ -264,6 +267,7 @@ enum ConsoleLink {
         case .offline: return .offline
         case .busy: return .busy
         case .unreadable: return .unreadable
+        case .newerGame(let copy, let game): return .newerGame(copy: copy, game: game)
         }
     }
 
