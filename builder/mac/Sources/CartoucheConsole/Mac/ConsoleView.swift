@@ -82,6 +82,12 @@ public final class CartoucheMacConsole: ObservableObject {
     /// The Builder's games folder and saves folder, as This Mac shows them
     /// on the Storage page (ConsoleStorage.swift).
     @Published private(set) var folders = CartoucheMacFolders(games: nil, saves: nil)
+    /// The iPhone's games folder, on one of the player's connections, where
+    /// the Builder sends its games, as the Storage page shows it: nil for
+    /// none.
+    @Published private(set) var iPhoneGames: CartoucheMacGamesFolder?
+    /// Send now, under the iPhone's games folder on the Storage page.
+    public var onSendGames: () -> Void = {}
     /// Removes the game from this Mac; the app asks the player first.
     public var onUninstall: (_ game: URL) -> Void = { _ in }
     /// Install, on a game the Builder keeps on a NAS: the app installs it
@@ -182,6 +188,13 @@ public final class CartoucheMacConsole: ObservableObject {
     public func showFolders(games: URL?, saves: URL?) {
         let shown = CartoucheMacFolders(games: games, saves: saves)
         if shown != folders { folders = shown }
+    }
+
+    /// The iPhone's games folder FOLDER, on one of the player's
+    /// connections, where the Builder sends its games, on the Storage page
+    /// under This Mac (ConsoleStorage.swift): nil for none.
+    public func showIPhoneGames(_ folder: CartoucheMacGamesFolder?) {
+        if folder != iPhoneGames { iPhoneGames = folder }
     }
 
     /// Install, on a game of the games folder.

@@ -174,6 +174,14 @@ enum ConsoleGallery {
         console.showFolders(games: URL(fileURLWithPath: "/Volumes/Jeux", isDirectory: true),
                             saves: URL(fileURLWithPath: "/Volumes/Partage/Cartouche/Saves", isDirectory: true))
         console.showStorageForGallery(language: language)
+        // The games folder chosen on the iPhone, on the NAS: Mario Kart
+        // World's Mac app going there, Animal Crossing's, another Mac's,
+        // to install.
+        console.showIPhoneGames(CartoucheMacGamesFolder(connection: CartoucheMacConsole.galleryNAS,
+                                                        path: language == "fr" ? "Cartouche/Jeux" : "Cartouche/Games",
+                                                        state: .sending(game: "Mario Kart World", packing: false, done: 1_288_490_188,
+                                                                        total: 2_915_000_000, index: 1, count: 2),
+                                                        offers: 1))
         // System › Game measurements: on, reports sent, the last one a
         // session of the sheet's game; a server, which the console never
         // reaches itself.
@@ -288,6 +296,16 @@ enum ConsoleGallery {
         }
         return folder
     }
+
+    /// The made-up connections of the console's Storage page, named in
+    /// LANGUAGE, kept in memory only: for the builder's iPhone page too,
+    /// which names the NAS, the iPhone's games folder on it.
+    static func showConnections(language: String) {
+        CartoucheMacConsole.shared.showStorageForGallery(language: language)
+    }
+
+    /// The made-up NAS among them.
+    static var nas: UUID { CartoucheMacConsole.galleryNAS }
 
     /// The games' apps go once the pictures are taken.
     static func cleanUp() {

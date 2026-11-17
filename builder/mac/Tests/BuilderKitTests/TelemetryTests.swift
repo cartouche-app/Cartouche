@@ -74,6 +74,10 @@ final class TelemetryTests: XCTestCase {
                                                 "settings": .flag(false)]
         let saves: [String: TelemetryValue] = ["place": .text("share"), "step": .text("keepAndFetch"), "when": .text("before")]
         let installed: [String: TelemetryValue] = ["again": .flag(false), "appMB": .number(1904), "seconds": .number(38)]
+        let sent: [String: TelemetryValue] = ["fileMB": .number(2915), "kind": .text("mac"), "packed": .flag(true), "seconds": .number(412),
+                                              "server": .text("s3")]
+        let installedFromThere: [String: TelemetryValue] = ["again": .flag(true), "appMB": .number(1904), "from": .text("connection"),
+                                                            "seconds": .number(95), "server": .text("s3")]
         let events: [(name: String, game: String?, fields: [String: TelemetryValue])] = [
             ("builder.opened", nil, opened),
             ("builder.setup", nil, setup),
@@ -101,6 +105,8 @@ final class TelemetryTests: XCTestCase {
             ("builder.saves", "0100152000022000", saves),
             ("builder.macInstalled", "0100152000022000", installed),
             ("builder.skipped", "0100000000010000", noRoom),
+            ("builder.sent", "0100000000010000", sent),
+            ("builder.macInstalled", "0100000000010000", installedFromThere),
         ]
         var made: [TelemetryEvent] = []
         for (index, event) in events.enumerated() {
@@ -257,9 +263,20 @@ final class TelemetryTests: XCTestCase {
         XCTAssertEqual(BuilderTelemetry.installedFields(bytes: 1_904_211_000, seconds: 37.6, again: true),
                        ["again": .flag(true), "appMB": .number(1904), "seconds": .number(38)])
         XCTAssertEqual(BuilderTelemetry.installedFields(bytes: nil, seconds: -1, again: false), ["again": .flag(false), "seconds": .number(0)])
+        // Its app another Mac sent to the iPhone's games folder, installed
+        // from there: the connection's kind alone, never its name.
+        XCTAssertEqual(BuilderTelemetry.installedFields(bytes: 1_904_211_000, seconds: 95.2, again: false, server: "drive"),
+                       ["again": .flag(false), "appMB": .number(1904), "from": .text("connection"), "seconds": .number(95), "server": .text("drive")])
+        // A game's file sent there, its Mac app packed first.
+        XCTAssertEqual(BuilderTelemetry.sentFields(kind: "mac", bytes: 2_915_400_000, seconds: 411.6, packed: true, server: "s3"),
+                       ["fileMB": .number(2915), "kind": .text("mac"), "packed": .flag(true), "seconds": .number(412), "server": .text("s3")])
+        XCTAssertEqual(BuilderTelemetry.sentFields(kind: "ipa", bytes: 0, seconds: -3, packed: false, server: "My NAS"),
+                       ["fileMB": .number(0), "kind": .text("ipa"), "packed": .flag(false), "seconds": .number(0), "server": .text("other")])
         let made = [("builder.played", BuilderTelemetry.playedFields(ended: "gpu", exit: 70, seconds: 1, fromBuilder: true, settings: false)),
                     ("builder.saves", BuilderTelemetry.savesFields(step: "keepAndFetch", when: "before", onShare: true)),
-                    ("builder.macInstalled", BuilderTelemetry.installedFields(bytes: 1_904_211_000, seconds: 38, again: false))]
+                    ("builder.macInstalled", BuilderTelemetry.installedFields(bytes: 1_904_211_000, seconds: 38, again: false)),
+                    ("builder.macInstalled", BuilderTelemetry.installedFields(bytes: 1_904_211_000, seconds: 95, again: true, server: "smb")),
+                    ("builder.sent", BuilderTelemetry.sentFields(kind: "ipa", bytes: 1_830_000_000, seconds: 64, packed: false, server: "sftp"))]
         for (index, event) in made.enumerated() {
             XCTAssertNotNil(TelemetryEvent(id: "6a1d9e3c-0000-4000-8000-00000000020\(index)", seq: index + 1, context: context,
                                            name: event.0, game: "0100152000022000", fields: event.1), event.0)

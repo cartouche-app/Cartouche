@@ -9,7 +9,10 @@
 //  that saves folder, or in Cartouche's saves folder on a share, which the
 //  page finds on the shares mounted here; or in the saves folder the player
 //  chose on the iPhone, when it is on one of their connections, which the
-//  page then shows in its place. With Tailscale, which the player
+//  page then shows in its place. The games folder chosen on the iPhone,
+//  when it is on one of their connections, the page shows too: the
+//  Builder sends its games there (IPhoneGames.swift), how many went, the
+//  one going, or why none goes. With Tailscale, which the player
 //  installs apart on this Mac and on the iPhone, the paired iPhones reach
 //  this Mac away from home too: the page says whether it is on, and this
 //  Mac's address there, by which an iPhone pairs when Bonjour cannot see
@@ -38,6 +41,7 @@ struct BridgeView: View {
                     devices
                 }
                 macSaves
+                IPhoneGamesSection(games: model.iPhoneGames)
             }
             .padding(28)
         }
@@ -286,6 +290,112 @@ struct Step: View {
             Text(text)
                 .font(.callout)
                 .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+/// The iPhone's games folder, on one of the player's connections: the
+/// Builder sends its games there, the file going, how many went, or why
+/// none goes; nothing when the iPhone chose none there.
+private struct IPhoneGamesSection: View {
+    @ObservedObject var games: IPhoneGames
+
+    var body: some View {
+        if let folder = games.folder {
+            let name = ConsoleLink.connectionName(folder.connection) ?? tr("its connection", "sa connexion")
+            VStack(alignment: .leading, spacing: 10) {
+                Text(tr("The iPhone’s games folder", "Dossier des jeux de l’iPhone").uppercased())
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                Card(padding: 6) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        FolderRow(symbol: "externaldrive.connected.to.line.below", title: tr("Games folder", "Dossier des jeux"),
+                                  path: folder.path.isEmpty ? name : name + " › " + folder.path.split(separator: "/").joined(separator: " › "),
+                                  note: tr("The iPhone’s, chosen on it: this Mac sends its IPAs and its Mac apps there too, through the same connection, “\(name)”, the newest first, and never removes anything there.",
+                                           "Celui de l’iPhone, choisi sur lui : ce Mac y envoie aussi ses IPA et ses apps Mac, par la même connexion, « \(name) », les plus récentes d’abord, et n’y supprime jamais rien.")) {
+                            Button(tr("Send now", "Envoyer maintenant")) { games.round() }
+                                .controlSize(.small)
+                                .disabled(games.progress != nil)
+                        }
+                        Divider().padding(.leading, 48)
+                        status(name: name)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                        if !games.offers.isEmpty {
+                            Divider().padding(.leading, 48)
+                            line(symbol: "arrow.down.circle",
+                                 games.offers.count == 1
+                                     ? tr("1 Mac app another Mac sent there: install it from the console’s library.",
+                                          "1 app Mac envoyée par un autre Mac : installez-la depuis la bibliothèque de la console.")
+                                     : tr("\(games.offers.count) Mac apps another Mac sent there: install them from the console’s library.",
+                                          "\(games.offers.count) apps Mac envoyées par un autre Mac : installez-les depuis la bibliothèque de la console."))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /// The file going, why none goes, or how many went.
+    @ViewBuilder
+    private func status(name: String) -> some View {
+        if let going = games.progress {
+            VStack(alignment: .leading, spacing: 6) {
+                line(symbol: "arrow.up.circle",
+                     going.packing
+                         ? tr("Packing the Mac app of “\(going.game)” in one file, as a NAS keeps it (\(going.index) of \(going.count))…",
+                              "Mise en un seul fichier de l’app Mac de « \(going.game) », comme la garde un NAS (\(going.index) sur \(going.count))…")
+                         : tr("Sending “\(going.game)” (\(going.index) of \(going.count)): \(Format.size(going.done)) of \(Format.size(going.total))",
+                              "Envoi de « \(going.game) » (\(going.index) sur \(going.count)) : \(Format.size(going.done)) sur \(Format.size(going.total))"))
+                if going.packing {
+                    ProgressView()
+                        .progressViewStyle(.linear)
+                        .padding(.leading, 38)
+                } else {
+                    ProgressView(value: Double(min(going.done, going.total)), total: Double(max(going.total, 1)))
+                        .padding(.leading, 38)
+                }
+            }
+        } else if let stopped = games.stopped {
+            switch stopped {
+            case .offline:
+                line(symbol: "wifi.slash", tr("“\(name)” does not answer from this Mac: its games go there once it does.",
+                                              "« \(name) » ne répond pas depuis ce Mac : ses jeux y partiront dès qu’il répondra."), warning: true)
+            case .readOnly:
+                line(symbol: "lock", tr("Your account may only read this folder: this Mac’s games cannot go there.",
+                                        "Votre compte ne peut que lire ce dossier : les jeux de ce Mac ne peuvent pas y aller."), warning: true)
+            case let .noRoom(needed, free):
+                line(symbol: "externaldrive.badge.exclamationmark",
+                     tr("Not enough room there for the next game: \(Format.size(needed)) needed, \(Format.size(free)) left.",
+                        "Pas assez de place pour le jeu suivant : \(Format.size(needed)) nécessaires, \(Format.size(free)) libres."), warning: true)
+            }
+        } else if let failure = games.failure {
+            line(symbol: "exclamationmark.triangle", tr("The last sending stopped, and starts again at the next look: \(failure)",
+                                                        "Le dernier envoi s’est arrêté, et reprendra au prochain passage : \(failure)"), warning: true)
+        } else if let checked = games.lastRound {
+            line(symbol: games.sentCount == games.total ? "checkmark.circle" : "arrow.up.circle",
+                 games.total == 0
+                     ? tr("No game of this Mac to send yet · looked \(Format.relative(checked))",
+                          "Aucun jeu de ce Mac à envoyer pour l’instant · vérifié \(Format.relative(checked))")
+                     : tr("\(games.sentCount) of this Mac’s \(games.total) files are there · looked \(Format.relative(checked))",
+                          "\(games.sentCount) des \(games.total) fichiers de ce Mac y sont · vérifié \(Format.relative(checked))"))
+        } else {
+            line(symbol: "clock", tr("Looking at the folder…", "Vérification du dossier…"))
+        }
+    }
+
+    private func line(symbol: String, _ text: String, warning: Bool = false) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 14) {
+            Image(systemName: symbol)
+                .foregroundStyle(warning ? Color.orange : Theme.indigo)
+                .frame(width: 24)
+            Text(text)
+                .font(.callout)
+                .foregroundStyle(warning ? Color.orange : Color.primary)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
         }
     }
 }

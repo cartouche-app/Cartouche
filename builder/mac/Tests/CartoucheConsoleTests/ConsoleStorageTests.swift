@@ -9,7 +9,8 @@
 //  Mac's given back, those removed on either side among them; the saves
 //  folder of this Mac, which never goes to an iPhone, or the iPhone's on a
 //  connection, followed when it is replaced or removed; the gallery's,
-//  which nothing keeps; and This Mac's folders as the player knows them.
+//  which nothing keeps; This Mac's folders as the player knows them; and
+//  the iPhone's games folder, as the Builder sends its games there.
 //  Each test has preferences and a secrets file of its own.
 //
 
@@ -211,5 +212,26 @@ final class ConsoleStorageTests: XCTestCase {
         let games = URL(fileURLWithPath: "/Volumes/Jeux", isDirectory: true)
         console.showFolders(games: games, saves: nil)
         XCTAssertEqual(console.folders, CartoucheMacFolders(games: games, saves: nil))
+    }
+
+    /// The iPhone's games folder on a connection, as the Builder sends its
+    /// games there: what the app says, the file going or how many went, or
+    /// none once the iPhone chose another place.
+    func testTheConsoleShowsTheIPhonesGamesFolder() {
+        let console = CartoucheMacConsole.shared
+        let before = console.iPhoneGames
+        defer { console.showIPhoneGames(before) }
+        let nas = UUID(uuidString: "FFFFFFFF-0000-4000-8000-000000000002")!
+        let going = CartoucheMacGamesFolder(connection: nas, path: "Cartouche/Jeux",
+                                            state: .sending(game: "Mario Kart World", packing: false, done: 100, total: 300, index: 1, count: 2),
+                                            offers: 1)
+        console.showIPhoneGames(going)
+        XCTAssertEqual(console.iPhoneGames, going)
+        let sent = CartoucheMacGamesFolder(connection: nas, path: "Cartouche/Jeux", state: .sent(2, of: 2))
+        console.showIPhoneGames(sent)
+        XCTAssertEqual(console.iPhoneGames?.state, .sent(2, of: 2))
+        XCTAssertEqual(console.iPhoneGames?.offers, 0)
+        console.showIPhoneGames(nil)
+        XCTAssertNil(console.iPhoneGames)
     }
 }

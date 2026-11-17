@@ -358,6 +358,58 @@
       "en": "1 connection",
       "fr": "1 connexion"
     },
+    "mac.storage.iPhoneGames.bytes": {
+      "en": "%1$@ of %2$@",
+      "fr": "%1$@ sur %2$@"
+    },
+    "mac.storage.iPhoneGames.count": {
+      "en": "%1$lld of %2$lld",
+      "fr": "%1$lld sur %2$lld"
+    },
+    "mac.storage.iPhoneGames.failed": {
+      "en": "The last sending stopped, and starts again at the next look: %@",
+      "fr": "Le dernier envoi s’est arrêté, et reprendra au prochain passage : %@"
+    },
+    "mac.storage.iPhoneGames.footer": {
+      "en": "The games folder chosen on your iPhone: Cartouche Builder sends it each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent there install from the library. To change it, choose another on the iPhone.",
+      "fr": "Le dossier des jeux choisi sur votre iPhone : Cartouche Builder y envoie aussi chaque IPA et chaque app Mac de son propre dossier des jeux, par la même connexion, les plus récentes d’abord, et n’y supprime jamais rien. Les apps Mac qu’un autre Mac y a envoyées s’installent depuis la bibliothèque. Pour en changer, choisissez-en un autre sur l’iPhone."
+    },
+    "mac.storage.iPhoneGames.noRoom": {
+      "en": "Not enough room there for the next game: %1$@ needed, %2$@ left. Once there is, this Mac’s games go on.",
+      "fr": "Pas assez de place pour le jeu suivant : %1$@ nécessaires, %2$@ libres. Dès qu’il y en a, les jeux de ce Mac continuent de partir."
+    },
+    "mac.storage.iPhoneGames.offers.many": {
+      "en": "%lld Mac apps another Mac sent there, to install from the library",
+      "fr": "%lld apps Mac envoyées par un autre Mac, à installer depuis la bibliothèque"
+    },
+    "mac.storage.iPhoneGames.offers.one": {
+      "en": "1 Mac app another Mac sent there, to install from the library",
+      "fr": "1 app Mac envoyée par un autre Mac, à installer depuis la bibliothèque"
+    },
+    "mac.storage.iPhoneGames.offline": {
+      "en": "%@ does not answer from this Mac: this Mac’s games go there once it does.",
+      "fr": "%@ ne répond pas depuis ce Mac : les jeux de ce Mac y partiront dès qu’il répondra."
+    },
+    "mac.storage.iPhoneGames.packing": {
+      "en": "Its Mac app is first packed in one file, as a NAS keeps it.",
+      "fr": "Son app Mac est d’abord mise en un seul fichier, comme la garde un NAS."
+    },
+    "mac.storage.iPhoneGames.readOnly": {
+      "en": "Your account may only read this folder: this Mac’s games cannot go there.",
+      "fr": "Votre compte ne peut que lire ce dossier : les jeux de ce Mac ne peuvent pas y aller."
+    },
+    "mac.storage.iPhoneGames.sendNow": {
+      "en": "Send now",
+      "fr": "Envoyer maintenant"
+    },
+    "mac.storage.iPhoneGames.sending": {
+      "en": "Sending: %1$@ (%2$lld of %3$lld)",
+      "fr": "Envoi en cours : %1$@ (%2$lld sur %3$lld)"
+    },
+    "mac.storage.iPhoneGames.sent": {
+      "en": "Sent from this Mac",
+      "fr": "Envoyés depuis ce Mac"
+    },
     "mac.storage.iPhoneSaves.footer": {
       "en": "The saves folder chosen on your iPhone: Cartouche Builder keeps the saves of the games played on this Mac there too, through the same connection, before and after each game, as the iPhone does. The %lld newest copies are kept. To change it, choose another on the iPhone.",
       "fr": "Le dossier des sauvegardes choisi sur votre iPhone : Cartouche Builder y garde aussi celles des jeux joués sur ce Mac, par la même connexion, avant et après chaque partie, comme l’iPhone. Les %lld copies les plus récentes y restent. Pour en changer, choisissez-en un autre sur l’iPhone."

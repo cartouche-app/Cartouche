@@ -130,13 +130,14 @@ struct MainView: View {
         .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didActivateApplicationNotification)) { _ in
             ConsoleLink.showRunning(model.macGames.playing)
         }
-        // A game installed from the NAS, how far it is, over the console.
+        // A game installed from the NAS, or from the iPhone's games folder,
+        // how far it is, over the console.
         .onChange(of: model.installing) { _, _ in showInstall() }
         .onChange(of: model.installMessage) { _, _ in showInstall() }
     }
 
     private func showInstall() {
-        let name = model.installing.map { model.game($0)?.name ?? $0 }
+        let name = model.installing.map { model.installingName ?? model.game($0)?.name ?? $0 }
         ConsoleLink.showInstall(name, step: model.installMessage)
     }
 
@@ -206,6 +207,8 @@ enum ConsoleLink {
         console.onFolders = { [weak model] in model?.showBuilder(.iphone) }
         console.onUninstall = { [weak model] game in model?.askToRemove(app: game) }
         console.onInstall = { [weak model] titleID in model?.install(titleID: titleID) }
+        // The iPhone's games folder, on the Storage page: Send now.
+        console.onSendGames = { [weak model] in model?.iPhoneGames.round() }
         // The first step of the console's guide to a first game on this Mac:
         // the setup assistant, over the console, and whether it was gone
         // through, at once and at each change.
@@ -218,10 +221,53 @@ enum ConsoleLink {
         startSaves(model)
         startMeasures(model)
         startUpdates(model.updater)
+        startIPhoneGames(model.iPhoneGames)
         speak()
     }
 
     private static var setupWatch: AnyCancellable?
+
+    // MARK: The iPhone's games folder
+
+    /// The iPhone's games folder, on a connection, as the Builder sends its
+    /// games there, on the console's Storage page: at once and at each
+    /// change, the file going a few times a second at most.
+    private static func startIPhoneGames(_ games: IPhoneGames) {
+        CartoucheMacConsole.shared.showIPhoneGames(folder(of: games))
+        gamesWatch = games.objectWillChange
+            .throttle(for: .milliseconds(250), scheduler: DispatchQueue.main, latest: true)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak games] _ in
+                guard let games else { return }
+                CartoucheMacConsole.shared.showIPhoneGames(folder(of: games))
+            }
+    }
+
+    private static var gamesWatch: AnyCancellable?
+
+    /// GAMES' folder as the Storage page shows it: the file going, why none
+    /// goes, or how many went.
+    static func folder(of games: IPhoneGames) -> CartoucheMacGamesFolder? {
+        guard let folder = games.folder else { return nil }
+        let state: CartoucheMacGamesFolder.State
+        if let going = games.progress {
+            state = .sending(game: going.game, packing: going.packing, done: going.done, total: going.total,
+                             index: going.index, count: going.count)
+        } else if let stopped = games.stopped {
+            switch stopped {
+            case .offline: state = .offline
+            case .readOnly: state = .readOnly
+            case let .noRoom(needed, free): state = .noRoom(needed: needed, free: free)
+            }
+        } else if let failure = games.failure {
+            state = .failed(failure)
+        } else if games.lastRound != nil {
+            state = .sent(games.sentCount, of: games.total)
+        } else {
+            state = .waiting
+        }
+        return CartoucheMacGamesFolder(connection: folder.connection, path: folder.path, state: state, offers: games.offers.count)
+    }
 
     // MARK: Updates
 
@@ -370,6 +416,12 @@ enum ConsoleLink {
         CartoucheMacConsole.shared.connectionName(id)
     }
 
+    /// The connection ID's kind, for the measurements: smb, s3, ftp, sftp
+    /// or drive.
+    static func connectionKind(_ id: UUID) -> String? {
+        CartoucheMacConsole.shared.connectionKind(id)
+    }
+
     /// ACTION, a moment after each change the player makes to their
     /// connections on the console's Storage page: once, as the app starts.
     static func followConnections(_ action: @escaping () -> Void) {
@@ -488,14 +540,19 @@ enum ConsoleLink {
         }
     }
 
-    /// The games built for this Mac, by their apps, and KEPT, the games
-    /// the games folder keeps in one file (a NAS's) and has not installed
-    /// on this Mac, in PLACE, the app's words for where they are.
-    static func show(games: [URL], kept: [Game], keptIn place: String) {
-        let keptGames = kept.compactMap { game -> CartoucheMacKeptGame? in
+    /// The games built for this Mac, by their apps, KEPT, the games the
+    /// games folder keeps in one file (a NAS's) and has not installed on
+    /// this Mac, and OFFERS, the Mac apps another Mac sent to the iPhone's
+    /// games folder, in PLACE, the app's words for where they are.
+    static func show(games: [URL], kept: [Game], offers: [ConnectionMacApp] = [], keptIn place: String) {
+        var keptGames = kept.compactMap { game -> CartoucheMacKeptGame? in
             guard let file = game.mac?.library else { return nil }
             return CartoucheMacKeptGame(titleID: game.titleID, name: game.name, file: file.path, size: file.size,
                                         built: game.mac?.build.flatMap { ISODate.parse($0.builtAt) })
+        }
+        keptGames += offers.map { offer in
+            CartoucheMacKeptGame(titleID: offer.titleID, name: offer.game, file: offer.file.name, size: offer.file.size,
+                                 built: offer.file.modified)
         }
         CartoucheMacConsole.shared.show(games: games, kept: keptGames, keptIn: place)
     }

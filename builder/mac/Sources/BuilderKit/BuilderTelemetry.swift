@@ -512,11 +512,39 @@ public final class BuilderTelemetry: ObservableObject {
     /// A game's app the games folder keeps in one file (a NAS's) installed
     /// on this Mac to be played (builder.macInstalled): its size once
     /// installed (BYTES), how long it took, and whether it took the place
-    /// of this Mac's copy of an older build (AGAIN). Never a name or a path.
-    public nonisolated static func installedFields(bytes: Int64?, seconds: TimeInterval, again: Bool) -> [String: TelemetryValue] {
+    /// of this Mac's copy of an older build (AGAIN); or, from the iPhone's
+    /// games folder, the app another Mac sent there, on a connection of
+    /// the kind SERVER. Never a name, a path or an address.
+    public nonisolated static func installedFields(bytes: Int64?, seconds: TimeInterval, again: Bool,
+                                                   server: String? = nil) -> [String: TelemetryValue] {
         var fields: [String: TelemetryValue] = ["seconds": .number(max(0, seconds).rounded()), "again": .flag(again)]
         if let bytes, bytes > 0 { fields["appMB"] = .number((Double(bytes) / 1_000_000).rounded()) }
+        if let server {
+            fields["from"] = .text("connection")
+            fields["server"] = .text(serverKind(server))
+        }
         return fields
+    }
+
+    /// A game's file sent to the iPhone's games folder, on one of the
+    /// player's connections (builder.sent): KIND, its IPA or its Mac app
+    /// (ipa, mac), its size (BYTES), how long it took, whether the Mac app
+    /// was PACKED in one file first, and the connection's kind, SERVER.
+    /// Never a name, a path or an address.
+    public nonisolated static func sentFields(kind: String, bytes: UInt64, seconds: TimeInterval, packed: Bool,
+                                              server: String?) -> [String: TelemetryValue] {
+        ["kind": .text(kind == "ipa" ? "ipa" : "mac"),
+         "fileMB": .number((Double(bytes) / 1_000_000).rounded()),
+         "seconds": .number(max(0, seconds).rounded()),
+         "packed": .flag(packed),
+         "server": .text(serverKind(server))]
+    }
+
+    /// A connection's kind, as Cartouche's storage names it: smb, s3, ftp,
+    /// sftp, drive, or other.
+    nonisolated static func serverKind(_ kind: String?) -> String {
+        guard let kind, ["smb", "s3", "ftp", "sftp", "drive"].contains(kind) else { return "other" }
+        return kind
     }
 
     /// An nxnative commit's 12 digits, when TEXT is one.

@@ -232,6 +232,23 @@ class Api(Home):
         self.assertEqual((code, data["error"]["kind"]), (3, "blocked"))
         self.assertIn("played from there", data["error"]["message"])
 
+    def test_packed_for_the_iphone_and_installed_from_a_fetched_file(self):
+        """mac-pack packs the app a games folder on this Mac's disk keeps as it
+        is, for the app to send it to the iPhone's games folder; mac-install
+        --from installs one the app fetched from there."""
+        self.build(MKW)
+        out = self.tmp / "Out"
+        code, data = self.call("mac-pack", MKW.lower(), "--into", str(out))
+        packed = out / f"Mario Kart World [{MKW}].app.zip"
+        self.assertEqual((code, data["file"]["path"], data["title_id"]), (0, str(packed), MKW))
+        code, data = self.call("mac-install", MKW, "--from", str(packed))
+        copy = Path.home() / "Applications" / "Mario Kart World.app"
+        self.assertEqual((code, data["app"]["path"], data["title_id"]), (0, str(copy), MKW))
+        code, data = self.call("mac-install", MKW, "--from", str(out / "Gone.app.zip"))
+        self.assertEqual((code, data["error"]["kind"]), (2, "bad_request"))
+        code, data = self.call("mac-pack", MKW)
+        self.assertEqual((code, data["error"]["kind"]), (2, "bad_request"))
+
     def test_an_error_says_its_class_where_and_errno_never_its_words(self):
         with mock.patch.object(api, "survey_storage", side_effect=PermissionError(13, "Permission denied", "/Users/player/Jeux")):
             code, data = self.call("storage")

@@ -57,6 +57,12 @@ public struct BuilderHome: Equatable, Sendable {
     public var console: URL { root.appendingPathComponent("Console", isDirectory: true) }
     /// The copies of saves that come, unpacked there first.
     public var savesScratch: URL { root.appendingPathComponent("Saves scratch", isDirectory: true) }
+    /// What went to the iPhone's games folder on a connection, and the Mac
+    /// apps installed from there (ConnectionGames.swift).
+    public var connectionGames: URL { root.appendingPathComponent("connection-games.json") }
+    /// The Mac apps packed for the iPhone's games folder, and those fetched
+    /// from there, while they go or come.
+    public var gamesScratch: URL { root.appendingPathComponent("Games scratch", isDirectory: true) }
 }
 
 /// The engine's settings (config.json), while the engine cannot run yet:
@@ -326,6 +332,21 @@ public final class Engine: @unchecked Sendable {
     /// its copy, and without room on this Mac.
     public func installMac(_ titleID: String, line: (@Sendable (String) -> Void)? = nil) async throws -> MacInstallAnswer {
         try await api(MacInstallAnswer.self, ["mac-install", titleID], timeout: 6 * 3600, line: line)
+    }
+
+    /// Installs on this Mac the game's app kept in FILE, which the app
+    /// fetched from the iPhone's games folder, where another Mac sent it:
+    /// as the games folder's own would be, the engine keeping no record of
+    /// it. Blocked while the game runs from its copy, and without room.
+    public func installMac(_ titleID: String, from file: URL, line: (@Sendable (String) -> Void)? = nil) async throws -> MacInstallAnswer {
+        try await api(MacInstallAnswer.self, ["mac-install", titleID, "--from", file.path], timeout: 6 * 3600, line: line)
+    }
+
+    /// Packs in one file in FOLDER the game's app the games folder keeps as
+    /// it is, for the app to send it to the iPhone's games folder: busy when
+    /// a batch put another build in its place meanwhile.
+    public func packMac(_ titleID: String, into folder: URL, line: (@Sendable (String) -> Void)? = nil) async throws -> MacPackAnswer {
+        try await api(MacPackAnswer.self, ["mac-pack", titleID, "--into", folder.path], timeout: 6 * 3600, line: line)
     }
 
     // MARK: Batches

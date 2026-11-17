@@ -136,6 +136,9 @@ class AppContract(Home):
         self.assertEqual((self.answers["queue"]["queued"], self.answers["queue"]["queue"]["stop"]), (True, [HOLLOW]))
         self.call("clean", "clean", "logs")
         self.call("platform", "platform", ODYSSEY, "mac", "off")
+        # Mario Kart World's app, kept as it is in the games folder, packed
+        # in one file for the iPhone's games folder.
+        self.call("mac-pack", "mac-pack", MKW, "--into", str(self.tmp / "Packed"))
 
         # The games folder on a NAS: Mario Kart World's app kept there in one
         # file, then installed on this Mac to be played.

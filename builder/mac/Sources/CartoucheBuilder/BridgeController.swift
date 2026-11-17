@@ -232,7 +232,8 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
 /// JSON from CartoucheCore's type to its own copy of it and back. The
 /// folders the player chose on the iPhone come with them: of each, the one
 /// chosen last on any iPhone is kept, and the Mac keeps its games' saves in
-/// that saves folder when it is on one of the connections.
+/// that saves folder when it is on one of the connections, and sends its
+/// games to that games folder (IPhoneGames).
 extension BridgeController: BridgeConnectionsSource {
     func bridgeConnections(_ theirs: [CartoucheConnection], places: CartoucheChosenFolders?) throws -> [CartoucheConnection] {
         guard let given = try? JSONEncoder().encode(theirs),
@@ -244,9 +245,10 @@ extension BridgeController: BridgeConnectionsSource {
             let told = AppSettings.toldFolders.taking(places)
             if told != AppSettings.toldFolders { AppSettings.toldFolders = told }
         }
-        // The connections may have changed too: a saves folder on one
-        // replaced or removed.
+        // The connections may have changed too: a saves folder, or the
+        // games folder, on one replaced or removed.
         model?.useMacSaves()
+        model?.useIPhoneGames()
         objectWillChange.send()
         return mine
     }

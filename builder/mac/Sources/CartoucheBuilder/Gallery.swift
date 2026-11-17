@@ -60,6 +60,11 @@ enum Gallery {
         // The iPhone page with Tailscale on this Mac, and its address there
         // (BridgeView.swift); the iPhone page above has it off.
         case iphoneTailscale = "iphone-tailscale"
+        // The whole iPhone page, in a window as tall as it, down to the
+        // iPhone's games folder on one of the player's connections, a NAS:
+        // a game going there, and a Mac app another Mac sent
+        // (IPhoneGames.swift).
+        case iphoneGames = "iphone-games"
         // The game page of the builder in the window that showed the
         // console just before, the player back from it with the switch at
         // the top of the window: as the game page, whatever the Mac's
@@ -79,7 +84,7 @@ enum Gallery {
         /// Whether the page is in a window taller than the screen, as tall
         /// as the page, which AppKit would fit to the screen.
         var isTall: Bool {
-            isWholeSheet || [.storageMac, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport].contains(self)
+            isWholeSheet || [.storageMac, .iphoneGames, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport].contains(self)
         }
 
         /// The page of the sheet's saves it opens over the sheet.
@@ -113,9 +118,11 @@ enum Gallery {
             case .names, .namesDumps: return NamingHelp.size
             case .settings, .settingsBuilds, .settingsFolders: return SettingsTab.size
             case .storageMac: return CGSize(width: 1024, height: 1440)
+            case .iphoneGames: return CGSize(width: 1024, height: 1500)
             case .consoleSheet, .consoleSheetNewer: return CGSize(width: 1024, height: 1640)
-            // This Mac and every connection, down to the footer.
-            case .consoleStorage: return CGSize(width: 1024, height: 1260)
+            // This Mac, the iPhone's games folder on a NAS, and every
+            // connection, down to the footer.
+            case .consoleStorage: return CGSize(width: 1024, height: 1560)
             // What is sent, down to the way to erase it.
             case .consoleMeasures: return CGSize(width: 1024, height: 1180)
             // What the player writes, the ways to send it, and the report
@@ -506,7 +513,7 @@ enum Gallery {
             switch page {
             case .library, .activity, .storage, .iphone: model.section = AppSection(rawValue: page.rawValue) ?? .library
             case .storageMac: model.section = .storage
-            case .iphoneTailscale: model.section = .iphone
+            case .iphoneTailscale, .iphoneGames: model.section = .iphone
             case .libraryRoom, .game, .gameNarrow, .gameNewer, .gameQueue, .gameXcode, .gameUnbuilt, .gameAfterConsole: model.section = .library
             case .setup, .setupXcode: model.section = .setup
             default: break
@@ -573,6 +580,21 @@ enum Gallery {
                                                       newer: "3.0.4", game: "3.0.3")
                                        : MacSaveEvent(at: now.addingTimeInterval(-26 * 60), when: .before, step: "fetch",
                                                       fetched: "2026-11-13T18-02-00Z.zip")])
+            if page == .iphoneGames {
+                // The connections of the console's Storage page, made up and
+                // kept in memory only: the iPhone chose its games folder on
+                // the NAS; Mario Kart World's Mac app goes there, and
+                // Animal Crossing's, another Mac's, waits to be installed.
+                ConsoleGallery.showConnections(language: L10n.code)
+                let name = "Animal Crossing New Horizons [01006F8002326000].app.zip"
+                model.iPhoneGames.preview(folder: IPhoneGames.Folder(connection: ConsoleGallery.nas, path: "Cartouche/" + tr("Games", "Jeux")),
+                                          progress: ConnectionGamesProgress(game: "Mario Kart World", kind: .macFile, done: 1_288_490_188,
+                                                                            total: 2_915_000_000, index: 1, count: 2),
+                                          sent: 4, total: 6,
+                                          offers: [ConnectionMacApp(titleID: "01006F8002326000", game: "Animal Crossing New Horizons",
+                                                                    file: ConnectionFile(name: name, size: 7_340_032_000, modified: now.addingTimeInterval(-26 * 3_600)))],
+                                          checked: now.addingTimeInterval(-120))
+            }
             if page == .menubar {
                 let release = BuilderRelease(version: "0.3.0", tag: "builder-v0.3.0", notes: "",
                                              page: URL(string: "https://github.com/cartouche-app/Cartouche/releases/tag/builder-v0.3.0")!,

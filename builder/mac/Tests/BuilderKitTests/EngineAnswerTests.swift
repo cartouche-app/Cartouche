@@ -176,6 +176,13 @@ final class EngineAnswerTests: XCTestCase {
         XCTAssertEqual(installed.bytes, Int64(installed.app.size))
         XCTAssertNotNil(installed.seconds)
 
+        // An app the games folder keeps as it is, packed for the iPhone's.
+        let packed = try answer(MacPackAnswer.self, "mac-pack")
+        XCTAssertEqual(packed.titleID, "0400C3F00006E000")
+        XCTAssertEqual(packed.file.name, "Mario Kart World [0400C3F00006E000].app.zip")
+        XCTAssertTrue(packed.file.present)
+        XCTAssertEqual(packed.bytes, Int64(packed.file.size))
+
         let storage = try answer(StorageAnswer.self, "storage-nas").storage
         let copy = try XCTUnwrap(storage.apps.first { $0.titleID == "0400C3F00006E000" })
         XCTAssertTrue(copy.isInstalledCopy)

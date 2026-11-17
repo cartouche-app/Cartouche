@@ -105,6 +105,8 @@ final class AppModel: ObservableObject {
     let telemetry: BuilderTelemetry
     /// The games played on this Mac, and their saves.
     let macGames: MacGames
+    /// The Builder's games in the iPhone's games folder, on a connection.
+    let iPhoneGames: IPhoneGames
     let sample: Bool
 
     /// What the window shows: Cartouche's console or the builder, as the
@@ -148,6 +150,9 @@ final class AppModel: ObservableObject {
     /// The game whose app the games folder keeps in one file (a NAS's) is
     /// being installed on this Mac, and how far it is, in the engine's words.
     @Published private(set) var installing: String?
+    /// The name of the game being installed, when it is not the library's:
+    /// a Mac app another Mac sent to the iPhone's games folder.
+    @Published private(set) var installingName: String?
     @Published private(set) var installMessage = ""
     /// A batch asked for, until status.json shows it: a few seconds, or as
     /// long as the engine's look at nxnative holds the batch lock, which the
@@ -177,6 +182,7 @@ final class AppModel: ObservableObject {
         self.sample = sample
         bridge = BridgeController(home: home, sample: sample)
         macGames = MacGames(store: home.macSaves, scratch: home.savesScratch, sample: sample)
+        iPhoneGames = IPhoneGames(store: ConnectionGamesStore(url: home.connectionGames), scratch: home.gamesScratch)
         if sample {
             updater = Updater(app: URL(fileURLWithPath: "/Applications/Cartouche Builder.app"), version: "0.2.0", identifier: Updater.identifier,
                               folder: home.root.appendingPathComponent("Updates"), enabled: false)
@@ -393,6 +399,8 @@ final class AppModel: ObservableObject {
             let fresh = try await engine.library(update: update)
             show(read: fresh, since: mark)
             if update { announceImproved(fresh) }
+            // What goes to the iPhone's games folder, on a connection.
+            iPhoneGames.libraryRead(library?.games ?? [])
         } catch {
             if !quietly { show(error, origin: update ? "check" : "library", background: update) }
         }
@@ -1056,9 +1064,14 @@ final class AppModel: ObservableObject {
         macGames.news = { [weak self] news in self?.heard(news) }
         macGames.language = L10n.code
         useMacSaves()
-        // The iPhone's saves folder may be on a connection the player
-        // changes or removes on the console's Storage page.
-        ConsoleLink.followConnections { [weak self] in self?.useMacSaves() }
+        iPhoneGames.start(for: self)
+        useIPhoneGames()
+        // The iPhone's folders may be on a connection the player changes or
+        // removes on the console's Storage page.
+        ConsoleLink.followConnections { [weak self] in
+            self?.useMacSaves()
+            self?.useIPhoneGames()
+        }
         macGames.start()
         adoptSharedSaves()
         // A NAS mounted later: its saves folder is looked for then.
@@ -1092,9 +1105,10 @@ final class AppModel: ObservableObject {
     }
 
     /// The library's games that have an app on this Mac, as their
-    /// Info.plist names them: their copies' folder is named after it.
-    private func useMacApps() {
-        let apps = (library?.games ?? []).compactMap { game -> MacGameApp? in
+    /// Info.plist names them: their copies' folder is named after it. And
+    /// the apps installed from the iPhone's games folder, another Mac's.
+    func useMacApps() {
+        var apps = (library?.games ?? []).compactMap { game -> MacGameApp? in
             guard let app = game.mac?.app, app.present else { return nil }
             let url = URL(fileURLWithPath: app.path)
             if sample { return MacGameApp(url: url, titleID: game.titleID, name: game.name) }
@@ -1102,29 +1116,39 @@ final class AppModel: ObservableObject {
         }
         if sample {
             macGames.preview(apps: apps)
-        } else {
-            macGames.use(apps: apps)
-            showConsoleGames()
+            return
         }
+        let have = Set(apps.map { $0.titleID.uppercased() })
+        apps += iPhoneGames.fetchedApps.filter { !have.contains($0.titleID) }
+            .compactMap { MacGameApp(url: URL(fileURLWithPath: $0.app)) }
+        macGames.use(apps: apps)
+        showConsoleGames()
     }
 
     /// Cartouche's console shows the games with an app on this Mac, and
     /// those the games folder keeps in one file (a NAS's) and has not
     /// installed here, with Install, as the iPhone's console shows the IPAs
     /// of its games folder: in the app's words for where they are.
-    private func showConsoleGames() {
+    func showConsoleGames() {
         guard !sample else { return }
         let games = library?.games ?? []
-        let apps = games.compactMap { game -> URL? in
+        var apps = games.compactMap { game -> URL? in
             guard let app = game.mac?.app, app.present else { return nil }
             return URL(fileURLWithPath: app.path)
         }
+        // The apps installed from the iPhone's games folder, another Mac's.
+        let built = Set(games.filter { $0.mac?.hasApp == true || $0.mac?.kept == true }.map { $0.titleID.uppercased() })
+        apps += iPhoneGames.fetchedApps.filter { !built.contains($0.titleID) }.map { URL(fileURLWithPath: $0.app) }
         let kept = games.filter { game in
             guard let mac = game.mac else { return false }
             return mac.playable && !mac.hasApp
         }
-        ConsoleLink.show(games: apps, kept: kept,
-                         keptIn: gamesOnShare ? tr("the NAS", "le NAS") : tr("the games folder", "le dossier des jeux"))
+        // The Mac apps another Mac sent there, of the games it has none of.
+        let offers = iPhoneGames.offers.filter { !built.contains($0.titleID) }
+        ConsoleLink.show(games: apps, kept: kept, offers: offers, keptIn: ConnectionGames.shownPlace(
+            kept: kept.isEmpty ? nil : (gamesOnShare ? tr("the NAS", "le NAS") : tr("the games folder", "le dossier des jeux")),
+            offers: offers.isEmpty ? nil : iPhoneGames.folder.flatMap { ConsoleLink.connectionName($0.connection) }
+                ?? tr("the iPhone’s games folder", "le dossier des jeux de l’iPhone")))
         // The sessions of the games it shows, played since the app last
         // read them, from the Finder or the Dock too: the console reads the
         // logs of its games only.
@@ -1311,8 +1335,60 @@ final class AppModel: ObservableObject {
     /// The console's Install, on a game the games folder keeps in one file
     /// (a NAS's): installs it on this Mac, as the game page's button does.
     func install(titleID: String) {
-        guard let game = self.game(titleID) else { return }
-        installOnThisMac(game)
+        if let game = self.game(titleID), game.mac?.kept == true {
+            installOnThisMac(game)
+        } else if let offer = iPhoneGames.offer(titleID) {
+            // Another Mac's, from the iPhone's games folder.
+            guard !sample else { return }
+            Task {
+                do {
+                    try await iPhoneGames.install(offer)
+                } catch {
+                    show(error, origin: "install")
+                }
+            }
+        }
+    }
+
+    /// Runs WORK as the install of TITLE_ID's game, NAME, on this Mac: one at
+    /// a time, what it says shown on the console and on the game's page.
+    func runInstall(of titleID: String, name: String, _ work: (@escaping @Sendable (String) -> Void) async throws -> Void) async throws {
+        guard installing == nil else {
+            throw EngineFailure(kind: "busy", message: tr("Wait for the installation under way to finish.", "Attendez la fin de l’installation en cours."))
+        }
+        installing = titleID
+        installingName = name
+        installMessage = tr("Installing \(name) on this Mac…", "Installation de \(name) sur ce Mac…")
+        defer {
+            installing = nil
+            installingName = nil
+            installMessage = ""
+        }
+        try await work { [weak self] line in
+            Task { @MainActor in
+                if self?.installing == titleID { self?.installMessage = line }
+            }
+        }
+    }
+
+    /// The games this Mac has an app of: built here, kept in the games
+    /// folder or installed, or installed from the iPhone's games folder.
+    func macTitleIDs() -> Set<String> {
+        var found = Set((library?.games ?? []).filter { $0.mac?.hasApp == true || $0.mac?.kept == true }.map { $0.titleID.uppercased() })
+        found.formUnion(iPhoneGames.fetchedApps.map(\.titleID))
+        return found
+    }
+
+    /// The games folder chosen on the iPhone, when it is on one of the
+    /// player's connections: the Builder sends its games there, and the
+    /// console installs from there the Mac apps another Mac sent.
+    func useIPhoneGames() {
+        guard !sample else { return }
+        if let told = AppSettings.toldFolders.games, let id = told.connection, let connection = ConsoleLink.currentConnection(id) {
+            iPhoneGames.use(IPhoneGames.Folder(connection: connection, path: told.path))
+        } else {
+            iPhoneGames.use(nil)
+        }
     }
 
     private func heard(_ news: MacGamesNews) {

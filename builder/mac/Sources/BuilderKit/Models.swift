@@ -476,6 +476,20 @@ public struct MacInstallAnswer: Decodable, Equatable {
     }
 }
 
+/// A game's app packed in one file for the iPhone's games folder
+/// (mac-pack): the file, its game, and the time it took.
+public struct MacPackAnswer: Decodable, Equatable {
+    public var file: GameIPA
+    public var titleID: String
+    public var bytes: Int64?
+    public var seconds: Double?
+
+    private enum CodingKeys: String, CodingKey {
+        case file, bytes, seconds
+        case titleID = "title_id"
+    }
+}
+
 public struct Game: Codable, Equatable, Identifiable {
     public var titleID: String
     public var name: String

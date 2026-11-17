@@ -24,7 +24,14 @@ follows through status.json (status.py).
                          Mac (its app) again, or no longer: never for neither
                          (what was built stays where it is)
   mount                  connects the shares of the folders again
-  mac-install TITLE_ID   installs on this Mac the game's app a NAS keeps in one file
+  mac-install TITLE_ID [--from FILE]
+                         installs on this Mac the game's app a NAS keeps in one file,
+                         or the one in FILE, which the app fetched from the iPhone's
+                         games folder on one of the player's connections
+  mac-pack TITLE_ID --into FOLDER
+                         packs in one file in FOLDER the game's app the games folder
+                         keeps as it is, for the app to send it to the iPhone's
+                         games folder
   bundle-romfs --ipa IPA --romfs IMAGE
                          packages matching external game data without compiling
   queue                  the games asked for while a batch runs (queue.py)
@@ -89,6 +96,10 @@ def main(argv: list[str]) -> int:
     commands.add_parser("mount")
     install_parser = commands.add_parser("mac-install")
     install_parser.add_argument("title_id")
+    install_parser.add_argument("--from", dest="source", type=Path)
+    pack_parser = commands.add_parser("mac-pack")
+    pack_parser.add_argument("title_id")
+    pack_parser.add_argument("--into", required=True, type=Path)
     bundle_parser = commands.add_parser("bundle-romfs")
     bundle_parser.add_argument("--ipa", required=True, type=Path)
     bundle_parser.add_argument("--romfs", required=True, type=Path)
@@ -118,7 +129,8 @@ def main(argv: list[str]) -> int:
             "follow": lambda: follow(ctx, args.title_id, args.state == "on"),
             "platform": lambda: platform(ctx, args.title_id, args.platform, args.state == "on"),
             "mount": lambda: mount(ctx),
-            "mac-install": lambda: mac_install(ctx, args.title_id),
+            "mac-install": lambda: mac_install(ctx, args.title_id, args.source),
+            "mac-pack": lambda: mac_pack(ctx, args.title_id, args.into),
             "bundle-romfs": lambda: bundle_romfs(ctx, args.ipa, args.romfs),
             "queue": lambda: queue(ctx, args.action, getattr(args, "title_ids", []), getattr(args, "force", False)),
         }[args.command]
@@ -182,15 +194,26 @@ def bundle_romfs(ctx: batch.Context, source: Path, image: Path) -> dict:
             "nxnative": info.short_commit if info else None, "bytes": size}
 
 
-def mac_install(ctx: batch.Context, title_id: str) -> dict:
+def mac_install(ctx: batch.Context, title_id: str, source: Path | None = None) -> dict:
     """Installs on this Mac the game's app the games folder keeps in one file
     (a NAS's), or makes this Mac's copy of it again of the newest build: in
     the Mac apps folder, in place of the game's app there, never while the
-    game runs from it. What it does goes to stderr, for the app to show."""
+    game runs from it. What it does goes to stderr, for the app to show.
+
+    With SOURCE, the game's app kept in that file, which the app fetched
+    from the iPhone's games folder on one of the player's connections, where
+    another Mac sent it: installed the same way, wherever the games folder
+    keeps its own apps, and recorded nowhere, the builder having built
+    nothing of it."""
     title_id = title_id.upper()
     if not titles.is_title_id(title_id):
         raise BadRequest(f"not a title ID: {title_id}")
     place = macapps.place(ctx.config)
+    if source is not None:
+        if not source.is_file():
+            raise BadRequest(f"no such file: {source}")
+        stem = source.name[: -len(macapps.PACKED_SUFFIX)] if source.name.endswith(macapps.PACKED_SUFFIX) else source.stem
+        return _install_packed(ctx, place, title_id, source, macapps.find(place.installs, title_id), titles.label(stem))
     if not place.packed:
         raise batch.Blocked(t("mac.not_kept_packed"))
     shares.reconnect([place.library], ctx.config.shares, log=lambda address: _say(t("batch.mounting", share=address)))
@@ -201,6 +224,14 @@ def mac_install(ctx: batch.Context, title_id: str) -> dict:
         raise batch.Blocked(t("mac.no_packed"))
     copy = place.copy(title_id, copied.app if copied else "")
     shown = (built.name if built and built.name else "") or titles.label(packed.name[: -len(macapps.PACKED_SUFFIX)])
+    return _install_packed(ctx, place, title_id, packed, copy, shown, built=built, records=True)
+
+
+def _install_packed(ctx: batch.Context, place: macapps.Place, title_id: str, packed: Path, copy: Path | None, shown: str,
+                    built=None, records: bool = False) -> dict:
+    """The game's app kept in PACKED installed in the Mac apps folder, in
+    place of COPY, the game's app there, if any; RECORDS it as this Mac's
+    copy of the games folder's file, made of BUILT."""
     if copy is not None and macapps.running(copy):
         raise batch.Blocked(t("mac.install_running", name=shown))
     name = copy.name if copy is not None else macapps.target_name(place.installs, title_id, shown)
@@ -222,11 +253,61 @@ def mac_install(ctx: batch.Context, title_id: str) -> dict:
 
     path = macapps.install(packed, place.installs, title_id, name, progress=told)
     size = macapps.size(path)
-    ctx.store.mac_copied(title_id, MacCopy(app=path.name, folder=str(place.installs), built_at=built.built_at if built else "",
-                                           installed_at=now_iso(), size=size, commit=built.commit if built else ""))
+    if records:
+        ctx.store.mac_copied(title_id, MacCopy(app=path.name, folder=str(place.installs), built_at=built.built_at if built else "",
+                                               installed_at=now_iso(), size=size, commit=built.commit if built else ""))
     # For the app's measurements: the bytes and the time, never a name or a path.
     return {"app": {"name": path.name, "path": str(path), "size": size, "present": True},
             "title_id": title_id, "bytes": size, "seconds": round(time.monotonic() - began, 1)}
+
+
+def mac_pack(ctx: batch.Context, title_id: str, folder: Path) -> dict:
+    """Packs in one file in FOLDER, as a NAS keeps it, the game's app the
+    games folder keeps as it is (on a disk of this Mac's own kind): for the
+    app to send it to the iPhone's games folder, on one of the player's
+    connections, beside the game's IPA. A games folder that keeps the apps in
+    one file has that file already. An app a batch puts in the place of this
+    one meanwhile leaves no file: the app asks again after the batch."""
+    title_id = title_id.upper()
+    if not titles.is_title_id(title_id):
+        raise BadRequest(f"not a title ID: {title_id}")
+    place = macapps.place(ctx.config)
+    if place.packed:
+        raise batch.Blocked(t("mac.kept_packed"))
+    record = ctx.store.get(title_id)
+    built = record.mac
+    app = place.find(title_id, built.app if built else "")
+    if app is None:
+        raise batch.Blocked(t("mac.pack_missing"))
+    info = macapps.read_info(app)
+    shown = (built.name if built and built.name else "") or (info.name if info and info.name else "") or titles.label(app.stem)
+    target = folder / macapps.packed_name(shown, title_id)
+    needed = macapps.size(app) / 2**30 + ctx.config.min_free_gb
+    free = free_gb(folder)
+    if free < needed:
+        raise batch.Blocked(t("mac.pack_no_room", name=shown, needed=f"{needed:.0f}", free=f"{free:.0f}"))
+    began = time.monotonic()
+    _say(t("mac.pack_for_iphone", name=shown))
+    before = _app_state(app)
+    size = macapps.pack(app, target)
+    if _app_state(app) != before:
+        # Packed while a batch put a new build in its place: half of each.
+        target.unlink(missing_ok=True)
+        raise batch.Busy(t("mac.pack_changed", name=shown))
+    # For the app's measurements: the bytes and the time, never a name or a path.
+    return {"file": {"name": target.name, "path": str(target), "size": size, "present": True},
+            "title_id": title_id, "bytes": size, "seconds": round(time.monotonic() - began, 1)}
+
+
+def _app_state(app: Path) -> tuple:
+    """What changes when another build of the game takes APP's place: the
+    folder itself, and the commit its Info.plist names."""
+    try:
+        stat = app.stat()
+    except OSError:
+        return ()
+    info = macapps.read_info(app)
+    return stat.st_ino, stat.st_mtime_ns, info.commit if info else None, info.dirty if info else None
 
 
 # ---- The games ------------------------------------------------------------------

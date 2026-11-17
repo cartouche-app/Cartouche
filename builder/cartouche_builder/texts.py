@@ -139,6 +139,11 @@ TEXTS: dict[str, tuple[str, str]] = {
     "mac.installing": ("Installing {name} on this Mac: {done} of {total} GB", "Installation de {name} sur ce Mac : {done} Go sur {total}"),
     "mac.install_running": ("{name} is open on this Mac: quit it first, then play it again to update it.", "{name} est ouvert sur ce Mac : quittez-le d'abord, puis relancez-le pour le mettre à jour."),
     "mac.install_no_room": ("{name} needs {needed} GB on this Mac's disk, and {free} GB are free. Free some room, on the Storage page for example.", "{name} a besoin de {needed} Go sur le disque du Mac, et {free} Go sont libres. Libérez de la place, par exemple dans Stockage."),
+    "mac.kept_packed": ("The games folder keeps this game's app in one file already: that file goes as it is.", "Le dossier de jeux garde déjà l'app de ce jeu en un seul fichier : ce fichier part tel quel."),
+    "mac.pack_missing": ("This game has no Mac app in the games folder yet: it is built at the next batch.", "Ce jeu n'a pas encore d'app Mac dans le dossier de jeux : elle sera construite au prochain lot."),
+    "mac.pack_for_iphone": ("Packing {name}'s app in one file, for the iPhone's games folder", "Mise en un seul fichier de l'app de {name}, pour le dossier des jeux de l'iPhone"),
+    "mac.pack_no_room": ("{name}'s app needs {needed} GB on this Mac's disk to be packed, and {free} GB are free.", "L'app de {name} a besoin de {needed} Go sur le disque du Mac pour être mise en un seul fichier, et {free} Go sont libres."),
+    "mac.pack_changed": ("{name}'s app changed while it was packed: it is packed again after the batch.", "L'app de {name} a changé pendant sa mise en un seul fichier : elle le sera de nouveau après le lot."),
     "batch.trimmed": ("Removed the build folder {folder} ({gb} GB) to keep under the size limit.", "Dossier de construction {folder} supprimé ({gb} Go) pour rester sous la taille limite."),
     # ---- A full disk (disks.py)
     "disk.full_mac": ("Your Mac's disk is full ({free} left). Free some room, on the Storage page for example, then try again.", "Le disque du Mac est plein (il reste {free}). Libérez de la place, par exemple dans Stockage, puis réessayez."),

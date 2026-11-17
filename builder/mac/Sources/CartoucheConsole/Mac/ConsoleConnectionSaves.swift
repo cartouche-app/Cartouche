@@ -223,4 +223,10 @@ extension CartoucheMacConsole {
     public func connectionName(_ id: UUID) -> String? {
         CartoucheStorageSettings.shared.server(id)?.name
     }
+
+    /// The connection ID's kind, as the measurements say it: smb, s3, ftp,
+    /// sftp or drive.
+    public func connectionKind(_ id: UUID) -> String? {
+        CartoucheStorageSettings.shared.server(id)?.kind.rawValue
+    }
 }
