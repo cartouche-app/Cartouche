@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "titleId": "0100F43008C44000",
+  "name": "Pokémon Legends: Z-A",
+  "platform": "switch",
+  "requirements": {
+    "minimumIOS": "26.0",
+    "bcTextureCompression": true,
+    "increasedMemoryLimit": true
+  },
+  "results": [
+    {
+      "device": "iPhone19,4",
+      "iOS": "27.2.1",
+      "date": "2026-11-17",
+      "engine": "nxnative a3b5230f2c98 and 6 other builds",
+      "status": "playable-with-issues",
+      "peakMemoryMiB": 3794,
+      "notes": [
+        "Measured by Cartouche on 5 iPhones, 44 sessions from 2026-11-12 to 2026-11-17: 30 fps for 30 (median), 29.8 fps in the slowest 5% of the time, 10.9 stutters a minute. 9 sessions ended badly: 9 crashes."
+      ],
+      "measured": {
+        "iPhones": 5,
+        "sessions": 44,
+        "from": "2026-11-12",
+        "to": "2026-11-17",
+        "fps": 30,
+        "slowestFps": 29.8,
+        "targetFps": 30,
+        "stuttersPerMinute": 10.9,
+        "endedBadlyPercent": 20.5,
+        "endedBadly": {
+          "crashes": 9
+        },
+        "nxnative": "a3b5230f2c98",
+        "otherBuilds": 6
+      }
+    }
+  ]
+}

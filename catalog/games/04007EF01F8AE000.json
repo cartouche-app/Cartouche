@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "titleId": "04007EF01F8AE000",
+  "name": "Fire Emblem Fortune's Weave",
+  "platform": "switch2",
+  "requirements": {
+    "minimumIOS": "26.0",
+    "bcTextureCompression": true,
+    "increasedMemoryLimit": true
+  },
+  "results": [
+    {
+      "device": "iPhone19,4",
+      "iOS": "27.2.1",
+      "date": "2026-11-17",
+      "engine": "nxnative bee218d97844",
+      "status": "playable",
+      "peakMemoryMiB": 3393,
+      "notes": [
+        "Measured by Cartouche on 4 iPhones, 11 sessions from 2026-11-12 to 2026-11-17: 59.4 fps for 60 (median), 52.7 fps in the slowest 5% of the time, 122.5 stutters a minute. None ended badly."
+      ],
+      "measured": {
+        "iPhones": 4,
+        "sessions": 11,
+        "from": "2026-11-12",
+        "to": "2026-11-17",
+        "fps": 59.4,
+        "slowestFps": 52.7,
+        "targetFps": 60,
+        "stuttersPerMinute": 122.5,
+        "endedBadlyPercent": 0,
+        "nxnative": "bee218d97844"
+      }
+    }
+  ]
+}

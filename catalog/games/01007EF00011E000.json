@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "titleId": "01007EF00011E000",
+  "name": "The Legend of Zelda: Breath of the Wild",
+  "platform": "switch",
+  "requirements": {
+    "minimumIOS": "26.0",
+    "bcTextureCompression": true,
+    "increasedMemoryLimit": true
+  },
+  "results": [
+    {
+      "device": "iPhone19,4",
+      "iOS": "27.2",
+      "date": "2026-11-15",
+      "engine": "nxnative 0c078130f6db and 2 other builds",
+      "status": "playable-with-issues",
+      "peakMemoryMiB": 3178,
+      "notes": [
+        "Measured by Cartouche on 5 iPhones, 33 sessions from 2026-11-12 to 2026-11-15: 30 fps for 60 (median), 8.1 stutters a minute. None ended badly."
+      ],
+      "measured": {
+        "iPhones": 5,
+        "sessions": 33,
+        "from": "2026-11-12",
+        "to": "2026-11-15",
+        "fps": 30,
+        "targetFps": 60,
+        "stuttersPerMinute": 8.1,
+        "endedBadlyPercent": 0,
+        "nxnative": "0c078130f6db",
+        "otherBuilds": 2
+      }
+    }
+  ]
+}
