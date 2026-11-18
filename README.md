@@ -1,8 +1,8 @@
-# nxnative's games on players' iPhones
+# nxnative's games on players' iPhones and Macs
 
-What the players of [Cartouche](https://github.com/cartouche-app/Cartouche) measured of nxnative's games from 2026-11-10 to 2026-11-17, summed up for nxnative's developers each Thursday. How, and what is left out: [telemetry/README.md](https://github.com/cartouche-app/Cartouche/blob/main/telemetry/README.md#nxnatives-page).
+What the players of [Cartouche](https://github.com/cartouche-app/Cartouche) measured of nxnative's games from 2026-11-10 to 2026-11-17, on their iPhones and on their Macs, summed up for nxnative's developers each Thursday. How, and what is left out: [telemetry/README.md](https://github.com/cartouche-app/Cartouche/blob/main/telemetry/README.md#nxnatives-page).
 
-1390 game sessions from 107 installs, 279.1 hours of play. 364 of the 1110 sessions that count name their nxnative commit. Every line, and every figure, sums up at least 3 installs: a smaller group is left out, and a figure fewer installs gave shows –.
+1390 game sessions on iPhones and iPads from 107 installs, 279.1 hours of play. 364 of the 1110 sessions that count name their nxnative commit. Every line, and every figure, sums up at least 3 installs, or 3 Macs: a smaller group is left out, and a figure fewer of them gave shows –. The games played on players' Macs, and the builds there, follow the devices.
 
 Set apart: 68 sessions on iPhones whose GPU reads no BC texture (A16 and older), which nxnative refuses, from 6 installs; 57 sessions whose game process ran without Increased Memory Limit, which is Cartouche's doing, from 22 installs; 118 sessions of builds with changes of their own, from 14 installs.
 
@@ -69,9 +69,30 @@ The installs that started Cartouche, as each last did: 255 installs.
 - The memory limit iOS sets for Cartouche: 8,192 MiB on 110, 6,144 MiB on 95, 4,096 MiB on 18, 6,656 MiB on 8, 3,376 MiB without Increased Memory Limit on 8, 12,288 MiB on 7, 5,120 MiB without Increased Memory Limit on 3, 2,348 MiB on 3.
 - iPhones whose GPU reads no BC texture (A16 and older): 19 installs.
 
-## Builds on players' Macs, by nxnative commit
+## Played on players' Macs
+
+Cartouche Builder builds each game's app for the Mac too, from the same commit, and follows each game played on the Mac, started from its Play button or from the Finder: how each play ended, as nxnative's launcher says it in its log. A Mac counts as an install does.
+
+58 plays of 10 games on 12 Macs, 5.6 hours.
+
+| Game | Macs | Plays | Hours | Median minutes | Quit | GPU revoked | Crashed | Stopped | Unknown |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| The Legend of Zelda: Ocarina of Time `0400486024DEC000` | 5 | 17 | 3.5 | 5.3 | 12 | 0 | 0 | 0 | 5 |
+| Mario Kart 8 Deluxe `0100152000022000` | 3 | 9 | 0.5 | 2.0 | 3 | 0 | 0 | 0 | 6 |
+
+## Measured on players' Macs
+
+What Cartouche's console on the Mac read of each game played there, in the log nxnative's app for the Mac writes, as Cartouche reads an iPhone's: each Mac counts once, as an install does.
+
+No game was measured on 3 Macs or more.
+
+## IPAs built on players' Macs, by nxnative commit
 
 Cartouche Builder builds players' games with nxnative's build script, on their Macs. A game of a Mac counts once for a commit, as its last try with it ended, however often its player tried it again. Regressions are the games that fail with the commit and had built on their Mac before, and on how many Macs: a commit that broke a build makes them on several.
+
+In all, from 99 nxnative commits: 215 IPAs of 55 games built on 49 Macs, in a median of 25 minutes; 129 failed on 35 Macs.
+
+The steps 3 Macs or more failed at: shader split, 23 on 11 Macs; app build, 21 on 11 Macs; iOS shaders, 13 on 8 Macs; IPA pack, 10 on 4 Macs; extract v0, 5 on 4 Macs; check v0 files, 4 on 3 Macs; a step not said, 32 on 12 Macs; other steps, 21.
 
 | nxnative | Macs | Built | Failed | Regressions | Where they failed |
 | --- | --- | --- | --- | --- | --- |
@@ -93,6 +114,14 @@ Cartouche Builder builds players' games with nxnative's build script, on their M
 | `d6585a2de864` | 3 | 1 | 2 | 1 on fewer than 3 Macs | other steps 2 |
 | `e6a358f5c131` | 3 | 3 | 1 | 0 | other steps 1 |
 
+## Mac apps built on players' Macs, by nxnative commit
+
+Cartouche Builder also builds each game's app for the Mac it builds on, from the same commit and files, after its IPA or alone. A game of a Mac counts once for a commit, as its last try with it ended, however often its player tried it again. Regressions are the games that fail with the commit and had built on their Mac before, and on how many Macs: a commit that broke a build makes them on several.
+
+In all, from 18 nxnative commits: 37 Mac apps of 22 games built on 13 Macs, in a median of 41 minutes; some failed, on fewer than 3 Macs.
+
+No nxnative commit was built for the Mac on 3 Macs or more.
+
 ## How it is summed up
 
 - An install is one copy of Cartouche on one iPhone or iPad, under a random number it changes every 13 months or when its player erases what it sent: a player who installs Cartouche again is a new install. A Mac is one copy of Cartouche Builder. Neither number is ever written here.
@@ -103,4 +132,5 @@ Cartouche Builder builds players' games with nxnative's build script, on their M
 - GPU lost: the crashes nxnative ended once the system took the GPU away from the game for the GPU errors it caused (`[RED] GPU access revoked`), as the crashes' cause says too. Cartouche tells them from its reading 4 of the log on: before it, such a session is a crash like any other abort, and a line with no session read so shows –. On a Mac, nxnative quits the game itself, and its crash has no signal.
 - A session counts once, as last sent; a copy of another region counts for its game.
 - nxnative, Models: the commit, or the model, most installs of the line ran, when at least 3 did, and how many others; else only how many. A Mac counts as an install does: a step of a build shows when at least 3 Macs failed at it.
-- Builds: the Macs whose Cartouche Builder follows a fork of nxnative are left out, and so are the builds the player stopped and the errors of Cartouche Builder's own code. A game of a Mac counts once for a commit, as its last try with it ended, however often its player tried it again. A regression is such a game that failed and had built on that Mac on an earlier try, from any commit of the 28 days. Where they failed is nxnative's stage of each failed game's last try.
+- On players' Macs: a play is a game Cartouche Builder started, from its Play button, the Finder, the Dock or Launchpad, counted once it ended, as the last line of nxnative's launcher in its log says: Quit, `launcher: the host exited with 0`; GPU revoked, with 70, macOS having stopped the game's GPU work; Crashed, another exit code or a signal; Stopped, SIGHUP, SIGINT, SIGKILL or SIGTERM, from outside; Unknown, no such line, as when nxnative's window was closed without playing. Median minutes: the median of each Mac's own median play. Measured: Cartouche's console on the Mac reads the log of each game played there as Cartouche reads an iPhone's, its minutes from the start of nxnative's launcher, its settings window too; nxnative reads no thermal state on the Mac. The Macs whose Cartouche Builder follows a fork of nxnative are left out, and so are the builds with changes of their own.
+- Builds, of IPAs and of Mac apps: the Macs whose Cartouche Builder follows a fork of nxnative are left out, and so are the builds the player stopped and the errors of Cartouche Builder's own code. A game of a Mac counts once for a commit, as its last try with it ended, however often its player tried it again. A regression is such a game that failed and had built on that Mac on an earlier try, from any commit of the 28 days. Where they failed is nxnative's stage of each failed game's last try. Minutes: the median of each Mac's own median build, from its builds that built.
