@@ -45,6 +45,10 @@ struct CartoucheFailure: Codable, Equatable, Sendable {
         case appleServer
         /// The anisette server, which signs the requests to Apple, failed.
         case anisette
+        /// Apple refused, for now, a new machine for the sign-in to sign its
+        /// requests with, before the Apple ID went to it
+        /// (app/patches/sidestore/0024).
+        case provisioningRefused
 
         // Signing.
         /// The account has a certificate the built-in SideStore does not
@@ -504,7 +508,8 @@ struct CartoucheSideStoreOutcome: Equatable, Sendable {
     /// For Apple's answer with an HTTP error and no answer of its own (patch
     /// 0016): which of Apple's services gave it ("grandSlam" for the sign-in
     /// and its code, "developerServices"), and the seconds Apple asked to
-    /// wait, when it did.
+    /// wait, when it did. "provisioning" for its answer to a new machine for
+    /// the sign-in (patch 0024).
     var service: String?
     var retryAfter: Int?
     /// What the action noted on its way: whether Apple asked for a code and
@@ -515,7 +520,9 @@ struct CartoucheSideStoreOutcome: Equatable, Sendable {
     /// sentence names; when minimuxer could not reach this iPhone (patch
     /// 0022), which of minimuxer's sentences it gave ("reason"), the words
     /// of the library behind it ("detail"), the kind of pairing file it
-    /// loaded ("pairingKind") and whether an IPsec interface was up.
+    /// loaded ("pairingKind") and whether an IPsec interface was up; for
+    /// Apple's answer to a new machine (patch 0024), the step of its
+    /// provisioning that gave it ("reason": lookup, start or finish).
     var facts: [String: CartoucheTelemetryValue]
 
     /// What SideStore wrote, each value of the type it must have or none.
@@ -639,6 +646,12 @@ struct CartoucheSideStoreOutcome: Equatable, Sendable {
             return .appleServer
         case "anisette":
             return .anisette
+        case "provisioning":
+            // Apple's answer to a new machine for the sign-in (patch 0024):
+            // its 429, its refusal for now, or an error of its servers.
+            if http == 429 { return .tooManyAttempts }
+            if let http, (400...499).contains(http) { return .provisioningRefused }
+            return .appleServer
         case "operation", "minimuxer":
             switch kind {
             case "noVPN", "invalidVPN": return .vpn

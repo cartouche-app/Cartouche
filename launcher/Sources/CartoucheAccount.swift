@@ -311,19 +311,7 @@ final class CartoucheAccount: ObservableObject {
             .flatMap { CartoucheSideStoreOutcome(data: $0, expecting: .signIn) }
         CartoucheStoreKeychain.remove(CartoucheSideStoreOutcome.account)
         if let message {
-            var failure = CartoucheFailure.sideStore(outcome: outcome, message: message, fraction: fraction, seconds: seconds,
-                                                     vpn: CartoucheVPN.isConnected, pairing: CartouchePairing.exists)
-            noteWait(in: &failure.details)
-            if CartoucheSignInMessage.trouble(in: CartoucheSignInMessage.readable(message), failure: failure) == .tooManyRequests {
-                pauseSignIns(retryAfter: outcome?.retryAfter, failure: &failure)
-            }
-            if CartoucheSignInMessage.leavesDeviceStep(failure) {
-                // Apple accepted the account, and SideStore kept it: only
-                // the step that registers this iPhone is left.
-                CartoucheReports.note("Sign-in: only this iPhone is left to register")
-                CartoucheSetup.shared.noteDeviceStep(left: true)
-            }
-            failed(CartoucheText.sideStoreMessage(message, failure: failure, signIn: true), fraction: fraction, failure: failure)
+            failed(asSideStoreSaid: message, outcome: outcome, fraction: fraction, seconds: seconds)
         } else {
             CartoucheReports.note("Sign-in done")
             var fields = CartoucheFailure.sideStoreSuccess(outcome: outcome, seconds: seconds)
@@ -353,6 +341,26 @@ final class CartoucheAccount: ObservableObject {
         }
     }
 
+    /// The sign-in failed, as the built-in SideStore's MESSAGE says, and the
+    /// OUTCOME it left: in Cartouche's words when it has some, with the wait
+    /// Apple's refusal asks for, when it asks for one.
+    private func failed(asSideStoreSaid message: String, outcome: CartoucheSideStoreOutcome?, fraction: Double?, seconds: Double?) {
+        var failure = CartoucheFailure.sideStore(outcome: outcome, message: message, fraction: fraction, seconds: seconds,
+                                                 vpn: CartoucheVPN.isConnected, pairing: CartouchePairing.exists)
+        noteWait(in: &failure.details)
+        let trouble = CartoucheSignInMessage.trouble(in: CartoucheSignInMessage.readable(message), failure: failure)
+        if CartoucheSignInMessage.pausesSignIns(trouble) {
+            pauseSignIns(retryAfter: outcome?.retryAfter, limited: trouble == .tooManyRequests, failure: &failure)
+        }
+        if CartoucheSignInMessage.leavesDeviceStep(failure) {
+            // Apple accepted the account, and SideStore kept it: only the
+            // step that registers this iPhone is left.
+            CartoucheReports.note("Sign-in: only this iPhone is left to register")
+            CartoucheSetup.shared.noteDeviceStep(left: true)
+        }
+        failed(CartoucheText.sideStoreMessage(message, failure: failure, signIn: true), fraction: fraction, failure: failure)
+    }
+
     /// The sign-in failed, as MESSAGE says, for the reason FAILURE gives.
     /// AUTOMATIC: whether Cartouche started it by itself, which it is still
     /// doing unless said.
@@ -365,15 +373,19 @@ final class CartoucheAccount: ObservableObject {
                                               fraction: fraction, failure: failure)
     }
 
-    /// Apple refuses more requests for now: no sign-in until the wait is
-    /// over, which the measurements send with the error.
-    private func pauseSignIns(retryAfter: Int?, failure: inout CartoucheFailure) {
+    /// Apple refuses more requests for now, LIMITED, or a new machine for
+    /// the sign-in (CartoucheSignInMessage.pausesSignIns): no sign-in until
+    /// the wait is over, which the measurements send with the error. A
+    /// refused machine counts in a row with Apple's limits, and keeps its
+    /// own cause.
+    private func pauseSignIns(retryAfter: Int?, limited: Bool, failure: inout CartoucheFailure) {
         let limit = CartoucheSignInPause.after(pause, at: Date(), retryAfter: retryAfter)
         keep(limit)
-        failure.cause = .tooManyAttempts
+        if limited { failure.cause = .tooManyAttempts }
         failure.details["wait"] = .number(Double(limit.seconds))
         failure.details["inARow"] = .number(Double(limit.inARow))
-        CartoucheReports.note("Sign-in: Apple limits the sign-ins, \(limit.seconds / 60) min to wait")
+        CartoucheReports.note(limited ? "Sign-in: Apple limits the sign-ins, \(limit.seconds / 60) min to wait"
+                                      : "Sign-in: Apple refuses a new machine for now, \(limit.seconds / 60) min to wait")
     }
 
     // MARK: A sign-in that stopped before the certificate
@@ -592,8 +604,9 @@ final class CartoucheAccount: ObservableObject {
         if let message {
             var failure = CartoucheFailure.sideStore(outcome: outcome, message: message, fraction: fraction, seconds: seconds,
                                                      vpn: CartoucheVPN.isConnected, pairing: CartouchePairing.exists)
-            if CartoucheSignInMessage.trouble(in: CartoucheSignInMessage.readable(message), failure: failure) == .tooManyRequests {
-                pauseSignIns(retryAfter: outcome?.retryAfter, failure: &failure)
+            let trouble = CartoucheSignInMessage.trouble(in: CartoucheSignInMessage.readable(message), failure: failure)
+            if CartoucheSignInMessage.pausesSignIns(trouble) {
+                pauseSignIns(retryAfter: outcome?.retryAfter, limited: trouble == .tooManyRequests, failure: &failure)
             }
             if CartoucheSignInMessage.needsSignIn(afterDeviceStep: failure) {
                 // SideStore kept no account: the whole sign-in is left.
@@ -741,13 +754,15 @@ final class CartoucheAccount: ObservableObject {
 
     /// Shows a sign-in that one of Apple's answers ended, as the built-in
     /// SideStore left FIELDS for Cartouche and passed MESSAGE on, as the
-    /// sign-in's end does, for the gallery's screens.
+    /// sign-in's end does, the wait it asks for under way, for the gallery's
+    /// screens.
     func showAppleAnswerForGallery(_ fields: [String: Any], message: String) {
         let outcome = (try? JSONSerialization.data(withJSONObject: fields))
             .flatMap { CartoucheSideStoreOutcome(data: $0, expecting: .signIn) }
-        let failure = CartoucheFailure.sideStore(outcome: outcome, message: message, fraction: 0, seconds: 0,
-                                                 vpn: CartoucheVPN.isConnected, pairing: true)
-        failed(CartoucheText.sideStoreMessage(message, failure: failure, signIn: true), fraction: 0, failure: failure)
+        failed(asSideStoreSaid: message, outcome: outcome, fraction: 0, seconds: outcome?.seconds.map(Double.init))
+        // The wait shows on this screen alone: the gallery's next screens,
+        // opened in the same simulator, start without it.
+        UserDefaults.standard.removeObject(forKey: Self.pauseKey)
     }
     #endif
 }

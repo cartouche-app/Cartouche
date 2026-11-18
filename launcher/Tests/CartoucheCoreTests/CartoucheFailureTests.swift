@@ -101,6 +101,14 @@ final class CartoucheFailureTests: XCTestCase {
             (["family": "server", "kind": "underlyingError", "apple": -21668], .tooManyAttempts),
             (["family": "server", "kind": "underlyingError", "apple": -20102], .tooManyAttempts),
             (["family": "anisette", "kind": "allServersFailed"], .anisette),
+            // Apple's answer to a new machine for the sign-in (patch 0024).
+            (["family": "provisioning", "kind": "httpError", "http": 401, "service": "provisioning", "reason": "finish"],
+             .provisioningRefused),
+            (["family": "provisioning", "kind": "httpError", "http": 403, "service": "provisioning", "reason": "lookup"],
+             .provisioningRefused),
+            (["family": "provisioning", "kind": "httpError", "http": 429, "service": "provisioning"], .tooManyAttempts),
+            (["family": "provisioning", "kind": "httpError", "http": 503, "service": "provisioning"], .appleServer),
+            (["family": "provisioning", "kind": "invalidResponse", "service": "provisioning", "reason": "start"], .appleServer),
             (["family": "operation", "kind": "forbidden", "stage": "certificate"], .certificateRefused),
             (["family": "operation", "kind": "forbidden", "stage": "device"], .other),
             (["family": "operation", "kind": "pairingNotComplete"], .pairing),
@@ -171,6 +179,28 @@ final class CartoucheFailureTests: XCTestCase {
                                          "service": "gsa.apple.com"]))
         XCTAssertNil(odd.retryAfter)
         XCTAssertNil(odd.service)
+    }
+
+    func testApplesAnswerToANewMachineSaysWhichStepGaveIt() throws {
+        // As app/patches/sidestore/0024 leaves it: AnisetteKit's error for
+        // the 401 of the last step of the provisioning.
+        let left = try XCTUnwrap(outcome([
+            "seconds": 7, "percent": 0, "stage": "account", "trail": "SignIn", "family": "provisioning", "kind": "httpError",
+            "codes": "AnisetteKit.AnisetteError 5", "http": 401, "service": "provisioning", "reason": "finish",
+        ]))
+        XCTAssertEqual(left.service, "provisioning")
+        XCTAssertEqual(left.facts["reason"], .text("finish"))
+        let failure = CartoucheFailure.sideStore(outcome: left, message: "HTTP error (401): Apple PTM/TK endpoint returned HTTP 401",
+                                                 fraction: 0, seconds: 8, vpn: true, pairing: true)
+        XCTAssertEqual(failure.cause, .provisioningRefused)
+        XCTAssertEqual(failure.codes, "AnisetteKit.AnisetteError 5")
+        XCTAssertEqual(failure.fields, [
+            "cause": .text("provisioningRefused"), "stage": .text("account"), "seconds": .number(7), "percent": .number(0),
+            "trail": .text("SignIn"), "kind": .text("httpError"), "http": .number(401), "service": .text("provisioning"),
+            "reason": .text("finish"), "vpn": .flag(true), "pairing": .flag(true),
+        ])
+        // AnisetteKit's words stay on this iPhone.
+        XCTAssertFalse(failure.summary.contains("PTM"))
     }
 
     func testApplesPageInTheWordsGivesItsStatusOnly() throws {

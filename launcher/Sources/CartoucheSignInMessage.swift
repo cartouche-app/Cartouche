@@ -147,7 +147,24 @@ enum CartoucheSignInMessage {
         /// sideloaders, where only an install of Cartouche over itself, with
         /// the Cartouche Installer, puts it back.
         case noLiveProcess
+        /// Apple refused, for now, a new machine for the sign-in, with that
+        /// HTTP status, before the Apple ID went to it
+        /// (app/patches/sidestore/0024): AnisetteKit's English words say
+        /// only that one of Apple's endpoints returned it.
+        case provisioningRefused(status: Int)
+        /// Apple says the session of the sign-in has expired (its code
+        /// 1100), in English: a sign-in again has gone through after each
+        /// one Cartouche's measurements saw, Apple asking for a code.
+        case sessionExpired
+        /// Apple refused the sign-in without saying why (its code -22405),
+        /// in English.
+        case cannotComplete
     }
+
+    /// Apple's codes for a sign-in whose session has expired, and for one it
+    /// refuses without saying why.
+    static let sessionExpiredCode = 1100
+    static let cannotCompleteCode = -22405
 
     /// Whether MESSAGE holds a page of HTML, as Apple's servers send one for
     /// an HTTP error, and as the built-in SideStore passed it on as its
@@ -179,15 +196,36 @@ enum CartoucheSignInMessage {
         if failure.cause == .certificateRefused { return .otherCertificate }
         var http: Int?
         if case .number(let number)? = failure.details["http"] { http = Int(number) }
+        if failure.cause == .provisioningRefused, let http { return .provisioningRefused(status: http) }
         var kind: String?
         if case .text(let text)? = failure.details["kind"] { kind = text }
         if kind == "missingAppGroup" { return .noAppGroup }
+        var apple: Int?
+        if case .number(let number)? = failure.details["apple"] { apple = Int(number) }
+        if apple == sessionExpiredCode { return .sessionExpired }
+        if apple == cannotCompleteCode { return .cannotComplete }
+        var service: String?
+        if case .text(let text)? = failure.details["service"] { service = text }
         let status = pageStatus(in: message) ?? http
         if status == 429 { return .tooManyRequests }
-        if hasPage(message) || kind == "httpStatus" || kind == "invalidResponseFormat" {
+        // Apple's pages, its HTTP errors without an answer of its own, and
+        // its answers to a new machine that are no refusal: an error of its
+        // servers, or an answer that could not be read.
+        if hasPage(message) || kind == "httpStatus" || kind == "invalidResponseFormat" || service == "provisioning" {
             return .unreadable(status: status)
         }
         return nil
+    }
+
+    /// Whether TROUBLE keeps the player from signing in again for a while
+    /// (CartoucheSignInPause): Apple refusing more requests for now, or a
+    /// new machine for now, which a sign-in right away would only ask it
+    /// for again, before any code.
+    static func pausesSignIns(_ trouble: Trouble?) -> Bool {
+        switch trouble {
+        case .tooManyRequests?, .provisioningRefused?: return true
+        default: return false
+        }
     }
 }
 
@@ -290,11 +328,11 @@ extension CartoucheSignInMessage {
 }
 
 /// How long Cartouche keeps the player from signing in again once Apple has
-/// refused more sign-ins for now, so that no burst of attempts, by the
-/// player or by Cartouche itself, makes Apple's limit last longer: what
-/// Apple asked for when it said (Retry-After), a minute to a day; otherwise
-/// 15 minutes, then 30, 60 and 120 for each limit in a row, a day apart at
-/// most.
+/// refused more sign-ins for now, or a new machine for them, so that no
+/// burst of attempts, by the player or by Cartouche itself, makes Apple's
+/// limit last longer: what Apple asked for when it said (Retry-After), a
+/// minute to a day; otherwise 15 minutes, then 30, 60 and 120 for each limit
+/// in a row, a day apart at most.
 struct CartoucheSignInPause: Codable, Equatable {
     /// When the player can sign in again.
     var until: Date

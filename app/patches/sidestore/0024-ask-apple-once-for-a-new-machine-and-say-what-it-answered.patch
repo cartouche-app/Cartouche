@@ -1,0 +1,196 @@
+From fcc82fd5961d9d11b5c1510a125c1cadded592c4 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 18 Nov 2026 08:30:00 +0000
+Subject: [PATCH] Ask Apple once for a new machine, and say what it answered
+
+A sign-in that needs a new anisette machine provisions it from this iPhone
+straight to Apple's servers (gsa.apple.com: its lookup, start and finish),
+whichever anisette server signs it. When Apple answered it with an error,
+CartoucheAnisette went on with the next of the Cartouche Installer's
+servers, and the next: a sign-in that Apple's provisioning refused could
+send Apple the same requests four times in a few seconds, and a player who
+tried twice more, up to twelve times in under three minutes, none of which
+got a machine. Another server asks Apple the same, from the same iPhone. As
+the Cartouche Installer, which asks one server, Apple's answer now ends the
+sign-in: an HTTP error from any step of its provisioning, or an answer of
+Apple's that cannot be read, as AnisetteKit's words name them. A server
+that does not answer, or whose own answer cannot be read, still hands on
+to the next.
+
+CartoucheOutcome tells Apple's answer apart, as family provisioning, kind
+httpError or invalidResponse, with the HTTP status, service provisioning
+and the step that answered as reason (lookup, start, finish). It left
+family other, kind AnisetteError and no status, and Cartouche showed
+AnisetteKit's English words.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01MzPJouaxDEHiaAYJRW7jTY
+---
+ .../Core/Anisette/CartoucheAnisette.swift     | 73 ++++++++++++++++++-
+ SideStore/Intents/CartoucheOutcome.swift      | 24 +++++-
+ 2 files changed, 95 insertions(+), 2 deletions(-)
+
+diff --git a/SideStore/Core/Anisette/CartoucheAnisette.swift b/SideStore/Core/Anisette/CartoucheAnisette.swift
+index 08e7bdb..2fccfc5 100644
+--- a/SideStore/Core/Anisette/CartoucheAnisette.swift
++++ b/SideStore/Core/Anisette/CartoucheAnisette.swift
+@@ -23,7 +23,12 @@
+ //    made another way, when the server refuses it (-45061, "reprovision
+ //    required": reinstalling did not help, since the keychain outlives the
+ //    app), or when Apple refused the last sign-in with it before the player
+-//    typed a code for it, which then starts with the next server.
++//    typed a code for it, which then starts with the next server;
++//  - asks Apple for a new machine once: its provisioning goes from this
++//    iPhone straight to Apple's servers, whichever server signs it, and
++//    once Apple answered it with an error, or an answer that cannot be read,
++//    another server would only ask Apple the same again, as the Cartouche
++//    Installer, which asks one server, never does.
+ //
+ //  What follows such a sign-in (the developer services, renewals) keeps its
+ //  machine and identity, since Apple's token works only with them. An account
+@@ -32,6 +37,7 @@
+ //  Needs proper testing on an iPhone, with each server.
+ //
+ 
++import AnisetteKit
+ import CryptoKit
+ import Foundation
+ import SideSign
+@@ -115,6 +121,13 @@ enum CartoucheAnisette
+             {
+                 return try await self.fetch(from: server, machine: machine, clientInfo: clientInfo, userAgent: userAgent, mayReprovision: mayReprovision)
+             }
++            catch let error where self.provisioningAnswer(of: error) != nil
++            {
++                // Apple's own answer to a new machine, which the next server
++                // would only ask for again, from this iPhone.
++                debugLog("[CartoucheAnisette] Apple answered the new machine through \(server.absoluteString) with an error: \(error)")
++                throw error
++            }
+             catch
+             {
+                 lastError = error
+@@ -232,6 +245,64 @@ enum CartoucheAnisette
+         return SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
+     }
+ 
++    // MARK: - Apple's answer to a new machine
++
++    /// Apple's own answer to the provisioning of a new machine, which goes
++    /// from this iPhone straight to Apple's servers (AnisetteKit's
++    /// AnisetteClient, at gsa.apple.com), whichever server signs it: an HTTP
++    /// error from one of its steps, or an answer of Apple's that could not
++    /// be read.
++    struct ProvisioningAnswer: Equatable
++    {
++        /// The case of AnisetteKit's error: "httpError" or "invalidResponse".
++        var kind: String
++        /// Apple's HTTP status, for an HTTP error.
++        var status: Int?
++        /// The step that answered: "lookup", "start" (Apple's SPIM) or
++        /// "finish" (its PTM and TK).
++        var step: String
++    }
++
++    /// The words AnisetteKit's AnisetteClient names each step of the
++    /// provisioning by, in its HTTP errors ("Apple PTM/TK endpoint returned
++    /// HTTP 401") and its answers it could not read ("Failed to parse ptm/tk
++    /// from Apple response"), whatever their case, with the names Cartouche's
++    /// measurements send of them.
++    static let provisioningSteps: [(words: String, step: String)] = [
++        ("lookup", "lookup"),
++        ("spim", "start"),
++        ("ptm/tk", "finish"),
++    ]
++
++    /// Apple's answer to a new machine, when ERROR is one: AnisetteKit's HTTP
++    /// error or answer it could not read, whose words name one of the steps
++    /// above. AnisetteKit gives the same answer it could not read for the
++    /// server's headers ("Missing X-Apple-I-MD or X-Apple-I-MD-M from
++    /// response"), which names none: the next server may answer. Its words
++    /// never leave, only the names above and the status.
++    static func provisioningAnswer(of error: Error) -> ProvisioningAnswer?
++    {
++        let kind: String
++        let status: Int?
++        let words: String
++        switch error as? AnisetteKit.AnisetteError
++        {
++        case .httpError(let statusCode, let message)?:
++            kind = "httpError"
++            status = (100...599).contains(statusCode) ? statusCode : nil
++            words = message
++        case .invalidResponse(let reason)?:
++            kind = "invalidResponse"
++            status = nil
++            words = reason
++        default:
++            return nil
++        }
++        let lowered = words.lowercased()
++        guard let step = self.provisioningSteps.first(where: { lowered.contains($0.words) })?.step else { return nil }
++        return ProvisioningAnswer(kind: kind, status: status, step: step)
++    }
++
+     // MARK: - Errors
+ 
+     /// Whether Apple refused the sign-in for something else than the
+diff --git a/SideStore/Intents/CartoucheOutcome.swift b/SideStore/Intents/CartoucheOutcome.swift
+index d2f1e8e..4afbc17 100644
+--- a/SideStore/Intents/CartoucheOutcome.swift
++++ b/SideStore/Intents/CartoucheOutcome.swift
+@@ -44,6 +44,14 @@
+ //  {"family": "operation", "kind": "invalidVPN", "reason": "portClosed",
+ //   "pairingKind": "rppairing", "ipsec": false}
+ //
++//  When Apple answered the provisioning of a new machine for the sign-in
++//  with an error, or an answer that could not be read (CartoucheAnisette),
++//  "service" is "provisioning" and "reason" the step that answered,
++//  "lookup", "start" or "finish":
++//
++//  {"family": "provisioning", "kind": "httpError", "http": 401,
++//   "service": "provisioning", "reason": "finish"}
++//
+ //  Never the error's words, an Apple ID, a team, a device, a certificate's
+ //  serial, a path or an address: only the names below, chosen here, those
+ //  of SideStore's error cases and operations, and numbers. Cartouche checks
+@@ -213,6 +221,13 @@ final class CartoucheOutcome: @unchecked Sendable
+                     outcome["retryAfter"] = retryAfter
+                 }
+             }
++            // Apple's answer to a new machine, and the step of its
++            // provisioning that gave it (CartoucheAnisette).
++            if let answer = CartoucheAnisette.provisioningAnswer(of: error)
++            {
++                outcome["service"] = "provisioning"
++                outcome["reason"] = answer.step
++            }
+             if let (code, host) = Self.network(of: error)
+             {
+                 outcome["network"] = code
+@@ -513,6 +528,12 @@ final class CartoucheOutcome: @unchecked Sendable
+         case is DecodingError: family = "decoding"
+         case is CancellationError: return ("cancelled", "cancelled")
+         default:
++            // Apple's answer to a new machine (CartoucheAnisette), which
++            // AnisetteKit gives.
++            if let answer = CartoucheAnisette.provisioningAnswer(of: error)
++            {
++                return ("provisioning", answer.kind)
++            }
+             let nsError = error as NSError
+             switch nsError.domain
+             {
+@@ -593,7 +614,8 @@ final class CartoucheOutcome: @unchecked Sendable
+             guard let range = reason.range(of: "HTTP [1-5][0-9][0-9]", options: .regularExpression) else { return nil }
+             return Int(reason[range].dropFirst(5))
+         default:
+-            return nil
++            // Apple's, to a new machine.
++            return CartoucheAnisette.provisioningAnswer(of: error)?.status
+         }
+     }
+ 
+-- 
+2.43.0
+

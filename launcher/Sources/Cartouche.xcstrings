@@ -307,6 +307,23 @@
         }
       }
     },
+    "apple.provisioningRefused" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple is refusing, for now, to set up a new sign-in on this iPhone (%lld). Wait a while, then try again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple refuse pour l’instant de préparer une nouvelle connexion sur cet iPhone (%lld). Patientez un moment, puis réessayez."
+          }
+        }
+      }
+    },
     "apple.tooManyRequests" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9470,6 +9487,23 @@
         }
       }
     },
+    "signIn.cannotComplete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple refused this sign-in without saying why (-22405). There is nothing to reset or reinstall. Wait a few hours, then sign in again, once. If Apple still refuses the next day, sign in at account.apple.com in Safari: Apple says there whether your Apple ID needs anything from you."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple a refusé cette connexion sans en donner la raison (-22405). Il n’y a rien à réinitialiser ni à réinstaller. Attendez quelques heures, puis reconnectez-vous, une seule fois. Si Apple refuse encore le lendemain, connectez-vous sur account.apple.com dans Safari : Apple y dit si votre identifiant Apple attend quelque chose de vous."
+          }
+        }
+      }
+    },
     "signIn.certificateUnopened" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9993,6 +10027,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mot de passe"
+          }
+        }
+      }
+    },
+    "signIn.provisioningRefused" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple is refusing, for now, to set up a new sign-in on this iPhone (%lld), before your Apple ID is even sent. There is nothing to reset or reinstall. Wait for the countdown to end, then sign in again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple refuse pour l’instant de préparer une nouvelle connexion sur cet iPhone (%lld), avant même l’envoi de votre identifiant Apple. Il n’y a rien à réinitialiser ni à réinstaller. Attendez la fin du compte à rebours, puis reconnectez-vous."
+          }
+        }
+      }
+    },
+    "signIn.sessionExpired" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple says this iPhone’s sign-in has expired (1100). There is nothing to reset or reinstall: sign in again, and type the code Apple sends if it asks for one."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple dit que la connexion de cet iPhone a expiré (1100). Il n’y a rien à réinitialiser ni à réinstaller : reconnectez-vous, et saisissez le code qu’Apple envoie s’il en demande un."
           }
         }
       }

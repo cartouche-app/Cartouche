@@ -139,6 +139,65 @@ final class CartoucheSignInMessageTests: XCTestCase {
         XCTAssertNil(CartoucheSignInMessage.trouble(in: refusing, failure: failed))
     }
 
+    func testApplesRefusalsThatSideStorePassesOnInEnglish() {
+        // Apple refusing a new machine for the sign-in, before the Apple ID
+        // went to it (app/patches/sidestore/0024): AnisetteKit's words name
+        // the endpoint, at whichever step of the provisioning it was.
+        for (status, step, message) in [(401, "finish", "HTTP error (401): Apple PTM/TK endpoint returned HTTP 401"),
+                                        (403, "lookup", "HTTP error (403): Apple lookup endpoint returned HTTP 403")] {
+            let refused = sideStoreFailure(["stage": "account", "family": "provisioning", "kind": "httpError", "http": status,
+                                            "service": "provisioning", "reason": step, "codes": "AnisetteKit.AnisetteError 5"],
+                                           message: message)
+            let trouble = CartoucheSignInMessage.trouble(in: message, failure: refused)
+            XCTAssertEqual(trouble, .provisioningRefused(status: status), message)
+            XCTAssertTrue(CartoucheSignInMessage.pausesSignIns(trouble), message)
+        }
+        // Its 429 is Apple's limit, as for the sign-in.
+        let limited = sideStoreFailure(["stage": "account", "family": "provisioning", "kind": "httpError", "http": 429,
+                                        "service": "provisioning", "reason": "start"],
+                                       message: "HTTP error (429): Apple SPIM endpoint returned HTTP 429")
+        XCTAssertEqual(CartoucheSignInMessage.trouble(in: "HTTP error (429): Apple SPIM endpoint returned HTTP 429", failure: limited),
+                       .tooManyRequests)
+        // An error of its servers, or an answer that could not be read, is
+        // no refusal: no wait, the words of Apple's answers that could not be
+        // read.
+        let unavailable = sideStoreFailure(["stage": "account", "family": "provisioning", "kind": "httpError", "http": 503,
+                                            "service": "provisioning", "reason": "start"],
+                                           message: "HTTP error (503): Apple SPIM endpoint returned HTTP 503")
+        let down = CartoucheSignInMessage.trouble(in: "HTTP error (503): Apple SPIM endpoint returned HTTP 503", failure: unavailable)
+        XCTAssertEqual(down, .unreadable(status: 503))
+        XCTAssertFalse(CartoucheSignInMessage.pausesSignIns(down))
+        let garbled = sideStoreFailure(["stage": "account", "family": "provisioning", "kind": "invalidResponse",
+                                        "service": "provisioning", "reason": "lookup"],
+                                       message: "Invalid response: Failed to parse provisioning URLs from lookup")
+        XCTAssertEqual(CartoucheSignInMessage.trouble(in: "Invalid response: Failed to parse provisioning URLs from lookup",
+                                                      failure: garbled), .unreadable(status: nil))
+
+        // Apple says the sign-in's session has expired, and refuses one
+        // without saying why: its codes, which SideSign passes on with
+        // Apple's English words.
+        let expired = sideStoreFailure(["stage": "account", "family": "server", "kind": "underlyingError",
+                                        "codes": "SideSign.ServerError 3", "apple": 1100],
+                                       message: "Your session has expired. Please log in. (1100)")
+        let again = CartoucheSignInMessage.trouble(in: "Your session has expired. Please log in. (1100)", failure: expired)
+        XCTAssertEqual(again, .sessionExpired)
+        XCTAssertFalse(CartoucheSignInMessage.pausesSignIns(again))
+        let refused = sideStoreFailure(["stage": "account", "family": "server", "kind": "underlyingError",
+                                        "codes": "SideSign.ServerError 3", "apple": -22405],
+                                       message: "This Action Cannot Be Completed (-22405)")
+        let unexplained = CartoucheSignInMessage.trouble(in: "This Action Cannot Be Completed (-22405)", failure: refused)
+        XCTAssertEqual(unexplained, .cannotComplete)
+        XCTAssertFalse(CartoucheSignInMessage.pausesSignIns(unexplained))
+        // Apple's limit still waits.
+        let limit = sideStoreFailure(["stage": "account", "family": "server", "kind": "underlyingError",
+                                      "codes": "SideSign.ServerError 3", "apple": -22411],
+                                     message: "Too many verification codes have been sent. (-22411)")
+        let tooMany = CartoucheSignInMessage.trouble(in: "Too many verification codes have been sent. (-22411)", failure: limit)
+        XCTAssertEqual(tooMany, .tooManyRequests)
+        XCTAssertTrue(CartoucheSignInMessage.pausesSignIns(tooMany))
+        XCTAssertFalse(CartoucheSignInMessage.pausesSignIns(nil))
+    }
+
     /// What Cartouche makes of the built-in SideStore's MESSAGE, its sign-in
     /// having left FIELDS as its outcome.
     private func sideStoreFailure(_ fields: [String: Any], message: String) -> CartoucheFailure {

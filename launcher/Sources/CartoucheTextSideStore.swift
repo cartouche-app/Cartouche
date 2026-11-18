@@ -9,11 +9,14 @@
 //  iPhone for the sign-in, which SideStore's would send to its own
 //  settings, when it found no app group, which SideStore's would only name,
 //  when the Apple ID has a certificate it does not hold, which SideStore's
-//  tell in English, and when LiveProcess, which it runs in, is missing from
+//  tell in English, when LiveProcess, which it runs in, is missing from
 //  the app, which LiveContainer's tell in English, sending the player to
-//  the settings of other sideloaders. A file of its own, since it reads
-//  CartoucheFailure and CartoucheSignInMessage, which the storage tests
-//  (launcher/StorageTests) build CartoucheText.swift without.
+//  the settings of other sideloaders, and when Apple refuses a new machine
+//  for the sign-in, says its session has expired or refuses it without a
+//  reason, which AnisetteKit's and Apple's own words tell in English. A
+//  file of its own, since it reads CartoucheFailure and
+//  CartoucheSignInMessage, which the storage tests (launcher/StorageTests)
+//  build CartoucheText.swift without.
 //
 
 import Foundation
@@ -24,14 +27,17 @@ extension CartoucheText {
     static var appleTooManyRequests: String { s("apple.tooManyRequests", "Apple is refusing more requests for now, after too many in a short time from this Apple ID or from this network. Wait a while, then try again.") }
     static func applePage(_ status: Int) -> String { f("apple.page", "Apple’s servers sent back an error page (%lld) instead of an answer. Try again in a few minutes.", status) }
     static var appleUnreadable: String { s("apple.unreadable", "Cartouche could not read Apple’s answer. Check this iPhone’s connection, then try again.") }
+    static func appleProvisioningRefused(_ status: Int) -> String { f("apple.provisioningRefused", "Apple is refusing, for now, to set up a new sign-in on this iPhone (%lld). Wait a while, then try again.", status) }
 
     /// What Cartouche tells the player of the built-in SideStore's MESSAGE,
     /// FAILURE being what Cartouche told of how its action ended: its own
-    /// words when Apple limits the requests or answered with a page, or
-    /// LiveProcess is missing from the app, those of a SIGN-IN when it is
-    /// one, also when SideStore closed before it finished, found no app
-    /// group or met a certificate it does not hold; SideStore's otherwise,
-    /// without the App Intents error's name.
+    /// words when Apple limits the requests, answered with a page, or
+    /// refuses a new machine, or LiveProcess is missing from the app, those
+    /// of a SIGN-IN when it is one, also when SideStore closed before it
+    /// finished, found no app group or met a certificate it does not hold,
+    /// and when Apple says the sign-in's session has expired or refuses it
+    /// without a reason; SideStore's otherwise, without the App Intents
+    /// error's name.
     static func sideStoreMessage(_ message: String, failure: CartoucheFailure, signIn: Bool = false) -> String {
         let readable = CartoucheSignInMessage.readable(message)
         switch CartoucheSignInMessage.trouble(in: readable, failure: failure) {
@@ -42,6 +48,9 @@ extension CartoucheText {
         case .noAppGroup?: return signIn ? signInNoAppGroup : readable
         case .otherCertificate?: return signIn ? signInOtherCertificate : readable
         case .noLiveProcess?: return noLiveProcess
+        case .provisioningRefused(let status)?: return signIn ? signInProvisioningRefused(status) : appleProvisioningRefused(status)
+        case .sessionExpired?: return signIn ? signInSessionExpired : readable
+        case .cannotComplete?: return signIn ? signInCannotComplete : readable
         case nil:
             guard signIn, let trouble = CartoucheSignInMessage.deviceTrouble(in: failure) else { return readable }
             // Before Apple, or once it accepted the account.
@@ -52,6 +61,16 @@ extension CartoucheText {
             }
         }
     }
+
+    // MARK: Apple's refusals, which SideStore passes on in English
+
+    /// Apple refused, for now, the new machine Cartouche asked it for, which
+    /// signs the sign-in's requests (app/patches/sidestore/0024): no server
+    /// changes that, and the sign-in waits as for Apple's limits
+    /// (CartoucheSignInPause).
+    static func signInProvisioningRefused(_ status: Int) -> String { f("signIn.provisioningRefused", "Apple is refusing, for now, to set up a new sign-in on this iPhone (%lld), before your Apple ID is even sent. There is nothing to reset or reinstall. Wait for the countdown to end, then sign in again.", status) }
+    static var signInSessionExpired: String { s("signIn.sessionExpired", "Apple says this iPhone’s sign-in has expired (1100). There is nothing to reset or reinstall: sign in again, and type the code Apple sends if it asks for one.") }
+    static var signInCannotComplete: String { s("signIn.cannotComplete", "Apple refused this sign-in without saying why (-22405). There is nothing to reset or reinstall. Wait a few hours, then sign in again, once. If Apple still refuses the next day, sign in at account.apple.com in Safari: Apple says there whether your Apple ID needs anything from you.") }
 
     // MARK: The built-in SideStore, closed before it finished
 
