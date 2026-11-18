@@ -153,6 +153,8 @@ final class CartoucheReset: ObservableObject {
         }
         let found = CartoucheResetErase.find()
         let savesLost = targetsAtRisk.count
+        // The platform forgets this iPhone before its token goes.
+        await CartoucheCloudLink.shared.unlinkForReset()
         var failures: [CartoucheResetPlan.Failure] = []
         for round in 1...2 {
             if round == 2 {
@@ -282,15 +284,18 @@ enum CartoucheResetErase {
         for role in CartoucheStorageRole.allCases where settings.place(role) != nil {
             settings.setPlace(nil, for: role)
         }
-        // The keychain: each game's items, the storage's, and the built-in
-        // SideStore's but the certificate and what Apple knows this device
-        // by.
+        // The keychain: each game's items, the storage's, the token of
+        // Cartouche Cloud, and the built-in SideStore's but the certificate
+        // and what Apple knows this device by.
         for folder in found.dataFolders {
             LCUtils.removeAppKeychain(dataUUID: folder)
         }
+        CartoucheCloudLink.shared.forgetToken()
         var failures: [CartoucheResetPlan.Failure] = []
-        if let failure = CartoucheResetKeychain.remove(service: CartoucheResetPlan.storageService) {
-            failures.append(failure)
+        for (service, place) in CartoucheResetPlan.erasedServices {
+            if let failure = CartoucheResetKeychain.remove(service: service, place: place) {
+                failures.append(failure)
+            }
         }
         if let service = CartoucheStoreKeychain.service {
             for account in CartoucheResetKeychain.accounts(of: service) where !CartoucheResetPlan.keepsStoreItem(account: account) {
@@ -381,8 +386,8 @@ enum CartoucheResetKeychain {
     }
 
     /// Removes SERVICE's item of ACCOUNT, or all of SERVICE's: why not, if
-    /// it could not.
-    static func remove(service: String, account: String? = nil) -> CartoucheResetPlan.Failure? {
+    /// it could not, at PLACE, the service's in the reset's measurement.
+    static func remove(service: String, account: String? = nil, place: String = "SideStore") -> CartoucheResetPlan.Failure? {
         var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -393,7 +398,6 @@ enum CartoucheResetKeychain {
         }
         let status = SecItemDelete(query as CFDictionary)
         guard status != errSecSuccess, status != errSecItemNotFound else { return nil }
-        let place = service == CartoucheResetPlan.storageService ? "storage" : "SideStore"
         return CartoucheResetPlan.Failure(path: "Keychain/" + place + (account.map { "/" + $0 } ?? ""),
                                           reason: "OSStatus \(status)")
     }

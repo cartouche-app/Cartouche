@@ -1,0 +1,39 @@
+From 5edcf573c8238d510c3ffa951b1584347a247eca Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 18 Nov 2026 21:50:00 +0000
+Subject: [PATCH] Open Cartouche Cloud's page with the code of an account's
+ page
+
+On build.cartouche.cloud, the account's page gives the code that links
+Cartouche to the account, and its Open in Cartouche button, or its QR
+code on a computer, opens Cartouche with it:
+cartouche://cloud/link?code=ABCDEFGH. That link now opens the System
+page on Cartouche Cloud, which links this iPhone with the code at once
+(launcher/Sources/CartoucheCloudLink.swift, decision 136); any other
+link still opens nothing. The launcher reads the code itself and asks
+the platform: LiveContainer only hands it the link.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01MzPJosokqk1kiiFViHn8Gx
+---
+ LiveContainerSwiftUI/Views/LCTabView.swift | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/LiveContainerSwiftUI/Views/LCTabView.swift b/LiveContainerSwiftUI/Views/LCTabView.swift
+index 542251c..9473825 100644
+--- a/LiveContainerSwiftUI/Views/LCTabView.swift
++++ b/LiveContainerSwiftUI/Views/LCTabView.swift
+@@ -108,6 +108,10 @@ struct LCTabView: View {
+         // built-in SideStore's certificate to LiveContainer on its own.
+         if url.isFileURL, CartouchePairing.openedFile(url) {
+             sharedModel.selectedTab = .initial
++        } else if #available(iOS 17.0, *), CartoucheCloudLink.opened(url) {
++            // The link of a Cartouche Cloud account's page: the System page,
++            // on Cartouche Cloud, links this iPhone with its code.
++            sharedModel.selectedTab = .system
+         }
+     }
+     
+-- 
+2.43.0
+

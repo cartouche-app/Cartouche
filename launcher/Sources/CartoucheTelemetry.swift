@@ -548,6 +548,9 @@ final class CartoucheTelemetry: ObservableObject {
         var fields: [String: CartoucheTelemetryValue] = [:]
         if let version = build.version { fields["version"] = .text(version) }
         if let commit = build.shortCommit { fields["nxnative"] = .text(commit) }
+        // Where it came from: a file, the kind of storage, or Cartouche
+        // Cloud; nothing of the server nor of the account.
+        if let from = CartoucheGameActions.shared.installedFrom { fields["from"] = .text(from) }
         event("game.installed", game: found.isEmpty ? catalog.titleId(matchingName: app.displayName) : found, fields: fields)
     }
 

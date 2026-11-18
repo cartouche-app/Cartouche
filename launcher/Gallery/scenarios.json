@@ -294,6 +294,176 @@
       "work": "mac-too-old"
     },
     {
+      "name": "iphone-cloud",
+      "comment": "Cartouche Cloud, as System opens it, for an iPhone not linked yet: what it is, the price of a build as the service gives it, the trial by invitation, the site's sign-in, and the code of the account's page that links this iPhone (GalleryCloud).",
+      "screen": "cloud",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-cloud-linking",
+      "comment": "The same, as the link of the account's page opened Cartouche: its code in the field, linking this iPhone.",
+      "screen": "cloud",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-linking"
+    },
+    {
+      "name": "iphone-cloud-refused",
+      "comment": "The same code, which the service refused, and why.",
+      "screen": "cloud",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-refused"
+    },
+    {
+      "name": "iphone-cloud-games",
+      "comment": "This iPhone linked: the account's credits, those held for the game being built, and its games, in the site's words: being built, at its fifth step of six, with the time left; waiting for it; built, with Install and when it is deleted; and not built, with why and until when the site builds it again.",
+      "screen": "cloud",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-games"
+    },
+    {
+      "name": "iphone-system-cloud",
+      "comment": "The System page down to Cartouche Cloud's row, linked, with the game built to install.",
+      "screen": "system",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-games",
+      "category": "cloud"
+    },
+    {
+      "name": "iphone-home-cloud",
+      "comment": "The home with the game Cartouche Cloud built in focus, beside the player's games: In Cartouche Cloud, and Install from Cartouche Cloud.",
+      "screen": "games",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-games"
+    },
+    {
+      "name": "iphone-sheet-cloud",
+      "comment": "That game's sheet: Install from Cartouche Cloud, its size, and when Cartouche Cloud deletes it.",
+      "screen": "sheet",
+      "sheet": "01003FC01670C000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-games"
+    },
+    {
+      "name": "iphone-cloud-installing",
+      "comment": "That game being installed from Cartouche Cloud, over the console.",
+      "screen": "games",
+      "sheet": "01003FC01670C000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-installing"
+    },
+    {
       "name": "iphone-sheet-other",
       "screen": "sheet",
       "sheet": "01003FC01670C000",

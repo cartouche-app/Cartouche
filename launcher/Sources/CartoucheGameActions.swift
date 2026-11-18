@@ -231,6 +231,7 @@ final class CartoucheGameActions: ObservableObject {
         switch question.source {
         case .file(let url): install(url, asked: true)
         case .stored(let game): install(stored: game, asked: true)
+        case .cloud(let game): install(cloud: game, asked: true)
         }
     }
 
@@ -336,7 +337,7 @@ final class CartoucheGameActions: ObservableObject {
                     }
                 }
                 await fetchSaves(of: app)
-                finishInstall(app, signing: signing)
+                finishInstall(app, signing: signing, from: "file")
             } catch {
                 if stopped {
                     tellStopped()
@@ -431,7 +432,7 @@ final class CartoucheGameActions: ObservableObject {
                     }
                 }
                 await fetchSaves(of: app)
-                finishInstall(app, signing: signing)
+                finishInstall(app, signing: signing, from: server.kind.rawValue)
             } catch let lost as CartoucheResumingSource.Lost where !stopped {
                 facts.append(.init("Connection", "lost after \(lost.attempts) failed attempts, "
                                        + "the file opened again \(file?.reopened ?? 0) times before"))
@@ -454,6 +455,93 @@ final class CartoucheGameActions: ObservableObject {
             // a few seconds (CartoucheSMB.disconnect).
             await file?.close()
             await image?.close()
+        }
+    }
+
+    /// Installs the game Cartouche Cloud built for the account this iPhone
+    /// is linked to (CartoucheCloudLink), read where the service keeps it,
+    /// as a game of the games folder is: each file unpacked as it arrives,
+    /// the IPA opened again after the network dropped, and read on from
+    /// where it stopped, as the one download the platform counted. Its
+    /// address lasts a quarter of an hour, and is asked again as it expires
+    /// (CartoucheCloudIPA). Neither the token nor an address goes in the
+    /// report. An IPA built without its game files takes the image the
+    /// installed copy of the game holds: Cartouche Cloud builds none apart.
+    /// ASKED, as above.
+    func install(cloud game: CartoucheCloudBuilt, asked: Bool = false) {
+        guard work == nil, startsNow(CartoucheInstallQuestion(source: .cloud(game)), answered: asked) else { return }
+        facts = [.init("IPA", game.file), .init("IPA size", CartoucheReport.bytes(Int64(clamping: game.bytes))),
+                 .init("From", "Cartouche Cloud")]
+        if let builtAt = game.builtAt { facts.append(.init("Built", CartoucheReport.timestamp(builtAt))) }
+        let model = DataManager.shared.model
+        guard model.multiLCStatus != 2 else {
+            fail(.install, CartoucheText.installFailed, message: "lc.appList.manageInPrimaryTip".loc, cause: .notPrimary)
+            return
+        }
+        let link = CartoucheCloudLink.shared
+        guard let token = link.token else {
+            notice = CartoucheGameNotice(title: CartoucheText.installFailed, message: CartoucheText.cloudRefused(.unlinked))
+            return
+        }
+        let place = CartoucheText.cloudName
+        let step = CartoucheText.installFromStorageStep(place)
+        work = CartoucheGameWork(kind: .installing, name: game.name, step: step, fraction: nil, stage: "reading",
+                                 place: place)
+        beginTransfer()
+        transfer = Task {
+            var file: CartoucheResumingSource?
+            do {
+                let source = try await link.client.ipa(game.id, token: token)
+                file = source
+                source.onRetry = { @Sendable _, _ in
+                    Task { @MainActor in
+                        CartoucheGameActions.shared.work?.step = CartoucheText.installFromStorageRetry(place)
+                        CartoucheGameActions.shared.work?.stage = "reconnecting"
+                    }
+                }
+                source.onResumed = { @Sendable in
+                    Task { @MainActor in
+                        CartoucheGameActions.shared.work?.step = step
+                        CartoucheGameActions.shared.work?.stage = "reading"
+                    }
+                }
+                let entries = try await CartoucheZip.entries(of: source)
+                let gameFiles = try await planGameFiles(ofIPA: source, entries: entries, model: model) { _ in nil }
+                let needed = Int64(clamping: entries.reduce(UInt64(0)) { $0 + $1.size }) + 512 * 1_048_576
+                if let free = await Self.freeSpace(), free < needed {
+                    throw CartoucheStorageError(.noSpaceHere, CartoucheText.installFromStorageNoSpace(
+                        needed: CartoucheText.storageAmount(bytes: needed), free: CartoucheText.storageAmount(bytes: free)))
+                }
+                work?.fraction = 0
+                work?.stage = "unpacking"
+                let builtAt = CartoucheStoredGames.infoPlistEntry(in: entries)?.modified ?? game.builtAt
+                let (app, signing) = try await installUnpacked(into: model, builtAt: builtAt,
+                                                               keeping: gameFiles.kept) { folder, progress in
+                    try await CartoucheZip.extract(source, entries: entries, into: folder, progress: progress)
+                }
+                await fetchSaves(of: app)
+                finishInstall(app, signing: signing, from: "cloud")
+            } catch let lost as CartoucheResumingSource.Lost where !stopped {
+                facts.append(.init("Connection", "lost after \(lost.attempts) failed attempts, "
+                                       + "the IPA opened again \(file?.reopened ?? 0) times before"))
+                fail(.install, CartoucheText.installFailed,
+                     message: CartoucheText.installFromStorageLost(place, lost.localizedDescription), error: lost.last)
+            } catch let refused as CartoucheCloudError where !stopped {
+                // Unlinked from the site meanwhile: the token goes.
+                if refused.kind == .unlinked { link.forgetToken() }
+                fail(.install, CartoucheText.installFailed, message: CartoucheText.cloudRefused(refused.kind), error: refused)
+            } catch {
+                if stopped {
+                    tellStopped()
+                } else {
+                    if let reopened = file?.reopened, reopened > 0 {
+                        facts.append(.init("Connection", "the IPA opened again \(reopened) times"))
+                    }
+                    fail(.install, CartoucheText.installFailed, error: error)
+                }
+            }
+            endTransfer()
+            await file?.close()
         }
     }
 
@@ -647,7 +735,14 @@ final class CartoucheGameActions: ObservableObject {
         background = .invalid
     }
 
-    private func finishInstall(_ app: LCAppModel, signing: CartoucheSigningError?) {
+    /// Where the game installed last came from, for its measurement
+    /// (game.installed's `from`): "file", a file on this iPhone; the kind of
+    /// storage its games folder is on, such as "smb"; or "cloud", Cartouche
+    /// Cloud. Never more of it.
+    private(set) var installedFrom: String?
+
+    private func finishInstall(_ app: LCAppModel, signing: CartoucheSigningError?, from: String) {
+        installedFrom = from
         installed = app
         if let signing {
             // Installed, but not signed whole: the game may not start. The

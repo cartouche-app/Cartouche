@@ -10,6 +10,18 @@
       "why": "The console and a game's sheet side by side on an iPhone Duo unfolded: the Mac's window puts them side by side itself.",
       "mac": "CartoucheConsole/Mac/ConsoleView.swift"
     },
+    "CartoucheCloud.swift": {
+      "kind": "iphone",
+      "why": "Cartouche Cloud, which builds a player's game without a Mac, is the iPhone's alone (Ad, 18 November): what the app asks the service and reads of it, the account's games and a game built's IPA; a Mac builds its own games with Cartouche Builder."
+    },
+    "CartoucheCloudLink.swift": {
+      "kind": "iphone",
+      "why": "Cartouche Cloud, which builds a player's game without a Mac, is the iPhone's alone (Ad, 18 November): the link of this iPhone to an account, its token in the iPhone's keychain, and the account's games read for the library."
+    },
+    "CartoucheCloudPage.swift": {
+      "kind": "iphone",
+      "why": "Cartouche Cloud, which builds a player's game without a Mac, is the iPhone's alone (Ad, 18 November): its page in System, to link this iPhone, follow the account's games and install those built."
+    },
     "CartoucheContinuedWork.swift": {
       "kind": "iphone",
       "why": "iOS's background transfers (BGContinuedProcessingTask): the Mac's app goes on in the background on its own."
@@ -188,6 +200,10 @@
       "kind": "mac",
       "why": "Cartouche's measurements on the iPhone: its switch, its queue and its number, the games' log.txt in LiveContainer's containers, and its own events, by UIKit's notifications. On the Mac, the console reads the sessions of the log nxnative's app for the Mac writes, with the same reader and the same report, and the Builder's telemetry keeps the switch, the queue and the number for both, and sends (BuilderKit/BuilderTelemetry.swift).",
       "mac": "CartoucheConsole/Mac/ConsoleTelemetry.swift"
+    },
+    "CartoucheTextCloud.swift": {
+      "kind": "iphone",
+      "why": "Cartouche Cloud, which builds a player's game without a Mac, is the iPhone's alone (Ad, 18 November): the words of its page; those of a game built in the library and on its sheet, which the console shares, are in CartoucheText.swift."
     },
     "CartoucheTextReset.swift": {
       "kind": "iphone",

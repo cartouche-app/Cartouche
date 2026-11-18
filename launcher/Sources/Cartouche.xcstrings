@@ -426,6 +426,1383 @@
         }
       }
     },
+    "cloud.account.header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre compte"
+          }
+        }
+      }
+    },
+    "cloud.cause.build" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nxnative did not manage to build this game. This happens with some games and some of their versions: it may build after an update of nxnative."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "nxnative n’est pas parvenu à construire ce jeu. Cela arrive pour certains jeux et certaines de leurs versions : il pourra se construire après une mise à jour de nxnative."
+          }
+        }
+      }
+    },
+    "cloud.cause.ipa" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The build ended without the app it should have made."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La construction s’est terminée sans l’app qu’elle devait produire."
+          }
+        }
+      }
+    },
+    "cloud.cause.late" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud did not get to build it before the time it deletes it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud n’a pas pu le construire avant le moment où il l’efface."
+          }
+        }
+      }
+    },
+    "cloud.cause.mac" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Mac that was building it stopped before the end. Your game has nothing to do with it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le Mac qui le construisait s’est arrêté avant la fin. Votre jeu n’y est pour rien."
+          }
+        }
+      }
+    },
+    "cloud.cause.plan" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud cannot build this game as it was sent: its dump may be incomplete, or its version may be one nxnative does not build yet."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud ne peut pas construire ce jeu tel qu’il a été envoyé : son dump est peut-être incomplet, ou nxnative ne construit pas encore cette version."
+          }
+        }
+      }
+    },
+    "cloud.cause.stopped" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud stopped this build before its end. Your game has nothing to do with it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud a arrêté cette construction avant la fin. Votre jeu n’y est pour rien."
+          }
+        }
+      }
+    },
+    "cloud.cause.unpack" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Mac could not unpack the game you sent. Send it again from your game’s files."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le Mac n’a pas pu décompresser le jeu envoyé. Renvoyez-le à partir des fichiers de votre jeu."
+          }
+        }
+      }
+    },
+    "cloud.code.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code from your account’s page"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Code de la page de votre compte"
+          }
+        }
+      }
+    },
+    "cloud.credits" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Credits"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Crédits"
+          }
+        }
+      }
+    },
+    "cloud.credits.held" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ of them are held for your games under way: you have %2$@ left to send others."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ en sont retenus pour vos jeux en cours : il vous reste %2$@ pour en envoyer d’autres."
+          }
+        }
+      }
+    },
+    "cloud.dollars" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "$%@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ $"
+          }
+        }
+      }
+    },
+    "cloud.game.behind" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is built after your game being built now: one build at a time for an account."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il sera construit après votre jeu en construction : une construction à la fois par compte."
+          }
+        }
+      }
+    },
+    "cloud.game.elsewhere" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche does not know this state yet: the site says where the game is."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche ne connaît pas encore cet état : le site dit où en est le jeu."
+          }
+        }
+      }
+    },
+    "cloud.game.install" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installer"
+          }
+        }
+      }
+    },
+    "cloud.game.kept" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kept until %@, then deleted."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gardé jusqu’au %@, puis effacé."
+          }
+        }
+      }
+    },
+    "cloud.game.left" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About %@ to go."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encore environ %@."
+          }
+        }
+      }
+    },
+    "cloud.game.longer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is taking longer than usual."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elle prend plus de temps que d’habitude."
+          }
+        }
+      }
+    },
+    "cloud.game.open" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Give the same file again on the site before %@ to go on sending it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Redonnez le même fichier sur le site avant le %@ pour continuer l’envoi."
+          }
+        }
+      }
+    },
+    "cloud.game.place" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Place %lld in the queue."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En position %lld dans la file d’attente."
+          }
+        }
+      }
+    },
+    "cloud.game.state.building" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Being built"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En construction"
+          }
+        }
+      }
+    },
+    "cloud.game.state.built" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Built"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Construit"
+          }
+        }
+      }
+    },
+    "cloud.game.state.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not built"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non construit"
+          }
+        }
+      }
+    },
+    "cloud.game.state.open" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Envoi en cours"
+          }
+        }
+      }
+    },
+    "cloud.game.state.other" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On the site"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sur le site"
+          }
+        }
+      }
+    },
+    "cloud.game.state.queued" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In the queue"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dans la file"
+          }
+        }
+      }
+    },
+    "cloud.game.usual" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A build of this game usually takes about %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La construction de ce jeu prend d’habitude environ %@."
+          }
+        }
+      }
+    },
+    "cloud.games.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You get an email as soon as a game is built, and it shows in your library: install it from there or from here."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous recevez un e-mail dès qu’un jeu est construit, et il apparaît dans votre bibliothèque : installez-le de là ou d’ici."
+          }
+        }
+      }
+    },
+    "cloud.games.header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your games"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vos jeux"
+          }
+        }
+      }
+    },
+    "cloud.games.none" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You have sent no game yet: send one from a computer, on the site."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous n’avez encore envoyé aucun jeu : envoyez-en un depuis un ordinateur, sur le site."
+          }
+        }
+      }
+    },
+    "cloud.games.reading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading your games…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lecture de vos jeux…"
+          }
+        }
+      }
+    },
+    "cloud.getCode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get a code on the site"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtenir un code sur le site"
+          }
+        }
+      }
+    },
+    "cloud.headline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your game, built for you, without a Mac."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre jeu, construit pour vous, sans Mac."
+          }
+        }
+      }
+    },
+    "cloud.idle.paused" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Builds are paused for now: the games in the queue wait."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les constructions sont en pause pour l’instant : les jeux de la file attendent."
+          }
+        }
+      }
+    },
+    "cloud.idle.unset" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This copy of Cartouche Cloud builds no game yet: a game you send waits in the queue."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cette copie de Cartouche Cloud ne construit pas encore de jeu : un jeu envoyé attend dans la file."
+          }
+        }
+      }
+    },
+    "cloud.intro" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud takes a game you own, builds it on a Mac in the cloud, and gives you back the app Cartouche installs on your iPhone. It provides no game: you send your own copy from a computer, on its site, and it is built for you alone."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud prend un jeu que vous possédez, le construit sur un Mac dans le cloud, et vous rend l’app que Cartouche installe sur votre iPhone. Il ne fournit aucun jeu : vous envoyez votre propre copie depuis un ordinateur, sur son site, et elle est construite pour vous seul."
+          }
+        }
+      }
+    },
+    "cloud.invitation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud is in a closed trial: for now, only invited players can use it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud est en essai fermé : pour l’instant, seuls les joueurs invités peuvent l’utiliser."
+          }
+        }
+      }
+    },
+    "cloud.keptUntil" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud keeps it until %@, then deletes it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud le garde jusqu’au %@, puis l’efface."
+          }
+        }
+      }
+    },
+    "cloud.left.again" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can start the build again on the site until %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous pouvez relancer la construction sur le site jusqu’au %@."
+          }
+        }
+      }
+    },
+    "cloud.left.held" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What you sent is kept until %@, then deleted."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce que vous avez envoyé est gardé jusqu’au %@, puis effacé."
+          }
+        }
+      }
+    },
+    "cloud.left.mended" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud now builds with another version of nxnative: you can start the build again on the site until %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud construit maintenant avec une autre version de nxnative : vous pouvez relancer la construction sur le site jusqu’au %@."
+          }
+        }
+      }
+    },
+    "cloud.left.over" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What you sent is kept until %@, then deleted. To try again, send it again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce que vous avez envoyé est gardé jusqu’au %@, puis effacé. Pour réessayer, renvoyez-le."
+          }
+        }
+      }
+    },
+    "cloud.link" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lier"
+          }
+        }
+      }
+    },
+    "cloud.link.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On the site, Link Cartouche on your account’s page gives a code valid ten minutes: type it here. Opened on this iPhone, that page fills it in for you with Open in Cartouche."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sur le site, Lier Cartouche sur la page de votre compte donne un code valable dix minutes : tapez-le ici. Ouverte sur cet iPhone, cette page le remplit pour vous avec Ouvrir dans Cartouche."
+          }
+        }
+      }
+    },
+    "cloud.link.header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link this iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lier cet iPhone"
+          }
+        }
+      }
+    },
+    "cloud.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud"
+          }
+        }
+      }
+    },
+    "cloud.price" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ per game built, nothing for a build that fails."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ par jeu construit, rien pour une construction qui échoue."
+          }
+        }
+      }
+    },
+    "cloud.price.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A build costs %@: held while it runs, taken if it succeeds, given back otherwise."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une construction coûte %@ : retenus pendant qu’elle se fait, débités si elle réussit, rendus sinon."
+          }
+        }
+      }
+    },
+    "cloud.reaching" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reaching Cartouche Cloud…"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connexion à Cartouche Cloud…"
+          }
+        }
+      }
+    },
+    "cloud.refused.code" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This code links nothing: it may be mistyped, past its ten minutes, or used already. Your account’s page gives another."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce code ne lie rien : il est peut-être mal tapé, passé ses dix minutes, ou déjà utilisé. La page de votre compte en donne un autre."
+          }
+        }
+      }
+    },
+    "cloud.refused.expired" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The download address of this game expired: install it again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’adresse de téléchargement de ce jeu a expiré : installez-le à nouveau."
+          }
+        }
+      }
+    },
+    "cloud.refused.full" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account has as many devices linked as it can: unlink one on its page, then try again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre compte a autant d’appareils liés qu’il le peut : déliez-en un sur sa page, puis réessayez."
+          }
+        }
+      }
+    },
+    "cloud.refused.missing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud no longer has this game: it deletes a game two days after building it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud n’a plus ce jeu : il efface un jeu deux jours après l’avoir construit."
+          }
+        }
+      }
+    },
+    "cloud.refused.network" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud could not be reached: try again in a moment."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud n’a pas pu être joint : réessayez dans un instant."
+          }
+        }
+      }
+    },
+    "cloud.refused.offline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This iPhone is offline: connect it to the internet, then try again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cet iPhone est hors ligne : connectez-le à Internet, puis réessayez."
+          }
+        }
+      }
+    },
+    "cloud.refused.server" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud did not answer as expected: try again in a moment."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud n’a pas répondu comme prévu : réessayez dans un instant."
+          }
+        }
+      }
+    },
+    "cloud.refused.storage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud cannot hand out its games for now: try again later."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud ne peut pas fournir ses jeux pour l’instant : réessayez plus tard."
+          }
+        }
+      }
+    },
+    "cloud.refused.unlinked" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This iPhone is no longer linked to your Cartouche Cloud account: link it again in System › Cartouche Cloud."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cet iPhone n’est plus lié à votre compte Cartouche Cloud : liez-le à nouveau dans Système › Cartouche Cloud."
+          }
+        }
+      }
+    },
+    "cloud.signIn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in on the site"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Se connecter sur le site"
+          }
+        }
+      }
+    },
+    "cloud.signUp" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make an account on the site"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer un compte sur le site"
+          }
+        }
+      }
+    },
+    "cloud.site.account" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your account on the site"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre compte sur le site"
+          }
+        }
+      }
+    },
+    "cloud.site.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You send a game from a computer, on the site, where your credits and your account are too."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vous envoyez un jeu depuis un ordinateur, sur le site, où se trouvent aussi vos crédits et votre compte."
+          }
+        }
+      }
+    },
+    "cloud.site.games" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your games on the site"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vos jeux sur le site"
+          }
+        }
+      }
+    },
+    "cloud.state.built" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld games to install"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld jeux à installer"
+          }
+        }
+      }
+    },
+    "cloud.state.built.one" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 game to install"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1 jeu à installer"
+          }
+        }
+      }
+    },
+    "cloud.state.linked" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linked"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lié"
+          }
+        }
+      }
+    },
+    "cloud.state.notLinked" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not linked"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Non lié"
+          }
+        }
+      }
+    },
+    "cloud.state.underWay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Building"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En construction"
+          }
+        }
+      }
+    },
+    "cloud.track.back" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending back"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Renvoi"
+          }
+        }
+      }
+    },
+    "cloud.track.build" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Building"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Construction"
+          }
+        }
+      }
+    },
+    "cloud.track.fetch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fetching"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Récupération"
+          }
+        }
+      }
+    },
+    "cloud.track.ready" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getting ready"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préparation"
+          }
+        }
+      }
+    },
+    "cloud.track.step" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Step %1$lld of %2$lld · %3$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Étape %1$lld sur %2$lld · %3$@"
+          }
+        }
+      }
+    },
+    "cloud.track.unpack" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unpacking"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Décompression"
+          }
+        }
+      }
+    },
+    "cloud.track.wait" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Attente"
+          }
+        }
+      }
+    },
+    "cloud.unlink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlink this iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Délier cet iPhone"
+          }
+        }
+      }
+    },
+    "cloud.unlink.confirm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlink"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Délier"
+          }
+        }
+      }
+    },
+    "cloud.unlink.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linked, this iPhone reads your account’s games and fetches those built, nothing more: sending a game, your credits and your account stay on the site."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lié, cet iPhone lit les jeux de votre compte et récupère ceux qui sont construits, rien de plus : l’envoi d’un jeu, vos crédits et votre compte restent sur le site."
+          }
+        }
+      }
+    },
+    "cloud.unlink.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche no longer follows your account’s games here, and your account’s page no longer lists this iPhone. The games installed stay."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche ne suit plus les jeux de votre compte ici, et la page de votre compte ne liste plus cet iPhone. Les jeux installés restent."
+          }
+        }
+      }
+    },
+    "cloud.unlink.question" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlink this iPhone?"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Délier cet iPhone ?"
+          }
+        }
+      }
+    },
+    "cloud.unlinkedElsewhere" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud no longer knows this iPhone: it was unlinked on the site, or its account deleted. Link it again with a new code."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud ne connaît plus cet iPhone : il a été délié sur le site, ou son compte supprimé. Liez-le à nouveau avec un nouveau code."
+          }
+        }
+      }
+    },
     "daily.intro" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5097,6 +6474,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Votre identifiant Apple : vous vous reconnectez dans la mise en route."
+          }
+        }
+      }
+    },
+    "reset.goes.cloud" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The link to your Cartouche Cloud account, which Cartouche undoes first. Your account and its games stay on the site."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le lien vers votre compte Cartouche Cloud, que Cartouche défait d’abord. Votre compte et ses jeux restent sur le site."
           }
         }
       }
@@ -11098,6 +12492,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "En portage"
+          }
+        }
+      }
+    },
+    "status.cloud.long" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud built it for you: install it to play it on this iPhone."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud l’a construit pour vous : installez-le pour y jouer sur cet iPhone."
+          }
+        }
+      }
+    },
+    "status.cloud.short" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Cartouche Cloud"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dans Cartouche Cloud"
           }
         }
       }

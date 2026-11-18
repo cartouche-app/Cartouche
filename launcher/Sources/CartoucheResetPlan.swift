@@ -10,7 +10,8 @@
 //  learned since: the games, with their data folders, which hold their
 //  saves, settings and play time, and their keychain items, those of the
 //  games uninstalled with their saves kept too; Cartouche's preferences;
-//  the storage servers, with their passwords and tokens; the Apple ID the
+//  the storage servers, with their passwords and tokens; the link to a
+//  Cartouche Cloud account, which the platform forgets first; the Apple ID the
 //  built-in SideStore signed in with, its password and tokens, with
 //  SideStore's own preferences and files; the names and covers the player
 //  gave their games; the caches; the reports and their journal.
@@ -75,6 +76,15 @@ enum CartoucheResetPlan {
     /// The keychain service of Cartouche's storage servers: their settings
     /// and secrets (CartoucheStorageSettings). Every item goes.
     static let storageService = "Cartouche storage"
+
+    /// The services whose every item goes, each with the place a failure
+    /// to remove one is told by (measured): the storage's, and the token
+    /// that links this iPhone to a Cartouche Cloud account
+    /// (CartoucheCloudLink), which the reset unlinks first.
+    static let erasedServices: [(service: String, place: String)] = [
+        (storageService, "storage"),
+        (CartoucheCloud.keychainService, "Cloud"),
+    ]
 
     /// The built-in SideStore's keychain items that stay, by account: its
     /// certificate, as it keeps it now and as it kept it before 0.6.4, which
@@ -335,7 +345,7 @@ enum CartoucheResetPlan {
     /// is told as "…".
     static let measuredFolders: Set<String> = ownFolders.union([
         "Caches", "Application Support", "Preferences", "Cookies", "WebKit", "HTTPStorages", "SplashBoard",
-        "Saved Application State", "Logs", appGroupFolder, "storage", "SideStore",
+        "Saved Application State", "Logs", appGroupFolder, "storage", "Cloud", "SideStore",
         "CartoucheInstall", "CartoucheSaves", "CartoucheSwitchSave", "GameInfo", "Game logs",
     ])
 

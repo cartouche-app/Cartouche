@@ -79,6 +79,9 @@ enum CartouchePlayStatus: Hashable {
     case update
     /// The player's copy is in their games folder, not on this iPhone.
     case stored
+    /// Cartouche Cloud built the player's copy, which is neither on this
+    /// iPhone nor in their games folder.
+    case cloud
     /// The player's copy runs behind the console, paused there.
     case paused
     case iphone
@@ -89,6 +92,7 @@ enum CartouchePlayStatus: Hashable {
     static func of(_ entry: CartoucheEntry) -> CartouchePlayStatus {
         if entry.isInstalled { return entry.update != nil ? .update : .ready }
         if entry.stored != nil { return .stored }
+        if entry.cloud != nil { return .cloud }
         if entry.playsOnIPhone { return .iphone }
         switch entry.game?.status {
         case "mac": return .mac
@@ -109,6 +113,7 @@ enum CartouchePlayStatus: Hashable {
         case .ready: return "checkmark.circle.fill"
         case .update: return "arrow.down.circle.fill"
         case .stored: return "externaldrive.fill"
+        case .cloud: return "icloud.and.arrow.down.fill"
         case .paused: return "pause.circle.fill"
         case .iphone: return "iphone"
         case .mac: return "laptopcomputer"
@@ -120,7 +125,7 @@ enum CartouchePlayStatus: Hashable {
     var color: Color {
         switch self {
         case .ready: return Color(red: 0.204, green: 0.827, blue: 0.494)
-        case .update, .stored: return Color(red: 0.392, green: 0.824, blue: 1.0)
+        case .update, .stored, .cloud: return Color(red: 0.392, green: 0.824, blue: 1.0)
         case .paused: return CartoucheTheme.pink
         case .iphone: return Color(red: 0.204, green: 0.827, blue: 0.494)
         case .mac: return Color(red: 0.384, green: 0.639, blue: 1.0)
@@ -135,6 +140,7 @@ enum CartouchePlayStatus: Hashable {
         case .ready: return CartoucheText.statusReadyShort
         case .update: return CartoucheText.statusUpdateShort
         case .stored: return CartoucheText.statusStoredShort
+        case .cloud: return CartoucheText.statusCloudShort
         case .paused: return CartoucheText.statusPausedShort
         case .iphone: return CartoucheText.statusIPhoneShort
         case .mac: return CartoucheText.statusMacShort
@@ -149,6 +155,7 @@ enum CartouchePlayStatus: Hashable {
         case .ready, .iphone: return CartoucheText.statusIPhoneLong
         case .update: return CartoucheText.statusUpdateLong
         case .stored: return CartoucheText.statusStoredLong
+        case .cloud: return CartoucheText.statusCloudLong
         case .paused: return CartoucheText.pausedDetail
         case .mac: return CartoucheText.statusMacLong
         case .bringup: return CartoucheText.statusBringupLong
