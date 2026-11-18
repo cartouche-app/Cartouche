@@ -37,7 +37,7 @@ enum GalleryBCConversion {
     /// A thin arm64 executable whose C strings are STRINGS: its header, a
     /// __TEXT segment with its __cstring section, then the strings.
     static func executable(strings: [String]) -> Data {
-        let bytes = strings.flatMap { Array($0.utf8) + [0] }
+        let bytes: [UInt8] = strings.flatMap { Array($0.utf8) + [0] }
         var file = Data()
         func put32(_ value: UInt32) { withUnsafeBytes(of: value.littleEndian) { file.append(contentsOf: $0) } }
         func put64(_ value: UInt64) { withUnsafeBytes(of: value.littleEndian) { file.append(contentsOf: $0) } }
