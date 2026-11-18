@@ -28,6 +28,7 @@ let package = Package(
             // one adds at its place: pull requests that each add one then do not meet,
             // as they did when the list was one line.
             sources: [
+                "CartoucheBCConversion.swift",
                 "CartoucheBridge.swift",
                 "CartoucheBridgeBuilds.swift",
                 "CartoucheConnections.swift",

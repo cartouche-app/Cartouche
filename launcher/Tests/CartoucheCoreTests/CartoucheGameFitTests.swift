@@ -4,7 +4,8 @@
 //
 //  How a game fits this iPhone (Sources/CartoucheGameFit.swift): nxnative
 //  refuses a GPU that cannot read BC-compressed textures, the A16's and
-//  older, for every game, with a sheet or without.
+//  older, for every game, with a sheet or without, unless the player's
+//  build converts them.
 //
 
 import XCTest
@@ -13,10 +14,11 @@ import XCTest
 final class CartoucheGameFitTests: XCTestCase {
     /// Mario Kart World's sheet, on an iPhone with iOS 26, Increased Memory
     /// Limit and Game Mode.
-    private func verdict(runsMinimumIOS: Bool = true, readsBCTextures: Bool = true, needsIML: Bool = true,
-                         hasIML: Bool = true, peakMiB: Int? = 6_074, limitMiB: Int? = 8_192,
+    private func verdict(runsMinimumIOS: Bool = true, readsBCTextures: Bool = true, convertsBCTextures: Bool = false,
+                         needsIML: Bool = true, hasIML: Bool = true, peakMiB: Int? = 6_074, limitMiB: Int? = 8_192,
                          latestHere: String? = "playable") -> CartoucheGameFit.Verdict {
         CartoucheGameFit.verdict(minimumIOS: "26.0", runsMinimumIOS: runsMinimumIOS, readsBCTextures: readsBCTextures,
+                                 convertsBCTextures: convertsBCTextures,
                                  needsIML: needsIML, hasIML: hasIML, peakMiB: peakMiB, limitMiB: limitMiB,
                                  latestHere: latestHere)
     }
@@ -35,6 +37,22 @@ final class CartoucheGameFitTests: XCTestCase {
         // once on an iPhone 13 Pro and an iPhone 15.
         XCTAssertEqual(CartoucheGameFit.verdictWithoutSheet(readsBCTextures: false), .unsupported([.gpu]))
         XCTAssertNil(CartoucheGameFit.verdictWithoutSheet(readsBCTextures: true))
+    }
+
+    func testABuildThatConvertsTheTexturesLiftsTheGPU() {
+        // A fork of nxnative stores BC1–3 as ASTC and decompresses the rest
+        // (CartoucheBCConversion): Metroid Dread and Breath of the Wild ran
+        // on an iPhone 15 so. What else the game needs still counts.
+        XCTAssertEqual(verdict(readsBCTextures: false, convertsBCTextures: true), .recommended)
+        XCTAssertEqual(verdict(readsBCTextures: false, convertsBCTextures: true, latestHere: nil), .untested)
+        XCTAssertEqual(verdict(readsBCTextures: false, convertsBCTextures: true, hasIML: false),
+                       .notRecommended([.increasedMemoryLimit]))
+        XCTAssertEqual(verdict(runsMinimumIOS: false, readsBCTextures: false, convertsBCTextures: true),
+                       .unsupported([.iOS(minimum: "26.0")]))
+        // Without a sheet, nothing is then known against it.
+        XCTAssertNil(CartoucheGameFit.verdictWithoutSheet(readsBCTextures: false, convertsBCTextures: true))
+        // Where the GPU reads them, it changes nothing.
+        XCTAssertEqual(verdict(convertsBCTextures: true), verdict())
     }
 
     func testWithWhatTheGameNeedsTheTestersDecide() {

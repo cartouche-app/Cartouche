@@ -191,6 +191,9 @@ const session = object(
     gameVersion: text(/^[0-9A-Za-z._+-]{1,32}$/),
     nxnative: text(/^[0-9a-f]{7,40}$/),
     nxnativeChanged: flag,
+    // On a GPU that reads no BC texture, whether the game's build converts
+    // them for it (launcher/Sources/CartoucheBCConversion.swift).
+    bcTextures: oneOf("converted", "unconverted"),
     settings: dictionary(/^DM_[A-Z0-9_]{1,40}$/, text(/^[A-Za-z0-9._:+-]{1,32}$/), 40),
     minutes,
     reader: integer(1, 1000),

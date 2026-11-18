@@ -34,6 +34,7 @@ on:
       # builds for the Mac (builder/mac/Sources/CartoucheConsole/Shared links
       # them; app/tests/test_mac_console.py checks this list against it), and
       # its words.
+      - "launcher/Sources/CartoucheBCConversion.swift"
       - "launcher/Sources/CartoucheBridge.swift"
       - "launcher/Sources/CartoucheBridgeBuilds.swift"
       - "launcher/Sources/CartoucheCatalog.swift"

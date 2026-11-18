@@ -8,7 +8,9 @@
 //  textures for every game, the A16's and older, whatever the game's sheet
 //  says and for a game without a sheet too: players with an iPhone 13 Pro
 //  or an iPhone 15 saw their games close before their first image
-//  (docs/decisions.md, 67).
+//  (docs/decisions.md, 67). A build of the game that converts those
+//  textures for such a GPU, which a fork of nxnative makes, lifts it
+//  (CartoucheBCConversion, docs/decisions.md, 137).
 //
 //  Platform-independent: tested on its own by launcher/Package.swift.
 //
@@ -18,7 +20,8 @@ enum CartoucheGameFit {
     enum Reason: Hashable {
         /// This iOS is older than MINIMUM, which the game needs.
         case iOS(minimum: String)
-        /// The GPU cannot read BC-compressed textures.
+        /// The GPU cannot read BC-compressed textures, and the game's build
+        /// does not convert them.
         case gpu
         /// The game needs Increased Memory Limit, which Cartouche's
         /// signature lacks.
@@ -43,17 +46,20 @@ enum CartoucheGameFit {
 
     /// The verdict for a game with a sheet: MINIMUMIOS, the iOS it needs,
     /// which this iPhone runs, RUNSMINIMUMIOS, or not; READSBCTEXTURES,
-    /// whether this iPhone's GPU reads BC-compressed textures; NEEDSIML,
+    /// whether this iPhone's GPU reads BC-compressed textures, which the
+    /// player's build of the game may convert for it, CONVERTSBCTEXTURES,
+    /// so that it needs none; NEEDSIML,
     /// whether the game needs Increased Memory Limit, which Cartouche's
     /// signature has, HASIML, or not; PEAKMIB, the most the game used,
     /// against LIMITMIB, the memory it has here, where Play starts it;
     /// LATESTHERE, the status of the testers' last result on this model.
     static func verdict(minimumIOS: String, runsMinimumIOS: Bool, readsBCTextures: Bool,
+                        convertsBCTextures: Bool = false,
                         needsIML: Bool, hasIML: Bool, peakMiB: Int?, limitMiB: Int?,
                         latestHere: String?) -> Verdict {
         var blockers: [Reason] = []
         if !runsMinimumIOS { blockers.append(.iOS(minimum: minimumIOS)) }
-        if !readsBCTextures { blockers.append(.gpu) }
+        if !readsBCTextures && !convertsBCTextures { blockers.append(.gpu) }
         if !blockers.isEmpty { return .unsupported(blockers) }
 
         var warnings: [Reason] = []
@@ -68,9 +74,10 @@ enum CartoucheGameFit {
     }
 
     /// The verdict for a game without a sheet, of which nothing is known
-    /// but what this iPhone says, READSBCTEXTURES: nil when that is
+    /// but what this iPhone says, READSBCTEXTURES, and whether the player's
+    /// build converts those textures, CONVERTSBCTEXTURES: nil when that is
     /// nothing against it.
-    static func verdictWithoutSheet(readsBCTextures: Bool) -> Verdict? {
-        readsBCTextures ? nil : .unsupported([.gpu])
+    static func verdictWithoutSheet(readsBCTextures: Bool, convertsBCTextures: Bool = false) -> Verdict? {
+        readsBCTextures || convertsBCTextures ? nil : .unsupported([.gpu])
     }
 }

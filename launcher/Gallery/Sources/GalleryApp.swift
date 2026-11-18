@@ -129,6 +129,14 @@
 //                                        with two games' saves waiting for it
 //        erasing                         on Reset Cartouche's page, the reset
 //                                        under way
+//        gpu-no-bc                       an iPhone whose GPU reads no
+//                                        BC-compressed texture, an A16's,
+//                                        the sheet's game built by nxnative,
+//                                        which refuses it
+//                                        (GalleryBCConversion)
+//        gpu-no-bc-converted             the same, the sheet's game built by
+//                                        a fork of nxnative that converts
+//                                        those textures for it
 //        iml-left-out                    signed by a signing app on the
 //                                        iPhone (-GallerySigning iphone),
 //                                        without Increased Memory Limit,
@@ -325,6 +333,8 @@
 //        nightly                         on the Mac's builds (screen
 //                                        mac-builds), down to the nightly
 //                                        build
+//        requirements                    on a game's sheet, what the game
+//                                        needs, opened on each need
 //        reset                           on the System page, the page at its
 //                                        end, on Reset Cartouche
 //        results                         on a game's sheet, the testers'
@@ -517,6 +527,7 @@ struct GalleryScenario {
         GalleryState.certificateRefused = work == "certificate"
         GalleryState.appGroupMissing = work == "signed-elsewhere"
         GalleryState.liveProcessMissing = work?.hasSuffix("-no-liveprocess") == true
+        GalleryState.readsBCTextures = !GalleryBCConversion.isWithoutBC(work)
         GalleryState.signInUnfinished = work == "sign-in-unfinished"
         GalleryState.sheetSection = screen == "sheet" ? category : nil
         GalleryState.vpnConnected = work.map {
@@ -1000,6 +1011,7 @@ struct GalleryScenario {
             guard let name = name(of: titleId) else { return nil }
             let info = LCAppInfo(name: name, identifier: "org.nxnative." + titleId.lowercased(),
                                  folder: titleId + ".app", icon: GalleryIcon.make(name: name, key: titleId))
+            if titleId == sheet { GalleryBCConversion.install(info, work: work) }
             if titleId == updatedTitle {
                 // Installed four days ago, from an older commit of nxnative.
                 info.infoPlist = NSMutableDictionary(dictionary: ["CFBundleShortVersionString": "1.0.0", "DMCommit": "52124866a1b2",

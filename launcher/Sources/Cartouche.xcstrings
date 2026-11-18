@@ -8705,6 +8705,23 @@
         }
       }
     },
+    "sheet.gpu.converted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Textures converted to ASTC by this game’s build"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Textures converties en ASTC par la construction de ce jeu"
+          }
+        }
+      }
+    },
     "sheet.gpu.supported" : {
       "extractionState" : "manual",
       "localizations" : {

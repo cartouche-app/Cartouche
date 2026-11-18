@@ -301,6 +301,8 @@ final class CartoucheTelemetry: ObservableObject {
         let gameVersion: String?
         let nxnative: String?
         let nxnativeChanged: Bool?
+        /// On a GPU without BC textures, whether the build converts them.
+        let bcTextures: String?
         let settings: [String: String]
         /// What its process wrote, when the game ran behind the console, and
         /// whether its last reading was close to its limit.
@@ -345,7 +347,7 @@ final class CartoucheTelemetry: ObservableObject {
                 let report = CartoucheSessionReport(
                     id: Self.newNumber(), session: job.session, seq: nextSeq(), context: context(limitMiB: sessionLimit),
                     game: job.game, gameVersion: job.gameVersion, nxnative: job.nxnative, nxnativeChanged: job.nxnativeChanged,
-                    settings: job.settings, minutes: CartoucheGameLogReader.rounded(job.seconds / 60, 1), measures: measures,
+                    bcTextures: job.bcTextures, settings: job.settings, minutes: CartoucheGameLogReader.rounded(job.seconds / 60, 1), measures: measures,
                     process: job.process)
                 enqueue(report, id: report.id)
             }
@@ -376,7 +378,7 @@ final class CartoucheTelemetry: ObservableObject {
         for app in model.apps + model.hiddenApps {
             guard let found = catalog.gameTitle(of: app) else { continue }
             let titleId = found.isEmpty ? catalog.titleId(matchingName: app.displayName) : found
-            var details: (build: CartoucheGameBuild, settings: [String: String])?
+            var details: (build: CartoucheGameBuild, settings: [String: String], bcTextures: String?)?
             for container in app.uiContainers {
                 let documents = container.containerURL.appendingPathComponent("Documents", isDirectory: true)
                 // A running game is still writing log.txt, behind the console too.
@@ -392,7 +394,11 @@ final class CartoucheTelemetry: ObservableObject {
                     guard state.logs.needsReading(key: key, bytes: bytes) else { continue }
                     if details == nil {
                         details = (build: CartoucheInstalledBuilds.installedBuild(of: app),
-                                   settings: CartoucheGameActions.shared.settings(for: app, tileKey: "").values)
+                                   settings: CartoucheGameActions.shared.settings(for: app, tileKey: "").values,
+                                   bcTextures: CartoucheSessionReport.bcTextures(
+                                       readsBCTextures: CartoucheDevice.supportsBCTextureCompression) {
+                                           CartoucheInstalledBuilds.convertsBCTextures(of: app)
+                                       })
                     }
                     let build = details?.build
                     let process = state.runs.process(folder: container.folderName, created: created, last: last)
@@ -400,6 +406,7 @@ final class CartoucheTelemetry: ObservableObject {
                                     seconds: max(modified.timeIntervalSince(created), 0), game: titleId,
                                     gameVersion: build?.version, nxnative: build?.shortCommit,
                                     nxnativeChanged: build?.commit == nil ? nil : build?.isDirty,
+                                    bcTextures: details?.bcTextures,
                                     settings: details?.settings ?? [:], process: process?.process,
                                     nearLimit: process?.nearLimit ?? false))
                 }

@@ -52,19 +52,16 @@ from typing import NamedTuple
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from sheets import (  # noqa: E402
-    API, DATABASE, MIN_IPHONES, PAGE, SLOWEST_READER, WINDOW_DAYS, Cloudflare, Refused, figure_of, number,
+    API, DATABASE, MIN_IPHONES, PAGE, SLOWEST_READER, WINDOW_DAYS, Cloudflare, Refused, figure_of, number, reads_bc,
 )
 
 # A line, and each of its figures, needs this many installs, as the sheets do.
 MIN_INSTALLS = MIN_IPHONES
 BRANCH = "nxnative-measurements"
 
-# iPhones whose GPU reads no BC texture: the A16 and older ones, iPhone15,x
-# and before. nxnative's iOS check refuses them for every game.
-IPHONE = re.compile(r"^iPhone([0-9]+),[0-9]+$")
-# A Mac's model identifier, as Cartouche Builder sends it.
+# A Mac's model identifier, as Cartouche Builder sends it. The iPhones whose
+# GPU reads no BC texture, which nxnative refuses: reads_bc (sheets.py).
 MAC = re.compile(r"^Mac[0-9]+,[0-9]+$")
-LAST_WITHOUT_BC = 15
 
 # A game process with this limit or less, while Cartouche had more, ran
 # without Increased Memory Limit (CartoucheGuest.m): Cartouche's doing, not
@@ -169,11 +166,6 @@ def once(rows: list[dict], key) -> list[dict]:
 
 
 # MARK: Sessions
-
-
-def reads_bc(device: str | None) -> bool:
-    found = IPHONE.match(device or "")
-    return not found or int(found.group(1)) > LAST_WITHOUT_BC
 
 
 def set_apart(session: dict) -> str | None:

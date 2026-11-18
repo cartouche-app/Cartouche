@@ -13,7 +13,7 @@ README = """# Game profiles
 | [13 Sentinels: Aegis Rim](01003FC01670C000/README.md) | `01003FC01670C000` | 1.10 | 11.4.3 | Vanillaware's engine | NVN |
 | [13 Sentinels: Aegis Rim, Asian release](01008D7016438000/README.md) | `01008D7016438000` | 1.00 (base) | 11.4.3 | Vanillaware's engine | NVN |
 | [Mario Kart World](0400C3F00006E000/README.md) | `0400C3F00006E000` | 1.0.0 (base) | 19.3.3 | Nintendo EPD | NVN2 |
-| [Super Mario 3D All-Stars](010049900F546000/README.md) | `010049900F546000` | 1.1.4 | 10.8.1 | sead | NVN |
+| [Super Mario 3D All-Stars](010049900F546000/README.md) | `010049900F546000` | 1.1.4 | 10.8.1 | sead | NVN, Vulkan |
 | [Celeste](01002B30028F6000/README.md) | `01002B30028F6000` | 1.4.1.1 | 7.3.2 | Monocle | NVN |
 """
 
@@ -85,7 +85,14 @@ class NxnativeGamesTest(unittest.TestCase):
             "engine": "Nintendo EPD",
             "build": "1.0.0 (base)",
             "sdk": "19.3.3",
+            "graphics": "NVN2",
         })
+
+    def test_the_graphics_api_from_the_table(self):
+        # What a fork's conversion of BC textures covers: NVN's games alone
+        # (launcher/Sources/CartoucheBCConversion.swift).
+        self.assertEqual(self.game("01003FC01670C000")["graphics"], "NVN")
+        self.assertEqual(self.game("010049900F546000")["graphics"], "NVN, Vulkan")
 
     def test_status_from_the_opening_comment(self):
         self.assertEqual(self.game("01002B30028F6000")["status"], "iphone")

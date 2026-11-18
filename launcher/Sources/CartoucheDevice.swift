@@ -66,17 +66,17 @@ enum CartoucheDevice {
     /// In the launcher's harness (launcher/Harness), as a test sets it: an
     /// iPhone whose GPU reads them, unless it says otherwise.
     static var supportsBCTextureCompression: Bool { HarnessLC.readsBCTextures }
+    #elseif CARTOUCHE_GALLERY
+    /// In the launcher's gallery, as its scenario has it: an iPhone whose
+    /// GPU reads them, unless its work is one of an A16's (GalleryState).
+    static var supportsBCTextureCompression: Bool { GalleryState.readsBCTextures }
     #else
     static let supportsBCTextureCompression: Bool = {
-        #if CARTOUCHE_GALLERY
-        return true
-        #else
         guard let device = MTLCreateSystemDefaultDevice() else { return false }
         if #available(iOS 16.4, *) {
             return device.supportsBCTextureCompression
         }
         return false
-        #endif
     }()
     #endif
 
@@ -258,21 +258,25 @@ enum CartoucheFit: Hashable {
     }
 
     /// LIMITMIB is the memory the game has here, where Play starts it
-    /// (CartoucheGameKeeping.gameLimitMiB).
-    static func of(_ sheet: CartoucheGameSheet, limitMiB: Int?) -> CartoucheFit {
+    /// (CartoucheGameKeeping.gameLimitMiB); CONVERTSBCTEXTURES, whether the
+    /// player's build of the game converts its BC textures for this GPU
+    /// (CartoucheEntry.convertsBCTextures).
+    static func of(_ sheet: CartoucheGameSheet, limitMiB: Int?, convertsBCTextures: Bool = false) -> CartoucheFit {
         let latest = sheet.results.filter { $0.device == CartoucheDevice.modelIdentifier }.max { $0.date < $1.date }
         return CartoucheFit(CartoucheGameFit.verdict(
             minimumIOS: sheet.requirements.minimumIOS,
             runsMinimumIOS: CartoucheDevice.runsAtLeast(sheet.requirements.minimumIOS),
-            readsBCTextures: CartoucheDevice.supportsBCTextureCompression,
+            readsBCTextures: CartoucheDevice.supportsBCTextureCompression, convertsBCTextures: convertsBCTextures,
             needsIML: sheet.requirements.increasedMemoryLimit, hasIML: CartoucheDevice.hasIncreasedMemoryLimit,
             peakMiB: sheet.peakMemoryMiB, limitMiB: limitMiB, latestHere: latest?.status))
     }
 
     /// How a game without a sheet fits: nil, unless this iPhone's GPU is
-    /// one nxnative refuses for every game.
-    static func withoutSheet() -> CartoucheFit? {
-        CartoucheGameFit.verdictWithoutSheet(readsBCTextures: CartoucheDevice.supportsBCTextureCompression)
+    /// one nxnative refuses for every game, and the player's build does
+    /// not convert its textures for it, CONVERTSBCTEXTURES.
+    static func withoutSheet(convertsBCTextures: Bool = false) -> CartoucheFit? {
+        CartoucheGameFit.verdictWithoutSheet(readsBCTextures: CartoucheDevice.supportsBCTextureCompression,
+                                             convertsBCTextures: convertsBCTextures)
             .map { CartoucheFit($0) }
     }
 

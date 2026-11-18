@@ -71,6 +71,11 @@ struct CartoucheSessionReport: Codable, Equatable {
     var nxnative: String?
     /// Built from changed files of nxnative.
     var nxnativeChanged: Bool?
+    /// On a GPU that reads no BC-compressed texture, an A16's or older,
+    /// whether the game's build converts them for it, converted, or not,
+    /// unconverted, which nxnative then refuses (CartoucheBCConversion);
+    /// nothing on a GPU that reads them (bcTextures(readsBCTextures:converts:)).
+    var bcTextures: String?
     /// nxnative's settings the game ran with, by their variable.
     var settings: [String: String]?
     /// How long the session lasted, from its log's dates.
@@ -82,8 +87,8 @@ struct CartoucheSessionReport: Codable, Equatable {
     var process: CartoucheGameProcess?
 
     init(id: String, session: String, seq: Int, context: CartoucheTelemetryContext, game: String?, gameVersion: String?,
-         nxnative: String?, nxnativeChanged: Bool?, settings: [String: String]?, minutes: Double, measures: CartoucheGameMeasures,
-         process: CartoucheGameProcess? = nil) {
+         nxnative: String?, nxnativeChanged: Bool?, bcTextures: String? = nil, settings: [String: String]?, minutes: Double,
+         measures: CartoucheGameMeasures, process: CartoucheGameProcess? = nil) {
         self.id = id
         self.session = session
         self.seq = seq
@@ -92,10 +97,19 @@ struct CartoucheSessionReport: Codable, Equatable {
         self.gameVersion = gameVersion
         self.nxnative = nxnative
         self.nxnativeChanged = nxnativeChanged
+        self.bcTextures = bcTextures
         self.settings = settings.flatMap { CartoucheTelemetrySettings.cleaned($0) }
         self.minutes = minutes
         self.measures = measures
         self.process = process
+    }
+
+    /// What a session's report says of the game's BC textures
+    /// (bcTextures): nothing where the GPU reads them, READSBCTEXTURES;
+    /// else whether the player's build converts them, CONVERTS, which is
+    /// read only then.
+    static func bcTextures(readsBCTextures: Bool, converts: () -> Bool) -> String? {
+        readsBCTextures ? nil : converts() ? "converted" : "unconverted"
     }
 
     /// The memory limit a session's report gives (memoryLimitMiB): for a
@@ -115,7 +129,7 @@ struct CartoucheSessionReport: Codable, Equatable {
 
     // The context and the measures sit beside the report's own keys.
     private enum CodingKeys: String, CodingKey {
-        case schema, kind, id, session, seq, game, gameVersion, nxnative, nxnativeChanged, settings, minutes, reader, process
+        case schema, kind, id, session, seq, game, gameVersion, nxnative, nxnativeChanged, bcTextures, settings, minutes, reader, process
     }
 
     init(from decoder: Decoder) throws {
@@ -129,6 +143,7 @@ struct CartoucheSessionReport: Codable, Equatable {
         gameVersion = try container.decodeIfPresent(String.self, forKey: .gameVersion)
         nxnative = try container.decodeIfPresent(String.self, forKey: .nxnative)
         nxnativeChanged = try container.decodeIfPresent(Bool.self, forKey: .nxnativeChanged)
+        bcTextures = try container.decodeIfPresent(String.self, forKey: .bcTextures)
         settings = try container.decodeIfPresent([String: String].self, forKey: .settings)
         minutes = try container.decode(Double.self, forKey: .minutes)
         reader = try container.decode(Int.self, forKey: .reader)
@@ -148,6 +163,7 @@ struct CartoucheSessionReport: Codable, Equatable {
         try container.encodeIfPresent(gameVersion, forKey: .gameVersion)
         try container.encodeIfPresent(nxnative, forKey: .nxnative)
         try container.encodeIfPresent(nxnativeChanged, forKey: .nxnativeChanged)
+        try container.encodeIfPresent(bcTextures, forKey: .bcTextures)
         try container.encodeIfPresent(settings, forKey: .settings)
         try container.encode(minutes, forKey: .minutes)
         try container.encode(reader, forKey: .reader)
