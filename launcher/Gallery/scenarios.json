@@ -1430,6 +1430,57 @@
       ]
     },
     {
+      "name": "iphone-sign-in-provisioning-refused",
+      "comment": "A sign-in for which Apple refused a new machine for now, before the Apple ID went to it, LocalDevVPN connected: why, in Cartouche's words, where AnisetteKit's English words showed up to 0.14.0, with the wait under way.",
+      "screen": "signin",
+      "work": "provisioning-refused",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-sign-in-session-expired",
+      "comment": "A sign-in whose session Apple says has expired, before any code, LocalDevVPN connected: what to do, in Cartouche's words, where Apple's English words showed up to 0.14.0.",
+      "screen": "signin",
+      "work": "session-expired",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-sign-in-cannot-complete",
+      "comment": "A sign-in Apple refused without saying why, before any code, LocalDevVPN connected: what to do, in Cartouche's words, where Apple's English words showed up to 0.14.0.",
+      "screen": "signin",
+      "work": "cannot-complete",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-guide-first-launch",
       "screen": "guide",
       "owned": [],

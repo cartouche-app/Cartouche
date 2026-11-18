@@ -757,6 +757,52 @@ struct GalleryWatchReadout: UIViewRepresentable {
 
 // MARK: The built-in SideStore's sign-in
 
+/// Apple's answers that end a sign-in before any code, which the built-in
+/// SideStore passes on in English: the outcome it leaves Cartouche
+/// (app/patches/sidestore/0014, 0024) and its words, by the gallery's work
+/// that shows each one, which the stand-in's Apple ID holds too.
+enum GalleryAppleAnswer: String, CaseIterable {
+    /// Apple refused, for now, a new machine for the sign-in
+    /// (app/patches/sidestore/0024).
+    case provisioningRefused = "provisioning-refused"
+    /// Apple says the sign-in's session has expired.
+    case sessionExpired = "session-expired"
+    /// Apple refused the sign-in without saying why.
+    case cannotComplete = "cannot-complete"
+
+    /// What SideStore leaves Cartouche of the sign-in, LocalDevVPN
+    /// connected and the pairing file in place.
+    var outcome: [String: Any] {
+        var left: [String: Any] = [
+            "version": 1, "action": CartoucheSideStoreOutcome.Action.signIn.rawValue, "ok": false,
+            "date": Int(Date().timeIntervalSince1970), "percent": 0, "stage": "account", "trail": "SignIn",
+            "bundledCertificate": true, "activeCertificate": false,
+        ]
+        switch self {
+        case .provisioningRefused:
+            left.merge(["seconds": 7, "family": "provisioning", "kind": "httpError", "codes": "AnisetteKit.AnisetteError 5",
+                        "http": 401, "service": "provisioning", "reason": "finish"]) { _, new in new }
+        case .sessionExpired:
+            left.merge(["seconds": 6, "family": "server", "kind": "underlyingError", "codes": "SideSign.ServerError 3",
+                        "apple": 1100]) { _, new in new }
+        case .cannotComplete:
+            left.merge(["seconds": 4, "family": "server", "kind": "underlyingError", "codes": "SideSign.ServerError 3",
+                        "apple": -22405]) { _, new in new }
+        }
+        return left
+    }
+
+    /// SideStore's words for it: AnisetteKit's for the new machine, Apple's
+    /// own and its code for the others.
+    var message: String {
+        switch self {
+        case .provisioningRefused: return "HTTP error (401): Apple PTM/TK endpoint returned HTTP 401"
+        case .sessionExpired: return "Your session has expired. Please log in. (1100)"
+        case .cannotComplete: return "This Action Cannot Be Completed (-22405)"
+        }
+    }
+}
+
 /// The built-in SideStore's sign-in, as CartoucheAccount finds it by its
 /// Objective-C name and calls it (launcher/SideStoreSupport/CartoucheSignIn.swift),
 /// stood in for: it reads the Apple ID and password Cartouche left in their
@@ -779,6 +825,10 @@ struct GalleryWatchReadout: UIViewRepresentable {
 /// - with "noliveprocess" in it, LiveContainer's bridge cannot start
 ///   SideStore, LiveProcess missing from the app, and says so in its own
 ///   words, SideStore never started, the Apple ID and password unread;
+/// - with the name of one of GalleryAppleAnswer's cases in it, Apple ends
+///   the sign-in with that answer, which SideStore passes on in English,
+///   and SideStore leaves Cartouche how its sign-in ended, as
+///   app/patches/sidestore/0014 and 0024 do;
 /// - any other signs the player in.
 ///
 /// Once signed in, the gallery has the Apple ID and the certificate, as the
@@ -840,6 +890,12 @@ final class GallerySideStore: NSObject {
                 + "Install Cartouche again with the Cartouche Installer, over this copy: "
                 + "it gives Cartouche the certificate it signs with. Then sign in again.\n\n"
                 + "Certificate named by the app: …0A1B2C; key files: SideStore.framework; on the account: …3D4E5F."
+        }
+        if let answer = GalleryAppleAnswer.allCases.first(where: { appleID.contains($0.rawValue) }) {
+            if let written = try? JSONSerialization.data(withJSONObject: answer.outcome) {
+                CartoucheStoreKeychain.set(written, for: CartoucheSideStoreOutcome.account)
+            }
+            return answer.message
         }
         if appleID.contains("code") {
             var error: String?

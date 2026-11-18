@@ -104,6 +104,10 @@
 //      -GalleryWork <work>               what goes on, one of these:
 //        build-skipped                   No thanks said to the guide's Mac
 //                                        step
+//        cannot-complete                 a sign-in Apple refused without
+//                                        saying why, before any code,
+//                                        LocalDevVPN connected
+//                                        (GalleryAppleAnswer)
 //        certificate                     a certificate iOS no longer accepts
 //        code                            Apple asks for a verification code,
 //                                        on the sign-in
@@ -198,6 +202,10 @@
 //                                        the player's, paused behind the
 //                                        console; on the TV (screen tv), the
 //                                        game paused behind the console
+//        provisioning-refused            a sign-in for which Apple refused a
+//                                        new machine for now, LocalDevVPN
+//                                        connected, with the wait under way
+//                                        (GalleryAppleAnswer)
 //        renewal-failed                  Cartouche's renewal in its last 3
 //                                        days, which failed, the network gone
 //        renewal-no-liveprocess          Cartouche in its last 3 days,
@@ -222,6 +230,10 @@
 //                                        version 1.2.0 of the game having
 //                                        written it, and this iPhone's being
 //                                        1.0.0
+//        session-expired                 a sign-in whose session Apple says
+//                                        has expired, before any code,
+//                                        LocalDevVPN connected
+//                                        (GalleryAppleAnswer)
 //        sidestore-quit                  a sign-in whose built-in SideStore
 //                                        quit as it launched, LocalDevVPN
 //                                        connected
@@ -509,6 +521,7 @@ struct GalleryScenario {
         GalleryState.sheetSection = screen == "sheet" ? category : nil
         GalleryState.vpnConnected = work.map {
             Self.deviceChecks[$0] != nil || ["sidestore-quit", "no-app-group", "sign-in-no-liveprocess"].contains($0)
+                || GalleryAppleAnswer(rawValue: $0) != nil
         } ?? false
         let pairing = GalleryState.documents.appendingPathComponent("SideStore/Documents", isDirectory: true)
         try? FileManager.default.removeItem(at: pairing)
@@ -647,6 +660,9 @@ struct GalleryScenario {
             }
             if work == "sign-in-no-liveprocess" {
                 CartoucheAccount.shared.showNoLiveProcessForGallery()
+            }
+            if let answer = work.flatMap(GalleryAppleAnswer.init(rawValue:)) {
+                CartoucheAccount.shared.showAppleAnswerForGallery(answer.outcome, message: answer.message)
             }
             if work == "sign-in-unfinished" {
                 CartoucheAccount.shared.showUnfinishedForGallery()

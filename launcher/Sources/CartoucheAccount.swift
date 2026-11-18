@@ -738,5 +738,16 @@ final class CartoucheAccount: ObservableObject {
                                                  vpn: CartoucheVPN.isConnected, pairing: true)
         failed(CartoucheText.sideStoreMessage(message, failure: failure, signIn: true), fraction: 0, failure: failure)
     }
+
+    /// Shows a sign-in that one of Apple's answers ended, as the built-in
+    /// SideStore left FIELDS for Cartouche and passed MESSAGE on, as the
+    /// sign-in's end does, for the gallery's screens.
+    func showAppleAnswerForGallery(_ fields: [String: Any], message: String) {
+        let outcome = (try? JSONSerialization.data(withJSONObject: fields))
+            .flatMap { CartoucheSideStoreOutcome(data: $0, expecting: .signIn) }
+        let failure = CartoucheFailure.sideStore(outcome: outcome, message: message, fraction: 0, seconds: 0,
+                                                 vpn: CartoucheVPN.isConnected, pairing: true)
+        failed(CartoucheText.sideStoreMessage(message, failure: failure, signIn: true), fraction: 0, failure: failure)
+    }
     #endif
 }
