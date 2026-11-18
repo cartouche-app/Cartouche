@@ -8,14 +8,17 @@ app-reports.json.
   installs gave shows –; the peak is each install's highest, of its sessions
   that drew a frame;
 - the sessions on iPhones without BC textures, those whose game process ran
-  without Increased Memory Limit, those of changed builds, and those played
-  on a Mac are set apart;
+  without Increased Memory Limit and those of changed builds are set apart;
+- the games played on Macs, how each play ended and what the console there
+  measured of them, are summed up apart from the iPhones', each Mac as an
+  install, those of a fork of nxnative and of changed builds left out;
 - the lines by model and by commit, the crashes and the builds by commit
   show only what three installs, or three Macs, share; a commit, a model or
   a step fewer share is never named;
 - a game a Mac tried again counts once for a commit, as its last try
   ended, and the games that had built on that Mac and fail with the
-  commit, its regressions, apart;
+  commit, its regressions, apart; the IPAs and the Mac apps each have
+  their own, by commit and in all;
 - no install's, session's or report's number is ever written;
 - a session sent again counts once, at its highest seq; only the 28 days
   before the run count; a copy of another region counts for its game;
@@ -171,10 +174,10 @@ class NxnativePageTest(unittest.TestCase):
         result = self.run_page()
         self.assertEqual(self.output(), "written=true\n")
         page = self.page()
-        self.assertTrue(page.startswith("# nxnative's games on players' iPhones\n"))
+        self.assertTrue(page.startswith("# nxnative's games on players' iPhones and Macs\n"))
         self.assertIn("measured of nxnative's games from 2026-11-10 to 2026-11-11,", page)
-        self.assertIn("4 game sessions from 3 installs, 2.3 hours of play. 4 of the 4 sessions that count name "
-                      "their nxnative commit.", page)
+        self.assertIn("4 game sessions on iPhones and iPads from 3 installs, 2.3 hours of play. 4 of the 4 sessions "
+                      "that count name their nxnative commit.", page)
         # Each install's median: 58, 59 and (60 + 30) / 2 = 45: their median is 58; of the slowest 5%, 52, 53
         # and 37: 52. The rest is the fixture's: 35.2 minutes, a p99 of 33.4 ms, 3.1 stutters a minute, 76 of
         # 108 waiting for shaders, 210 ms of shader stall, 21.43 s of preparation, a peak of 4,813 MiB, serious
@@ -281,22 +284,51 @@ class NxnativePageTest(unittest.TestCase):
             "Cartouche's doing, from 3 installs; sessions of builds with changes of their own, from fewer than 3 "
             "installs.", page)
         self.assertNotIn("iPhone15,4", page)
-        self.assertIn("12 game sessions from 12 installs", page)
+        self.assertIn("12 game sessions on iPhones and iPads from 12 installs", page)
 
-    def test_the_sessions_played_on_a_mac_are_set_apart(self):
-        """Cartouche Builder reports the sessions of the games played on its
-        Mac, in nxnative's app for the Mac: the page sums up the iPhones'."""
+    def test_the_games_played_on_macs_are_summed_up_apart(self):
+        """Cartouche Builder tells how each game played on its Mac ended, and
+        its console measures it as Cartouche does on an iPhone: the page
+        sums both up by Mac, apart from the iPhones', as Ad asked on
+        18 November 2026, when 12 Macs had played 10 games 58 times."""
         for phone in self.phones[:3]:
             self.session(phone)
-        for mac in self.macs[:3]:
+
+        def on_a_mac(mac, **fields):
             self.session(mac, device="Mac16,12", ios="26.6", memoryLimitMiB=None, increasedMemoryLimit=None,
-                         end={"kind": "quit"})
+                         thermal=None, end={"kind": "quit"}, **fields)
+
+        # What the console measured on three Macs, and on a fourth of another game.
+        for mac, fps in zip(self.macs[:3], (58.0, 59.0, 60.0)):
+            on_a_mac(mac, fps={"median": fps, "low5": fps - 6})
+        on_a_mac(self.macs[3], game=SENTINELS)
+        # A build with changes of its own is left out.
+        on_a_mac(self.macs[4], nxnativeChanged=True)
+        # How each play ended, as Cartouche Builder read nxnative's launcher.
+        for m, game, ended, seconds in ((0, MKW, "quit", 1800), (0, MKW, "quit", 600), (1, MKW, "crashed", 300),
+                                        (2, MKW, "unknown", 5), (3, SENTINELS, "quit", 1200)):
+            self.event(self.macs[m], "builder.played", game=game, ended=ended, seconds=seconds, **{"from": "builder"})
+        # A Mac that follows a fork of nxnative is left out.
+        self.event(self.macs[5], "builder.opened", nxnative="aaaaaaaaaaaa", forkOfNxnative=True)
+        self.event(self.macs[5], "builder.played", game=MKW, ended="gpu", seconds=60, seq=2)
+        on_a_mac(self.macs[5])
         self.run_page()
         page = self.page()
         self.assertEqual([(row["Game"], row["Installs"]) for row in rows(page, "By game")], [(MKW_NAME, "3")])
-        self.assertIn("Set apart: 3 sessions played on a Mac, in nxnative's app for the Mac, which this page does "
-                      "not sum up, from 3 installs.", page)
-        self.assertNotIn("Mac16,12", page)
+        self.assertIn("3 game sessions on iPhones and iPads from 3 installs", page)
+        self.assertNotIn("Set apart", page)
+        # 3,905 seconds of play; Mario Kart World's 2,705, and each Mac's median: 1,200, 300 and 5 seconds.
+        self.assertIn("5 plays of 2 games on 4 Macs, 1.1 hours.", page)
+        self.assertEqual(rows(page, "Played on players' Macs"), [
+            {"Game": MKW_NAME, "Macs": "3", "Plays": "4", "Hours": "0.8", "Median minutes": "5.0", "Quit": "2",
+             "GPU revoked": "0", "Crashed": "1", "Stopped": "0", "Unknown": "1"}])
+        measured = rows(page, "Measured on players' Macs")
+        self.assertEqual([(r["Game"], r["nxnative"], r["Macs"], r["Sessions"], r["FPS median"], r["FPS slowest 5%"])
+                          for r in measured], [(MKW_NAME, "`6c3aeb3d70a1`", "3", "3", "59.0", "53.0")])
+        # nxnative reads no thermal state on the Mac.
+        self.assertNotIn("Reached serious heat", measured[0])
+        for left_out in ("Mac16,12", SENTINELS, "13 Sentinels"):
+            self.assertNotIn(left_out, page)
 
     # MARK: What several installs share
 
@@ -368,9 +400,17 @@ class NxnativePageTest(unittest.TestCase):
         for mac in self.macs[:3]:
             self.event(mac, "builder.opened", nxnative="aaaaaaaaaaaa", forkOfNxnative=False)
             self.event(mac, "builder.built", nxnative="aaaaaaaaaaaa")
+            self.event(mac, "builder.macBuilt", game=MKW, nxnative="aaaaaaaaaaaa", seconds=600)
+            self.event(mac, "builder.played", game=MKW, ended="quit", seconds=600)
+            self.session(mac, device="Mac16,12", ios="26.6", memoryLimitMiB=None, increasedMemoryLimit=None,
+                         end={"kind": "quit"})
         result = self.run_page()
-        written = self.page() + result.stdout + result.stderr + (self.work / "summary.md").read_text(encoding="utf-8")
+        page = self.page()
+        written = page + result.stdout + result.stderr + (self.work / "summary.md").read_text(encoding="utf-8")
         self.assertIn("`aaaaaaaaaaaa` | 3 |", written)
+        for title in ("Played on players' Macs", "Measured on players' Macs",
+                      "Mac apps built on players' Macs, by nxnative commit"):
+            self.assertEqual(len(rows(page, title)), 1, title)
         for number in self.ids:
             self.assertNotIn(number, written)
             self.assertNotIn(number[:8], written)
@@ -422,9 +462,12 @@ class NxnativePageTest(unittest.TestCase):
             self.event(mac, "builder.built", game=one, nxnative="bbbbbbbbbbbb")
         self.run_page()
         page = self.page()
-        self.assertEqual(rows(page, "Builds on players' Macs, by nxnative commit"), [
+        self.assertEqual(rows(page, "IPAs built on players' Macs, by nxnative commit"), [
             {"nxnative": "`aaaaaaaaaaaa`", "Macs": "3", "Built": "2", "Failed": "4", "Regressions": "0",
              "Where they failed": "app build 3, other steps 1"}])
+        # In all, the commit two Macs built too, unnamed.
+        self.assertIn("In all, from 2 nxnative commits: 4 IPAs of 2 games built on 4 Macs; 4 failed on 3 Macs.", page)
+        self.assertIn("The steps 3 Macs or more failed at: app build, 3 on 3 Macs; other steps, 1.", page)
         for left_out in ("bbbbbbbbbbbb", "unpack v0", "extract v0", "deliver"):
             self.assertNotIn(left_out, page.split("## How it is summed up")[0])
 
@@ -471,7 +514,7 @@ class NxnativePageTest(unittest.TestCase):
         built(5, later, after, 1)
         self.run_page()
         page = self.page()
-        self.assertEqual(rows(page, "Builds on players' Macs, by nxnative commit"), [
+        self.assertEqual(rows(page, "IPAs built on players' Macs, by nxnative commit"), [
             {"nxnative": f"`{before}`", "Macs": "4", "Built": "5", "Failed": "1", "Regressions": "0",
              "Where they failed": "other steps 1"},
             {"nxnative": f"`{broke}`", "Macs": "4", "Built": "1", "Failed": "5", "Regressions": "4 on 3 Macs",
@@ -479,6 +522,34 @@ class NxnativePageTest(unittest.TestCase):
             {"nxnative": f"`{after}`", "Macs": "3", "Built": "2", "Failed": "2", "Regressions": "1 on fewer than 3 Macs",
              "Where they failed": "other steps 2"}])
         self.assertNotIn("check v65536 files", page.split("## How it is summed up")[0])
+
+    def test_the_mac_apps_are_built_apart_from_the_ipas(self):
+        """Cartouche Builder builds each game's app for the Mac too, and
+        counts it apart (builder.macBuilt, builder.macFailed): 37 Mac apps
+        of 22 games on 13 Macs from 15 to 17 November 2026."""
+        one, two = GAMES[:2]
+        for n, mac in enumerate(self.macs[:4], start=1):
+            self.event(mac, "builder.built", game=one, nxnative="aaaaaaaaaaaa", seconds=1500)
+            self.event(mac, "builder.macBuilt", game=one, nxnative="aaaaaaaaaaaa", seconds=600 * n, seq=2)
+        self.event(self.macs[0], "builder.macFailed", game=two, nxnative="aaaaaaaaaaaa", stage="mac app build",
+                   cause="nxnative", seq=3)
+        # Stopped by its player: not nxnative's.
+        self.event(self.macs[1], "builder.macFailed", game=two, nxnative="aaaaaaaaaaaa", stage="mac app build",
+                   cause="stopped", seq=3)
+        self.run_page()
+        page = self.page()
+        self.assertEqual(rows(page, "Mac apps built on players' Macs, by nxnative commit"), [
+            {"nxnative": "`aaaaaaaaaaaa`", "Macs": "4", "Built": "4", "Failed": "1", "Regressions": "0",
+             "Where they failed": "other steps 1"}])
+        # Each Mac's median: 10, 20, 30 and 40 minutes.
+        self.assertIn("In all, from 1 nxnative commit: 4 Mac apps of 1 game built on 4 Macs, in a median of 25 "
+                      "minutes; some failed, on fewer than 3 Macs.", page)
+        self.assertEqual(rows(page, "IPAs built on players' Macs, by nxnative commit"), [
+            {"nxnative": "`aaaaaaaaaaaa`", "Macs": "4", "Built": "4", "Failed": "0", "Regressions": "0",
+             "Where they failed": "–"}])
+        self.assertIn("In all, from 1 nxnative commit: 4 IPAs of 1 game built on 4 Macs, in a median of 25 minutes; "
+                      "none failed.", page)
+        self.assertNotIn("mac app build", page.split("## How it is summed up")[0])
 
     def test_the_games_no_mac_built_for_cartouche_builder(self):
         """unbuilt.json: a game three Macs tried and none built, as Pokopia
@@ -575,9 +646,12 @@ class NxnativePageTest(unittest.TestCase):
         self.assertEqual(self.output(), "written=true\n")
         page = self.page()
         self.assertIn("from 2026-10-15 to 2026-11-11,", page)
-        self.assertIn("0 game sessions from 0 installs, 0.0 hours of play.", page)
+        self.assertIn("0 game sessions on iPhones and iPads from 0 installs, 0.0 hours of play.", page)
         self.assertIn("No game was played on 3 installs or more.", page)
+        self.assertIn("No game was played on 3 Macs or more.", page)
+        self.assertIn("No game was measured on 3 Macs or more.", page)
         self.assertIn("No nxnative commit was built on 3 Macs or more.", page)
+        self.assertIn("No nxnative commit was built for the Mac on 3 Macs or more.", page)
         # What the slowest 5% counts, so that a low one is not read as nxnative's alone.
         self.assertIn("it counts only from the sessions Cartouche read with its reading 2 of the log or a later one",
                       page)
