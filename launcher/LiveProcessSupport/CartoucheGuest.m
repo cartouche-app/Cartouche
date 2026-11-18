@@ -39,6 +39,14 @@
 //                    the game's process (date), missing until one has: then
 //                    the game had its controller, which Cartouche's journal
 //                    says (docs/decisions/123.md)
+//        tvPicture   while a scene of the game's is on a TV: whether the
+//                    game's picture is there (boolean), a layer of Metal in
+//                    a window shown in that scene, as nxnative moves its
+//                    picture there (front_ios.m); missing without such a
+//                    scene. Cartouche's journal says it as the game pauses
+//                    or ends, so that a report from a player whose TV shows
+//                    the game's card says whether the game put its picture
+//                    there (CartoucheGameHost.notePictureOnTV)
 //
 //  - The controllers: iOS hands their presses to the process that has the
 //    keyboard, and the game's process asks for it, without showing one,
@@ -117,15 +125,60 @@ static int CartoucheGuestIncreasedMemoryLimit(void) {
 /// is an app extension, without UIApplication's sharedApplication: the
 /// scene is noted as it connects.
 static __weak UIWindowScene *gameScene;
+/// The game's scenes on a TV, which Cartouche opens in this process while
+/// it has the TV (app/patches/livecontainer/0012), while they are
+/// connected: one at a time, but the one Cartouche closed may say so after
+/// the next has come.
+static NSHashTable<UIScene *> *tvScenes;
 
 static CGSize CartoucheGuestScreenSize(void) {
     UIWindowScene *scene = gameScene;
     return scene ? scene.coordinateSpace.bounds.size : CGSizeZero;
 }
 
-/// On measureQueue: SIZE, the game's screen now, and PRESS, the last press
-/// of a controller's button that reached the game, if one has.
-static void CartoucheGuestRecord(CGSize size, NSDate *press) {
+/// Whether SCENE is one of the game's on a TV: the role of the scene iOS
+/// gave an app for an external display before iOS 27, with which
+/// Cartouche opens it.
+static BOOL CartoucheGuestIsTVScene(UIScene *scene) {
+    if (@available(iOS 16.0, *)) {
+        return [scene.session.role isEqualToString:UIWindowSceneSessionRoleExternalDisplayNonInteractive];
+    }
+    return NO;
+}
+
+/// Whether VIEW, or a view in it, draws with Metal, as nxnative's picture
+/// does (front_ios.m DmGameView), a few levels down at most. Main thread.
+static BOOL CartoucheGuestDrawsWithMetal(UIView *view, Class metal, int depth) {
+    if ([view.layer isKindOfClass:metal]) return YES;
+    if (depth == 0) return NO;
+    for (UIView *subview in view.subviews) {
+        if (CartoucheGuestDrawsWithMetal(subview, metal, depth - 1)) return YES;
+    }
+    return NO;
+}
+
+/// Whether the game's picture is on its scene on a TV, in a window shown
+/// there, nil without such a scene (GameMemory.plist's tvPicture). Main
+/// thread.
+static NSNumber *CartoucheGuestPictureOnTV(void) {
+    NSArray<UIScene *> *scenes = tvScenes.allObjects;
+    if (scenes.count == 0) return nil;
+    // Looked up rather than linked, as nothing else of this process draws.
+    Class metal = NSClassFromString(@"CAMetalLayer");
+    for (UIScene *scene in scenes) {
+        if (!metal || ![scene isKindOfClass:UIWindowScene.class]) continue;
+        for (UIWindow *window in ((UIWindowScene *)scene).windows) {
+            if (!window.hidden && CartoucheGuestDrawsWithMetal(window, metal, 6)) return @YES;
+        }
+    }
+    return @NO;
+}
+
+/// On measureQueue: SIZE, the game's screen now, PRESS, the last press of
+/// a controller's button that reached the game, if one has, and
+/// PICTUREONTV, whether the game's picture is on its scene on a TV, if it
+/// has one.
+static void CartoucheGuestRecord(CGSize size, NSDate *press, NSNumber *pictureOnTV) {
     uint64_t footprint = 0, peak = 0;
     if (!CartoucheGuestFootprint(&footprint, &peak)) return;
     uint64_t available = (uint64_t)os_proc_available_memory();
@@ -151,6 +204,11 @@ static void CartoucheGuestRecord(CGSize size, NSDate *press) {
     reading[@"limit"] = @(footprint + available);
     reading[@"sizes"] = [sizes copy];
     if (press) reading[@"controllerPress"] = press;
+    if (pictureOnTV) {
+        reading[@"tvPicture"] = pictureOnTV;
+    } else {
+        [reading removeObjectForKey:@"tvPicture"];
+    }
     [reading writeToFile:memoryFile atomically:YES];
 }
 
@@ -167,8 +225,9 @@ static void CartoucheGuestMeasure(void) {
         }
         double pressed = atomic_load(&lastPress);
         NSDate *press = pressed > 0 ? [NSDate dateWithTimeIntervalSinceReferenceDate:pressed] : nil;
+        NSNumber *pictureOnTV = CartoucheGuestPictureOnTV();
         dispatch_async(measureQueue, ^{
-            CartoucheGuestRecord(size, press);
+            CartoucheGuestRecord(size, press, pictureOnTV);
         });
     });
 }
@@ -211,13 +270,21 @@ void CartoucheGuestStart(NSDictionary *appInfo) {
     NSURL *group = [NSClassFromString(@"LCSharedUtils") appGroupPath];
     if (![container isKindOfClass:NSString.class] || container.length == 0 || !group) return;
 
+    tvScenes = [NSHashTable weakObjectsHashTable];
     [NSNotificationCenter.defaultCenter addObserverForName:UISceneWillConnectNotification object:nil
                                                      queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
         UIScene *scene = note.object;
         if (!gameScene && [scene isKindOfClass:UIWindowScene.class]
             && [scene.session.role isEqualToString:UIWindowSceneSessionRoleApplication]) {
             gameScene = (UIWindowScene *)scene;
+        } else if ([scene isKindOfClass:UIScene.class] && CartoucheGuestIsTVScene(scene)) {
+            [tvScenes addObject:scene];
         }
+    }];
+    [NSNotificationCenter.defaultCenter addObserverForName:UISceneDidDisconnectNotification object:nil
+                                                     queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
+        UIScene *scene = note.object;
+        if ([scene isKindOfClass:UIScene.class]) [tvScenes removeObject:scene];
     }];
     // The controllers while the game's scene is active: on screen, as the
     // game shows and as it comes back from the console.
@@ -260,7 +327,7 @@ void CartoucheGuestStart(NSDictionary *appInfo) {
 
     measureQueue = dispatch_queue_create("Cartouche.GameMemory", DISPATCH_QUEUE_SERIAL);
     dispatch_async(measureQueue, ^{
-        CartoucheGuestRecord(CGSizeZero, nil);
+        CartoucheGuestRecord(CGSizeZero, nil, nil);
     });
     measureTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, measureQueue);
     dispatch_source_set_timer(measureTimer, dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), 2 * NSEC_PER_SEC, NSEC_PER_SEC / 2);

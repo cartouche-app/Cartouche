@@ -17,7 +17,12 @@ rather than on an iPhone plugged into a TV
   without a screen for it, as soon as the scene says its screen is
   captured;
 - every step of the TV goes in the journal a player's report takes along,
-  so that a report from an iPhone plugged into a TV says what the TV did.
+  so that a report from an iPhone plugged into a TV says what the TV did;
+- the game's process says whether the game's picture is on its scene on
+  the TV, and the journal says it as the game pauses or ends, with the
+  nxnative the game was built from: a player whose TV shows the game's
+  card, "This game shows on the iPhone", sends a report that says whether
+  the game put its picture there.
 
 Run from the repository root: python3 -m unittest discover -s app/tests -v
 """
@@ -30,6 +35,8 @@ ROOT = Path(__file__).resolve().parents[2]
 SOURCES = ROOT / "launcher" / "Sources"
 TV = SOURCES / "CartoucheTV.swift"
 HOST = SOURCES / "CartoucheGameHost.swift"
+READING = SOURCES / "CartoucheRunningGame.swift"
+GUEST = ROOT / "launcher" / "LiveProcessSupport" / "CartoucheGuest.m"
 HARNESS_SCENES = ROOT / "launcher" / "Harness" / "Sources" / "HarnessScenes.swift"
 PATCHES = ROOT / "app" / "patches" / "livecontainer"
 PATCHES_README = ROOT / "app" / "patches" / "README.md"
@@ -163,6 +170,34 @@ class TVModeTest(unittest.TestCase):
         anyway = re.search(r"anyway\.addAction\(UIAction \{.*?\}, for: \.primaryActionTriggered\)", self.host, re.S)
         self.assertIsNotNone(anyway)
         self.assertIn("CartoucheTV.note(", anyway.group(0), "the player showing the game anyway is noted")
+
+    def test_a_report_says_whether_the_games_picture_is_on_its_scene_on_the_tv(self):
+        guest = GUEST.read_text(encoding="utf-8")
+        # The game's scenes on a TV, by the role LiveContainer opens them
+        # with, while they are connected.
+        self.assertIn("[scene.session.role isEqualToString:UIWindowSceneSessionRoleExternalDisplayNonInteractive]",
+                      guest)
+        self.assertIn("[tvScenes addObject:scene];", guest)
+        self.assertIn("UISceneDidDisconnectNotification", guest)
+        # nxnative's picture is a Metal layer, in a window shown there.
+        self.assertIn('NSClassFromString(@"CAMetalLayer")', guest)
+        self.assertIn("!window.hidden && CartoucheGuestDrawsWithMetal(window, metal, 6)", guest)
+        self.assertIn('reading[@"tvPicture"] = pictureOnTV;', guest)
+        self.assertIn('[reading removeObjectForKey:@"tvPicture"];', guest, "without a TV, no word of one")
+        self.assertIn('pictureOnTV = (plist["tvPicture"] as? NSNumber)?.boolValue',
+                      READING.read_text(encoding="utf-8"))
+        self.assertIn('reading["tvPicture"] = NSNumber(value: pictureOnTV)', self.harness,
+                      "the harness's stand-in for the game's process writes it the same way")
+        # Said as the game pauses and as it ends, with the game's nxnative.
+        for name in ("func showConsole() {", "fileprivate func sceneDidExit("):
+            with self.subTest(at=name):
+                body = re.search(re.escape(name) + r".*?\n    \}\n", self.host, re.S)
+                self.assertIsNotNone(body)
+                self.assertIn("notePictureOnTV(in: reading)", body.group(0))
+        note = re.search(r"private func notePictureOnTV\(.*?\n    \}\n", self.host, re.S)
+        self.assertIsNotNone(note, "the journal no longer says where the game's picture is")
+        self.assertIn("CartoucheTV.note(step)", note.group(0))
+        self.assertIn("CartoucheInstalledBuilds.installedBuild(of: app).shortCommit", note.group(0))
 
     def test_the_patch_is_listed(self):
         listed = PATCHES_README.read_text(encoding="utf-8")

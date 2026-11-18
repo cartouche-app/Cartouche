@@ -106,6 +106,9 @@ struct CartoucheGameMemoryReading {
     /// process, nil until one has: iOS hands the presses to the process
     /// that has the keyboard (CartoucheGuestControllers.m).
     let lastControllerPress: Date?
+    /// Whether the game's picture is on its scene on a TV, as its process
+    /// sees that scene; nil without one (CartoucheGuest.m).
+    let pictureOnTV: Bool?
 
     var footprintMiB: Int { Int(footprintBytes / 1_048_576) }
     var peakMiB: Int { Int(peakBytes / 1_048_576) }
@@ -158,6 +161,7 @@ struct CartoucheGameMemoryReading {
                         footprintBytes: (size["footprint"] as? NSNumber)?.uint64Value ?? 0)
         }
         lastControllerPress = plist["controllerPress"] as? Date
+        pictureOnTV = (plist["tvPicture"] as? NSNumber)?.boolValue
     }
 }
 

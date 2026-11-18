@@ -28,7 +28,9 @@
 //  a controller's presses to the process that has the keyboard, and
 //  nothing in a game started without nxnative's settings screen asked for
 //  it (CartoucheGuestControllers.m). It notes the last press that reached
-//  it, which the journal says once, as the game pauses or ends.
+//  it, which the journal says once, as the game pauses or ends, and, while
+//  a scene of the game's is on a TV, whether the game's picture is there,
+//  which the journal says too (CartoucheTV.swift).
 //
 
 import AVFAudio
@@ -69,6 +71,9 @@ final class CartoucheGameHost {
     /// Whether the journal says yet that the controller's presses reach the
     /// game.
     private var notedControllerPresses = false
+    /// What the journal said last of the game's picture on the TV, as the
+    /// game's process sees its scene there.
+    private var notedPictureOnTV: Bool?
 
     private init() {}
 
@@ -181,7 +186,9 @@ final class CartoucheGameHost {
     func showConsole() {
         guard app != nil, isInFront, let window else { return }
         if let scene {
-            noteControllerPresses(in: CartoucheGameMemoryReading.last(pid: Int(scene.pid)))
+            let reading = CartoucheGameMemoryReading.last(pid: Int(scene.pid))
+            noteControllerPresses(in: reading)
+            notePictureOnTV(in: reading)
         }
         isInFront = false
         // The console turns as the iPad is held: the game's screen lets go
@@ -357,6 +364,7 @@ final class CartoucheGameHost {
         }
         let reading = CartoucheGameMemoryReading.last(pid: Int(vc.pid))
         noteControllerPresses(in: reading)
+        notePictureOnTV(in: reading)
         let quit = quitting
         let wasInFront = isInFront
         // Why the game's process ended, when LiveProcess ended it on an
@@ -403,6 +411,7 @@ final class CartoucheGameHost {
         isInFront = false
         quitting = false
         notedControllerPresses = false
+        notedPictureOnTV = nil
         backToConsole()
     }
 
@@ -414,6 +423,23 @@ final class CartoucheGameHost {
         guard !notedControllerPresses, let app, reading?.lastControllerPress != nil else { return }
         notedControllerPresses = true
         CartoucheReports.note(app.displayName + ": the controller's presses reach the game")
+    }
+
+    /// Says in the journal, as the game pauses or ends, whether the game's
+    /// picture is on its scene on the TV, when READING, its process's last,
+    /// says, and it changed since the journal last said it, with the
+    /// nxnative commit the game was built from: a report from a player
+    /// whose TV shows the game's card then says whether the game put its
+    /// picture there, and which nxnative it has.
+    private func notePictureOnTV(in reading: CartoucheGameMemoryReading?) {
+        guard let onTV = reading?.pictureOnTV, onTV != notedPictureOnTV else { return }
+        notedPictureOnTV = onTV
+        var step = onTV ? "TV: the game's picture is on its scene there"
+                        : "TV: the game's picture is not on its scene there, which shows its card"
+        if let app, let commit = CartoucheInstalledBuilds.installedBuild(of: app).shortCommit {
+            step += " (nxnative " + commit + ")"
+        }
+        CartoucheTV.note(step)
     }
 
     /// The console's window has the screen again, upright or sideways as

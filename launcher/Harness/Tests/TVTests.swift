@@ -187,6 +187,60 @@ final class TVTests: HarnessCase {
         XCTAssertEqual(scene.tvForegroundUpdates.last, false)
     }
 
+    // MARK: What a report says of the game's picture
+
+    /// The game's process says whether the game's picture is on its scene
+    /// on the TV (CartoucheGuest.m), and the journal says it as the game
+    /// pauses or ends, when it changed, with the nxnative commit the game
+    /// was built from: a report from a player whose TV shows the game's
+    /// card says whether the game put its picture there, and which
+    /// nxnative it has.
+    func testAReportSaysWhetherTheGamesPictureIsOnItsSceneOnTheTV() async throws {
+        try connectTV()
+        let game = HarnessGame.plain()
+        let (_, scene) = try await started(game)
+        try await waitUntil("the game's scene opens on the TV") { scene.tvScene != nil }
+        let build = " (nxnative \(game.commit.prefix(12)))"
+        let missing = "TV: the game's picture is not on its scene there, which shows its card" + build
+        let there = "TV: the game's picture is on its scene there" + build
+
+        // Not there: said as the game pauses.
+        scene.writeMemory(footprintMiB: 900, availableMiB: 5_000, pictureOnTV: false)
+        try await pause(0.7)
+        scene.pressControllerHome()
+        try await waitUntil("the console shows") { actions.running?.isInFront == false }
+        XCTAssertEqual(journal().filter { $0 == missing }.count, 1)
+
+        // The same at the next pause: said once.
+        try await pause(0.7)
+        scene.pressControllerHome()
+        try await waitUntil("the game shows again") { actions.running?.isInFront == true }
+        try await pause(0.7)
+        scene.pressControllerHome()
+        try await waitUntil("the console shows") { actions.running?.isInFront == false }
+        XCTAssertEqual(journal().filter { $0 == missing }.count, 1)
+
+        // There at last: said as the game ends.
+        scene.writeMemory(footprintMiB: 900, availableMiB: 5_000, pictureOnTV: true)
+        actions.quitRunningGame()
+        try await waitUntil("the game has ended") { actions.running == nil }
+        XCTAssertEqual(journal().filter { $0 == there }.count, 1)
+        XCTAssertEqual(journal().filter { $0 == missing }.count, 1)
+    }
+
+    /// Without a scene of the game's on a TV, its process says nothing of
+    /// it, and nor does the journal.
+    func testWithoutATVAReportSaysNothingOfTheGamesPicture() async throws {
+        let (_, scene) = try await started(.plain())
+        scene.writeMemory(footprintMiB: 900, availableMiB: 5_000)
+        try await pause(0.7)
+        scene.pressControllerHome()
+        try await waitUntil("the console shows") { actions.running?.isInFront == false }
+        actions.quitRunningGame()
+        try await waitUntil("the game has ended") { actions.running == nil }
+        XCTAssertFalse(journal().contains { $0.hasPrefix("TV: the game's picture") })
+    }
+
     // MARK: The end of the game, and of the TV
 
     func testQuitClosesTheGamesSceneOnTheTVAndGivesTheTVBack() async throws {
