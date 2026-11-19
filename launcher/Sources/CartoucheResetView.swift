@@ -62,6 +62,9 @@ struct CartoucheResetView: View {
             Section(CartoucheText.resetGoesHeader) {
                 item(CartoucheText.resetGoesGames, "gamecontroller.fill", erased: true)
                 item(CartoucheText.resetGoesStorage, "externaldrive.fill", erased: true)
+                if CartoucheCloudLink.shared.isLinked {
+                    item(CartoucheText.resetGoesCloud, "cloud.fill", erased: true)
+                }
                 if !CartoucheImportedSigning.accountSigningDisabled {
                     item(CartoucheText.resetGoesAccount, "person.crop.circle.fill", erased: true)
                 }

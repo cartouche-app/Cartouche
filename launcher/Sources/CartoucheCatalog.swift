@@ -104,10 +104,26 @@ struct CartoucheDeviceProfile: Decodable, Hashable {
     let measurements: [Measurement]
 }
 
+/// A game Cartouche Cloud built for the account this iPhone is linked to
+/// (CartoucheCloudLink.swift): its IPA, there to install until the service
+/// deletes it, two days after its build.
+struct CartoucheCloudBuilt: Hashable {
+    /// The platform's name of the game sent, 32 hexadecimal digits.
+    let id: String
+    /// Its title ID, in capitals.
+    let titleId: String
+    let name: String
+    /// Its IPA's size and name.
+    let bytes: UInt64
+    let file: String
+    let builtAt: Date?
+    let expiresAt: Date
+}
+
 /// A game in the catalogue: a supported game, the player's copy of one, or
 /// the player's copy of an nxnative game that Cartouche does not know. The
 /// player's copy is installed (app), in their games folder (stored), or
-/// both.
+/// both; or built by Cartouche Cloud for them, and neither (cloud).
 struct CartoucheEntry: Identifiable, Hashable {
     let id: String
     let game: CartoucheNxGame?
@@ -119,6 +135,10 @@ struct CartoucheEntry: Identifiable, Hashable {
     /// That IPA, when it is a newer build than the installed game: the
     /// console offers to update the game with it.
     var update: CartoucheStoredGame? = nil
+    /// The game's IPA that Cartouche Cloud built for the player, when
+    /// neither this iPhone nor the games folder has the game: Install
+    /// brings it from there.
+    var cloud: CartoucheCloudBuilt? = nil
     /// The title ID the player's copy says it is, that of a game the list
     /// may not know yet.
     var ownTitleId: String? = nil
@@ -168,7 +188,7 @@ struct CartoucheEntry: Identifiable, Hashable {
     /// copy says: nxnative has no profile for it, nor IGDB a cover by its
     /// title ID.
     var isUnknown: Bool { game == nil && sheet == nil && cover == nil }
-    var isOwned: Bool { app != nil || stored != nil }
+    var isOwned: Bool { app != nil || stored != nil || cloud != nil }
     var isInstalled: Bool { app != nil }
     /// In the games folder, not on this iPhone: Install brings it.
     var canInstallFromStorage: Bool { app == nil && stored != nil }
@@ -199,7 +219,7 @@ struct CartoucheEntry: Identifiable, Hashable {
 
     static func == (lhs: CartoucheEntry, rhs: CartoucheEntry) -> Bool {
         lhs.id == rhs.id && lhs.app === rhs.app && lhs.stored == rhs.stored && lhs.update == rhs.update
-            && lhs.ownTitleId == rhs.ownTitleId && lhs.cover == rhs.cover && lhs.found == rhs.found
+            && lhs.cloud == rhs.cloud && lhs.ownTitleId == rhs.ownTitleId && lhs.cover == rhs.cover && lhs.found == rhs.found
             && lhs.player == rhs.player && lhs.playerCover == rhs.playerCover
     }
 
@@ -446,20 +466,27 @@ final class CartoucheCatalog: ObservableObject {
         }
     }
 
-    /// Whether these apps and the IPAs of the player's games folder give the
-    /// player a game of their own: whether entries(for:stored:) has owned
-    /// ones, an nxnative game installed or any IPA of the games folder,
+    /// Whether these apps, the IPAs of the player's games folder and the
+    /// games Cartouche Cloud built for them give the player a game of their
+    /// own: whether entries(for:stored:cloud:) has owned ones, an nxnative
+    /// game installed or any IPA of the games folder or of Cartouche Cloud,
     /// without making every entry.
-    func hasOwnedGames(among apps: [LCAppModel], stored: [CartoucheStoredGame]) -> Bool {
-        !stored.isEmpty || apps.contains { gameTitle(of: $0) != nil }
+    func hasOwnedGames(among apps: [LCAppModel], stored: [CartoucheStoredGame],
+                       cloud: [CartoucheCloudBuilt] = []) -> Bool {
+        !stored.isEmpty || !cloud.isEmpty || apps.contains { gameTitle(of: $0) != nil }
     }
 
-    /// The catalogue for these apps and the IPAs of the player's games
-    /// folder: each of the player's nxnative games, installed or stored, then
-    /// every other game nxnative has a profile for, with the sheet testers
-    /// wrote when there is one. An installed game whose newest IPA in the
-    /// games folder is a newer build of it has that IPA as its update.
-    func entries(for apps: [LCAppModel], stored: [CartoucheStoredGame] = []) -> Entries {
+    /// The catalogue for these apps, the IPAs of the player's games folder
+    /// and the games Cartouche Cloud built for them, the latest built first
+    /// (CartoucheCloudLink): each of the player's nxnative games, installed,
+    /// stored or built, then every other game nxnative has a profile for,
+    /// with the sheet testers wrote when there is one. An installed game
+    /// whose newest IPA in the games folder is a newer build of it has that
+    /// IPA as its update. A game Cartouche Cloud built is the player's when
+    /// neither this iPhone nor the games folder has it: its build made
+    /// last.
+    func entries(for apps: [LCAppModel], stored: [CartoucheStoredGame] = [],
+                 cloud: [CartoucheCloudBuilt] = []) -> Entries {
         var result = Entries()
         var ownedTitles = Set<String>()
         var storedLeft = stored
@@ -497,6 +524,16 @@ final class CartoucheCatalog: ObservableObject {
             let sheet = titleId.flatMap { self.sheet(titleId: $0) }
             result.owned.append(CartoucheEntry(id: "stored:" + copy.path, game: game, sheet: sheet, app: nil, stored: copy,
                                                ownTitleId: titleId))
+        }
+        // The games Cartouche Cloud built that the player has nowhere else,
+        // one entry each.
+        for built in cloud {
+            let game = self.game(titleId: built.titleId)
+            let titleId = game?.titleId ?? built.titleId
+            if ownedTitles.contains(titleId) { continue }
+            if let game { ownedTitles.formUnion(game.titleIds) } else { ownedTitles.insert(titleId) }
+            result.owned.append(CartoucheEntry(id: "cloud:" + built.id, game: game, sheet: self.sheet(titleId: titleId),
+                                               app: nil, cloud: built, ownTitleId: titleId))
         }
         result.owned = result.owned.map { withOwnInfo(withCover($0)) }
         result.owned.sort { $0.name.localizedStandardCompare($1.name) == .orderedAscending }

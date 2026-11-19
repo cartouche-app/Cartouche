@@ -21,6 +21,7 @@ extension CartoucheText {
     static var resetGoesGames: String { s("reset.goes.games", "Your games, with their saves, settings and play time, and what was kept of the games you uninstalled.") }
     static var resetGoesStorage: String { s("reset.goes.storage", "Your storage: its servers and folders, with their passwords and sign-ins, Google Drive and your Mac among them.") }
     static var resetGoesAccount: String { s("reset.goes.account", "Your Apple ID: you sign in again in Setup.") }
+    static var resetGoesCloud: String { s("reset.goes.cloud", "The link to your Cartouche Cloud account, which Cartouche undoes first. Your account and its games stay on the site.") }
     static var resetGoesSettings: String { s("reset.goes.settings", "Cartouche’s settings, the names and covers you gave your games, the guide’s progress, and the reports on problems.") }
 
     static var resetStaysHeader: String { s("reset.stays.header", "Kept") }

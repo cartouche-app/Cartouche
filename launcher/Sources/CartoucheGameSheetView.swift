@@ -44,6 +44,8 @@ struct CartoucheGameSheetView: View {
     let onUninstall: (LCAppModel) -> Void
     /// Installs the game's IPA from the player's games folder.
     var onInstallStored: (CartoucheStoredGame) -> Void = { _ in }
+    /// Installs the game Cartouche Cloud built for the player.
+    var onInstallCloud: (CartoucheCloudBuilt) -> Void = { _ in }
     /// Copies the installed game to the player's games folder.
     var onExport: (LCAppModel) -> Void = { _ in }
     /// Opens what the player says of their game: its name, platform, genre
@@ -79,6 +81,7 @@ struct CartoucheGameSheetView: View {
          onSettings: @escaping (LCAppModel) -> Void, onImport: @escaping () -> Void,
          onUninstall: @escaping (LCAppModel) -> Void,
          onInstallStored: @escaping (CartoucheStoredGame) -> Void = { _ in },
+         onInstallCloud: @escaping (CartoucheCloudBuilt) -> Void = { _ in },
          onExport: @escaping (LCAppModel) -> Void = { _ in },
          onEditInfo: @escaping () -> Void = {},
          onShortcuts: @escaping (LCAppModel) -> Void = { _ in },
@@ -90,6 +93,7 @@ struct CartoucheGameSheetView: View {
         self.onImport = onImport
         self.onUninstall = onUninstall
         self.onInstallStored = onInstallStored
+        self.onInstallCloud = onInstallCloud
         self.onExport = onExport
         self.onEditInfo = onEditInfo
         self.onShortcuts = onShortcuts
@@ -381,6 +385,10 @@ struct CartoucheGameSheetView: View {
                         buildLine(CartoucheText.statusStoredOffline(serverName), systemImage: "wifi.slash")
                     }
                 }
+            } else if let cloud = entry.cloud {
+                primaryButton(CartoucheText.cloudInstall, systemImage: "icloud.and.arrow.down.fill") { onInstallCloud(cloud) }
+                secondaryButton(CartoucheText.importOtherCopy, systemImage: "square.and.arrow.down", action: onImport)
+                buildLine(CartoucheText.cloudKeptUntil(CartoucheText.dateAndTime(cloud.expiresAt)), systemImage: "clock")
             } else {
                 primaryButton(CartoucheText.importCopy, systemImage: "square.and.arrow.down", action: onImport)
             }
@@ -672,7 +680,7 @@ struct CartoucheGameSheetView: View {
         // The player's copy says nothing of where nxnative plays the game.
         let status: CartouchePlayStatus = {
             let status = CartouchePlayStatus.of(entry)
-            return status == .ready || status == .update || status == .stored ? .iphone : status
+            return status == .ready || status == .update || status == .stored || status == .cloud ? .iphone : status
         }()
         Label {
             Text(status.long)

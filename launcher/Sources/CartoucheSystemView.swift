@@ -5,7 +5,10 @@
 //  What Cartouche has on this iPhone: its setup, and the guide to the
 //  player's first game (CartoucheGuideView), which opens over the console;
 //  the player's storage, where their games and saves are kept; the builds
-//  of the player's Mac paired there (CartoucheMacBuildsPage); the memory
+//  of the player's Mac paired there (CartoucheMacBuildsPage); Cartouche
+//  Cloud, which builds the player's game without a Mac, and the link of
+//  this iPhone to their account there (CartoucheCloudPage), which a link
+//  of the account's page opens too; the memory
 //  limit iOS sets for it, which the games that start in its place share;
 //  whether games run behind the console, and the memory they have there;
 //  when its signature expires, and how it is renewed; the device that the
@@ -51,6 +54,8 @@ struct CartoucheSystemView: View {
     @EnvironmentObject private var sharedModel: SharedModel
     /// The player's Mac, asked its builds while their page shows.
     @StateObject private var macBuilds = CartoucheMacBuildsWatch()
+    /// This iPhone's link to a Cartouche Cloud account.
+    @ObservedObject private var cloud = CartoucheCloudLink.shared
     #else
     /// The games built for this Mac and the Builder's setup, which the
     /// guide's steps read.
@@ -95,6 +100,7 @@ struct CartoucheSystemView: View {
                     setupSection
                     storageSection
                     macBuildsSection
+                    cloudSection
                     memorySection
                     playingSection
                     signatureSection
@@ -126,6 +132,11 @@ struct CartoucheSystemView: View {
                     CartoucheMacBuildsPage(watch: macBuilds)
                 }
                 #endif
+                // The link of the account's page: the page of Cartouche
+                // Cloud, linking this iPhone.
+                .navigationDestination(isPresented: $cloud.opensPage) {
+                    CartoucheCloudPage()
+                }
             }
         }
         // Dark like the console under it, whatever the iPhone's appearance.
@@ -306,6 +317,38 @@ struct CartoucheSystemView: View {
                 }
             }
         }
+    }
+
+    // MARK: Cartouche Cloud
+
+    /// The first row of Cartouche Cloud's section.
+    static let cloudRow = "cloud"
+
+    /// Cartouche Cloud, for everyone: what it is and how to get an account,
+    /// or the account this iPhone is linked to, and its games.
+    private var cloudSection: some View {
+        Section {
+            NavigationLink {
+                CartoucheCloudPage()
+            } label: {
+                LabeledContent {
+                    Text(cloudState)
+                        .lineLimit(1)
+                } label: {
+                    Label(CartoucheText.cloudName, systemImage: "cloud.fill")
+                }
+            }
+            .id(Self.cloudRow)
+        }
+    }
+
+    /// Where the account is, in a word or two.
+    private var cloudState: String {
+        guard cloud.isLinked else { return CartoucheText.cloudNotLinked }
+        let built = cloud.builtGames.count
+        if built > 0 { return CartoucheText.cloudBuiltCount(built) }
+        if cloud.account?.isBusy == true { return CartoucheText.cloudUnderWay }
+        return CartoucheText.cloudLinked
     }
 
     // MARK: Memory

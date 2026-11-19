@@ -45,6 +45,8 @@ struct CartoucheHomeView: View {
     let onImport: () -> Void
     /// Installs a game from the player's games folder.
     let onInstall: (CartoucheStoredGame) -> Void
+    /// Installs a game Cartouche Cloud built for the player.
+    let onInstallCloud: (CartoucheCloudBuilt) -> Void
     let onUninstall: (LCAppModel) -> Void
     let onSheet: (CartoucheEntry) -> Void
     let onLibrary: () -> Void
@@ -71,6 +73,7 @@ struct CartoucheHomeView: View {
     init(entries: CartoucheCatalog.Entries, gameCount: Int, isActive: Bool,
          onPlay: @escaping (LCAppModel) -> Void, onImport: @escaping () -> Void,
          onInstall: @escaping (CartoucheStoredGame) -> Void = { _ in },
+         onInstallCloud: @escaping (CartoucheCloudBuilt) -> Void = { _ in },
          onUninstall: @escaping (LCAppModel) -> Void, onSheet: @escaping (CartoucheEntry) -> Void,
          onLibrary: @escaping () -> Void, onSetup: @escaping () -> Void, onGuide: @escaping () -> Void = {},
          onTab: @escaping (LCTabIdentifier) -> Void, zoom: Namespace.ID? = nil,
@@ -81,6 +84,7 @@ struct CartoucheHomeView: View {
         self.onPlay = onPlay
         self.onImport = onImport
         self.onInstall = onInstall
+        self.onInstallCloud = onInstallCloud
         self.onUninstall = onUninstall
         self.onSheet = onSheet
         self.onLibrary = onLibrary
@@ -463,6 +467,8 @@ struct CartoucheHomeView: View {
             }
         } else if let stored = entry.stored {
             Button { onInstall(stored) } label: { Label(installTitle, systemImage: "arrow.down.circle.fill") }
+        } else if let cloud = entry.cloud {
+            Button { onInstallCloud(cloud) } label: { Label(CartoucheText.cloudInstall, systemImage: "icloud.and.arrow.down.fill") }
         } else {
             Button(action: onImport) { Label(CartoucheText.importCopy, systemImage: "square.and.arrow.down") }
         }
@@ -595,6 +601,9 @@ struct CartoucheHomeView: View {
                 }
             } else if let stored = entry.stored {
                 actionButton(installTitle, systemImage: "arrow.down.circle.fill", primary: true, input: .a) { onInstall(stored) }
+            } else if let cloud = entry.cloud {
+                actionButton(CartoucheText.cloudInstall, systemImage: "icloud.and.arrow.down.fill", primary: true,
+                             input: .a) { onInstallCloud(cloud) }
             } else {
                 actionButton(CartoucheText.importCopy, systemImage: "square.and.arrow.down", primary: true,
                              input: .a, action: onImport)
@@ -776,6 +785,8 @@ struct CartoucheHomeView: View {
                 onPlay(app)
             } else if let stored = entry.stored {
                 onInstall(stored)
+            } else if let cloud = entry.cloud {
+                onInstallCloud(cloud)
             } else {
                 onImport()
             }

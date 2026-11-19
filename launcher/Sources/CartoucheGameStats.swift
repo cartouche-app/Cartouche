@@ -216,6 +216,9 @@ struct CartoucheGameStatsSection: View {
                     LabeledContent(CartoucheText.statsStored(CartoucheStoredGames.shared.serverName ?? ""),
                                    value: CartoucheText.size(bytes: stored.storedSize))
                 }
+                if let cloud = entry.cloud {
+                    LabeledContent(CartoucheText.statsCloud, value: CartoucheText.size(bytes: cloud.bytes))
+                }
             }
         }
     }
@@ -281,7 +284,7 @@ struct CartoucheGameStatsLine: View {
 
     var body: some View {
         let time = stats.playTime(of: entry)
-        let size: UInt64? = entry.app.map { stats.size(of: $0)?.total } ?? entry.stored?.size
+        let size: UInt64? = entry.app.map { stats.size(of: $0)?.total } ?? entry.stored?.size ?? entry.cloud?.bytes
         if time != nil || size != nil {
             HStack(spacing: 12) {
                 if let time {

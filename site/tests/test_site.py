@@ -5,9 +5,11 @@
 The page shows Cartouche with games of nxnative's list, their covers and
 artworks loaded from IGDB by the IDs of catalog/covers.json, as the app loads
 them; it carries no image of a game. Besides those images it loads nothing
-from another site, and it links only to Cartouche's repository, nxnative's
-and IGDB: never to a game, a dump, an IPA, a catalog of games, keys or
-firmware, nor to a server of the project (docs/decisions.md, 40). Its only
+from another site, and it links only to Cartouche's repository, nxnative's,
+IGDB, Cartouche's Discord server and Cartouche Cloud's site: never to a game,
+a dump, an IPA, a catalog of games, keys or firmware, nor to another server of
+the project (docs/decisions.md, 40, amended by 129 and 138). It says what
+Cartouche Cloud does for a player with no Mac, never its price. Its only
 downloads are the project's own programs for a computer, the Cartouche
 Installer and Cartouche Builder, each a file of their releases marked for
 the publication to give its newest one (site/tools/downloads.py), as the
@@ -52,8 +54,15 @@ DOWNLOADS = {
 # expires (decided by Ad on 17 Nov).
 DISCORD = "https://discord.gg/wG3DZjdAeF"
 
+# Cartouche Cloud's own site, which builds a player's games on its Macs from
+# the copy they send it, for a player with no Mac (decision 138): the page
+# links to its first page and to its privacy notice, and to nothing else of
+# it.
+CLOUD = "https://build.cartouche.cloud/"
+
 # Every absolute link the page may hold, whole: the repository and its pages,
-# the files above, the Discord server, nxnative, and IGDB, which the page credits.
+# the files above, the Discord server, nxnative, IGDB, which the page credits,
+# and Cartouche Cloud's site.
 ALLOWED_LINKS = [
     re.compile(re.escape(REPOSITORY)),
     re.compile(re.escape(REPOSITORY) + r"/blob/main/[\w/.-]+\.md(?:#[\w-]+)?"),
@@ -62,7 +71,13 @@ ALLOWED_LINKS = [
     *DOWNLOADS.values(),
     re.compile(r"https://github\.com/seedds/nxnative"),
     re.compile(r"https://www\.igdb\.com"),
+    re.compile(re.escape(CLOUD) + r"(?:privacy)?"),
 ]
+
+# A price, in any currency the page could name: Cartouche Cloud's stays on its
+# own site and in the app, which read it from the service (the owner,
+# 2026-11-18).
+PRICE = re.compile(r"(?i)[$€£]\s?\d|\d(?:[\s\u00a0\u202f]?[$€£]|\s?(?:usd|eur|dollars?|euros?)\b)")
 
 # The one other site the page loads from: IGDB's image server, at the sizes
 # IGDB names, for the IDs of catalog/covers.json.
@@ -373,6 +388,21 @@ class SiteTests(unittest.TestCase):
         self.assertIn('<a class="gh" href="' + DISCORD + '"', self.text)
         self.assertIn('<use href="#i-discord"/>', self.text)
         self.assertNotRegex(self.text, r"(?i)discord(?:app)?\.com/invite|discord\.gg/(?!wG3DZjdAeF\b)")
+
+    def test_cartouche_cloud_without_its_price(self) -> None:
+        # Its section, from the header too, says what it does and leads to
+        # its site; the FAQ, to its privacy notice.
+        self.assertIn("cloud", self.page.ids)
+        self.assertIn('<a href="#cloud">', self.text[: self.text.index("<main>")])
+        self.assertEqual({href for href in self.links() if href.startswith(CLOUD)}, {CLOUD, CLOUD + "privacy"})
+        # Nothing the page says gives what a build costs.
+        for path in (PAGE, DOWNLOAD_PAGE, NOT_FOUND_PAGE):
+            text, page = read_page(path)
+            said = page.words + [value for tag, attrs in page.tags for name, value in attrs.items() if name in SAID]
+            said += [text for attrs, text in page.scripts]
+            for words in said:
+                found = PRICE.search(words)
+                self.assertIsNone(found, f"{path.name} says a price: {found and words[max(0, found.start() - 40):found.end() + 40]!r}")
 
     def test_the_page_credits_igdb_and_provides_no_game(self) -> None:
         for sentence in (

@@ -167,6 +167,7 @@ final class CartoucheGameActions: ObservableObject {
     nonisolated static func takes(_ url: URL) -> Bool { false }
     func install(_ url: URL) { GalleryTest.install(url, with: self) }
     func install(stored game: CartoucheStoredGame) {}
+    func install(cloud game: CartoucheCloudBuilt) {}
     func installAnyway(_ question: CartoucheInstallQuestion) { installQuestion = nil }
     func dropInstall(_ question: CartoucheInstallQuestion) { installQuestion = nil }
     func closeInstallQuestion() { installQuestion = nil }

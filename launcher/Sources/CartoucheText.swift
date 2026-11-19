@@ -89,6 +89,15 @@ enum CartoucheText {
     static var statusUpdateLong: String { s("status.update.long", "A newer IPA of it is in your games folder: updating keeps your saves.") }
     static func statusStoredOffline(_ server: String) -> String { f("status.stored.offline", "%@ is offline: install this game once the iPhone is back on its network or on your VPN.", server) }
     static func statusUpdateOffline(_ server: String) -> String { f("status.update.offline", "%@ is offline: update this game once the iPhone is back on its network or on your VPN.", server) }
+    // A game Cartouche Cloud built for the player, in the library and on its
+    // sheet, which the console shares with the Mac: the rest of Cartouche
+    // Cloud's words are the iPhone's alone (CartoucheTextCloud.swift).
+    static var cloudName: String { s("cloud.name", "Cartouche Cloud") }
+    static var statusCloudShort: String { s("status.cloud.short", "In Cartouche Cloud") }
+    static var statusCloudLong: String { s("status.cloud.long", "Cartouche Cloud built it for you: install it to play it on this iPhone.") }
+    static var statsCloud: String { statsStored(cloudName) }
+    static var cloudInstall: String { installFrom(cloudName) }
+    static func cloudKeptUntil(_ moment: String) -> String { f("cloud.keptUntil", "Cartouche Cloud keeps it until %@, then deletes it.", moment) }
 
     /// A genre of nxnative.json, or nil for "other".
     static func genre(_ genre: String) -> String? {

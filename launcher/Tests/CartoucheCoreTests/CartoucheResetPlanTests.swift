@@ -426,6 +426,18 @@ final class CartoucheResetPlanTests: XCTestCase {
                        [CartoucheResetPlan.Failure(path: "Documents/Inbox/Kart.ipa", reason: "NSCocoaErrorDomain 513")])
     }
 
+    /// The token that links this iPhone to a Cartouche Cloud account goes
+    /// with the storage's items, every item of its service, and a failure
+    /// to remove it says where by the place of its service, as the
+    /// storage's does: never by its account, nor by the token.
+    func testTheLinkToCartoucheCloudGoesAndIsMeasuredByItsPlace() {
+        let erased = CartoucheResetPlan.erasedServices
+        XCTAssertEqual(erased.map { $0.service }, [CartoucheResetPlan.storageService, CartoucheCloud.keychainService])
+        XCTAssertEqual(erased.map { $0.place }, ["storage", "Cloud"])
+        XCTAssertEqual(CartoucheResetPlan.measured([CartoucheResetPlan.Failure(path: "Keychain/Cloud", reason: "OSStatus -25308")]),
+                       "Keychain/Cloud OSStatus -25308")
+    }
+
     /// The telemetry says where what could not go lay, and why, by
     /// Cartouche's own folders and iOS's: never a file's name, nor the
     /// bundle ID an Inbox of iOS's is named after, which may hold the team's.
