@@ -927,7 +927,7 @@ struct CartoucheHomeView: View {
     }
 }
 
-/// The platform, the genre and where a game plays, on one line.
+/// The platform, the genre and where a game plays.
 @available(iOS 17.0, *)
 struct CartoucheMetaLine: View {
     let entry: CartoucheEntry
@@ -935,28 +935,62 @@ struct CartoucheMetaLine: View {
     var showsStatus = true
     /// The game runs behind the console, paused there.
     var isPaused = false
+    /// The game's sheet can give the genre a line of its own.
+    var wraps = false
 
     var body: some View {
+        if wraps {
+            ViewThatFits(in: .horizontal) {
+                line
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        platform
+                        status
+                    }
+                    genre
+                }
+            }
+        } else {
+            line
+        }
+    }
+
+    private var line: some View {
         HStack(spacing: 8) {
-            if let platform = entry.platform {
-                Text(CartoucheText.platform(platform).uppercased())
-                    .font(.caption2.weight(.heavy))
-                    .tracking(1)
-                    .foregroundStyle(Color.white)
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 3)
-                    .background(Color.white.opacity(0.16), in: Capsule())
-            }
-            if let genre = entry.genre, let name = CartoucheText.genre(genre) {
-                Label(name, systemImage: CartoucheTheme.symbol(genre: genre))
-                    .font(.caption.weight(.semibold))
-                    .labelStyle(CartoucheTightLabelStyle())
-                    .foregroundStyle(CartoucheTheme.secondaryText)
-                    .lineLimit(1)
-            }
-            if showsStatus {
-                CartoucheStatusLabel(status: isPaused ? .paused : CartouchePlayStatus.of(entry))
-            }
+            platform
+            genre
+            status
+        }
+    }
+
+    @ViewBuilder
+    private var platform: some View {
+        if let platform = entry.platform {
+            Text(CartoucheText.platform(platform).uppercased())
+                .font(.caption2.weight(.heavy))
+                .tracking(1)
+                .foregroundStyle(Color.white)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(Color.white.opacity(0.16), in: Capsule())
+        }
+    }
+
+    @ViewBuilder
+    private var genre: some View {
+        if let genre = entry.genre, let name = CartoucheText.genre(genre) {
+            Label(name, systemImage: CartoucheTheme.symbol(genre: genre))
+                .font(.caption.weight(.semibold))
+                .labelStyle(CartoucheTightLabelStyle())
+                .foregroundStyle(CartoucheTheme.secondaryText)
+                .lineLimit(wraps ? nil : 1)
+        }
+    }
+
+    @ViewBuilder
+    private var status: some View {
+        if showsStatus {
+            CartoucheStatusLabel(status: isPaused ? .paused : CartouchePlayStatus.of(entry))
         }
     }
 }

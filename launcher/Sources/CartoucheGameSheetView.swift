@@ -333,7 +333,7 @@ struct CartoucheGameSheetView: View {
                     // behind the console, the line says it is paused.
                     let isRunning = actions.isRunning(entry.app)
                     CartoucheMetaLine(entry: entry, showsStatus: entry.app == nil || entry.sheet == nil || isRunning,
-                                      isPaused: isRunning)
+                                      isPaused: isRunning, wraps: true)
                     if entry.sheet != nil, !isRunning {
                         CartoucheFitBadge(fit: fit, owned: entry.app != nil)
                     }

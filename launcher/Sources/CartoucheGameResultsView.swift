@@ -23,9 +23,15 @@ import Translation
 struct CartoucheGameResultsSection: View {
     let results: [CartoucheGameSheet.Result]
 
-    /// The results as the sheet lists them, the newest first.
-    static func ordered(_ results: [CartoucheGameSheet.Result]) -> [CartoucheGameSheet.Result] {
-        results.sorted { $0.date > $1.date }
+    /// This device's results first, newest first within each group.
+    static func ordered(_ results: [CartoucheGameSheet.Result],
+                        for model: String = CartoucheDevice.modelIdentifier) -> [CartoucheGameSheet.Result] {
+        results.sorted { lhs, rhs in
+            let lhsMatches = lhs.device == model
+            let rhsMatches = rhs.device == model
+            if lhsMatches != rhsMatches { return lhsMatches }
+            return lhs.date > rhs.date
+        }
     }
 
     var body: some View {
