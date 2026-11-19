@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "titleId": "01006BB00C6F0000",
+  "name": "The Legend of Zelda: Link's Awakening",
+  "platform": "switch",
+  "requirements": {
+    "minimumIOS": "26.0",
+    "bcTextureCompression": true,
+    "increasedMemoryLimit": false
+  },
+  "results": [
+    {
+      "device": "iPhone19,4",
+      "iOS": "27.2.1",
+      "date": "2026-11-18",
+      "engine": "nxnative eed7c4295853 and 2 other builds",
+      "status": "playable",
+      "peakMemoryMiB": 2234,
+      "notes": [
+        "Measured by Cartouche on 3 iPhones, 12 sessions from 2026-11-12 to 2026-11-18: 60 fps for 60 (median), 57 fps in the slowest 5% of the time, 9.9 stutters a minute. None ended badly."
+      ],
+      "measured": {
+        "iPhones": 3,
+        "sessions": 12,
+        "from": "2026-11-12",
+        "to": "2026-11-18",
+        "fps": 60,
+        "slowestFps": 57,
+        "targetFps": 60,
+        "stuttersPerMinute": 9.9,
+        "endedBadlyPercent": 0,
+        "nxnative": "eed7c4295853",
+        "otherBuilds": 2
+      }
+    }
+  ]
+}

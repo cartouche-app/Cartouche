@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "titleId": "0400A3A01EE4C000",
+  "name": "Pokemon Pokopia",
+  "platform": "switch2",
+  "requirements": {
+    "minimumIOS": "26.0",
+    "bcTextureCompression": true,
+    "increasedMemoryLimit": true
+  },
+  "results": [
+    {
+      "device": "iPhone19,4",
+      "iOS": "27.2.1",
+      "date": "2026-11-18",
+      "engine": "nxnative c1df4ddaaedc and 2 other builds",
+      "status": "playable-with-issues",
+      "peakMemoryMiB": 4656,
+      "notes": [
+        "Measured by Cartouche on 5 iPhones, 10 sessions from 2026-11-15 to 2026-11-18: 59.4 fps for 60 (median), 55 fps in the slowest 5% of the time, 38.6 stutters a minute. 1 session ended badly: 1 crash."
+      ],
+      "measured": {
+        "iPhones": 5,
+        "sessions": 10,
+        "from": "2026-11-15",
+        "to": "2026-11-18",
+        "fps": 59.4,
+        "slowestFps": 55,
+        "targetFps": 60,
+        "stuttersPerMinute": 38.6,
+        "endedBadlyPercent": 10,
+        "endedBadly": {
+          "crashes": 1
+        },
+        "nxnative": "c1df4ddaaedc",
+        "otherBuilds": 2
+      }
+    }
+  ]
+}
