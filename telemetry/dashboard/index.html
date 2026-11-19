@@ -460,7 +460,7 @@
     // Every field of a session the page shows, so that a field the server
     // starts to send is not left out (telemetry/test/dashboard.test.js).
     const SHOWN = [
-        "session", "gameVersion", "nxnative", "nxnativeChanged", "settings", "minutes", "reader", "frames", "targetFps",
+        "session", "gameVersion", "nxnative", "nxnativeChanged", "bcTextures", "settings", "minutes", "reader", "frames", "targetFps",
         "fps.median", "fps.low5", "frameMs.p50", "frameMs.p95", "frameMs.p99", "gpuMs.p50", "gpuMs.p95", "gpuMs.p99",
         "overTargetPercent", "droppedPercent", "stutters.count", "stutters.perMinute", "stutters.shaders", "stutters.textures",
         "stutters.other", "shaderStallMsPerMinute", "prepare.seconds", "prepare.lines", "cpu.watts", "cpu.percent",
@@ -883,6 +883,11 @@
             sameSettings,
             readers: countBy(sessions, (session) => session.reader),
             changed: share(sessions, (session) => session.nxnativeChanged),
+            // On a GPU that reads no BC texture, an A16's or older: the
+            // sessions whose build converts them (a fork of nxnative), and
+            // of those, the ones that drew a frame.
+            bcConverted: share(sessions, (session) => (text(session.bcTextures) === null ? null : session.bcTextures === "converted")),
+            bcConvertedPlayed: share(sessions.filter((session) => session.bcTextures === "converted"), drewFrames),
             tv: share(sessions, (session) => session["display.tv"]),
             fold: share(sessions.filter((session) => (num(session.reader) ?? 1) >= FOLD_READER), (session) => session["display.foldSplit"]),
             dlc: share(sessions, (session) => session.dlc),
@@ -2782,6 +2787,8 @@
                     ["Autour du pli d'un Duo", shareText(f.fold)],
                     ["Avec contenu additionnel", shareText(f.dlc)],
                     ["Build nxnative modifié", shareText(f.changed)],
+                    ["GPU sans BC : textures converties", shareText(f.bcConverted)],
+                    ["Converties : parties avec une image", shareText(f.bcConvertedPlayed)],
                 ])),
             card("Réglages nxnative", "Les réglages DM_ qui changent d'une partie à l'autre, et leurs valeurs : les plus partagés d'abord.",
                 f.variedSettings.length

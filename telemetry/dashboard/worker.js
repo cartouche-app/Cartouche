@@ -74,6 +74,7 @@ export const SESSION = [
   "gameVersion",
   "nxnative",
   "nxnativeChanged",
+  "bcTextures",
   "settings",
   "minutes",
   "reader",

@@ -167,6 +167,9 @@ enum CartoucheText {
     static var bcRequirement: String { s("sheet.gpu.bc", "BC texture compression") }
     static var gpuSupported: String { s("sheet.gpu.supported", "Supported by this GPU") }
     static var gpuUnsupported: String { s("sheet.gpu.unsupported", "Not supported by this GPU") }
+    /// The player's build of the game converts its BC textures for this
+    /// GPU, which reads none (CartoucheBCConversion).
+    static var gpuConverted: String { s("sheet.gpu.converted", "Textures converted to ASTC by this game’s build") }
     static var recommendedSettings: String { s("sheet.recommended", "Recommended settings") }
     static var resolution: String { s("sheet.resolution", "Resolution") }
     static var mode: String { s("sheet.mode", "Mode") }

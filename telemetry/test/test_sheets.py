@@ -10,6 +10,8 @@ app-reports.json.
 - a session sent again counts once, at its highest seq; only the 28 days
   before the run count; a copy of another region counts for its game;
 - the status follows from how the sessions ended and the frame rate;
+- on a GPU that reads no BC texture, only the sessions of a build that
+  converts them count: nxnative refuses that GPU;
 - testers' results stay, a measured result of a model measured again is
   replaced, and the sheet stays valid for its schema and the publish guard;
 - a game of nxnative's list without a sheet gets one once three iPhones of a
@@ -201,6 +203,27 @@ class SheetsTest(unittest.TestCase):
         result = self.measured()["iPad13,16"]
         self.assertEqual(result["measured"]["iPhones"], 3, "the schema's key, for iPads too")
         self.assertTrue(result["notes"][0].startswith("Measured by Cartouche on 3 iPads, 3 sessions"), result["notes"])
+        self.assert_valid(self.written())
+
+    def test_on_a_gpu_without_bc_only_the_builds_that_convert_the_textures_count(self):
+        # An iPhone 15 (iPhone15,4, an A16): nxnative refuses its GPU, so a
+        # session of nxnative's own build never got into the game, and an
+        # older Cartouche said nothing of it. A build of a fork that
+        # converts the textures (bcTextures) ran, and says how.
+        for phone in self.phones[:3]:
+            self.session(phone, device="iPhone15,4", bcTextures="unconverted", frames=0, fps=None, minutes=0.1,
+                         end={"kind": "boot-failed"})
+            self.session(phone, device="iPhone15,4", bcTextures=None, frames=0, fps=None, minutes=0.1,
+                         end={"kind": "boot-failed"})
+        self.run_sheets()
+        self.assertEqual(self.output(), "changed=false\n", "no result says the game does not run there")
+        for phone, fps in zip(self.phones[:3], (31.0, 30.0, 29.0)):
+            self.session(phone, device="iPhone15,4", bcTextures="converted", fps={"median": fps, "low5": fps - 4},
+                         targetFps=30)
+        self.run_sheets()
+        result = self.measured()["iPhone15,4"]
+        self.assertEqual(result["status"], "playable")
+        self.assertEqual(result["measured"]["sessions"], 3, "the converted builds' sessions alone")
         self.assert_valid(self.written())
 
     def test_a_model_no_sheet_may_name_is_left_out(self):

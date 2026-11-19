@@ -323,22 +323,26 @@ enum CartoucheFit: Hashable {
     }
 
     /// LIMITMIB is the memory a game may use here
-    /// (CartoucheGameKeeping.gameLimitMiB).
-    static func of(_ sheet: CartoucheGameSheet, limitMiB: Int?) -> CartoucheFit {
+    /// (CartoucheGameKeeping.gameLimitMiB); CONVERTSBCTEXTURES, whether the
+    /// player's build of the game converts its BC textures for a GPU
+    /// without them, as on the iPhone: a Mac's always reads them.
+    static func of(_ sheet: CartoucheGameSheet, limitMiB: Int?, convertsBCTextures: Bool = false) -> CartoucheFit {
         let latest = sheet.results.filter { $0.device == CartoucheDevice.modelIdentifier }.max { $0.date < $1.date }
         // The macOS of nxnative's apps for the Mac, where the iPhone's sheet
         // says the iOS a game needs.
         return CartoucheFit(CartoucheGameFit.verdict(
             minimumIOS: CartoucheDevice.macMinimum, runsMinimumIOS: CartoucheDevice.runsAtLeast(CartoucheDevice.macMinimum),
-            readsBCTextures: CartoucheDevice.supportsBCTextureCompression,
+            readsBCTextures: CartoucheDevice.supportsBCTextureCompression, convertsBCTextures: convertsBCTextures,
             needsIML: false, hasIML: true,
             peakMiB: sheet.peakMemoryMiB, limitMiB: limitMiB, latestHere: latest?.status))
     }
 
     /// How a game without a sheet fits: nil, unless this Mac's GPU is one
-    /// nxnative refuses for every game.
-    static func withoutSheet() -> CartoucheFit? {
-        CartoucheGameFit.verdictWithoutSheet(readsBCTextures: CartoucheDevice.supportsBCTextureCompression)
+    /// nxnative refuses for every game, and the player's build does not
+    /// convert its textures for it, CONVERTSBCTEXTURES.
+    static func withoutSheet(convertsBCTextures: Bool = false) -> CartoucheFit? {
+        CartoucheGameFit.verdictWithoutSheet(readsBCTextures: CartoucheDevice.supportsBCTextureCompression,
+                                             convertsBCTextures: convertsBCTextures)
             .map { CartoucheFit($0) }
     }
 

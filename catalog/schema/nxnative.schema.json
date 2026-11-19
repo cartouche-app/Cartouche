@@ -31,7 +31,7 @@
     "game": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["titleId", "name", "platform", "genre", "status", "engine", "build", "sdk"],
+      "required": ["titleId", "name", "platform", "genre", "status", "engine", "build", "sdk", "graphics"],
       "properties": {
         "titleId": {
           "$ref": "#/$defs/titleId"
@@ -62,6 +62,11 @@
         },
         "sdk": {
           "type": "string"
+        },
+        "graphics": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The graphics API the game draws with, as nxnative's table of games says it: NVN, NVN2 (Switch 2), Vulkan, OpenGL, or several, such as \"NVN, Vulkan\". A fork's conversion of BC textures for a GPU without them covers NVN's games alone (launcher/Sources/CartoucheBCConversion.swift)."
         },
         "variants": {
           "type": "array",

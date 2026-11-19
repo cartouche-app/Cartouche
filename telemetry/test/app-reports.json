@@ -2,6 +2,7 @@
   "reports": [
     {
       "audioUnderrunsPerMinute": 0.2,
+      "bcTextures": "converted",
       "cartouche": "0.10.0",
       "cpu": {
         "percent": 230,

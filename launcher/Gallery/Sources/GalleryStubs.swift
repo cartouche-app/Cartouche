@@ -48,6 +48,9 @@ enum GalleryState {
     /// runs in, is missing from the app, as after an install that removed
     /// its extensions (CartoucheLiveProcess; works: …-no-liveprocess).
     static var liveProcessMissing = false
+    /// The GPU reads BC-compressed textures (CartoucheDevice), unless the
+    /// scenario is an A16's (GalleryBCConversion; works: gpu-no-bc…).
+    static var readsBCTextures = true
 
     static let documents: URL = {
         let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]

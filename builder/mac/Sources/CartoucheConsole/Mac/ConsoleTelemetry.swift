@@ -264,6 +264,9 @@ final class CartoucheMacSessions {
         let gameVersion: String?
         let nxnative: String?
         let nxnativeChanged: Bool?
+        /// On a GPU without BC textures, whether the build converts them, as
+        /// on the iPhone: a Mac's reads them, and says nothing of it.
+        let bcTextures: String?
         let settings: [String: String]
     }
 
@@ -342,7 +345,7 @@ final class CartoucheMacSessions {
                     CartoucheSessionReport(
                         id: UUID().uuidString.lowercased(), session: job.session, seq: seq, context: context,
                         game: job.game, gameVersion: job.gameVersion, nxnative: job.nxnative, nxnativeChanged: job.nxnativeChanged,
-                        settings: job.settings, minutes: CartoucheGameLogReader.rounded(job.seconds / 60, 1), measures: measures)
+                        bcTextures: job.bcTextures, settings: job.settings, minutes: CartoucheGameLogReader.rounded(job.seconds / 60, 1), measures: measures)
                 }
             }
             save()
@@ -368,7 +371,7 @@ final class CartoucheMacSessions {
         for app in CartoucheMacConsole.shared.apps {
             guard let titleID = actions.titleId(of: app)?.uppercased() else { continue }
             let names = playing.contains(titleID) ? ["\(titleID).prev.log"] : ["\(titleID).prev.log", "\(titleID).log"]
-            var details: (build: CartoucheGameBuild, settings: [String: String])?
+            var details: (build: CartoucheGameBuild, settings: [String: String], bcTextures: String?)?
             for name in names {
                 let url = logs.appendingPathComponent(name)
                 guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
@@ -379,13 +382,18 @@ final class CartoucheMacSessions {
                 guard read.needsReading(key: key, bytes: bytes) else { continue }
                 if details == nil {
                     details = (build: CartoucheInstalledBuilds.installedBuild(of: app),
-                               settings: actions.settings(for: app, tileKey: "").values)
+                               settings: actions.settings(for: app, tileKey: "").values,
+                               bcTextures: CartoucheSessionReport.bcTextures(
+                                   readsBCTextures: CartoucheDevice.supportsBCTextureCompression) {
+                                       CartoucheInstalledBuilds.convertsBCTextures(of: app)
+                                   })
                 }
                 let build = details?.build
                 jobs.append(Job(url: url, key: key, session: read.session(of: key) ?? UUID().uuidString.lowercased(), bytes: bytes,
                                 seconds: max(modified.timeIntervalSince(created), 0), game: titleID,
                                 gameVersion: build?.version, nxnative: build?.shortCommit,
                                 nxnativeChanged: build?.commit == nil ? nil : build?.isDirty,
+                                bcTextures: details?.bcTextures,
                                 settings: details?.settings ?? [:]))
             }
         }

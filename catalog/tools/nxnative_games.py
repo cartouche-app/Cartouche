@@ -11,7 +11,9 @@ The list comes from nxnative's game profiles at the commit Cartouche pins
   say where nxnative plays it now. The opening comment of game.tsv is often
   older ("In bring-up" for a game that plays on the iPhone), so the notes
   come first and the comment only fills in what they do not say;
-- dm/games/README.md: the table of games, with the build, SDK and engine.
+- dm/games/README.md: the table of games, with the build, SDK, engine and
+  graphics API, which tells whether a build that converts BC textures
+  covers the game (launcher/Sources/CartoucheBCConversion.swift).
 
 A release for another region with its own profile ("13 Sentinels: Aegis
 Rim, Asian release") becomes a variant of the main release, and a program
@@ -151,6 +153,7 @@ def games(nxnative: Path) -> list[dict]:
             "engine": row["engine"],
             "build": row["build"],
             "sdk": row["sdk"],
+            "graphics": row["graphics"],
         }
         profiles[title_id] = (row["name"], game)
 

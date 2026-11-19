@@ -606,6 +606,73 @@
       ]
     },
     {
+      "name": "iphone-sheet-gpu-no-bc",
+      "comment": "Breath of the Wild's sheet on an iPhone whose GPU reads no BC-compressed texture, an A16's, the game built by nxnative, which refuses that GPU: not supported, as before the conversion of the textures was read.",
+      "screen": "sheet",
+      "sheet": "01007EF00011E000",
+      "work": "gpu-no-bc",
+      "owned": [
+        "01007EF00011E000",
+        "0400C3F00006E000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 1366,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-sheet-gpu-no-bc-converted",
+      "comment": "The same sheet, the game built by a fork of nxnative that converts its BC textures to ASTC for that GPU (mianmuhammadse/nxnative's no-bc branch): no warning, and what the game needs opened on each need, the BC line green.",
+      "screen": "sheet",
+      "sheet": "01007EF00011E000",
+      "work": "gpu-no-bc-converted",
+      "category": "requirements",
+      "owned": [
+        "01007EF00011E000",
+        "0400C3F00006E000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 1366,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-sheet-gpu-no-bc-converted-no-sheet",
+      "comment": "Metroid Dread, which has no sheet, built by that fork on the same iPhone: no warning that nxnative refuses the GPU.",
+      "screen": "sheet",
+      "sheet": "010093801237C000",
+      "work": "gpu-no-bc-converted",
+      "owned": [
+        "010093801237C000",
+        "0400C3F00006E000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-game-info",
       "screen": "gameinfo",
       "sheet": "0100C0FFEE0A0000",

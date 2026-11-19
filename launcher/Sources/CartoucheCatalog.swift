@@ -80,6 +80,10 @@ struct CartoucheNxGame: Decodable, Hashable {
     let engine: String
     let build: String
     let sdk: String
+    /// The graphics API the game draws with, as nxnative's table of games
+    /// says it: NVN, NVN2, Vulkan, OpenGL, or several, such as "NVN,
+    /// Vulkan" (CartoucheBCConversion.covers).
+    let graphics: String?
     let variants: [Variant]?
 
     /// The main release's title ID, then those of the other regions.
@@ -188,6 +192,18 @@ struct CartoucheEntry: Identifiable, Hashable {
     var isInstalled: Bool { app != nil }
     /// In the games folder, not on this iPhone: Install brings it.
     var canInstallFromStorage: Bool { app == nil && stored != nil }
+
+    /// Whether the player's installed copy draws its BC-compressed
+    /// textures on this iPhone's GPU, which reads none: its build converts
+    /// them (CartoucheBCConversion), and the game draws with NVN, which the
+    /// conversion covers. False where the GPU reads them, where it does not
+    /// matter and nothing is read, and for a copy not installed, whose
+    /// build Cartouche has not read.
+    var convertsBCTextures: Bool {
+        guard !CartoucheDevice.supportsBCTextureCompression, let app,
+              CartoucheBCConversion.covers(graphics: game?.graphics) else { return false }
+        return CartoucheInstalledBuilds.convertsBCTextures(of: app)
+    }
 
     /// Whether the game is known to play on an iPhone: a tester's result
     /// says so, or nxnative's profile does.

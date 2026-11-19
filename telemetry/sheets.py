@@ -56,6 +56,13 @@ DEVICE = re.compile(r"^(iPhone|iPad)[0-9]+,[0-9]+$")
 # A sheet's file, named by its game's title ID.
 SHEET_FILE = re.compile(r"^[0-9A-F]{16}\.json$")
 
+# iPhones whose GPU reads no BC texture: the A16 and older ones, iPhone15,x
+# and before. nxnative's iOS check refuses them for every game; a fork of
+# nxnative converts the textures for them, which a session says (bcTextures,
+# launcher/Sources/CartoucheBCConversion.swift).
+IPHONE = re.compile(r"^iPhone([0-9]+),[0-9]+$")
+LAST_WITHOUT_BC = 15
+
 # A result needs this many iPhones of the model, and so does each of its
 # figures.
 MIN_IPHONES = 3
@@ -124,6 +131,7 @@ MINIMUM_IOS = "26.0"
 SESSIONS = (
     "SELECT id, install, session, seq, day, device, ios, game, "
     "json_extract(body, '$.nxnative') AS nxnative, "
+    "json_extract(body, '$.bcTextures') AS bc, "
     "json_extract(body, '$.minutes') AS minutes, "
     "json_extract(body, '$.frames') AS frames, "
     "json_extract(body, '$.fps.median') AS fps, "
@@ -217,6 +225,22 @@ def figure_of(session: dict, key: str) -> float | None:
 def drew_frames(session: dict) -> bool:
     """Whether the session got into the game: it drew a frame."""
     return (number(session.get("frames")) or 0) > 0 or number(session.get("fps")) is not None
+
+
+def reads_bc(device: str | None) -> bool:
+    """Whether DEVICE's GPU reads BC textures: all but the iPhones up to
+    iPhone15,x."""
+    found = IPHONE.match(device or "")
+    return not found or int(found.group(1)) > LAST_WITHOUT_BC
+
+
+def counts(session: dict) -> bool:
+    """Whether a session says how its game runs on its model: on a GPU that
+    reads no BC texture, only one whose build converts them (bc). nxnative
+    refuses that GPU, so the others never got into their game, and would
+    make the model's result say the game does not run there, where a build
+    that converts may, and Cartouche no longer stops it (CartoucheGameFit)."""
+    return reads_bc(session.get("device")) or session.get("bc") == "converted"
 
 
 def median(values: list[float]) -> float | None:
@@ -426,7 +450,7 @@ def results(sessions: list[dict], sheet_of: dict[str, str]) -> tuple[
     unlisted: dict[str, set[str]] = defaultdict(set)
     for session in sessions:
         game = session.get("game")
-        if not game or not DEVICE.match(session.get("device") or ""):
+        if not game or not DEVICE.match(session.get("device") or "") or not counts(session):
             continue
         sheet = sheet_of.get(game)
         if sheet is None:
