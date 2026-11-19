@@ -40,10 +40,20 @@ final class ControllerTests: HarnessCase {
         // with, on the main thread: on the iPhone, in the game's process,
         // as its scene first activates, never in Cartouche's, whose main
         // thread the watchdog of HarnessCase looks after. Once, before it.
+        // A text field loads more as it first takes the keyboard: what
+        // shows its selection, and the blur behind its cursor's accessory,
+        // 1.51 s once on a busy Mac of the CI's (run 44472384623). On the
+        // iPhone, a game's text field is in the game's process too.
         if !Self.keyboardLoaded {
             Self.keyboardLoaded = true
-            let (scene, _) = try openGameWindow()
+            let (scene, window) = try openGameWindow()
             HarnessControllers.take(scene)
+            let field = UITextField(frame: CGRect(x: 20, y: 80, width: 200, height: 40))
+            field.inputView = UIView()
+            try XCTUnwrap(window.rootViewController?.view).addSubview(field)
+            field.becomeFirstResponder()
+            field.resignFirstResponder()
+            field.removeFromSuperview()
             HarnessControllers.leave(scene)
             closeGameWindows()
         }
