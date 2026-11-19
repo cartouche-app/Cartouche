@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "titleId": "0100B99019412000",
+  "name": "Mario vs. Donkey Kong",
+  "platform": "switch",
+  "requirements": {
+    "minimumIOS": "26.0",
+    "bcTextureCompression": true,
+    "increasedMemoryLimit": false
+  },
+  "results": [
+    {
+      "device": "iPhone18,1",
+      "iOS": "27.3",
+      "date": "2026-11-18",
+      "engine": "nxnative, its build not reported",
+      "status": "playable",
+      "peakMemoryMiB": 1013,
+      "notes": [
+        "Measured by Cartouche on 3 iPhones, 15 sessions from 2026-11-11 to 2026-11-18: 59.8 fps for 60 (median). None ended badly."
+      ],
+      "measured": {
+        "iPhones": 3,
+        "sessions": 15,
+        "from": "2026-11-11",
+        "to": "2026-11-18",
+        "fps": 59.8,
+        "targetFps": 60,
+        "endedBadlyPercent": 0
+      }
+    }
+  ]
+}
