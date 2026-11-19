@@ -422,7 +422,7 @@ final class HarnessWatchdog: @unchecked Sendable {
     }
 
     /// From the main thread.
-    func start() {
+    func start(readStep: @escaping @MainActor @Sendable () -> String = { HarnessWatchdog.step() }) {
         precondition(Thread.isMainThread)
         let main = pthread_self()
         lock.lock()
@@ -435,21 +435,27 @@ final class HarnessWatchdog: @unchecked Sendable {
                 let goOn = watching
                 lock.unlock()
                 guard goOn else { return }
-                let sent = Date()
+                let sent = ProcessInfo.processInfo.systemUptime
                 let answered = DispatchSemaphore(value: 0)
-                let stage = HarnessBox("")
+                let reply = HarnessBox((arrived: sent, step: ""))
                 DispatchQueue.main.async {
-                    stage.value = MainActor.assumeIsolated { Self.step() }
+                    // Time the wait to enter the main queue. Reading the
+                    // step is the watchdog's own work.
+                    let arrived = ProcessInfo.processInfo.systemUptime
+                    reply.value = (arrived, MainActor.assumeIsolated { readStep() })
                     answered.signal()
                 }
                 var looks: [HarnessWait.Look] = []
                 if answered.wait(timeout: .now() + HarnessWait.lookFrom) == .timedOut {
                     repeat {
-                        let at = Date().timeIntervalSince(sent)
+                        let at = ProcessInfo.processInfo.systemUptime - sent
                         looks.append(HarnessWait.Look(at: at, stack: HarnessMainThread.sample(main)))
                     } while answered.wait(timeout: .now() + HarnessWait.lookEvery) == .timedOut
                 }
-                let wait = HarnessWait(seconds: Date().timeIntervalSince(sent), from: last, to: stage.value, looks: looks)
+                let response = reply.value
+                let seconds = response.arrived - sent
+                looks.removeAll { $0.at >= seconds }
+                let wait = HarnessWait(seconds: seconds, from: last, to: response.step, looks: looks)
                 lock.lock()
                 if wait.counted > longest.counted {
                     longest = wait
@@ -458,7 +464,7 @@ final class HarnessWatchdog: @unchecked Sendable {
                     longestForRunningBoard = wait
                 }
                 lock.unlock()
-                last = stage.value
+                last = response.step
                 Thread.sleep(forTimeInterval: 0.05)
             }
         }

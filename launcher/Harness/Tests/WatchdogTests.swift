@@ -86,6 +86,23 @@ final class WatchdogTests: XCTestCase {
         #endif
     }
 
+    /// Once the main queue has answered, the time the watchdog spends
+    /// reading the current step belongs to the harness.
+    func testTheWatchdogsOwnStepReadDoesNotCount() async {
+        let next = expectation(description: "The watchdog finished timing its first probe")
+        let reads = HarnessBox(0)
+        let watchdog = HarnessWatchdog()
+        watchdog.start {
+            reads.value += 1
+            if reads.value == 1 { Thread.sleep(forTimeInterval: 2) }
+            if reads.value == 2 { next.fulfill() }
+            return "test step"
+        }
+        await fulfillment(of: [next], timeout: 15)
+        let worst = watchdog.stop()
+        XCTAssertLessThan(worst.longest.counted, 1.5, worst.longest.failure)
+    }
+
     /// The wait of run 43673497623, as the watchdog looks at it now, the
     /// main thread waiting for RunningBoard each time: only its first fifth
     /// of a second counts, before the first look, and the log says the rest
