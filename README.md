@@ -8,7 +8,8 @@
 
 Cartouche installs, starts and keeps the games [nxnative](https://github.com/seedds/nxnative) runs natively on iPhone and iPad, from your own copies.<br>
 It signs, renews and updates itself, and gets your games the memory they need.<br>
-On your Mac, Cartouche Builder builds your games, plays them there with the same saves, and builds them again when nxnative improves them.
+On your Mac, Cartouche Builder builds your games, plays them there with the same saves, and builds them again when nxnative improves them.<br>
+With no Mac, [Cartouche Cloud](https://build.cartouche.cloud/) builds them for you, from the copy you send it.
 
 <a href="https://cartouche.cloud/download/#installer-mac"><img src="docs/images/download-mac.png" height="48" alt="Download the Cartouche Installer for Mac"></a>&nbsp;&nbsp;<a href="https://cartouche.cloud/download/#installer-windows"><img src="docs/images/download-windows.png" height="48" alt="Download the Cartouche Installer for Windows"></a>
 
@@ -53,10 +54,10 @@ Step by step, from nothing to your first game: [docs/getting-started.md](docs/ge
 1. On the iPhone or iPad, install [**LocalDevVPN**](https://apps.apple.com/app/localdevvpn/id6755608044) from the App Store: the built-in SideStore needs it to sign in and to renew Cartouche without a computer.
 2. On a Mac or a Windows PC, download the **Cartouche Installer**, [for Mac](https://cartouche.cloud/download/#installer-mac) or [for Windows](https://cartouche.cloud/download/#installer-windows), plug in the iPhone or iPad, sign in with your Apple account (a free one is enough) and install. It puts the latest Cartouche on it with its certificate, the memory capability and the pairing file ([installer/README.md](installer/README.md)).
 3. Open Cartouche: its guide, **Your first game**, takes you from there, and ticks each step by itself.
-4. On a Mac with Apple silicon, [download **Cartouche Builder**](https://cartouche.cloud/download/#builder) and drag it onto Applications: it installs the tools nxnative builds with, then builds your game into your games folder, for the iPhone and iPad and for this Mac ([builder/README.md](builder/README.md#install)).
+4. On a Mac with Apple silicon, [download **Cartouche Builder**](https://cartouche.cloud/download/#builder) and drag it onto Applications: it installs the tools nxnative builds with, then builds your game into your games folder, for the iPhone and iPad and for this Mac ([builder/README.md](builder/README.md#install)). With no Mac, send your copy from a computer on [Cartouche Cloud's site](https://build.cartouche.cloud/), and link Cartouche to your account in **System › Cartouche Cloud**: it installs the game built.
 5. In Cartouche, **System › Storage › Add your Mac (Cartouche Builder)**, with the code both screens show: Cartouche installs your games from the Mac and keeps your saves there. A NAS, your Google Drive or another storage of yours works too. On the Mac, **Play on this Mac** plays the same game with the same saves.
 
-**What you need:** an iPhone 15 Pro or newer, or an iPad with an M1 chip or newer, on iOS or iPadOS 26 or later, as nxnative; the bigger games need a 12 GB iPhone. A Mac or a Windows PC, once, to install Cartouche, and a Mac with Apple silicon and macOS 26.6 or later to build your games and play them on the Mac.
+**What you need:** an iPhone 15 Pro or newer, or an iPad with an M1 chip or newer, on iOS or iPadOS 26 or later, as nxnative; the bigger games need a 12 GB iPhone. A Mac or a Windows PC, once, to install Cartouche, and a Mac with Apple silicon and macOS 26.6 or later to build your games and play them on the Mac, or a computer and Cartouche Cloud to build them for you.
 
 **Your own signing certificate:** with a `.p12` and its provisioning profile, choose your certificate instead of the Apple Account in the Installer's second step. It signs Cartouche with them, with no Apple account, LocalDevVPN or weekly renewal; games then start in Cartouche's place, and most of them need Increased Memory Limit in the profile ([docs/imported-signing.md](docs/imported-signing.md)).
 
@@ -91,7 +92,7 @@ On an iPad with an M1 chip or newer, Cartouche is the same app as on the iPhone,
 <details>
 <summary><b>Do I need a computer?</b></summary>
 
-Once, to install Cartouche, from a Mac or a Windows PC: then it renews and updates itself from the iPhone or iPad. Building your games takes a Mac with Apple silicon, with Cartouche Builder, which plays them on that Mac too.
+Once, to install Cartouche, from a Mac or a Windows PC: then it renews and updates itself from the iPhone or iPad. Building your games takes a Mac with Apple silicon, with Cartouche Builder, which plays them on that Mac too, or a computer and [Cartouche Cloud](https://build.cartouche.cloud/), which builds them for you on its Macs, from the copy you send it, and deletes that copy once the game is built.
 </details>
 
 <details>

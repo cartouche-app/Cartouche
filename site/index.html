@@ -795,6 +795,17 @@
     .uswitch--on::after { left: auto; right: calc(3 * var(--pt)); }
     .bigtitle { padding: 0 calc(2 * var(--pt)); font: 700 calc(34 * var(--pt))/1.1 var(--text); letter-spacing: -.01em; }
 
+    /* ---------- Cartouche Cloud's page ---------- */
+    .ucloud__head { display: flex; align-items: flex-start; justify-content: space-between; gap: calc(12 * var(--pt)); }
+    .ucloud__head b { font-weight: 600; }
+    .ucloud__state { flex: none; margin-top: calc(2 * var(--pt)); color: var(--c); font-size: calc(14 * var(--pt)); font-weight: 600; }
+    .ucloud__step { color: rgba(255, 255, 255, .85); font-size: calc(14 * var(--pt)); font-weight: 600; }
+    .ucloud__note { color: rgba(255, 255, 255, .55); font-size: calc(14 * var(--pt)); line-height: 1.35; }
+    .utrack { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: calc(5 * var(--pt)); }
+    .utrack i { height: calc(4 * var(--pt)); border-radius: 99px; background: rgba(255, 255, 255, .16); }
+    .utrack .is-done { background: var(--link); }
+    .utrack .is-on { background: linear-gradient(90deg, var(--link), var(--pink)); }
+
     /* ---------- All games ---------- */
     .lib__body { position: relative; z-index: 1; padding: calc(100 * var(--pt)) calc(18 * var(--pt)) 0; }
     .usearch { display: flex; align-items: center; gap: calc(10 * var(--pt)); height: calc(46 * var(--pt)); padding: 0 calc(16 * var(--pt)); border-radius: 999px; color: rgba(255, 255, 255, .5); }
@@ -1405,6 +1416,7 @@
                 <a href="#console"><span lang="fr">La console</span><span lang="en">Console</span></a>
                 <a href="#storage"><span lang="fr">Stockage</span><span lang="en">Storage</span></a>
                 <a href="#builder">Builder</a>
+                <a href="#cloud">Cloud</a>
                 <a href="#install"><span lang="fr">Installer</span><span lang="en">Install</span></a>
                 <a href="#faq"><span lang="fr">Questions</span><span lang="en">FAQ</span></a>
             </nav>
@@ -1426,8 +1438,8 @@
                         <h1><span lang="fr">Vos jeux,<br> sur iPhone, iPad et Mac.</span><span lang="en">Your games,<br> on iPhone, iPad and Mac.</span></h1>
                     </div>
                     <div>
-                        <p class="lede" lang="fr">Cartouche installe, lance et garde les jeux que <a href="https://github.com/seedds/nxnative">nxnative</a> fait tourner nativement sur iPhone et iPad, à partir de vos propres copies. Il se signe, se renouvelle et se met à jour tout seul, et donne à vos jeux la mémoire qu’il leur faut. Sur votre Mac, <a href="#builder">Cartouche Builder</a> construit vos jeux, les y fait tourner avec les mêmes sauvegardes, et les reconstruit quand nxnative les améliore.</p>
-                        <p class="lede" lang="en">Cartouche installs, starts and keeps the games <a href="https://github.com/seedds/nxnative">nxnative</a> runs natively on iPhone and iPad, from your own copies. It signs, renews and updates itself, and gets your games the memory they need. On your Mac, <a href="#builder">Cartouche Builder</a> builds your games, plays them there with the same saves, and rebuilds them when nxnative improves them.</p>
+                        <p class="lede" lang="fr">Cartouche installe, lance et garde les jeux que <a href="https://github.com/seedds/nxnative">nxnative</a> fait tourner nativement sur iPhone et iPad, à partir de vos propres copies. Il se signe, se renouvelle et se met à jour tout seul, et donne à vos jeux la mémoire qu’il leur faut. Sur votre Mac, <a href="#builder">Cartouche Builder</a> construit vos jeux, les y fait tourner avec les mêmes sauvegardes, et les reconstruit quand nxnative les améliore. Sans Mac, <a href="#cloud">Cartouche Cloud</a> les construit pour vous.</p>
+                        <p class="lede" lang="en">Cartouche installs, starts and keeps the games <a href="https://github.com/seedds/nxnative">nxnative</a> runs natively on iPhone and iPad, from your own copies. It signs, renews and updates itself, and gets your games the memory they need. On your Mac, <a href="#builder">Cartouche Builder</a> builds your games, plays them there with the same saves, and rebuilds them when nxnative improves them. With no Mac, <a href="#cloud">Cartouche Cloud</a> builds them for you.</p>
                         <div class="actions">
                             <a class="btn btn--primary" href="#install"><i class="glyph" aria-hidden="true">A</i><span lang="fr">Installer Cartouche</span><span lang="en">Install Cartouche</span></a>
                             <a class="btn btn--glass" href="https://github.com/cartouche-app/Cartouche"><i class="glyph" aria-hidden="true">X</i><span lang="fr">Le code sur GitHub</span><span lang="en">Code on GitHub</span></a>
@@ -1651,6 +1663,35 @@
             </div>
         </section>
 
+        <section class="section" id="cloud" style="--light:#B794F6;--dark:#4C1D95;--gx:84%;--gx2:16%">
+            <div class="wrap split">
+                <div>
+                    <p class="label"><span lang="fr">Sans Mac</span><span lang="en">No Mac</span></p>
+                    <h2><span lang="fr">Cartouche Cloud construit vos jeux pour vous.</span><span lang="en">Cartouche Cloud builds your games for you.</span></h2>
+                    <div class="prose">
+                        <p lang="fr"><span class="nw">Pas de Mac ?</span> Depuis un ordinateur, envoyez votre propre copie d’un jeu sur le site de Cartouche Cloud : il la construit avec nxnative sur un Mac dans le cloud, pour vous seul, puis l’efface. Liez Cartouche à votre compte par un code : il suit la construction, puis installe le jeu sur votre iPhone.</p>
+                        <p lang="en">No Mac? From a computer, send your own copy of a game on Cartouche Cloud’s site: it builds it with nxnative on a Mac in the cloud, for you alone, then deletes it. Link Cartouche to your account with a code: it follows the build, then installs the game on your iPhone.</p>
+                    </div>
+                    <div class="actions">
+                        <a class="btn btn--primary" href="https://build.cartouche.cloud/"><svg aria-hidden="true"><use href="#i-cloud"/></svg><span lang="fr">Ouvrir Cartouche Cloud</span><span lang="en">Open Cartouche Cloud</span></a>
+                    </div>
+                    <p class="builder-need"><span lang="fr">Une construction réussie se paie en crédits, achetés d’avance sur son site ; une construction qui échoue ne coûte rien.</span><span lang="en">A build that succeeds is paid for in credits, bought in advance on its site; a build that fails costs nothing.</span></p>
+                    <ul class="perks">
+                        <li class="perk"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-lock"/></svg></span><div><h3><span lang="fr">Vos clés restent chez vous</span><span lang="en">Your keys stay with you</span></h3><p><span lang="fr">Votre navigateur ouvre le jeu sur votre ordinateur et n’envoie que lui : vos clés n’en partent jamais.</span><span lang="en">Your browser opens the game on your computer and sends the game alone: your keys never leave it.</span></p></div></li>
+                        <li class="perk"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-iphone"/></svg></span><div><h3><span lang="fr">Suivi depuis l’iPhone</span><span lang="en">Followed from the iPhone</span></h3><p><span lang="fr">Cartouche montre chaque étape et le temps restant, puis installe le jeu construit, comme vos autres jeux. Un <span class="nw">e-mail</span> vous prévient aussi.</span><span lang="en">Cartouche shows each step and the time left, then installs the game built, like your other games. An email tells you too.</span></p></div></li>
+                        <li class="perk"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-hidden"/></svg></span><div><h3><span lang="fr">Pour vous seul</span><span lang="en">For you alone</span></h3><p><span lang="fr">Votre copie est effacée dès que le jeu est construit. Le jeu construit reste deux jours, pour votre seul compte, le temps de l’installer.</span><span lang="en">Your copy is deleted as soon as the game is built. The game built stays two days, for your account alone, time to install it.</span></p></div></li>
+                        <li class="perk"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-wrench"/></svg></span><div><h3><span lang="fr">Rien à installer</span><span lang="en">Nothing to install</span></h3><p><span lang="fr">Ni Mac, ni Xcode, ni Terminal : un navigateur sur un ordinateur, et Cartouche sur l’iPhone.</span><span lang="en">No Mac, no Xcode, no Terminal: a browser on a computer, and Cartouche on the iPhone.</span></p></div></li>
+                    </ul>
+                </div>
+                <figure>
+                    <div class="device" style="--w:402;--h:874;--r:55;--b:12;max-width:340px;--light:#B794F6;--dark:#4C1D95">
+                        <div class="device__body"><div class="screen" data-screen="cloud" role="img" data-label-fr="La page Cartouche Cloud, sur un iPhone lié à un compte" data-label-en="The Cartouche Cloud page, on an iPhone linked to an account" aria-label="The Cartouche Cloud page, on an iPhone linked to an account"></div></div>
+                    </div>
+                    <figcaption><span lang="fr">Système › Cartouche Cloud</span><span lang="en">System › Cartouche Cloud</span></figcaption>
+                </figure>
+            </div>
+        </section>
+
         <section class="section" id="install" style="--light:#4F46E5;--dark:#EC4899">
             <div class="wrap split" style="align-items:start">
                 <div>
@@ -1664,7 +1705,7 @@
                                 <a class="btn btn--primary" data-download="installer-windows" href="https://github.com/cartouche-app/Cartouche/releases/download/installer-v0.1.0/Cartouche-Installer-0.1.0-Windows.exe"><svg aria-hidden="true"><use href="#i-download"/></svg><span lang="fr">Télécharger pour Windows</span><span lang="en">Download for Windows</span></a>
                             </div></div></li>
                         <li class="step"><span class="step__n" aria-hidden="true">3</span><div><h3><span lang="fr">Le guide de Cartouche</span><span lang="en">Cartouche’s guide</span></h3><p><span lang="fr">Ouvrez Cartouche : son guide, « Votre premier jeu », vous accompagne jusqu’à votre première partie et coche chaque étape tout seul.</span><span lang="en">Open Cartouche: its guide, Your first game, takes you all the way to playing, and ticks off each step by itself.</span></p></div></li>
-                        <li class="step"><span class="step__n" aria-hidden="true">4</span><div><h3><span lang="fr">Vos jeux, sur votre Mac</span><span lang="en">Your games, on your Mac</span></h3><p><span lang="fr">Glissez <a href="#builder">Cartouche Builder</a> dans Applications : il installe ce qu’il faut à nxnative, sans Terminal, vous ouvre l’App Store pour Xcode, puis construit vos jeux à partir de vos propres copies, pour l’iPhone, l’iPad et le Mac. La première fois, macOS ne peut pas le vérifier : Réglages Système › Confidentialité et sécurité › Ouvrir quand même.</span><span lang="en">Drag <a href="#builder">Cartouche Builder</a> onto Applications: it installs what nxnative needs, with no Terminal, opens the App Store for Xcode, then builds your games from your own copies, for the iPhone, the iPad and the Mac. The first time, macOS cannot check it: System Settings › Privacy &amp; Security › Open Anyway.</span></p>
+                        <li class="step"><span class="step__n" aria-hidden="true">4</span><div><h3><span lang="fr">Vos jeux, sur votre Mac</span><span lang="en">Your games, on your Mac</span></h3><p><span lang="fr">Glissez <a href="#builder">Cartouche Builder</a> dans Applications : il installe ce qu’il faut à nxnative, sans Terminal, vous ouvre l’App Store pour Xcode, puis construit vos jeux à partir de vos propres copies, pour l’iPhone, l’iPad et le Mac. La première fois, macOS ne peut pas le vérifier : Réglages Système › Confidentialité et sécurité › Ouvrir quand même. <span class="nw">Pas de Mac ?</span> <a href="#cloud">Cartouche Cloud</a> les construit pour vous.</span><span lang="en">Drag <a href="#builder">Cartouche Builder</a> onto Applications: it installs what nxnative needs, with no Terminal, opens the App Store for Xcode, then builds your games from your own copies, for the iPhone, the iPad and the Mac. The first time, macOS cannot check it: System Settings › Privacy &amp; Security › Open Anyway. No Mac? <a href="#cloud">Cartouche Cloud</a> builds them for you.</span></p>
                             <a class="btn btn--primary" data-download="builder" href="https://github.com/cartouche-app/Cartouche/releases/download/builder-v0.2.0/Cartouche-Builder-0.2.0.dmg"><svg aria-hidden="true"><use href="#i-download"/></svg><span lang="fr">Télécharger Cartouche Builder</span><span lang="en">Download Cartouche Builder</span></a></div></li>
                     </ol>
                     <p class="small guide"><span lang="fr">Pas à pas, de rien à votre premier jeu : <a href="https://github.com/cartouche-app/Cartouche/blob/main/docs/getting-started.fr.md">le guide Premiers pas</a>.</span><span lang="en">Step by step, from nothing to your first game: <a href="https://github.com/cartouche-app/Cartouche/blob/main/docs/getting-started.md">the Getting started guide</a>.</span></p>
@@ -1677,7 +1718,7 @@
                         <dt>iPad</dt>
                         <dd><span lang="fr">iPadOS 26 ou ultérieur, sur un iPad à puce M1 ou plus récente.</span><span lang="en">iPadOS 26 or later, on an iPad with an M1 chip or newer.</span></dd>
                         <dt>Mac</dt>
-                        <dd><span lang="fr">Un Mac à puce Apple avec macOS 26.6 ou ultérieur, pour construire vos jeux et y jouer.</span><span lang="en">A Mac with Apple silicon and macOS 26.6 or later, to build your games and play them there.</span></dd>
+                        <dd><span lang="fr">Un Mac à puce Apple avec macOS 26.6 ou ultérieur, pour construire vos jeux et y jouer. Sans Mac, <a href="#cloud">Cartouche Cloud</a> les construit pour vous.</span><span lang="en">A Mac with Apple silicon and macOS 26.6 or later, to build your games and play them there. With no Mac, <a href="#cloud">Cartouche Cloud</a> builds them for you.</span></dd>
                         <dt><span lang="fr">Compte Apple</span><span lang="en">Apple account</span></dt>
                         <dd><span lang="fr">Un compte gratuit suffit, ou votre propre certificat de signature (.p12).</span><span lang="en">A free one is enough, or a signing certificate (.p12) of your own.</span></dd>
                         <dt><span lang="fr">Ordinateur</span><span lang="en">Computer</span></dt>
@@ -1695,8 +1736,8 @@
                     <p class="label"><span lang="fr">Ce qu’il ne fait pas</span><span lang="en">What it does not do</span></p>
                     <h2><span lang="fr">Aucun jeu fourni. Jamais.</span><span lang="en">No games included. Ever.</span></h2>
                     <div class="prose">
-                        <p lang="fr">Cartouche ne contient et ne télécharge aucun jeu, aucune clé et aucun firmware. Il n’a ni catalogue de jeux à télécharger, ni lien vers un tel catalogue, ni stockage public. Vous importez les jeux que vous possédez et que vous avez construits vous-même.</p>
-                        <p lang="en">Cartouche contains and downloads no games, no keys and no firmware. It has no catalogue of games to download, no link to one and no public storage. You import games you own and built yourself.</p>
+                        <p lang="fr">Cartouche ne contient aucun jeu, aucune clé et aucun firmware, et ne télécharge que les jeux que Cartouche Cloud a construits pour vous, à partir de la copie que vous lui avez envoyée vous-même. Il n’a ni catalogue de jeux à télécharger, ni lien vers un tel catalogue, ni stockage public. Vous importez les jeux que vous possédez et que vous avez construits vous-même, ou que Cartouche Cloud a construits pour vous.</p>
+                        <p lang="en">Cartouche contains no games, no keys and no firmware, and downloads only the games Cartouche Cloud built for you, from the copy you sent it yourself. It has no catalogue of games to download, no link to one and no public storage. You import games you own and built yourself, or that Cartouche Cloud built for you.</p>
                     </div>
                     <ul class="never">
                         <li><svg aria-hidden="true"><use href="#i-ban"/></svg><span lang="fr">Aucun jeu ni mise à jour de jeu</span><span lang="en">No games or game updates</span></li>
@@ -1719,11 +1760,11 @@
                 <div class="panel qa">
                     <details>
                         <summary><span lang="fr">Cartouche est-il gratuit ?</span><span lang="en">Is Cartouche free?</span></summary>
-                        <p><span lang="fr">Oui. C’est un logiciel libre sous licence AGPL-3.0, et il marche avec un compte Apple gratuit.</span><span lang="en">Yes. It is free software under the AGPL-3.0, and it works with a free Apple account.</span></p>
+                        <p><span lang="fr">Oui. C’est un logiciel libre sous licence AGPL-3.0, et il marche avec un compte Apple gratuit. Seul <a href="#cloud">Cartouche Cloud</a>, qui construit vos jeux si vous n’avez pas de Mac, est payant, à la construction réussie.</span><span lang="en">Yes. It is free software under the AGPL-3.0, and it works with a free Apple account. Only <a href="#cloud">Cartouche Cloud</a>, which builds your games if you have no Mac, is paid, per build that succeeds.</span></p>
                     </details>
                     <details>
                         <summary><span lang="fr">Faut-il un ordinateur ?</span><span lang="en">Do I need a computer?</span></summary>
-                        <p><span lang="fr">Une fois, pour installer Cartouche depuis un Mac ou un PC Windows. Ensuite, il se renouvelle et se met à jour depuis l’iPhone ou l’iPad. Pour construire vos jeux, il faut un Mac à puce Apple, avec <a href="#builder">Cartouche Builder</a>, qui les fait aussi tourner sur le Mac.</span><span lang="en">Once, to install Cartouche from a Mac or a Windows PC. Then it renews and updates itself from the iPhone or iPad. Building your games takes a Mac with Apple silicon, with <a href="#builder">Cartouche Builder</a>, which plays them on the Mac too.</span></p>
+                        <p><span lang="fr">Une fois, pour installer Cartouche depuis un Mac ou un PC Windows. Ensuite, il se renouvelle et se met à jour depuis l’iPhone ou l’iPad. Pour construire vos jeux, il faut un Mac à puce Apple, avec <a href="#builder">Cartouche Builder</a>, qui les fait aussi tourner sur le Mac, ou un ordinateur et <a href="#cloud">Cartouche Cloud</a>, qui les construit pour vous.</span><span lang="en">Once, to install Cartouche from a Mac or a Windows PC. Then it renews and updates itself from the iPhone or iPad. Building your games takes a Mac with Apple silicon, with <a href="#builder">Cartouche Builder</a>, which plays them on the Mac too, or a computer and <a href="#cloud">Cartouche Cloud</a>, which builds them for you.</span></p>
                     </details>
                     <details>
                         <summary><span lang="fr">Cartouche marche-t-il sur iPad et sur Mac ?</span><span lang="en">Does Cartouche work on iPad and on a Mac?</span></summary>
@@ -1743,7 +1784,11 @@
                     </details>
                     <details>
                         <summary><span lang="fr">Comment construire mes jeux ?</span><span lang="en">How do I build my games?</span></summary>
-                        <p><span lang="fr">Avec <a href="#builder">Cartouche Builder</a>, sur un Mac à puce Apple. Montrez-lui le dossier de vos copies et celui de vos jeux : il installe ce qu’il faut, construit chaque jeu avec nxnative, puis le reconstruit quand nxnative l’améliore. Il ne télécharge jamais de jeu.</span><span lang="en">With <a href="#builder">Cartouche Builder</a>, on a Mac with Apple silicon. Show it the folder of your copies and your games folder: it installs what it needs, builds each game with nxnative, then builds it again when nxnative improves it. It never downloads a game.</span></p>
+                        <p><span lang="fr">Avec <a href="#builder">Cartouche Builder</a>, sur un Mac à puce Apple. Montrez-lui le dossier de vos copies et celui de vos jeux : il installe ce qu’il faut, construit chaque jeu avec nxnative, puis le reconstruit quand nxnative l’améliore. Il ne télécharge jamais de jeu. Sans Mac, <a href="#cloud">Cartouche Cloud</a> les construit pour vous : envoyez votre copie depuis un ordinateur, sur son site, et Cartouche installe le jeu construit.</span><span lang="en">With <a href="#builder">Cartouche Builder</a>, on a Mac with Apple silicon. Show it the folder of your copies and your games folder: it installs what it needs, builds each game with nxnative, then builds it again when nxnative improves it. It never downloads a game. With no Mac, <a href="#cloud">Cartouche Cloud</a> builds them for you: send your copy from a computer, on its site, and Cartouche installs the game built.</span></p>
+                    </details>
+                    <details>
+                        <summary><span lang="fr">Que garde Cartouche Cloud de mes jeux ?</span><span lang="en">What does Cartouche Cloud keep of my games?</span></summary>
+                        <p><span lang="fr">Votre copie, le temps de la construire : elle est effacée dès que le jeu est construit, et deux jours après son envoi au plus tard. Le jeu construit reste deux jours, pour votre seul compte. Vos clés ne lui parviennent jamais : votre navigateur ouvre le jeu et n’envoie que lui. Le détail est sur <a href="https://build.cartouche.cloud/privacy">sa page Confidentialité</a>.</span><span lang="en">Your copy, while it is built: it is deleted as soon as the game is built, and two days after you sent it at the latest. The game built stays two days, for your account alone. Your keys never reach it: your browser opens the game and sends the game alone. The details are on <a href="https://build.cartouche.cloud/privacy">its privacy page</a>.</span></p>
                     </details>
                     <details>
                         <summary><span lang="fr">Cartouche fournit-il ces jeux ?</span><span lang="en">Does Cartouche come with these games?</span></summary>
@@ -2068,6 +2113,35 @@
             '</div><i class="island"></i><i class="indicator"></i></div>';
     }
 
+    // Cartouche Cloud's page, from System, on an iPhone linked to an
+    // account (CartoucheCloudPage.swift): its games, one being built, at
+    // its fifth step of six, and one built, to install, then the ways to the
+    // site and Unlink this iPhone. It shows the page scrolled past the account's credits: the site
+    // says no price (site/tests).
+    function cloud() {
+        var building = BY_ID.sword, built = BY_ID.cuphead;
+        var track = [1, 2, 3, 4, 5, 6].map(function (n) { return n < 5 ? '<i class="is-done"></i>' : n === 5 ? '<i class="is-on"></i>' : "<i></i>"; }).join("");
+        var head = function (g, color, state) {
+            return '<div class="ucloud__head"><b>' + g.name + '</b><span class="ucloud__state" style="--c:' + color + '">' + state + "</span></div>";
+        };
+        return '<div class="ui sheet">' + stage([], null) + statusbar() + '<p class="navtitle">Cartouche Cloud</p>' +
+            '<div class="sheet__body"><p class="ugroup">' + t("Vos jeux", "Your games") + "</p>" +
+            '<div class="ucard"><div class="urow urow--stack">' + head(building, "var(--link)", t("En construction", "Being built")) +
+            '<div class="utrack" aria-hidden="true">' + track + "</div>" +
+            '<span class="ucloud__step">' + t("Étape 5 sur 6 · Construction", "Step 5 of 6 · Building") + "</span>" +
+            '<span class="ucloud__note">' + t("Encore environ 14 min.", "About 14 min to go.") + "</span></div>" +
+            '<div class="urow urow--stack">' + head(built, "var(--ready)", t("Construit", "Built")) +
+            '<span class="ucloud__note">' + t("Gardé jusqu’au 21 nov. à 19:11, puis effacé.", "Kept until Nov 21 at 7:11 PM, then deleted.") + "</span></div>" +
+            '<div class="urow">' + ic("cloud", "ublue") + '<span class="urow__main ulink">' + t("Installer", "Install") + '</span><span class="urow__val">' + t("3,4 Go", "3.4 GB") + "</span></div></div>" +
+            '<p class="ufoot">' + t("Vous recevez un e-mail dès qu’un jeu est construit, et il apparaît dans votre bibliothèque : installez-le de là ou d’ici.", "You get an email as soon as a game is built, and it shows in your library: install it from there or from here.") + "</p>" +
+            '<div class="ucard"><div class="urow">' + ic("globe", "ublue") + '<span class="urow__main ulink">' + t("Vos jeux sur le site", "Your games on the site") + "</span></div>" +
+            '<div class="urow">' + ic("globe", "ublue") + '<span class="urow__main ulink">' + t("Votre compte sur le site", "Your account on the site") + "</span></div></div>" +
+            '<p class="ufoot">' + t("Vous envoyez un jeu depuis un ordinateur, sur le site, où se trouvent aussi vos crédits et votre compte.", "You send a game from a computer, on the site, where your credits and your account are too.") + "</p>" +
+            '<div class="ucard"><div class="urow urow--danger"><span class="urow__main">' + t("Délier cet iPhone", "Unlink this iPhone") + "</span></div></div>" +
+            '<p class="ufoot">' + t("Lié, cet iPhone lit les jeux de votre compte et récupère ceux qui sont construits, rien de plus : l’envoi d’un jeu, vos crédits et votre compte restent sur le site.", "Linked, this iPhone reads your account’s games and fetches those built, nothing more: sending a game, your credits and your account stay on the site.") + "</p>" +
+            '</div><i class="island"></i><i class="indicator"></i></div>';
+    }
+
     // All games: the player's first, then those nxnative plays on the
     // iPhone, then the others, each by name, as the app sorts them.
     function library() {
@@ -2355,6 +2429,7 @@
     $('[data-screen="sheet"]').innerHTML = sheet(BY_ID.stardew);
     $('[data-screen="settings"]').innerHTML = settings(BY_ID.stardew);
     $('[data-screen="system"]').innerHTML = system();
+    $('[data-screen="cloud"]').innerHTML = cloud();
     var pauseScreen = $('[data-screen="pause"]');
     pauseScreen.innerHTML = playScreen(BY_ID.mk8d);
 
