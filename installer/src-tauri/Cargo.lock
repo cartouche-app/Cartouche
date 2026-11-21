@@ -657,7 +657,7 @@ dependencies = [
 
 [[package]]
 name = "cartouche-installer"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "aes-gcm",
  "apple-codesign-quick",
