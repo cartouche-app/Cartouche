@@ -111,6 +111,15 @@ class SideStoreAnisetteTest(unittest.TestCase):
         self.assertEqual(constant(self.constants, "userAgent"), user_agent)
         self.assertRegex(constant(self.constants, "xcodeVersion"), r"^\d+\.\d+(\.\d+)? \(\w+\)$")
 
+    def test_client_info_uses_the_os_label_grandslam_accepts(self):
+        installer_client_info, _ = installer_identity()
+        for client, client_info in (
+            ("SideStore", constant(self.constants, "clientInfo")),
+            ("Installer", installer_client_info),
+        ):
+            with self.subTest(client=client):
+                self.assertRegex(client_info, r"^<[^>]+> <Mac OS X;")
+
     def test_the_isideload_it_names_is_the_installers(self):
         cargo = re.search(r'^isideload\s*=\s*\{[^}]*version\s*=\s*"([^"]+)"', CARGO.read_text(encoding="utf-8"), re.M)
         self.assertIsNotNone(cargo, f"{CARGO.relative_to(ROOT)} no longer names isideload")

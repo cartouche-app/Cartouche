@@ -74,6 +74,18 @@ fn failure_response(failure: Failure) -> Response {
 const WRONG_PASSWORD: (i64, &str) = (-22406, "Your Apple Account or password was entered incorrectly.");
 
 fn gs_service(apple: &FakeApple, request: &Request) -> Response {
+    // GrandSlam answers before reading the plist when the OS label is `macOS`.
+    if request
+        .header("x-mme-client-info")
+        .is_some_and(|info| info.contains("<macOS;"))
+    {
+        return Response::new(
+            503,
+            "text/html",
+            b"<title>503 Service Temporarily Unavailable</title>".to_vec(),
+        );
+    }
+
     let Ok(body) = plist::from_bytes::<plist::Dictionary>(&request.body) else {
         return Response::text(400, "not a plist");
     };

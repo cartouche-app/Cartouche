@@ -452,7 +452,7 @@ index 0b8e0f2..39a3c1f 100644
              "X-Xcode-Version": context.xcodeVersion,
              "X-Apple-Identity-Token": encodedIdentityToken,
 diff --git a/SideStore/AppConstants.swift b/SideStore/AppConstants.swift
-index de03a9c..8d2edf0 100644
+index de03a9c..6c6267f 100644
 --- a/SideStore/AppConstants.swift
 +++ b/SideStore/AppConstants.swift
 @@ -72,6 +72,25 @@ public enum AppConstants {
@@ -465,9 +465,9 @@ index de03a9c..8d2edf0 100644
 +        // Since October 2026, Apple refuses a sign-in whose identity is not
 +        // the kind of machine that made its anisette (-80045): an Android or
 +        // Windows server, or on-device anisette, with a Mac identity.
-+        // CartoucheAnisette signs in with these.
++        // GrandSlam expects the "Mac OS X" OS label, even for current versions.
 +        public enum Cartouche {
-+            public static let clientInfo   = "<Mac15,7> <macOS;27.0;26A5378j> <com.apple.AuthKit/1 (com.apple.akd/1.0)>"
++            public static let clientInfo   = "<Mac15,7> <Mac OS X;27.0;26A5378j> <com.apple.AuthKit/1 (com.apple.akd/1.0)>"
 +            public static let userAgent    = "akd/1.0 CFNetwork/811.5.4"
 +            public static let xcodeVersion = "27.0 (27A5218g)"
 +            public static let servers      = [

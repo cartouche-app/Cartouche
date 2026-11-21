@@ -212,9 +212,10 @@ async fn login<R: Runtime>(
                 .set_serial_number("0".to_string())
                 .set_storage(create_sideloading_storage(app)?)
                 // just temporary while waiting for the anisette servers to start reporting this
+                // GrandSlam expects the "Mac OS X" OS label, even for current versions.
                 .set_client_info_override(Some(AnisetteClientInfo {
                     client_info:
-                        "<Mac15,7> <macOS;27.0;26A5378j> <com.apple.AuthKit/1 (com.apple.akd/1.0)>"
+                        "<Mac15,7> <Mac OS X;27.0;26A5378j> <com.apple.AuthKit/1 (com.apple.akd/1.0)>"
                             .to_string(),
                     user_agent: "akd/1.0 CFNetwork/811.5.4".to_string(),
                 }))
