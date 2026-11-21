@@ -16,6 +16,18 @@
       "bundleIdentifier": "io.github.clabeuhtegrite.cartouche",
       "versions": [
         {
+          "version": "0.15.1",
+          "date": "2026-11-21T13:38:01Z",
+          "localizedDescription": "Cartouche 0.15.1 restores Apple Account sign-in.\n\n- Cartouche uses the client format Apple expects for new sign-ins. This fixes the HTTP 503 at the start of sign-in.\n- If you couldn’t sign in to update Cartouche, install this version over your current copy with Cartouche Installer 0.2.3. Your games and saves stay on the iPhone.\n- A game’s sheet shows results for your device model first, with the newest results first in each group. The genre gets its own line when space is tight.",
+          "downloadURL": "https://github.com/clabeuhtegrite/Cartouche/releases/download/v0.15.1/Cartouche-0.15.1.ipa",
+          "size": 30131069,
+          "sha256": "065c2bda67cdd09c2ebc03e3058c5c04a322a52f15382c768e2aeb44d5ab3eb3",
+          "minOSVersion": "15.0",
+          "ownCertificateDownloadURL": "https://github.com/clabeuhtegrite/Cartouche/releases/download/v0.15.1/Cartouche-0.15.1-Own-Certificate.ipa",
+          "ownCertificateSize": 26413099,
+          "ownCertificateSHA256": "9a61fcfb9f05b844165a931bd43f2b948b1d2b973eae8a09c04090a19d433da5"
+        },
+        {
           "version": "0.15.0",
           "date": "2026-11-19T10:57:53Z",
           "localizedDescription": "Cartouche now installs the games Cartouche Cloud builds for you without a Mac, no longer says Not supported on this iPhone of a game whose build converts its textures for your iPhone's GPU, and says in its own words what Apple answers when a sign-in does not go through.\n\n- Cartouche Cloud: no Mac? Cartouche Cloud now builds your games for you, from the copy you send it on its site. In System › Cartouche Cloud, link Cartouche to your account with a code, follow each build, then install the games built, as from your games folder. Not tried on a real iPhone yet.\n- Game sheets: four more games have theirs, made from what players measured: Final Fantasy Resonance, Link's Awakening, Mario vs. Donkey Kong and Pokopia, which now shows On iPhone. The other sheets count the sessions played since. Not tried on a real iPhone yet.\n- Game sheets: on an iPhone whose GPU reads no BC textures, with an A16 chip or older, a game whose build converts them to ASTC, as a fork of nxnative does, is no longer Not supported on this iPhone: its sheet says Textures converted to ASTC by this game's build, and how it fits is decided as on other iPhones, by iOS, Increased Memory Limit, its memory and its results. A build that does not convert them, and a game drawn with Vulkan or OpenGL, keep the warning. Not tried on a real iPhone yet.\n- Signing in: when Apple refuses for now to set up a new sign-in on your iPhone, Cartouche now asks it once instead of once for each anisette server, says so in your language and has you wait before trying again, as after Apple's limits. When Apple says the sign-in has expired (1100), or refuses it without saying why (-22405), Cartouche now says what to do in your language too. Not tried on a real iPhone yet.\n- TV mode: when the TV shows only the game's card, Report a problem now says whether the game's picture was there, and which nxnative built the game. Not tried on a real iPhone yet.",
@@ -106,15 +118,6 @@
           "downloadURL": "https://github.com/clabeuhtegrite/Cartouche/releases/download/v0.11.0/Cartouche-0.11.0.ipa",
           "size": 28050496,
           "sha256": "05613801515db618855235813c2dab24d744efeba085c40b5f22fdcaee0c9cb5",
-          "minOSVersion": "15.0"
-        },
-        {
-          "version": "0.10.0",
-          "date": "2026-11-10T21:12:14Z",
-          "localizedDescription": "A game waits behind the console, your Mac can be your storage, and a guide takes you to your first game.\n\n- Games: the Home button, on screen or on a controller, brings the console back without ending the game, which waits behind it, paused. Resume goes back to it, Quit ends it. A game that needs more memory than it gets there starts in Cartouche's place, as before.\n- Games: a game starts in your iPhone's language when it has it. Its settings can choose another.\n- Games: Cartouche runs in iOS's Game Mode, for the most of the CPU and GPU and the lowest latency of your controllers. iOS says so when it comes on.\n- Games: a game's sheet shows your play time, your sessions and when you last played, and the room the game takes on this iPhone and in your games folder. The home shows them under the game in focus.\n- Home: your games alone, on one shelf, with larger covers. Shorter texts everywhere, and dark System pages. On an unfolded iPhone Duo, the home and the sheet of the game in focus stand on either side of the fold.\n- Storage: System › Storage › Add your Mac (Cartouche Builder) pairs Cartouche with Cartouche Builder on your Mac, once, with the same six digits on both screens. Your games then install from the Mac and your saves go to it, encrypted on the way.\n- Storage: away from home or off your VPN, a server that does not answer shows as offline within seconds, with no error, and your saves wait until it answers again. An install that the network cuts off for a moment picks up where it stopped.\n- Errors: under each error, Copy the report gives what it takes to understand it, never a password or an address. System › Report a problem shows a report in full and sends nothing until you choose how: Send to Cartouche, share it, copy it, or open it on GitHub.\n- Setup: on a new install, Your first game takes you from LocalDevVPN to your first game and ticks each step by itself. It stays at the top of the home until a game is installed.\n- Catalog: All games lists the games nxnative added since 0.9.0 and marks the 64 it plays on the iPhone. New games get their covers within a day, without a new version of Cartouche.\n- Game measurements: after each game session, Cartouche sends what nxnative measured, such as the frame rate and the memory, with its own events, and never your files, saves, accounts or the addresses of your storage. It does so unless you turn it off in System › Game measurements, which also shows the last report and erases what this iPhone sent. All that is sent: https://github.com/clabeuhtegrite/Cartouche/blob/main/docs/privacy.md",
-          "downloadURL": "https://github.com/clabeuhtegrite/Cartouche/releases/download/v0.10.0/Cartouche-0.10.0.ipa",
-          "size": 27979087,
-          "sha256": "a12247fcf85091c8f96862fc7b44cc2b784311fa3f48d1928c07d522a8bd33ae",
           "minOSVersion": "15.0"
         }
       ]
