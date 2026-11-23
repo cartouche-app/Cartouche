@@ -61,17 +61,15 @@ struct CartoucheSetupView: View {
                         title: CartoucheText.setupAppleIDTitle,
                         detail: appleIDDetail
                     ) {
-                        if setup.appleID == nil || !setup.hasCertificate || setup.certificateRefused || setup.needsDevice {
-                            // SideStore registers this iPhone at sign-in, through
-                            // the pairing file.
-                            Button {
-                                signingIn = true
-                            } label: {
-                                Label(appleIDButton, systemImage: setup.needsDevice ? "iphone.gen3" : "person.crop.circle.badge.checkmark")
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .disabled(!setup.hasPairingFile || account.phase == .registeringDevice)
+                        // A stored Apple ID and a working certificate can outlive
+                        // the Apple session used for on-device renewal.
+                        Button {
+                            signingIn = true
+                        } label: {
+                            Label(appleIDButton, systemImage: setup.needsDevice ? "iphone.gen3" : "person.crop.circle.badge.checkmark")
                         }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(!setup.hasPairingFile || account.phase == .registeringDevice)
                         // Why the sign-in stopped, once its screen has gone.
                         if setup.signInStep == .unfinished, account.phase == nil, let report = account.lastProblem {
                             Label(report.message, systemImage: "exclamationmark.triangle.fill")

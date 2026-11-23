@@ -25,6 +25,19 @@ extension Words {
 }
 
 final class SignInUITests: ConsoleTestCase {
+    @MainActor
+    func testCompletedSetupCanSignInAgainWithTheSameAppleID() {
+        let app = openConsole(Launch())
+        tap(app.buttons[Words.system], "System in the dock", in: app)
+        tap(element(in: app.buttons, beginningWith: Words.setup), "Setup on the System page", in: app)
+        tap(app.buttons["Sign in again"], "Sign in again from completed setup", in: app)
+        let appleID = app.textFields[Words.appleID]
+        expect(appleID.waitForExistence(timeout: 15), "The sign-in form did not open", in: app)
+        XCTAssertEqual(appleID.value as? String, GalleryWords.signedInAs)
+        tap(app.buttons[Words.cancel], "Cancel sign-in", in: app)
+        expect(app.buttons["Sign in again"].waitForExistence(timeout: 10), "The setup did not reopen", in: app)
+    }
+
     /// A wrong code gets a new request that says so; the right one signs the
     /// player in, and the setup shows the Apple ID.
     @MainActor

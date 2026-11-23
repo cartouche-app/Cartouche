@@ -243,6 +243,17 @@ final class CartoucheRenewalRulesTests: XCTestCase {
         XCTAssertEqual(CartoucheRenewalTrouble.of(offline), .certificateRevoked)
     }
 
+    func testExpiredSessionAtCertificateVerification() throws {
+        let fields: [String: Any] = ["stage": "VerifyCertificate", "family": "server", "apple": -1,
+                                     "codes": "SideSign.ServerError 3"]
+        let expired = try renewalFailure(fields, message: "Apple error -1: Your session has expired.")
+        XCTAssertEqual(CartoucheRenewalTrouble.of(expired), .sessionExpired)
+        let other = try renewalFailure(fields, message: "Apple error -1: Service unavailable.")
+        XCTAssertNil(CartoucheRenewalTrouble.of(other))
+        let knownCode = try renewalFailure(["stage": "VerifyCertificate", "family": "server", "apple": 1100])
+        XCTAssertEqual(CartoucheRenewalTrouble.of(knownCode), .sessionExpired)
+    }
+
     /// SideStore did not reach this iPhone through LocalDevVPN, as a renewal
     /// or an update needs it to: what to do, as a sign-in says it.
     func testTellsWhatKeptSideStoreFromThisIPhone() throws {

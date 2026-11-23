@@ -310,6 +310,7 @@ enum CartoucheText {
     static var renewingByItself: String { s("system.signature.renewing.auto", "Cartouche renews itself…") }
     static var renewUnavailable: String { s("system.signature.renew.unavailable", "The built-in SideStore did not load. Close Cartouche, open it again, then renew.") }
     static var renewFailed: String { s("system.signature.renew.failed", "The renewal did not go through") }
+    static var renewSessionExpired: String { s("system.signature.renew.sessionExpired", "Your Apple session has expired. In System › Setup, choose Sign in again and use the same Apple ID. Then retry.") }
     static var renewRevoked: String { s("system.signature.renew.revoked", "Apple revoked the certificate Cartouche is signed with, most likely because another app or computer took a new one with the same Apple ID. Cartouche can no longer renew or update itself with this certificate: install Cartouche again over this copy with the Cartouche Installer, on your computer, with the same Apple ID. Your games and saves stay.") }
     static var automaticRenewal: String { s("system.auto", "Automatic renewal") }
     static var renewEveryNight: String { s("system.auto.daily", "Renew every night") }

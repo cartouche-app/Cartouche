@@ -126,6 +126,7 @@ enum CartoucheRenewal {
     /// What to do about TROUBLE.
     static func advice(_ trouble: CartoucheRenewalTrouble) -> String {
         switch trouble {
+        case .sessionExpired: return CartoucheText.renewSessionExpired
         case .certificateRevoked: return CartoucheText.renewRevoked
         case .device(let device): return CartoucheText.deviceMessage(device)
         case .liveProcessMissing: return CartoucheText.noLiveProcess

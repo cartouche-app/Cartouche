@@ -17596,6 +17596,23 @@
         }
       }
     },
+    "system.signature.renew.sessionExpired" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your Apple session has expired. In System › Setup, choose Sign in again and use the same Apple ID. Then retry."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre session Apple a expiré. Dans Système › Mise en route, choisissez Se reconnecter et utilisez le même identifiant Apple. Réessayez ensuite."
+          }
+        }
+      }
+    },
     "system.signature.renew.unavailable" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -161,6 +161,8 @@ enum CartoucheRenewalTrouble: Equatable {
     /// renewals failed so on 3 copies of 0.12.x, while LiveContainer's
     /// check still found the certificate working.
     case certificateRevoked
+    /// The stored Apple session can no longer verify this certificate.
+    case sessionExpired
     /// SideStore did not reach this iPhone through LocalDevVPN, as a
     /// sign-in tells it (CartoucheSignInMessage.deviceTrouble(in:)).
     case device(CartoucheSignInMessage.DeviceTrouble)
@@ -179,6 +181,11 @@ enum CartoucheRenewalTrouble: Equatable {
         if failure.cause == .liveProcessMissing { return .liveProcessMissing }
         if failure.cause == .certificate, case .text("certificateRevoked")? = failure.details["kind"] {
             return .certificateRevoked
+        }
+        if failure.stage == "VerifyCertificate",
+           failure.details["apple"] == .number(Double(CartoucheSignInMessage.sessionExpiredCode))
+            || failure.details["sessionExpired"] == .flag(true) {
+            return .sessionExpired
         }
         return CartoucheSignInMessage.deviceTrouble(in: failure).map { .device($0) }
     }
