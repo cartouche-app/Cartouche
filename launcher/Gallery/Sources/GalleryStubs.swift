@@ -51,6 +51,32 @@ enum GalleryState {
     /// The GPU reads BC-compressed textures (CartoucheDevice), unless the
     /// scenario is an A16's (GalleryBCConversion; works: gpu-no-bc…).
     static var readsBCTextures = true
+    /// Game Mode comes a moment after Cartouche opens (work:
+    /// game-mode-later): Cartouche's own limit is 6,144 MiB until then, as
+    /// on an iPhone with 12 GB, and 8,192 once it came.
+    static var gameModeLater = false
+    /// When Cartouche first measured its own memory: Game Mode comes 1.5 s
+    /// later.
+    private static var firstOwnReading: Date?
+
+    /// Cartouche's own limit in MiB, as the gallery's iPhone gives it: 8,192
+    /// with Increased Memory Limit and Game Mode; 6,144 for the first 1.5 s
+    /// after Cartouche first measures it, before Game Mode came (work:
+    /// game-mode-later), as the console read it on those iPhones 6 times in
+    /// 10 as it opened.
+    static var ownLimitMiB: Int {
+        guard gameModeLater else { return 8_192 }
+        let first = firstOwnReading ?? Date()
+        firstOwnReading = first
+        return Date().timeIntervalSince(first) < 1.5 ? 6_144 : 8_192
+    }
+
+    /// Whether Game Mode came, and a measurement every 2 s, as the console
+    /// makes them (CartoucheOwnMemoryWatch), has had the time to see it.
+    static var gameModeSettled: Bool {
+        guard gameModeLater else { return true }
+        return firstOwnReading.map { Date().timeIntervalSince($0) > 1.5 + 2.5 } ?? false
+    }
 
     static let documents: URL = {
         let url = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]

@@ -3,7 +3,8 @@
 //  Cartouche
 //
 //  The player's Mac on the Storage page (CartoucheStorageView): the Macs
-//  nearby whose Cartouche Builder shares with Cartouche, a Mac by its name
+//  nearby whose Cartouche Builder shares with Cartouche, on the Wi-Fi or
+//  through the cable when the iPhone is plugged into one, a Mac by its name
 //  or its address in the player's tailnet, away from home, the six digits
 //  to compare with the Mac's while pairing, and, for a new Mac, whether its
 //  Games and Saves folders become the games folder and the saves folder.
@@ -59,7 +60,7 @@ final class CartoucheMacPairing: ObservableObject {
             var paired: (server: CartoucheStorageServer, secret: String)?
             var failure: Error?
             do {
-                paired = try await CartoucheMacStorage.pair(server, at: mac.endpoint, name: mac.name, deviceName: deviceName) { digits in
+                paired = try await CartoucheMacStorage.pair(server, with: mac, deviceName: deviceName) { digits in
                     Task { @MainActor in
                         if self.attempt == attempt { self.code = digits }
                     }
@@ -232,9 +233,12 @@ struct CartoucheStorageMacForm: View {
                             Text(CartoucheText.storageMacPaired)
                         } else if isAdded {
                             Text(CartoucheText.storageMacAdded)
+                        } else if mac.cabled {
+                            Text(CartoucheText.storageMacByCable)
                         }
                     } label: {
-                        Label(mac.name, systemImage: "laptopcomputer")
+                        // Plugged into it: pairing goes through the cable.
+                        Label(mac.name, systemImage: mac.cabled ? "cable.connector" : "laptopcomputer")
                     }
                 }
                 .tint(.primary)
