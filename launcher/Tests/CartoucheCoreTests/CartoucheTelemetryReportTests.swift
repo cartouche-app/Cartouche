@@ -85,7 +85,7 @@ final class CartoucheTelemetryReportTests: XCTestCase {
             process: process)
         let event = try XCTUnwrap(CartoucheEventReport(
             id: "3d9b2f5e-0000-4000-8000-000000000001", seq: 8, context: context, name: "game.installed", game: "0400C3F00006E000",
-            fields: ["version": .text("1.0.0"), "nxnative": .text("6c3aeb3d70a1"), "fromStorage": .flag(true), "sizeMiB": .number(19_456)]))
+            fields: ["version": .text("1.0.0"), "nxnative": .text("6c3aeb3d70a1"), "from": .text("mac")]))
         return (session, event)
     }
 

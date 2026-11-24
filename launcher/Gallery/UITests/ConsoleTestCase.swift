@@ -133,7 +133,7 @@ enum GalleryWords {
     static let wrongCode = "Incorrect verification code."
     static let signedInAs = "player@icloud.com"
     /// The folder in Files the saves are kept in (GallerySaves).
-    static let savesFolder = "Gallery saves"
+    static let savesFolder = "NAS"
     /// The stand-in start's alert, and what Siri would say, over the
     /// console (GalleryTesting.swift).
     static let play = "Gallery play"

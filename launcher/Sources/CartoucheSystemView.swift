@@ -346,7 +346,8 @@ struct CartoucheSystemView: View {
     /// Where the account is, in a word or two.
     private var cloudState: String {
         guard cloud.isLinked else { return CartoucheText.cloudNotLinked }
-        let built = cloud.builtGames.count
+        // Those on this iPhone already are installed.
+        let built = cloud.toInstall(installed: catalog.installedTitles(among: sharedModel.apps)).count
         if built > 0 { return CartoucheText.cloudBuiltCount(built) }
         if cloud.account?.isBusy == true { return CartoucheText.cloudUnderWay }
         return CartoucheText.cloudLinked

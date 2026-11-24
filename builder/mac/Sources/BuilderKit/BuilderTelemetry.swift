@@ -501,7 +501,7 @@ public final class BuilderTelemetry: ObservableObject {
     /// A game's saves kept in step with the iPhone's copies (builder.saves):
     /// the STEP (CartoucheSaveStep: send, keep, fetch, keepAndFetch;
     /// heldBack, MacSaveEvent's, for a newest copy that waits for the
-    /// game's update; or offline, failed), WHEN (before, after, round), and whether the
+    /// game's update; or offline, failed), WHEN (before, during, after, round), and whether the
     /// saves folder is ON_SHARE. Never a name, a copy's or a folder's.
     public nonisolated static func savesFields(step: String, when: String, onShare: Bool) -> [String: TelemetryValue] {
         ["step": .text(FailureDetails.name(step) ?? "other"),
