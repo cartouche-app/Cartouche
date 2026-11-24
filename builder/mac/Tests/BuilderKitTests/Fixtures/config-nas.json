@@ -9,12 +9,11 @@
     "problems": [],
     "python": "/usr/local/bin/python3",
     "scheduled": false,
-    "version": "0.7.1",
+    "version": "0.5.0",
     "workspace": "/Users/player/Builder/home/workspace"
   },
   "config": {
     "aliases": {},
-    "build_for": "",
     "engine_branch": "main",
     "engine_policy": "weekly",
     "engine_url": "/Users/player/Builder/remote",
@@ -46,6 +45,7 @@
     "unprofiled": false,
     "version": 2,
     "workspace": "",
-    "workspace_limit_gb": 0
+    "workspace_limit_gb": 0,
+    "build_for": ""
   }
 }
