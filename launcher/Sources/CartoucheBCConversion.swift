@@ -24,6 +24,10 @@
 //  Until Then, a Vulkan game, played on an iPhone 15 so. A game drawn with
 //  OpenGL still needs a GPU with BC formats (covers).
 //
+//  A game not installed is read where its IPA sits, on the Mac, a NAS or a
+//  Drive (conversion(ofIPA:)): its executable's entry alone, unpacked to a
+//  file, then read as an installed one's (CartoucheStoredGames).
+//
 //  Platform-independent: tested on its own by launcher/Package.swift.
 //
 
@@ -58,6 +62,32 @@ enum CartoucheBCConversion {
     static func conversion(executableAt url: URL) -> APIs {
         guard let data = try? Data(contentsOf: url, options: .alwaysMapped) else { return [] }
         return conversion(executable: data)
+    }
+
+    /// The APIs whose BC textures the app of an IPA converts, read where
+    /// the IPA sits, through SOURCE, whose ENTRIES are read already: the
+    /// entry of its executable, EXECUTABLE as its Info.plist names it,
+    /// unpacked to a file in a folder of its own in FOLDER, read as an
+    /// installed game's, then removed. None when the IPA has no such entry.
+    static func conversion(ofIPA source: CartoucheByteSource, entries: [CartoucheZipEntry], executable: String,
+                           in folder: URL) async throws -> APIs {
+        guard let entry = executableEntry(in: entries, named: executable),
+              let relative = CartoucheZip.safePath(entry.name) else { return [] }
+        let place = folder.appendingPathComponent("bc-" + UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: place) }
+        try await CartoucheZip.extract(source, entries: [entry], into: place)
+        return conversion(executableAt: place.appendingPathComponent(relative))
+    }
+
+    /// The entry of an IPA's app's executable, EXECUTABLE:
+    /// Payload/<name>.app/EXECUTABLE, a file.
+    static func executableEntry(in entries: [CartoucheZipEntry], named executable: String) -> CartoucheZipEntry? {
+        guard !executable.isEmpty, !executable.contains("/") else { return nil }
+        return entries.first { entry in
+            let parts = entry.name.split(separator: "/", omittingEmptySubsequences: false)
+            return parts.count == 3 && parts[0] == "Payload" && parts[1].hasSuffix(".app") && parts[2] == executable
+                && !entry.isDirectory && !entry.isSymlink
+        }
     }
 
     /// The APIs whose BC textures the executable DATA, a Mach-O file, thin or

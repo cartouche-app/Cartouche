@@ -171,6 +171,58 @@ final class StorageTests: HarnessCase {
         try assertInstalled(try XCTUnwrap(app(game.bundleIdentifier)), as: game)
     }
 
+    /// On a GPU that reads no BC texture, a game on the Mac or in a games
+    /// folder whose build converts them says so before it is installed,
+    /// as an installed one's does: Cartouche reads its executable where the
+    /// IPA sits, once, and keeps it with the list. nxnative's own build
+    /// keeps the warning.
+    func testOnAGPUWithoutBCAGameFromTheGamesFolderSaysItsBuildConverts() async throws {
+        HarnessLC.readsBCTextures = false
+        let (_, folder) = try await HarnessStorage.folder("Jeux", for: [.games])
+        let picks = HarnessCatalog.drawnWithNVN
+        XCTAssertGreaterThanOrEqual(picks.count, 2)
+        var converted = HarnessGame.plain(picks[0])
+        converted.convertsBC = true
+        let upstream = HarnessGame.plain(picks[1])
+        try put(converted, in: folder, at: "\(converted.name) [\(converted.titleId)].ipa")
+        try put(upstream, in: folder, at: "\(upstream.name) [\(upstream.titleId)].ipa")
+        await stored.reload()
+        try await waitUntil("both builds are read") {
+            stored.games.count == 2 && stored.games.allSatisfy { $0.bcConversion != nil }
+        }
+        let convertedCopy = try XCTUnwrap(stored.games.first { $0.titleId == converted.titleId })
+        let upstreamCopy = try XCTUnwrap(stored.games.first { $0.titleId == upstream.titleId })
+        XCTAssertEqual(convertedCopy.convertedBC, .nvn)
+        XCTAssertEqual(upstreamCopy.convertedBC, [])
+
+        // Their sheets: not installed, the converted one no longer refused.
+        let entries = CartoucheCatalog.shared.entries(for: [], stored: stored.games)
+        let convertedEntry = try XCTUnwrap(entries.owned.first { $0.titleId == converted.titleId })
+        let upstreamEntry = try XCTUnwrap(entries.owned.first { $0.titleId == upstream.titleId })
+        XCTAssertFalse(convertedEntry.isInstalled)
+        XCTAssertTrue(convertedEntry.convertsBCTextures)
+        XCTAssertNil(CartoucheFit.withoutSheet(convertsBCTextures: convertedEntry.convertsBCTextures))
+        XCTAssertFalse(upstreamEntry.convertsBCTextures)
+        XCTAssertNotNil(CartoucheFit.withoutSheet(convertsBCTextures: upstreamEntry.convertsBCTextures))
+
+        // Read once: the next scan keeps what was read.
+        await stored.reload()
+        XCTAssertEqual(stored.games.first { $0.titleId == converted.titleId }?.convertedBC, .nvn)
+    }
+
+    /// On a GPU that reads BC textures, nothing more is read of the IPAs.
+    func testOnAGPUWithBCNoBuildIsReadForItsConversion() async throws {
+        let (_, folder) = try await HarnessStorage.folder("Jeux", for: [.games])
+        var converted = HarnessGame.plain(HarnessCatalog.drawnWithNVN[0])
+        converted.convertsBC = true
+        try put(converted, in: folder, at: "\(converted.name) [\(converted.titleId)].ipa")
+        await stored.reload()
+        let found = try XCTUnwrap(stored.games.first)
+        XCTAssertNil(found.bcConversion)
+        let entry = try XCTUnwrap(CartoucheCatalog.shared.entries(for: [], stored: stored.games).owned.first)
+        XCTAssertFalse(entry.convertsBCTextures)
+    }
+
     func testWithoutAGamesFolderNothingIsListed() async throws {
         await stored.reload()
         XCTAssertTrue(stored.games.isEmpty)

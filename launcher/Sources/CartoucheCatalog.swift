@@ -194,15 +194,24 @@ struct CartoucheEntry: Identifiable, Hashable {
     /// In the games folder, not on this iPhone: Install brings it.
     var canInstallFromStorage: Bool { app == nil && stored != nil }
 
-    /// Whether the player's installed copy draws its BC-compressed
-    /// textures on this iPhone's GPU, which reads none: its build converts
-    /// them for every API the game draws with, NVN or Vulkan
-    /// (CartoucheBCConversion.covers). False where the GPU reads them, where
-    /// it does not matter and nothing is read, and for a copy not installed,
-    /// whose build Cartouche has not read.
+    /// Whether the player's copy draws its BC-compressed textures on this
+    /// iPhone's GPU, which reads none: its build converts them for every
+    /// API the game draws with, NVN or Vulkan (CartoucheBCConversion.covers).
+    /// The installed game's, else the copy on the Mac or in a games folder,
+    /// read where it sits (CartoucheStoredGames.readConversions). False
+    /// where the GPU reads them, where it does not matter and nothing is
+    /// read, and for a copy whose build Cartouche has not read yet.
     var convertsBCTextures: Bool {
-        guard !CartoucheDevice.supportsBCTextureCompression, let app else { return false }
-        return CartoucheBCConversion.covers(graphics: game?.graphics, by: CartoucheInstalledBuilds.bcConversion(of: app))
+        guard !CartoucheDevice.supportsBCTextureCompression else { return false }
+        let converted: CartoucheBCConversion.APIs
+        if let app {
+            converted = CartoucheInstalledBuilds.bcConversion(of: app)
+        } else if let read = stored?.convertedBC {
+            converted = read
+        } else {
+            return false
+        }
+        return CartoucheBCConversion.covers(graphics: game?.graphics, by: converted)
     }
 
     /// Whether the game is known to play on an iPhone: a tester's result
