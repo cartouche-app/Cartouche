@@ -74,8 +74,11 @@ final class CartoucheAccount: ObservableObject {
     /// Whether the last sign-in went through.
     @Published private(set) var signedIn = false
     /// Whether Cartouche started this sign-in by itself, for a new
-    /// certificate: the setup then opens should Apple ask for a code.
+    /// certificate or for an expired Apple session: the setup then opens
+    /// should Apple ask for a code.
     @Published private(set) var isAutomatic = false
+    /// What Cartouche signs in again by itself for, as its report says.
+    private var automaticReason = "for a new certificate"
     /// The wait Apple's limit on sign-ins asks for, kept across launches.
     @Published private(set) var pause: CartoucheSignInPause?
     /// Where and when the last sign-in started, kept across launches.
@@ -222,7 +225,9 @@ final class CartoucheAccount: ObservableObject {
     }
 
     /// Has the built-in SideStore sign in again with the Apple ID and
-    /// password it keeps, for the certificate that signs Cartouche. Returns
+    /// password it keeps, for the certificate that signs Cartouche, or for
+    /// REASON, as the report says it: for an expired Apple session, as a
+    /// renewal found it (CartoucheRenewals). Returns
     /// whether it tried: not while SideStore keeps none, while Apple's limit
     /// on sign-ins holds, or without LocalDevVPN, which the setup tries again
     /// with each time Cartouche comes to the front. Without LocalDevVPN,
@@ -230,7 +235,7 @@ final class CartoucheAccount: ObservableObject {
     /// (CartoucheLocalDevVPN), then checks the setup again, which comes
     /// back here.
     @discardableResult
-    func signInAgain() -> Bool {
+    func signInAgain(for reason: String = "for a new certificate") -> Bool {
         guard !CartoucheImportedSigning.accountSigningDisabled, phase == nil, pausedUntil == nil,
               let appleID = CartoucheStoreKeychain.string("appleIDEmailAddress"),
               let password = CartoucheStoreKeychain.string("appleIDPassword") else { return false }
@@ -240,6 +245,7 @@ final class CartoucheAccount: ObservableObject {
         }
         signIn(appleID: appleID, password: password, waitingForVPN: false)
         isAutomatic = phase != nil
+        automaticReason = reason
         return true
     }
 
@@ -339,6 +345,9 @@ final class CartoucheAccount: ObservableObject {
             failed(CartoucheText.signInCertificateUnopened, failure: CartoucheFailure(.certificate, stage: "handOff"),
                    automatic: automatic)
         }
+        // A new session: Cartouche renews itself at once, should Apple have
+        // said that the last one expired.
+        if message == nil { CartoucheRenewals.shared.signedIn() }
     }
 
     /// The sign-in failed, as the built-in SideStore's MESSAGE says, and the
@@ -369,7 +378,7 @@ final class CartoucheAccount: ObservableObject {
         var failure = failure
         failure.details["automatic"] = .flag(automatic)
         problemReport = CartoucheReports.make(.signIn, CartoucheText.signInFailedTitle, message: message,
-                                              step: automatic ? "Signing in again by itself, for a new certificate" : "Signing in",
+                                              step: automatic ? "Signing in again by itself, " + automaticReason : "Signing in",
                                               fraction: fraction, failure: failure)
     }
 

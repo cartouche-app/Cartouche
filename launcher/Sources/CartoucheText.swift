@@ -210,6 +210,8 @@ enum CartoucheText {
     static var setupIntro: String { s("setup.intro", "Three steps, once on this iPhone, then an automation that renews Cartouche every night.") }
     static var setupAllDone: String { s("setup.done.title", "All set") }
     static var setupAllDoneDetail: String { s("setup.done.detail", "Cartouche signs your games and renews itself. There is nothing more to do here.") }
+    static var setupSessionExpiredTitle: String { s("setup.sessionExpired.title", "One step to do again") }
+    static var setupSessionExpiredDetail: String { s("setup.sessionExpired.detail", "Apple asks for a new sign-in with your Apple ID. Cartouche renews itself again as soon as it has gone through; your games and saves stay.") }
     static var setupAllDoneButNightly: String { s("setup.done.nightly", "Cartouche signs your games. One last step: the automation that renews it every night, even while it stays closed.") }
     static func setupStepDone(_ step: String) -> String { f("setup.step.done", "%@, done", step) }
     static var setupPairingTitle: String { s("setup.pairing.title", "Pairing file") }
@@ -223,6 +225,7 @@ enum CartoucheText {
     static var setupAppleIDHow: String { s("setup.appleID.how", "Sign in once, here in Cartouche: Cartouche then takes its certificate and renews itself every week.") }
     static func setupAppleIDDone(_ appleID: String) -> String { f("setup.appleID.done", "Signed in: %@", appleID) }
     static func setupAppleIDUnfinished(_ appleID: String) -> String { f("setup.appleID.unfinished", "The sign-in with %@ stopped before Cartouche got its certificate. Sign in again.", appleID) }
+    static func setupAppleIDSessionExpired(_ appleID: String) -> String { f("setup.appleID.sessionExpired", "Apple says the session of %@ has expired: Cartouche can no longer renew itself. Sign in again with this Apple ID.", appleID) }
     static var setupSignIn: String { s("setup.appleID.signIn", "Sign In") }
     static func setupAppleIDDevice(_ appleID: String) -> String { f("setup.appleID.device", "Signed in: %@. This iPhone is left to register, which Cartouche does by itself once LocalDevVPN is connected.", appleID) }
     static var setupCertificateTitle: String { s("setup.certificate.title", "Certificate") }
@@ -313,6 +316,7 @@ enum CartoucheText {
     static var renewingByItself: String { s("system.signature.renewing.auto", "Cartouche renews itself…") }
     static var renewUnavailable: String { s("system.signature.renew.unavailable", "The built-in SideStore did not load. Close Cartouche, open it again, then renew.") }
     static var renewFailed: String { s("system.signature.renew.failed", "The renewal did not go through") }
+    static var renewSessionExpired: String { s("system.signature.renew.sessionExpired", "Apple says the session of your Apple ID has expired: Cartouche can no longer renew or update itself until you sign in again. Choose Sign in again, on the System page, with the same Apple ID: Cartouche then renews itself. Your games and saves stay.") }
     static var renewRevoked: String { s("system.signature.renew.revoked", "Apple revoked the certificate Cartouche is signed with, most likely because another app or computer took a new one with the same Apple ID. Cartouche can no longer renew or update itself with this certificate: install Cartouche again over this copy with the Cartouche Installer, on your computer, with the same Apple ID. Your games and saves stay.") }
     static var automaticRenewal: String { s("system.auto", "Automatic renewal") }
     static var renewEveryNight: String { s("system.auto.daily", "Renew every night") }
@@ -492,6 +496,64 @@ enum CartoucheText {
     static func outsideUnpacking(_ percent: String) -> String { f("work.outside.unpacking", "%@ · unpacking", percent) }
     static func outsideReconnecting(_ server: String) -> String { f("work.outside.reconnecting", "Connecting to %@ again", server) }
     static var installStopped: String { s("work.install.stopped", "The install stopped") }
+
+    // MARK: How a game comes, and how fast
+
+    /// "By cable", "On the Wi-Fi, the Mac on 2.4\u{00A0}GHz".
+    static func transferWay(_ way: CartoucheTransferWay) -> String {
+        switch way {
+        case .cable:
+            return s("work.transfer.cable", "By cable")
+        case .tailnet:
+            return s("work.transfer.tailnet", "Through Tailscale")
+        case .network(let mac):
+            if mac?.medium == CartoucheMacNetwork.ethernet {
+                return s("work.transfer.macEthernet", "On the local network, the Mac on Ethernet")
+            }
+            if mac?.medium == CartoucheMacNetwork.wifi, let band = mac?.band {
+                return f("work.transfer.macWiFi", "On the Wi-Fi, the Mac on %@\u{00A0}GHz", decimal(band))
+            }
+            return s("work.transfer.network", "On the local network")
+        }
+    }
+
+    /// "3.1 MB/s", "31 MB/s": one decimal below 10.
+    static func transferSpeed(_ bytes: Double) -> String {
+        let (value, decimals) = CartoucheTransferMeter.megabytes(bytes)
+        let formatter = NumberFormatter()
+        formatter.locale = locale
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = decimals
+        formatter.maximumFractionDigits = decimals
+        let number = formatter.string(from: NSNumber(value: value)) ?? String(value)
+        return f("unit.mbps", "%@\u{00A0}MB/s", number)
+    }
+
+    /// "By cable · 31 MB/s".
+    static func transferLine(_ way: String, _ speed: String) -> String { f("work.transfer.line", "%1$@ · %2$@", way, speed) }
+
+    static func transferAdvice(_ advice: CartoucheTransferAdvice) -> String {
+        switch advice {
+        case .macOnSlowBand:
+            return s("work.transfer.advice.macBand", "The Mac is on its 2.4\u{00A0}GHz Wi-Fi, the slowest: plug this iPhone into the Mac with a cable, or put the Mac on the 5\u{00A0}GHz Wi-Fi, and the game comes much faster.")
+        case .slowToMac:
+            return s("work.transfer.advice.mac", "It is slow: plug this iPhone into the Mac with a cable, or put both on a 5\u{00A0}GHz Wi-Fi, and the game comes much faster.")
+        case .slowTailnet:
+            return s("work.transfer.advice.tailnet", "It is slow: through Tailscale, the game goes over the internet. At home, on the same Wi-Fi or by cable, it comes much faster.")
+        case .slowNetwork:
+            return s("work.transfer.advice.network", "It is slow: on a 5\u{00A0}GHz Wi-Fi, the game comes much faster.")
+        }
+    }
+
+    /// "2.4" as the reader writes it: "2,4" in French.
+    private static func decimal(_ number: String) -> String {
+        guard let value = Double(number) else { return number }
+        let formatter = NumberFormatter()
+        formatter.locale = locale
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 1
+        return formatter.string(from: NSNumber(value: value)) ?? number
+    }
     static var exportStopped: String { s("work.export.stopped", "The copy stopped") }
     static var workStoppedOutside: String {
         s("work.stopped.message", "It was stopped outside Cartouche: from the Lock Screen or the Dynamic Island, or by iOS. Start it again whenever you like.")

@@ -1100,6 +1100,48 @@
       ]
     },
     {
+      "name": "iphone-installing-mac",
+      "comment": "A game being installed from the player's Mac on the Wi-Fi, the Mac on its 2.4 GHz band as Cartouche on the Mac tells, at 3.1 MB/s: how it comes, how fast, and what would go faster, the cable or the 5 GHz Wi-Fi (decision 151).",
+      "screen": "games",
+      "sheet": "0400C3F00006E000",
+      "work": "installing-mac",
+      "owned": [
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-installing-cable",
+      "comment": "The same game from the same Mac, this iPhone plugged into it: by cable, at 31 MB/s, and nothing to advise.",
+      "screen": "games",
+      "sheet": "0400C3F00006E000",
+      "work": "installing-cable",
+      "owned": [
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-install-failed",
       "screen": "games",
       "sheet": "0400C3F00006E000",
@@ -1209,6 +1251,27 @@
       "comment": "The update of Cartouche to 0.4.0, failed as Apple had revoked the certificate of its signature: what to do, in Cartouche's words, alone on the notice (work: update-revoked).",
       "screen": "games",
       "work": "update-revoked",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-update-session-expired",
+      "comment": "The update of Cartouche to 0.4.0, failed as Apple said that the session the built-in SideStore asks it with had expired: what to do, in Cartouche's words, alone on the notice (work: update-session-expired), where up to 0.15.1 the notice said to check LocalDevVPN and try again, then SideStore's words.",
+      "screen": "games",
+      "work": "update-session-expired",
       "owned": [
         "0400C3F00006E000",
         "040074A01BF12000",
@@ -1668,6 +1731,39 @@
       "work": "sign-in-unfinished",
       "owned": [],
       "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-setup-done",
+      "comment": "The setup once set up: each step done, and no Sign in again, which only an expired Apple session brings back.",
+      "screen": "setup",
+      "owned": [],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-setup-session-expired",
+      "comment": "The setup once set up, after a renewal that failed as Apple said that the session the built-in SideStore renews with had expired: the Apple ID's step to do again, with Sign in again, which a setup done shows no more otherwise.",
+      "screen": "setup",
+      "work": "renewal-session-expired",
+      "owned": [],
+      "setup": true,
       "controller": false,
       "width": 402,
       "height": 874,
@@ -2268,6 +2364,28 @@
       ],
       "category": "signature",
       "work": "renewal-revoked"
+    },
+    {
+      "name": "iphone-system-renewal-session-expired",
+      "comment": "The System page down to the signature, after Cartouche renewed itself in its last 3 days and failed as Apple said that the session the built-in SideStore renews with had expired, then signed in again by itself without it going through: what to do, in Cartouche's words, and Sign in again under it, where up to 0.15.1 SideStore's words showed, and only Renew now, which failed the same way.",
+      "screen": "system",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "category": "signature",
+      "work": "renewal-session-expired"
     },
     {
       "name": "iphone-system-renewal-no-liveprocess",

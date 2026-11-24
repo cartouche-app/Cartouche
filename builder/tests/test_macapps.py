@@ -8,7 +8,9 @@ import os
 import plistlib
 import stat
 import subprocess
+import sys
 import threading
+import unittest
 import warnings
 import zipfile
 from pathlib import Path
@@ -254,6 +256,71 @@ class MacApps(Home):
         self.assertEqual(sorted(p.name for p in library.iterdir()), [packed.name])
         macapps.install(packed, self.folder, MKW, installed.name)
         self.assertEqual(macapps.read_info(installed).commit, "333333333333")
+
+    def test_this_macs_copy_is_left_out_of_time_machine(self):
+        """This Mac's copy of the file the games folder keeps, out of Time
+        Machine's backups, as the iPhone's installed games are out of its own
+        (decision 153); the file stays in the player's storage, unmarked."""
+        packed = self.packed_app()
+        with mock.patch.object(macapps, "leave_out_of_backups", return_value=True) as leave:
+            installed = macapps.install(packed, self.folder, MKW, "Mario Kart World.app")
+            # Made again of a new build: marked again, the new app coming
+            # without the old one's mark.
+            macapps.install(packed, self.folder, MKW, installed.name)
+        self.assertEqual(leave.call_args_list, [mock.call(installed), mock.call(installed)])
+        # An app the games folder keeps as it is, the player's own: never.
+        with mock.patch.object(macapps, "leave_out_of_backups") as leave:
+            macapps.deliver(make_app(self.out / f"{MKW}.app"), self.tmp / "Games", "Mario Kart World.app")
+        leave.assert_not_called()
+
+    def test_tmutils_mark(self):
+        app = make_app(self.folder / "Mario Kart World.app")
+        tool = self.tmp / "tmutil"
+        tool.write_text("")
+        ran = []
+
+        def answer(code=0, error=None):
+            def run(args, **kwargs):
+                ran.append(args)
+                if error is not None:
+                    raise error
+                return subprocess.CompletedProcess(args, code, b"", b"")
+            return run
+
+        def leave(run):
+            with mock.patch.object(sys, "platform", "darwin"), mock.patch.object(macapps, "TMUTIL", str(tool)), \
+                    mock.patch.object(subprocess, "run", side_effect=run):
+                return macapps.leave_out_of_backups(app)
+
+        # A sticky exclusion, which goes with the app and needs no administrator.
+        self.assertTrue(leave(answer()))
+        self.assertEqual(ran, [[str(tool), "addexclusion", str(app)]])
+        # Refused, or tmutil gone wrong: said, never raised.
+        self.assertFalse(leave(answer(code=1)))
+        self.assertFalse(leave(answer(error=OSError("no tmutil"))))
+        self.assertFalse(leave(answer(error=subprocess.TimeoutExpired("tmutil", 30))))
+        # Elsewhere than on a Mac, or without tmutil: nothing runs.
+        ran.clear()
+        with mock.patch.object(sys, "platform", "linux"), mock.patch.object(subprocess, "run", side_effect=answer()):
+            self.assertFalse(macapps.leave_out_of_backups(app))
+        with mock.patch.object(sys, "platform", "darwin"), mock.patch.object(macapps, "TMUTIL", str(self.tmp / "none")), \
+                mock.patch.object(subprocess, "run", side_effect=answer()):
+            self.assertFalse(macapps.leave_out_of_backups(app))
+        self.assertEqual(ran, [])
+
+    @unittest.skipUnless(sys.platform == "darwin" and os.path.exists(macapps.TMUTIL), "tmutil is a Mac's")
+    def test_on_a_mac_the_copy_carries_time_machines_mark(self):
+        """On a Mac, the mark Time Machine reads, on the copy installed and
+        on none of the games folder's files."""
+        packed = self.packed_app()
+        installed = macapps.install(packed, self.folder, MKW, "Mario Kart World.app")
+
+        def marked(path):
+            return subprocess.run(["/usr/bin/xattr", "-p", "com.apple.metadata:com_apple_backup_excludeItem", str(path)],
+                                  capture_output=True).returncode == 0
+
+        self.assertTrue(marked(installed))
+        self.assertFalse(marked(packed))
 
     def test_a_file_that_is_not_the_games_app_is_refused(self):
         library = self.tmp / "NAS"

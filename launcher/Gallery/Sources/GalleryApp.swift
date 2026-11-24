@@ -191,6 +191,11 @@
 //                                        What's new has no notes to show
 //        installing                      a game being installed, over the
 //                                        console
+//        installing-cable                the same from the MacBook Air, by
+//                                        cable, at 31 MB/s
+//        installing-mac                  the same on the Wi-Fi, the MacBook
+//                                        Air on its 2.4 GHz band, at 3.1 MB/s,
+//                                        with what would go faster
 //        iphone-step                     a sign-in Apple accepted that
 //                                        stopped at the step that registers
 //                                        this iPhone, LocalDevVPN being off
@@ -274,6 +279,11 @@
 //        renewal-revoked                 Cartouche's renewal in its last 3
 //                                        days, which failed as Apple had
 //                                        revoked its certificate
+//        renewal-session-expired         Cartouche's renewal in its last 3
+//                                        days, which failed as Apple said
+//                                        that the session SideStore renews
+//                                        with had expired: the System page
+//                                        and the setup ask to sign in again
 //        renewal-unanswered              Cartouche's renewal in its last 3
 //                                        days, which failed as this iPhone
 //                                        did not answer through LocalDevVPN
@@ -351,6 +361,10 @@
 //        update-revoked                  the update of Cartouche to 0.4.0,
 //                                        failed as Apple had revoked the
 //                                        certificate of its signature
+//        update-session-expired          the update of Cartouche to 0.4.0,
+//                                        failed as Apple said that the
+//                                        session SideStore asks it with had
+//                                        expired
 //        updated                         Cartouche opening after an update
 //                                        started from it, from 0.2.0 to the
 //                                        gallery's own version (project.yml),
@@ -608,12 +622,16 @@ struct GalleryScenario {
         // The built-in SideStore's record of its last renewal: six days left,
         // or, as Cartouche renews itself, two and a bit.
         if work == "renewing" || work == "renewal-failed" || work == "renewal-revoked"
-            || work == "renewal-unanswered" || work == "renewal-no-liveprocess" {
+            || work == "renewal-unanswered" || work == "renewal-no-liveprocess" || work == "renewal-session-expired" {
             GalleryState.recordSignature(expiringIn: 2 * 86_400 + 5 * 3_600, renewedAgo: 4 * 86_400 + 19 * 3_600)
         } else {
             GalleryState.recordSignature(expiringIn: 6 * 86_400 + 3_600, renewedAgo: 86_400)
         }
         MainActor.assumeIsolated {
+            // What an earlier scenario noted of Apple's session stays out of
+            // this one.
+            UserDefaults.standard.removeObject(forKey: CartoucheRenewals.sessionExpiredKey)
+            UserDefaults.standard.removeObject(forKey: CartoucheRenewals.sessionSignInKey)
             showTranslations()
             if work == "updated" {
                 // What an update started from Cartouche leaves as it opens
@@ -651,6 +669,9 @@ struct GalleryScenario {
             if work == "renewal-unanswered" {
                 CartoucheRenewals.shared.showUnansweredForGallery()
             }
+            if work == "renewal-session-expired" {
+                CartoucheRenewals.shared.showSessionExpiredForGallery()
+            }
             // The automation of every night as the work has it, never as a
             // scenario before this one left it.
             CartoucheNightly.shared.showForGallery(work)
@@ -673,6 +694,22 @@ struct GalleryScenario {
                 CartoucheGameActions.shared.work = CartoucheGameWork(kind: .installing, name: name,
                                                                      step: CartoucheText.installUnpacking, fraction: 0.42,
                                                                      outside: true)
+            }
+            if work == "installing-cable" || work == "installing-mac" {
+                // From the player's Mac, how it comes and how fast
+                // (CartoucheTransferSpeed.swift), as from iOS 26.
+                let name = sheet.flatMap { CartoucheCatalog.shared.game(titleId: $0)?.name } ?? "Game"
+                var shown = CartoucheGameWork(kind: .installing, name: name, step: CartoucheText.installFromStorageStep("MacBook Air"),
+                                              fraction: 0.42, stage: "unpacking", place: "MacBook Air", outside: true)
+                if work == "installing-cable" {
+                    shown.way = .cable
+                    shown.speed = 31_400_000
+                } else {
+                    shown.way = .network(mac: CartoucheMacNetwork(medium: CartoucheMacNetwork.wifi, band: "2.4"))
+                    shown.speed = 3_140_000
+                    shown.slow = true
+                }
+                CartoucheGameActions.shared.work = shown
             }
             if work == "install-failed" {
                 // An install the network dropped halfway, with its report.
@@ -716,6 +753,9 @@ struct GalleryScenario {
             }
             if work == "update-no-liveprocess" {
                 CartoucheUpdates.shared.showNoLiveProcessForGallery("0.4.0")
+            }
+            if work == "update-session-expired" {
+                CartoucheUpdates.shared.showSessionExpiredForGallery("0.4.0")
             }
             if work == "code" {
                 CartoucheAccount.shared.requestCodeForGallery(.init(

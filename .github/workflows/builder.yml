@@ -117,6 +117,7 @@ on:
       - "launcher/Sources/CartoucheTextSwitchSave.swift"
       - "launcher/Sources/CartoucheTheme.swift"
       - "launcher/Sources/CartoucheTiles.swift"
+      - "launcher/Sources/CartoucheTransferSpeed.swift"
       - "launcher/Sources/CartoucheTranslations.swift"
       - "launcher/Sources/CartoucheZip.swift"
       - "launcher/Sources/Cartouche.xcstrings"

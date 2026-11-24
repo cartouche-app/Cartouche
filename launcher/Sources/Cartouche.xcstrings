@@ -16937,6 +16937,35 @@
         }
       }
     },
+    "setup.appleID.sessionExpired" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple meldet, dass die Sitzung von %@ abgelaufen ist: Cartouche kann sich nicht mehr erneuern. Melde dich erneut mit dieser Apple-ID an."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple says the session of %@ has expired: Cartouche can no longer renew itself. Sign in again with this Apple ID."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple dice que la sesión de %@ ha caducado: Cartouche ya no puede renovarse. Vuelve a iniciar sesión con este ID de Apple."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple dit que la session de %@ a expiré : Cartouche ne peut plus se renouveler. Reconnectez-vous avec cet identifiant Apple."
+          }
+        }
+      }
+    },
     "setup.appleID.signIn" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18006,6 +18035,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fichier de jumelage"
+          }
+        }
+      }
+    },
+    "setup.sessionExpired.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple verlangt eine neue Anmeldung mit deiner Apple-ID. Cartouche erneuert sich wieder, sobald sie durch ist; deine Spiele und Spielstände bleiben."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple asks for a new sign-in with your Apple ID. Cartouche renews itself again as soon as it has gone through; your games and saves stay."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple pide un nuevo inicio de sesión con tu ID de Apple. Cartouche vuelve a renovarse en cuanto se completa; tus juegos y tus partidas guardadas se conservan."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple demande une nouvelle connexion avec votre identifiant Apple. Cartouche se renouvelle de nouveau dès qu’elle est passée ; vos jeux et vos sauvegardes restent."
+          }
+        }
+      }
+    },
+    "setup.sessionExpired.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein Schritt ist erneut nötig"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One step to do again"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un paso que repetir"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une étape à refaire"
           }
         }
       }
@@ -31901,6 +31988,35 @@
         }
       }
     },
+    "system.signature.renew.sessionExpired" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple meldet, dass die Sitzung deiner Apple-ID abgelaufen ist: Cartouche kann sich weder erneuern noch aktualisieren, bis du dich erneut anmeldest. Wähle „Erneut anmelden“ auf der Seite „System“, mit derselben Apple-ID: Danach erneuert sich Cartouche. Deine Spiele und Spielstände bleiben."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple says the session of your Apple ID has expired: Cartouche can no longer renew or update itself until you sign in again. Choose Sign in again, on the System page, with the same Apple ID: Cartouche then renews itself. Your games and saves stay."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple dice que la sesión de tu ID de Apple ha caducado: Cartouche ya no puede renovarse ni actualizarse hasta que vuelvas a iniciar sesión. Elige Volver a iniciar sesión, en la página Sistema, con el mismo ID de Apple: Cartouche se renovará entonces. Tus juegos y tus partidas guardadas se conservan."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple dit que la session de votre identifiant Apple a expiré : Cartouche ne peut plus se renouveler ni se mettre à jour tant que vous ne vous reconnectez pas. Choisissez Se reconnecter, sur la page Système, avec le même identifiant Apple : Cartouche se renouvelle ensuite. Vos jeux et vos sauvegardes restent."
+          }
+        }
+      }
+    },
     "system.signature.renew.unavailable" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -33608,6 +33724,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ Mo"
+          }
+        }
+      }
+    },
+    "unit.mbps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ MB/s"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ MB/s"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ MB/s"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Mo/s"
           }
         }
       }
@@ -36044,6 +36189,296 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Elle a été arrêtée hors de Cartouche : depuis l’écran verrouillé ou la Dynamic Island, ou par iOS. Relancez-la quand vous voulez."
+          }
+        }
+      }
+    },
+    "work.transfer.advice.mac" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es ist langsam: Verbinde dieses iPhone per Kabel mit dem Mac oder bring beide in ein 5-GHz-WLAN, dann kommt das Spiel viel schneller."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is slow: plug this iPhone into the Mac with a cable, or put both on a 5 GHz Wi-Fi, and the game comes much faster."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Va lento: conecta este iPhone al Mac con un cable, o pon ambos en una red Wi-Fi de 5 GHz, y el juego llegará mucho más rápido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "C’est lent : branchez l’iPhone au Mac par un câble, ou mettez-les tous deux sur un Wi-Fi 5 GHz, et le jeu arrivera bien plus vite."
+          }
+        }
+      }
+    },
+    "work.transfer.advice.macBand" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Mac ist in seinem 2,4-GHz-WLAN, dem langsamsten: Verbinde dieses iPhone per Kabel mit dem Mac oder bring den Mac ins 5-GHz-WLAN, dann kommt das Spiel viel schneller."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Mac is on its 2.4 GHz Wi-Fi, the slowest: plug this iPhone into the Mac with a cable, or put the Mac on the 5 GHz Wi-Fi, and the game comes much faster."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El Mac está en su Wi-Fi de 2,4 GHz, la más lenta: conecta este iPhone al Mac con un cable, o pasa el Mac a la Wi-Fi de 5 GHz, y el juego llegará mucho más rápido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le Mac est sur le Wi-Fi 2,4 GHz, le plus lent : branchez l’iPhone au Mac par un câble, ou passez le Mac sur le Wi-Fi 5 GHz, et le jeu arrivera bien plus vite."
+          }
+        }
+      }
+    },
+    "work.transfer.advice.network" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es ist langsam: In einem 5-GHz-WLAN kommt das Spiel viel schneller."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is slow: on a 5 GHz Wi-Fi, the game comes much faster."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Va lento: en una red Wi-Fi de 5 GHz, el juego llegará mucho más rápido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "C’est lent : sur un Wi-Fi 5 GHz, le jeu arrivera bien plus vite."
+          }
+        }
+      }
+    },
+    "work.transfer.advice.tailnet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es ist langsam: Über Tailscale geht das Spiel durchs Internet. Zu Hause, im selben WLAN oder per Kabel, kommt es viel schneller."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is slow: through Tailscale, the game goes over the internet. At home, on the same Wi-Fi or by cable, it comes much faster."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Va lento: a través de Tailscale, el juego pasa por internet. En casa, en la misma red Wi-Fi o por cable, llegará mucho más rápido."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "C’est lent : par Tailscale, le jeu passe par internet. À la maison, sur le même Wi-Fi ou par câble, il arrivera bien plus vite."
+          }
+        }
+      }
+    },
+    "work.transfer.cable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Per Kabel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By cable"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por cable"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Par câble"
+          }
+        }
+      }
+    },
+    "work.transfer.line" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "work.transfer.macEthernet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über das lokale Netzwerk, der Mac per Ethernet"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On the local network, the Mac on Ethernet"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por la red local, el Mac por Ethernet"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Par le réseau local, le Mac en Ethernet"
+          }
+        }
+      }
+    },
+    "work.transfer.macWiFi" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über das WLAN, der Mac auf %@ GHz"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On the Wi-Fi, the Mac on %@ GHz"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por Wi-Fi, el Mac en %@ GHz"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Par le Wi-Fi, le Mac en %@ GHz"
+          }
+        }
+      }
+    },
+    "work.transfer.network" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über das lokale Netzwerk"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On the local network"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por la red local"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Par le réseau local"
+          }
+        }
+      }
+    },
+    "work.transfer.tailnet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Über Tailscale"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Through Tailscale"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A través de Tailscale"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Par Tailscale"
           }
         }
       }

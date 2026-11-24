@@ -576,6 +576,10 @@ final class CartoucheTelemetry: ObservableObject {
         // From a Mac, how it was reached: the cable, the tailnet or the
         // network, never its address.
         if let link = CartoucheGameActions.shared.installedLink { fields["link"] = .text(link) }
+        // How fast it came, in MB/s, and over which band of the Mac's
+        // Wi-Fi: how many installs a 2.4 GHz Wi-Fi slows (decision 151).
+        if let speed = CartoucheGameActions.shared.installedSpeed { fields["speed"] = .number(speed) }
+        if let band = CartoucheGameActions.shared.installedMacBand { fields["macBand"] = .text(band) }
         event("game.installed", game: found.isEmpty ? catalog.titleId(matchingName: app.displayName) : found, fields: fields)
     }
 

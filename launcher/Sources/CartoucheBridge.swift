@@ -40,6 +40,11 @@
 //  chosen last there or on another iPhone, which an iPhone older than that
 //  leaves aside.
 //
+//  A Mac's info also says how the connection reaches it on its side
+//  (network): its Wi-Fi with the band, its Ethernet, the cable or another
+//  way, for the install's screen to say how the game comes, and to warn of
+//  a Mac on its 2.4 GHz Wi-Fi (CartoucheTransferSpeed.swift).
+//
 //  This file is shared: Cartouche compiles it with the launcher, Cartouche
 //  Builder through the CartoucheCore package (launcher/Package.swift). It
 //  needs only Foundation, CryptoKit and Network.
@@ -414,6 +419,12 @@ public struct CartoucheBridgeResponse: Codable, Equatable {
     /// on there (CartoucheTailscale.swift), IPv4 first; none without it. A
     /// Cartouche Builder older than this one says nothing.
     public var tailscale: [String]?
+    /// info: how this connection reaches the Mac, as the Mac sees it: its
+    /// Wi-Fi and its band, its Ethernet, the cable, or another way
+    /// (CartoucheTransferSpeed.swift). The install's screen says so, and
+    /// warns of a Mac on its 2.4 GHz Wi-Fi. A Cartouche for Mac older than
+    /// this one says nothing.
+    public var network: CartoucheMacNetwork?
     /// builds, build and the rest: the Mac's builds, after what was asked.
     public var builds: CartoucheBridgeBuilds?
     /// connections: the Mac's, once it took the iPhone's, with those

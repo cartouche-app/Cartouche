@@ -25,7 +25,9 @@ the games folder, beside the game's IPA (Place):
   of it, put in the Mac apps folder (the Applications folder of the
   player's session unless the settings name another): unpacked when the
   game is first played (install), and made again of each new build while
-  it is there, so that the Mac keeps only the games the player plays.
+  it is there, so that the Mac keeps only the games the player plays. That
+  copy stays out of Time Machine's backups (leave_out_of_backups): the file
+  in the games folder is the player's own copy, and stays in them.
 """
 
 from __future__ import annotations
@@ -59,6 +61,8 @@ PACKED_ENV = "CARTOUCHE_BUILDER_MAC_PACKED"
 # The filesystems an app lives on as it is, its links, modes and extended
 # attributes with it.
 APP_FILESYSTEMS = ("apfs", "hfs")
+# Time Machine's tool, which marks an item to be left out of its backups.
+TMUTIL = "/usr/bin/tmutil"
 
 
 @dataclass
@@ -477,9 +481,29 @@ def install(packed: Path, folder: Path, title_id: str, name: str, stop=None, pro
             raise ValueError(t("mac.not_packed", name=packed.name))
         if progress:
             progress(total, total)
-        return deliver(apps[0], folder, name, stop=stop)
+        installed = deliver(apps[0], folder, name, stop=stop)
+        leave_out_of_backups(installed)
+        return installed
     finally:
         remove_tree(staging)
+
+
+def leave_out_of_backups(app: Path) -> bool:
+    """Leaves APP, this Mac's copy of a game's app that the games folder
+    keeps in one file, out of Time Machine's backups, as Cartouche on the
+    iPhone leaves the games it installs out of the iPhone's (decision 153):
+    the copy installs again from that file, which stays in the player's
+    storage, while the game's save, in the player's Library, stays in the
+    backups. tmutil's mark goes with the app wherever it moves, and needs no
+    administrator. Nothing where tmutil is not (the tests on Linux); False
+    when it did not mark APP, which never stops an install."""
+    if sys.platform != "darwin" or not os.path.exists(TMUTIL):
+        return False
+    try:
+        done = subprocess.run([TMUTIL, "addexclusion", str(app)], stdin=subprocess.DEVNULL, capture_output=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return done.returncode == 0
 
 
 def _ditto() -> bool:

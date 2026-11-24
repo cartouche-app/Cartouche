@@ -10,6 +10,10 @@
       "why": "The console and a game's sheet side by side on an iPhone Duo unfolded: the Mac's window puts them side by side itself.",
       "mac": "CartoucheConsole/Mac/ConsoleView.swift"
     },
+    "CartoucheBackup.swift": {
+      "kind": "iphone",
+      "why": "The games LiveContainer installs in Cartouche's container, left out of the iPhone's backups, iCloud's and a computer's (decision 153): the console installs no game; the Mac's copies of the games a NAS keeps in one file are left out of Time Machine by the builder as it installs them (builder/cartouche_builder/macapps.py)."
+    },
     "CartoucheCableListener.swift": {
       "kind": "iphone",
       "why": "Cartouche listening on the iPhone's own loopback for Cartouche Builder, which reaches it through the cable once the iPhone is plugged into the Mac: the console runs on the Mac itself, which reaches its own folders."
