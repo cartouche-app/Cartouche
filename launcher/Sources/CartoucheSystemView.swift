@@ -184,6 +184,7 @@ struct CartoucheSystemView: View {
     private func measure() {
         setup.refresh()
         memory = CartoucheMemoryReading.now()
+        keeping.measuredOwn(memory)
         signature = CartoucheSignature.current()
         CartoucheRenewal.scheduleWarnings()
         Task { alertStatus = await CartoucheRenewal.alertStatus() }

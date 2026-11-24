@@ -707,7 +707,7 @@ enum CartoucheText {
     static var storageReadOnlySaves: String { s("storage.readOnly.saves", "Read-only for your account: Cartouche cannot copy your saves here. Choose a folder you can write to.") }
     static func storageReadOnlyServer(_ name: String) -> String { f("storage.readOnly.server", "%@ (read-only)", name) }
     static func exportReadOnly(_ server: String) -> String { f("work.export.readOnly", "Your account on %@ can only read the games folder: Cartouche cannot copy the game there.", server) }
-    static func storageSavesFooter(_ kept: Int) -> String { f("storage.saves.footer", "Cartouche keeps your games’ saves in step with this folder, a folder per game: they come when a game is installed and before it starts, as after another iPhone played it or Cartouche was installed again, and go after each game. The %lld newest copies are kept.", kept) }
+    static func storageSavesFooter(_ kept: Int) -> String { f("storage.saves.footer", "Cartouche keeps your games’ saves in step with this folder, a folder per game: they come when a game is installed and before it starts, as after another iPhone played it or Cartouche was installed again, and go a few seconds after each save of the game, after the game at the latest. The %lld newest copies are kept, one for each game played.", kept) }
     static func storageSignInFailed(_ host: String, _ reason: String) -> String { f("storage.signInFailed", "Cartouche could not sign in to %1$@: %2$@", host, reason) }
     static func storageTooLarge(_ name: String) -> String { f("storage.tooLarge", "%@ is larger than Cartouche expects.", name) }
     static var storageConnectFailed: String { s("storage.failed.connect", "Cartouche could not connect") }
@@ -744,7 +744,7 @@ enum CartoucheText {
     static var savesCopyUnreadable: String { s("saves.unreadable", "This copy cannot be read: it is incomplete, or holds more than a game’s saves.") }
     static var savesReadOnly: String { s("saves.readOnly", "Your saves folder is read-only for your account: choose another one in System › Storage.") }
     static func savesSyncNow(_ server: String) -> String { f("saves.syncNow", "Sync with %@ now", server) }
-    static var savesRunning: String { s("saves.running", "Quit the game to sync its saves or put back a copy.") }
+    static var savesRunning: String { s("saves.running", "While the game plays, its saves go a few seconds after each save. Quit it to sync now or put back a copy.") }
     static func savesFetched(_ date: String) -> String { f("saves.fetched", "The newest saves, of %@, came from your saves folder.", date) }
     static func savesFetchedOver(_ date: String, _ kept: String) -> String {
         f("saves.fetched.kept", "The newest saves, of %1$@, came from your saves folder. This iPhone’s are kept there as the copy of %2$@.", date, kept)
@@ -752,7 +752,7 @@ enum CartoucheText {
     static func savesKeptHere(_ kept: String) -> String {
         f("saves.kept", "Newer saves are in your saves folder: they come when the game next starts. This iPhone’s are kept there as the copy of %@.", kept)
     }
-    static func savesFooter(_ kept: Int) -> String { f("saves.footer", "Cartouche keeps these saves in step with your saves folder: the newest come when the game is installed and before it starts, and go there after each game. When both changed, the newest win and the others stay as a copy. The %lld newest copies are kept.", kept) }
+    static func savesFooter(_ kept: Int) -> String { f("saves.footer", "Cartouche keeps these saves in step with your saves folder: the newest come when the game is installed and before it starts, and go there a few seconds after each save of the game, after the game at the latest. When both changed, the newest win and the others stay as a copy. The %lld newest copies are kept, one for each game played.", kept) }
     static func savesNewerGame(_ copy: String, _ game: String) -> String {
         f("saves.newerGame", "The newest copy of these saves comes from version %1$@ of the game, newer than the one installed here (%2$@): it comes once the game is updated. Until then, the saves played here go to your saves folder as a copy of their own.", copy, game)
     }

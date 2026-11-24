@@ -94,6 +94,8 @@ struct CartoucheGamesView: View {
     /// The game in focus, or the last one whose sheet opened: the game of
     /// the sheet beside the console, in a regular width.
     @State private var paneID: String?
+    /// Cartouche's own memory, measured again for a while each time the
+    /// console comes to the front (CartoucheOwnMemoryWatch).
     @State private var memory = CartoucheMemoryReading.now()
     @State private var showingSetup = false
     @State private var showingGuide = false
@@ -418,6 +420,7 @@ struct CartoucheGamesView: View {
         // new one each time the player comes back. A game may have saved and
         // counted its play time meanwhile, and the games folder changed.
         // Cartouche's source may list a new version, newer covers may be out.
+        .modifier(CartoucheOwnMemoryWatch(memory: $memory))
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
             CartoucheRenewal.scheduleWarnings()
             CartoucheStorageReach.shared.setInFront(true)
@@ -431,6 +434,9 @@ struct CartoucheGamesView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
             CartoucheStorageReach.shared.setInFront(false)
+            // The saves the game behind the console made go before iOS stops
+            // Cartouche.
+            CartoucheSaveBackups.shared.sendWaitingNow()
         }
         // A server of the player's that was offline answers again, as when
         // the iPhone is back home or on the VPN: the games folder is read
