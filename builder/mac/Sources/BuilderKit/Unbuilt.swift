@@ -79,8 +79,8 @@ public enum UnbuiltGames {
     /// What a game's sheet says of GAME, in the player's language, the step
     /// it failed at as NAMED says it.
     public static func words(_ game: UnbuiltGame, named: (String) -> String = { $0 }) -> String {
-        var failed = tr("In the last 4 weeks, \(game.macs) Macs tried it with Cartouche Builder and all \(game.failures) of their builds failed",
-                        "Ces 4 dernières semaines, \(game.macs) Mac l’ont essayé avec Cartouche Builder et leurs \(game.failures) constructions ont toutes échoué")
+        var failed = tr("In the last 4 weeks, \(game.macs) Macs tried it with Cartouche and all \(game.failures) of their builds failed",
+                        "Ces 4 dernières semaines, \(game.macs) Mac l’ont essayé avec Cartouche et leurs \(game.failures) constructions ont toutes échoué")
         if let stage = game.stage, !stage.isEmpty {
             failed += tr(", most often at the step “\(named(stage))”", ", le plus souvent à l’étape « \(named(stage)) »")
         }

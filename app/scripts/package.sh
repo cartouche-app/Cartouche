@@ -91,8 +91,8 @@ $PB -c "Print :CFBundleDevelopmentRegion" "$APP/Info.plist" >/dev/null 2>&1 \
 # and their Mac's Cartouche Builder (CartoucheStorageMac.swift), in place of
 # LiveContainer's, which speaks of a guest app. French in French, in English
 # everywhere else.
-LOCAL_NETWORK_EN="Cartouche connects to Cartouche Builder on your Mac and to the shared folders of your Mac, PC or NAS on this network to keep your games and saves there."
-LOCAL_NETWORK_FR="Cartouche se connecte à Cartouche Builder sur votre Mac et aux dossiers partagés de votre Mac, PC ou NAS sur ce réseau pour y garder vos jeux et vos sauvegardes."
+LOCAL_NETWORK_EN="Cartouche connects to Cartouche on your Mac and to the shared folders of your Mac, PC or NAS on this network to keep your games and saves there."
+LOCAL_NETWORK_FR="Cartouche se connecte à Cartouche sur votre Mac et aux dossiers partagés de votre Mac, PC ou NAS sur ce réseau pour y garder vos jeux et vos sauvegardes."
 plutil -replace NSLocalNetworkUsageDescription -string "$LOCAL_NETWORK_EN" "$APP/Info.plist"
 # iOS lets an app look only for the Bonjour types it names: LiveContainer's
 # list has _smb._tcp, not the bridge's to Cartouche Builder.

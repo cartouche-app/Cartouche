@@ -183,12 +183,12 @@ final class CartoucheReportTests: XCTestCase {
         let mac = CartoucheReport.Environment(
             cartouche: "0.6.2", basedOn: nil, system: "26.1 (25B72)", device: "Mac16,10 (M4, 16 GB)", language: "fr (fr-FR)",
             facts: [.init("Free on this Mac", "412.00 GB (412,000,000,000 bytes)"), .init("Storage", "saves on a folder of the Mac's")],
-            app: "Cartouche Builder", systemName: "macOS")
+            app: "Cartouche for Mac", systemName: "macOS")
         let report = CartoucheReport(origin: .saves, title: "Les sauvegardes n’ont pas été copiées", message: "Le disque est plein.",
                                      environment: mac)
         let lines = report.text(redactedBy: .shapes).components(separatedBy: "\n")
         XCTAssertEqual(Array(lines[4...]), [
-            "Cartouche Builder: 0.6.2",
+            "Cartouche for Mac: 0.6.2",
             "macOS: 26.1 (25B72)",
             "Device: Mac16,10 (M4, 16 GB)",
             "Language: fr (fr-FR)",

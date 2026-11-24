@@ -467,18 +467,18 @@ extension CartoucheText {
     static var macStorageThisMac: String { s("mac.storage.thisMac", "This Mac") }
     static var macStorageThisMacFooter: String {
         s("mac.storage.thisMac.footer",
-          "Cartouche Builder’s folders, which your iPhones reach through it: its games folder keeps the games it builds, and its saves folder the saves of your games.")
+          "The Builder’s folders, which your iPhones reach through this Mac: its games folder keeps the games it builds, and its saves folder the saves of your games.")
     }
-    static var macStorageChangeInBuilder: String { s("mac.storage.change", "Change in Cartouche Builder") }
+    static var macStorageChangeInBuilder: String { s("mac.storage.change", "Change in the Builder") }
     static var macStorageThisMacGamesFooter: String {
         s("mac.storage.thisMac.games.footer",
-          "Cartouche Builder’s games folder, which your iPhones reach through it, keeps the games it builds.")
+          "The Builder’s games folder, which your iPhones reach through this Mac, keeps the games it builds.")
     }
 
     /// Under the iPhone's saves folder, on a connection.
     static func macStorageIPhoneSavesFooter(_ kept: Int) -> String {
         f("mac.storage.iPhoneSaves.footer",
-          "The saves folder of your iPhones: Cartouche Builder keeps the saves of the games played on this Mac there too, through the same connection, before each game and as it saves, as the iPhone does. The %lld newest copies are kept. Change it here or on an iPhone: the folder chosen last wins, and your iPhones take it the next time Cartouche opens on them.",
+          "The saves folder of your iPhones: Cartouche keeps the saves of the games played on this Mac there too, through the same connection, before each game and as it saves, as the iPhone does. The %lld newest copies are kept. Change it here or on an iPhone: the folder chosen last wins, and your iPhones take it the next time Cartouche opens on them.",
           kept)
     }
 
@@ -524,26 +524,26 @@ extension CartoucheText {
     }
     static var macIPhoneGamesSeveralFooter: String {
         s("mac.storage.iPhoneGames.several.footer",
-          "The games folders of your iPhones: Cartouche Builder sends the first each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent to any of them install from the library, from a folder that answers. Change them here or on an iPhone: the folders chosen last win, and your iPhones take them the next time Cartouche opens on them.")
+          "The games folders of your iPhones: Cartouche sends the first each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent to any of them install from the library, from a folder that answers. Change them here or on an iPhone: the folders chosen last win, and your iPhones take them the next time Cartouche opens on them.")
     }
     static var macIPhoneGamesFooter: String {
         s("mac.storage.iPhoneGames.footer",
-          "The games folder of your iPhones: Cartouche Builder sends it each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent there install from the library. Change it here or on an iPhone: the folder chosen last wins, and your iPhones take it the next time Cartouche opens on them.")
+          "The games folder of your iPhones: Cartouche sends it each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent there install from the library. Change it here or on an iPhone: the folder chosen last wins, and your iPhones take it the next time Cartouche opens on them.")
     }
     /// With none of the iPhones' games folders on a connection.
     static var macIPhoneGamesChooseFooter: String {
         s("mac.storage.iPhoneGames.choose.footer",
-          "None of your iPhones’ games folders is on one of your connections. Choose one here: your iPhones read it too, the next time Cartouche opens on them, and Cartouche Builder sends its games there.")
+          "None of your iPhones’ games folders is on one of your connections. Choose one here: your iPhones read it too, the next time Cartouche opens on them, and this Mac sends its games there.")
     }
     /// With the iPhones' saves folder on none of the connections.
     static var macStorageSavesChooseFooter: String {
         s("mac.storage.saves.choose.footer",
-          "The saves of the games played on this Mac stay in Cartouche Builder’s saves folder. Choose a folder on one of your connections to keep them there with your iPhones’: your iPhones take it too, the next time Cartouche opens on them, and the newest saves win.")
+          "The saves of the games played on this Mac stay in Cartouche’s saves folder, on this Mac. Choose a folder on one of your connections to keep them there with your iPhones’: your iPhones take it too, the next time Cartouche opens on them, and the newest saves win.")
     }
 
     /// Under the connections of the console's Storage page.
     static var storageConnectionsFooter: String {
         s("mac.storage.connections.footer",
-          "Only storage of your own, with your own account. The iPhones paired with this Mac have the same connections, passwords included, over the bridge’s encryption: they take the changes made here when Cartouche opens on them, and send theirs here as they make them. Cartouche Builder keeps the passwords and keys in a file of its folder that only your account can read, never in the Mac’s keychain.")
+          "Only storage of your own, with your own account. The iPhones paired with this Mac have the same connections, passwords included, over the bridge’s encryption: they take the changes made here when Cartouche opens on them, and send theirs here as they make them. Cartouche keeps the passwords and keys in a file of its folder that only your account can read, never in the Mac’s keychain.")
     }
 }

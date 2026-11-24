@@ -1,5 +1,5 @@
 #!/bin/bash
-# Makes Cartouche Builder.app in DESTINATION (builder/mac/build by default):
+# Makes Cartouche.app, the Mac's Cartouche, in DESTINATION (builder/mac/build by default):
 # the SwiftUI app built for Apple silicon, the builder's engine (the Python
 # package cartouche_builder, which the app runs) and the covers list in its
 # resources, with the catalogue and the words of Cartouche's console, its
@@ -17,7 +17,7 @@ here=$(cd "$(dirname "$0")" && pwd)
 builder=$(dirname "$here")
 root=$(dirname "$builder")
 destination=${1:-"$here/build"}
-app="$destination/Cartouche Builder.app"
+app="$destination/Cartouche.app"
 
 version=$(sed -n 's/^version = "\(.*\)"$/\1/p' "$builder/pyproject.toml")
 [ -n "$version" ] || { echo "bundle.sh: no version in builder/pyproject.toml" >&2; exit 1; }
@@ -28,7 +28,7 @@ binary="$(swift build -c release --arch arm64 --package-path "$here" --show-bin-
 
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources/engine" "$app/Contents/Resources/en.lproj" "$app/Contents/Resources/fr.lproj"
-cp "$binary" "$app/Contents/MacOS/Cartouche Builder"
+cp "$binary" "$app/Contents/MacOS/Cartouche"
 cp -R "$builder/cartouche_builder" "$app/Contents/Resources/engine/"
 find "$app/Contents/Resources/engine" -name __pycache__ -type d -prune -exec rm -rf {} +
 cp "$root/catalog/covers.json" "$app/Contents/Resources/covers.json"
@@ -77,11 +77,11 @@ cat >"$app/Contents/Info.plist" <<PLIST
     <string>fr</string>
   </array>
   <key>CFBundleDisplayName</key>
-  <string>Cartouche Builder</string>
+  <string>Cartouche</string>
   <key>CFBundleName</key>
-  <string>Cartouche Builder</string>
+  <string>Cartouche</string>
   <key>CFBundleExecutable</key>
-  <string>Cartouche Builder</string>
+  <string>Cartouche</string>
   <key>CFBundleIdentifier</key>
   <string>io.github.clabeuhtegrite.cartouche-builder</string>
   <key>CFBundleIconFile</key>

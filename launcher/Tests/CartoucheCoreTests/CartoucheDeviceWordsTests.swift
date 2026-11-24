@@ -53,11 +53,11 @@ final class CartoucheDeviceWordsTests: XCTestCase {
     /// The setting of Cartouche Builder keeps the name the Mac shows.
     func testCartoucheBuildersSettingKeepsItsName() {
         XCTAssertEqual(
-            onIPad("On your Mac, open Cartouche Builder and turn on Share with Cartouche on the iPhone, on its iPhone page. This iPhone and the Mac must be on the same Wi-Fi."),
-            "On your Mac, open Cartouche Builder and turn on Share with Cartouche on the iPhone, on its iPhone page. This iPad and the Mac must be on the same Wi-Fi.")
+            onIPad("On your Mac, open Cartouche and turn on Share with Cartouche on the iPhone, on the Builder’s iPhone page. This iPhone and the Mac must be on the same Wi-Fi."),
+            "On your Mac, open Cartouche and turn on Share with Cartouche on the iPhone, on the Builder’s iPhone page. This iPad and the Mac must be on the same Wi-Fi.")
         XCTAssertEqual(
-            onIPad("Ouvrez-y Cartouche Builder avec Partager avec Cartouche sur l’iPhone activé\u{00A0}: Cartouche réessaie dès que l’iPhone retrouve son Wi-Fi."),
-            "Ouvrez-y Cartouche Builder avec Partager avec Cartouche sur l’iPhone activé\u{00A0}: Cartouche réessaie dès que l’iPad retrouve son Wi-Fi.")
+            onIPad("Ouvrez-y Cartouche avec Partager avec Cartouche sur l’iPhone activé\u{00A0}: Cartouche réessaie dès que l’iPhone retrouve son Wi-Fi."),
+            "Ouvrez-y Cartouche avec Partager avec Cartouche sur l’iPhone activé\u{00A0}: Cartouche réessaie dès que l’iPad retrouve son Wi-Fi.")
     }
 
     /// Every text of Cartouche.xcstrings, in English and in French, as an

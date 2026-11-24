@@ -73,7 +73,7 @@ enum Words {
     static let openShortcuts = "Open Shortcuts"             // daily.openShortcuts
     static let storageIntro = "Your games and saves on your own storage" // storage.intro
     static let addFirst = "First add your Mac"              // storage.addFirst
-    static let addMac = "Add your Mac (Cartouche Builder)"  // storage.mac.add
+    static let addMac = "Add your Mac"  // storage.mac.add
     static let addS3 = "Add S3 storage"                     // storage.addS3
     static let addFTP = "Add an FTP server"                 // storage.addFTP
     static let addFolder = "Add a folder in Files"          // storage.addFolder

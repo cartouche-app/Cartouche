@@ -617,7 +617,7 @@ struct CartoucheStorageView: View {
             let port = server.port.map { ":\($0)" } ?? ""
             return "\(server.username)@\(server.host)\(port)"
         case .mac:
-            return server.host.isEmpty ? "Cartouche Builder" : "Cartouche Builder · " + server.host
+            return server.host.isEmpty ? CartoucheText.storageMacTitle : CartoucheText.storageMacTitle + " · " + server.host
         case .drive:
             return server.host.isEmpty ? CartoucheText.storageDriveTitle : CartoucheText.storageDriveTitle + " · " + server.host
         }

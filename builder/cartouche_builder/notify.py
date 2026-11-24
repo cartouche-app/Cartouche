@@ -8,16 +8,20 @@ import sys
 
 from .paths import APP_NAME
 
+# The app's process, as pgrep -f reads it (an extended regular expression).
+RUNNING = r"/Cartouche( Builder)?\.app/Contents/MacOS/"
+
 
 def _quoted(text: str) -> str:
     return '"' + text.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
 def app_runs() -> bool:
-    """Whether Cartouche Builder's app runs now: it then tells of the batches
-    itself, those it starts and the nightly ones it follows."""
+    """Whether the Mac's app runs now: it then tells of the batches itself,
+    those it starts and the nightly ones it follows. It is Cartouche.app, or
+    Cartouche Builder.app on a Mac it has not renamed yet (AppName.swift)."""
     try:
-        found = subprocess.run(["pgrep", "-f", "Cartouche Builder.app/Contents/MacOS/"], capture_output=True, timeout=10)
+        found = subprocess.run(["pgrep", "-f", RUNNING], capture_output=True, timeout=10)
     except (OSError, subprocess.SubprocessError):
         return False
     return found.returncode == 0

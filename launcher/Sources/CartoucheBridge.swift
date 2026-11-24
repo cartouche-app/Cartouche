@@ -86,7 +86,7 @@ public struct CartoucheBridgeError: LocalizedError, Equatable {
         self.message = message
     }
 
-    public var errorDescription: String? { message.isEmpty ? "Cartouche Builder: \(kind.rawValue)" : message }
+    public var errorDescription: String? { message.isEmpty ? "Cartouche for Mac: \(kind.rawValue)" : message }
 }
 
 // MARK: Bytes
