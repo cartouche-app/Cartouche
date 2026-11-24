@@ -326,8 +326,9 @@ struct CartoucheGuideView: View {
         case .build:
             detail(CartoucheText.guideBuildHow)
             // Side by side where they fit, the one over the other otherwise,
-            // and before what the Mac needs: Cartouche Cloud and No thanks
-            // show without the player scrolling for them, on an iPhone too.
+            // and before what the Mac needs: Cartouche Cloud, the IPAs the
+            // player has already and No thanks show without the player
+            // scrolling for them, on an iPhone too.
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 10) { buildActions }
                 VStack(alignment: .leading, spacing: 10) { buildActions }
@@ -372,8 +373,10 @@ struct CartoucheGuideView: View {
     }
 
     /// The Mac's step's buttons: its page sent to the Mac; Cartouche Cloud,
-    /// which builds the game of a player with no Mac; and No thanks, which
-    /// skips the step, or closes it again once skipped.
+    /// which builds the game of a player with no Mac; the Files picker, for
+    /// a player whose games are IPAs already, whose IPA picked closes the
+    /// guide for the install; and No thanks, which skips the step, or closes
+    /// it again once skipped.
     @ViewBuilder
     private var buildActions: some View {
         ShareLink(item: CartoucheGuide.builderPage, subject: Text(CartoucheText.guideBuildShareSubject),
@@ -387,6 +390,9 @@ struct CartoucheGuideView: View {
         .cartouchePrimaryButton()
         action(CartoucheText.guideBuildCloud, systemImage: "cloud", primary: false) {
             showingCloud = true
+        }
+        action(CartoucheText.guideBuildHaveIPA, systemImage: "folder", primary: false) {
+            chooseIPA()
         }
         action(CartoucheText.guideBuildSkip, systemImage: "forward.fill", primary: false) {
             withAnimation(.easeInOut(duration: 0.2)) {

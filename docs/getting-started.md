@@ -24,7 +24,7 @@ On an iPad, every step is the same, with the iPad in place of the iPhone.
 
 ## 2. Build your game on your Mac
 
-The guide's **Send the steps to my Mac** sends the Mac [the page of Cartouche for Mac](https://cartouche.cloud/#builder) of Cartouche's site, by AirDrop or Messages: its **Download Cartouche for Mac** gives the disk image, and the steps below take it from there. No Mac? **No Mac: Cartouche Cloud** opens the page of Cartouche Cloud, which builds your game for you ([below](#no-mac-cartouche-cloud-builds-it-for-you)). Your games are built already, on your NAS for instance? **No thanks** skips this step, and the guide goes on to your games folder.
+The guide's **Send the steps to my Mac** sends the Mac [the page of Cartouche for Mac](https://cartouche.cloud/#builder) of Cartouche's site, by AirDrop or Messages: its **Download Cartouche for Mac** gives the disk image, and the steps below take it from there. No Mac? **No Mac: Cartouche Cloud** opens the page of Cartouche Cloud, which builds your game for you ([below](#no-mac-cartouche-cloud-builds-it-for-you)). Your games are IPAs already? **I have my own IPAs already** opens Files, and the IPA you choose installs. Your games are built already, on your NAS for instance? **No thanks** skips this step, and the guide goes on to your games folder.
 
 1. On a Mac with Apple silicon and macOS 26.6 or later, [download Cartouche for Mac](https://cartouche.cloud/download/#builder), open the disk image and drag **Cartouche** onto **Applications**.
 2. Open Cartouche from Applications. The first time, macOS says it cannot check it, as it is not signed by Apple: in **System Settings › Privacy & Security**, click **Open Anyway** beside Cartouche, once.

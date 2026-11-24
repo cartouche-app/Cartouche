@@ -62,6 +62,7 @@ enum Words {
     static let openSetup = "Open the setup"                 // guide.openSetup
     static let buildStep = "Build your game"                // guide.build.title
     static let noMacCloud = "No Mac: Cartouche Cloud"       // guide.build.cloud
+    static let haveIPAs = "I have my own IPAs already"      // guide.build.haveIPA
     static let cloud = "Cartouche Cloud"                    // cloud.name
     static let noThanks = "No thanks"                       // guide.build.skip
     static let folderStep = "Choose your games folder"      // guide.folder.title

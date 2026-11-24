@@ -6207,6 +6207,35 @@
         }
       }
     },
+    "guide.build.haveIPA" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ich habe schon eigene IPAs"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I have my own IPAs already"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ya tengo mis propias IPA"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "J’ai déjà mes propres IPA"
+          }
+        }
+      }
+    },
     "guide.build.how" : {
       "extractionState" : "manual",
       "localizations" : {

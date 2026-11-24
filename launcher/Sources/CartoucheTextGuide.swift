@@ -53,6 +53,8 @@ extension CartoucheText {
     /// The Mac's step, this iPhone linked to Cartouche Cloud.
     static var guideBuildCloudLinked: String { s("guide.build.cloudLinked", "This iPhone is linked to Cartouche Cloud. From a computer, send your own copy of a game on its site: your game shows here once it is built.") }
     static var guideBuildCloudOpen: String { s("guide.build.cloudOpen", "Open Cartouche Cloud") }
+    /// The Files picker, for a player whose games are built already, as IPAs.
+    static var guideBuildHaveIPA: String { s("guide.build.haveIPA", "I have my own IPAs already") }
     static var guideBuildSkip: String { s("guide.build.skip", "No thanks") }
     static var guideBuildSkipped: String { s("guide.build.skipped", "Skipped: your games will come from your games folder, or from an IPA you import.") }
     static var guideBuildShareSubject: String { s("guide.build.share.subject", "Cartouche on your Mac") }

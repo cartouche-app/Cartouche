@@ -8,7 +8,8 @@
 //  without the pairing file to the setup; once signed in, No thanks skips
 //  the Mac's step, and the games folder's step opens the Storage page, or
 //  the Files picker, whose IPA closes the guide for the install. A player
-//  with no Mac goes from the Mac's step to Cartouche Cloud; linked to it,
+//  with IPAs already opens the Files picker from the Mac's step, and one
+//  with no Mac goes from there to Cartouche Cloud; linked to it,
 //  the guide passes over the games folder and installs the game Cartouche
 //  Cloud built. The card at the top of the home says the step left and
 //  opens the guide again; its × leaves the guide to the System page.
@@ -127,6 +128,26 @@ final class GuideUITests: ConsoleTestCase {
         expect(guideBar(in: app).waitForExistence(timeout: 10), "Back from Cartouche Cloud did not come back to the guide",
                in: app)
         closeGuide(in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// A player whose games are IPAs already: the Mac's step opens the
+    /// Files picker, whose IPA closes the guide and goes to the install.
+    @MainActor
+    func testTheMacsStepImportsTheIPAsAPlayerHasAlready() {
+        let app = openConsole(signedIn)
+        let card = guideCard(in: app)
+        expect(card.waitForExistence(timeout: 15), "No guide's card on the home", in: app)
+        tap(card, "the guide's card", in: app)
+        expect(guideBar(in: app).waitForExistence(timeout: 15), "The guide's card did not open the guide", in: app)
+        tap(app.buttons[Words.haveIPAs], "I have my own IPAs already, in the Mac's step", in: app)
+        let picker = FilesPicker(app: app, test: self)
+        expect(picker.waitForIt(), "The Files picker did not show over the guide", in: app)
+        picker.pick(GalleryWords.ipa)
+        expect(picker.waitForItToGo(), "The Files picker stayed once the IPA was picked", in: app)
+        expectInstall(of: GalleryWords.ipa, in: app)
+        expect(!guideBar(in: app).exists, "The guide stayed over the install", in: app)
+        expect(waitUntil(10) { isOnConsole(app) }, "The console did not come back after the install", in: app)
         expectMainThreadAnswered(app)
     }
 
