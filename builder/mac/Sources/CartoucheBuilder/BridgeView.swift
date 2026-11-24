@@ -144,13 +144,14 @@ struct BridgeView: View {
 
     private var stateText: String {
         guard bridge.enabled else {
-            return tr("Off. On, the iPhone finds this Mac on your Wi-Fi and installs games from it, encrypted on the way, once paired.",
-                      "Désactivé. Activé, l’iPhone trouve ce Mac sur votre Wi-Fi et y installe ses jeux, chiffrés en chemin, une fois associé.")
+            return tr("Off. On, the iPhone finds this Mac on your Wi-Fi or through its cable, and installs games from it, encrypted on the way, once paired.",
+                      "Désactivé. Activé, l’iPhone trouve ce Mac sur votre Wi-Fi ou par son câble, et y installe ses jeux, chiffrés en chemin, une fois associé.")
         }
         switch bridge.state {
         case .stopped, .starting: return tr("Starting…", "Démarrage…")
         case .running:
-            return tr("Visible on your network as “\(bridge.name)”.", "Visible sur votre réseau sous « \(bridge.name) ».")
+            return tr("Visible on your network as “\(bridge.name)”, and to an iPhone plugged into this Mac.",
+                      "Visible sur votre réseau sous « \(bridge.name) », et par un iPhone branché à ce Mac.")
                 + (bridge.connected.isEmpty ? "" : tr(" An iPhone is connected: the Mac stays awake.", " Un iPhone est connecté : le Mac reste éveillé."))
         case let .failed(error):
             return tr("Could not start: ", "Démarrage impossible : ") + error
@@ -163,7 +164,8 @@ struct BridgeView: View {
                 Text(tr("On the iPhone", "Sur l’iPhone"))
                     .font(.headline)
                 Step(number: 1, text: tr("Open Cartouche, then System › Storage › Add your Mac.", "Ouvrez Cartouche, puis Système › Stockage › Ajouter votre Mac."))
-                Step(number: 2, text: tr("Choose “\(bridge.name)” under Macs nearby.", "Choisissez « \(bridge.name) » sous Macs à proximité."))
+                Step(number: 2, text: tr("Choose “\(bridge.name)” under Macs nearby, with the iPhone plugged into this Mac by a cable, or on the same Wi-Fi.",
+                                         "Choisissez « \(bridge.name) » sous Macs à proximité, l’iPhone branché à ce Mac par un câble, ou sur le même Wi-Fi."))
                 Step(number: 3, text: tr("A code shows on both screens: allow the iPhone here if they are the same.",
                                          "Un code s’affiche sur les deux écrans : autorisez l’iPhone ici s’ils sont identiques."))
             }
@@ -256,7 +258,9 @@ struct BridgeView: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(device.name)
                                         .font(.callout.weight(.medium))
-                                    Text(bridge.connected.contains(device.id)
+                                    Text(bridge.cabled.contains(device.id)
+                                         ? tr("Connected now, by cable", "Connecté maintenant, par câble")
+                                         : bridge.connected.contains(device.id)
                                          ? tr("Connected now", "Connecté maintenant")
                                          : tr("Paired ", "Associé ") + Format.relative(device.paired) + (device.seen.map { tr(", seen ", ", vu ") + Format.relative($0) } ?? ""))
                                         .font(.caption)

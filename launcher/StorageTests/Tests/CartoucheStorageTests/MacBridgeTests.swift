@@ -50,6 +50,9 @@ final class FakeMac: @unchecked Sendable {
     private var listener: NWListener?
     private let queue = DispatchQueue(label: "Fake Mac")
     private(set) var port = 0
+    /// Its link through the cable, while the iPhone is plugged into it.
+    private var cableLink: CartoucheBridgeConnection?
+    private var throughCable = 0
 
     init(name: String = "Mac de test") {
         macID = UUID().uuidString
@@ -84,6 +87,50 @@ final class FakeMac: @unchecked Sendable {
     func stop() {
         listener?.cancel()
         listener = nil
+    }
+
+    /// The iPhone plugged into it: as Cartouche Builder does through
+    /// usbmuxd, it links to Cartouche listening on the iPhone's loopback at
+    /// PORT (CartoucheCableListener), and opens a connection there for each
+    /// ticket Cartouche gives. The test's loopback stands in for usbmuxd.
+    func plug(into port: UInt16) async throws {
+        let endpoint = NWEndpoint.hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: port)!)
+        let link = try await CartoucheBridgeConnection.open(endpoint, timeout: 5)
+        lock.lock()
+        cableLink = link
+        lock.unlock()
+        let macID = self.macID, name = self.name
+        Task {
+            await CartoucheBridgeCable.serveLink(link, mac: macID, name: name) { [weak self] ticket in
+                guard let connection = try? await CartoucheBridgeConnection.open(endpoint, timeout: 5) else { return }
+                do {
+                    try await CartoucheBridgeCable.sayTicket(ticket, on: connection, mac: macID, name: name)
+                } catch {
+                    return connection.close()
+                }
+                guard let self else { return connection.close() }
+                self.lock.lock()
+                self.throughCable += 1
+                self.lock.unlock()
+                await self.handshake(connection)
+            }
+        }
+    }
+
+    /// The iPhone unplugged: its link ends.
+    func unplug() {
+        lock.lock()
+        let link = cableLink
+        cableLink = nil
+        lock.unlock()
+        link?.close()
+    }
+
+    /// How many connections it opened through the cable.
+    var connectionsThroughCable: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return throughCable
     }
 
     // MARK: What the test sets and reads
@@ -203,6 +250,16 @@ final class FakeMac: @unchecked Sendable {
     private func serve(_ transport: CartoucheBridgeConnection) async {
         do {
             try await transport.start(timeout: 5)
+        } catch {
+            return transport.close()
+        }
+        await handshake(transport)
+    }
+
+    /// A connection once open, the network's or the cable's: a session, or
+    /// a pairing.
+    private func handshake(_ transport: CartoucheBridgeTransport) async {
+        do {
             let opening = try await CartoucheBridgeHandshake.server(transport, mac: macID, name: name,
                                                                      keyOf: { [weak self] in self?.key(of: $0) },
                                                                      allow: { [weak self] _, code in self?.asked(code: code) ?? false },

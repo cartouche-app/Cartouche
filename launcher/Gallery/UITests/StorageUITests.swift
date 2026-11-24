@@ -163,6 +163,22 @@ final class StorageUITests: ConsoleTestCase {
         expectMainThreadAnswered(app)
     }
 
+    /// Plugged into a Mac by a cable, Add your Mac lists it with no Wi-Fi to
+    /// find it on, and says it is by cable.
+    @MainActor
+    func testAddYourMacListsTheMacPluggedInByCable() {
+        let app = openAddYourMac(Launch(work: "mac-cable"))
+        let plugged = element(in: app.buttons, beginningWith: "MacBook Air")
+        expect(plugged.waitForExistence(timeout: 15), "Add your Mac does not list the Mac plugged in", in: app)
+        // The row reads as one button, its label joining its lines.
+        expect(plugged.label.contains(Words.byCable) || element(beginningWith: Words.byCable, in: app).exists,
+               "Add your Mac does not say it is by cable", in: app)
+        expect(element(in: app.buttons, beginningWith: "Mac mini").exists, "Add your Mac does not list the Mac on the Wi-Fi",
+               in: app)
+        closeAddYourMac(in: app)
+        expectMainThreadAnswered(app)
+    }
+
     /// Pairing with a Mac, Add your Mac shows the six digits the Mac shows
     /// too, to check on both screens.
     @MainActor

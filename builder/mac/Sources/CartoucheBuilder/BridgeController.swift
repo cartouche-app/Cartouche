@@ -44,6 +44,8 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
     @Published private(set) var state: BridgeServer.State = .stopped
     @Published private(set) var devices: [PairedDevice] = []
     @Published private(set) var connected: Set<String> = []
+    /// Those of them connected through the cable, plugged into this Mac.
+    @Published private(set) var cabled: Set<String> = []
     @Published private(set) var request: PairingRequest?
     @Published private(set) var games: URL?
     /// This Mac's addresses in the player's tailnet, while Tailscale is on
@@ -176,6 +178,7 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
         state = server.state
         devices = server.devices.all
         connected = server.connected
+        cabled = server.connectedByCable
     }
 
     func bridgeServer(_ server: BridgeServer, allowPairing name: String, code: String) async -> Bool {

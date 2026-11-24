@@ -87,6 +87,7 @@ enum Words {
     static let savesWaiting = "%lld games’ saves are waiting" // saves.waiting.many
     static let yourMac = "Your Mac"                         // storage.mac.title
     static let macsNearby = "Macs nearby"                   // storage.mac.nearby
+    static let byCable = "By cable"                         // storage.mac.byCable
     static let pairingWith = "Pairing with %@"              // storage.mac.pairing
     static let checkDigits = "Check that your Mac shows the same digits" // storage.mac.checkCode
     static let noLocalNetwork = "iOS does not let Cartouche look for your Mac" // storage.mac.localNetwork
