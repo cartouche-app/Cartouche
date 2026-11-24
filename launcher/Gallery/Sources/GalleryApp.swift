@@ -189,6 +189,9 @@
 //                                        with its report to copy
 //        installed                       the word an update leaves when
 //                                        What's new has no notes to show
+//        installed-not-a-game            the same two apps (other-apps), and
+//                                        what Cartouche says once it has
+//                                        installed the first: where it is
 //        installing                      a game being installed, over the
 //                                        console
 //        installing-cable                the same from the MacBook Air, by
@@ -255,6 +258,10 @@
 //                                        signed whole, with Sign again and
 //                                        play
 //        not-signed-start                the same, as Play signed it again
+//        other-apps                      two apps installed that are not
+//                                        nxnative games, an IPA the player
+//                                        tried, which the System page lists
+//                                        under Other installed apps
 //        offline                         the player's NAS, out of reach, with
 //                                        a newer build of that game in its
 //                                        games folder and two games' saves
@@ -397,6 +404,9 @@
 //                                        Cartouche Builder's dumps folder
 //        manage                          on the sheet, the sheet opened on
 //                                        the game's management
+//        otherApps                       on the System page, the page
+//                                        scrolled down to Other installed
+//                                        apps (work other-apps)
 //        nightly                         on the Mac's builds (screen
 //                                        mac-builds), down to the nightly
 //                                        build; on the System page, the
@@ -710,6 +720,12 @@ struct GalleryScenario {
                     shown.slow = true
                 }
                 CartoucheGameActions.shared.work = shown
+            }
+            if work == "installed-not-a-game" {
+                // The first of the other apps, just installed: Cartouche
+                // says where it is (CartoucheGameActions.finishInstall).
+                CartoucheGameActions.shared.notice = CartoucheGameNotice(
+                    title: CartoucheText.installDone, message: CartoucheText.installNotAGame(Self.otherApps[0].name))
             }
             if work == "install-failed" {
                 // An install the network dropped halfway, with its report.
@@ -1129,7 +1145,24 @@ struct GalleryScenario {
         }
     }
 
+    /// The apps that are not nxnative games (works other-apps and
+    /// installed-not-a-game): a name, a bundle identifier of no nxnative
+    /// game, and a key for the colours of their icon.
+    static let otherApps: [(name: String, identifier: String)] = [
+        ("Pocket Notes", "com.example.pocketnotes"),
+        ("Sky Radar", "com.example.skyradar"),
+    ]
+
     func apps() -> [LCAppModel] {
+        let others = work == "other-apps" || work == "installed-not-a-game" ? Self.otherApps.map { app in
+            LCAppModel(appInfo: LCAppInfo(name: app.name, identifier: app.identifier, folder: app.identifier + ".app",
+                                          icon: GalleryIcon.make(name: app.name, key: app.identifier)))
+        } : []
+        return games() + others
+    }
+
+    /// The player's games.
+    private func games() -> [LCAppModel] {
         ownedTitles.compactMap { titleId in
             guard let name = name(of: titleId) else { return nil }
             let info = LCAppInfo(name: name, identifier: "org.nxnative." + titleId.lowercased(),

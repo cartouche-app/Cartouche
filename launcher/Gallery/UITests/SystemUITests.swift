@@ -4,9 +4,10 @@
 //
 //  The System page and every page it opens, each of which must come and go
 //  with the console answering throughout; the builds of the player's Mac,
-//  driven from there; Reset Cartouche, at its end, which asks twice before
-//  it erases; and Cartouche's own update, on offer over the console, which
-//  Later puts off.
+//  driven from there; the other apps installed, near its end, opened and
+//  uninstalled from there; Reset Cartouche, at its end, which asks twice
+//  before it erases; and Cartouche's own update, on offer over the console,
+//  which Later puts off.
 //
 
 import XCTest
@@ -37,6 +38,13 @@ extension Words {
     static let madeTheAutomation = "I made the automation"  // daily.made
     static let madeOn = "Made on "                          // daily.state.waiting
     static let setupStepDone = "%@, done"                   // setup.step.done
+}
+
+/// The apps installed that are not nxnative games, near the end of the
+/// System page (decision 154).
+extension Words {
+    static let openApp = "Open"                             // action.open
+    static let uninstall = "Uninstall"                      // action.uninstall
 }
 
 /// Reset Cartouche's words (CartoucheTextReset.swift).
@@ -153,6 +161,53 @@ final class SystemUITests: ConsoleTestCase {
         expect(erasing.waitForExistence(timeout: 10), "Erase everything did not cover the page while Cartouche erases", in: app)
         expect(waitForGone(erasing, timeout: 15), "The gallery's reset did not end", in: app)
         back(from: Words.resetCartouche, in: app)
+        tap(app.buttons[Words.done], "Done of the System page", in: app)
+        expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// The apps installed that are not nxnative games are near the end of
+    /// the System page, under Other installed apps (decision 154): Open
+    /// closes the page and starts the app, as Play starts a game; Uninstall
+    /// asks first, then closes the page and uninstalls it, which the page
+    /// then no longer lists. Up to 0.15.1, Cartouche said they were in
+    /// Apps, LiveContainer's tab, which it never shows: nothing opened them.
+    @MainActor
+    func testAnotherInstalledAppOpensAndUninstallsFromTheSystemPage() {
+        let app = openConsole(Launch(work: "other-apps"))
+        tap(app.buttons[Words.system], "System in the dock", in: app)
+        expect(app.navigationBars[Words.system].waitForExistence(timeout: 15), "The System page did not open", in: app)
+        // Pocket Notes, the first by name (GalleryScenario.otherApps).
+        let open = app.buttons[Words.openApp].firstMatch
+        scrollTo(open, "Open, under Other installed apps", in: app)
+        expect(element(labelled: "Pocket Notes", in: app).exists, "Pocket Notes is not under Other installed apps", in: app)
+        tap(open, "Open of Pocket Notes", in: app)
+        expectPlay(of: "Pocket Notes", in: app)
+        expect(waitUntil(10) { isOnConsole(app) }, "Open did not leave the console on the screen", in: app)
+
+        tap(app.buttons[Words.system], "System in the dock, again", in: app)
+        expect(app.navigationBars[Words.system].waitForExistence(timeout: 15), "The System page did not open again", in: app)
+        let uninstall = app.buttons[Words.uninstall].firstMatch
+        // Once, then cancelled: nothing happens.
+        scrollAndTap(uninstall, "Uninstall of Pocket Notes", in: app)
+        cancelConfirmation("The question before Pocket Notes is uninstalled", in: app)
+        expect(!app.alerts[GalleryWords.uninstall].waitForExistence(timeout: 3),
+               "The question, cancelled, uninstalled Pocket Notes all the same", in: app)
+        // Then Uninstall.
+        scrollAndTap(uninstall, "Uninstall of Pocket Notes, again", in: app)
+        tapButtonOnTop(Words.uninstall, "Uninstall, in the question", in: app)
+        let alert = app.alerts[GalleryWords.uninstall]
+        expect(alert.waitForExistence(timeout: 15), "Pocket Notes was not uninstalled", in: app)
+        expect(alert.staticTexts["Uninstall 1: Pocket Notes"].exists,
+               "The uninstall was not Pocket Notes': \(alert.debugDescription)", in: app)
+        tap(alert.buttons[Words.done], "Done of the uninstall", in: app)
+        expect(waitUntil(10) { isOnConsole(app) }, "The uninstall did not leave the console on the screen", in: app)
+
+        // Sky Radar alone is left.
+        tap(app.buttons[Words.system], "System in the dock, once more", in: app)
+        expect(app.navigationBars[Words.system].waitForExistence(timeout: 15), "The System page did not open once more", in: app)
+        scrollTo(element(labelled: "Sky Radar", in: app), "Sky Radar, under Other installed apps", in: app)
+        expect(!element(labelled: "Pocket Notes", in: app).exists, "Pocket Notes is still listed once uninstalled", in: app)
         tap(app.buttons[Words.done], "Done of the System page", in: app)
         expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)
         expectMainThreadAnswered(app)

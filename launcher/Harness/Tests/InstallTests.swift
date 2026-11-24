@@ -323,6 +323,63 @@ final class InstallTests: HarnessCase {
                       "LiveContainer answers the app's URL scheme")
     }
 
+    /// An app that is no game is where Cartouche says it is: on the System
+    /// page, under Other installed apps, the console showing games only
+    /// (decision 154). Up to 0.15.1, Cartouche said it was in Apps,
+    /// LiveContainer's tab, which it never shows: nothing listed it.
+    func testAnAppThatIsNoGameIsOnTheSystemPageWhereCartoucheSaysItIs() async throws {
+        let game = try await installed(.plain())
+        let notesResult = try await install(try HarnessIPA.app())
+        let notes = try XCTUnwrap(notesResult)
+        let message = try XCTUnwrap(actions.notice?.message)
+        XCTAssertTrue(message.contains(CartoucheText.systemTab), message)
+        XCTAssertTrue(message.contains(CartoucheText.otherAppsTitle), message)
+        XCTAssertFalse(message.hasSuffix("Apps."), "Apps, LiveContainer's tab, never shows")
+        XCTAssertEqual(CartoucheCatalog.shared.otherApps(among: model.apps), [notes], "the game is not one of them")
+        XCTAssertTrue(model.apps.contains(game))
+    }
+
+    /// Open, on the System page, starts the app in Cartouche's place, as
+    /// LiveContainer's Apps tab did, even with the console kept open: the
+    /// console, which shows games only, would have nothing to resume or
+    /// quit it from. It says the app opens, not a game.
+    func testAnAppThatIsNoGameOpensInCartouchesPlace() async throws {
+        XCTAssertTrue(CartoucheGameKeeping.shared.keepsConsoleOpen)
+        let notesResult = try await install(try HarnessIPA.app())
+        let notes = try XCTUnwrap(notesResult)
+        actions.notice = nil
+        actions.play(notes)
+        XCTAssertEqual(actions.work?.kind, .starting)
+        XCTAssertEqual(actions.work?.step, CartoucheText.openSoon)
+        try await waitUntil("the start is over") { actions.work == nil }
+        XCTAssertNil(actions.notice)
+        XCTAssertNil(actions.running, "not behind the console")
+        XCTAssertTrue(HarnessScenes.all.isEmpty)
+        XCTAssertEqual(HarnessLC.launches.map(\.bundle), [notes.appInfo.relativeBundlePath])
+        // No switch of nxnative's in its data folder.
+        let folder = try dataFolder(of: notes)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: folder.appendingPathComponent("Documents/env.txt").path))
+    }
+
+    /// Uninstall, on the System page, takes the app and its data away: the
+    /// page no longer lists it.
+    func testAnAppThatIsNoGameUninstallsWithItsData() async throws {
+        let notesResult = try await install(try HarnessIPA.app())
+        let notes = try XCTUnwrap(notesResult)
+        actions.notice = nil
+        actions.play(notes)
+        try await waitUntil("the start is over") { actions.work == nil }
+        let folder = try dataFolder(of: notes)
+        HarnessLC.loadApps()
+        let listed = try XCTUnwrap(app(notes.appInfo.bundleIdentifier() ?? ""))
+
+        actions.uninstall(listed, erasingData: true)
+        try await waitUntil("the app is uninstalled") { actions.work == nil }
+        XCTAssertNil(actions.notice)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: folder.path))
+        XCTAssertTrue(CartoucheCatalog.shared.otherApps(among: model.apps).isEmpty)
+    }
+
     // MARK: Signing
 
     /// What LiveContainer said as it could not sign the game, in the
