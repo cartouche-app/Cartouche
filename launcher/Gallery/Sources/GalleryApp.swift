@@ -557,6 +557,12 @@ struct GalleryScenario {
         GalleryState.liveProcessMissing = work?.hasSuffix("-no-liveprocess") == true
         GalleryState.readsBCTextures = !GalleryBCConversion.isWithoutBC(work)
         GalleryState.gameModeLater = work == "game-mode-later"
+        // Cartouche's first launch on this iPhone and this iOS: no limit of
+        // its own measured before Game Mode comes (CartoucheOwnLimitRecord).
+        if GalleryState.gameModeLater {
+            UserDefaults.standard.removeObject(forKey: CartoucheOwnLimitRecord.key)
+            UserDefaults.standard.removeObject(forKey: CartoucheOwnLimitRecord.systemKey)
+        }
         GalleryState.signInUnfinished = work == "sign-in-unfinished"
         GalleryState.sheetSection = screen == "sheet" ? category : nil
         GalleryState.vpnConnected = work.map {
@@ -1301,7 +1307,8 @@ struct CartoucheGalleryApp: App {
 }
 
 /// A game's sheet, with Cartouche's own memory as the console has it
-/// (CartoucheGamesView): measured as it opens.
+/// (CartoucheGamesView): measured as it opens, and again for a while
+/// after (CartoucheOwnMemoryWatch).
 struct GallerySheetScreen: View {
     let entry: CartoucheEntry
     let opensOnManagement: Bool
@@ -1318,6 +1325,7 @@ struct GallerySheetScreen: View {
                     }
                 }
         }
+        .modifier(CartoucheOwnMemoryWatch(memory: $memory))
     }
 }
 

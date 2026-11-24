@@ -17,7 +17,9 @@
 //  Memory Limit: some installs signed it without, which left a game 3,376
 //  MiB there while Cartouche had 8,192 (docs/decisions.md, 67). Cartouche
 //  keeps that answer with the install it came from
-//  (CartoucheBehindIMLRecord).
+//  (CartoucheBehindIMLRecord). Cartouche's own limit moves too: Game Mode
+//  raises it a moment after Cartouche comes to the front, so Cartouche
+//  keeps the highest it measured (CartoucheOwnLimitRecord).
 //
 //  Platform-independent: tested on its own by launcher/Package.swift.
 //
@@ -197,5 +199,55 @@ struct CartoucheBehindIMLRecord {
     /// whether its process has the capability.
     func clear() {
         defaults.removeObject(forKey: Self.key)
+    }
+}
+
+/// The highest limit Cartouche measured itself with, as Cartouche keeps it
+/// in DEFAULTS from one launch to the next, on SYSTEM, as
+/// CartoucheGameKeeping names it: the iPhone's model, its iOS, and whether
+/// Cartouche's signature has Increased Memory Limit. Another iOS or another
+/// signature may give another limit: the record of the one before goes.
+///
+/// Game Mode raises Cartouche's own limit a moment after Cartouche comes to
+/// the front, from 6,144 MiB to 8,192 on an iPhone with 12 GB, and a game in
+/// Cartouche's place has the higher: on those iPhones, Cartouche read
+/// 6,144 MiB 6 times in 10 as its console opened, and 8,192 nearly every
+/// time a moment later, as games in its place had (telemetry, 24 November
+/// 2026). Read once as the console opened, the sheet of a game said it had
+/// 6,144 MiB there.
+struct CartoucheOwnLimitRecord {
+    static let key = "Cartouche.ownLimitMiB"
+    static let systemKey = "Cartouche.ownLimitMiB.system"
+
+    let defaults: UserDefaults
+    let system: String
+
+    /// The highest limit measured on this system, nil before any.
+    func load() -> Int? {
+        let limit = defaults.integer(forKey: Self.key)
+        guard limit > 0, defaults.string(forKey: Self.systemKey) == system else {
+            defaults.removeObject(forKey: Self.key)
+            defaults.removeObject(forKey: Self.systemKey)
+            return nil
+        }
+        return limit
+    }
+
+    /// What Cartouche measured of its own limit, MEASUREDMIB, nil when iOS
+    /// gives none, against HIGHEST, the highest before: the highest now,
+    /// kept when it is the measurement.
+    func record(_ measuredMiB: Int?, highest: Int?) -> Int? {
+        guard let measuredMiB, measuredMiB > (highest ?? 0) else { return highest }
+        defaults.set(measuredMiB, forKey: Self.key)
+        defaults.set(system, forKey: Self.systemKey)
+        return measuredMiB
+    }
+
+    /// Cartouche's own limit, as a game in its place has it: MEASUREDMIB, as
+    /// Cartouche measures it now, or HIGHEST, the highest it measured on
+    /// this system, when that is higher.
+    static func placeMiB(measured measuredMiB: Int?, highest: Int?) -> Int? {
+        guard let highest else { return measuredMiB }
+        return max(measuredMiB ?? 0, highest)
     }
 }
