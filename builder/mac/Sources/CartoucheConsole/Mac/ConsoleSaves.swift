@@ -492,7 +492,7 @@ extension CartoucheText {
     /// A game whose saves nxnative's own cloud saves keep, which the
     /// Builder leaves to it, as its page in the Builder says.
     static var savesInCloud: String {
-        s("mac.saves.cloud", "Its saves go through nxnative’s own cloud saves, chosen in its settings: Cartouche Builder leaves them to it.")
+        s("mac.saves.cloud", "Its saves go through nxnative’s own cloud saves, chosen in its settings: Cartouche leaves them to it.")
     }
 
     static func macSaveFile(_ name: String) -> String { f("mac.file.save", "Save %@…", name) }

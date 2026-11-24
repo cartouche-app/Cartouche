@@ -82,12 +82,12 @@ class Disks(unittest.TestCase):
         """A game skipped for the room the settings keep free: how much is
         missing, in whole gigabytes that add up, and what makes room."""
         self.assertEqual(disks.no_room(Path("/Users/player/Builder/workspace"), 13.7, 20, 0, 20),
-                         "7 GB missing to build this game: Cartouche Builder starts a build only with 20 GB free on your Mac's disk, "
+                         "7 GB missing to build this game: Cartouche starts a build only with 20 GB free on your Mac's disk, "
                          "and only 13 GB are free there. Free some room there (the Storage page shows what the build folders take), "
                          "choose build folders on another disk (Settings › Folders), or lower “Keep at least 20 GB free” (Settings › Storage).")
         i18n.set_language("fr")
         self.assertEqual(disks.no_room(Path("/Volumes/SSD/builds"), 25.2, 31.4, 11.4, 20),
-                         "Il manque 7 Go pour construire ce jeu : Cartouche Builder ne commence une construction qu'avec 32 Go libres "
+                         "Il manque 7 Go pour construire ce jeu : Cartouche ne commence une construction qu'avec 32 Go libres "
                          "sur le disque « SSD », dont 12 Go pour décompresser son zip, et il n'y en a que 25. Libérez-y de la place "
                          "(la page Stockage montre ce que prennent les dossiers de construction), choisissez des dossiers de construction "
                          "sur un autre disque (Réglages › Dossiers) ou baissez « Garder au moins 20 Go libres » (Réglages › Stockage).")
@@ -99,7 +99,7 @@ class Disks(unittest.TestCase):
             short = disks.room(Path("/Users/player/Builder/workspace"), 20, 2)
             self.assertEqual({k: short[k] for k in ("free_gb", "keep_gb", "folders", "title")},
                              {"free_gb": 13, "keep_gb": 20, "folders": 2, "title": "7 GB missing to build"})
-            self.assertEqual(short["text"], "Cartouche Builder starts a build only with 20 GB free on your Mac's disk, and only 13 GB are free there. "
+            self.assertEqual(short["text"], "Cartouche starts a build only with 20 GB free on your Mac's disk, and only 13 GB are free there. "
                                             "It first removes the build folders of the games built longest ago (2), which may be enough. "
                                             "Free some room there (Storage shows what the build folders take), choose build folders on another disk, "
                                             "or lower “Keep at least 20 GB free”.")

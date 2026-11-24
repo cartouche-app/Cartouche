@@ -232,13 +232,13 @@ extension CartoucheText {
     static var macGuideSetupTitle: String { s("mac.guide.setup.title", "Make this Mac ready") }
     static var macGuideSetupDetail: String {
         s("mac.guide.setup.detail",
-          "Cartouche Builder’s assistant installs what nxnative needs, then asks where your dumps are and where your games go.")
+          "The Builder’s assistant installs what nxnative needs, then asks where your dumps are and where your games go.")
     }
     static var macGuideSetupAction: String { s("mac.guide.setup.action", "Open the assistant") }
     static var macGuideBuildTitle: String { s("mac.guide.build.title", "Build a game for this Mac") }
     static var macGuideBuildDetail: String {
         s("mac.guide.build.detail",
-          "In Cartouche Builder’s library, build one of your games for this Mac: it comes to the console once built.")
+          "In the Builder’s library, build one of your games for this Mac: it comes to the console once built.")
     }
     static var macGuideBuildAction: String { s("mac.guide.build.action", "Open the library") }
     static var macGuidePlayTitle: String { s("mac.guide.play.title", "Play it") }

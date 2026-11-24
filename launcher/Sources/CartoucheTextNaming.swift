@@ -15,7 +15,7 @@ extension CartoucheText {
 
     static var namingTitle: String { s("naming.title", "Naming your games") }
     static var namingOpen: String { s("naming.open", "How to name your games") }
-    static var namingIntro: String { s("naming.intro", "Cartouche and Cartouche Builder know a game by its title ID: the 16 letters and digits in square brackets in its name, as they name what they write. A game’s sheet shows its title ID.") }
+    static var namingIntro: String { s("naming.intro", "Cartouche, on the iPhone as on the Mac, knows a game by its title ID: the 16 letters and digits in square brackets in its name, as it names what it writes. A game’s sheet shows its title ID.") }
     static var namingFound: String { s("naming.found", "Found") }
     static var namingLeftAside: String { s("naming.leftAside", "Left aside") }
 
@@ -24,26 +24,26 @@ extension CartoucheText {
         switch place {
         case .games: return storageGamesFolder
         case .saves: return storageSavesFolder
-        case .dumps: return s("naming.dumps", "Dumps folder, for Cartouche Builder")
+        case .dumps: return s("naming.dumps", "Dumps folder, for the Mac")
         }
     }
 
     /// Below PLACE's examples.
     static func namingFooter(_ place: CartoucheNaming.Place) -> String {
         switch place {
-        case .games: return s("naming.games.footer", "Cartouche Builder puts each game’s IPA here, named so; a game copied here from its sheet is named the same way.")
+        case .games: return s("naming.games.footer", "Cartouche on the Mac puts each game’s IPA here, named so; a game copied here from its sheet is named the same way.")
         case .saves: return s("naming.saves.footer", "Cartouche names these itself: leave their names as they are.")
-        case .dumps: return f("naming.dumps.footer", "Loose or each in its folder, up to %lld folders down. A name without its title ID works too: Cartouche Builder then reads it inside, which takes your prod.keys for a package.", CartoucheNaming.dumpsDepth)
+        case .dumps: return f("naming.dumps.footer", "Loose or each in its folder, up to %lld folders down. A name without its title ID works too: Cartouche on the Mac then reads it inside, which takes your prod.keys for a package.", CartoucheNaming.dumpsDepth)
         }
     }
 
     /// What an example's place makes of it.
     static func namingWhy(_ meaning: CartoucheNaming.Meaning) -> String {
         switch meaning {
-        case .namedIPA: return s("naming.namedIPA", "An IPA, named as Cartouche and Cartouche Builder name it: the game, then its title ID.")
+        case .namedIPA: return s("naming.namedIPA", "An IPA, named as Cartouche names it: the game, then its title ID.")
         case .unnamedIPA: return s("naming.unnamedIPA", "Any other name ending in .ipa: Cartouche then reads the game inside, a little slower.")
         case .gameFiles: return s("naming.gameFiles", "The image of a game’s files, for an IPA built without them: any name ending in romfs.img, beside its IPA or elsewhere in the folder.")
-        case .macApp: return s("naming.macApp", "A game built for the Mac, which Cartouche Builder keeps beside its IPA on a NAS: leave it there.")
+        case .macApp: return s("naming.macApp", "A game built for the Mac, which Cartouche on the Mac keeps beside its IPA on a NAS: leave it there.")
         case .tooDeep: return s("naming.tooDeep", "Two folders down: Cartouche reads the folder and the folders right in it, no deeper.")
         case .gameFolder: return s("naming.gameFolder", "A folder per game, which Cartouche makes: any name, as long as it ends with the game’s title ID.")
         case .copy: return f("naming.copy", "A copy of the game’s saves, named after when it was made, in UTC. The %lld newest are kept.", CartoucheSaveSync.kept)

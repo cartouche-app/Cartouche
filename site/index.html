@@ -944,7 +944,7 @@
     .builder-flow { margin-top: clamp(56px, 7vw, 88px); }
     .builder-flow + .flow { margin-top: 0; }
 
-    /* ---------- Cartouche Builder's window ----------
+    /* ---------- The window of Cartouche for Mac ----------
        The Mac app (builder/mac) as macOS 26 draws it, in its own words:
        --w × --h is the window in points, and every size inside is a number
        of points times --pt, as on the iPhone's screens. A narrower window
@@ -1157,7 +1157,7 @@
 
     /* ---------- The Mac beside the iPad ----------
        A MacBook Air: its screen is 1024 × 666 points, with the menu bar and
-       Cartouche Builder's window on the desktop, the library and beside it
+       The window of Cartouche for Mac on the desktop, the library and beside it
        the sheet of the game the iPad has in focus (GameDetailView), with
        Play on this Mac. In the lid and the base, every size is a number of
        points times --u, the base being 1188 points wide. From 700 px wide
@@ -1236,7 +1236,7 @@
     .mw__split { display: flex; flex: 1; min-height: 0; border-top: 1px solid rgba(255, 255, 255, .06); }
     .mw__split > .mw__page { min-width: 0; border-top: 0; overflow: hidden; overflow: clip; }
 
-    /* A game's sheet in Cartouche Builder, beside its library (GameDetailView). */
+    /* A game's sheet in Cartouche for Mac, beside its library (GameDetailView). */
     .msheet { display: flex; flex: none; flex-direction: column; gap: calc(18 * var(--pt)); width: var(--sheet); padding: calc(20 * var(--pt)); overflow: hidden; overflow: clip; border-left: 1px solid rgba(255, 255, 255, .08); }
     .msheet__head { display: grid; grid-template-columns: calc(76 * var(--pt)) minmax(0, 1fr) calc(22 * var(--pt)); gap: calc(12 * var(--pt)); align-items: start; }
     .msheet__head .mcover { box-shadow: 0 calc(3 * var(--pt)) calc(12 * var(--pt)) rgba(0, 0, 0, .35); }
@@ -1438,8 +1438,8 @@
                         <h1><span lang="fr">Vos jeux,<br> sur iPhone, iPad et Mac.</span><span lang="en">Your games,<br> on iPhone, iPad and Mac.</span></h1>
                     </div>
                     <div>
-                        <p class="lede" lang="fr">Cartouche installe, lance et garde les jeux que <a href="https://github.com/seedds/nxnative">nxnative</a> fait tourner nativement sur iPhone et iPad, à partir de vos propres copies. Il se signe, se renouvelle et se met à jour tout seul, et donne à vos jeux la mémoire qu’il leur faut. Sur votre Mac, <a href="#builder">Cartouche Builder</a> construit vos jeux, les y fait tourner avec les mêmes sauvegardes, et les reconstruit quand nxnative les améliore. Sans Mac, <a href="#cloud">Cartouche Cloud</a> les construit pour vous.</p>
-                        <p class="lede" lang="en">Cartouche installs, starts and keeps the games <a href="https://github.com/seedds/nxnative">nxnative</a> runs natively on iPhone and iPad, from your own copies. It signs, renews and updates itself, and gets your games the memory they need. On your Mac, <a href="#builder">Cartouche Builder</a> builds your games, plays them there with the same saves, and rebuilds them when nxnative improves them. With no Mac, <a href="#cloud">Cartouche Cloud</a> builds them for you.</p>
+                        <p class="lede" lang="fr">Cartouche installe, lance et garde les jeux que <a href="https://github.com/seedds/nxnative">nxnative</a> fait tourner nativement sur iPhone et iPad, à partir de vos propres copies. Il se signe, se renouvelle et se met à jour tout seul, et donne à vos jeux la mémoire qu’il leur faut. Sur votre Mac, <a href="#builder">Cartouche pour Mac</a> construit vos jeux, les y fait tourner avec les mêmes sauvegardes, et les reconstruit quand nxnative les améliore. Sans Mac, <a href="#cloud">Cartouche Cloud</a> les construit pour vous.</p>
+                        <p class="lede" lang="en">Cartouche installs, starts and keeps the games <a href="https://github.com/seedds/nxnative">nxnative</a> runs natively on iPhone and iPad, from your own copies. It signs, renews and updates itself, and gets your games the memory they need. On your Mac, <a href="#builder">Cartouche for Mac</a> builds your games, plays them there with the same saves, and rebuilds them when nxnative improves them. With no Mac, <a href="#cloud">Cartouche Cloud</a> builds them for you.</p>
                         <div class="actions">
                             <a class="btn btn--primary" href="#install"><i class="glyph" aria-hidden="true">A</i><span lang="fr">Installer Cartouche</span><span lang="en">Install Cartouche</span></a>
                             <a class="btn btn--glass" href="https://github.com/cartouche-app/Cartouche"><i class="glyph" aria-hidden="true">X</i><span lang="fr">Le code sur GitHub</span><span lang="en">Code on GitHub</span></a>
@@ -1468,12 +1468,12 @@
                         <h2><span lang="fr">Reprenez votre partie sur l’écran d’à côté.</span><span lang="en">Pick up your game on the next screen.</span></h2>
                     </div>
                     <div class="prose">
-                        <p lang="fr">Cartouche est la même app sur iPhone et sur iPad : vos jeux, leurs fiches, la manette ou le tactile. Sur votre Mac, la console de Cartouche est dans la fenêtre de <a href="#builder">Cartouche Builder</a>, qui construit chaque jeu pour le Mac aussi, et le lance. Vos sauvegardes vous suivent de l’un à l’autre, par votre Mac ou votre NAS : la plus récente l’emporte.</p>
-                        <p lang="en">Cartouche is the same app on iPhone and iPad: your games, their sheets, a controller or touch. On your Mac, Cartouche’s console is in the window of <a href="#builder">Cartouche Builder</a>, which builds each game for the Mac too, and plays it there. Your saves follow you from one to the other, through your Mac or your NAS: the newest wins.</p>
+                        <p lang="fr">Cartouche est la même app sur iPhone et sur iPad : vos jeux, leurs fiches, la manette ou le tactile. Sur votre Mac, <a href="#builder">Cartouche pour Mac</a> montre la même console, construit chaque jeu pour le Mac aussi, et le lance. Vos sauvegardes vous suivent de l’un à l’autre, par votre Mac ou votre NAS : la plus récente l’emporte.</p>
+                        <p lang="en">Cartouche is the same app on iPhone and iPad: your games, their sheets, a controller or touch. On your Mac, <a href="#builder">Cartouche for Mac</a> shows the same console, builds each game for the Mac too, and plays it there. Your saves follow you from one to the other, through your Mac or your NAS: the newest wins.</p>
                     </div>
                 </div>
                 <div class="duo">
-                    <div class="laptop" role="img" data-label-fr="Cartouche Builder sur un MacBook Air : la fiche du même jeu, avec Jouer sur ce Mac" data-label-en="Cartouche Builder on a MacBook Air: the sheet of the same game, with Play on this Mac" aria-label="Cartouche Builder on a MacBook Air: the sheet of the same game, with Play on this Mac">
+                    <div class="laptop" role="img" data-label-fr="Cartouche pour Mac sur un MacBook Air : la fiche du même jeu, avec Jouer sur ce Mac" data-label-en="Cartouche for Mac on a MacBook Air: the sheet of the same game, with Play on this Mac" aria-label="Cartouche for Mac on a MacBook Air: the sheet of the same game, with Play on this Mac">
                         <div class="laptop__in" inert>
                             <div class="laptop__lid"><div class="laptop__screen" data-laptop></div><i class="laptop__notch"></i></div>
                             <div class="laptop__base"></div>
@@ -1486,11 +1486,11 @@
                         <div class="device__body"><div class="screen" data-screen="duo-phone"></div></div>
                     </div>
                 </div>
-                <p class="hint"><span lang="fr">Touchez une jaquette sur l’iPad ou l’iPhone<span class="hint__keys">, ou <kbd>←</kbd> <kbd>→</kbd> au clavier</span> : le même jeu passe sur les trois écrans, avec sa fiche sur l’iPad et dans Cartouche Builder sur le Mac.</span><span lang="en">Tap a cover on the iPad or the iPhone<span class="hint__keys">, or press <kbd>←</kbd> <kbd>→</kbd></span>: the same game comes up on all three screens, with its sheet on the iPad and in Cartouche Builder on the Mac.</span></p>
+                <p class="hint"><span lang="fr">Touchez une jaquette sur l’iPad ou l’iPhone<span class="hint__keys">, ou <kbd>←</kbd> <kbd>→</kbd> au clavier</span> : le même jeu passe sur les trois écrans, avec sa fiche sur l’iPad et dans Cartouche sur le Mac.</span><span lang="en">Tap a cover on the iPad or the iPhone<span class="hint__keys">, or press <kbd>←</kbd> <kbd>→</kbd></span>: the same game comes up on all three screens, with its sheet on the iPad and in Cartouche on the Mac.</span></p>
                 <ul class="perks perks--three">
                     <li class="perk"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-iphone"/></svg></span><div><h3>iPhone</h3><p><span lang="fr">La console dans la poche, au tactile ou à la manette, et le jeu en pause derrière elle. Sur un iPhone 15 Pro ou plus récent.</span><span lang="en">The console in your pocket, by touch or with a controller, and the game paused behind it. On an iPhone 15 Pro or newer.</span></p></div></li>
                     <li class="perk"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-ipad"/></svg></span><div><h3>iPad</h3><p><span lang="fr">En paysage, la console et la fiche du jeu côte à côte. Un jeu fait pour se jouer de côté reste de côté. Sur un iPad à puce M1 ou plus récente.</span><span lang="en">In landscape, the console and the game’s sheet side by side. A game made to be played sideways stays sideways. On an iPad with an M1 chip or newer.</span></p></div></li>
-                    <li class="perk"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-laptop"/></svg></span><div><h3>Mac</h3><p><span lang="fr">La console de Cartouche et Cartouche Builder, dans la même fenêtre : Console ou Builder, en haut. Chaque jeu est construit pour le Mac aussi, et Jouer le lance avec vos dernières sauvegardes. Sur un Mac à puce Apple.</span><span lang="en">Cartouche’s console and Cartouche Builder, in one window: Console or Builder, at the top. Each game is built for the Mac too, and Play starts it with your newest saves. On a Mac with Apple silicon.</span></p></div></li>
+                    <li class="perk"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-laptop"/></svg></span><div><h3>Mac</h3><p><span lang="fr">La console de Cartouche et le Builder, dans la même app : Console ou Builder, en haut de la fenêtre. Chaque jeu est construit pour le Mac aussi, et Jouer le lance avec vos dernières sauvegardes. Sur un Mac à puce Apple.</span><span lang="en">Cartouche’s console and the Builder, in one app: Console or Builder, at the top of the window. Each game is built for the Mac too, and Play starts it with your newest saves. On a Mac with Apple silicon.</span></p></div></li>
                 </ul>
             </div>
         </section>
@@ -1582,7 +1582,7 @@
                         <p class="note"><svg aria-hidden="true"><use href="#i-globe"/></svg><span lang="fr"><b>Hors de chez vous</b> : installez Tailscale à part, sur l’iPhone et sur votre Mac ou votre NAS, et Cartouche les rejoint loin de votre <span class="nw">Wi-Fi</span>.</span><span lang="en"><b>Away from home</b>: install Tailscale apart, on the iPhone and on your Mac or NAS, and Cartouche reaches them away from your <span class="nw">Wi-Fi</span>.</span></p>
                     </div>
                     <ul class="stores">
-                        <li class="store store--wide"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-laptop"/></svg></span><h3><span lang="fr">Votre Mac</span><span lang="en">Your Mac</span></h3><p><span lang="fr">Par Cartouche Builder, sur votre <span class="nw">Wi-Fi</span> : jumelé une fois avec le même code à six chiffres sur les deux écrans, puis tout passe chiffré. Il garde aussi les mêmes connexions et les mêmes dossiers que l’iPhone.</span><span lang="en">Through Cartouche Builder, on your <span class="nw">Wi-Fi</span>: paired once with the same six digits on both screens, then everything goes encrypted. It also keeps the same connections and folders as the iPhone.</span></p></li>
+                        <li class="store store--wide"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-laptop"/></svg></span><h3><span lang="fr">Votre Mac</span><span lang="en">Your Mac</span></h3><p><span lang="fr">Par Cartouche pour Mac, sur votre <span class="nw">Wi-Fi</span> : jumelé une fois avec le même code à six chiffres sur les deux écrans, puis tout passe chiffré. Il garde aussi les mêmes connexions et les mêmes dossiers que l’iPhone.</span><span lang="en">Through Cartouche for Mac, on your <span class="nw">Wi-Fi</span>: paired once with the same six digits on both screens, then everything goes encrypted. It also keeps the same connections and folders as the iPhone.</span></p></li>
                         <li class="store"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-nas"/></svg></span><h3><span lang="fr">Dossier partagé</span><span lang="en">Shared folder</span></h3><p><span lang="fr">SMB 2 ou 3, sur votre Mac, votre PC ou votre NAS.</span><span lang="en">SMB 2 or 3, on your Mac, PC or NAS.</span></p></li>
                         <li class="store"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-cloud"/></svg></span><h3><span lang="fr">Bucket S3 privé</span><span lang="en">Private S3 bucket</span></h3><p><span lang="fr">Sur Amazon S3 ou votre MinIO, chaque requête signée avec vos clés.</span><span lang="en">On Amazon S3 or your own MinIO, each request signed with your keys.</span></p></li>
                         <li class="store"><span class="tag-icon"><svg aria-hidden="true"><use href="#i-server"/></svg></span><h3><span lang="fr">Serveur FTP ou SFTP</span><span lang="en">FTP or SFTP server</span></h3><p><span lang="fr">Avec votre compte. En SFTP, Cartouche vérifie la clé du serveur.</span><span lang="en">With your account. Over SFTP, Cartouche checks the server’s key.</span></p></li>
@@ -1627,21 +1627,21 @@
                 <div class="intro intro--wide">
                     <div>
                         <p class="label"><span lang="fr">Sur votre Mac</span><span lang="en">On your Mac</span></p>
-                        <h2><span lang="fr">Cartouche Builder construit vos jeux, et les refait quand nxnative les améliore.</span><span lang="en">Cartouche Builder builds your games, and builds them again when nxnative improves them.</span></h2>
+                        <h2><span lang="fr">Cartouche pour Mac construit vos jeux, et les refait quand nxnative les améliore.</span><span lang="en">Cartouche for Mac builds your games, and builds them again when nxnative improves them.</span></h2>
                     </div>
                     <div>
                         <div class="prose">
-                            <p lang="fr">Cartouche Builder est l’app Mac de Cartouche. À partir de vos propres copies, il construit chaque jeu avec nxnative, pour l’iPhone et l’iPad comme pour le Mac, et le dépose dans votre dossier de jeux. Puis il les suit : quand nxnative en améliore un, il le reconstruit, tout de suite ou la nuit, et Cartouche propose la mise à jour sur l’iPhone, sauvegardes gardées. Sa fenêtre montre aussi la console de Cartouche, comme sur l’iPhone, avec les réglages et les sauvegardes de chaque jeu sur sa fiche. Console ou Builder, en haut de la fenêtre, ou ⌘1 et ⌘2, passent de l’un à l’autre.</p>
-                            <p lang="en">Cartouche Builder is Cartouche’s Mac app. From your own copies, it builds each game with nxnative, for the iPhone and iPad as for the Mac, and puts it in your games folder. Then it follows them: when nxnative improves one, it builds it again, now or at night, and Cartouche offers the update on the iPhone, saves kept. Its window shows Cartouche’s console too, as on the iPhone, with each game’s settings and saves on its sheet. Console or Builder, at the top of the window, or ⌘1 and ⌘2, switch from one to the other.</p>
+                            <p lang="fr">Sur le Mac, Cartouche est une seule app : la console, comme sur l’iPhone, et le Builder. À partir de vos propres copies, il construit chaque jeu avec nxnative, pour l’iPhone et l’iPad comme pour le Mac, et le dépose dans votre dossier de jeux. Puis il les suit : quand nxnative en améliore un, il le reconstruit, tout de suite ou la nuit, et Cartouche propose la mise à jour sur l’iPhone, sauvegardes gardées. Sa fenêtre montre aussi la console de Cartouche, comme sur l’iPhone, avec les réglages et les sauvegardes de chaque jeu sur sa fiche. Console ou Builder, en haut de la fenêtre, ou ⌘1 et ⌘2, passent de l’un à l’autre.</p>
+                            <p lang="en">On the Mac, Cartouche is one app: the console, as on the iPhone, and the Builder. From your own copies, it builds each game with nxnative, for the iPhone and iPad as for the Mac, and puts it in your games folder. Then it follows them: when nxnative improves one, it builds it again, now or at night, and Cartouche offers the update on the iPhone, saves kept. Its window shows Cartouche’s console too, as on the iPhone, with each game’s settings and saves on its sheet. Console or Builder, at the top of the window, or ⌘1 and ⌘2, switch from one to the other.</p>
                         </div>
                         <div class="actions">
-                            <a class="btn btn--primary" data-download="builder" href="https://github.com/cartouche-app/Cartouche/releases/download/builder-v0.2.0/Cartouche-Builder-0.2.0.dmg"><svg aria-hidden="true"><use href="#i-download"/></svg><span lang="fr">Télécharger Cartouche Builder</span><span lang="en">Download Cartouche Builder</span></a>
+                            <a class="btn btn--primary" data-download="builder" href="https://github.com/cartouche-app/Cartouche/releases/download/builder-v0.2.0/Cartouche-Builder-0.2.0.dmg"><svg aria-hidden="true"><use href="#i-download"/></svg><span lang="fr">Télécharger Cartouche pour Mac</span><span lang="en">Download Cartouche for Mac</span></a>
                             <a class="btn btn--glass" href="https://github.com/cartouche-app/Cartouche/blob/main/builder/README.md"><svg aria-hidden="true"><use href="#i-doc"/></svg><span lang="fr">Son guide</span><span lang="en">Its guide</span></a>
                         </div>
                         <p class="builder-need"><span lang="fr">Gratuit, pour un Mac à puce Apple avec macOS 26.6 ou ultérieur. La première fois, macOS ne peut pas le vérifier : Réglages Système › Confidentialité et sécurité › Ouvrir quand même.</span><span lang="en">Free, for a Mac with Apple silicon and macOS 26.6 or later. The first time, macOS cannot check it: System Settings › Privacy &amp; Security › Open Anyway.</span></p>
                     </div>
                 </div>
-                <div class="mac" role="group" data-label-fr="La fenêtre de Cartouche Builder sur un Mac" data-label-en="Cartouche Builder’s window on a Mac" aria-label="Cartouche Builder’s window on a Mac">
+                <div class="mac" role="group" data-label-fr="La fenêtre de Cartouche pour Mac sur un Mac" data-label-en="The window of Cartouche for Mac on a Mac" aria-label="The window of Cartouche for Mac on a Mac">
                     <div class="mac__win" data-builder></div>
                 </div>
                 <p class="hint"><span lang="fr">Parcourez ses pages, ou lancez Tout reconstruire.</span><span lang="en">Browse its pages, or press Rebuild all.</span></p>
@@ -1656,7 +1656,7 @@
                 <p class="label builder-flow"><span lang="fr">De votre console à vos écrans</span><span lang="en">From your console to your screens</span></p>
                 <ol class="flow">
                     <li><span class="tag-icon"><svg aria-hidden="true"><use href="#i-folder"/></svg></span><h3><span lang="fr">Vos fichiers</span><span lang="en">Your files</span></h3><p><span lang="fr">Votre jeu, ses mises à jour et ses DLC, tirés de votre propre console.</span><span lang="en">Your game, its updates and DLC, dumped from your own console.</span></p></li>
-                    <li><span class="tag-icon"><svg aria-hidden="true"><use href="#i-laptop"/></svg></span><h3>Cartouche Builder</h3><p><span lang="fr">Construit le jeu avec nxnative sur votre Mac, pour l’iPhone, l’iPad et le Mac, et le refait quand nxnative l’améliore.</span><span lang="en">Builds the game with nxnative on your Mac, for the iPhone, the iPad and the Mac, and again when nxnative improves it.</span></p></li>
+                    <li><span class="tag-icon"><svg aria-hidden="true"><use href="#i-laptop"/></svg></span><h3><span lang="fr">Cartouche pour Mac</span><span lang="en">Cartouche for Mac</span></h3><p><span lang="fr">Construit le jeu avec nxnative sur votre Mac, pour l’iPhone, l’iPad et le Mac, et le refait quand nxnative l’améliore.</span><span lang="en">Builds the game with nxnative on your Mac, for the iPhone, the iPad and the Mac, and again when nxnative improves it.</span></p></li>
                     <li><span class="tag-icon"><svg aria-hidden="true"><use href="#i-nas"/></svg></span><h3><span lang="fr">Votre dossier de jeux</span><span lang="en">Your games folder</span></h3><p><span lang="fr">Sur votre Mac ou votre NAS. Le Mac peut aussi servir de stockage à Cartouche.</span><span lang="en">On your Mac or NAS. The Mac can also be Cartouche’s storage.</span></p></li>
                     <li><span class="tag-icon"><svg aria-hidden="true"><use href="#i-iphone"/></svg></span><h3>Cartouche</h3><p><span lang="fr">Installe le jeu sur l’iPhone ou l’iPad, puis propose chaque mise à jour sur sa fiche, sauvegardes gardées. Le Mac le lance aussi, avec les mêmes.</span><span lang="en">Installs the game on the iPhone or iPad, then offers each update on its sheet, saves kept. The Mac plays it too, with the same ones.</span></p></li>
                 </ol>
@@ -1705,8 +1705,8 @@
                                 <a class="btn btn--primary" data-download="installer-windows" href="https://github.com/cartouche-app/Cartouche/releases/download/installer-v0.1.0/Cartouche-Installer-0.1.0-Windows.exe"><svg aria-hidden="true"><use href="#i-download"/></svg><span lang="fr">Télécharger pour Windows</span><span lang="en">Download for Windows</span></a>
                             </div></div></li>
                         <li class="step"><span class="step__n" aria-hidden="true">3</span><div><h3><span lang="fr">Le guide de Cartouche</span><span lang="en">Cartouche’s guide</span></h3><p><span lang="fr">Ouvrez Cartouche : son guide, « Votre premier jeu », vous accompagne jusqu’à votre première partie et coche chaque étape tout seul.</span><span lang="en">Open Cartouche: its guide, Your first game, takes you all the way to playing, and ticks off each step by itself.</span></p></div></li>
-                        <li class="step"><span class="step__n" aria-hidden="true">4</span><div><h3><span lang="fr">Vos jeux, sur votre Mac</span><span lang="en">Your games, on your Mac</span></h3><p><span lang="fr">Glissez <a href="#builder">Cartouche Builder</a> dans Applications : il installe ce qu’il faut à nxnative, sans Terminal, vous ouvre l’App Store pour Xcode, puis construit vos jeux à partir de vos propres copies, pour l’iPhone, l’iPad et le Mac. La première fois, macOS ne peut pas le vérifier : Réglages Système › Confidentialité et sécurité › Ouvrir quand même. <span class="nw">Pas de Mac ?</span> <a href="#cloud">Cartouche Cloud</a> les construit pour vous.</span><span lang="en">Drag <a href="#builder">Cartouche Builder</a> onto Applications: it installs what nxnative needs, with no Terminal, opens the App Store for Xcode, then builds your games from your own copies, for the iPhone, the iPad and the Mac. The first time, macOS cannot check it: System Settings › Privacy &amp; Security › Open Anyway. No Mac? <a href="#cloud">Cartouche Cloud</a> builds them for you.</span></p>
-                            <a class="btn btn--primary" data-download="builder" href="https://github.com/cartouche-app/Cartouche/releases/download/builder-v0.2.0/Cartouche-Builder-0.2.0.dmg"><svg aria-hidden="true"><use href="#i-download"/></svg><span lang="fr">Télécharger Cartouche Builder</span><span lang="en">Download Cartouche Builder</span></a></div></li>
+                        <li class="step"><span class="step__n" aria-hidden="true">4</span><div><h3><span lang="fr">Vos jeux, sur votre Mac</span><span lang="en">Your games, on your Mac</span></h3><p><span lang="fr">Glissez <a href="#builder">Cartouche pour Mac</a> dans Applications : il installe ce qu’il faut à nxnative, sans Terminal, vous ouvre l’App Store pour Xcode, puis construit vos jeux à partir de vos propres copies, pour l’iPhone, l’iPad et le Mac. La première fois, macOS ne peut pas le vérifier : Réglages Système › Confidentialité et sécurité › Ouvrir quand même. <span class="nw">Pas de Mac ?</span> <a href="#cloud">Cartouche Cloud</a> les construit pour vous.</span><span lang="en">Drag <a href="#builder">Cartouche for Mac</a> onto Applications: it installs what nxnative needs, with no Terminal, opens the App Store for Xcode, then builds your games from your own copies, for the iPhone, the iPad and the Mac. The first time, macOS cannot check it: System Settings › Privacy &amp; Security › Open Anyway. No Mac? <a href="#cloud">Cartouche Cloud</a> builds them for you.</span></p>
+                            <a class="btn btn--primary" data-download="builder" href="https://github.com/cartouche-app/Cartouche/releases/download/builder-v0.2.0/Cartouche-Builder-0.2.0.dmg"><svg aria-hidden="true"><use href="#i-download"/></svg><span lang="fr">Télécharger Cartouche pour Mac</span><span lang="en">Download Cartouche for Mac</span></a></div></li>
                     </ol>
                     <p class="small guide"><span lang="fr">Pas à pas, de rien à votre premier jeu : <a href="https://github.com/cartouche-app/Cartouche/blob/main/docs/getting-started.fr.md">le guide Premiers pas</a>.</span><span lang="en">Step by step, from nothing to your first game: <a href="https://github.com/cartouche-app/Cartouche/blob/main/docs/getting-started.md">the Getting started guide</a>.</span></p>
                 </div>
@@ -1764,11 +1764,11 @@
                     </details>
                     <details>
                         <summary><span lang="fr">Faut-il un ordinateur ?</span><span lang="en">Do I need a computer?</span></summary>
-                        <p><span lang="fr">Une fois, pour installer Cartouche depuis un Mac ou un PC Windows. Ensuite, il se renouvelle et se met à jour depuis l’iPhone ou l’iPad. Pour construire vos jeux, il faut un Mac à puce Apple, avec <a href="#builder">Cartouche Builder</a>, qui les fait aussi tourner sur le Mac, ou un ordinateur et <a href="#cloud">Cartouche Cloud</a>, qui les construit pour vous.</span><span lang="en">Once, to install Cartouche from a Mac or a Windows PC. Then it renews and updates itself from the iPhone or iPad. Building your games takes a Mac with Apple silicon, with <a href="#builder">Cartouche Builder</a>, which plays them on the Mac too, or a computer and <a href="#cloud">Cartouche Cloud</a>, which builds them for you.</span></p>
+                        <p><span lang="fr">Une fois, pour installer Cartouche depuis un Mac ou un PC Windows. Ensuite, il se renouvelle et se met à jour depuis l’iPhone ou l’iPad. Pour construire vos jeux, il faut un Mac à puce Apple, avec <a href="#builder">Cartouche pour Mac</a>, qui les fait aussi tourner sur le Mac, ou un ordinateur et <a href="#cloud">Cartouche Cloud</a>, qui les construit pour vous.</span><span lang="en">Once, to install Cartouche from a Mac or a Windows PC. Then it renews and updates itself from the iPhone or iPad. Building your games takes a Mac with Apple silicon, with <a href="#builder">Cartouche for Mac</a>, which plays them on the Mac too, or a computer and <a href="#cloud">Cartouche Cloud</a>, which builds them for you.</span></p>
                     </details>
                     <details>
                         <summary><span lang="fr">Cartouche marche-t-il sur iPad et sur Mac ?</span><span lang="en">Does Cartouche work on iPad and on a Mac?</span></summary>
-                        <p><span lang="fr">Sur un iPad à puce M1 ou plus récente, c’est la même app que sur l’iPhone, installée de la même façon, qui dit « iPad » partout où elle parle de votre appareil. Sur un Mac à puce Apple, <a href="#builder">Cartouche Builder</a> construit chacun de vos jeux pour le Mac aussi et le lance, avec les mêmes sauvegardes et les mêmes connexions que votre iPhone et votre iPad.</span><span lang="en">On an iPad with an M1 chip or newer, it is the same app as on the iPhone, installed the same way, which says “iPad” wherever it speaks of your device. On a Mac with Apple silicon, <a href="#builder">Cartouche Builder</a> builds each of your games for the Mac too and plays it there, with the same saves and the same connections as your iPhone and iPad.</span></p>
+                        <p><span lang="fr">Sur un iPad à puce M1 ou plus récente, c’est la même app que sur l’iPhone, installée de la même façon, qui dit « iPad » partout où elle parle de votre appareil. Sur un Mac à puce Apple, <a href="#builder">Cartouche pour Mac</a> construit chacun de vos jeux pour le Mac aussi et le lance, avec les mêmes sauvegardes et les mêmes connexions que votre iPhone et votre iPad.</span><span lang="en">On an iPad with an M1 chip or newer, it is the same app as on the iPhone, installed the same way, which says “iPad” wherever it speaks of your device. On a Mac with Apple silicon, <a href="#builder">Cartouche for Mac</a> builds each of your games for the Mac too and plays it there, with the same saves and the same connections as your iPhone and iPad.</span></p>
                     </details>
                     <details>
                         <summary><span lang="fr">Puis-je jouer sur ma télé ?</span><span lang="en">Can I play on my TV?</span></summary>
@@ -1784,7 +1784,7 @@
                     </details>
                     <details>
                         <summary><span lang="fr">Comment construire mes jeux ?</span><span lang="en">How do I build my games?</span></summary>
-                        <p><span lang="fr">Avec <a href="#builder">Cartouche Builder</a>, sur un Mac à puce Apple. Montrez-lui le dossier de vos copies et celui de vos jeux : il installe ce qu’il faut, construit chaque jeu avec nxnative, puis le reconstruit quand nxnative l’améliore. Il ne télécharge jamais de jeu. Sans Mac, <a href="#cloud">Cartouche Cloud</a> les construit pour vous : envoyez votre copie depuis un ordinateur, sur son site, et Cartouche installe le jeu construit.</span><span lang="en">With <a href="#builder">Cartouche Builder</a>, on a Mac with Apple silicon. Show it the folder of your copies and your games folder: it installs what it needs, builds each game with nxnative, then builds it again when nxnative improves it. It never downloads a game. With no Mac, <a href="#cloud">Cartouche Cloud</a> builds them for you: send your copy from a computer, on its site, and Cartouche installs the game built.</span></p>
+                        <p><span lang="fr">Avec <a href="#builder">Cartouche pour Mac</a>, sur un Mac à puce Apple. Montrez-lui le dossier de vos copies et celui de vos jeux : il installe ce qu’il faut, construit chaque jeu avec nxnative, puis le reconstruit quand nxnative l’améliore. Il ne télécharge jamais de jeu. Sans Mac, <a href="#cloud">Cartouche Cloud</a> les construit pour vous : envoyez votre copie depuis un ordinateur, sur son site, et Cartouche installe le jeu construit.</span><span lang="en">With <a href="#builder">Cartouche for Mac</a>, on a Mac with Apple silicon. Show it the folder of your copies and your games folder: it installs what it needs, builds each game with nxnative, then builds it again when nxnative improves it. It never downloads a game. With no Mac, <a href="#cloud">Cartouche Cloud</a> builds them for you: send your copy from a computer, on its site, and Cartouche installs the game built.</span></p>
                     </details>
                     <details>
                         <summary><span lang="fr">Que garde Cartouche Cloud de mes jeux ?</span><span lang="en">What does Cartouche Cloud keep of my games?</span></summary>
@@ -2179,7 +2179,7 @@
             '<i class="island"></i><i class="indicator"></i></div>';
     }
 
-    // ---------- Cartouche Builder, on the Mac ----------
+    // ---------- Cartouche, on the Mac ----------
     // Its window (builder/mac), in its own words: the player's games as its
     // library shows them, two of them improved by nxnative, a batch under
     // way, what it keeps on the Mac, the iPhone it serves and this Mac's
@@ -2280,7 +2280,7 @@
 
     function macStorage() {
         return '<section class="mwp" data-mwp="storage" hidden>' +
-            mheader(t("Stockage", "Storage"), t("Cartouche Builder garde 20,8 Go sur ce Mac", "Cartouche Builder keeps 20.8 GB on this Mac"), mbtn("refresh", t("Mesurer à nouveau", "Measure again"))) +
+            mheader(t("Stockage", "Storage"), t("Cartouche garde 20,8 Go sur ce Mac", "Cartouche keeps 20.8 GB on this Mac"), mbtn("refresh", t("Mesurer à nouveau", "Measure again"))) +
             '<div class="mdisks"><div class="mcard mdisk"><b>' + ic("drive") + t("Disque des constructions", "Build disk") + '</b><div class="mbar"><i style="--p:82%"></i></div>' +
             "<p>" + t("182 Go libres sur 994 Go", "182 GB free of 994 GB") + "</p><small>" + t("Garde 20 Go libres : les plus vieux dossiers partent d’abord.", "Keeps 20 GB free: the oldest build folders go first.") + "</small></div>" +
             '<div class="mcard mdisk"><b>' + ic("nas") + t("Dossier des jeux", "Games folder") + '</b><div class="mbar"><i style="--p:71%"></i></div>' +
@@ -2304,7 +2304,7 @@
             '<p class="mlabel">' + t("Ce que voit l’iPhone", "What the iPhone sees") + '</p><div class="mcard">' +
             '<div class="mrow">' + ic("gamepad") + '<p class="mrow__main"><b>' + t("Jeux", "Games") + "</b><small>/Volumes/Jeux</small><small>" + t("Sur votre NAS, à travers ce Mac", "On your NAS, through this Mac") + "</small></p></div>" +
             '<div class="mrow">' + ic("cloud") + '<p class="mrow__main"><b>' + t("Sauvegardes", "Saves") + "</b><small>~/Library/Application Support/Cartouche Builder/Saves</small><small>" +
-            t("Dans le dossier de Cartouche Builder", "In Cartouche Builder’s folder") + "</small></p>" + mbtn("", t("Changer…", "Change…")) + "</div></div>" +
+            t("Dans le dossier de Cartouche", "In Cartouche’s folder") + "</small></p>" + mbtn("", t("Changer…", "Change…")) + "</div></div>" +
             '<p class="mlabel">' + t("iPhone associés", "Paired iPhones") + '</p><div class="mcard"><div class="mrow">' + ic("iphone") +
             '<p class="mrow__main"><b>iPhone 17 Pro</b><small>' + t("Connecté maintenant", "Connected now") + "</small></p>" + mbtn("", t("Retirer", "Remove")) + "</div></div></section>";
     }
@@ -2319,7 +2319,7 @@
 
     function macSide() {
         return '<div class="mw__side"><div class="mw__top"><span class="mw__lights" aria-hidden="true"><i></i><i></i><i></i></span><span class="mw__toggle" aria-hidden="true">' + ic("sidebar") + "</span></div>" +
-            '<nav class="mw__nav" data-label-fr="Pages de Cartouche Builder" data-label-en="Cartouche Builder’s pages" aria-label="Cartouche Builder’s pages">' + MAC_PAGES.map(function (p, i) {
+            '<nav class="mw__nav" data-label-fr="Pages du Builder" data-label-en="The Builder’s pages" aria-label="The Builder’s pages">' + MAC_PAGES.map(function (p, i) {
                 return '<button type="button" class="mw__item" data-go="' + p.page + '"' + (i === 0 ? ' aria-current="page"' : "") +
                     ' data-label-fr="' + p.label[0] + '" data-label-en="' + p.label[1] + '" aria-label="' + p.label[1] + '">' + ic(p.icon) + "<span>" + tt(p.label) + "</span>" +
                     (p.badge === "%" ? "<b data-pct></b>" : p.badge ? "<b>" + p.badge + "</b>" : "") + "</button>";
@@ -2365,7 +2365,7 @@
     // The MacBook's screen: the menu bar, and on the desktop Cartouche
     // Builder's window with the library and the sheet beside it.
     function laptop(g) {
-        return '<div class="osdesk"><div class="osbar"><b>Cartouche Builder</b>' +
+        return '<div class="osdesk"><div class="osbar"><b>Cartouche</b>' +
             [["Fichier", "File"], ["Édition", "Edit"], ["Présentation", "View"], ["Fenêtre", "Window"], ["Aide", "Help"]].map(function (m) { return "<span>" + tt(m) + "</span>"; }).join("") +
             '<span class="osbar__right">' + ic("wifi", "ic--wifi") + ic("battery", "ic--battery") + "<span>" + t("ven. 13 nov. 09:41", "Fri Nov 13 9:41 AM") + "</span></span></div>" +
             '<div class="lwin"><div class="mw" data-page="library">' + macSide() + '<div class="mw__main">' + macBar() +
@@ -2454,7 +2454,7 @@
     var duoPhone = $('[data-screen="duo-phone"]');
     duoPhone.innerHTML = home({ games: OWNED, index: ipadIndex, interactive: true, island: true, sizes: "(max-width: 699px) 90px, 120px" });
     setFocus(duoPhone, OWNED, ipadIndex);
-    // The MacBook behind them: Cartouche Builder shows the sheet of the same
+    // The MacBook behind them: Cartouche for Mac shows the sheet of the same
     // game, picked in its library. It is only shown: its screen is inert.
     var laptopScreen = $("[data-laptop]");
     laptopScreen.innerHTML = laptop(OWNED[ipadIndex]);
@@ -2546,7 +2546,7 @@
     });
     toggle.addEventListener("click", function () { setPause(pauseState === "console" ? "game" : "console"); });
 
-    // Cartouche Builder's window: its sidebar leads to its pages, Rebuild
+    // The window of Cartouche for Mac: its sidebar leads to its pages, Rebuild
     // all to the batch, which goes on while the window is in view.
     var macWin = $("[data-builder]");
     macWin.innerHTML = macWindow();

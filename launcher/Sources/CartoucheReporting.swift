@@ -171,7 +171,7 @@ enum CartoucheReports {
         #if os(iOS)
         note("Cartouche \(environment.cartouche) started, iOS \(environment.system), \(environment.device)")
         #else
-        note("Console of Cartouche Builder \(environment.cartouche) shown, macOS \(environment.system), \(environment.device)")
+        note("Console of Cartouche for Mac \(environment.cartouche) shown, macOS \(environment.system), \(environment.device)")
         #endif
     }
 
@@ -318,7 +318,7 @@ enum CartoucheReports {
         }
         facts.append(storage())
         return CartoucheReport.Environment(cartouche: builder, basedOn: nil, system: system, device: device,
-                                           language: language, facts: facts, app: "Cartouche Builder", systemName: "macOS")
+                                           language: language, facts: facts, app: "Cartouche for Mac", systemName: "macOS")
     }
     #endif
 
@@ -344,7 +344,7 @@ enum CartoucheReports {
         case .s3: return "S3"
         case .ftp: return "FTP"
         case .sftp: return "SFTP"
-        case .mac: return "Cartouche Builder on a Mac"
+        case .mac: return "Cartouche on a Mac"
         case .drive: return "Google Drive"
         }
     }

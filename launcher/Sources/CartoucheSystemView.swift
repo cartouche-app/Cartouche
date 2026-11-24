@@ -754,7 +754,7 @@ struct CartoucheSystemView: View {
             Text(verbatim: "Cartouche")
             #else
             // The app the console is in.
-            Text(verbatim: "Cartouche Builder")
+            Text(verbatim: "Cartouche for Mac")
             #endif
         } footer: {
             Text(CartoucheText.coversCredit)

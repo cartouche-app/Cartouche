@@ -174,7 +174,7 @@ class Batches(BatchHome):
         configs.save(paths, config)
         with mock.patch.object(batch, "free_gb", return_value=13.7):
             plan, summary = self.run_due(only={MKW})
-        self.assertTrue(summary.failed[0][1].startswith("7 GB missing to build this game: Cartouche Builder starts a build only with 20 GB free on "),
+        self.assertTrue(summary.failed[0][1].startswith("7 GB missing to build this game: Cartouche starts a build only with 20 GB free on "),
                         summary.failed[0][1])
         status = json.loads(paths.status.read_text())
         game = next(g for g in status["games"] if g["title_id"] == MKW)

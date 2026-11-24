@@ -471,7 +471,7 @@ final class CartoucheConnectionsExchange: ObservableObject {
         guard let mac = remote as? CartoucheMacRemote else { return false }
         do {
             guard try await mac.client.info().hasConnections == true else {
-                NSLog("[Cartouche] the Mac takes no connections: its Cartouche Builder is older")
+                NSLog("[Cartouche] the Mac takes no connections: its Cartouche is older")
                 return false
             }
             let theirs = try await mac.client.connections(settings.connections(), places: settings.chosenFolders())
