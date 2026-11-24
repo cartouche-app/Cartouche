@@ -397,7 +397,7 @@ final class CartoucheTelemetry: ObservableObject {
                                    settings: CartoucheGameActions.shared.settings(for: app, tileKey: "").values,
                                    bcTextures: CartoucheSessionReport.bcTextures(
                                        readsBCTextures: CartoucheDevice.supportsBCTextureCompression) {
-                                           CartoucheInstalledBuilds.convertsBCTextures(of: app)
+                                           !CartoucheInstalledBuilds.bcConversion(of: app).isEmpty
                                        })
                     }
                     let build = details?.build

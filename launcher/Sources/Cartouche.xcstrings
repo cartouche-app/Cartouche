@@ -10105,13 +10105,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Textures converted to ASTC by this game’s build"
+            "value" : "Textures converted for this GPU by this game’s build"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Textures converties en ASTC par la construction de ce jeu"
+            "value" : "Textures converties pour ce GPU par la construction de ce jeu"
           }
         }
       }

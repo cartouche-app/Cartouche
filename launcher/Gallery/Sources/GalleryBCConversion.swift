@@ -3,9 +3,11 @@
 //  CartoucheGallery
 //
 //  An iPhone whose GPU reads no BC-compressed texture, an A16's, for the
-//  works gpu-no-bc and gpu-no-bc-converted: the sheet's game installed as
-//  nxnative builds it, which refuses that GPU, or as a fork of nxnative
-//  that converts those textures builds it (CartoucheBCConversion). Its
+//  works gpu-no-bc, gpu-no-bc-converted and gpu-no-bc-converted-vulkan: the
+//  sheet's game installed as nxnative builds it, which refuses that GPU, or
+//  as a fork of nxnative that converts those textures builds it
+//  (CartoucheBCConversion), for NVN alone as on 18 November, or for Vulkan
+//  too as since 22 November. Its
 //  executable is a small one, made as ld lays one out, with the words of
 //  that build where a game's executable has them: Cartouche reads it as it
 //  reads a game's.
@@ -16,21 +18,28 @@ import Foundation
 enum GalleryBCConversion {
     /// Whether WORK is an A16's.
     static func isWithoutBC(_ work: String?) -> Bool {
-        work == "gpu-no-bc" || work == "gpu-no-bc-converted"
+        work == "gpu-no-bc" || work == "gpu-no-bc-converted" || work == "gpu-no-bc-converted-vulkan"
     }
 
     /// Gives INFO, the sheet's game, its Info.plist and its executable, for
-    /// WORK: as a fork that converts the textures builds it
-    /// (gpu-no-bc-converted), else as nxnative does.
+    /// WORK: as a fork that converts the textures builds it, for NVN
+    /// (gpu-no-bc-converted) or for NVN and Vulkan
+    /// (gpu-no-bc-converted-vulkan), else as nxnative does.
     static func install(_ info: LCAppInfo, work: String?) {
         guard isWithoutBC(work) else { return }
         info.infoPlist = NSMutableDictionary(dictionary: ["CFBundleExecutable": "Game"])
         guard let bundle = info.bundlePath() else { return }
-        let strings = work == "gpu-no-bc-converted"
-            // mianmuhammadse/nxnative's no-bc branch, nvn_mtl.m.
-            ? ["DM_NO_BC_ASTC", "no BC: DM_NO_BC_ASTC=%s: %s%s", "no BC: BC1–3 transcoded to ASTC on the GPU"]
-            // nxnative's main.m.
-            : ["This device's GPU (%s) cannot read BC-compressed textures, which the games use."]
+        // mianmuhammadse/nxnative's no-bc branch: nvn_mtl.m, then, since
+        // 22 November, hle_vk.m.
+        let nvn = ["DM_NO_BC_ASTC", "no BC: DM_NO_BC_ASTC=%s: %s%s", "no BC: BC1–3 transcoded to ASTC on the GPU"]
+        let vulkan = ["[dm] [vk] no BC: BC images are stored as ASTC 4x4 (BC1-3) or decompressed (the other formats), first one: format %d %ux%u → pixel format %lu"]
+        let strings: [String]
+        switch work {
+        case "gpu-no-bc-converted": strings = nvn
+        case "gpu-no-bc-converted-vulkan": strings = nvn + vulkan
+        // nxnative's main.m.
+        default: strings = ["This device's GPU (%s) cannot read BC-compressed textures, which the games use."]
+        }
         try? executable(strings: strings).write(to: URL(fileURLWithPath: bundle).appendingPathComponent("Game"))
     }
 

@@ -10,7 +10,7 @@
 //  or an iPhone 15 saw their games close before their first image
 //  (docs/decisions.md, 67). A build of the game that converts those
 //  textures for such a GPU, which a fork of nxnative makes, lifts it
-//  (CartoucheBCConversion, docs/decisions.md, 137).
+//  (CartoucheBCConversion, docs/decisions/137.md and 145.md).
 //
 //  Platform-independent: tested on its own by launcher/Package.swift.
 //

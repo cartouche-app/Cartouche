@@ -195,14 +195,13 @@ struct CartoucheEntry: Identifiable, Hashable {
 
     /// Whether the player's installed copy draws its BC-compressed
     /// textures on this iPhone's GPU, which reads none: its build converts
-    /// them (CartoucheBCConversion), and the game draws with NVN, which the
-    /// conversion covers. False where the GPU reads them, where it does not
-    /// matter and nothing is read, and for a copy not installed, whose
-    /// build Cartouche has not read.
+    /// them for every API the game draws with, NVN or Vulkan
+    /// (CartoucheBCConversion.covers). False where the GPU reads them, where
+    /// it does not matter and nothing is read, and for a copy not installed,
+    /// whose build Cartouche has not read.
     var convertsBCTextures: Bool {
-        guard !CartoucheDevice.supportsBCTextureCompression, let app,
-              CartoucheBCConversion.covers(graphics: game?.graphics) else { return false }
-        return CartoucheInstalledBuilds.convertsBCTextures(of: app)
+        guard !CartoucheDevice.supportsBCTextureCompression, let app else { return false }
+        return CartoucheBCConversion.covers(graphics: game?.graphics, by: CartoucheInstalledBuilds.bcConversion(of: app))
     }
 
     /// Whether the game is known to play on an iPhone: a tester's result
