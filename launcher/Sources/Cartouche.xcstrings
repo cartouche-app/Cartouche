@@ -9895,6 +9895,40 @@
         }
       }
     },
+    "setup.sessionExpired.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple asks for a new sign-in with your Apple ID. Cartouche renews itself again as soon as it has gone through; your games and saves stay."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple demande une nouvelle connexion avec votre identifiant Apple. Cartouche se renouvelle de nouveau dès qu’elle est passée ; vos jeux et vos sauvegardes restent."
+          }
+        }
+      }
+    },
+    "setup.sessionExpired.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One step to do again"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une étape à refaire"
+          }
+        }
+      }
+    },
     "setup.status.done" : {
       "extractionState" : "manual",
       "localizations" : {

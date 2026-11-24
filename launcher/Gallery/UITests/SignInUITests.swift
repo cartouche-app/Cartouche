@@ -25,6 +25,8 @@ extension Words {
     static let signInAgain = "Sign in again"                // signIn.again
     static let renewSessionExpired = "Apple says the session of your Apple ID has expired" // system.signature.renew.sessionExpired
     static let setupSessionExpired = "Apple says the session of " // setup.appleID.sessionExpired
+    static let setupStepAgain = "One step to do again"      // setup.sessionExpired.title
+    static let setupAllSet = "All set"                      // setup.done.title
 }
 
 final class SignInUITests: ConsoleTestCase {
@@ -40,6 +42,7 @@ final class SignInUITests: ConsoleTestCase {
         let signedIn = element(in: app.staticTexts, beginningWith: Words.signedIn)
         expect(signedIn.waitForExistence(timeout: 15), "The setup does not say the Apple ID is signed in", in: app)
         expect(!app.buttons[Words.signInAgain].exists, "The setup done offers Sign in again", in: app)
+        expect(app.staticTexts[Words.setupAllSet].exists, "The setup done does not say that all is set", in: app)
         closeSetup(in: app)
         expectMainThreadAnswered(app)
     }
@@ -91,6 +94,9 @@ final class SignInUITests: ConsoleTestCase {
         tap(element(in: app.buttons, beginningWith: Words.setup), "Setup on the System page", in: app)
         let said = element(in: app.staticTexts, beginningWith: Words.setupSessionExpired)
         expect(said.waitForExistence(timeout: 15), "The setup does not say that the session has expired", in: app)
+        // Nor does its title say that all is set.
+        expect(app.staticTexts[Words.setupStepAgain].exists, "The setup's title does not say a step is to do again", in: app)
+        expect(!app.staticTexts[Words.setupAllSet].exists, "The setup's title says all is set", in: app)
         tap(app.buttons[Words.signInAgain], "Sign in again of the setup's Apple ID step", in: app)
         let appleID = app.textFields[Words.appleID]
         expect(appleID.waitForExistence(timeout: 15), "The sign-in did not open", in: app)

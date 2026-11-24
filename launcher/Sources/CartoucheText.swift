@@ -208,6 +208,8 @@ enum CartoucheText {
     static var setupIntro: String { s("setup.intro", "Three steps, once on this iPhone. Then Cartouche renews itself.") }
     static var setupAllDone: String { s("setup.done.title", "All set") }
     static var setupAllDoneDetail: String { s("setup.done.detail", "Cartouche signs your games and renews itself. There is nothing more to do here.") }
+    static var setupSessionExpiredTitle: String { s("setup.sessionExpired.title", "One step to do again") }
+    static var setupSessionExpiredDetail: String { s("setup.sessionExpired.detail", "Apple asks for a new sign-in with your Apple ID. Cartouche renews itself again as soon as it has gone through; your games and saves stay.") }
     static func setupStepDone(_ step: String) -> String { f("setup.step.done", "%@, done", step) }
     static var setupPairingTitle: String { s("setup.pairing.title", "Pairing file") }
     static var setupPairingHow: String { s("setup.pairing.how", "Only a computer can make it: the Cartouche Installer puts it in Cartouche as it installs it, and this step ticks itself. You can also choose it here, or open it with Cartouche.") }

@@ -516,6 +516,7 @@ struct CartoucheSystemView: View {
             Label(report.message, systemImage: "exclamationmark.triangle.fill")
                 .font(.footnote)
                 .foregroundStyle(.red)
+            signInAgainButton
             CartoucheReportButton(report: report)
                 .font(.footnote)
         } else if renewals.liveProcessMissing {
@@ -538,10 +539,16 @@ struct CartoucheSystemView: View {
             Label(CartoucheText.renewSessionExpired, systemImage: "exclamationmark.triangle.fill")
                 .font(.footnote)
                 .foregroundStyle(.red)
+            signInAgainButton
         }
-        // Apple said that the session SideStore renews with has expired: a
-        // sign-in with the same Apple ID gives it a new one, and Cartouche
-        // renews itself as soon as it has gone through.
+    }
+
+    /// Apple said that the session SideStore renews with has expired: a
+    /// sign-in with the same Apple ID gives it a new one, and Cartouche
+    /// renews itself as soon as it has gone through. Right under what the
+    /// page says of it, above Copy the report.
+    @ViewBuilder
+    private var signInAgainButton: some View {
         if renewals.sessionExpired && !renewals.isRenewing {
             Button {
                 signingIn = true

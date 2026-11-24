@@ -209,7 +209,8 @@ struct CartoucheSetupView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(setup.needsSetup ? CartoucheText.setupIntroTitle : CartoucheText.setupAllDone)
+            Text(setup.needsSetup ? CartoucheText.setupIntroTitle
+                 : sessionExpired ? CartoucheText.setupSessionExpiredTitle : CartoucheText.setupAllDone)
                 .font(.system(.largeTitle, design: .rounded, weight: .bold))
             Text(headerDetail)
                 .foregroundStyle(.secondary)
@@ -224,7 +225,15 @@ struct CartoucheSetupView: View {
         if setup.usesImportedSigning {
             return setup.needsSetup ? CartoucheText.setupIntroOwnCertificate : CartoucheText.setupAllDoneOwnCertificate
         }
-        return setup.needsSetup ? CartoucheText.setupIntro : CartoucheText.setupAllDoneDetail
+        if setup.needsSetup { return CartoucheText.setupIntro }
+        return sessionExpired ? CartoucheText.setupSessionExpiredDetail : CartoucheText.setupAllDoneDetail
+    }
+
+    /// Set up, once Apple has said that the session SideStore renews with
+    /// has expired: the Apple ID's step is to do again, and nothing is all
+    /// set until it is.
+    private var sessionExpired: Bool {
+        renewals.sessionExpired && !setup.usesImportedSigning
     }
 
     private func step<Actions: View>(
