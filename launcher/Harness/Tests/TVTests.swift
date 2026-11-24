@@ -228,6 +228,33 @@ final class TVTests: HarnessCase {
         XCTAssertEqual(journal().filter { $0 == missing }.count, 1)
     }
 
+    /// A player who unplugs the TV, or closes Cartouche, without pausing the
+    /// game: the journal says whether the game's picture was on the TV as
+    /// the TV goes, and a few seconds after the game's scene opens there.
+    func testAReportSaysWhetherTheGamesPictureIsOnTheTVWithoutAPause() async throws {
+        try connectTV()
+        let game = HarnessGame.plain()
+        let (_, scene) = try await started(game)
+        try await waitUntil("the game's scene opens on the TV") { scene.tvScene != nil }
+        let build = " (nxnative \(game.commit.prefix(12)))"
+        let missing = "TV: the game's picture is not on its scene there, which shows its card" + build
+        let there = "TV: the game's picture is on its scene there" + build
+
+        // A few seconds after the scene opens.
+        scene.writeMemory(footprintMiB: 900, availableMiB: 5_000, pictureOnTV: false)
+        try await waitUntil("the journal says the picture is not there", timeout: 12) {
+            journal().contains(missing)
+        }
+        XCTAssertEqual(actions.running?.isInFront, true, "the game still plays")
+
+        // As the TV goes, before the game's scene there closes.
+        scene.writeMemory(footprintMiB: 900, availableMiB: 5_000, pictureOnTV: true)
+        disconnectTV()
+        try await waitUntil("the game's scene on the TV closes") { scene.tvScene == nil }
+        XCTAssertEqual(journal().filter { $0 == there }.count, 1)
+        XCTAssertEqual(journal().filter { $0 == missing }.count, 1)
+    }
+
     /// Without a scene of the game's on a TV, its process says nothing of
     /// it, and nor does the journal.
     func testWithoutATVAReportSaysNothingOfTheGamesPicture() async throws {
