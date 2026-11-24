@@ -179,7 +179,10 @@ struct CartoucheGameMemoryReading {
 /// fits there starts in Cartouche's place, until another install of
 /// Cartouche signs that process again or the player tries again. When
 /// that process has as much as Cartouche or more, every game goes behind
-/// the console (CartoucheGamePlace.swift).
+/// the console (CartoucheGamePlace.swift). Cartouche's own limit is the
+/// highest Cartouche measured on this system, or the one it measures now
+/// when higher: Game Mode gives Cartouche its 8,192 MiB a moment after it
+/// comes to the front, and the console reads 6,144 as it opens.
 @MainActor
 final class CartoucheGameKeeping: ObservableObject {
     static let shared = CartoucheGameKeeping()
@@ -214,6 +217,12 @@ final class CartoucheGameKeeping: ObservableObject {
     /// Whether the last game behind the console ran without Increased
     /// Memory Limit, as its process said, with this install of Cartouche.
     @Published private(set) var behindLacksIML: Bool
+    /// The highest limit Cartouche measured itself with, on this iPhone,
+    /// this iOS and this signature.
+    private let ownRecord: CartoucheOwnLimitRecord
+    /// The highest limit Cartouche measured itself with, as ownRecord keeps
+    /// it: what a game has in Cartouche's place, once Game Mode came.
+    @Published private(set) var highestOwnMiB: Int?
 
     private init() {
         let defaults = UserDefaults.standard
@@ -226,6 +235,33 @@ final class CartoucheGameKeeping: ObservableObject {
         // capability.
         imlRecord = CartoucheBehindIMLRecord(defaults: defaults, install: Self.install)
         behindLacksIML = imlRecord.load()
+        ownRecord = CartoucheOwnLimitRecord(defaults: defaults, system: Self.system)
+        highestOwnMiB = ownRecord.load()
+    }
+
+    /// The system Cartouche's own limit was measured on: the iPhone's
+    /// model, its iOS, and whether Cartouche's signature has Increased
+    /// Memory Limit, which each change that limit.
+    private static var system: String {
+        [CartoucheDevice.modelIdentifier, CartoucheDevice.iOSVersion,
+         CartoucheDevice.hasIncreasedMemoryLimit ? "iml" : "no-iml"].joined(separator: " ")
+    }
+
+    /// Cartouche's own limit, as a game in its place has it: OWNLIMITMIB,
+    /// as Cartouche measured it, or the highest it measured on this system,
+    /// when that is higher.
+    func placeLimitMiB(_ ownLimitMiB: Int?) -> Int? {
+        CartoucheOwnLimitRecord.placeMiB(measured: ownLimitMiB, highest: highestOwnMiB)
+    }
+
+    /// What Cartouche measured of its own memory, READING: its limit is
+    /// kept when it is the highest yet. Cartouche's own limit, as a game
+    /// in its place has it (placeLimitMiB).
+    @discardableResult
+    func measuredOwn(_ reading: CartoucheMemoryReading?) -> Int? {
+        let highest = ownRecord.record(reading?.limitMiB, highest: highestOwnMiB)
+        if highest != highestOwnMiB { highestOwnMiB = highest }
+        return placeLimitMiB(reading?.limitMiB)
     }
 
     /// This install of Cartouche, which signed the games' process with the
@@ -243,16 +279,18 @@ final class CartoucheGameKeeping: ObservableObject {
     /// Once it has no more, the game goes behind the console again.
     func startsInPlace(bundleId: String?, ownLimitMiB: Int?) -> Bool {
         guard let bundleId, inPlace.contains(bundleId) else { return false }
-        return CartoucheGamePlace.staysInPlace(behindMiB: limitMiB, ownMiB: ownLimitMiB)
+        return CartoucheGamePlace.staysInPlace(behindMiB: limitMiB, ownMiB: placeLimitMiB(ownLimitMiB))
     }
 
     /// The most memory Play can give a game here, against Cartouche's own,
-    /// OWNLIMITMIB: while games run behind the console, the limit iOS gave
-    /// the last one there, or Cartouche's own when that is higher, for a
-    /// game short of memory there.
+    /// OWNLIMITMIB, or the highest Cartouche measured (placeLimitMiB): in
+    /// Cartouche's place, Cartouche's own; while games run behind the
+    /// console, the limit iOS gave the last one there, or Cartouche's own
+    /// when that is higher, for a game short of memory there.
     func gameLimitMiB(ownLimitMiB: Int?) -> Int? {
-        guard Self.isAvailable, keepsConsoleOpen else { return ownLimitMiB }
-        return CartoucheGamePlace.gameLimitMiB(behindMiB: limitMiB, ownMiB: ownLimitMiB)
+        let own = placeLimitMiB(ownLimitMiB)
+        guard Self.isAvailable, keepsConsoleOpen else { return own }
+        return CartoucheGamePlace.gameLimitMiB(behindMiB: limitMiB, ownMiB: own)
     }
 
     /// The game starts in Cartouche's place from now on.
@@ -284,7 +322,8 @@ final class CartoucheGameKeeping: ObservableObject {
     /// Memory Limit, and Cartouche's place has more, by its own limit,
     /// OWNLIMITMIB.
     func sendsGamesInPlace(ownLimitMiB: Int?) -> Bool {
-        CartoucheGamePlace.sendsGamesInPlace(behindMiB: limitMiB, behindLacksIML: behindLacksIML, ownMiB: ownLimitMiB)
+        CartoucheGamePlace.sendsGamesInPlace(behindMiB: limitMiB, behindLacksIML: behindLacksIML,
+                                             ownMiB: placeLimitMiB(ownLimitMiB))
     }
 
     /// The games try behind the console again, where the next one says
@@ -300,7 +339,44 @@ final class CartoucheGameKeeping: ObservableObject {
     /// than it has there, and Cartouche's place has more.
     func fitsBehind(needsIML: Bool, peakMiB: Int?, limitMiB limit: Int? = nil, ownLimitMiB: Int?) -> Bool {
         CartoucheGamePlace.startsBehind(needsIML: needsIML, peakMiB: peakMiB, behindMiB: limit ?? limitMiB,
-                                        behindLacksIML: behindLacksIML, ownMiB: ownLimitMiB)
+                                        behindLacksIML: behindLacksIML, ownMiB: placeLimitMiB(ownLimitMiB))
+    }
+}
+
+/// Measures Cartouche's own memory into MEMORY every 2 s, for half a minute
+/// after the view appears and each time Cartouche comes back to the front:
+/// Game Mode raises Cartouche's limit a moment after that, from 6,144 MiB
+/// to 8,192 on an iPhone with 12 GB, and a game's sheet says what a game
+/// has in Cartouche's place. Cartouche keeps the highest it measured, for
+/// the next time it opens (CartoucheGameKeeping.measuredOwn).
+struct CartoucheOwnMemoryWatch: ViewModifier {
+    @Binding var memory: CartoucheMemoryReading?
+    /// Each time Cartouche comes back to the front, the watch starts again.
+    @State private var watch = 0
+
+    // Written out: the private state above would make the synthesized
+    // initializer private.
+    init(memory: Binding<CartoucheMemoryReading?>) {
+        _memory = memory
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .task(id: watch) { await measure() }
+            .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+                watch += 1
+            }
+    }
+
+    @MainActor
+    private func measure() async {
+        for _ in 0..<15 {
+            let reading = CartoucheMemoryReading.now()
+            CartoucheGameKeeping.shared.measuredOwn(reading)
+            if reading?.limitMiB != memory?.limitMiB { memory = reading }
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            if Task.isCancelled { return }
+        }
     }
 }
 
