@@ -859,6 +859,8 @@ final class CartoucheGameActions: ObservableObject {
             // the measurements the reason (CartoucheGameSigning).
             failSigning(.install, signing, app: app)
         } else if CartoucheCatalog.shared.entries(for: [app]).owned.isEmpty {
+            // The console shows games only: the System page lists the
+            // others (docs/decisions/154.md).
             notice = CartoucheGameNotice(title: CartoucheText.installDone, message: CartoucheText.installNotAGame(app.displayName))
         }
     }
@@ -1296,7 +1298,9 @@ final class CartoucheGameActions: ObservableObject {
     /// behind the console or in Cartouche's place. With showingSettings,
     /// nxnative shows its settings screen before the game. The game that
     /// runs behind the console comes back to the screen instead; another
-    /// game takes its place once the player has said so.
+    /// game takes its place once the player has said so. An app that is
+    /// not an nxnative game, which the System page opens, starts here too,
+    /// always in Cartouche's place (startsBehindConsole).
     func play(_ app: LCAppModel, showingSettings: Bool = false) {
         if let running {
             if running.app === app && !showingSettings {
@@ -1309,9 +1313,9 @@ final class CartoucheGameActions: ObservableObject {
         guard work == nil, !app.isAppRunning else { return }
         facts = Self.buildFacts(CartoucheInstalledBuilds.shared.build(of: app))
             + [.init("nxnative's settings screen", showingSettings ? "shown" : "skipped")]
-        work = CartoucheGameWork(kind: .starting, name: app.displayName,
-                                 step: showingSettings ? CartoucheText.startSettings : CartoucheText.startSoon, fraction: nil,
-                                 stage: "preparing")
+        let isGame = CartoucheCatalog.shared.gameTitle(of: app) != nil
+        let soon = showingSettings ? CartoucheText.startSettings : isGame ? CartoucheText.startSoon : CartoucheText.openSoon
+        work = CartoucheGameWork(kind: .starting, name: app.displayName, step: soon, fraction: nil, stage: "preparing")
         signing = app.$signProgress
             .combineLatest(app.$isSigningInProgress)
             .receive(on: DispatchQueue.main)
@@ -1340,7 +1344,7 @@ final class CartoucheGameActions: ObservableObject {
                 if app.appInfo.cartoucheSigningFailure != nil {
                     await signWhole(app)
                 }
-                work?.step = showingSettings ? CartoucheText.startSettings : CartoucheText.startSoon
+                work?.step = soon
                 work?.stage = "starting"
                 try Self.prepareStart(of: app, showingSettings: showingSettings)
                 if #available(iOS 18.0, *), try await startBehindConsole(app, showingSettings: showingSettings) {
@@ -1362,7 +1366,7 @@ final class CartoucheGameActions: ObservableObject {
                 if let signing = Self.signingError(error, of: app) {
                     failSigning(.start, signing, app: app)
                 } else {
-                    fail(.start, CartoucheText.startFailed, error: error)
+                    fail(.start, isGame ? CartoucheText.startFailed : CartoucheText.openFailed, error: error)
                 }
             }
             // Still here: the game did not start.
@@ -1438,11 +1442,15 @@ final class CartoucheGameActions: ObservableObject {
         return true
     }
 
+    /// An app that is not an nxnative game starts in Cartouche's place, as
+    /// LiveContainer's Apps tab started it: the console, which shows games
+    /// only, would have no card of it to resume or quit it from.
     @available(iOS 18.0, *)
     private func startsBehindConsole(_ app: LCAppModel) -> Bool {
         let keeping = CartoucheGameKeeping.shared
         let info = app.appInfo
-        guard keeping.keepsConsoleOpen, CartoucheGameKeeping.isAvailable,
+        guard CartoucheCatalog.shared.gameTitle(of: app) != nil,
+              keeping.keepsConsoleOpen, CartoucheGameKeeping.isAvailable,
               // LiveContainer runs these only in its own place.
               info.defaultClassicMode == 0, !info.isJITNeeded, !info.is32bit,
               !keeping.startsInPlace(bundleId: info.bundleIdentifier(),
