@@ -213,7 +213,7 @@ struct CartoucheGameStatsSection: View {
                         .task(id: entry.id) { stats.refresh([app]) }
                 }
                 if let stored = entry.stored {
-                    LabeledContent(CartoucheText.statsStored(CartoucheStoredGames.shared.serverName ?? ""),
+                    LabeledContent(CartoucheText.statsStored(CartoucheStoredGames.shared.place(of: stored)),
                                    value: CartoucheText.size(bytes: stored.storedSize))
                 }
                 if let cloud = entry.cloud {
@@ -295,7 +295,7 @@ struct CartoucheGameStatsLine: View {
                 if let size {
                     Label(CartoucheText.size(bytes: size), systemImage: entry.app != nil ? CartoucheDevice.symbol : "externaldrive")
                         .accessibilityLabel(Text(entry.app != nil ? CartoucheText.onThisIPhone
-                                                    : CartoucheText.statsStored(CartoucheStoredGames.shared.serverName ?? "")))
+                                                    : CartoucheText.statsStored(CartoucheStoredGames.shared.place(of: entry.stored))))
                         .accessibilityValue(Text(CartoucheText.size(bytes: size)))
                 }
             }

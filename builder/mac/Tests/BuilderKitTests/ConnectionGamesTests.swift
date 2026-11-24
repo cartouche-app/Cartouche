@@ -10,8 +10,9 @@
 //  their names; a round that stops for a folder this Mac cannot write to,
 //  without room, or away, or before the next file once a batch starts; the
 //  library's games as the files that go; and where the console says the
-//  games to install are. The console's side, the iPhone's code, is tested
-//  with Cartouche's storage (launcher/StorageTests).
+//  games to install are; the Mac apps of several folders, a game in more
+//  than one once, from one that answers. The console's side, the iPhone's
+//  code, is tested with Cartouche's storage (launcher/StorageTests).
 //
 
 import Foundation
@@ -169,6 +170,34 @@ final class ConnectionGamesTests: XCTestCase {
                         ConnectionMacApp(titleID: odyssey, game: "Super Mario Odyssey", file: there[2])])
         // A game this Mac has an app of is none of another Mac's.
         XCTAssertEqual(ConnectionGames.macApps(in: there, known: [mkw]).map(\.titleID), [odyssey])
+    }
+
+    /// The iPhone reads a NAS's games folder and a Google Drive's: a game
+    /// in both is offered once, from the one that answers, then the newer
+    /// file, then the first; each copy in the order to try them.
+    func testTheMacAppsOfSeveralFoldersOnceFromOneThatAnswers() {
+        let nas = "nas|Jeux", drive = "drive|Jeux"
+        let nasFile = ConnectionFile(name: "Mario Kart World [\(mkw)].app.zip", size: 3_000, modified: t0 + 60)
+        let driveFile = ConnectionFile(name: "Mario Kart World [\(mkw)].app.zip", size: 2_900, modified: t0)
+        let odysseyFile = ConnectionFile(name: "Super Mario Odyssey [\(odyssey)].app.zip", size: 2_000, modified: t0)
+        var looks = [ConnectionGamesLook(place: nas, files: [nasFile], answered: true),
+                     ConnectionGamesLook(place: drive, files: [driveFile, odysseyFile], answered: true)]
+        XCTAssertEqual(ConnectionGames.macApps(in: looks, known: []),
+                       [ConnectionMacApp(titleID: mkw, game: "Mario Kart World", file: nasFile, place: nas),
+                        ConnectionMacApp(titleID: odyssey, game: "Super Mario Odyssey", file: odysseyFile, place: drive)],
+                       "the newer file")
+        XCTAssertEqual(ConnectionGames.copies(of: mkw, in: looks).map(\.place), [nas, drive])
+        // The NAS away from home: the Drive's, older, which answers.
+        looks[0].answered = false
+        XCTAssertEqual(ConnectionGames.macApps(in: looks, known: []).first?.place, drive)
+        XCTAssertEqual(ConnectionGames.copies(of: mkw, in: looks).map(\.place), [drive, nas])
+        // Only in the folder that does not answer: offered from there still.
+        XCTAssertEqual(ConnectionGames.macApps(in: [looks[0]], known: []).map(\.place), [nas])
+        // The same file in both: the first folder's.
+        looks = [ConnectionGamesLook(place: nas, files: [driveFile], answered: true),
+                 ConnectionGamesLook(place: drive, files: [driveFile], answered: true)]
+        XCTAssertEqual(ConnectionGames.macApps(in: looks, known: []).map(\.place), [nas])
+        XCTAssertEqual(ConnectionGames.macApps(in: looks, known: [mkw]), [])
     }
 
     func testAnAppInstalledFromThereIsMadeAgainOfANewerFile() {

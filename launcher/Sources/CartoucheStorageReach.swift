@@ -178,11 +178,12 @@ final class CartoucheStorageReach: ObservableObject {
         return absence.network == network && Date().timeIntervalSince(absence.tried) < Self.settled
     }
 
-    /// The servers of the games folder and of the saves folder, once each:
-    /// not a folder of the iPhone, which is always there.
+    /// The servers of the games folders and of the saves folder, once
+    /// each: not a folder of the iPhone, which is always there.
     var serversInUse: [CartoucheStorageServer] {
         var seen = Set<UUID>()
-        return CartoucheStorageRole.allCases.compactMap { settings.location($0)?.server }
+        let games = settings.gamesLocations.map(\.server)
+        return (games + [settings.location(.saves)?.server].compactMap { $0 })
             .filter { $0.kind != .folder && seen.insert($0.id).inserted }
     }
 

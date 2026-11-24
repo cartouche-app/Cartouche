@@ -394,6 +394,10 @@
       "en": "%@ does not answer from this Mac: this Mac’s games go there once it does.",
       "fr": "%@ ne répond pas depuis ce Mac : les jeux de ce Mac y partiront dès qu’il répondra."
     },
+    "mac.storage.iPhoneGames.other.offline": {
+      "en": "%@ does not answer from this Mac: its Mac apps that another folder holds too install from that folder meanwhile.",
+      "fr": "%@ ne répond pas depuis ce Mac : ses apps Mac présentes aussi dans un autre dossier s’installent depuis cet autre dossier en attendant."
+    },
     "mac.storage.iPhoneGames.packing": {
       "en": "Its Mac app is first packed in one file, as a NAS keeps it.",
       "fr": "Son app Mac est d’abord mise en un seul fichier, comme la garde un NAS."
@@ -413,6 +417,14 @@
     "mac.storage.iPhoneGames.sent": {
       "en": "Sent from this Mac",
       "fr": "Envoyés depuis ce Mac"
+    },
+    "mac.storage.iPhoneGames.several.footer": {
+      "en": "The games folders chosen on your iPhone: Cartouche Builder sends the first each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent to any of them install from the library, from a folder that answers. To change them, do so on the iPhone.",
+      "fr": "Les dossiers des jeux choisis sur votre iPhone : Cartouche Builder envoie aussi au premier chaque IPA et chaque app Mac de son propre dossier des jeux, par la même connexion, les plus récentes d’abord, et n’y supprime jamais rien. Les apps Mac envoyées par un autre Mac dans l’un d’eux s’installent depuis la bibliothèque, depuis un dossier qui répond. Pour les changer, faites-le sur l’iPhone."
+    },
+    "mac.storage.iPhoneGames.several.header": {
+      "en": "The iPhone’s games folders",
+      "fr": "Les dossiers des jeux de l’iPhone"
     },
     "mac.storage.iPhoneSaves.footer": {
       "en": "The saves folder chosen on your iPhone: Cartouche Builder keeps the saves of the games played on this Mac there too, through the same connection, before each game and as it saves, as the iPhone does. The %lld newest copies are kept. To change it, choose another on the iPhone.",

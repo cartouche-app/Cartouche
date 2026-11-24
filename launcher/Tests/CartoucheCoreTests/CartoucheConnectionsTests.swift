@@ -247,9 +247,36 @@ final class CartoucheConnectionsTests: XCTestCase {
         XCTAssertEqual(second.taking(CartoucheChosenFolders(saves: none)).saves, none)
     }
 
+    /// The other games folders an iPhone reads go with its games folder:
+    /// kept, or left, with it.
+    func testTheOtherGamesFoldersGoWithTheGamesFolder() {
+        let nas = CartoucheChosenFolders.Folder(connection: a, path: "Jeux", chosen: now)
+        let drive = CartoucheChosenFolders.Folder(connection: b, path: "Jeux", chosen: now)
+        let s3 = CartoucheChosenFolders.Folder(connection: c, path: "jeux", chosen: now)
+        let first = CartoucheChosenFolders().taking(CartoucheChosenFolders(games: nas, otherGames: [drive, s3]))
+        XCTAssertEqual(first.otherGames, [drive, s3])
+        // The saves chosen later on another iPhone: the games folders stay.
+        let saves = CartoucheChosenFolders.Folder(connection: a, path: "Saves", chosen: now + 60)
+        XCTAssertEqual(first.taking(CartoucheChosenFolders(saves: saves)).otherGames, [drive, s3])
+        // Told again at the same time, or an older choice: nothing changes.
+        XCTAssertEqual(first.taking(CartoucheChosenFolders(games: nas, otherGames: [s3])), first)
+        // A folder added on the iPhone, chosen later with its games folder.
+        var later = nas
+        later.chosen = now + 120
+        let added = first.taking(CartoucheChosenFolders(games: later, otherGames: [drive]))
+        XCTAssertEqual(added.games, later)
+        XCTAssertEqual(added.otherGames, [drive])
+        // An older iPhone, which tells none, with a games folder chosen
+        // later still: none besides it.
+        var older = nas
+        older.chosen = now + 180
+        XCTAssertNil(added.taking(CartoucheChosenFolders(games: older)).otherGames)
+    }
+
     func testTheFoldersChosenGoThereAndBack() throws {
         let told = CartoucheChosenFolders(games: .init(connection: nil, path: "", chosen: now),
-                                          saves: .init(connection: a, path: "Cartouche/Saves", chosen: now + 0.5))
+                                          saves: .init(connection: a, path: "Cartouche/Saves", chosen: now + 0.5),
+                                          otherGames: [.init(connection: b, path: "Jeux", chosen: now)])
         let request = CartoucheBridgeRequest(.connections, connections: [], places: told)
         let back = try JSONDecoder().decode(CartoucheBridgeRequest.self, from: JSONEncoder().encode(request))
         XCTAssertEqual(back.places, told)
