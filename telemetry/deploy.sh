@@ -10,10 +10,10 @@
 #    harm;
 # 3. the Worker cartouche-telemetry, worker.js as it is, with the database
 #    as DB and no logs kept, and what it files the problems players send
-#    with: the private repository CARTOUCHE_REPORTS_REPOSITORY and the token
-#    CARTOUCHE_REPORTS_TOKEN, when they are set; without them, or with a
-#    public repository, the Worker keeps the problems until a deploy with
-#    them. With IGDB_CLIENT_ID and IGDB_CLIENT_SECRET, a Twitch
+#    with: the private repository CARTOUCHE_REPORTS_REPOSITORY, by the name
+#    GitHub gives it now if it moved, and the token CARTOUCHE_REPORTS_TOKEN,
+#    when they are set; without them, or with a public repository, the
+#    Worker keeps the problems until a deploy with them. With IGDB_CLIENT_ID and IGDB_CLIENT_SECRET, a Twitch
 #    application's, it finds on IGDB the covers of the games Cartouche does
 #    not know; the dashboard never gets them;
 # 4. its workers.dev address, on the account's workers.dev subdomain,
@@ -113,11 +113,22 @@ if [ -n "${CARTOUCHE_REPORTS_TOKEN:-}" ] && [ -n "${CARTOUCHE_REPORTS_REPOSITORY
   repository="$CARTOUCHE_REPORTS_REPOSITORY"
   printf 'Authorization: Bearer %s\n' "$CARTOUCHE_REPORTS_TOKEN" >"$WORK/github-authorization"
   printf '%s' "$CARTOUCHE_REPORTS_TOKEN" >"$WORK/problems-token"
-  visibility="$(curl -sS --max-time 20 -H @"$WORK/github-authorization" -H "Accept: application/vnd.github+json" \
-    "${GITHUB_API_URL:-https://api.github.com}/repos/$repository" 2>/dev/null |
-    jq -r 'if (type == "object" and has("private")) then (if .private then "private" else "public" end) else empty end' 2>/dev/null || true)"
+  # A repository moved to another owner answers at its old name with a
+  # redirect, which curl follows on the same host with the token: the Worker
+  # gets the name GitHub gives it now.
+  curl -sSL --max-redirs 3 --max-time 20 -o "$WORK/repository.json" -H @"$WORK/github-authorization" \
+    -H "Accept: application/vnd.github+json" "${GITHUB_API_URL:-https://api.github.com}/repos/$repository" 2>/dev/null || true
+  visibility="$(jq -r 'if (type == "object" and has("private")) then (if .private then "private" else "public" end) else empty end' \
+    "$WORK/repository.json" 2>/dev/null || true)"
+  named="$(jq -r 'if (type == "object" and (.full_name | type) == "string") then .full_name else empty end' \
+    "$WORK/repository.json" 2>/dev/null || true)"
+  moved=""
+  if [ -n "$visibility" ] && [[ "$named" =~ ^[A-Za-z0-9-]{1,39}/[A-Za-z0-9._-]{1,100}$ ]] && [ "${named,,}" != "${repository,,}" ]; then
+    moved=" (GitHub moved it from $repository)"
+    repository="$named"
+  fi
   case "$visibility" in
-    private) problems="players' problems go to $repository, a private repository" ;;
+    private) problems="players' problems go to $repository, a private repository$moved" ;;
     public) problems="$repository is public: the server files no problem there, and keeps them" ;;
     *) problems="the token cannot read $repository: the server keeps the problems until GitHub takes them" ;;
   esac

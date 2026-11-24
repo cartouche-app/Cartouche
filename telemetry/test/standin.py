@@ -44,6 +44,9 @@ class Cloudflare:
         self.schedules = {}
         # GitHub's repositories the token can read: name -> private.
         self.repositories = {}
+        # Repositories moved to another owner: old name -> new name. GitHub
+        # answers the old name with a redirect to the repository's ID.
+        self.moved = {}
         # What each Worker's workers.dev address answers: the server its
         # name, the dashboard its closed page until Access protects it.
         self.workers_dev = {
@@ -59,10 +62,20 @@ class Cloudflare:
         self.calls.append((method, path))
         if path.startswith("/workers.dev/"):
             return self.workers_dev.get(path[len("/workers.dev/"):].strip("/"), (404, Raw({}, b"")))
-        if path.startswith("/github/repos/"):
-            name = path[len("/github/repos/"):]
+        if path.startswith("/github/repos/") or path.startswith("/github/repositories/"):
             if headers.get("Authorization") != f"Bearer {GITHUB_TOKEN}":
                 return 401, {"message": "Bad credentials"}
+            # A repository's ID: its place among the repositories.
+            names = list(self.repositories)
+            if path.startswith("/github/repositories/"):
+                number = path[len("/github/repositories/"):]
+                name = names[int(number)] if number.isdigit() and int(number) < len(names) else None
+            else:
+                name = path[len("/github/repos/"):]
+            if method == "GET" and self.moved.get(name) in self.repositories:
+                place = f"/github/repositories/{names.index(self.moved[name])}"
+                return 301, Raw({"Content-Type": "application/json", "Location": place},
+                                json.dumps({"message": "Moved Permanently", "url": place}).encode())
             if method != "GET" or name not in self.repositories:
                 return 404, {"message": "Not Found"}
             return 200, {"full_name": name, "private": self.repositories[name]}
