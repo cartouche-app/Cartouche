@@ -38,8 +38,8 @@ final class CartoucheGameCopiesTests: XCTestCase {
         XCTAssertTrue(CartoucheGameCopies.prefers(older, over: newer))
     }
 
-    /// Both answer: the newer build, wherever it is; then the one written
-    /// last; then the first folder's.
+    /// Both answer: the newer build, wherever it is; the same build, the
+    /// first folder's; builds unread, the one written last.
     func testBetweenCopiesThatAnswerTheNewerBuildThenTheFirstFolder() {
         let first = rank(folder: 0, version: "1.0.0", builtAt: night)
         let second = rank(folder: 1, version: "1.1.0", builtAt: night.addingTimeInterval(-3_600))
@@ -57,6 +57,12 @@ final class CartoucheGameCopiesTests: XCTestCase {
         XCTAssertTrue(CartoucheGameCopies.prefers(first, over: same))
         XCTAssertFalse(CartoucheGameCopies.prefers(same, over: first))
         XCTAssertFalse(CartoucheGameCopies.prefers(first, over: first))
+        // The same build copied there later: still the first folder's, as
+        // a copy's time says nothing of the game.
+        let copiedLater = rank(folder: 1, version: "1.0.0", builtAt: night, modified: night.addingTimeInterval(60))
+        let copiedFirst = rank(folder: 0, version: "1.0.0", builtAt: night, modified: night)
+        XCTAssertTrue(CartoucheGameCopies.prefers(copiedFirst, over: copiedLater))
+        XCTAssertFalse(CartoucheGameCopies.prefers(copiedLater, over: copiedFirst))
     }
 
     /// Both offline: as before, the newer build, which the console names.

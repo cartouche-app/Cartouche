@@ -7,8 +7,9 @@
 //  more than one folder shows once in the library, and Cartouche offers the
 //  copy it can reach. A copy on a server that answers comes before one on
 //  a server that does not, as a NAS away from home; between two that
-//  answer, or two that do not, the newer build, else the one written there
-//  last, else the copy of the folder listed first.
+//  answer, or two that do not, the newer build; of the same build, the
+//  copy of the folder listed first; of copies whose builds Cartouche could
+//  not read, the one written there last, then the first folder's.
 //
 //  The first games folder is the one Cartouche copies a game to before it
 //  is uninstalled, and the one the paired Mac sends its builds to; the
@@ -34,13 +35,16 @@ struct CartoucheCopyRank: Equatable {
 
 enum CartoucheGameCopies {
     /// Whether the copy of rank A is the one to offer rather than the copy
-    /// of rank B: on a server that answers, then the newer build, then the
-    /// one written last, then the one of the folder listed first.
+    /// of rank B: on a server that answers, then the newer build, the same
+    /// build in the folder listed first; without both builds, the one
+    /// written last, then the one of the folder listed first.
     static func prefers(_ a: CartoucheCopyRank, over b: CartoucheCopyRank) -> Bool {
         if a.offline != b.offline { return !a.offline }
         if let build = a.build, let other = b.build {
             if build.isNewerCopy(than: other) { return true }
             if other.isNewerCopy(than: build) { return false }
+            // The same build, whenever each was copied there.
+            return a.folder < b.folder
         }
         let written = a.modified ?? .distantPast
         let otherWritten = b.modified ?? .distantPast
