@@ -1255,7 +1255,8 @@ struct CartoucheGalleryApp: App {
             CartoucheGamesView(showingLibrary: true)
         case "sheet", "sheet-mac", "sheet-saves":
             if let entry = entries.all.first(where: { $0.titleId == scenario.sheet }) {
-                GallerySheetScreen(entry: entry, opensOnManagement: scenario.category == "manage")
+                GallerySheetScreen(entry: entry, opensOnManagement: scenario.category == "manage",
+                                   hasNoGame: entries.owned.isEmpty)
             }
         case "gameinfo":
             if let entry = entries.owned.first(where: { $0.titleId == scenario.sheet }) {
@@ -1432,12 +1433,15 @@ struct CartoucheGalleryApp: App {
 struct GallerySheetScreen: View {
     let entry: CartoucheEntry
     let opensOnManagement: Bool
+    /// A player with no game: How to get a game beside Import my copy.
+    var hasNoGame = false
     @State private var memory = CartoucheMemoryReading.now()
 
     var body: some View {
         NavigationStack {
             CartoucheGameSheetView(entry: entry, memory: memory, onPlay: { _ in },
                                    onSettings: { _ in }, onImport: {}, onUninstall: { _ in },
+                                   onGuide: hasNoGame ? {} : nil,
                                    opensOnManagement: opensOnManagement)
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {

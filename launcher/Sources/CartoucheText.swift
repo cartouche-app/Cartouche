@@ -54,6 +54,9 @@ enum CartoucheText {
     static var emptyMessage: String { s("games.empty.message", "Import the IPA of a supported game, made from your own copy.") }
     static var noSheet: String { s("games.noSheet", "No sheet yet") }
     static var importCopy: String { s("action.import", "Import my copy") }
+    /// Beside Import my copy, while the player has no game: the guide,
+    /// which says how a game is made from their own copy.
+    static var howToGetGame: String { s("action.howToGetGame", "How to get a game") }
     static var play: String { s("action.play", "Play") }
     static var done: String { s("action.done", "Done") }
 

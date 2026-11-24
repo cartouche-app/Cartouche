@@ -53,6 +53,9 @@ struct CartoucheGameSheetView: View {
     var onEditInfo: () -> Void = {}
     /// Opens Siri and Home Screen, for the installed game.
     var onShortcuts: (LCAppModel) -> Void = { _ in }
+    /// Opens the guide, beside Import my copy: given while the player has
+    /// no game, who may have no IPA to import.
+    var onGuide: (() -> Void)?
     /// Whether the sheet opens on the game's management, near its bottom,
     /// rather than on its top: for the gallery's screens of it.
     var opensOnManagement = false
@@ -85,6 +88,7 @@ struct CartoucheGameSheetView: View {
          onExport: @escaping (LCAppModel) -> Void = { _ in },
          onEditInfo: @escaping () -> Void = {},
          onShortcuts: @escaping (LCAppModel) -> Void = { _ in },
+         onGuide: (() -> Void)? = nil,
          opensOnManagement: Bool = false) {
         self.entry = entry
         self.memory = memory
@@ -97,6 +101,7 @@ struct CartoucheGameSheetView: View {
         self.onExport = onExport
         self.onEditInfo = onEditInfo
         self.onShortcuts = onShortcuts
+        self.onGuide = onGuide
         self.opensOnManagement = opensOnManagement
     }
 
@@ -417,6 +422,9 @@ struct CartoucheGameSheetView: View {
                 buildLine(CartoucheText.cloudKeptUntil(CartoucheText.dateAndTime(cloud.expiresAt)), systemImage: "clock")
             } else {
                 primaryButton(CartoucheText.importCopy, systemImage: "square.and.arrow.down", action: onImport)
+                if let onGuide {
+                    secondaryButton(CartoucheText.howToGetGame, systemImage: "questionmark.circle", action: onGuide)
+                }
             }
         }
         .padding(.vertical, 8)

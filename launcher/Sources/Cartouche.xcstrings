@@ -146,6 +146,35 @@
         }
       }
     },
+    "action.howToGetGame" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie bekomme ich ein Spiel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How to get a game"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cómo conseguir un juego"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comment avoir un jeu"
+          }
+        }
+      }
+    },
     "action.import" : {
       "extractionState" : "manual",
       "localizations" : {

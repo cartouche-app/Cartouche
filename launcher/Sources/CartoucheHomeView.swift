@@ -491,8 +491,12 @@ struct CartoucheHomeView: View {
                 gameHero(entry, metrics: metrics)
             case .importGame:
                 heroText(CartoucheText.importTile, CartoucheText.emptyMessage, metrics: metrics)
-                actionButton(CartoucheText.importCopy, systemImage: "square.and.arrow.down", primary: true,
-                             input: .a, action: onImport)
+                // Side by side where they fit, the one over the other
+                // otherwise.
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 10) { importActions }
+                    VStack(alignment: .leading, spacing: 10) { importActions }
+                }
             case .allGames:
                 heroText(CartoucheText.allGames, CartoucheText.allGamesDetail(gameCount), metrics: metrics)
                 actionButton(CartoucheText.allGames, systemImage: "square.grid.2x2.fill", primary: true,
@@ -504,6 +508,23 @@ struct CartoucheHomeView: View {
         .frame(maxWidth: 560, minHeight: metrics.isWide ? nil : metrics.heroHeight, alignment: .topLeading)
         .animation(.easeInOut(duration: 0.2), value: hero)
     }
+
+    /// Import a game's buttons: Files, and, while the player has no game,
+    /// the guide, for a player with no IPA to import, who opens Files and
+    /// finds nothing there.
+    @ViewBuilder
+    private var importActions: some View {
+        actionButton(CartoucheText.importCopy, systemImage: "square.and.arrow.down", primary: true,
+                     input: .a, action: onImport)
+        if hasNoGame {
+            actionButton(CartoucheText.howToGetGame, systemImage: "questionmark.circle", primary: false,
+                         input: .x, action: onGuide)
+        }
+    }
+
+    /// No game installed, in the games folders or built by Cartouche
+    /// Cloud.
+    private var hasNoGame: Bool { entries.owned.isEmpty }
 
     private func heroTitle(_ title: String, metrics: Metrics) -> some View {
         Text(title)
@@ -806,7 +827,11 @@ struct CartoucheHomeView: View {
         case .a:
             if let focused { activate(focused) }
         case .x:
-            if case .game(let entry) = focused { onSheet(entry) }
+            if case .game(let entry) = focused {
+                onSheet(entry)
+            } else if focused == .importGame, hasNoGame {
+                onGuide()
+            }
         case .y:
             onLibrary()
         case .menu:
