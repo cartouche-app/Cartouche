@@ -492,8 +492,8 @@ test("the page sums up the reports Cartouche makes", () => {
   assert.equal(model.memory.headroom, session.memory.lowestHeadroomMiB);
   assert.deepEqual(model.memory.increased, { share: 1, yes: 1, known: 1 });
   assert.equal(model.installs.count, 1);
-  assert.equal(model.installs.size, 19456);
-  assert.deepEqual(model.installs.fromStorage, { share: 1, yes: 1, known: 1 });
+  // Where it came from, and how the Mac was reached.
+  assert.deepEqual(model.installs.from.map((item) => [item.key, item.count]), [["mac", 1]]);
   assert.deepEqual(model.devices.models.map((item) => item.key), ["iPhone19,4"]);
   assert.deepEqual(model.devices.languages.map((item) => item.key), ["fr"]);
   assert.deepEqual(model.eventNames.map((item) => item.key), ["game.installed"]);
@@ -1029,6 +1029,146 @@ test("a commit counts each game of each Mac once, as its last try ended, and the
   assert.deepEqual(pick(again.builder.byCommit[0]), [1, 0, 1, 0, 0, 1, 0, null]);
 });
 
+test("the renewals say what renewed each signature, those Cartouche made itself, and the copies a failure left stuck", () => {
+  const failed = { origin: "renewal", error: "SideStore 1", cause: "device", stage: "ResignApp", kind: "noDevice", background: true };
+  const model = build([
+    eventOf(1, "app.opened", { signatureDays: 6 }),
+    eventOf(1, "renewal.done", { seconds: 30, automatic: true, vpnOpened: true }),
+    eventOf(1, "signature.renewed", { daysLeft: 7, via: "cartouche" }),
+    // Failed, then reinstalled: renewed since.
+    eventOf(2, "signature.renewed", { daysLeft: 7, via: "update" }),
+    eventOf(2, "error", { ...failed, cause: "offline", stage: "PreflightChecks", background: false }),
+    eventOf(2, "signature.renewed", { daysLeft: 7, via: "reinstall" }),
+    // Renewed, then failed last, this week: stuck, as the two after it.
+    eventOf(3, "renewal.done", { seconds: 50, automatic: false }),
+    eventOf(3, "error", failed),
+    eventOf(3, "app.opened", { signatureDays: 1 }),
+    eventOf(4, "error", failed),
+    eventOf(5, "error", failed),
+    // A failure older than a signature lasts, the copy silent since: gone, not stuck.
+    onDay("2026-10-20", eventOf(6, "error", failed)),
+    // Before a renewal said what made it.
+    eventOf(7, "signature.renewed", { daysLeft: 7 }),
+  ]);
+  const r = model.renewals;
+  assert.deepEqual([r.renewed, r.renewedCopies], [4, 3]);
+  assert.deepEqual(Object.fromEntries(r.via.map((row) => [row.key, row.count])), { cartouche: 1, update: 1, reinstall: 1, unsaid: 1 });
+  assert.deepEqual([r.done, r.tried, r.through, r.failed, r.failedCopies], [2, 6, 2, 5, 5]);
+  assert.deepEqual([r.automatic.yes, r.automatic.known, r.seconds], [1, 2, 40]);
+  assert.deepEqual(r.why.map((row) => [row.stage, row.cause, row.count]), [["ResignApp", "device", 4], ["PreflightChecks", "offline", 1]]);
+  assert.deepEqual([r.stuck, r.stuckCause.key, r.low], [3, "device", 1]);
+  const [renewal] = model.attention;
+  assert.deepEqual([renewal.key, renewal.copies, renewal.cause, renewal.causeCopies, renewal.section], ["renewal", 3, "device", 3, "renouvellements"]);
+  assert.deepEqual([model.totals.renewals.copies, model.totals.renewals.through], [6, 2]);
+  // Two copies stuck are not yet a point to look at.
+  assert.deepEqual(build([eventOf(1, "error", failed), eventOf(2, "error", failed)]).attention, []);
+});
+
+test("where the games and the saves are kept, the games folders, and the saves synced on the iPhones and the Macs", () => {
+  const mac = { device: "Mac16,12", ios: "26.6", cartouche: "0.7.1" };
+  const model = build([
+    eventOf(1, "app.opened", { storage: "smb", saves: "smb", gamesFolders: 2, tailscale: true }),
+    eventOf(2, "app.opened", { storage: "mac", saves: "smb", gamesFolders: 1, tailscale: false }),
+    // Before the folders were said.
+    eventOf(3, "app.opened", { storage: "sftp", saves: "none" }),
+    eventOf(4, "app.opened", { storage: "smb", saves: "drive", gamesFolders: 4 }),
+    eventOf(1, "saves.synced", { step: "send", when: "after", during: 4, duringFailed: 1 }),
+    eventOf(2, "saves.synced", { step: "fetch", when: "before" }),
+    eventOf(101, "builder.saves", { step: "send", when: "during", place: "share" }, mac),
+    eventOf(101, "builder.saves", { step: "same", when: "round", place: "share" }, mac),
+    eventOf(1, "error", { origin: "storage", cause: "network", stage: "connect", background: true }),
+    eventOf(2, "error", { origin: "saves", cause: "network", stage: "savesSync" }),
+  ]);
+  const st = model.storage;
+  assert.deepEqual(st.games.map((row) => [row.key, row.count]), [["smb", 2], ["mac", 1], ["sftp", 1]]);
+  assert.deepEqual(st.savesKind.map((row) => [row.key, row.count]), [["smb", 2], ["drive", 1], ["none", 1]]);
+  assert.deepEqual([st.folders.map((row) => [row.key, row.count]), st.foldersKnown], [[["1", 1], ["2", 1], ["3+", 1]], 3]);
+  assert.deepEqual([st.tailscale.yes, st.tailscale.known], [1, 2]);
+  assert.deepEqual([st.errors.count, st.errors.copies, st.errors.background.share], [1, 1, 1]);
+  const sv = st.saves;
+  assert.deepEqual([sv.count, sv.iphones, sv.macs, sv.during, sv.duringFailed, sv.errors, sv.errorCopies], [4, 2, 1, 5, 1, 1, 1]);
+  assert.deepEqual(Object.fromEntries(sv.steps.map((row) => [row.key, row.count])), { send: 2, fetch: 1, same: 1 });
+  assert.deepEqual(Object.fromEntries(sv.moments.map((row) => [row.key, row.count])), { after: 1, before: 1, during: 1, round: 1 });
+  // The Mac's saves are not an iPhone's.
+  assert.equal(model.totals.iphones, 4);
+});
+
+test("each game installed says where it came from, and how its Mac was reached", () => {
+  const game = { game: "0100000000010000" };
+  const model = build([
+    eventOf(1, "game.installed", { version: "1.0.0", from: "mac", link: "cable" }, game),
+    eventOf(2, "game.installed", { from: "mac", link: "network" }, game),
+    eventOf(3, "game.installed", { from: "cloud" }, game),
+    eventOf(4, "game.installed", { from: "smb", folder: "other" }, game),
+    // Before 0.15.0, whether it came from the games folder, or nothing.
+    eventOf(5, "game.installed", { fromStorage: true }, game),
+    eventOf(6, "game.installed", { fromStorage: false }, game),
+    eventOf(7, "game.installed", {}, game),
+    eventOf(3, "app.opened", { cloud: true }),
+    eventOf(8, "app.opened", { cloud: false }),
+    eventOf(3, "error", { origin: "install", from: "cloud", cause: "network", stage: "download" }),
+    eventOf(4, "error", { origin: "install", from: "smb", cause: "network", stage: "download" }),
+  ]);
+  assert.equal(model.installs.count, 7);
+  assert.deepEqual(Object.fromEntries(model.installs.from.map((row) => [row.key, row.count])), { mac: 2, cloud: 1, smb: 1, storage: 1, file: 1 });
+  assert.equal(model.installs.fromKnown, 6);
+  assert.deepEqual(model.installs.link.map((row) => [row.key, row.count]), [["cable", 1], ["network", 1]]);
+  assert.deepEqual([model.installs.otherFolder.yes, model.installs.otherFolder.known], [1, 1]);
+  const iphone = model.cloud.iphone;
+  assert.deepEqual([iphone.installs, iphone.copies, iphone.linked.yes, iphone.linked.known, iphone.failed], [1, 1, 1, 2, 1]);
+  assert.deepEqual(iphone.byCause.map((row) => [row.key, row.count]), [["network", 1]]);
+});
+
+test("Cartouche Cloud's builds, why they failed and what its page refused, apart from the iPhones and the Macs", () => {
+  const platform = { device: "CartoucheCloud1,1", ios: "0", cartouche: "1.0", memoryLimitMiB: undefined, increasedMemoryLimit: undefined };
+  const cloud = (name, fields, game) => eventOf(900, name, fields, { ...platform, game });
+  const odyssey = "0100000000010000";
+  const kart = "0400C3F00006E000";
+  const model = build([
+    eventOf(1, "app.opened", {}),
+    cloud("cloud.built", { minutes: 40, gigabytes: 6.5, nxnative: "6c3aeb3d70a1" }, odyssey),
+    cloud("cloud.built", { minutes: 60, gigabytes: 8.5, nxnative: "6c3aeb3d70a1" }, kart),
+    cloud("cloud.failed", { step: "build", stage: "shaders", cause: "tables", nxnative: "8d62601f0000" }, odyssey),
+    cloud("cloud.failed", { step: "build", stage: "shaders", cause: "tables", nxnative: "8d62601f0000" }, kart),
+    cloud("cloud.failed", { step: "fetch" }, kart),
+    cloud("cloud.refused", { code: "unopened", kind: "packages" }),
+    cloud("cloud.refused", { code: "unopened", kind: "packages" }),
+    cloud("cloud.refused", { code: "heavy", kind: "zip" }),
+  ]);
+  const c = model.cloud;
+  assert.deepEqual([c.events, c.built, c.failed, c.minutes, c.gigabytes], [8, 2, 3, 50, 7.5]);
+  assert.deepEqual(c.why.map((row) => [row.step, row.stage, row.cause, row.count, row.games, row.commit]), [
+    ["build", "shaders", "tables", 2, 2, "8d62601f0000"],
+    ["fetch", null, null, 1, 1, null],
+  ]);
+  assert.deepEqual(c.games.map((row) => [row.id, row.built, row.failed]), [[kart, 1, 2], [odyssey, 1, 1]]);
+  assert.deepEqual([c.refused.map((row) => [row.key, row.count]), c.refusedKinds.map((row) => [row.key, row.count]), c.refusedCount], [[["unopened", 2], ["heavy", 1]], [["packages", 2], ["zip", 1]], 3]);
+  assert.deepEqual([model.totals.cloud.built, model.totals.cloud.failed, model.totals.cloud.share], [2, 3, 0.4]);
+  // The same failure twice is a point to look at; once is not.
+  assert.deepEqual(model.attention.map((item) => [item.key, item.copies, item.step, item.cause, item.commit]), [["cloud", 2, "build", "tables", "8d62601f0000"]]);
+  // The platform is no iPhone, no Mac, and no version of Cartouche.
+  assert.equal(model.totals.iphones, 1);
+  assert.equal(model.builder.events, 0);
+  assert.ok(!model.options.versions.some((row) => row.value === "1.0"));
+  assert.ok(!model.options.devices.some((row) => row.value === "CartoucheCloud1,1"));
+});
+
+test("a Mac's failures say the Builder's step and its cause, and the console's errors theirs", () => {
+  const mac = (n, name, fields) => eventOf(100 + n, name, fields, { device: "Mac16,12", ios: "26.6", cartouche: "0.7.1", game: "0100000000010000" });
+  const model = build([
+    mac(1, "builder.failed", { stage: "shaders", cause: "tables" }),
+    mac(2, "builder.failed", { stage: "shaders", cause: "tables" }),
+    mac(2, "builder.failed", { cause: "no_space" }),
+    mac(1, "error", { origin: "storage", cause: "network", stage: "connect" }),
+    mac(2, "error", { origin: "storage", cause: "network", stage: "connect" }),
+    mac(2, "error", { origin: "saves", cause: "noSpace" }),
+  ]);
+  assert.deepEqual(model.builder.failed.whys.map((row) => [row.stage, row.cause, row.count, row.installs]), [["shaders", "tables", 2, 2], ["?", "no_space", 1, 1]]);
+  assert.deepEqual(model.builder.console.map((row) => [row.origin, row.cause, row.count]), [["storage", "network", 2], ["saves", "noSpace", 1]]);
+  // A Mac's error is not an iPhone's.
+  assert.equal(model.errors.count, 0);
+});
+
 test("the sample data fills every section, and is the same each time", () => {
   const first = M.demo(28, CATALOG, NOW);
   assert.equal(JSON.stringify(first), JSON.stringify(M.demo(28, CATALOG, NOW)));
@@ -1063,6 +1203,22 @@ test("the sample data fills every section, and is the same each time", () => {
     commits: model.builder.byCommit.length,
     macSessions: model.macPlay.sessions,
     macGames: model.macGames.length,
+    renewed: model.renewals.renewed,
+    renewalsDone: model.renewals.done,
+    renewalsFailed: model.renewals.failed,
+    renewalsStuck: model.renewals.stuck,
+    imported: model.renewals.imported.length,
+    folders: model.storage.foldersKnown,
+    savesSynced: model.storage.saves.count,
+    savesDuring: model.storage.saves.during,
+    macSaves: model.storage.saves.macs,
+    installFrom: model.installs.from.length,
+    installLink: model.installs.link.length,
+    cloudBuilt: model.cloud.built,
+    cloudFailed: model.cloud.why.length,
+    cloudRefused: model.cloud.refusedCount,
+    cloudInstalls: model.cloud.iphone.installs,
+    cloudLinked: model.cloud.iphone.linked?.yes ?? 0,
   })) {
     assert.ok(value > 0, name);
   }
