@@ -5,9 +5,9 @@ name: Game measurements
 # telemetry/README.md#game-sheets): one result for each iPhone model that at
 # least three iPhones played a game on in the last 28 days. A game of
 # nxnative's list that has no sheet gets one with its first result. It reads
-# the D1 database with the secrets CLOUDFLARE_API_TOKEN and
-# CLOUDFLARE_ACCOUNT_ID of the environment cloudflare, and does nothing while
-# they are not set. main takes no push: the sheets that changed, and the new
+# the D1 database in the account of the zone cartouche.cloud (decision 158)
+# with the secret CLOUDFLARE_DOMAIN_TOKEN of the environment cloudflare, and
+# does nothing while it is not set. main takes no push: the sheets that changed, and the new
 # ones, go on the branch catalog-measurements, and the summary links the pull
 # request to open from it, each Thursday morning, and lists the new sheets.
 
@@ -38,9 +38,12 @@ jobs:
       - name: Read the sessions and write the sheets
         id: sum
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: python3 telemetry/sheets.py --catalog catalog --out build/sheets
+          # The Domain workflow's token: the database is in the zone's account (decision 158).
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_DOMAIN_TOKEN }}
+        run: |
+          CLOUDFLARE_ACCOUNT_ID="$(telemetry/account.sh)"
+          export CLOUDFLARE_ACCOUNT_ID
+          python3 telemetry/sheets.py --catalog catalog --out build/sheets
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: ${{ steps.sum.outputs.changed == 'true' }}
         with:

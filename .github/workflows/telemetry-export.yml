@@ -2,8 +2,8 @@ name: Telemetry export
 
 # Exports the telemetry database for one of the project's sessions, which
 # cannot reach Cloudflare (telemetry/README.md#export): the first job reads
-# it with the secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID of the
-# environment cloudflare and encrypts it for the public key the run is given
+# it in the account of the zone cartouche.cloud (decision 158) with the
+# secret CLOUDFLARE_DOMAIN_TOKEN of the environment cloudflare and encrypts it for the public key the run is given
 # (telemetry/export.py); the second, which holds no secret, puts the export
 # on the branch telemetry-export, where the session that holds the private
 # key fetches it, and alone can open it. Only those who can write to the
@@ -41,11 +41,14 @@ jobs:
           persist-credentials: false
       - name: Export
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # The Domain workflow's token: the database is in the zone's account (decision 158).
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_DOMAIN_TOKEN }}
           KEY: ${{ inputs.key }}
           DAYS: ${{ inputs.days }}
-        run: python3 telemetry/export.py export --key "$KEY" --days "$DAYS" --out build/export
+        run: |
+          CLOUDFLARE_ACCOUNT_ID="$(telemetry/account.sh)"
+          export CLOUDFLARE_ACCOUNT_ID
+          python3 telemetry/export.py export --key "$KEY" --days "$DAYS" --out build/export
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: telemetry-export
