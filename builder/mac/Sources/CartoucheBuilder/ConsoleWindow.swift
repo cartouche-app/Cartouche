@@ -212,6 +212,10 @@ enum ConsoleLink {
         console.onInstall = { [weak model] titleID in model?.install(titleID: titleID) }
         // The iPhone's games folder, on the Storage page: Send now.
         console.onSendGames = { [weak model] in model?.iPhoneGames.round() }
+        // The games folders or the saves folder, chosen on the Storage page
+        // on one of the connections, as JSON from the console's copy of the
+        // type to CartoucheCore's (AppModel).
+        console.onChangeFolders = { [weak model] change in model?.changeFolders(change) }
         // The first step of the console's guide to a first game on this Mac:
         // the setup assistant, over the console, and whether it was gone
         // through, at once and at each change.

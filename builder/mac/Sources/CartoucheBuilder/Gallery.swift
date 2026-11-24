@@ -133,9 +133,10 @@ enum Gallery {
             case .storageMac: return CGSize(width: 1024, height: 1440)
             case .iphoneGames: return CGSize(width: 1024, height: 1500)
             case .consoleSheet, .consoleSheetNewer: return CGSize(width: 1024, height: 1640)
-            // This Mac, the iPhone's games folder on a NAS, and every
-            // connection, down to the footer.
-            case .consoleStorage: return CGSize(width: 1024, height: 1560)
+            // This Mac, the iPhone's games folders on a NAS and a Drive,
+            // with the ways to change them, the saves folder to choose, and
+            // every connection, down to the footer.
+            case .consoleStorage: return CGSize(width: 1024, height: 1900)
             // What is sent, down to the way to erase it.
             case .consoleMeasures: return CGSize(width: 1024, height: 1180)
             // What the player writes, the ways to send it, and the report

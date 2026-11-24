@@ -30,7 +30,8 @@
 //  The player's connections to their storage go to the Mac, and its own
 //  come back, so that both have the same (CartoucheConnectionsExchange):
 //  after a pairing, after each change here, and when Cartouche comes to
-//  the front.
+//  the front. So do the folders chosen for the games and the saves: the
+//  ones chosen last, here, on another iPhone or on the Mac's console, win.
 //
 
 import Combine
@@ -496,7 +497,9 @@ enum CartoucheMacStorage {
 /// The player's connections to their storage, given to each paired Mac
 /// with their secrets, and the Mac's taken, so that both have the same
 /// (CartoucheConnections.swift), with the folders chosen here for the games
-/// and the saves, which the Mac uses too when they are on one of them:
+/// and the saves, which the Mac uses too when they are on one of them, and
+/// those it keeps taken when they were chosen later, on its console or on
+/// another iPhone (take(folders:)):
 /// after a pairing, a moment after a server that goes over the bridge was
 /// saved or removed here or a folder chosen, and when Cartouche comes to
 /// the front, at most every ten minutes then. A Mac away, closed or too old
@@ -588,10 +591,14 @@ final class CartoucheConnectionsExchange: ObservableObject {
                 NSLog("[Cartouche] the Mac takes no connections: its Cartouche Builder is older")
                 return false
             }
-            let theirs = try await mac.client.connections(settings.connections(), places: settings.chosenFolders())
+            let (theirs, places) = try await mac.client.exchange(settings.connections(), places: settings.chosenFolders())
             let changed = settings.take(theirs)
-            NSLog("[Cartouche] the Mac took the connections and gave %ld, %@", theirs.filter { !$0.removed }.count,
-                  changed ? "which changed some here" : "the same as here")
+            // The folders chosen last there, on a connection taken just now
+            // too.
+            let moved = places.map { settings.take(folders: $0) } ?? false
+            NSLog("[Cartouche] the Mac took the connections and gave %ld, %@%@", theirs.filter { !$0.removed }.count,
+                  changed ? "which changed some here" : "the same as here",
+                  moved ? ", and folders chosen later there" : "")
             return true
         } catch {
             NSLog("[Cartouche] the Mac did not take the connections: %@", error.localizedDescription)
