@@ -3,23 +3,26 @@
 //  Cartouche
 //
 //  Whether a game was built with an nxnative that converts its
-//  BC-compressed textures for a GPU that reads none, the A16's and older:
-//  nxnative refuses such a GPU for every game (CartoucheGameFit), but a
-//  fork of it stores BC1 to BC3 as ASTC 4x4 there and decompresses the
-//  others, as mianmuhammadse/nxnative's no-bc branch does (its
-//  dm/gfx/tex/README.md, 18 November). nxnative's host is built into the
-//  game's executable, with its words: such a build reads the setting that
-//  turns the conversion down, DM_NO_BC_ASTC, and no longer carries either
-//  of nxnative's refusals of the GPU (dm/ios/Sources/main.m and
-//  dm/gfx/nvn/nvn_mtl.m). Only the executable's C strings are read
+//  BC-compressed textures for a GPU that reads none, the A16's and older,
+//  and for which of its graphics APIs: nxnative refuses such a GPU for every
+//  game (CartoucheGameFit), but a fork of it stores BC1 to BC3 as ASTC 4x4
+//  there and decompresses the others (BC4 to BC7, and 3D textures), as
+//  mianmuhammadse/nxnative's no-bc branch does (its dm/gfx/tex/README.md).
+//  nxnative's host is built into the game's executable, with its words: such
+//  a build reads the setting of the conversion, DM_NO_BC_ASTC, and no longer
+//  carries either of nxnative's refusals of the GPU (dm/ios/Sources/main.m
+//  and dm/gfx/nvn/nvn_mtl.m). Only the executable's C strings are read
 //  (__TEXT,__cstring and the sections like it), where a C program's words
 //  are: the same letters in the game's data say nothing. A file that is not
 //  an arm64 executable, or that ends too soon, converts nothing, and a
 //  build that says nothing of it keeps the GPU's warning: nothing here ever
 //  hides an incompatibility it did not read lifted.
 //
-//  The conversion is NVN's alone: that fork's README says that a game drawn
-//  with Vulkan or OpenGL still needs a GPU with BC formats (covers).
+//  The conversion was NVN's alone; since 22 November (53f5d9a) the fork's
+//  Vulkan layer stores BC images the same way, and its build then says so in
+//  its own words, the line it logs at its first such image (hle_vk.m).
+//  Until Then, a Vulkan game, played on an iPhone 15 so. A game drawn with
+//  OpenGL still needs a GPU with BC formats (covers).
 //
 //  Platform-independent: tested on its own by launcher/Package.swift.
 //
@@ -27,45 +30,70 @@
 import Foundation
 
 enum CartoucheBCConversion {
-    /// The setting of the conversion, which only a build that converts reads.
+    /// The graphics APIs whose BC textures a build converts: none for
+    /// nxnative's own builds.
+    struct APIs: OptionSet, Hashable {
+        let rawValue: Int
+        /// NVN, the Switch's, and NVN2, the Switch 2's.
+        static let nvn = APIs(rawValue: 1 << 0)
+        static let vulkan = APIs(rawValue: 1 << 1)
+    }
+
+    /// The setting of the conversion, which only a build that converts reads:
+    /// NVN's, which the Vulkan layer's follows.
     static let marker = "DM_NO_BC_ASTC"
+    /// What the fork's Vulkan layer logs at the first BC image it stores
+    /// otherwise, "[dm] [vk] no BC: BC images are stored as ASTC 4x4
+    /// (BC1-3) or decompressed (the other formats), first one: …": a build
+    /// whose Vulkan layer does not convert has no such words.
+    static let vulkanMarker = "[vk] no BC:"
     /// nxnative's refusals of a GPU without BC formats, at the game's start
     /// (main.m) and at its first image (nvn_mtl.m): a build that still says
     /// either stops on such a GPU, whatever else it carries.
     static let refusals = ["cannot read BC-compressed textures", "has no BC texture formats"]
 
-    /// Whether the executable at URL converts its BC textures. Mapped, not
-    /// read: a game's executable can be hundreds of megabytes, of which only
-    /// its header and its C strings are touched.
-    static func converts(executableAt url: URL) -> Bool {
-        guard let data = try? Data(contentsOf: url, options: .alwaysMapped) else { return false }
-        return converts(executable: data)
+    /// The APIs whose BC textures the executable at URL converts. Mapped,
+    /// not read: a game's executable can be hundreds of megabytes, of which
+    /// only its header and its C strings are touched.
+    static func conversion(executableAt url: URL) -> APIs {
+        guard let data = try? Data(contentsOf: url, options: .alwaysMapped) else { return [] }
+        return conversion(executable: data)
     }
 
-    /// Whether the executable DATA, a Mach-O file, thin or universal,
-    /// converts its BC textures: its C strings name the conversion's
-    /// setting and neither of nxnative's refusals.
-    static func converts(executable data: Data) -> Bool {
-        data.withUnsafeBytes { (file: UnsafeRawBufferPointer) -> Bool in
-            guard let sections = cStringSections(of: file), !sections.isEmpty else { return false }
-            var named = false
+    /// The APIs whose BC textures the executable DATA, a Mach-O file, thin or
+    /// universal, converts: none when its C strings say either of
+    /// nxnative's refusals; else NVN's when they name the conversion's
+    /// setting, Vulkan's when they have its layer's words.
+    static func conversion(executable data: Data) -> APIs {
+        data.withUnsafeBytes { (file: UnsafeRawBufferPointer) -> APIs in
+            guard let sections = cStringSections(of: file), !sections.isEmpty else { return [] }
+            var apis: APIs = []
             for section in sections {
                 let strings = UnsafeRawBufferPointer(rebasing: file[section])
-                if refusals.contains(where: { contains(strings, $0) }) { return false }
-                if !named { named = contains(strings, marker) }
+                if refusals.contains(where: { contains(strings, $0) }) { return [] }
+                if !apis.contains(.nvn), contains(strings, marker) { apis.insert(.nvn) }
+                if !apis.contains(.vulkan), contains(strings, vulkanMarker) { apis.insert(.vulkan) }
             }
-            return named
+            return apis
         }
     }
 
-    /// Whether the conversion covers a game drawn with GRAPHICS, as
-    /// nxnative's list of games says it (CartoucheNxGame.graphics): NVN, the
-    /// Switch's, or NVN2, the Switch 2's, and nothing else. Of a game the
-    /// list does not know, the build's word stands.
-    static func covers(graphics: String?) -> Bool {
+    /// Whether a build that converts the BC textures of CONVERTED covers a
+    /// game drawn with GRAPHICS, as nxnative's list of games says it
+    /// (CartoucheNxGame.graphics): every API the game draws with, NVN or
+    /// NVN2, and Vulkan, is among them; OpenGL never is. Of a game the list
+    /// does not know, the build's word stands.
+    static func covers(graphics: String?, by converted: APIs) -> Bool {
+        guard !converted.isEmpty else { return false }
         guard let graphics else { return true }
         let apis = graphics.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces).uppercased() }
-        return !apis.isEmpty && apis.allSatisfy { $0 == "NVN" || $0 == "NVN2" }
+        return !apis.isEmpty && apis.allSatisfy { api in
+            switch api {
+            case "NVN", "NVN2": return converted.contains(.nvn)
+            case "VULKAN": return converted.contains(.vulkan)
+            default: return false
+            }
+        }
     }
 
     // MARK: Mach-O

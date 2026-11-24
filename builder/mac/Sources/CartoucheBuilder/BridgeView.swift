@@ -88,7 +88,7 @@ struct BridgeView: View {
                         }
                     } else {
                         FolderRow(symbol: "externaldrive.badge.icloud", title: tr("Saves folder", "Dossier des sauvegardes"), path: bridge.saves.path,
-                                  note: bridge.savesIsDefault ? tr("In Cartouche Builder’s folder", "Dans le dossier de Cartouche Builder") : nil) {
+                                  note: bridge.savesIsDefault ? tr("In Cartouche’s folder", "Dans le dossier de Cartouche") : nil) {
                             Button(tr("Change…", "Changer…")) {
                                 if let url = FolderPicker.choose(title: tr("Where the saves go", "Où vont les sauvegardes"), directory: bridge.saves) {
                                     bridge.setSaves(url)
@@ -223,7 +223,7 @@ struct BridgeView: View {
                     }
                     Divider().padding(.leading, 48)
                     FolderRow(symbol: "externaldrive.badge.icloud", title: tr("Saves", "Sauvegardes"), path: bridge.saves.path,
-                              note: bridge.savesIsDefault ? tr("In Cartouche Builder’s folder", "Dans le dossier de Cartouche Builder") : nil) {
+                              note: bridge.savesIsDefault ? tr("In Cartouche’s folder", "Dans le dossier de Cartouche") : nil) {
                         Button(tr("Change…", "Changer…")) {
                             if let url = FolderPicker.choose(title: tr("Where the iPhone’s saves go", "Où vont les sauvegardes de l’iPhone"), directory: bridge.saves) {
                                 bridge.setSaves(url)

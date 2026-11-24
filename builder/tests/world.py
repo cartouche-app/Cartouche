@@ -306,7 +306,7 @@ class World:
         self.nxnative = Nxnative(self.root / "github" / "nxnative", NAMES if games is None else games)
         # The engine as the app carries it in its Resources (bundle.sh): the
         # package alone, which nothing may write in (PYTHONDONTWRITEBYTECODE).
-        self.package = self.root / "Cartouche Builder.app" / "Contents" / "Resources" / "engine"
+        self.package = self.root / "Cartouche.app" / "Contents" / "Resources" / "engine"
         shutil.copytree(BUILDER / "cartouche_builder", self.package / "cartouche_builder", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
         self.python = Path(os.environ.get("CARTOUCHE_BUILDER_PYTHON") or sys.executable)
         self.app = App(self)

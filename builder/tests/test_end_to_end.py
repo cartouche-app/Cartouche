@@ -680,7 +680,7 @@ class Failures(EndToEnd):
         self.app.api("config", "--set", json.dumps({"keys": str(self.world.keys), "min_free_gb": 10000}))
         status = self.app.finish(self.app.build())
         game = self.failure(status, LANTERN, "skipped", "no_room")
-        self.assertRegex(game["error"], r"^\d+ GB missing to build this game: Cartouche Builder starts a build only with 10000 GB free on your Mac's disk, "
+        self.assertRegex(game["error"], r"^\d+ GB missing to build this game: Cartouche starts a build only with 10000 GB free on your Mac's disk, "
                                         r"and only \d+ GB are free there\. Free some room there ")
         self.assertEqual(game["room"]["needed_gb"], 10000)
         self.assertEqual(game["room"]["free_gb"] + int(game["error"].split(" ")[0]), 10000)

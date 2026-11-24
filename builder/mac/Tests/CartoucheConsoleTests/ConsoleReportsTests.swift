@@ -69,7 +69,7 @@ final class ConsoleReportsTests: XCTestCase {
 
     func testAReportSaysThisMacAndCartoucheBuilder() {
         let environment = CartoucheReports.environment()
-        XCTAssertEqual(environment.appShown, "Cartouche Builder")
+        XCTAssertEqual(environment.appShown, "Cartouche for Mac")
         XCTAssertEqual(environment.systemShown, "macOS")
         XCTAssertNil(environment.basedOn)
         XCTAssertTrue(environment.device.hasSuffix(" GB)"), environment.device)
@@ -82,7 +82,7 @@ final class ConsoleReportsTests: XCTestCase {
         XCTAssertFalse(names.contains { $0.contains("iPhone") }, "\(names)")
 
         let text = CartoucheReports.text(of: CartoucheReports.make(.storage, "Problème", message: "Rien ne répond.", inBackground: true))
-        XCTAssertTrue(text.contains("\nCartouche Builder: "), text)
+        XCTAssertTrue(text.contains("\nCartouche for Mac: "), text)
         XCTAssertTrue(text.contains("\nmacOS: "), text)
         XCTAssertFalse(text.contains("\niOS: "), text)
         // System › Report a problem: no entry for devices.json, which holds

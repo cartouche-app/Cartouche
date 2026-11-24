@@ -138,8 +138,8 @@ struct EngineFooter: View {
             if let newest = model.library?.engine?.heldBehind {
                 // The newest commit does not build: the games are built from
                 // the last one that did on this Mac (fallback.py).
-                Label(tr("nxnative \(newest.prefix(8)), its newest commit, does not build for now: Cartouche Builder stays on the last one that built.",
-                         "nxnative \(newest.prefix(8)), son dernier commit, ne construit pas pour l’instant : Cartouche Builder reste sur le dernier qui a construit."),
+                Label(tr("nxnative \(newest.prefix(8)), its newest commit, does not build for now: the Builder stays on the last one that built.",
+                         "nxnative \(newest.prefix(8)), son dernier commit, ne construit pas pour l’instant : le Builder reste sur le dernier qui a construit."),
                       systemImage: "exclamationmark.triangle")
                     .font(.caption2)
                     .foregroundStyle(.orange)

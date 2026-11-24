@@ -185,7 +185,7 @@ final class AppModel: ObservableObject {
         macGames = MacGames(store: home.macSaves, scratch: home.savesScratch, sample: sample)
         iPhoneGames = IPhoneGames(store: ConnectionGamesStore(url: home.connectionGames), scratch: home.gamesScratch)
         if sample {
-            updater = Updater(app: URL(fileURLWithPath: "/Applications/Cartouche Builder.app"), version: "0.2.0", identifier: Updater.identifier,
+            updater = Updater(app: URL(fileURLWithPath: "/Applications/Cartouche.app"), version: "0.2.0", identifier: Updater.identifier,
                               folder: home.root.appendingPathComponent("Updates"), enabled: false)
             telemetry = BuilderTelemetry(file: nil, endpoint: nil, version: "0.2.0")
         } else {
@@ -1468,7 +1468,7 @@ final class AppModel: ObservableObject {
     /// ended, on the page or the console it was started from; a window the
     /// player closed, the game started from the menu bar, stays closed.
     private func comeBack() {
-        guard let window = NSApp.windows.first(where: { $0.identifier?.rawValue == AppModel.mainWindow || $0.title == "Cartouche Builder" }),
+        guard let window = NSApp.windows.first(where: { $0.identifier?.rawValue == AppModel.mainWindow || $0.title == AppName.name }),
               window.isVisible else { return }
         NSApp.activate()
         window.makeKeyAndOrderFront(nil)
@@ -1476,7 +1476,7 @@ final class AppModel: ObservableObject {
 
     func showMainWindow() {
         NSApp.activate()
-        if let window = NSApp.windows.first(where: { $0.identifier?.rawValue == AppModel.mainWindow || $0.title == "Cartouche Builder" }) {
+        if let window = NSApp.windows.first(where: { $0.identifier?.rawValue == AppModel.mainWindow || $0.title == AppName.name }) {
             window.makeKeyAndOrderFront(nil)
         } else {
             NotificationCenter.default.post(name: .openMainWindow, object: nil)

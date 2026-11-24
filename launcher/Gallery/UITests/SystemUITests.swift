@@ -29,6 +29,16 @@ extension Words {
     static let macSendLink = "Send the link to %@"          // mac.builds.sendLink
 }
 
+/// The words of the automation of Shortcuts that renews Cartouche every
+/// night, the setup's last step (decision 149).
+extension Words {
+    static let makeTheAutomation = "Make the automation"    // daily.action.make
+    static let seeTheSteps = "See the steps"                // daily.action.see
+    static let madeTheAutomation = "I made the automation"  // daily.made
+    static let madeOn = "Made on "                          // daily.state.waiting
+    static let setupStepDone = "%@, done"                   // setup.step.done
+}
+
 /// Reset Cartouche's words (CartoucheTextReset.swift).
 extension Words {
     static let resetCartouche = "Reset Cartouche"           // reset.title
@@ -71,6 +81,47 @@ final class SystemUITests: ConsoleTestCase {
             expect(app.navigationBars[Words.system].waitForExistence(timeout: 10),
                    "Back from \(page.row) did not come back to the System page", in: app)
         }
+        tap(app.buttons[Words.done], "Done of the System page", in: app)
+        expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// The setup's last step opens Renew every night, the automation of
+    /// Shortcuts still to make: once the player says they made it, the page
+    /// goes back up to say it waits for its first night, where the player
+    /// sees it without scrolling, and the step is done, its button opening
+    /// the steps again (decision 149). Up to 0.15.1, nothing in the setup
+    /// said to make it, and nothing told whether it was made.
+    @MainActor
+    func testTheSetupsLastStepWaitsForTheAutomationOnceMade() {
+        let app = openConsole()
+        tap(app.buttons[Words.system], "System in the dock", in: app)
+        expect(app.navigationBars[Words.system].waitForExistence(timeout: 15), "The System page did not open", in: app)
+        let row = element(in: app.buttons, beginningWith: Words.setup)
+        scrollTo(row, "Setup on the System page", in: app)
+        tap(row, "Setup on the System page", in: app)
+        expect(app.navigationBars[Words.setup].waitForExistence(timeout: 15), "Setup did not open", in: app)
+
+        scrollAndTap(element(in: app.buttons, beginningWith: Words.makeTheAutomation),
+                     "Make the automation, the setup's last step", in: app)
+        expect(app.navigationBars[Words.renewEveryNight].waitForExistence(timeout: 15),
+               "Make the automation did not open Renew every night", in: app)
+        let made = element(in: app.buttons, beginningWith: Words.madeTheAutomation)
+        scrollAndTap(made, "I made the automation", in: app)
+        expect(element(beginningWith: Words.madeOn, in: app).waitForExistence(timeout: 10),
+               "Once made, the page does not show at its top that it waits for the automation's first night", in: app)
+        expect(waitForGone(made), "I made the automation is still offered once made", in: app)
+
+        back(from: Words.renewEveryNight, in: app)
+        expect(app.navigationBars[Words.setup].waitForExistence(timeout: 10),
+               "Back from Renew every night did not come back to the setup", in: app)
+        let done = String(format: Words.setupStepDone, Words.renewEveryNight)
+        expect(element(labelled: done, in: app).waitForExistence(timeout: 10), "The setup does not say \(done)", in: app)
+        scrollAndTap(element(in: app.buttons, beginningWith: Words.seeTheSteps), "See the steps, the last step done", in: app)
+        expect(app.navigationBars[Words.renewEveryNight].waitForExistence(timeout: 15),
+               "See the steps did not open Renew every night", in: app)
+        back(from: Words.renewEveryNight, in: app)
+        back(from: Words.setup, in: app)
         tap(app.buttons[Words.done], "Done of the System page", in: app)
         expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)
         expectMainThreadAnswered(app)

@@ -42,20 +42,20 @@ extension CartoucheText {
     static func guideAccountDone(_ appleID: String) -> String { f("guide.account.done", "Signed in as %@.", appleID) }
 
     static var guideBuildTitle: String { s("guide.build.title", "Build your game on a Mac") }
-    static var guideBuildHow: String { s("guide.build.how", "nxnative turns your own copy of a game into an app for the iPhone, and only a Mac can do it. Cartouche Builder does it for you, and builds your games again when nxnative improves them.") }
+    static var guideBuildHow: String { s("guide.build.how", "nxnative turns your own copy of a game into an app for the iPhone, and only a Mac can do it. Cartouche on the Mac does it for you, and builds your games again when nxnative improves them.") }
     static var guideBuildMac: String { s("guide.build.mac", "A Mac with Apple silicon (M1 or later), on macOS 26.6 or later") }
     static var guideBuildXcode: String { s("guide.build.xcode", "Xcode 27.2, free from Apple") }
     static var guideBuildGame: String { s("guide.build.game", "Your game, copied from your own console, with your console’s keys (prod.keys) for a Switch game") }
     static var guideBuildSend: String { s("guide.build.send", "Send the steps to my Mac") }
-    static var guideBuildSendNote: String { s("guide.build.sendNote", "By AirDrop or Messages. On the Mac, the page gives Cartouche Builder: drag it into Applications, and it installs its tools itself.") }
+    static var guideBuildSendNote: String { s("guide.build.sendNote", "By AirDrop or Messages. On the Mac, the page gives Cartouche for Mac: drag it into Applications, and it installs its tools itself.") }
     static var guideBuildSkip: String { s("guide.build.skip", "No thanks") }
     static var guideBuildSkipped: String { s("guide.build.skipped", "Skipped: your games will come from your games folder, or from an IPA you import.") }
     static var guideBuildShareSubject: String { s("guide.build.share.subject", "Cartouche on your Mac") }
-    static var guideBuildShareMessage: String { s("guide.build.share.message", "Install Cartouche Builder, then build your game with it.") }
+    static var guideBuildShareMessage: String { s("guide.build.share.message", "Install Cartouche on your Mac, then build your game with it.") }
     static var guideBuildDone: String { s("guide.build.done", "A game of yours is ready.") }
 
     static var guideFolderTitle: String { s("guide.folder.title", "Choose your games folder") }
-    static var guideFolderHow: String { s("guide.folder.how", "Cartouche Builder puts your games in a folder, on the Mac or on your NAS. Add your Mac here once, with the code both screens show, or choose the folder on your NAS: Cartouche lists your games and offers their updates.") }
+    static var guideFolderHow: String { s("guide.folder.how", "Cartouche on the Mac puts your games in a folder, on the Mac or on your NAS. Add your Mac here once, with the code both screens show, or choose the folder on your NAS: Cartouche lists your games and offers their updates.") }
     /// The same, for a player who said No thanks to the Mac's step.
     static var guideFolderHowNoMac: String { s("guide.folder.howNoMac", "Choose the folder that holds your games, on your NAS, another server of yours or in Files: Cartouche lists them and offers their updates.") }
     static var guideFolderChoose: String { s("guide.folder.choose", "Choose the games folder") }
@@ -64,7 +64,7 @@ extension CartoucheText {
 
     static var guidePlayTitle: String { s("guide.play.title", "Install your game and play") }
     static var guidePlayReady: String { s("guide.play.ready", "Your game is in your games folder. Cartouche installs it on this iPhone, then shows Play.") }
-    static var guidePlayWaiting: String { s("guide.play.waiting", "No game in your games folder yet. Yours shows here as soon as Cartouche Builder has built it. You can also import an IPA.") }
+    static var guidePlayWaiting: String { s("guide.play.waiting", "No game in your games folder yet. Yours shows here as soon as Cartouche on your Mac has built it. You can also import an IPA.") }
     /// The same, for a player who said No thanks to the Mac's step.
     static var guidePlayWaitingNoMac: String { s("guide.play.waitingNoMac", "No game in your games folder yet. Yours shows here as soon as it is there. You can also import an IPA.") }
     static func guidePlayInstall(_ game: String) -> String { f("guide.play.install", "Install %@", game) }

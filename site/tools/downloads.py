@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Give the site's download links the newest file of their releases.
 
-Cartouche Builder and the Cartouche Installer are releases of this
+Cartouche for Mac and the Cartouche Installer are releases of this
 repository, builder-v<version> and installer-v<version>, beside Cartouche's
 own v<version>. GitHub's /releases/latest names a single release of the
 three, and each file carries its version in its name, so no address of
@@ -15,7 +15,7 @@ publish the site again once they have published a release.
 
 The newest is the highest version among the releases that are neither
 drafts nor pre-releases and have the file, named as their workflow names it
-and served from this repository's releases, as Cartouche Builder picks its
+and served from this repository's releases, as Cartouche for Mac picks its
 own updates (builder/mac/Sources/BuilderKit/Updater.swift): those of the
 repository the workflow names, GITHUB_REPOSITORY, whose addresses GitHub's
 answer gives wherever the repository lives, once it has moved to an
@@ -61,7 +61,7 @@ class File:
 
 FILES = {
     # The disk image and its SHA-256, which the app's updates need too.
-    "builder": File("builder-v", "Cartouche-Builder-{version}.dmg", ("Cartouche-Builder-{version}.dmg.sha256",), "Cartouche Builder"),
+    "builder": File("builder-v", "Cartouche-Builder-{version}.dmg", ("Cartouche-Builder-{version}.dmg.sha256",), "Cartouche for Mac"),
     # Both files of one release, so that the Mac's button and Windows' give
     # the same version.
     "installer-mac": File("installer-v", "Cartouche-Installer-{version}-Mac.dmg", ("Cartouche-Installer-{version}-Windows.exe",), "Cartouche Installer for Mac"),

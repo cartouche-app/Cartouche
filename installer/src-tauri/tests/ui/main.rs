@@ -70,6 +70,9 @@ fn github_down(f: &Fakes) {
     publish(f);
     f.github.state().source_status = Some(503);
     f.usbmuxd.unplug(&f.iphone);
+    // The window's first list of the iPhones is still on its way when the
+    // iPhone is plugged in and Refresh clicked.
+    f.usbmuxd.hold_lists();
 }
 
 fn no_keychain(f: &Fakes) {
@@ -719,10 +722,17 @@ fn everything_goes_wrong(ui: &Ui, f: &Fakes) {
     let version = VERSION;
     let name = f.iphone.config().name.clone();
 
-    // No iPhone plugged in, then one, and Refresh.
+    // No iPhone plugged in, then one while the window is still listing
+    // them, and Refresh: the window lists them again once that list is in.
     ui.wait_text(&ui.t("device.no_devices_found_period"));
+    let start = Instant::now();
+    while f.usbmuxd.lists_asked() == 0 {
+        assert!(start.elapsed() < Duration::from_secs(30), "the window never listed the iPhones");
+        std::thread::sleep(Duration::from_millis(50));
+    }
     f.usbmuxd.plug(&f.iphone);
     ui.click(&ui.t("common.refresh"));
+    f.usbmuxd.release_lists();
     ui.wait_text(&name);
 
     // GitHub does not answer, then does.
