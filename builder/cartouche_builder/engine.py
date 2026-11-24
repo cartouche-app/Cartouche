@@ -183,11 +183,39 @@ class Engine:
         out = self.git("log", "-1", "--format=%H", at, "--", *paths, timeout=600).strip()
         return out or None
 
-    def changes(self, since: str, at: str, *paths: str, limit: int) -> list[str]:
-        """The LIMIT newest commits after SINCE up to AT that changed one of
-        PATHS, newest first: their full SHAs. No file is fetched either."""
-        out = self.git("log", f"-{limit}", "--format=%H", f"{since}..{at}", "--", *paths, timeout=600)
-        return [line.strip() for line in out.splitlines() if line.strip()]
+    def revisions(self, since: str, at: str, path: str) -> list[tuple[str, str | None, str | None, str | None]]:
+        """The commits after SINCE up to AT that changed PATH, newest first:
+        (its full SHA, its first parent's, PATH's blob before it and after
+        it), the blobs None where git gives none (a merge, a path added or
+        removed). The partial clone knows every tree: no file is fetched."""
+        out = self.git("log", "--raw", "--no-abbrev", "--no-renames", "--format=%x1e%H %P", f"{since}..{at}", "--", path, timeout=600)
+        found = []
+        for record in out.split("\x1e")[1:]:
+            lines = [line for line in record.splitlines() if line.strip()]
+            if not lines:
+                continue
+            shas = lines[0].split()
+            before = after = None
+            for line in lines[1:]:
+                fields = line.split("\t", 1)[0].split()
+                if line.startswith(":") and len(fields) >= 5:
+                    before = None if set(fields[2]) == {"0"} else fields[2]
+                    after = None if set(fields[3]) == {"0"} else fields[3]
+                    break
+            found.append((shas[0], shas[1] if len(shas) > 1 else None, before, after))
+        return found
+
+    def descendants(self, commit: str, at: str) -> set[str]:
+        """The commits after COMMIT up to AT that have it in their history:
+        their full SHAs, COMMIT left out."""
+        out = self.git("rev-list", "--ancestry-path", f"{commit}..{at}", timeout=600)
+        return {line.strip() for line in out.splitlines() if line.strip()}
+
+    def ancestors(self, commit: str, since: str) -> set[str]:
+        """COMMIT and the commits of its history from SINCE on (SINCE
+        itself included): their full SHAs."""
+        out = self.git("rev-list", commit, "--not", f"{since}^@", timeout=600)
+        return {line.strip() for line in out.splitlines() if line.strip()}
 
     def parent(self, commit: str) -> str | None:
         """COMMIT's first parent: its full SHA, or None for the first commit."""

@@ -489,20 +489,193 @@ class SplitTables(Base):
         before = self.splitter_again()
         commit(self.remote, "nvn/dirty: preserve first-match range lookups (PR #1227)", {f"dm/games/{MKW}/patches.py": "ranges"})
         plan, summary = self.run_due(only={MKW})
-        # The newest, then the commit before the splitter's newest change,
-        # which reads its shaders as the newest: its IPA, from before the
-        # first change, stays as it is.
-        self.assertEqual((self.runs(MKW), self.mac_runs(MKW)), (4, 1))
+        # The newest only: the commit before the splitter's newest change is
+        # the one the split differed at last time, so it reads its shaders
+        # as the newest does; its IPA, from before the first change, stays
+        # as it is.
+        self.assertEqual(before, self.newest)
+        self.assertEqual((self.runs(MKW), self.mac_runs(MKW)), (3, 1))
         self.assertEqual((ipa.stat().st_mtime_ns, ctx.store.get(MKW).build.commit), (before_ipa, self.older[:12]))
         game = self.game(MKW)
         newest = ctx.engine.latest()
         self.assertEqual((game["state"], game["cause"]), ("skipped", "tables"))
         self.assertEqual(game["error"], f"nxnative {newest[:12]} reads this game's shaders otherwise than its profile for now, and its IPA is from "
                                         f"{self.older[:12]}, from before nxnative changed how it reads them: it stays as it is until nxnative has a newer commit.")
-        self.assertEqual(fallback.splits(ctx.paths)[MKW]["failed"], [before])
+        mark = fallback.splits(ctx.paths)[MKW]
+        self.assertEqual((mark["failed"], mark["differ"], mark["older"], mark["built"]), ([], [self.newest, newest], self.older, True))
         self.assertEqual(ctx.engine.head(), newest)
         plan = batch.survey(batch.context())
         self.assertEqual((self.entry(plan, MKW).build, self.entry(plan, MKW).reasons), (False, ["up_to_date"]))
+
+    def again(self, count: int, start: int = 0) -> list[str]:
+        """The splitter changed COUNT more times, as it still reads a shader
+        main holds twice, and Mario Kart World's profile once (it is due
+        again): the commit before each change, newest first."""
+        befores = []
+        for number in range(start, start + count):
+            befores.append(git(self.remote, "rev-parse", "HEAD"))
+            commit(self.remote, f"packing/shader_split: read archive {number}", {SPLITTER: f"reads: first\n# archive {number}\n"})
+        commit(self.remote, f"nvn/dirty: preserve first-match range lookups ({start})", {f"dm/games/{MKW}/patches.py": f"ranges {start}"})
+        return befores[::-1]
+
+    def tried_from(self) -> list[str]:
+        """The older commits the batches built the game from, in turn."""
+        return [value["commit"] for kind, title_id, value in self.events if kind == "commit" and title_id == MKW and value.get("split")]
+
+    def as_builder_0_7(self) -> None:
+        """nxnative.json's marks as Cartouche Builder 0.7.0 and 0.7.1 kept them,
+        on players' Macs: no commits whose split differed nor failed
+        otherwise."""
+        paths = Paths.default()
+        data = json.loads(paths.engine_state.read_text())
+        for mark in data["split"].values():
+            mark.pop("differ", None), mark.pop("otherwise", None)
+        paths.engine_state.write_text(json.dumps(data))
+
+    def test_the_splitter_changed_more_than_depth_times_since_it_broke_on_a_mac_that_never_built(self):
+        # As at nxnative on 19 November 2026: four changes after 8d62601f,
+        # whose parent was the one commit that built seven games; the three
+        # newest changes' parents did not.
+        befores = self.again(fallback.DEPTH + 1)
+        plan, summary = self.run_due(only={MKW})
+        self.assertEqual((summary.failed, summary.mac_failed), ([], []))
+        ctx = batch.context()
+        # The DEPTH newest, then twice as far back: the commit before the
+        # change that broke it, its Mac app too, in one batch.
+        self.assertEqual(self.tried_from(), [sha[:12] for sha in befores[: fallback.DEPTH]] + [self.older[:12]])
+        self.assertEqual((self.runs(MKW), self.mac_runs(MKW)), (2 + fallback.DEPTH, 1))
+        record = ctx.store.get(MKW)
+        self.assertEqual((record.build.commit, record.mac.commit), (self.older[:12], self.older[:12]))
+        game = self.game(MKW)
+        self.assertEqual((game["state"], game["commit"], game["fallback"], game["split"]), ("built", self.older[:12], True, True))
+        self.assertEqual(ctx.engine.head(), ctx.engine.latest())
+
+    def test_a_mac_that_built_it_from_before_the_splitter_broke_keeps_it_however_often_it_changes(self):
+        self.run_due(only={MKW})
+        ctx = batch.context()
+        ipa = self.games / ctx.store.get(MKW).build.ipa
+        before_ipa = ipa.stat().st_mtime_ns
+        self.assertEqual(self.runs(MKW), 2)
+        # Its mark as the Builder before kept it, then more changes of the
+        # splitter than DEPTH, twice, and the profile changed each time.
+        self.as_builder_0_7()
+        for start in (0, 10):
+            self.again(fallback.DEPTH + 1, start)
+            plan, summary = self.run_due(only={MKW})
+            # The newest only: every commit before a change since is newer
+            # than the one its split differed at before, and its IPA, from
+            # before the change that broke it, stays as it is.
+            self.assertEqual(self.runs(MKW), 3 if start == 0 else 4)
+            self.assertEqual((self.mac_runs(MKW), self.tried_from()), (1, [self.older[:12]]))
+            self.assertEqual((ipa.stat().st_mtime_ns, ctx.store.get(MKW).build.commit), (before_ipa, self.older[:12]))
+            game = self.game(MKW)
+            self.assertEqual((game["state"], game["cause"]), ("skipped", "tables"))
+            self.assertIn(f"its IPA is from {self.older[:12]}", game["error"])
+            mark = fallback.splits(ctx.paths)[MKW]
+            self.assertEqual((mark["older"], mark["built"], mark["newest"], mark["failed"]), (self.older, True, ctx.engine.latest(), []))
+            plan = batch.survey(batch.context())
+            self.assertEqual((self.entry(plan, MKW).build, self.entry(plan, MKW).reasons), (False, ["up_to_date"]))
+
+    def test_many_changes_after_it_broke_a_few_builds_then_the_newest_that_builds(self):
+        # Six changes of the splitter that split its shaders as its tables
+        # say, the change that broke it, then five more.
+        root = git(self.remote, "rev-list", "--max-parents=0", "HEAD")
+        git(self.remote, "reset", "-q", "--hard", root)
+        commit(self.remote, "Mario Kart World's shader tables", {SPLITTER: "reads: last\n", f"dm/games/{MKW}/shader_map.tsv": "split by: last\n"})
+        harmless = [commit(self.remote, f"packing/shader_split: read archive h{n}", {SPLITTER: f"reads: last\n# h{n}\n"}) for n in range(6)]
+        broke = commit(self.remote, "nvn/raytracing: run Welcome Tour's native ray modules on Metal", {SPLITTER: "reads: first\n"})
+        after = [commit(self.remote, f"packing/shader_split: read archive a{n}", {SPLITTER: f"reads: first\n# a{n}\n"}) for n in range(5)]
+        commit(self.remote, "nvn: discover raw pointer pools at binding time", {"dm/nvn/pools.c": "raw"})
+        newest_first = after[-2::-1] + [broke] + harmless[::-1]
+        plan, summary = self.run_due(only={MKW})
+        self.assertEqual(summary.failed, [])
+        ctx = batch.context()
+        # Five builds: the three newest, then twice as far back each time.
+        self.assertEqual(self.tried_from(), [newest_first[i][:12] for i in (0, 1, 2, 4, 8)])
+        self.assertEqual(ctx.store.get(MKW).build.commit, harmless[2][:12])
+        # The next time it is built, the newest commits between it and those
+        # that did not, in turn: the one right before the change that broke it.
+        commit(self.remote, "nvn/dirty: preserve first-match range lookups (PR #1227)", {f"dm/games/{MKW}/patches.py": "ranges"})
+        plan, summary = self.run_due(only={MKW})
+        self.assertEqual(summary.failed, [])
+        self.assertEqual(self.tried_from()[5:], [harmless[-1][:12]])
+        self.assertEqual(ctx.store.get(MKW).build.commit, harmless[-1][:12])
+        self.assertEqual(self.runs(MKW), 8)
+
+    def test_a_commit_whose_split_differed_before_nxnative_fixed_it_rules_nothing_out_since(self):
+        self.run_due(only={MKW})
+        ctx = batch.context()
+        # nxnative reads its shaders as its tables say again: built from the
+        # newest, as any game.
+        fixed = commit(self.remote, "packing/shaders: preserve verified registered duplicate sources",
+                       {SPLITTER: "reads: last\n# fixed\n", f"dm/games/{MKW}/patches.py": "fixed"})
+        plan, summary = self.run_due(only={MKW})
+        self.assertEqual((ctx.store.get(MKW).build.commit, self.runs(MKW)), (fixed[:12], 3))
+        # Then it changes its splitter twice, the second time otherwise.
+        harmless = commit(self.remote, "packing/shader_split: read archive h", {SPLITTER: "reads: last\n# h\n"})
+        commit(self.remote, "packing/shader_split: read archive a", {SPLITTER: "reads: first\n# a\n"})
+        commit(self.remote, "nvn/dirty: preserve first-match range lookups (PR #1227)", {f"dm/games/{MKW}/patches.py": "ranges"})
+        plan, summary = self.run_due(only={MKW})
+        # The commits newer than the one its split differed at the first time
+        # are not ruled out: the game built from one since.
+        self.assertEqual(summary.failed, [])
+        self.assertEqual(self.tried_from()[1:], [harmless[:12]])
+        self.assertEqual((ctx.store.get(MKW).build.commit, self.runs(MKW)), (harmless[:12], 5))
+
+    def test_an_older_commit_that_fails_otherwise_ends_the_walk_and_none_before_it_is_tried(self):
+        befores = self.again(fallback.DEPTH + 1)
+        run = batch.builds.run
+
+        def metal_at(*args, **kwargs):
+            # An Xcode the older commit was not tested with: older commits
+            # want older ones still.
+            if batch.context().engine.head() == befores[1]:
+                return Result(code=1, ok=False, error="this Mac's Metal compiler is not the one the shaders were tested with", stage="check v131072 files", cause="metal")
+            return run(*args, **kwargs)
+
+        with mock.patch.object(batch.builds, "run", side_effect=metal_at):
+            plan, summary = self.run_due(only={MKW})
+        ctx = batch.context()
+        self.assertEqual(self.tried_from(), [befores[0][:12], befores[1][:12]])
+        game = self.game(MKW)
+        newest = ctx.engine.latest()
+        self.assertEqual((game["state"], game["cause"], game["commit"]), ("failed", "tables", newest[:12]))
+        mark = fallback.splits(ctx.paths)[MKW]
+        self.assertEqual((mark["failed"], mark["otherwise"]), ([befores[0], befores[1]], [befores[1]]))
+        self.assertEqual(ctx.engine.head(), newest)
+        # At a newer commit: none of them again, nor any before them.
+        commit(self.remote, "Mario Kart World's menus", {f"dm/games/{MKW}/README.md": "menus"})
+        with mock.patch.object(batch.builds, "run", side_effect=metal_at):
+            plan, summary = self.run_due(only={MKW})
+        self.assertEqual((self.runs(MKW), len(self.tried_from())), (3, 2))
+        self.assertIn(f"Mario Kart World: nxnative's commits from before its splitter changed ({befores[0][:12]}, {befores[1][:12]}) "
+                      "did not build it either with these files, and are not tried again.", statuses.read(ctx.paths)["lines"])
+
+    def test_an_older_commit_that_fails_otherwise_leaves_the_ipa_this_mac_built(self):
+        self.run_due(only={MKW})
+        ctx = batch.context()
+        ipa = self.games / ctx.store.get(MKW).build.ipa
+        before_ipa = ipa.stat().st_mtime_ns
+        # nxnative.json lost, more changes: tried from the newest of them,
+        # whose app does not link.
+        ctx.paths.engine_state.unlink()
+        befores = self.again(fallback.DEPTH + 1)
+        run = batch.builds.run
+
+        def app_build_at(*args, **kwargs):
+            if batch.context().engine.head() == befores[0]:
+                return Result(code=1, ok=False, error="xcodebuild failed (exit 65)", stage="app build", cause="app_build")
+            return run(*args, **kwargs)
+
+        with mock.patch.object(batch.builds, "run", side_effect=app_build_at):
+            plan, summary = self.run_due(only={MKW})
+        # The first batch's, then the newest commit before a change: its IPA
+        # stays, nothing built from the older commit again.
+        self.assertEqual(self.tried_from(), [self.older[:12], befores[0][:12]])
+        self.assertEqual((ipa.stat().st_mtime_ns, ctx.store.get(MKW).build.commit), (before_ipa, self.older[:12]))
+        game = self.game(MKW)
+        self.assertEqual((game["state"], game["cause"]), ("skipped", "tables"))
+        self.assertEqual(self.runs(MKW), 3)
 
     def test_each_older_commit_once_in_a_batch_whatever_nxnative_json_keeps(self):
         # No commit builds these files, and nxnative.json cannot be written.
@@ -559,16 +732,24 @@ class SplitTables(Base):
         first = git(ctx.engine.root, "rev-list", "--max-parents=0", "HEAD")
         self.assertEqual(fallback.split_back(ctx.engine, MKW, first), [])
         self.assertEqual(fallback.split_back(ctx.engine, ODYSSEY, self.newest), [])
-        # The splitter changed again since, more than DEPTH times: the commit
-        # before each of the DEPTH newest changes, newest first.
+        # The splitter changed again since, more than DEPTH times (33 times
+        # at nxnative between 19 and 24 November 2026): the commit before
+        # each change since the tables, newest first, however many.
         befores = []
         for number in range(fallback.DEPTH + 1):
             befores.append(git(self.remote, "rev-parse", "HEAD"))
             commit(self.remote, f"packing/shader_split: read archive {number}", {SPLITTER: f"reads: first\n# archive {number}\n"})
         ctx.engine.update()
         newest = ctx.engine.head()
-        self.assertEqual(fallback.split_back(ctx.engine, MKW, newest), befores[::-1][:fallback.DEPTH])
-        self.assertEqual(len(fallback.split_back(ctx.engine, MKW, newest)), fallback.DEPTH)
+        self.assertEqual(fallback.split_back(ctx.engine, MKW, newest), befores[::-1] + [self.older])
+        # A change undone, then the splitter of an older commit again: of
+        # the commits that hold the same splitter, the newest; none that
+        # holds the newest's, which splits them as the newest does.
+        fourth = commit(self.remote, "packing/shader_split: read archive 4", {SPLITTER: "reads: first\n# archive 4\n"})
+        undone = commit(self.remote, "Revert \"packing/shader_split: read archive 4\"", {SPLITTER: "reads: first\n# archive 3\n"})
+        commit(self.remote, "packing/shader_split: read archive 5", {SPLITTER: "reads: first\n"})
+        ctx.engine.update()
+        self.assertEqual(fallback.split_back(ctx.engine, MKW, ctx.engine.head()), [undone, fourth] + befores[::-1][:-1] + [self.older])
 
     def test_the_cause_is_named(self):
         said = ("the split shader tables differ from game profile 0400C3F00006E000's:\nshader_map.tsv: 36 row(s) only in the profile, 36 only in the split\n"
