@@ -549,6 +549,20 @@ final class CartoucheCatalog: ObservableObject {
         return result
     }
 
+    /// The title IDs of the nxnative games installed among APPS, as
+    /// entries(for:stored:cloud:) finds them: all those of a game the
+    /// catalogue knows. A game Cartouche Cloud built of one of them is on
+    /// this iPhone already.
+    func installedTitles(among apps: [LCAppModel]) -> Set<String> {
+        var titles = Set<String>()
+        for app in apps {
+            guard let found = gameTitle(of: app),
+                  let titleId = found.isEmpty ? titleMatchingName(of: app) : found else { continue }
+            if let game = game(titleId: titleId) { titles.formUnion(game.titleIds) } else { titles.insert(titleId) }
+        }
+        return titles
+    }
+
     /// The title ID of an nxnative game, "" for an nxnative game whose title
     /// ID is unknown, or nil for any other app.
     ///

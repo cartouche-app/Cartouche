@@ -120,6 +120,14 @@ final class CartoucheCloudTests: XCTestCase {
         XCTAssertEqual(building.step, "build")
         XCTAssertEqual(building.usual, 2700)
         XCTAssertEqual(building.launchedAt, CartoucheCloudStandIn.moment("2026-11-17T12:01:00Z"))
+        // And where the build of the game itself is, as the Mac said it.
+        XCTAssertEqual(building.currentPhase, .shaders)
+        XCTAssertEqual(building.phasedAt, CartoucheCloudStandIn.moment("2026-11-17T12:02:00Z"))
+        XCTAssertEqual(building.phaseDone, 0.42)
+        XCTAssertEqual(building.phaseLeft, 1500)
+        XCTAssertEqual(building.reportedAt, CartoucheCloudStandIn.moment("2026-11-17T12:03:00Z"))
+        XCTAssertEqual(building.phases, ["files": 60])
+        XCTAssertNil(queued.currentPhase)
         XCTAssertEqual(built.bytes, UInt64(CartoucheCloudStandIn.ipa.count))
         XCTAssertEqual(built.file, "Mario Kart 8 Deluxe [0100152000022000].ipa")
         XCTAssertEqual(built.builtAt, CartoucheCloudStandIn.moment("2026-11-17T12:32:00Z"))
@@ -133,6 +141,85 @@ final class CartoucheCloudTests: XCTestCase {
         let sent = try XCTUnwrap(standIn.requests.last)
         XCTAssertEqual([sent.method, sent.path], ["GET", "/api/app/games"])
         XCTAssertEqual(sent.authorization, "Bearer " + token)
+    }
+
+    /// A game built whose title is on this iPhone is installed already: the
+    /// page offers no Install for it, and System counts it not among those
+    /// to install, whatever the library makes of it.
+    func testAGameBuiltWhoseTitleIsOnThisIPhoneIsNotToInstall() async throws {
+        let account = try await client.account(token: try await linked())
+        let built = account.games[2]
+        let now = CartoucheCloudStandIn.moment("2026-11-18T12:00:00Z")
+        let other: Set<String> = ["0100A3D008C5C000"]
+        XCTAssertEqual(account.toInstall(at: now, installed: other).map(\.id), [built.id])
+        XCTAssertTrue(built.isToInstall(at: now, installed: other))
+        XCTAssertEqual(account.toInstall(at: now, installed: other.union([built.titleId])).map(\.id), [])
+        XCTAssertFalse(built.isToInstall(at: now, installed: [built.titleId]))
+        // Still built, and still in the library's list, which leaves the
+        // games on this iPhone out by itself.
+        XCTAssertTrue(built.isBuilt(at: now))
+        XCTAssertEqual(account.toInstall(at: now).map(\.id), [built.id])
+        // Not built: nothing to install, installed or not.
+        XCTAssertFalse(account.games[0].isToInstall(at: now, installed: []))
+    }
+
+    /// At the Mac's build step, the page draws the four phases of the build
+    /// of the game itself as the site's list does: those before the current
+    /// one done, with how long each took, the current one with how much of
+    /// it is done and what is left of it, counted from when the Mac said
+    /// it, the others to come; and says since when a Mac that went quiet
+    /// said nothing. Nothing of it anywhere else.
+    func testThePhasesOfTheBuildOfTheGameItself() async throws {
+        let account = try await client.account(token: try await linked())
+        let building = account.games[1]
+        XCTAssertEqual(building.phaseMarks, [
+            CartoucheCloudPhaseMark(phase: .files, at: .done, seconds: 60),
+            CartoucheCloudPhaseMark(phase: .shaders, at: .now),
+            CartoucheCloudPhaseMark(phase: .app, at: .next),
+            CartoucheCloudPhaseMark(phase: .ipa, at: .next),
+        ])
+        XCTAssertEqual(building.phaseShare, 0.42)
+        let reported = try XCTUnwrap(building.reportedAt)
+        XCTAssertEqual(building.phaseTimeLeft(at: reported), 1500)
+        XCTAssertEqual(building.phaseTimeLeft(at: reported.addingTimeInterval(300)), 1200)
+        // A minute at the least, however late the builder is.
+        XCTAssertEqual(building.phaseTimeLeft(at: reported.addingTimeInterval(3000)), 60)
+        // Ten minutes without a word: the page says so.
+        XCTAssertNil(building.quiet(at: reported.addingTimeInterval(599)))
+        XCTAssertEqual(building.quiet(at: reported.addingTimeInterval(720)), 720)
+
+        // The last phase: those before it done, with what the Mac said of
+        // them; what the builder does not say is not shown.
+        var last = building
+        last.phase = "ipa"
+        last.phaseDone = nil
+        last.phaseLeft = nil
+        last.phases = ["files": 60, "shaders": 6600, "app": 0]
+        XCTAssertEqual(last.phaseMarks, [
+            CartoucheCloudPhaseMark(phase: .files, at: .done, seconds: 60),
+            CartoucheCloudPhaseMark(phase: .shaders, at: .done, seconds: 6600),
+            CartoucheCloudPhaseMark(phase: .app, at: .done),
+            CartoucheCloudPhaseMark(phase: .ipa, at: .now),
+        ])
+        XCTAssertNil(last.phaseShare)
+        XCTAssertNil(last.phaseTimeLeft(at: reported))
+        // A share out of its bounds is kept in them.
+        last.phaseDone = 1.5
+        XCTAssertEqual(last.phaseShare, 1)
+
+        // At another step, in another state, or a phase this Cartouche does
+        // not know: no phase.
+        var other = building
+        other.step = "send"
+        var unknown = building
+        unknown.phase = "linking"
+        for game in [other, unknown, account.games[0], account.games[2]] {
+            XCTAssertNil(game.currentPhase)
+            XCTAssertEqual(game.phaseMarks, [])
+            XCTAssertNil(game.phaseShare)
+            XCTAssertNil(game.phaseTimeLeft(at: reported))
+            XCTAssertNil(game.quiet(at: reported.addingTimeInterval(3600)))
+        }
     }
 
     func testTheTimeLeftOfABuildIsTheUsualTimeSinceItsLaunch() async throws {
@@ -506,7 +593,8 @@ final class CartoucheCloudStandIn: URLProtocol {
                  "place": NSNull()],
                 ["id": "a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2a2", "title": "0100152000022000", "name": "Mario Kart 8 Deluxe",
                  "state": "building", "price": 250, "expires_at": expires, "stage": 4, "usual": 2700, "step": "build",
-                 "launched_at": "2026-11-17T12:01:00Z"],
+                 "launched_at": "2026-11-17T12:01:00Z", "phase": "shaders", "phased_at": "2026-11-17T12:02:00Z",
+                 "phase_done": 0.42, "phase_left": 1500, "reported_at": "2026-11-17T12:03:00Z", "phases": ["files": 60]],
                 ["id": builtGame, "title": "0100152000022000", "name": "Mario Kart 8 Deluxe", "state": "built",
                  "price": 250, "expires_at": expires, "bytes": ipa.count,
                  "file": "Mario Kart 8 Deluxe [0100152000022000].ipa", "built_at": "2026-11-17T12:32:00Z"],
