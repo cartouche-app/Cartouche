@@ -243,6 +243,11 @@
 //        renewal-revoked                 Cartouche's renewal in its last 3
 //                                        days, which failed as Apple had
 //                                        revoked its certificate
+//        renewal-session-expired         Cartouche's renewal in its last 3
+//                                        days, which failed as Apple said
+//                                        that the session SideStore renews
+//                                        with had expired: the System page
+//                                        and the setup ask to sign in again
 //        renewal-unanswered              Cartouche's renewal in its last 3
 //                                        days, which failed as this iPhone
 //                                        did not answer through LocalDevVPN
@@ -320,6 +325,10 @@
 //        update-revoked                  the update of Cartouche to 0.4.0,
 //                                        failed as Apple had revoked the
 //                                        certificate of its signature
+//        update-session-expired          the update of Cartouche to 0.4.0,
+//                                        failed as Apple said that the
+//                                        session SideStore asks it with had
+//                                        expired
 //        updated                         Cartouche opening after an update
 //                                        started from it, from 0.2.0 to the
 //                                        gallery's own version (project.yml),
@@ -565,12 +574,16 @@ struct GalleryScenario {
         // The built-in SideStore's record of its last renewal: six days left,
         // or, as Cartouche renews itself, two and a bit.
         if work == "renewing" || work == "renewal-failed" || work == "renewal-revoked"
-            || work == "renewal-unanswered" || work == "renewal-no-liveprocess" {
+            || work == "renewal-unanswered" || work == "renewal-no-liveprocess" || work == "renewal-session-expired" {
             GalleryState.recordSignature(expiringIn: 2 * 86_400 + 5 * 3_600, renewedAgo: 4 * 86_400 + 19 * 3_600)
         } else {
             GalleryState.recordSignature(expiringIn: 6 * 86_400 + 3_600, renewedAgo: 86_400)
         }
         MainActor.assumeIsolated {
+            // What an earlier scenario noted of Apple's session stays out of
+            // this one.
+            UserDefaults.standard.removeObject(forKey: CartoucheRenewals.sessionExpiredKey)
+            UserDefaults.standard.removeObject(forKey: CartoucheRenewals.sessionSignInKey)
             showTranslations()
             if work == "updated" {
                 // What an update started from Cartouche leaves as it opens
@@ -606,6 +619,9 @@ struct GalleryScenario {
             }
             if work == "renewal-unanswered" {
                 CartoucheRenewals.shared.showUnansweredForGallery()
+            }
+            if work == "renewal-session-expired" {
+                CartoucheRenewals.shared.showSessionExpiredForGallery()
             }
             CartoucheSetup.shared.refresh()
             if let trial = signingTrial {
@@ -669,6 +685,9 @@ struct GalleryScenario {
             }
             if work == "update-no-liveprocess" {
                 CartoucheUpdates.shared.showNoLiveProcessForGallery("0.4.0")
+            }
+            if work == "update-session-expired" {
+                CartoucheUpdates.shared.showSessionExpiredForGallery("0.4.0")
             }
             if work == "code" {
                 CartoucheAccount.shared.requestCodeForGallery(.init(

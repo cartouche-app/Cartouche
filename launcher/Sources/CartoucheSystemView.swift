@@ -56,6 +56,9 @@ struct CartoucheSystemView: View {
     @StateObject private var macBuilds = CartoucheMacBuildsWatch()
     /// This iPhone's link to a Cartouche Cloud account.
     @ObservedObject private var cloud = CartoucheCloudLink.shared
+    /// The sign-in, over this page, once Apple has said that the session
+    /// SideStore renews with has expired.
+    @State private var signingIn = false
     #else
     /// The games built for this Mac and the Builder's setup, which the
     /// guide's steps read.
@@ -141,6 +144,9 @@ struct CartoucheSystemView: View {
         }
         // Dark like the console under it, whatever the iPhone's appearance.
         .preferredColorScheme(.dark)
+        .sheet(isPresented: $signingIn) {
+            CartoucheSignInView()
+        }
         .onAppear(perform: measure)
         // A renewal ended, from this page or by Cartouche itself.
         .onChange(of: renewals.isRenewing) { _, renewing in
@@ -188,17 +194,20 @@ struct CartoucheSystemView: View {
 
     #if os(iOS)
     private var setupSection: some View {
-        Section {
+        // Apple said that the session SideStore renews with has expired: the
+        // setup's sign-in is to do again.
+        let complete = setup.isComplete && !renewals.sessionExpired
+        return Section {
             NavigationLink {
                 CartoucheSetupView()
             } label: {
                 LabeledContent {
                     // In a list, a Label beside the row's own made the row
                     // several lines tall: the tight style keeps it one line.
-                    Label(setup.isComplete ? CartoucheText.setupStatusDone : CartoucheText.setupStatusToDo,
-                          systemImage: setup.isComplete ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                    Label(complete ? CartoucheText.setupStatusDone : CartoucheText.setupStatusToDo,
+                          systemImage: complete ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
                         .labelStyle(CartoucheTightLabelStyle())
-                        .foregroundStyle(setup.isComplete ? Color.green : Color.orange)
+                        .foregroundStyle(complete ? Color.green : Color.orange)
                 } label: {
                     Label(CartoucheText.setupTitle, systemImage: "checklist")
                 }
@@ -523,6 +532,24 @@ struct CartoucheSystemView: View {
             Label(CartoucheText.renewRevoked, systemImage: "exclamationmark.triangle.fill")
                 .font(.footnote)
                 .foregroundStyle(.red)
+        } else if renewals.sessionExpired {
+            // After the renewal or the update that found it, in an earlier
+            // launch, until a sign-in goes through.
+            Label(CartoucheText.renewSessionExpired, systemImage: "exclamationmark.triangle.fill")
+                .font(.footnote)
+                .foregroundStyle(.red)
+        }
+        // Apple said that the session SideStore renews with has expired: a
+        // sign-in with the same Apple ID gives it a new one, and Cartouche
+        // renews itself as soon as it has gone through.
+        if renewals.sessionExpired && !renewals.isRenewing {
+            Button {
+                signingIn = true
+            } label: {
+                Label(CartoucheText.signInAgain, systemImage: "person.crop.circle.badge.checkmark")
+            }
+            .buttonStyle(.borderedProminent)
+            .disabled(!setup.hasPairingFile || account.phase == .registeringDevice)
         }
     }
 

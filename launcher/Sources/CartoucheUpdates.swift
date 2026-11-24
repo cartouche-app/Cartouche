@@ -295,6 +295,16 @@ final class CartoucheUpdates: ObservableObject {
                step: CartoucheText.updatePreparingTitle(version), fraction: 0.1, failure: failure)
     }
 
+    /// The update to VERSION, failed as Apple said that the session the
+    /// built-in SideStore asks it with had expired, for the launcher's
+    /// gallery.
+    func showSessionExpiredForGallery(_ version: String) {
+        let failure = CartoucheRenewals.sessionExpiredForGallery
+        CartoucheRenewals.shared.noteIfSessionExpired(failure)
+        failed(CartoucheRenewal.playerMessage("Your session has expired. Please log in. (-1)", failure: failure),
+               version: version, step: CartoucheText.updatePreparingTitle(version), fraction: 0.35, failure: failure)
+    }
+
     /// The update to VERSION, failed as LiveProcess, which the built-in
     /// SideStore runs in, is missing from the app, as LiveContainer's bridge
     /// tells it, for the launcher's gallery.
@@ -368,9 +378,10 @@ final class CartoucheUpdates: ObservableObject {
             var failure = CartoucheFailure.sideStore(outcome: outcome, message: message, fraction: fraction, seconds: seconds,
                                                      vpn: CartoucheVPN.isConnected, pairing: CartouchePairing.exists)
             if let vpn { CartoucheRenewal.note(vpn, in: &failure.details) }
-            // Apple revoked the certificate: Cartouche no longer renews
-            // itself on it either.
+            // Apple revoked the certificate, or said that its session has
+            // expired: Cartouche no longer renews itself on it either.
             CartoucheRenewals.shared.noteIfRevoked(failure)
+            CartoucheRenewals.shared.noteIfSessionExpired(failure)
             failed(CartoucheRenewal.playerMessage(message, failure: failure), version: version, step: step, fraction: fraction,
                    failure: failure)
         } else {

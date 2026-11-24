@@ -19,6 +19,7 @@ import UniformTypeIdentifiers
 struct CartoucheSetupView: View {
     @ObservedObject private var setup = CartoucheSetup.shared
     @ObservedObject private var account = CartoucheAccount.shared
+    @ObservedObject private var renewals = CartoucheRenewals.shared
     @State private var choosingPairingFile = false
     @State private var signingIn = false
     @Environment(\.openURL) private var openURL
@@ -57,19 +58,26 @@ struct CartoucheSetupView: View {
                     }
                     step(
                         number: 2,
-                        done: setup.signInStep == .done && !setup.needsDevice,
+                        done: setup.signInStep == .done && !setup.needsDevice && !renewals.sessionExpired,
                         title: CartoucheText.setupAppleIDTitle,
                         detail: appleIDDetail
                     ) {
-                        // A stored Apple ID and a working certificate can outlive
-                        // the Apple session used for on-device renewal.
-                        Button {
-                            signingIn = true
-                        } label: {
-                            Label(appleIDButton, systemImage: setup.needsDevice ? "iphone.gen3" : "person.crop.circle.badge.checkmark")
+                        // Once set up, only while Apple says that the session
+                        // SideStore renews with has expired, which a sign-in
+                        // mends: any other sign-in counts against Apple's
+                        // limit on them, and may cost the player a code.
+                        if setup.appleID == nil || !setup.hasCertificate || setup.certificateRefused || setup.needsDevice
+                            || renewals.sessionExpired {
+                            // SideStore registers this iPhone at sign-in, through
+                            // the pairing file.
+                            Button {
+                                signingIn = true
+                            } label: {
+                                Label(appleIDButton, systemImage: setup.needsDevice ? "iphone.gen3" : "person.crop.circle.badge.checkmark")
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .disabled(!setup.hasPairingFile || account.phase == .registeringDevice)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(!setup.hasPairingFile || account.phase == .registeringDevice)
                         // Why the sign-in stopped, once its screen has gone.
                         if setup.signInStep == .unfinished, account.phase == nil, let report = account.lastProblem {
                             Label(report.message, systemImage: "exclamationmark.triangle.fill")
@@ -171,6 +179,10 @@ struct CartoucheSetupView: View {
         if setup.signInStep == .unfinished {
             let working = account.phase == .signingIn || account.needsCode
             return working ? CartoucheText.signInWorking : CartoucheText.setupAppleIDUnfinished(appleID)
+        }
+        if renewals.sessionExpired, !setup.needsDevice {
+            let working = account.phase == .signingIn || account.needsCode
+            return working ? CartoucheText.signInWorking : CartoucheText.setupAppleIDSessionExpired(appleID)
         }
         guard setup.needsDevice else { return CartoucheText.setupAppleIDDone(appleID) }
         return account.phase == .registeringDevice ? CartoucheText.setupBannerDeviceWorking : CartoucheText.setupAppleIDDevice(appleID)

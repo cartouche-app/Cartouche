@@ -68,6 +68,10 @@ enum CartoucheAutomaticRenewal {
         /// Whether LiveContainer's LiveProcess extension, which the built-in
         /// SideStore runs in, is missing from the app (CartoucheLiveProcess).
         var liveProcessMissing = false
+        /// Whether Apple said that the session the built-in SideStore renews
+        /// Cartouche with has expired, for the signature Cartouche has, and
+        /// no sign-in went through since (CartoucheExpiredSession).
+        var sessionExpired = false
         /// Whether Tailscale is connected on this iPhone, which LocalDevVPN
         /// would turn off.
         var tailscaleConnected = false
@@ -91,6 +95,11 @@ enum CartoucheAutomaticRenewal {
         /// six hours, until an install of Cartouche over itself gives it
         /// another signature (CartoucheRenewalTrouble.certificateRevoked).
         case certificateRevoked
+        /// Apple said that the session the built-in SideStore renews
+        /// Cartouche with has expired: a renewal would fail the same way
+        /// every six hours, LocalDevVPN opened for each, until a sign-in
+        /// gives SideStore a new one (CartoucheRenewalTrouble.sessionExpired).
+        case sessionExpired
         /// The setup has something left, which a renewal needs.
         case setup
         /// LocalDevVPN is not connected: Cartouche tries again each time it
@@ -115,6 +124,7 @@ enum CartoucheAutomaticRenewal {
         guard situation.canRenew else { return .cannotRenew }
         guard !situation.liveProcessMissing else { return .liveProcessMissing }
         guard !situation.certificateRevoked else { return .certificateRevoked }
+        guard !situation.sessionExpired else { return .sessionExpired }
         guard situation.isSetUp else { return .setup }
         guard !situation.sideStoreBusy else { return .sideStoreBusy }
         guard !situation.gameRunning else { return .gameRunning }
@@ -161,7 +171,16 @@ enum CartoucheRenewalTrouble: Equatable {
     /// renewals failed so on 3 copies of 0.12.x, while LiveContainer's
     /// check still found the certificate working.
     case certificateRevoked
-    /// The stored Apple session can no longer verify this certificate.
+    /// Apple said that the session the built-in SideStore asks it with has
+    /// expired, as SideStore first asks it for the account's certificates
+    /// (VerifyCertificateOperation): SideStore keeps the token of its last
+    /// sign-in and renews with it, without signing in again, and only a
+    /// sign-in gives it a new one. From November 19 to 24, 54 renewals and
+    /// updates of 7 copies, from 0.13.1 to 0.15.1, failed so, with Apple's
+    /// -1 and "Your session has expired", which the System page and the
+    /// update's notice showed in SideStore's words; an install over
+    /// Cartouche did not always mend it, and the one copy whose player
+    /// signed in again went past that step on its next renewal.
     case sessionExpired
     /// SideStore did not reach this iPhone through LocalDevVPN, as a
     /// sign-in tells it (CartoucheSignInMessage.deviceTrouble(in:)).
@@ -188,6 +207,35 @@ enum CartoucheRenewalTrouble: Equatable {
             return .sessionExpired
         }
         return CartoucheSignInMessage.deviceTrouble(in: failure).map { .device($0) }
+    }
+}
+
+/// Apple said that the session the built-in SideStore renews and updates
+/// Cartouche with has expired (CartoucheRenewalTrouble.sessionExpired), as a
+/// renewal or an update found it with the signature Cartouche had then: a
+/// sign-in gives SideStore a new session. Cartouche then renews itself no
+/// more (CartoucheAutomaticRenewal.Wait.sessionExpired), signs in again by
+/// itself once, after the renewal it started by itself that found it, with
+/// the Apple ID and password SideStore keeps, and renews itself once a
+/// sign-in has gone through.
+enum CartoucheExpiredSession {
+    /// Whether the session that Cartouche noted expired with the signature
+    /// that expired at NOTED still holds, the signature Cartouche has
+    /// expiring at CURRENT: another signature, from a renewal, an update or
+    /// an install over Cartouche, came with a session that worked. Nil for
+    /// either, nothing tells it does.
+    static func holds(current: Date?, noted: Date?) -> Bool {
+        guard let current, let noted else { return false }
+        return abs(current.timeIntervalSince(noted)) < 1
+    }
+
+    /// Whether Cartouche signs in again by itself for the session noted
+    /// expired with the signature that expired at NOTED, the signature
+    /// Cartouche has expiring at CURRENT: once for a signature, TRIED being
+    /// the one it last did so for, as Apple limits sign-ins and may ask for a
+    /// code each time. After that, the player signs in again.
+    static func signsInAgain(current: Date?, noted: Date?, tried: Date?) -> Bool {
+        holds(current: current, noted: noted) && !holds(current: current, noted: tried)
     }
 }
 

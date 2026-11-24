@@ -267,6 +267,12 @@ final class CartoucheRenewals: ObservableObject {
     /// Cartouche over itself gives it a signature that expires at another
     /// time (CartoucheAutomaticRenewal.isRevoked).
     static let revokedKey = "Cartouche.renewal.revokedSignature"
+    /// When the signature with which a renewal or an update found the Apple
+    /// session expired expires, kept across launches until a sign-in goes
+    /// through (CartoucheExpiredSession); and when the one Cartouche last
+    /// signed in again by itself for does.
+    static let sessionExpiredKey = "Cartouche.renewal.sessionExpired"
+    static let sessionSignInKey = "Cartouche.renewal.sessionExpired.signedInAgain"
 
     /// How long an update, a sign-in or the registration of this iPhone
     /// waits for the renewal under way before it goes on: three minutes,
@@ -310,6 +316,17 @@ final class CartoucheRenewals: ObservableObject {
     /// stays, which then says the same.
     var liveProcessMissing: Bool { !CartoucheLiveProcess.isInApp }
 
+    /// Whether Apple said that the session the built-in SideStore renews
+    /// Cartouche with has expired, as a renewal or an update found it with
+    /// the signature Cartouche has, and no sign-in went through since
+    /// (CartoucheExpiredSession): Cartouche no longer renews itself, which
+    /// would fail the same way every six hours, and the System page and the
+    /// setup ask the player to sign in again. Renew now stays.
+    var sessionExpired: Bool {
+        CartoucheExpiredSession.holds(current: CartoucheSignature.current().expirationDate,
+                                      noted: UserDefaults.standard.object(forKey: Self.sessionExpiredKey) as? Date)
+    }
+
     /// Notes the signature Cartouche has when FAILURE, why a renewal or an
     /// update failed, says that Apple revoked its certificate.
     func noteIfRevoked(_ failure: CartoucheFailure?) {
@@ -318,6 +335,49 @@ final class CartoucheRenewals: ObservableObject {
         UserDefaults.standard.set(expirationDate, forKey: Self.revokedKey)
         CartoucheReports.note("Apple revoked the certificate of this signature: Cartouche no longer renews itself on it")
         objectWillChange.send()
+    }
+
+    /// Notes the signature Cartouche has when FAILURE, why a renewal or an
+    /// update failed, says that Apple's session has expired.
+    func noteIfSessionExpired(_ failure: CartoucheFailure?) {
+        guard let failure, CartoucheRenewalTrouble.of(failure) == .sessionExpired,
+              let expirationDate = CartoucheSignature.current().expirationDate else { return }
+        UserDefaults.standard.set(expirationDate, forKey: Self.sessionExpiredKey)
+        CartoucheReports.note("Apple says the session SideStore renews with has expired: Cartouche no longer renews itself until a sign-in")
+        objectWillChange.send()
+    }
+
+    /// Signs the built-in SideStore in again by itself, with the Apple ID
+    /// and password it keeps, once for the signature with which Apple said
+    /// that the session expired (CartoucheExpiredSession.signsInAgain): after
+    /// the renewal Cartouche started by itself that found it, as it came to
+    /// the front. The player sees the sign-in only should Apple ask for a
+    /// code; without LocalDevVPN, or should the sign-in fail, the System page
+    /// and the setup ask the player to sign in again.
+    private func signInAgainForTheSession() {
+        let defaults = UserDefaults.standard
+        let current = CartoucheSignature.current().expirationDate
+        guard CartoucheExpiredSession.signsInAgain(current: current,
+                                                   noted: defaults.object(forKey: Self.sessionExpiredKey) as? Date,
+                                                   tried: defaults.object(forKey: Self.sessionSignInKey) as? Date),
+              CartoucheLocalDevVPN.isConnected, !sideStoreBusy else { return }
+        defaults.set(current, forKey: Self.sessionSignInKey)
+        if CartoucheAccount.shared.signInAgain(for: "for an expired Apple session") {
+            CartoucheReports.note("Apple's session has expired: signing in again by itself")
+        }
+    }
+
+    /// A sign-in went through: SideStore has a new session. When a renewal
+    /// or an update had found the last one expired, Cartouche renews itself
+    /// at once, which it no longer did meanwhile.
+    func signedIn() {
+        guard sessionExpired else { return }
+        UserDefaults.standard.removeObject(forKey: Self.sessionExpiredKey)
+        objectWillChange.send()
+        guard canRenewNow else { return }
+        CartoucheReports.note("Signed in again after Apple's session expired: renewing by itself")
+        UserDefaults.standard.set(Date(), forKey: Self.lastTryKey)
+        start(automatic: true)
     }
 
     /// What Cartouche finds as it comes to the front.
@@ -334,6 +394,7 @@ final class CartoucheRenewals: ObservableObject {
             lastTry: UserDefaults.standard.object(forKey: Self.lastTryKey) as? Date,
             certificateRevoked: certificateRevoked,
             liveProcessMissing: liveProcessMissing,
+            sessionExpired: sessionExpired,
             tailscaleConnected: CartoucheTailscale.isConnected)
     }
 
@@ -403,12 +464,18 @@ final class CartoucheRenewals: ObservableObject {
                 try await CartoucheRenewal.renew(progress: progress, automatic: automatic, vpn: vpn)
                 CartoucheReports.note("Renewal done")
                 UserDefaults.standard.removeObject(forKey: Self.revokedKey)
+                UserDefaults.standard.removeObject(forKey: Self.sessionExpiredKey)
             } catch {
-                noteIfRevoked((error as? CartoucheRenewal.Failure)?.failure)
+                let failure = (error as? CartoucheRenewal.Failure)?.failure
+                noteIfRevoked(failure)
+                noteIfSessionExpired(failure)
                 fail(error, automatic: automatic, fraction: progress.fractionCompleted, vpn: vpn)
             }
             self.progress = nil
             isAutomatic = false
+            // The player who renewed from the System page signs in again
+            // there, as it says.
+            if automatic { signInAgainForTheSession() }
             // SideStore scheduled its own warnings, in English and about
             // SideStore: Cartouche's take their place.
             CartoucheRenewal.scheduleWarnings()
@@ -454,6 +521,27 @@ final class CartoucheRenewals: ObservableObject {
                                        details: ["kind": .text("certificateRevoked"), "vpn": .flag(true)])
         let message = CartoucheRenewal.playerMessage("The certificate has been revoked.", failure: failure)
         fail(CartoucheRenewal.Failure(message: message, failure: failure), automatic: true, fraction: 0.1)
+    }
+
+    /// What the built-in SideStore leaves when Apple says that the session it
+    /// renews with has expired, as 54 renewals and updates of 7 copies left
+    /// it from November 19 to 24, for the gallery's screens.
+    static var sessionExpiredForGallery: CartoucheFailure {
+        CartoucheFailure(.appleServer, stage: "VerifyCertificate", fraction: 1, seconds: 2,
+                         codes: "SideSign.ServerError 3",
+                         details: ["kind": .text("underlyingError"), "apple": .number(-1), "sessionExpired": .flag(true),
+                                   "vpn": .flag(true)])
+    }
+
+    /// The renewal Cartouche started by itself, failed as Apple said that
+    /// the session SideStore renews with had expired, for the gallery's
+    /// screens: as after Cartouche signed in again by itself, and Apple
+    /// asked for a code the player did not type.
+    func showSessionExpiredForGallery() {
+        let failure = Self.sessionExpiredForGallery
+        let message = CartoucheRenewal.playerMessage("Your session has expired. Please log in. (-1)", failure: failure)
+        noteIfSessionExpired(failure)
+        fail(CartoucheRenewal.Failure(message: message, failure: failure), automatic: true, fraction: 1)
     }
 
     /// The renewal Cartouche started by itself, failed as this iPhone did not

@@ -9266,6 +9266,23 @@
         }
       }
     },
+    "setup.appleID.sessionExpired" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple says the session of %@ has expired: Cartouche can no longer renew itself. Sign in again with this Apple ID."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple dit que la session de %@ a expiré : Cartouche ne peut plus se renouveler. Reconnectez-vous avec cet identifiant Apple."
+          }
+        }
+      }
+    },
     "setup.appleID.signIn" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -17602,13 +17619,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your Apple session has expired. In System › Setup, choose Sign in again and use the same Apple ID. Then retry."
+            "value" : "Apple says the session of your Apple ID has expired: Cartouche can no longer renew or update itself until you sign in again. Choose Sign in again, on the System page, with the same Apple ID: Cartouche then renews itself. Your games and saves stay."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Votre session Apple a expiré. Dans Système › Mise en route, choisissez Se reconnecter et utilisez le même identifiant Apple. Réessayez ensuite."
+            "value" : "Apple dit que la session de votre identifiant Apple a expiré : Cartouche ne peut plus se renouveler ni se mettre à jour tant que vous ne vous reconnectez pas. Choisissez Se reconnecter, sur la page Système, avec le même identifiant Apple : Cartouche se renouvelle ensuite. Vos jeux et vos sauvegardes restent."
           }
         }
       }
