@@ -890,6 +890,9 @@ struct CartoucheNightlyRenewalView: View {
     /// Tailscale's section, which the gallery opens the page on.
     private static let tailscaleRow = "tailscale"
 
+    /// Where the automation stands, at the top of the page.
+    private static let stateRow = "state"
+
     /// The time the steps suggest, in the reader's language: 4:00 AM, 04:00.
     private var fourInTheMorning: String {
         let four = Calendar.current.date(bySettingHour: 4, minute: 0, second: 0, of: Date()) ?? Date()
@@ -909,6 +912,7 @@ struct CartoucheNightlyRenewalView: View {
             List {
                 Section {
                     CartoucheNightlyStateRow(state: nightly.state, detail: nightly.detail)
+                        .id(Self.stateRow)
                 }
                 // The automation as Shortcuts shows it once made: when, then
                 // its two actions.
@@ -958,6 +962,12 @@ struct CartoucheNightlyRenewalView: View {
                     if asksToMake {
                         Button {
                             nightly.made()
+                            // Back up to where the automation stands, which
+                            // now waits for its first night: the button, at
+                            // the bottom, only goes away.
+                            DispatchQueue.main.async {
+                                withAnimation { reader.scrollTo(Self.stateRow, anchor: .top) }
+                            }
                         } label: {
                             Label(CartoucheText.dailyMade, systemImage: "checkmark.circle")
                         }

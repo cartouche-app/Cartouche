@@ -88,7 +88,8 @@ final class SystemUITests: ConsoleTestCase {
 
     /// The setup's last step opens Renew every night, the automation of
     /// Shortcuts still to make: once the player says they made it, the page
-    /// waits for its first night, and the step is done, its button opening
+    /// goes back up to say it waits for its first night, where the player
+    /// sees it without scrolling, and the step is done, its button opening
     /// the steps again (decision 149). Up to 0.15.1, nothing in the setup
     /// said to make it, and nothing told whether it was made.
     @MainActor
@@ -108,7 +109,7 @@ final class SystemUITests: ConsoleTestCase {
         let made = element(in: app.buttons, beginningWith: Words.madeTheAutomation)
         scrollAndTap(made, "I made the automation", in: app)
         expect(element(beginningWith: Words.madeOn, in: app).waitForExistence(timeout: 10),
-               "Once made, the page does not wait for the automation's first night", in: app)
+               "Once made, the page does not show at its top that it waits for the automation's first night", in: app)
         expect(waitForGone(made), "I made the automation is still offered once made", in: app)
 
         back(from: Words.renewEveryNight, in: app)
