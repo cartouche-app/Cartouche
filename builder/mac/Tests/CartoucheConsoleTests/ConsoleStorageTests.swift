@@ -9,8 +9,9 @@
 //  Mac's given back, those removed on either side among them; the saves
 //  folder of this Mac, which never goes to an iPhone, or the iPhone's on a
 //  connection, followed when it is replaced or removed; the gallery's,
-//  which nothing keeps; This Mac's folders as the player knows them; and
-//  the iPhone's games folder, as the Builder sends its games there.
+//  which nothing keeps; This Mac's folders as the player knows them; the
+//  iPhone's games folder, as the Builder sends its games there; and a
+//  folder chosen here, which goes to the app.
 //  Each test has preferences and a secrets file of its own.
 //
 
@@ -233,5 +234,20 @@ final class ConsoleStorageTests: XCTestCase {
         XCTAssertEqual(console.iPhoneGames?.offers, 0)
         console.showIPhoneGames(nil)
         XCTAssertNil(console.iPhoneGames)
+    }
+
+    /// A folder chosen on the Storage page goes to the app, as JSON it
+    /// reads with CartoucheCore's copy of the type.
+    func testAFolderChosenHereGoesToTheApp() throws {
+        let console = CartoucheMacConsole.shared
+        let before = console.onChangeFolders
+        defer { console.onChangeFolders = before }
+        var given: [Data] = []
+        console.onChangeFolders = { given.append($0) }
+        let nas = UUID(uuidString: "FFFFFFFF-0000-4000-8000-000000000002")!
+        console.changeFolders(.saves(connection: nas, path: "Cartouche/Sauvegardes"))
+        console.changeFolders(.addGames(connection: nas, path: "Jeux"))
+        XCTAssertEqual(try given.map { try JSONDecoder().decode(CartoucheChosenFolders.Change.self, from: $0) },
+                       [.saves(connection: nas, path: "Cartouche/Sauvegardes"), .addGames(connection: nas, path: "Jeux")])
     }
 }

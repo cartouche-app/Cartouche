@@ -255,6 +255,7 @@ final class CartoucheGameActions: ObservableObject {
     /// install it on an iPhone whose GPU nxnative refuses.
     func install(_ url: URL, asked: Bool = false) {
         guard work == nil, startsNow(CartoucheInstallQuestion(source: .file(url)), answered: asked) else { return }
+        installing = ("file", nil)
         facts = [.init("IPA", url.lastPathComponent), .init("From", "a file on this iPhone")]
         let model = DataManager.shared.model
         guard model.multiLCStatus != 2 else {
@@ -366,6 +367,7 @@ final class CartoucheGameActions: ObservableObject {
         // The copies to try, the one offered first, each with its server.
         let copies: [(game: CartoucheStoredGame, server: CartoucheStorageServer)] = storedGames.copies(of: offered)
             .compactMap { copy in storedGames.server(of: copy).map { (copy, $0) } }
+        installing = (first.kind.rawValue, first.id)
         let model = DataManager.shared.model
         facts = Self.storedFacts(offered, on: first)
         guard model.multiLCStatus != 2 else {
@@ -403,6 +405,7 @@ final class CartoucheGameActions: ObservableObject {
                             + [.init("Copy", "the copy offered was offline, this one is the next", own: true)]
                         work?.step = step
                         work?.place = server.name
+                        installing = (server.kind.rawValue, server.id)
                     }
                     break
                 }
@@ -467,7 +470,7 @@ final class CartoucheGameActions: ObservableObject {
                     }
                 }
                 await fetchSaves(of: app)
-                finishInstall(app, signing: signing, from: server.kind.rawValue)
+                finishInstall(app, signing: signing, from: server.kind.rawValue, link: Self.link(to: server))
             } catch let lost as CartoucheResumingSource.Lost where !stopped {
                 facts.append(.init("Connection", "lost after \(lost.attempts) failed attempts, "
                                        + "the file opened again \(file?.reopened ?? 0) times before"))
@@ -512,6 +515,7 @@ final class CartoucheGameActions: ObservableObject {
     /// ASKED, as above.
     func install(cloud game: CartoucheCloudBuilt, asked: Bool = false) {
         guard work == nil, startsNow(CartoucheInstallQuestion(source: .cloud(game)), answered: asked) else { return }
+        installing = ("cloud", nil)
         facts = [.init("IPA", game.file), .init("IPA size", CartoucheReport.bytes(Int64(clamping: game.bytes))),
                  .init("From", "Cartouche Cloud")]
         if let builtAt = game.builtAt { facts.append(.init("Built", CartoucheReport.timestamp(builtAt))) }
@@ -782,9 +786,17 @@ final class CartoucheGameActions: ObservableObject {
     /// storage its games folder is on, such as "smb"; or "cloud", Cartouche
     /// Cloud. Never more of it.
     private(set) var installedFrom: String?
+    /// How the iPhone reached the Mac the game installed last came from
+    /// (game.installed's `link`): through the cable, the tailnet or the
+    /// network (CartoucheMacLink); nil for another place.
+    private(set) var installedLink: String?
+    /// Where the install under way comes from, as installedFrom says it,
+    /// and its server, for the measurements of an install that fails.
+    private var installing: (from: String, server: UUID?)?
 
-    private func finishInstall(_ app: LCAppModel, signing: CartoucheSigningError?, from: String) {
+    private func finishInstall(_ app: LCAppModel, signing: CartoucheSigningError?, from: String, link: String? = nil) {
         installedFrom = from
+        installedLink = link
         installed = app
         if let signing {
             // Installed, but not signed whole: the game may not start. The
@@ -1811,9 +1823,28 @@ final class CartoucheGameActions: ObservableObject {
         }
         let report = CartoucheReports.make(origin, title, message: message, error: error,
                                            step: work.map { $0.title + ": " + $0.step }, fraction: work?.fraction,
-                                           stage: stage, seconds: seconds, failure: failure, facts: facts)
+                                           stage: stage, seconds: seconds, failure: failure, facts: facts,
+                                           measures: installMeasures(origin))
         workFailed = true
         notice = CartoucheGameNotice(title: title, message: message, report: report, signAgain: signAgain)
+    }
+
+    /// How Cartouche last reached SERVER, a Mac, for the measurements; nil
+    /// for another kind of server.
+    private static func link(to server: CartoucheStorageServer) -> String? {
+        server.kind == .mac ? CartoucheMacStorage.links[server.id]?.rawValue : nil
+    }
+
+    /// What an install's error says of where the game came from: as
+    /// game.installed says it, with the way to the Mac. Nil for any other
+    /// step.
+    private func installMeasures(_ origin: CartoucheReport.Origin) -> [String: CartoucheTelemetryValue] {
+        guard origin == .install, let installing else { return [:] }
+        var measures: [String: CartoucheTelemetryValue] = ["from": .text(installing.from)]
+        if let id = installing.server, let server = CartoucheStorageSettings.shared.server(id), let link = Self.link(to: server) {
+            measures["link"] = .text(link)
+        }
+        return measures
     }
 
     /// "Game build: 1.0.0, nxnative 844bf1a5ea8f, built 2026-11-06 19:12:40 +0100".

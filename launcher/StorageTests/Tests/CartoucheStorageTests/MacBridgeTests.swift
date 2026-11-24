@@ -46,6 +46,9 @@ final class FakeMac: @unchecked Sendable {
     private var given: [[CartoucheConnection]] = []
     /// The folders each iPhone told it with its connections, in order.
     private var told: [CartoucheChosenFolders?] = []
+    /// The folders it keeps, the ones chosen last, which it answers with;
+    /// nil for a Mac older than that, which answers with none.
+    private var folders: CartoucheChosenFolders?
     private var tailnet: [String]?
     private var listener: NWListener?
     private let queue = DispatchQueue(label: "Fake Mac")
@@ -192,6 +195,21 @@ final class FakeMac: @unchecked Sendable {
         lock.lock()
         connections = kept
         lock.unlock()
+    }
+
+    /// Keeps FOLDERS from now on, as chosen on its console, and answers
+    /// with the ones chosen last, as a Cartouche Builder that does.
+    func keepFolders(_ folders: CartoucheChosenFolders) {
+        lock.lock()
+        self.folders = folders
+        lock.unlock()
+    }
+
+    /// The folders it keeps; nil while it keeps none.
+    var keptFolders: CartoucheChosenFolders? {
+        lock.lock()
+        defer { lock.unlock() }
+        return folders
     }
 
     /// The connections it keeps; nil while it takes none.
@@ -365,6 +383,12 @@ final class FakeMac: @unchecked Sendable {
             let merged = CartoucheConnections.merged(kept, theirs)
             connections = merged
             response.connections = merged
+            // The folders chosen last, here or on the iPhone, as Cartouche
+            // Builder keeps them (BridgeController).
+            if let kept = folders {
+                folders = request.places.map { kept.taking($0) } ?? kept
+                response.places = folders
+            }
         }
         return (response, Data())
     }

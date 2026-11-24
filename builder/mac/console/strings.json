@@ -362,6 +362,10 @@
       "en": "%1$@ of %2$@",
       "fr": "%1$@ sur %2$@"
     },
+    "mac.storage.iPhoneGames.choose.footer": {
+      "en": "None of your iPhones’ games folders is on one of your connections. Choose one here: your iPhones read it too, the next time Cartouche opens on them, and this Mac sends its games there.",
+      "fr": "Aucun dossier des jeux de vos iPhone n’est sur une de vos connexions. Choisissez-en un ici : vos iPhone le liront aussi, la prochaine fois que Cartouche s’ouvrira sur eux, et ce Mac y enverra ses jeux."
+    },
     "mac.storage.iPhoneGames.count": {
       "en": "%1$lld of %2$lld",
       "fr": "%1$lld sur %2$lld"
@@ -371,8 +375,8 @@
       "fr": "Le dernier envoi s’est arrêté, et reprendra au prochain passage : %@"
     },
     "mac.storage.iPhoneGames.footer": {
-      "en": "The games folder chosen on your iPhone: Cartouche sends it each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent there install from the library. To change it, choose another on the iPhone.",
-      "fr": "Le dossier des jeux choisi sur votre iPhone : Cartouche y envoie aussi chaque IPA et chaque app Mac de son propre dossier des jeux, par la même connexion, les plus récentes d’abord, et n’y supprime jamais rien. Les apps Mac qu’un autre Mac y a envoyées s’installent depuis la bibliothèque. Pour en changer, choisissez-en un autre sur l’iPhone."
+      "en": "The games folder of your iPhones: Cartouche sends it each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent there install from the library. Change it here or on an iPhone: the folder chosen last wins, and your iPhones take it the next time Cartouche opens on them.",
+      "fr": "Le dossier des jeux de vos iPhone : Cartouche y envoie aussi chaque IPA et chaque app Mac de son propre dossier des jeux, par la même connexion, les plus récentes d’abord, et n’y supprime jamais rien. Les apps Mac qu’un autre Mac y a envoyées s’installent depuis la bibliothèque. Changez-le ici ou sur un iPhone : le dossier choisi en dernier l’emporte, et vos iPhone le prennent la prochaine fois que Cartouche s’ouvre sur eux."
     },
     "mac.storage.iPhoneGames.header": {
       "en": "The iPhone’s games folder",
@@ -419,16 +423,20 @@
       "fr": "Envoyés depuis ce Mac"
     },
     "mac.storage.iPhoneGames.several.footer": {
-      "en": "The games folders chosen on your iPhone: Cartouche sends the first each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent to any of them install from the library, from a folder that answers. To change them, do so on the iPhone.",
-      "fr": "Les dossiers des jeux choisis sur votre iPhone : Cartouche envoie aussi au premier chaque IPA et chaque app Mac de son propre dossier des jeux, par la même connexion, les plus récentes d’abord, et n’y supprime jamais rien. Les apps Mac envoyées par un autre Mac dans l’un d’eux s’installent depuis la bibliothèque, depuis un dossier qui répond. Pour les changer, faites-le sur l’iPhone."
+      "en": "The games folders of your iPhones: Cartouche sends the first each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent to any of them install from the library, from a folder that answers. Change them here or on an iPhone: the folders chosen last win, and your iPhones take them the next time Cartouche opens on them.",
+      "fr": "Les dossiers des jeux de vos iPhone : Cartouche envoie aussi au premier chaque IPA et chaque app Mac de son propre dossier des jeux, par la même connexion, les plus récentes d’abord, et n’y supprime jamais rien. Les apps Mac envoyées par un autre Mac dans l’un d’eux s’installent depuis la bibliothèque, depuis un dossier qui répond. Changez-les ici ou sur un iPhone : les dossiers choisis en dernier l’emportent, et vos iPhone les prennent la prochaine fois que Cartouche s’ouvre sur eux."
     },
     "mac.storage.iPhoneGames.several.header": {
       "en": "The iPhone’s games folders",
       "fr": "Les dossiers des jeux de l’iPhone"
     },
     "mac.storage.iPhoneSaves.footer": {
-      "en": "The saves folder chosen on your iPhone: Cartouche keeps the saves of the games played on this Mac there too, through the same connection, before each game and as it saves, as the iPhone does. The %lld newest copies are kept. To change it, choose another on the iPhone.",
-      "fr": "Le dossier des sauvegardes choisi sur votre iPhone : Cartouche y garde aussi celles des jeux joués sur ce Mac, par la même connexion, avant chaque partie et dès que le jeu sauvegarde, comme l’iPhone. Les %lld copies les plus récentes y restent. Pour en changer, choisissez-en un autre sur l’iPhone."
+      "en": "The saves folder of your iPhones: Cartouche keeps the saves of the games played on this Mac there too, through the same connection, before each game and as it saves, as the iPhone does. The %lld newest copies are kept. Change it here or on an iPhone: the folder chosen last wins, and your iPhones take it the next time Cartouche opens on them.",
+      "fr": "Le dossier des sauvegardes de vos iPhone : Cartouche y garde aussi celles des jeux joués sur ce Mac, par la même connexion, avant chaque partie et dès que le jeu sauvegarde, comme l’iPhone. Les %lld copies les plus récentes y restent. Changez-le ici ou sur un iPhone : le dossier choisi en dernier l’emporte, et vos iPhone le prennent la prochaine fois que Cartouche s’ouvre sur eux."
+    },
+    "mac.storage.saves.choose.footer": {
+      "en": "The saves of the games played on this Mac stay in Cartouche’s saves folder, on this Mac. Choose a folder on one of your connections to keep them there with your iPhones’: your iPhones take it too, the next time Cartouche opens on them, and the newest saves win.",
+      "fr": "Les sauvegardes des jeux joués sur ce Mac restent dans le dossier des sauvegardes de Cartouche, sur ce Mac. Choisissez un dossier sur une de vos connexions pour les y garder avec celles de vos iPhone : vos iPhone le prendront aussi, la prochaine fois que Cartouche s’ouvrira sur eux, et les sauvegardes les plus récentes l’emportent."
     },
     "mac.storage.thisMac": {
       "en": "This Mac",

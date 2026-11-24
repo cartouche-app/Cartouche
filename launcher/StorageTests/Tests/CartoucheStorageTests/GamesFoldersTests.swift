@@ -9,11 +9,17 @@
 //  or on the paired Mac, and one the Mac replaced moves them to the new
 //  one; choosing another games folder takes it from the others; the paired
 //  Mac is told them all, the games folder first, those it can reach. The
-//  rule for the order and for the copy offered is tested on its own
-//  (launcher/Tests, CartoucheGameCopiesTests). It needs no server, so it
-//  always runs.
+//  folders the Mac gives back, chosen later on its console or on another
+//  iPhone, are taken here as if chosen here then, the games folders and
+//  the saves folder, with this iPhone's own on no connection kept after
+//  them; one on no server here, or older than this iPhone's, leaves them as
+//  they are. The rule for the order and for the copy offered is tested on
+//  its own (launcher/Tests, CartoucheGameCopiesTests), the Mac's changes
+//  too (CartoucheChosenFoldersTests). It needs no server, so it always
+//  runs.
 //
 
+import Combine
 import Foundation
 import XCTest
 @testable import CartoucheStorage
@@ -145,5 +151,78 @@ final class GamesFoldersTests: XCTestCase {
         settings.addGamesFolder(place(s3))
         XCTAssertGreaterThan(settings.chosenFolders().games?.chosen ?? .distantPast, before)
         XCTAssertEqual(settings.chosenFolders().otherGames?.map(\.connection), [drive.id, s3.id])
+    }
+
+    // MARK: The folders the paired Mac gives back
+
+    private func told(_ server: CartoucheStorageServer?, _ path: String = "Jeux", at chosen: Date) -> CartoucheChosenFolders.Folder {
+        CartoucheChosenFolders.Folder(connection: server?.id, path: path, chosen: chosen)
+    }
+
+    /// Chosen later on the Mac's console: the games folders, the Drive's
+    /// first, and the saves folder, as if chosen here then; the Mac's own
+    /// folder, through the bridge, stays after them. Told again, or older
+    /// than those, nothing changes.
+    func testTheFoldersChosenLaterOnTheMacAreTakenHere() throws {
+        let settings = settings()
+        servers(in: settings)
+        let mac = CartoucheStorageServer(kind: .mac, name: "Mac")
+        settings.save(mac, secret: "key")
+        settings.setPlace(place(mac, "Games"), for: .games)
+        settings.addGamesFolder(place(nas))
+        settings.setPlace(place(nas, "Sauvegardes"), for: .saves)
+        let chosenHere = try XCTUnwrap(settings.chosen[.games])
+        var taken = 0
+        let watch = settings.gamesFoldersTaken.sink { taken += 1 }
+        defer { watch.cancel() }
+
+        let later = chosenHere.addingTimeInterval(60)
+        let fromMac = CartoucheChosenFolders(games: told(drive, at: later), saves: told(s3, "Saves", at: later),
+                                             otherGames: [told(nas, at: later)])
+        XCTAssertTrue(settings.take(folders: fromMac))
+        XCTAssertEqual(settings.gamesFolders.all, [place(drive), place(nas), place(mac, "Games")])
+        XCTAssertEqual(settings.place(.saves), place(s3, "Saves"))
+        XCTAssertEqual(settings.chosen[.games], later, "as chosen on the Mac, not now")
+        XCTAssertEqual(settings.chosen[.saves], later)
+        XCTAssertEqual(taken, 1, "the games folders are read again")
+        // Told again: nothing changes, here nor on the Mac told back.
+        XCTAssertFalse(settings.take(folders: fromMac))
+        XCTAssertEqual(fromMac.taking(settings.chosenFolders()), fromMac)
+
+        // Folders chosen before those: they leave them.
+        let before = later.addingTimeInterval(-30)
+        XCTAssertFalse(settings.take(folders: CartoucheChosenFolders(games: told(s3, at: before), saves: told(nas, "Sauvegardes", at: before))))
+        XCTAssertEqual(settings.place(.saves), place(s3, "Saves"))
+        XCTAssertEqual(settings.gamesFolders.all, [place(drive), place(nas), place(mac, "Games")])
+        XCTAssertEqual(taken, 1)
+    }
+
+    /// A folder on no server here, or on none at all (the Mac's own, a
+    /// folder picked on another iPhone), leaves this iPhone's as they are,
+    /// however late it was chosen; one on a server the Mac replaced goes to
+    /// the one kept.
+    func testAFolderOnNoServerHereLeavesThemAsTheyAre() throws {
+        let settings = settings()
+        servers(in: settings)
+        settings.setPlace(place(nas), for: .games)
+        settings.addGamesFolder(place(s3))
+        settings.setPlace(place(nas, "Sauvegardes"), for: .saves)
+        let later = Date().addingTimeInterval(60)
+        let unknown = CartoucheStorageServer(kind: .ftp, name: "FTP", host: "ftp.example", username: "joueur")
+        XCTAssertFalse(settings.take(folders: CartoucheChosenFolders(games: told(unknown, at: later), saves: told(nil, "", at: later),
+                                                                     otherGames: [told(drive, at: later)])))
+        XCTAssertFalse(settings.take(folders: CartoucheChosenFolders(games: told(nil, "", at: later))))
+        XCTAssertEqual(settings.gamesFolders.all, [place(nas), place(s3)])
+        XCTAssertEqual(settings.place(.saves), place(nas, "Sauvegardes"))
+
+        // The Mac replaced an NAS of the same place by this iPhone's.
+        var old = CartoucheConnection(id: UUID(), kind: "smb", name: "NAS", host: "192.168.1.2", username: "joueur", share: "Jeux",
+                                      changed: later)
+        old.removed = true
+        old.replacedBy = nas.id
+        settings.take([old])
+        XCTAssertTrue(settings.take(folders: CartoucheChosenFolders(saves: CartoucheChosenFolders.Folder(connection: old.id, path: "Saves",
+                                                                                                         chosen: later))))
+        XCTAssertEqual(settings.place(.saves), place(nas, "Saves"))
     }
 }
