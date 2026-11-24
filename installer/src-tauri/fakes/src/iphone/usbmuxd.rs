@@ -4,12 +4,16 @@
 use std::{
     io,
     net::SocketAddr,
-    sync::{Arc, Mutex},
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicUsize, Ordering},
+    },
 };
 
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
     net::{TcpListener, TcpStream},
+    sync::watch,
 };
 
 use super::{FakeIphone, Service};
@@ -21,6 +25,10 @@ pub struct FakeUsbmuxd {
     addr: SocketAddr,
     iphones: Arc<Mutex<Vec<FakeIphone>>>,
     buid: String,
+    /// How many lists of the iPhones were asked for.
+    lists_asked: Arc<AtomicUsize>,
+    /// Whether lists are held back (`hold_lists`).
+    lists_held: Arc<watch::Sender<bool>>,
 }
 
 impl FakeUsbmuxd {
@@ -36,6 +44,8 @@ impl FakeUsbmuxd {
             addr: listener.local_addr()?,
             iphones: Arc::new(Mutex::new(Vec::new())),
             buid: uuid::Uuid::new_v4().to_string().to_uppercase(),
+            lists_asked: Arc::new(AtomicUsize::new(0)),
+            lists_held: Arc::new(watch::Sender::new(false)),
         };
         let accept = muxd.clone();
         tokio::spawn(async move {
@@ -68,6 +78,25 @@ impl FakeUsbmuxd {
 
     pub fn unplug(&self, iphone: &FakeIphone) {
         iphone.state().unplugged = true;
+    }
+
+    /// From now on, each list of the iPhones is taken when it is asked for,
+    /// with the iPhones plugged in at that instant, and answered only once
+    /// `release_lists` is called: a list still on its way while the person
+    /// plugs an iPhone in.
+    pub fn hold_lists(&self) {
+        self.lists_held.send_replace(true);
+    }
+
+    /// Answers the lists held back, and the next ones as they come.
+    pub fn release_lists(&self) {
+        self.lists_held.send_replace(false);
+    }
+
+    /// How many lists of the iPhones were asked for so far, each counted
+    /// once it is taken.
+    pub fn lists_asked(&self) -> usize {
+        self.lists_asked.load(Ordering::SeqCst)
     }
 
     fn plugged(&self) -> Vec<FakeIphone> {
@@ -124,6 +153,9 @@ impl FakeUsbmuxd {
                             })
                         })
                         .collect();
+                    self.lists_asked.fetch_add(1, Ordering::SeqCst);
+                    let mut held = self.lists_held.subscribe();
+                    let _ = held.wait_for(|held| !*held).await;
                     send(&mut stream, tag, dict! { "DeviceList" => list }).await?;
                 }
                 "Listen" => {
