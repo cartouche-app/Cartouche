@@ -1053,7 +1053,7 @@ public struct BuilderConfig: Codable, Equatable {
     public var enginePolicy: String
     /// Whom the games are for: "" the paired iPhones, else a model
     /// ("iPhone15,4"). One whose GPU reads no BC has its games built from
-    /// nxnative's no-bc variant (BuildFor, cartouche_builder/build_for.py).
+    /// nxnative-nobc, a separate fork (BuildFor, cartouche_builder/build_for.py).
     public var buildFor: String
     public var refreshDays: Int
     public var skip: [String]

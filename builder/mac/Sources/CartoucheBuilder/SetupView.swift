@@ -209,7 +209,7 @@ struct SetupRow: View {
 /// Under nxnative's row: the repository it is downloaded from, the one the
 /// games are built from, and the choice of it, open on Change…: whom the
 /// games are built for (an iPhone whose GPU reads no BC texture has them
-/// built from nxnative's no-bc variant), and another repository. Chosen
+/// built from nxnative-nobc, a separate fork), and another repository. Chosen
 /// before the download, it is what the step downloads; changed after, the
 /// next build fetches the other one.
 struct BuildSourceChoice: View {
@@ -292,8 +292,8 @@ struct BuildSourceChoice: View {
                 let name = choice.model.flatMap(BuildFor.name(of:)) ?? choice.model ?? "iPhone"
                 whom = tr("for the \(name)", "pour l’\(name)")
             }
-            return tr("From nxnative’s no-bc variant, \(whom): \(address), branch \(repository.branch).",
-                      "Depuis la variante no-bc de nxnative, \(whom) : \(address), branche \(repository.branch).")
+            return tr("From nxnative-nobc, a separate fork of nxnative by mianmuhammadse, \(whom): \(address), branch \(repository.branch).",
+                      "Depuis nxnative-nobc, une fourche distincte de nxnative par mianmuhammadse, \(whom) : \(address), branche \(repository.branch).")
         case .custom:
             return tr("From your repository: \(address), branch \(repository.branch).",
                       "Depuis votre dépôt : \(address), branche \(repository.branch).")

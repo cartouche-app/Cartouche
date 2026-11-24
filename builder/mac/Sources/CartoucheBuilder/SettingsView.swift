@@ -496,7 +496,7 @@ struct StorageSettings: View {
 
 /// Whom the games are built for: the paired iPhones, or a model chosen.
 /// For one whose GPU reads no BC texture, which nxnative refuses, they are
-/// built from nxnative's no-bc variant (BuildFor), and the iPhone's games
+/// built from nxnative-nobc, a separate fork (BuildFor), and the iPhone's games
 /// are built again.
 struct BuildForPicker: View {
     @EnvironmentObject private var model: AppModel
@@ -519,7 +519,7 @@ struct BuildForPicker: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             if choice.kind == .noBC {
-                Link(tr("Its page on GitHub", "Sa page sur GitHub"), destination: BuildFor.forkPage)
+                Link(tr("nxnative-nobc on GitHub", "nxnative-nobc sur GitHub"), destination: BuildFor.forkPage)
                     .font(.caption)
             }
         }
@@ -559,8 +559,8 @@ struct BuildForPicker: View {
                 let name = choice.model.flatMap(BuildFor.name(of:)) ?? choice.model ?? "iPhone"
                 who = tr("The \(name) reads no BC texture", "L’\(name) ne lit pas les textures BC")
             }
-            text = tr("\(who), so nxnative refuses it: the games are built from nxnative’s no-bc variant, by mianmuhammadse, which converts those textures for its GPU. On an iPhone that reads them, and on this Mac, it does as nxnative does.",
-                      "\(who) et nxnative le refuse : les jeux se construisent avec la variante no-bc de nxnative, par mianmuhammadse, qui convertit ces textures pour son GPU. Sur un iPhone qui les lit, et sur ce Mac, elle fait comme nxnative.")
+            text = tr("\(who), so nxnative refuses it: the games are built from nxnative-nobc, a separate fork of nxnative by mianmuhammadse, which converts those textures for its GPU. On an iPhone that reads them, and on this Mac, it does as nxnative does.",
+                      "\(who) et nxnative le refuse : les jeux se construisent avec nxnative-nobc, une fourche distincte de nxnative par mianmuhammadse, qui convertit ces textures pour son GPU. Sur un iPhone qui les lit, et sur ce Mac, elle fait comme nxnative.")
         }
         if let unknown {
             text += " " + tr("“\(unknown)” has not said its model yet: open Cartouche on it with this Mac on.",
@@ -580,8 +580,8 @@ struct AdvancedSettings: View {
             } header: {
                 Text("nxnative")
             } footer: {
-                Text(tr("The nxnative games are built from. Change it only to try a fork. While it is nxnative’s, an iPhone whose GPU reads no BC texture has its games built from nxnative’s no-bc variant (Builds, Build for).",
-                        "Le nxnative avec lequel les jeux sont construits. À changer seulement pour essayer une variante. Tant que c’est celui de nxnative, un iPhone qui ne lit pas les textures BC a ses jeux construits avec la variante no-bc de nxnative (Constructions, Construire pour)."))
+                Text(tr("The nxnative games are built from. Change it only to try a fork. While it is nxnative’s, an iPhone whose GPU reads no BC texture has its games built from nxnative-nobc, a separate fork (Builds, Build for).",
+                        "Le nxnative avec lequel les jeux sont construits. À changer seulement pour essayer une variante. Tant que c’est celui de nxnative, un iPhone qui ne lit pas les textures BC a ses jeux construits avec nxnative-nobc, une fourche distincte (Constructions, Construire pour)."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

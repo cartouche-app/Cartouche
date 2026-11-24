@@ -355,7 +355,7 @@ public struct CartoucheBridgeRequest: Codable, Equatable {
     public var places: CartoucheChosenFolders?
     /// info: the iPhone's model and whether its GPU reads BC textures, for
     /// Cartouche Builder, which builds the games of an iPhone that reads
-    /// none from nxnative's no-bc variant. An older Mac leaves it aside.
+    /// none from nxnative-nobc, a separate fork. An older Mac leaves it aside.
     public var device: CartoucheBridgeDevice?
 
     public init(_ op: Operation, path: String? = nil, offset: UInt64? = nil, count: Int? = nil, size: UInt64? = nil, upload: String? = nil,

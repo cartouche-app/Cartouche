@@ -61,7 +61,7 @@ enum Gallery {
         // the storage page down to the games on this Mac, in a window as
         // tall as it. The Builds tab again, an iPhone 15 paired in place of
         // the iPhone Duo: its GPU reads no BC texture, and the games are
-        // built from nxnative's no-bc variant (BuildFor).
+        // built from nxnative-nobc, a separate fork (BuildFor).
         case settingsBuilds = "settings-builds", settingsBuildsNoBC = "settings-builds-no-bc", storageMac = "storage-mac"
         // The iPhone page with Tailscale on this Mac, and its address there
         // (BridgeView.swift); the iPhone page above has it off.

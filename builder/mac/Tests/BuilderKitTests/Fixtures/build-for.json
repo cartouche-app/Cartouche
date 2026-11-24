@@ -91,7 +91,7 @@
       "kind": "no-bc",
       "model": "iPhone15,4",
       "device": "iPhone de Lou",
-      "url": "https://github.com/mianmuhammadse/nxnative.git",
+      "url": "https://github.com/mianmuhammadse/nxnative-nobc.git",
       "branch": "no-bc"
     },
     {
@@ -105,7 +105,7 @@
       "kind": "no-bc",
       "model": "iPhone15,4",
       "device": "iPhone de Lou",
-      "url": "https://github.com/mianmuhammadse/nxnative.git",
+      "url": "https://github.com/mianmuhammadse/nxnative-nobc.git",
       "branch": "no-bc"
     },
     {
@@ -120,7 +120,7 @@
       "kind": "no-bc",
       "model": "iPad13,4",
       "device": "iPad",
-      "url": "https://github.com/mianmuhammadse/nxnative.git",
+      "url": "https://github.com/mianmuhammadse/nxnative-nobc.git",
       "branch": "no-bc"
     },
     {
@@ -161,7 +161,7 @@
       "kind": "no-bc",
       "model": "iPhone14,7",
       "device": "",
-      "url": "https://github.com/mianmuhammadse/nxnative.git",
+      "url": "https://github.com/mianmuhammadse/nxnative-nobc.git",
       "branch": "no-bc"
     },
     {
@@ -172,7 +172,7 @@
       "kind": "no-bc",
       "model": "iPad15,7",
       "device": "",
-      "url": "https://github.com/mianmuhammadse/nxnative.git",
+      "url": "https://github.com/mianmuhammadse/nxnative-nobc.git",
       "branch": "no-bc"
     },
     {
@@ -202,7 +202,7 @@
       "kind": "no-bc",
       "model": "iPhone15,4",
       "device": "iPhone de Lou",
-      "url": "https://github.com/mianmuhammadse/nxnative.git",
+      "url": "https://github.com/mianmuhammadse/nxnative-nobc.git",
       "branch": "no-bc"
     }
   ]

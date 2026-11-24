@@ -81,7 +81,7 @@ final class BuildForTests: XCTestCase {
 
     func testTheToolsStepSaysTheRepositoryAsThePlayerReadsIt() {
         XCTAssertEqual(BuildFor.address(BuilderConfig.engineURL), "github.com/seedds/nxnative")
-        XCTAssertEqual(BuildFor.address(BuildFor.forkURL), "github.com/mianmuhammadse/nxnative")
+        XCTAssertEqual(BuildFor.address(BuildFor.forkURL), "github.com/mianmuhammadse/nxnative-nobc")
         XCTAssertEqual(BuildFor.address("https://github.com/someone/nxnative/"), "github.com/someone/nxnative")
         XCTAssertEqual(BuildFor.address("git@github.com:someone/nxnative.git"), "github.com/someone/nxnative")
         XCTAssertEqual(BuildFor.address(" /Users/me/nxnative "), "/Users/me/nxnative")

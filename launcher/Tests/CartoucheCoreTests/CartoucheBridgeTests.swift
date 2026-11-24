@@ -369,7 +369,7 @@ final class CartoucheBridgeTests: XCTestCase {
 
     func testInfoTellsTheMacThisIPhonesModelAndNothingElse() throws {
         // Cartouche Builder builds the games of an iPhone whose GPU reads no
-        // BC from nxnative's no-bc variant (cartouche_builder/build_for.py).
+        // BC from nxnative-nobc, a separate fork (cartouche_builder/build_for.py).
         let asked = CartoucheBridgeRequest(.info, device: CartoucheBridgeDevice(model: "iPhone15,4", readsBC: false))
         let data = try CartoucheBridgeMessage.encode(asked, body: Data())
         let (request, _) = try CartoucheBridgeMessage.decode(CartoucheBridgeRequest.self, from: data)

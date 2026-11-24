@@ -20560,13 +20560,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche on your Mac builds them for this iPhone from nxnative’s no-bc variant, which converts those textures, once the two are paired."
+            "value" : "Cartouche on your Mac builds them for this iPhone from nxnative-nobc, a separate fork of nxnative that converts those textures, once the two are paired."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche sur votre Mac les construit pour cet iPhone avec la variante no-bc de nxnative, qui convertit ces textures, une fois les deux appairés."
+            "value" : "Cartouche sur votre Mac les construit pour cet iPhone avec nxnative-nobc, une fourche distincte de nxnative qui convertit ces textures, une fois les deux appairés."
           }
         }
       }

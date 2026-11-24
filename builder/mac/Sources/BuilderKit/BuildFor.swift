@@ -5,8 +5,8 @@
 //  Whom the games are built for, and so which nxnative builds them, as the
 //  engine decides it (cartouche_builder/build_for.py), for the settings' Build
 //  for and its words. nxnative refuses a GPU that reads no BC-compressed
-//  texture, the A16's and older: its no-bc variant, by mianmuhammadse,
-//  stores those textures otherwise there, and takes nxnative's own path on
+//  texture, the A16's and older: nxnative-nobc, a separate fork of nxnative
+//  by mianmuhammadse, stores those textures otherwise there, and takes nxnative's own path on
 //  a GPU that reads them. The games are built from it when the model chosen
 //  reads no BC, or, with none chosen, when one of the paired iPhones says it
 //  reads none; from nxnative otherwise. A repository chosen under Advanced
@@ -17,10 +17,11 @@
 import Foundation
 
 public enum BuildFor {
-    public static let forkURL = "https://github.com/mianmuhammadse/nxnative.git"
+    public static let forkURL = "https://github.com/mianmuhammadse/nxnative-nobc.git"
     public static let forkBranch = "no-bc"
-    /// Its page, which says what it does and who makes it.
-    public static let forkPage = URL(string: "https://github.com/mianmuhammadse/nxnative/tree/no-bc")!
+    /// Its repository, which says what it does and who makes it. Its author
+    /// asks that the Builder say it is a separate fork, and link to it.
+    public static let forkPage = URL(string: "https://github.com/mianmuhammadse/nxnative-nobc")!
 
     /// A model Build for offers.
     public struct Model: Identifiable, Hashable, Sendable {

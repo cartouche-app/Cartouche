@@ -105,7 +105,7 @@ class Sources(unittest.TestCase):
 
     def test_their_names(self):
         self.assertEqual(build_for.label(NXNATIVE), "nxnative")
-        self.assertEqual(build_for.label(FORK), "nxnative's no-bc variant, by mianmuhammadse")
+        self.assertEqual(build_for.label(FORK), "nxnative-nobc, a separate fork of nxnative by mianmuhammadse")
         self.assertEqual(build_for.label("https://github.com/someone/nxnative#dev"), "someone/nxnative (branch dev)")
 
 
@@ -177,7 +177,7 @@ class Planning(PlanHome):
         entries = self.plan_from(FORK)
         self.assertTrue(entries[MKW].build)
         self.assertEqual(entries[MKW].reasons, ["engine"])
-        self.assertEqual(entries[MKW].detail, "Built from nxnative; the games are built from nxnative's no-bc variant, by mianmuhammadse now")
+        self.assertEqual(entries[MKW].detail, "Built from nxnative; the games are now built from nxnative-nobc, a separate fork of nxnative by mianmuhammadse")
         self.assertEqual(entries[ODYSSEY].reasons, ["up_to_date"])
 
     def test_and_back_from_nxnative_once_no_iphone_needs_the_fork(self):

@@ -22,7 +22,7 @@ public struct PairedDevice: Codable, Identifiable, Equatable, Sendable {
     /// Cartouche tells them with its info requests (CartoucheBridgeDevice):
     /// nil until it does, from an older Cartouche. The engine reads these
     /// two, never the key, to build the games of an iPhone without BC from
-    /// nxnative's no-bc variant (cartouche_builder/build_for.py).
+    /// nxnative-nobc, a separate fork (cartouche_builder/build_for.py).
     public var model: String?
     public var readsBC: Bool?
 

@@ -277,7 +277,7 @@ final class AppModel: ObservableObject {
             fields["jobs"] = .count(config.jobs)
             fields["keepExtracted"] = .flag(config.keepExtracted)
             fields["policy"] = .text(config.enginePolicy)
-            // The no-bc variant, for an iPhone without BC (BuildFor), is a fork too.
+            // nxnative-nobc, for an iPhone without BC (BuildFor), is a fork too.
             let choice = BuildFor.choice(config, devices: bridge.devices)
             fields["forkOfNxnative"] = .flag(choice.kind != .nxnative)
             fields["noBC"] = .flag(choice.kind == .noBC)

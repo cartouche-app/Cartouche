@@ -31,7 +31,7 @@ from .config import ENGINE_BRANCH, ENGINE_URL, Config
 from .i18n import t
 from .paths import Paths
 
-FORK_URL = "https://github.com/mianmuhammadse/nxnative.git"
+FORK_URL = "https://github.com/mianmuhammadse/nxnative-nobc.git"
 FORK_BRANCH = "no-bc"
 
 MODEL = re.compile(r"^(iPhone|iPad)([0-9]+),([0-9]+)$")
