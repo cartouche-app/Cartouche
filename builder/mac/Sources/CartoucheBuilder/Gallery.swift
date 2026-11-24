@@ -64,9 +64,10 @@ enum Gallery {
         // connected now plugged into this Mac, by its cable
         // (BridgeCable.swift).
         case iphoneCable = "iphone-cable"
-        // The iPhone page, the iPhone connected now reading a game on this
-        // Mac's 2.4 GHz Wi-Fi, at 3.1 MB/s, with what would go faster
-        // (BridgeSendingWords, decision 151).
+        // The whole iPhone page, in a window as tall as it, the iPhone
+        // connected now reading a game on this Mac's 2.4 GHz Wi-Fi, at
+        // 3.1 MB/s, with what would go faster (BridgeSendingWords, decision
+        // 151).
         case iphoneSending = "iphone-sending"
         // The whole iPhone page, in a window as tall as it, down to the
         // iPhone's games folder on one of the player's connections, a NAS:
@@ -100,7 +101,7 @@ enum Gallery {
         /// Whether the page is in a window taller than the screen, as tall
         /// as the page, which AppKit would fit to the screen.
         var isTall: Bool {
-            isWholeSheet || [.storageMac, .iphoneGames, .iphoneCable, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport,
+            isWholeSheet || [.storageMac, .iphoneGames, .iphoneCable, .iphoneSending, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport,
                              .activitySplit, .gameSplit].contains(self)
         }
 
