@@ -1393,7 +1393,7 @@
       ]
     },
     {
-      "name": "iphone-setup-done",
+      "name": "iphone-setup-nightly-to-make",
       "comment": "The setup of a Cartouche whose first three steps are done, the automation of Shortcuts that renews it every night still to make: its last step, which opens Renew every night.",
       "screen": "setup",
       "owned": [
