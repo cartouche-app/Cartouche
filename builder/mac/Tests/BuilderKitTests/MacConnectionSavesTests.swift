@@ -42,7 +42,7 @@ private final class Console: MacConnectionSavesDriver, @unchecked Sendable {
     }
 
     func sync(_ game: MacSaveGame, documents: URL, base: Data?, fetching: Bool, leaving: @escaping @Sendable () -> Bool,
-              quiet: @Sendable () -> Bool) async throws -> MacConnectionOutcome {
+              quiet: @Sendable () -> Bool, replacing: String?) async throws -> MacConnectionOutcome {
         asked.append(Asked(base: base.flatMap { try? JSONDecoder().decode(CartoucheSaveBase.self, from: $0) }, fetching: fetching,
                            leftThere: leaving(), documents: documents))
         return try answer()

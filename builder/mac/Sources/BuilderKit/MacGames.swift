@@ -7,9 +7,9 @@
 //  Finder, the Dock, Launchpad), followed until they end, and their saves
 //  kept in step with the iPhone's copies in the saves folder (MacSaves.swift):
 //  the newest copy comes before a game the builder starts, the Mac's saves
-//  go after every game, and while a game does not run, a round every
-//  minute brings a copy that arrived, so that a start from the Dock finds
-//  it too. A game whose saves nxnative's own cloud saves sync (a folder
+//  go a few seconds after the game saves, while it plays, and after every
+//  game, and while a game does not run, a round every minute brings a copy
+//  that arrived, so that a start from the Dock finds it too. A game whose saves nxnative's own cloud saves sync (a folder
 //  the player chose in its settings window) is left to them: never two
 //  syncs on one save.
 //
@@ -119,6 +119,13 @@ public final class MacGames: ObservableObject {
     private var observers: [any NSObjectProtocol] = []
     private var rounds: Task<Void, Never>?
     private var rounding = false
+    /// The games playing whose saves go as they change, by title ID
+    /// (CartoucheSaveWatch), and the loop that looks at them.
+    private var watches: [String: CartoucheSaveWatch] = [:]
+    private var looking: Task<Void, Never>?
+    /// The games playing whose sync while they play the app heard of, by
+    /// title ID: it counts one for each game, but for those that failed.
+    private var heardPlaying: Set<String> = []
     /// The play time of each game playing, by title ID.
     private var counters: [String: MacPlayTime] = [:]
     private var ticks: Task<Void, Never>?
@@ -251,6 +258,12 @@ public final class MacGames: ObservableObject {
                 self?.tickPlayTime()
             }
         }
+        looking = Task { [weak self] in
+            while !Task.isCancelled, self != nil {
+                try? await Task.sleep(nanoseconds: UInt64(CartoucheSaveWatch.interval * 1_000_000_000))
+                await self?.lookAtPlaying()
+            }
+        }
     }
 
     public func stop() {
@@ -264,6 +277,8 @@ public final class MacGames: ObservableObject {
         rounds = nil
         ticks?.cancel()
         ticks = nil
+        looking?.cancel()
+        looking = nil
         watchers.values.forEach { $0.cancel() }
         watchers = [:]
         counters.values.forEach { $0.leftFront() }
@@ -386,6 +401,12 @@ public final class MacGames: ObservableObject {
 
     private func follow(_ run: MacGameRun) {
         playing[run.app.titleID] = run
+        if watches[run.app.titleID] == nil {
+            // How its saves look when they are in step with the saves folder.
+            let base = store.record(run.app.titleID).base
+            watches[run.app.titleID] = CartoucheSaveWatch(inStep: base?.place == folder?.place ? base?.look : nil)
+            heardPlaying.remove(run.app.titleID)
+        }
         if !sample, counters[run.app.titleID] == nil {
             counters[run.app.titleID] = MacPlayTime(folder: games.appendingPathComponent(run.app.titleID, isDirectory: true))
         }
@@ -433,6 +454,7 @@ public final class MacGames: ObservableObject {
             return
         }
         playing.removeValue(forKey: titleID)
+        watches.removeValue(forKey: titleID)
         counters.removeValue(forKey: titleID)?.leftFront()
         let (ending, code) = MacGameEnding.read(log: logs.appendingPathComponent(titleID + ".log"), since: run.started)
         news?(.ended(run, ending: ending, exit: code, seconds: Date().timeIntervalSince(run.started)))
@@ -560,6 +582,34 @@ public final class MacGames: ObservableObject {
         last[app.titleID] = event
         news?(.saves(titleID: app.titleID, event: event, onShare: folder.onShare))
         return event
+    }
+
+    /// Looks at the saves of the games playing: those a game made go to the
+    /// saves folder once they have stayed as they are for a few seconds
+    /// (CartoucheSaveWatch), from a copy of them made at one moment, in
+    /// their turn with the other syncs (MacSaveKeeper.sendPlaying).
+    public func lookAtPlaying() async {
+        guard !sample, let folder else { return }
+        for titleID in watches.keys.sorted() {
+            guard let run = playing[titleID], keepsSaves(titleID) else { continue }
+            let documents = games.appendingPathComponent(titleID, isDirectory: true)
+            let look = await Task.detached(priority: .utility) { CartoucheSaveSync.saves(in: documents)?.look }.value
+            guard watches[titleID]?.due(look) == true else { continue }
+            let played = await keeper.sendPlaying(run.app.saveGame, from: documents, in: folder, scratch: scratch)
+            if let look = played.inStep {
+                watches[titleID]?.sent(look)
+            } else if played.moved {
+                watches[titleID]?.moved()
+            } else if played.failed {
+                watches[titleID]?.failed()
+            }
+            await noteChecked(run.app)
+            guard let event = played.event else { continue }
+            last[titleID] = event
+            if event.offline || event.failed || heardPlaying.insert(titleID).inserted {
+                news?(.saves(titleID: titleID, event: event, onShare: folder.onShare))
+            }
+        }
     }
 
     /// Whether no program of APP runs, looked at again each time it is asked.

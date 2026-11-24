@@ -75,13 +75,17 @@ public actor CartoucheMacConnectionSaves {
     /// time both were the same (as JSON): FETCHING lets the newest copy
     /// come; LEAVING says whether the copy of a base of another saves
     /// folder is still there; QUIET, just before a copy takes the place of
-    /// the saves, that the game still does not run.
+    /// the saves, that the game still does not run; REPLACING, the copy
+    /// they went to earlier in the same game, which the one that goes now
+    /// takes the place of when it is still the newest.
     public func sync(titleID: String, name: String, version: String?, documents: URL, base: Data?, fetching: Bool,
-                     leaving: @escaping @Sendable () -> Bool, quiet: @Sendable () -> Bool) async throws -> CartoucheMacConnectionOutcome {
+                     leaving: @escaping @Sendable () -> Bool, quiet: @Sendable () -> Bool,
+                     replacing: String? = nil) async throws -> CartoucheMacConnectionOutcome {
         let target = Self.target(titleID: titleID, name: name, version: version, documents: documents)
         let given = base.flatMap(Self.decode)
         return try await withFolder { folder in
-            Self.outcome(try await folder.sync(target, base: given, fetching: fetching, leaving: leaving, quiet: quiet))
+            Self.outcome(try await folder.sync(target, base: given, fetching: fetching, leaving: leaving, quiet: quiet,
+                                               replacing: replacing))
         }
     }
 

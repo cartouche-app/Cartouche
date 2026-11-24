@@ -11,6 +11,12 @@
 //    installed again, or when the copy is newer than theirs, as when
 //    another iPhone played the game since. A server offline from here is
 //    left alone: the game plays with the saves it has.
+//  - While a game plays behind the console, Cartouche beside it, the saves
+//    it makes go a few seconds after it made them (CartoucheSaveWatch),
+//    from a copy of them made at one moment, never half written
+//    (CartoucheSaveSync.snapshot); each copy that goes then takes the place
+//    of the one before, so that each game leaves one copy. Cartouche
+//    leaving the screen sends at once what waits.
 //  - After a game, the saves that changed go: when a game behind the
 //    console ends and, since a game in Cartouche's place is Cartouche
 //    itself while it plays, when Cartouche opens again after a game and
@@ -74,6 +80,20 @@ final class CartoucheSaveBackups: ObservableObject {
     private var bases: [String: CartoucheSaveBase]
     private var run: Task<Void, Never>?
     private var background = UIBackgroundTaskIdentifier.invalid
+    /// The games playing behind the console whose saves go as they change,
+    /// by target key: each one's target, watch, and the loop that looks at
+    /// its saves.
+    private var playingGames: [String: CartoucheSaveTarget] = [:]
+    private var watches: [String: CartoucheSaveWatch] = [:]
+    private var looking: [String: Task<Void, Never>] = [:]
+    /// The copy each game's saves went to while it played, by target key,
+    /// which the next one takes the place of, until the one after the game.
+    private var playCopies: [String: String] = [:]
+    /// The games whose sync while they played failed already, by target
+    /// key: the next failures make no report of their own.
+    private var playFailed: Set<String> = []
+    /// The syncs after the games that ended, which a start waits for.
+    private var ending: [String: Task<Void, Never>] = [:]
     private static let basesKey = "Cartouche.saves.bases"
     private static let syncedKey = "Cartouche.saves.synced"
     private static let newsKey = "Cartouche.saves.news"
@@ -159,6 +179,9 @@ final class CartoucheSaveBackups: ObservableObject {
     /// Waits for the syncs under way: before a game starts, which closes
     /// Cartouche.
     func finish() async {
+        for task in Array(ending.values) {
+            await task.value
+        }
         while let run {
             await run.value
             if self.run == run { break }
@@ -189,14 +212,23 @@ final class CartoucheSaveBackups: ObservableObject {
     private struct Round {
         var outcomes: [String: CartoucheSaveOutcome] = [:]
         var failure: Error?
+        /// How the saves of each game looked, in its Documents, when the
+        /// round found them in step or sent them, by target key.
+        var inStep: [String: String] = [:]
+        /// The games whose saves kept changing while they were copied, to
+        /// go once they stop (PLAYING).
+        var moved: Set<String> = []
     }
 
     /// Syncs the TARGETS with the saves folder, one game after another: all
     /// of them, or, ONLYCHANGED, after a game, those whose saves changed
     /// since they were last in step. FETCHING lets the newest copy come
     /// here. BYPLAYER: the player asked, and a server found offline is tried
-    /// again.
-    private func syncRound(_ targets: [CartoucheSaveTarget], fetching: Bool, onlyChanged: Bool, byPlayer: Bool) async -> Round {
+    /// again. PLAYING: the games play, and their saves go from a copy of
+    /// them made at one moment, never while a server is known to be offline;
+    /// REPORTING: a failure makes a report.
+    private func syncRound(_ targets: [CartoucheSaveTarget], fetching: Bool, onlyChanged: Bool, byPlayer: Bool,
+                           playing: Bool = false, reporting: Bool = true) async -> Round {
         var result = Round()
         guard let location = settings.location(.saves) else {
             result.failure = CartoucheStorageError(.noSavesFolder, CartoucheText.savesNoFolder)
@@ -211,6 +243,7 @@ final class CartoucheSaveBackups: ObservableObject {
                 // since they were last in step, has nothing to send.
                 guard let look = await Self.look(of: target.documents), look != base?.look else {
                     waiting.remove(target.key)
+                    if let look = base?.look { result.inStep[target.key] = look }
                     continue
                 }
             }
@@ -221,7 +254,8 @@ final class CartoucheSaveBackups: ObservableObject {
         // it, rather than for the patience each time Cartouche comes back,
         // and a game starts with the saves it has.
         let reach = CartoucheStorageReach.shared
-        if !byPlayer && (onlyChanged ? reach.isSettledOffline(location.server.id) : reach.isOffline(location.server.id)) {
+        let offline = onlyChanged && !playing ? reach.isSettledOffline(location.server.id) : reach.isOffline(location.server.id)
+        if !byPlayer && offline {
             if onlyChanged { wait(for: due.map { $0.target }) }
             result.failure = CartoucheStorageOffline(location.server)
             return result
@@ -245,9 +279,37 @@ final class CartoucheSaveBackups: ObservableObject {
             var failed: Error?
             for (target, base) in due {
                 do {
-                    let outcome = try await folder.sync(target, base: base, fetching: fetching)
+                    var source = target
+                    var snapshot: CartoucheSavesSnapshot?
+                    if playing {
+                        // The saves as they are now, whole: the game may save
+                        // again while they go.
+                        let copy = Self.scratch.appendingPathComponent("playing", isDirectory: true)
+                            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+                        let documents = target.documents
+                        snapshot = try await Task.detached(priority: .utility) {
+                            try CartoucheSaveSync.snapshot(ofSavesIn: documents, into: copy)
+                        }.value
+                        guard let snapshot else {
+                            result.moved.insert(target.key)
+                            continue
+                        }
+                        source = CartoucheSaveTarget(key: target.key, name: target.name, titleId: target.titleId,
+                                                     documents: snapshot.documents, gameVersion: target.gameVersion)
+                    }
+                    defer {
+                        if let snapshot { try? FileManager.default.removeItem(at: snapshot.documents) }
+                    }
+                    var outcome = try await folder.sync(source, base: snapshot.map { $0.forCopy(base) } ?? base,
+                                                        fetching: fetching, replacing: playCopies[target.key])
+                    if let snapshot { outcome.base = snapshot.forGame(outcome.base) }
                     record(outcome, of: target)
                     result.outcomes[target.key] = outcome
+                    if let look = snapshot?.look ?? outcome.base?.look { result.inStep[target.key] = look }
+                    // The next copy of the same game takes this one's place.
+                    if let sent = outcome.sent, playingGames[target.key] != nil || ending[target.key] != nil {
+                        playCopies[target.key] = sent
+                    }
                 } catch let offline as CartoucheStorageOffline {
                     throw offline
                 } catch {
@@ -264,10 +326,14 @@ final class CartoucheSaveBackups: ObservableObject {
         } catch {
             // The syncs Cartouche makes by itself, each time it comes back,
             // can fail on the way too: their report is not kept.
-            problemReport = CartoucheReports.make(.saves, CartoucheText.savesCopyFailed, message: error.localizedDescription,
-                                                  error: error, step: "Syncing the saves with " + CartoucheReports.place(.saves),
-                                                  stage: "savesSync",
-                                                  facts: [.init("Games", String(due.count))], inBackground: !byPlayer)
+            if reporting || problemReport == nil {
+                problemReport = CartoucheReports.make(.saves, CartoucheText.savesCopyFailed, message: error.localizedDescription,
+                                                      error: error, step: "Syncing the saves with " + CartoucheReports.place(.saves),
+                                                      stage: "savesSync",
+                                                      facts: [.init("Games", String(due.count))]
+                                                          + (playing ? [.init("While the game plays", "yes", own: true)] : []),
+                                                      inBackground: !byPlayer)
+            }
             NSLog("[Cartouche] saves not synced: %@", error.localizedDescription)
             result.failure = error
         }
@@ -401,6 +467,120 @@ final class CartoucheSaveBackups: ObservableObject {
         guard background != .invalid else { return }
         UIApplication.shared.endBackgroundTask(background)
         background = .invalid
+    }
+
+    // MARK: While a game plays
+
+    /// While TARGET's game plays behind the console, Cartouche beside it:
+    /// the saves it makes go to the saves folder a few seconds after it
+    /// made them (CartoucheSaveWatch), from a copy made at one moment
+    /// (CartoucheSaveSync.snapshot), in their turn with the other syncs.
+    /// Away from the saves folder's server, they wait for it, as after a
+    /// game.
+    func watch(_ target: CartoucheSaveTarget) {
+        guard isOn, let location = settings.location(.saves), looking[target.key] == nil else { return }
+        playingGames[target.key] = target
+        watches[target.key] = CartoucheSaveWatch(inStep: savedBase(of: target, place: Self.place(location))?.look)
+        playCopies[target.key] = nil
+        playFailed.remove(target.key)
+        looking[target.key] = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: UInt64(CartoucheSaveWatch.interval * 1_000_000_000))
+                guard !Task.isCancelled, let self else { return }
+                await self.lookAgain(at: target)
+            }
+        }
+    }
+
+    /// TARGET's game ended: its saves are no longer watched, and those it
+    /// made since they last went go now, after the syncs under way, in place
+    /// of the copy they went to while it played. A game started next waits
+    /// for them (finish).
+    func gameEnded(_ target: CartoucheSaveTarget) {
+        looking.removeValue(forKey: target.key)?.cancel()
+        watches[target.key] = nil
+        playingGames[target.key] = nil
+        guard isOn else {
+            playCopies[target.key] = nil
+            return
+        }
+        let previous = ending[target.key]
+        let task = Task {
+            await previous?.value
+            _ = await turn { await self.syncRound([target], fetching: false, onlyChanged: true, byPlayer: false) }
+        }
+        ending[target.key] = task
+        Task {
+            await task.value
+            guard ending[target.key] == task else { return }
+            ending[target.key] = nil
+            if playingGames[target.key] == nil { playCopies[target.key] = nil }
+        }
+    }
+
+    /// Cartouche leaves the screen while a game plays beside it: its saves
+    /// that have not gone yet go now, without the few seconds' wait, before
+    /// iOS stops Cartouche.
+    func sendWaitingNow() {
+        guard !playingGames.isEmpty else { return }
+        beginBackground()
+        Task {
+            for target in Array(playingGames.values) {
+                let look = await Self.look(of: target.documents)
+                if watches[target.key]?.isPending(look) == true {
+                    await sendPlaying(target)
+                }
+            }
+            if run == nil { endBackground() }
+        }
+    }
+
+    /// The saves folder's server answers again, or Cartouche came back: the
+    /// saves of the game playing that did not go are tried again at once.
+    func retryPlaying() {
+        for key in watches.keys {
+            watches[key]?.retryNow()
+        }
+    }
+
+    /// Looks at TARGET's saves again: they go once they have stayed as they
+    /// are for a few seconds.
+    private func lookAgain(at target: CartoucheSaveTarget) async {
+        guard watches[target.key] != nil else { return }
+        let look = await Self.look(of: target.documents)
+        guard watches[target.key]?.due(look) == true else { return }
+        await sendPlaying(target)
+    }
+
+    /// Sends TARGET's saves, which changed while its game plays, in their
+    /// turn: what its watch learns of it.
+    private func sendPlaying(_ target: CartoucheSaveTarget) async {
+        let reporting = !playFailed.contains(target.key)
+        let round = await turn { () -> PlayRound in
+            let round = await self.syncRound([target], fetching: false, onlyChanged: true, byPlayer: false, playing: true,
+                                             reporting: reporting)
+            return PlayRound(inStep: round.inStep[target.key], moved: round.moved.contains(target.key),
+                             failed: round.failure != nil, offline: round.failure is CartoucheStorageOffline)
+        }
+        guard watches[target.key] != nil else { return }
+        if let look = round.inStep {
+            watches[target.key]?.sent(look)
+        } else if round.moved {
+            watches[target.key]?.moved()
+        } else if round.failed {
+            watches[target.key]?.failed()
+            if !round.offline { playFailed.insert(target.key) }
+        }
+    }
+
+    /// What a sync of a game's saves while it plays did, for its watch.
+    private struct PlayRound: Sendable {
+        /// How its saves looked when they went, or were found in step.
+        var inStep: String?
+        /// They kept changing while they were copied.
+        var moved: Bool
+        var failed: Bool
+        var offline: Bool
     }
 
     // MARK: Listing and putting back
