@@ -16,9 +16,25 @@
 import Foundation
 
 enum GalleryBCConversion {
-    /// Whether WORK is an A16's.
+    /// Whether WORK is an A16's: also mac-gpu-no-bc and
+    /// mac-gpu-no-bc-converted, the sheet's game on the paired Mac, not
+    /// installed, built by nxnative or by a fork that converts the textures
+    /// (storedConversion).
     static func isWithoutBC(_ work: String?) -> Bool {
-        work == "gpu-no-bc" || work == "gpu-no-bc-converted" || work == "gpu-no-bc-converted-vulkan"
+        ["gpu-no-bc", "gpu-no-bc-converted", "gpu-no-bc-converted-vulkan", "mac-gpu-no-bc", "mac-gpu-no-bc-converted"]
+            .contains(work ?? "")
+    }
+
+    /// What Cartouche read of the build of the sheet's game on the Mac, for
+    /// WORK (CartoucheStoredGame.bcConversion): NVN's conversion for
+    /// mac-gpu-no-bc-converted, none for mac-gpu-no-bc; nil, not read, for
+    /// another work.
+    static func storedConversion(_ work: String?) -> Int? {
+        switch work {
+        case "mac-gpu-no-bc-converted": CartoucheBCConversion.APIs.nvn.rawValue
+        case "mac-gpu-no-bc": 0
+        default: nil
+        }
     }
 
     /// Gives INFO, the sheet's game, its Info.plist and its executable, for

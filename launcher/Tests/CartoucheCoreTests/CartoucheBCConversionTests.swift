@@ -185,6 +185,65 @@ final class CartoucheBCConversionTests: XCTestCase {
         XCTAssertEqual(CartoucheBCConversion.conversion(executableAt: folder.appendingPathComponent("Missing")), [])
     }
 
+    // MARK: An IPA not installed
+
+    /// An IPA as nxnative's build_ipa.sh zips one, its executable EXECUTABLE.
+    private func ipa(executable: [UInt8], named name: String = "Game") async throws -> MemorySource {
+        let sink = MemorySink()
+        let writer = CartoucheZipWriter(sink: sink)
+        try await writer.addFolder("Payload/")
+        try await writer.addFolder("Payload/Game.app/")
+        try await writer.addData("Payload/Game.app/Info.plist", Data("<plist/>".utf8))
+        // The rest of a game's executable after its header and strings,
+        // its entry deflated, as nxnative's IPAs have it.
+        try await writer.addData("Payload/Game.app/" + name, Data(executable + [UInt8](repeating: 0x1f, count: 200_000)), mode: 0o755)
+        try await writer.addData("Payload/Game.app/romfs.img", Data(repeating: 7, count: 4096))
+        try await writer.finish()
+        return MemorySource(sink.data)
+    }
+
+    private func conversion(ofIPA source: MemorySource, executable: String = "Game") async throws -> CartoucheBCConversion.APIs {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let entries = try await CartoucheZip.entries(of: source)
+        let apis = try await CartoucheBCConversion.conversion(ofIPA: source, entries: entries, executable: executable, in: folder)
+        // Nothing left of the executable unpacked.
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: folder.path), [])
+        return apis
+    }
+
+    /// A game on the Mac or in a games folder, not installed: its
+    /// executable is read where the IPA sits, as an installed game's
+    /// (decision 145), so that its sheet says its build converts the
+    /// textures rather than that nxnative refuses the GPU.
+    func testTheExecutableOfAnIPANotInstalledIsReadWhereItSits() async throws {
+        let converted = try await ipa(executable: executable([host, conversion, vulkanConversion]))
+        let apis = try await conversion(ofIPA: converted)
+        XCTAssertEqual(apis, [.nvn, .vulkan])
+
+        let nvnOnly = try await ipa(executable: executable([host, conversion]))
+        let nvn = try await conversion(ofIPA: nvnOnly)
+        XCTAssertEqual(nvn, [.nvn])
+        let upstream = try await ipa(executable: executable([host, Section(strings: [refusalAtStart, refusalAtFirstImage])]))
+        let none = try await conversion(ofIPA: upstream)
+        XCTAssertEqual(none, [])
+    }
+
+    /// The executable is the one the Info.plist names, a file at the top of
+    /// the app: another name, or a path, reads nothing.
+    func testAnIPAWithoutTheExecutableItsInfoPlistNamesConvertsNothing() async throws {
+        let source = try await ipa(executable: executable([host, conversion]), named: "Game")
+        let other = try await conversion(ofIPA: source, executable: "Other")
+        XCTAssertEqual(other, [])
+        let path = try await conversion(ofIPA: source, executable: "../Game.app/Game")
+        XCTAssertEqual(path, [])
+        let empty = try await conversion(ofIPA: source, executable: "")
+        XCTAssertEqual(empty, [])
+        let named = try await conversion(ofIPA: source, executable: "Game")
+        XCTAssertEqual(named, [.nvn])
+    }
+
     // MARK: Vulkan
 
     func testABuildWhoseVulkanLayerConvertsSaysSoToo() {

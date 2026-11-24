@@ -30,6 +30,14 @@
 //  that holds them too. Install tries the game's next copy when the server
 //  of the one offered does not answer.
 //
+//  On an iPhone whose GPU reads no BC-compressed texture, the A16's and
+//  older, Cartouche also reads, once the list is out, whether each game's
+//  build converts those textures (CartoucheBCConversion), from its
+//  executable where the IPA sits: the sheet of a game on the Mac or in a
+//  games folder then says what an installed one's says, rather than that
+//  nxnative refuses the GPU. One game after another, a few dozen
+//  megabytes of each IPA, once: what it read is kept with the rest.
+//
 
 import Combine
 import Foundation
@@ -63,6 +71,11 @@ struct CartoucheStoredGame: Codable, Hashable, Identifiable {
     /// it; none from an older Cartouche, which had one games folder.
     var server: UUID? = nil
     var folder: String? = nil
+    /// The APIs whose BC-compressed textures its build converts for a GPU
+    /// that reads none (CartoucheBCConversion.APIs), from its executable:
+    /// nil until Cartouche read it, as it does on such a GPU alone
+    /// (CartoucheStoredGames.readConversions).
+    var bcConversion: Int? = nil
     /// Whether its server does not answer from here, and its folder's
     /// place among the games folders, as the list says them now: not kept
     /// (CodingKeys).
@@ -71,12 +84,15 @@ struct CartoucheStoredGame: Codable, Hashable, Identifiable {
 
     enum CodingKeys: String, CodingKey {
         case path, size, modified, bundleId, displayName, version, build, titleId, isGame, gameFiles, gameFilesPath,
-             checkedGameFiles, server, folder
+             checkedGameFiles, server, folder, bcConversion
     }
 
     /// Its path, on its server: the same path in two games folders is two
     /// copies.
     var id: String { (server.map { $0.uuidString + "|" } ?? "") + path }
+    /// The APIs whose BC textures its build converts, once read.
+    var convertedBC: CartoucheBCConversion.APIs? { bcConversion.map(CartoucheBCConversion.APIs.init(rawValue:)) }
+
     /// Whether it needs an image of its game files the games folder lacks.
     var lacksGameFiles: Bool { gameFiles != nil && gameFilesPath == nil }
     /// What it takes in the games folder, with the image of its game files.
@@ -310,6 +326,9 @@ final class CartoucheStoredGames: ObservableObject {
     private var known: [String: CartoucheStoredGame] = [:]
     private let cacheFile: URL
     private var scan: Task<Void, Never>?
+    /// The reading of the games' builds for their conversion of BC
+    /// textures, after a scan (readConversions).
+    private var conversions: Task<Void, Never>?
     private var watching: AnyCancellable?
     #if CARTOUCHE_GALLERY
     private var shownForGallery = false
@@ -542,6 +561,87 @@ final class CartoucheStoredGames: ObservableObject {
         self.loose = loose
         publish()
         save()
+        readConversionsLater()
+    }
+
+    /// Whether Cartouche reads, of the copy GAME, whether its build
+    /// converts the BC-compressed textures: on a GPU that reads none
+    /// (READSBCTEXTURES false), for a game not read yet whose warning a
+    /// conversion lifts, by the APIs nxnative's list says it draws with,
+    /// GRAPHICS (CartoucheBCConversion.covers): never one drawn with
+    /// OpenGL.
+    nonisolated static func needsConversion(_ game: CartoucheStoredGame, graphics: String?, readsBCTextures: Bool) -> Bool {
+        !readsBCTextures && game.isGame && game.bcConversion == nil
+            && CartoucheBCConversion.covers(graphics: graphics, by: [.nvn, .vulkan])
+    }
+
+    /// Reads the games' builds for their conversion of BC textures, unless
+    /// that is under way, or this iPhone's GPU reads them.
+    private func readConversionsLater() {
+        guard !CartoucheDevice.supportsBCTextureCompression, conversions == nil else { return }
+        conversions = Task {
+            await readConversions()
+            conversions = nil
+        }
+    }
+
+    /// Reads, one copy after another, whether each game's build converts
+    /// the BC-compressed textures this iPhone's GPU reads none of, as an
+    /// installed game's is read (CartoucheInstalledBuilds.bcConversion), and
+    /// keeps it with what the scan found, for the game's sheet to say. A
+    /// copy whose server does not answer, or that iCloud has not
+    /// downloaded, is read after a later scan.
+    private func readConversions() async {
+        var tried = Set<String>()
+        let catalog = CartoucheCatalog.shared
+        while let game = found.first(where: { game in
+            !tried.contains(game.id)
+                && Self.needsConversion(game, graphics: game.titleId.flatMap { catalog.game(titleId: $0) }?.graphics,
+                                        readsBCTextures: CartoucheDevice.supportsBCTextureCompression)
+        }) {
+            tried.insert(game.id)
+            guard let server = server(of: game), !CartoucheStorageReach.shared.isSettledOffline(server.id),
+                  let apis = await conversion(of: game, on: server) else { continue }
+            let key = Self.key(server, path: game.path, size: game.size, modified: game.modified)
+            known[key]?.bcConversion = apis.rawValue
+            found = found.map { copy in
+                guard copy.id == game.id, copy.size == game.size, copy.modified == game.modified else { return copy }
+                var copy = copy
+                copy.bcConversion = apis.rawValue
+                return copy
+            }
+            publish()
+            save()
+        }
+    }
+
+    /// The APIs whose BC textures the build of GAME, on SERVER, converts,
+    /// from its executable (CartoucheBCConversion.conversion(ofIPA:)); nil
+    /// when it cannot be read now.
+    private func conversion(of game: CartoucheStoredGame, on server: CartoucheStorageServer) async -> CartoucheBCConversion.APIs? {
+        let remote: CartoucheRemote
+        do {
+            remote = try await CartoucheStorage.connect(server, settings: settings)
+        } catch {
+            return nil
+        }
+        var apis: CartoucheBCConversion.APIs?
+        // Reading a file iCloud Drive has not downloaded would download all of it.
+        let notDownloaded = (remote as? CartoucheFolder).map { !$0.isDownloaded(game.path) } ?? false
+        if !notDownloaded {
+            do {
+                let source = try await remote.open(game.path)
+                let entries = try await CartoucheZip.entries(of: source)
+                let (info, _) = try await Self.infoPlist(of: source, entries: entries)
+                apis = try await CartoucheBCConversion.conversion(
+                    ofIPA: source, entries: entries, executable: info["CFBundleExecutable"] as? String ?? "",
+                    in: FileManager.default.temporaryDirectory)
+            } catch {
+                NSLog("[Cartouche] cannot read the build of %@: %@", game.path, error.localizedDescription)
+            }
+        }
+        await remote.disconnect()
+        return apis
     }
 
     /// Reads the games folder at PATH on SERVER.

@@ -181,6 +181,12 @@
 //        gpu-no-bc-converted-vulkan      the same, built by that fork as
 //                                        since 22 November, which converts
 //                                        a Vulkan game's too
+//        mac-gpu-no-bc                   the same iPhone, paired with the
+//                                        Mac, the sheet's game there, not
+//                                        installed, built by nxnative
+//        mac-gpu-no-bc-converted         the same, built by a fork that
+//                                        converts those textures, which
+//                                        Cartouche read where the IPA sits
 //        iml-left-out                    signed by a signing app on the
 //                                        iPhone (-GallerySigning iphone),
 //                                        without Increased Memory Limit,
@@ -869,7 +875,8 @@ struct GalleryScenario {
             if work == "erasing" {
                 CartoucheReset.shared.showForGallery(.erasing)
             }
-            if ["mac", "mac-offline", "mac-builds", "mac-too-old", "mac-tailscale", "mac-tailscale-off"].contains(work) {
+            if ["mac", "mac-offline", "mac-builds", "mac-too-old", "mac-tailscale", "mac-tailscale-off",
+                "mac-gpu-no-bc", "mac-gpu-no-bc-converted"].contains(work) {
                 // The player's Mac, paired, with the games Cartouche Builder
                 // built in its Games folder; offline, away from home, the
                 // saves of two games wait for it; builds, Cartouche Builder
@@ -960,15 +967,20 @@ struct GalleryScenario {
     /// them there: built last night.
     @MainActor
     private func storedGames(in folder: String) -> [CartoucheStoredGame] {
-        ownedTitles.compactMap { titleId in
+        // The sheet's game too, when the player has it there alone, with
+        // what Cartouche read of its build (GalleryBCConversion).
+        let notInstalled = sheet.flatMap { ownedTitles.contains($0) || GalleryBCConversion.storedConversion(work) == nil ? nil : $0 }
+        return (ownedTitles + [notInstalled].compactMap { $0 }).compactMap { titleId in
             guard let game = CartoucheCatalog.shared.game(titleId: titleId) else { return nil }
             let built = Date().addingTimeInterval(-9 * 3_600)
-            return CartoucheStoredGame(
+            var stored = CartoucheStoredGame(
                 path: "/\(folder)/\(game.name) [\(titleId)].ipa", size: 21_474_836_480, modified: built,
                 bundleId: "org.nxnative." + titleId.lowercased(), displayName: game.name, version: "1.0.0",
                 build: CartoucheGameBuild(version: "1.0.0", commit: "7bddb8c1e2f3", chain: "adec7d81d970",
                                           builtAt: built.addingTimeInterval(-120)),
                 titleId: titleId, isGame: true)
+            if titleId == notInstalled { stored.bcConversion = GalleryBCConversion.storedConversion(work) }
+            return stored
         }
     }
 

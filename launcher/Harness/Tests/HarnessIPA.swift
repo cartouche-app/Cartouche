@@ -55,6 +55,10 @@ struct HarnessGame {
     /// pso/applegpu_g18p.mtl4a, a universal Mach-O of Apple's GPU, which
     /// zsign cannot sign, and the list of its pipelines.
     var pipelineArchive = false
+    /// Built by a fork of nxnative that converts BC-compressed textures for
+    /// a GPU that reads none, as nxnative-nobc does: its executable's C
+    /// strings name the conversion's setting (CartoucheBCConversion).
+    var convertsBC = false
 
     var bundleIdentifier: String { bundleIdentifierOverride ?? "org.nxnative." + titleId.lowercased() }
     /// romfs.img, the image of the game's files (dm/host/romfs_image.h).
@@ -148,7 +152,9 @@ struct HarnessGame {
             .folder("Payload/"),
             .folder(app),
             .file(app + "Info.plist", plist),
-            .file(app + executable, HarnessMachOFile.executable(sdk: sdk, encrypted: encrypted), mode: 0o755),
+            .file(app + executable, HarnessMachOFile.executable(sdk: sdk, encrypted: encrypted,
+                                                                strings: convertsBC ? HarnessMachOFile.noBCStrings : []),
+                  mode: 0o755),
             .file(app + "PkgInfo", Data("APPL????".utf8)),
             .folder(app + "dm/"),
             .file(app + "dm/launcher.json", launcherJSON),
@@ -222,6 +228,25 @@ enum HarnessCatalog {
     /// Games without a sheet, whose names are plain enough to name a bundle.
     static let gamesWithoutSheet: [Game] = games.filter { game in
         !sheets.contains(game.titleId.uppercased()) && game.name.contains(where: \.isLetter)
+    }
+
+    /// The graphics API each game draws with, by its title ID, as
+    /// nxnative.json says it: NVN for most.
+    static let graphics: [String: String] = {
+        guard let data = try? Data(contentsOf: folder.appendingPathComponent("nxnative.json")),
+              let document = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let games = document["games"] as? [[String: Any]] else { return [:] }
+        var graphics: [String: String] = [:]
+        for game in games {
+            if let titleId = game["titleId"] as? String, let api = game["graphics"] as? String { graphics[titleId] = api }
+        }
+        return graphics
+    }()
+
+    /// The places in gamesWithoutSheet of the games drawn with NVN alone,
+    /// whose BC textures a conversion of NVN's covers.
+    static var drawnWithNVN: [Int] {
+        gamesWithoutSheet.indices.filter { graphics[gamesWithoutSheet[$0].titleId] == "NVN" }
     }
 }
 
@@ -531,8 +556,15 @@ extension Data {
 /// (LC_BUILD_VERSION), and, for an app from the App Store that was not
 /// decrypted, its encryption (LC_ENCRYPTION_INFO_64).
 enum HarnessMachOFile {
-    static func executable(sdk: UInt32, minimumOS: UInt32 = 0x0011_0000, encrypted: Bool = false) -> Data {
-        image(fileType: 2, sdk: sdk, minimumOS: minimumOS, encrypted: encrypted)
+    /// The words of nxnative-nobc's build where the conversion is: its
+    /// setting, as its nvn_mtl.m logs it.
+    static let noBCStrings = ["DM_NO_BC_ASTC", "no BC: DM_NO_BC_ASTC=%s: %s%s"]
+
+    /// An executable; with STRINGS, a __TEXT segment whose __cstring
+    /// section holds them, after the code, as ld lays out a game's.
+    static func executable(sdk: UInt32, minimumOS: UInt32 = 0x0011_0000, encrypted: Bool = false,
+                           strings: [String] = []) -> Data {
+        image(fileType: 2, sdk: sdk, minimumOS: minimumOS, encrypted: encrypted, strings: strings)
     }
 
     static func library() -> Data {
@@ -564,7 +596,10 @@ enum HarnessMachOFile {
         return data + slice
     }
 
-    private static func image(fileType: UInt32, sdk: UInt32, minimumOS: UInt32, encrypted: Bool) -> Data {
+    private static func image(fileType: UInt32, sdk: UInt32, minimumOS: UInt32, encrypted: Bool,
+                              strings: [String] = []) -> Data {
+        let codeEnd = 48 << 10
+        let cStrings: [UInt8] = strings.flatMap { Array($0.utf8) + [0] }
         var commands = Data()
         commands.le32(0x32); commands.le32(24)
         commands.le32(2) // iOS
@@ -573,6 +608,20 @@ enum HarnessMachOFile {
         if encrypted {
             commands.le32(0x2C); commands.le32(24)
             commands.le32(0x4000); commands.le32(0x4000); commands.le32(1); commands.le32(0)
+            count += 1
+        }
+        if !cStrings.isEmpty {
+            // LC_SEGMENT_64 __TEXT, from the file's start, with its section
+            // __cstring (S_CSTRING_LITERALS) after the code.
+            func name(_ text: String) { commands.append(Data(text.utf8) + Data(count: 16 - text.utf8.count)) }
+            let size = UInt64(codeEnd + cStrings.count)
+            commands.le32(0x19); commands.le32(72 + 80); name("__TEXT")
+            commands.le64(0x1_0000_0000); commands.le64(size); commands.le64(0); commands.le64(size)
+            commands.le32(5); commands.le32(5); commands.le32(1); commands.le32(0)
+            name("__cstring"); name("__TEXT")
+            commands.le64(0x1_0000_0000 + UInt64(codeEnd)); commands.le64(UInt64(cStrings.count))
+            commands.le32(UInt32(codeEnd)); commands.le32(0); commands.le32(0); commands.le32(0)
+            commands.le32(0x02); commands.le32(0); commands.le32(0); commands.le32(0)
             count += 1
         }
         var data = Data()
@@ -587,10 +636,11 @@ enum HarnessMachOFile {
         data.append(commands)
         // Code that compresses as code does, rather than zeros.
         var state: UInt32 = 0x1234_5678 ^ sdk
-        while data.count < 48 << 10 {
+        while data.count < codeEnd {
             state = state &* 1_664_525 &+ 1_013_904_223
             data.le32(0xD503_201F ^ (state & 0x0000_FFE0))
         }
+        data.append(contentsOf: cStrings)
         return data
     }
 }
