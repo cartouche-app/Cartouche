@@ -69,21 +69,25 @@ struct CartoucheGuideView: View {
 
     var body: some View {
         let progress = guide.progress(entries)
-        ScrollView {
-            VStack(alignment: .leading, spacing: 14) {
-                header(progress)
-                ForEach(progress.steps) { step in
-                    card(step, progress: progress)
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    header(progress)
+                    ForEach(progress.steps) { step in
+                        card(step, progress: progress)
+                            .id(step)
+                    }
+                    Label(CartoucheText.guideNoDownloads, systemImage: "lock.shield")
+                        .font(.footnote)
+                        .foregroundStyle(CartoucheTheme.tertiaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 4)
                 }
-                Label(CartoucheText.guideNoDownloads, systemImage: "lock.shield")
-                    .font(.footnote)
-                    .foregroundStyle(CartoucheTheme.tertiaryText)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 4)
+                .padding()
+                .frame(maxWidth: 640)
+                .frame(maxWidth: .infinity)
             }
-            .padding()
-            .frame(maxWidth: 640)
-            .frame(maxWidth: .infinity)
+            .onAppear { showStepLeft(progress, with: proxy) }
         }
         .background(CartoucheStage(key: nil))
         .navigationTitle(CartoucheText.guideTitle)
@@ -147,6 +151,18 @@ struct CartoucheGuideView: View {
             // The step the player opened is done: the next one left opens.
             if let opened, progress.isDone(opened) { self.opened = nil }
         }
+    }
+
+    /// Shows the step open with the one before it above, the steps done
+    /// and the header further up: the Mac's step's four buttons show
+    /// without the player scrolling for them, on an iPhone too. The first
+    /// step shows under the header, as it is.
+    private func showStepLeft(_ progress: CartoucheGuide.Progress, with proxy: ScrollViewProxy) {
+        guard let step = opened ?? progress.current,
+              let index = progress.steps.firstIndex(of: step), index > 0 else { return }
+        let above = progress.steps[index - 1]
+        // Once the steps are laid out.
+        DispatchQueue.main.async { proxy.scrollTo(above, anchor: .top) }
     }
 
     // MARK: Header
@@ -326,9 +342,10 @@ struct CartoucheGuideView: View {
         case .build:
             detail(CartoucheText.guideBuildHow)
             // Side by side where they fit, the one over the other otherwise,
-            // and before what the Mac needs: Cartouche Cloud, the IPAs the
-            // player has already and No thanks show without the player
-            // scrolling for them, on an iPhone too.
+            // and before what the Mac needs: with the guide shown from the
+            // step before this one, Cartouche Cloud, the IPAs the player has
+            // already and No thanks show without the player scrolling for
+            // them, on an iPhone too.
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 10) { buildActions }
                 VStack(alignment: .leading, spacing: 10) { buildActions }
