@@ -95,7 +95,7 @@ jobs:
               # requests, which change only the source, and what the CI,
               # Storage, Launcher screens and Launcher harness workflows
               # check.
-              app/README.md|app/patches/README.md|app/releases/README.md|app/sidestore-source.json|app/tests/*|launcher/README.md|launcher/StorageTests/*|launcher/Gallery/*|launcher/Harness/*) ;;
+              app/README.md|app/patches/README.md|app/releases/README.md|app/sidestore-source.json|app/sidestore-player-source.json|app/tests/*|launcher/README.md|launcher/StorageTests/*|launcher/Gallery/*|launcher/Harness/*) ;;
               # What the app is built from (app/scripts/prepare.sh and
               # package.sh), each version's release notes included, which
               # What's new shows.
@@ -159,6 +159,11 @@ jobs:
           key: ${{ steps.sidestore.outputs.key }}
       - name: Build
         run: app/scripts/build.sh --prepared --sidestore-cache build/sidestore
+      # The IPA a player installs with their own SideStore, as the Release
+      # workflow makes it beside this one: ldid signs its executables again,
+      # with their own app group (docs/decisions/147.md).
+      - name: The IPA for the player's SideStore, from this build
+        run: python3 app/scripts/sidestore_ipa.py --ipa build/app/Cartouche.ipa --out build/app/Cartouche-SideStore.ipa
       # Kept even when the rest of the build fails: build.sh writes the key
       # once the SideStore is built.
       - name: Keep the SideStore in the cache
@@ -171,7 +176,9 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: Cartouche-unsigned-${{ github.sha }}
-          path: build/app/Cartouche.ipa
+          path: |
+            build/app/Cartouche.ipa
+            build/app/Cartouche-SideStore.ipa
           retention-days: 14
           if-no-files-found: error
 
@@ -195,14 +202,19 @@ jobs:
         run: |
           python3 -m venv .venv
           .venv/bin/pip install --quiet -e guard
-          .venv/bin/cartouche-guard --kind app build/download/Cartouche.ipa build/download/Cartouche-Own-Certificate.ipa
-      - name: The built-in SideStore's source would take this build
+          .venv/bin/cartouche-guard --kind app build/download/Cartouche.ipa build/download/Cartouche-Own-Certificate.ipa \
+            build/download/Cartouche-SideStore.ipa
+      - name: Both sources would take this build
         run: |
           echo '{"name": "Cartouche", "apps": []}' > build/source.json
+          echo '{"name": "Cartouche for SideStore", "apps": []}' > build/player-source.json
           echo "Checked by the App workflow." > build/notes.md
           python3 app/scripts/add_release.py --ipa build/download/Cartouche.ipa \
             --url "https://github.com/$GITHUB_REPOSITORY/releases/download/check/Cartouche.ipa" \
             --own-certificate-ipa build/download/Cartouche-Own-Certificate.ipa \
             --own-certificate-url "https://github.com/$GITHUB_REPOSITORY/releases/download/check/Cartouche-Own-Certificate.ipa" \
-            --notes build/notes.md --source build/source.json
+            --sidestore-ipa build/download/Cartouche-SideStore.ipa \
+            --sidestore-url "https://github.com/$GITHUB_REPOSITORY/releases/download/check/Cartouche-SideStore.ipa" \
+            --notes build/notes.md --source build/source.json --player-source build/player-source.json
           python3 -m json.tool build/source.json
+          python3 -m json.tool build/player-source.json

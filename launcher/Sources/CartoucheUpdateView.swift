@@ -8,6 +8,8 @@
 //  player's own certificate, the new version on offer alone: its IPA to
 //  download, signed on the iPhone, or the Cartouche Installer to install it
 //  with. A controller answers with A and B, and copies the report with Y.
+//  Installed by the player's own SideStore, the same card follows the
+//  reinstall for Increased Memory Limit (CartoucheUpdates.reinstallForMemory).
 //
 
 import SwiftUI
@@ -32,18 +34,15 @@ struct CartoucheUpdateView: View {
 
     private var title: String {
         if let notice = updates.notice, updates.phase == nil { return notice.title }
-        switch updates.phase {
-        case .preparing: return CartoucheText.updatePreparingTitle(version)
-        case .installing: return CartoucheText.updateInstallingTitle(version)
-        case nil: return CartoucheText.updateOfferTitle(version)
-        }
+        guard let phase = updates.phase else { return CartoucheText.updateOfferTitle(version) }
+        // An update, or the reinstall for Increased Memory Limit.
+        return updates.stepTitle(phase, version: version)
     }
 
     private var message: String {
         if let notice = updates.notice, updates.phase == nil { return notice.message }
         switch updates.phase {
-        case .preparing: return CartoucheText.updatePreparingMessage
-        case .installing: return CartoucheText.updateInstallingMessage
+        case let phase?: return updates.stepMessage(phase)
         case nil:
             let running = CartoucheUpdates.runningVersion
             var text = CartoucheImportedSigning.isSignedOnIPhone ? CartoucheText.updateOfferOnIPhone(running)

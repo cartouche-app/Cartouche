@@ -18,10 +18,13 @@ sys.path.insert(0, str(ROOT / "app" / "scripts"))
 
 import add_release  # noqa: E402
 import own_certificate_ipa  # noqa: E402
+import sidestore_ipa  # noqa: E402
 
 BUNDLE_ID = "io.github.clabeuhtegrite.cartouche"
 URL = "https://github.com/clabeuhtegrite/Cartouche/releases/download/v{0}/Cartouche-{0}.ipa"
 SOURCE = ROOT / "app" / "sidestore-source.json"
+PLAYER_SOURCE = ROOT / "app" / "sidestore-player-source.json"
+PLAYER_SOURCE_URL = "https://raw.githubusercontent.com/clabeuhtegrite/Cartouche/main/app/sidestore-player-source.json"
 
 
 def listed(source):
@@ -237,6 +240,114 @@ class OwnCertificateEntryTest(ReleaseFiles, unittest.TestCase):
         self.assertEqual(status, 0)
         version, = json.loads(source.read_text(encoding="utf-8"))["apps"][0]["versions"]
         self.assertEqual(version["ownCertificateDownloadURL"], self.OWN_URL.format("0.1.1"))
+
+
+
+class SideStoreEntryTest(ReleaseFiles, unittest.TestCase):
+    """The IPA a player installs with their own SideStore, in the source
+    they add to it (app/scripts/sidestore_ipa.py, docs/decisions/147.md)."""
+
+    SIDESTORE_URL = "https://github.com/clabeuhtegrite/Cartouche/releases/download/v{0}/Cartouche-{0}-SideStore.ipa"
+
+    def sidestore_ipa(self, version="0.1.1", source_url=PLAYER_SOURCE_URL, **changes):
+        """An IPA laid out as sidestore_ipa.py leaves it."""
+        release = self.ipa(version)
+        with zipfile.ZipFile(release) as archive:
+            entries = {name: archive.read(name) for name in archive.namelist()}
+        info_name = "Payload/App0.app/Info.plist"
+        info = plistlib.loads(entries[info_name])
+        info.update({
+            "CartoucheBundleIdentifier": BUNDLE_ID,
+            "CartoucheSideStoreInstall": True,
+            "CartoucheAppGroup": sidestore_ipa.GROUP,
+            "ALTAppGroups": [sidestore_ipa.GROUP],
+            "CartoucheSourceURL": source_url,
+        })
+        info.update(changes)
+        entries[info_name] = plistlib.dumps({key: value for key, value in info.items() if value is not None})
+        out = release.with_name(f"Cartouche-{version}-SideStore.ipa")
+        with zipfile.ZipFile(out, "w") as archive:
+            for name, data in entries.items():
+                archive.writestr(name, data)
+        return out
+
+    def add_sidestore(self, source, ipa, version="0.1.1", **changes):
+        arguments = dict(ipa=ipa, url=self.SIDESTORE_URL.format(version), notes="Fixes.\n",
+                         date="2026-11-07T08:00:00Z", bundle_id=BUNDLE_ID, version=version,
+                         source_url=PLAYER_SOURCE_URL)
+        arguments.update(changes)
+        return add_release.add_sidestore_release(source, **arguments)
+
+    def test_the_repository_source_for_sidestore_takes_a_release(self):
+        source = json.loads(PLAYER_SOURCE.read_text(encoding="utf-8"))
+        released = above(listed(source) + listed(json.loads(SOURCE.read_text(encoding="utf-8"))))
+        ipa = self.sidestore_ipa(released)
+        app, = self.add_sidestore(source, ipa, released)["apps"]
+        self.assertEqual(app["bundleIdentifier"], BUNDLE_ID)
+        version = app["versions"][0]
+        self.assertEqual(version["downloadURL"], self.SIDESTORE_URL.format(released))
+        self.assertEqual(version["size"], ipa.stat().st_size)
+        self.assertEqual(version["sha256"], hashlib.sha256(ipa.read_bytes()).hexdigest())
+        # SideStore reads neither IPA of the other source.
+        self.assertFalse([key for key in version if key.startswith("ownCertificate")])
+        self.assertNotEqual(source["identifier"], json.loads(SOURCE.read_text(encoding="utf-8"))["identifier"])
+
+    def test_each_source_names_its_own_ipa(self):
+        # The built-in SideStore's source never takes the IPA for the
+        # player's SideStore, which carries another app group, nor the
+        # other way round.
+        with self.assertRaisesRegex(add_release.ReleaseError, "player's SideStore"):
+            self.add({"apps": []}, self.sidestore_ipa("0.1.1"), "0.1.1")
+        with self.assertRaisesRegex(add_release.ReleaseError, "CartoucheSideStoreInstall"):
+            self.add_sidestore({"apps": []}, self.ipa("0.1.1"), "0.1.1")
+
+    def test_only_the_ipa_for_the_players_sidestore_of_this_version_is_listed(self):
+        cases = {
+            "another version's": dict(ipa=self.sidestore_ipa("0.1.0")),
+            "an address that is not https": dict(ipa=self.sidestore_ipa("0.1.1"),
+                                                 url=self.SIDESTORE_URL.format("0.1.1").replace("https", "http")),
+            "updates from another source": dict(ipa=self.sidestore_ipa(
+                "0.1.1", source_url="https://raw.githubusercontent.com/clabeuhtegrite/Cartouche/main/app/sidestore-source.json")),
+            "the built-in SideStore's own group": dict(ipa=self.sidestore_ipa(
+                "0.1.1", CartoucheAppGroup="group.com.SideStore.SideStore",
+                ALTAppGroups=["group.com.SideStore.SideStore"])),
+            "another group in ALTAppGroups": dict(ipa=self.sidestore_ipa(
+                "0.1.1", ALTAppGroups=[sidestore_ipa.GROUP, "group.com.SideStore.SideStore"])),
+            "the mode of the player's own certificate": dict(ipa=self.sidestore_ipa(
+                "0.1.1", CartoucheImportedSigning=True)),
+        }
+        for what, changes in cases.items():
+            with self.subTest(what), self.assertRaises(add_release.ReleaseError):
+                self.add_sidestore({"apps": []}, **{"ipa": None, **changes})
+
+    def test_the_command_writes_both_sources_or_neither(self):
+        directory = Path(self.directory.name)
+        source = directory / "both-source.json"
+        player = directory / "both-player-source.json"
+        source.write_text('{"apps": []}', encoding="utf-8")
+        player.write_text('{"name": "Cartouche for SideStore", "apps": []}', encoding="utf-8")
+        config = directory / "both-config.env"
+        config.write_text(f"CARTOUCHE_BUNDLE_ID={BUNDLE_ID}\nCARTOUCHE_VERSION=0.1.1\n"
+                          f"CARTOUCHE_PLAYER_SIDESTORE_SOURCE_URL={PLAYER_SOURCE_URL}\n", encoding="utf-8")
+        notes = directory / "both-notes.md"
+        notes.write_text("Fixes.\n", encoding="utf-8")
+        common = ["--ipa", str(self.ipa("0.1.1")), "--url", URL.format("0.1.1"), "--notes", str(notes),
+                  "--source", str(source), "--player-source", str(player), "--config", str(config)]
+        # A refused IPA for the player's SideStore leaves both as they were.
+        self.assertEqual(add_release.main(common + ["--sidestore-ipa", str(self.ipa("0.1.1")),
+                                                    "--sidestore-url", self.SIDESTORE_URL.format("0.1.1")]), 1)
+        self.assertEqual(json.loads(source.read_text(encoding="utf-8")), {"apps": []})
+        self.assertEqual(add_release.main(common + ["--sidestore-ipa", str(self.sidestore_ipa("0.1.1"))]), 1)
+        status = add_release.main(common + ["--sidestore-ipa", str(self.sidestore_ipa("0.1.1")),
+                                            "--sidestore-url", self.SIDESTORE_URL.format("0.1.1")])
+        self.assertEqual(status, 0)
+        version, = json.loads(source.read_text(encoding="utf-8"))["apps"][0]["versions"]
+        self.assertEqual(version["downloadURL"], URL.format("0.1.1"))
+        written = json.loads(player.read_text(encoding="utf-8"))
+        self.assertEqual(written["name"], "Cartouche for SideStore")
+        player_version, = written["apps"][0]["versions"]
+        self.assertEqual(player_version["downloadURL"], self.SIDESTORE_URL.format("0.1.1"))
+        self.assertEqual(player_version["version"], "0.1.1")
 
 
 if __name__ == "__main__":

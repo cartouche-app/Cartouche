@@ -9,7 +9,11 @@
 //  where it stands, read again whenever Cartouche comes back to the front.
 //  The Apple ID's step stays open while this iPhone is left to register,
 //  and while the sign-in stopped before the certificate, with why it
-//  stopped.
+//  stopped. Installed by the player's own SideStore
+//  (CartoucheSideStoreInstall), the pairing file is asked of that SideStore,
+//  the sign-in takes the certificate it signed Cartouche with, and a fourth
+//  step has Cartouche install itself again, once, for Increased Memory
+//  Limit (CartoucheUpdates.reinstallForMemory).
 //
 
 import SwiftUI
@@ -19,6 +23,7 @@ import UniformTypeIdentifiers
 struct CartoucheSetupView: View {
     @ObservedObject private var setup = CartoucheSetup.shared
     @ObservedObject private var account = CartoucheAccount.shared
+    @ObservedObject private var updates = CartoucheUpdates.shared
     /// The automation of Shortcuts that renews Cartouche every night: the
     /// last step, which Cartouche plays without (needsSetup).
     @ObservedObject private var nightly = CartoucheNightly.shared
@@ -48,8 +53,17 @@ struct CartoucheSetupView: View {
                         number: 1,
                         done: setup.hasPairingFile,
                         title: CartoucheText.setupPairingTitle,
-                        detail: setup.hasPairingFile ? CartoucheText.setupPairingDone : CartoucheText.setupPairingHow
+                        detail: pairingDetail
                     ) {
+                        // The player's own SideStore has this iPhone's.
+                        if sideStoreInstall && !setup.hasPairingFile {
+                            Button {
+                                CartoucheSideStoreInstall.askForPairingFile()
+                            } label: {
+                                Label(CartoucheText.sideStorePairingAsk, systemImage: "arrow.up.forward.app")
+                            }
+                            .buttonStyle(.borderedProminent)
+                        }
                         Button {
                             choosingPairingFile = true
                         } label: {
@@ -128,15 +142,17 @@ struct CartoucheSetupView: View {
                         }
                     }
                 }
+                if sideStoreInstall { memoryStep }
                 if setup.usesImportedSigning, let signature = CartoucheOwnSignature.current {
                     CartoucheOwnSignatureBox(signature: signature)
                 }
                 if renewsItself {
                     renewalNote
                     // After LocalDevVPN, whose action the automation runs
-                    // before Refresh All Apps.
+                    // before Refresh All Apps; after Increased Memory Limit
+                    // for the IPA of the player's own SideStore.
                     step(
-                        number: 4,
+                        number: sideStoreInstall ? 5 : 4,
                         done: nightly.state.isDone,
                         title: CartoucheText.renewEveryNight,
                         detail: nightly.detail
@@ -195,8 +211,75 @@ struct CartoucheSetupView: View {
         }
     }
 
+    /// Installed by the player's own SideStore, from its source for
+    /// SideStore.
+    private var sideStoreInstall: Bool { CartoucheSideStoreInstall.isSideStoreInstall }
+
+    private var pairingDetail: String {
+        if setup.hasPairingFile { return CartoucheText.setupPairingDone }
+        return sideStoreInstall ? CartoucheText.sideStorePairingHow : CartoucheText.setupPairingHow
+    }
+
+    /// Increased Memory Limit, which the player's own SideStore leaves out
+    /// on a free team: Cartouche installs itself again, once, through the
+    /// built-in SideStore, which asks Apple for it.
+    private var memoryStep: some View {
+        let memory = CartoucheSideStoreInstall.memory
+        let reinstalling = updates.kind == .memory ? updates.phase : nil
+        return step(number: 4, done: memory == .granted, title: CartoucheText.sideStoreMemoryTitle,
+                    detail: memoryDetail(memory)) {
+            if let phase = reinstalling {
+                VStack(alignment: .leading, spacing: 6) {
+                    Label(updates.stepTitle(phase, version: CartoucheUpdates.runningVersion), systemImage: "arrow.down.circle")
+                        .font(.subheadline.weight(.semibold))
+                    if phase == .preparing, let progress = updates.progress {
+                        // SideStore reports its progress from another
+                        // thread: read it twice a second.
+                        TimelineView(.periodic(from: .now, by: 0.5)) { _ in
+                            ProgressView(value: progress.fractionCompleted)
+                        }
+                    } else {
+                        ProgressView()
+                    }
+                    Text(updates.stepMessage(phase))
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            } else if memory == .reinstall {
+                Button {
+                    updates.reinstallForMemory()
+                } label: {
+                    Label(CartoucheText.sideStoreMemoryButton, systemImage: "memorychip")
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!updates.canReinstallForMemory || account.phase != nil)
+                // Why the last reinstall did not go through.
+                if updates.kind == .memory, let report = updates.problemReport {
+                    Label(report.message, systemImage: "exclamationmark.triangle.fill")
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                        .fixedSize(horizontal: false, vertical: true)
+                    CartoucheReportButton(report: report)
+                        .font(.footnote)
+                        .buttonStyle(.bordered)
+                }
+            }
+        }
+    }
+
+    private func memoryDetail(_ memory: CartoucheSideStoreMemory) -> String {
+        switch memory {
+        case .granted: return CartoucheText.sideStoreMemoryGranted
+        case .afterSetup: return CartoucheText.sideStoreMemoryAfterSetup
+        case .reinstall: return CartoucheText.sideStoreMemoryReinstall
+        }
+    }
+
     private var appleIDDetail: String {
-        guard let appleID = setup.appleID else { return CartoucheText.setupAppleIDHow }
+        guard let appleID = setup.appleID else {
+            return sideStoreInstall ? CartoucheText.sideStoreAppleIDHow : CartoucheText.setupAppleIDHow
+        }
         // The sign-in stopped before the certificate: signing in again
         // brings it.
         if setup.signInStep == .unfinished {
@@ -228,7 +311,7 @@ struct CartoucheSetupView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(setup.needsSetup ? CartoucheText.setupIntroTitle : CartoucheText.setupAllDone)
+            Text(headerTitle)
                 .font(.system(.largeTitle, design: .rounded, weight: .bold))
             Text(headerDetail)
                 .foregroundStyle(.secondary)
@@ -236,10 +319,20 @@ struct CartoucheSetupView: View {
         .padding(.bottom, 4)
     }
 
+    private var headerTitle: String {
+        if setup.needsSetup { return CartoucheText.setupIntroTitle }
+        return setup.memoryLeft ? CartoucheText.sideStoreMemoryLeftTitle : CartoucheText.setupAllDone
+    }
+
     /// With the player's own certificate, Cartouche renews nothing: the
-    /// certificate is the only step.
+    /// certificate is the only step. Installed by the player's own
+    /// SideStore, Increased Memory Limit is a fourth.
     private var headerDetail: String {
         if CartoucheImportedSigning.isSignedElsewhere { return CartoucheText.setupIntroSignedElsewhere }
+        if sideStoreInstall {
+            if setup.needsSetup { return CartoucheText.sideStoreIntro }
+            if setup.memoryLeft { return CartoucheText.sideStoreMemoryLeft }
+        }
         if setup.usesImportedSigning {
             return setup.needsSetup ? CartoucheText.setupIntroOwnCertificate : CartoucheText.setupAllDoneOwnCertificate
         }
@@ -320,7 +413,7 @@ struct CartoucheSetupBanner: View {
     @ObservedObject private var account = CartoucheAccount.shared
 
     var body: some View {
-        if setup.needsSetup {
+        if setup.showsBanner {
             NavigationLink {
                 CartoucheSetupView()
             } label: {
@@ -357,17 +450,30 @@ struct CartoucheSetupBanner: View {
 /// What the setup banners say, over the home and the games.
 @available(iOS 17.0, *)
 extension CartoucheSetup {
+    /// Installed by the player's own SideStore and set up, without
+    /// Increased Memory Limit: Cartouche installs itself again for it.
+    var memoryLeft: Bool {
+        CartoucheSideStoreInstall.isSideStoreInstall && CartoucheSideStoreInstall.memory == .reinstall
+    }
+
+    /// Whether the banners show: the setup is left, or Increased Memory
+    /// Limit.
+    var showsBanner: Bool { needsSetup || memoryLeft }
+
     var bannerIcon: String {
-        certificateRefused ? "exclamationmark.shield.fill" : canPlay ? "arrow.triangle.2.circlepath" : "checklist"
+        if !needsSetup && memoryLeft { return "memorychip" }
+        return certificateRefused ? "exclamationmark.shield.fill" : canPlay ? "arrow.triangle.2.circlepath" : "checklist"
     }
 
     var bannerTitle: String {
+        if !needsSetup && memoryLeft { return CartoucheText.sideStoreMemoryBannerTitle }
         if CartoucheImportedSigning.isSignedElsewhere { return CartoucheText.signedElsewhereTitle }
         if certificateRefused { return CartoucheText.setupBannerCertificate }
         return canPlay ? CartoucheText.setupBannerRenewal : CartoucheText.setupBannerTitle
     }
 
     func bannerDetail(signingInAgain: Bool, registeringDevice: Bool = false) -> String {
+        if !needsSetup && memoryLeft { return CartoucheText.sideStoreMemoryBannerDetail }
         if CartoucheImportedSigning.isSignedElsewhere { return CartoucheText.setupBannerSignedElsewhere }
         if usesImportedSigning {
             if CartoucheImportedSigning.isSignedOnIPhone {

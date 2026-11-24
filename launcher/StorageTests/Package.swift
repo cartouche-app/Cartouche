@@ -13,7 +13,8 @@
 // submodule app/SMBClient, and Package.resolved, which matches the one of
 // app/patches/livecontainer/0007 (app/tests/test_storage_tests.py). Without
 // CARTOUCHE_STORAGE_SERVERS, every test is skipped but OfflineTests,
-// MacBridgeTests and SMBRefusalTests, which need no server.
+// MacBridgeTests, ConnectionsExchangeTests, GamesFoldersTests and
+// SMBRefusalTests, which need no server.
 
 import PackageDescription
 

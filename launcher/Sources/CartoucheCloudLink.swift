@@ -91,6 +91,14 @@ final class CartoucheCloudLink: ObservableObject {
         return account.toInstall().map(CartoucheCloudBuilt.init)
     }
 
+    /// Of those, the games whose title is none of INSTALLED, the title IDs
+    /// of the games on this iPhone (CartoucheCatalog.installedTitles): those
+    /// left to install, which System counts.
+    func toInstall(installed: Set<String>) -> [CartoucheCloudBuilt] {
+        guard isLinked, let account else { return [] }
+        return account.toInstall(installed: installed).map(CartoucheCloudBuilt.init)
+    }
+
     // MARK: Reading the account
 
     /// Reads the account's games from now on, every few seconds, until

@@ -63,6 +63,27 @@
       "work": "certificate"
     },
     {
+      "name": "iphone-home-sidestore-memory",
+      "comment": "The home of a Cartouche the player's own SideStore installed, once set up (signing: sidestore): the banner for Increased Memory Limit, which that SideStore left out on a free team.",
+      "screen": "games",
+      "signing": "sidestore",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-home-landscape",
       "screen": "games",
       "owned": [
@@ -357,7 +378,7 @@
     },
     {
       "name": "iphone-cloud-games",
-      "comment": "This iPhone linked: the account's credits, those held for the game being built, and its games, in the site's words: being built, at its fifth step of six, with the time left; waiting for it; built, with Install and when it is deleted; and not built, with why and until when the site builds it again.",
+      "comment": "This iPhone linked: the account's credits, those held for the game being built, and its games, each with its cover, in the site's words: being built, at its fifth step of six, with the phases of the build of the game itself, its shaders under way with how much of them is done and the time left; waiting for it; built, with Install and when it is deleted; built and installed on this iPhone since, On this iPhone in place of Install; and not built, with why and until when the site builds it again.",
       "screen": "cloud",
       "owned": [
         "0400C3F00006E000",
@@ -377,8 +398,29 @@
       "work": "cloud-games"
     },
     {
+      "name": "iphone-cloud-games-whole",
+      "comment": "The same page whole, down to the games built: 13 Sentinels with Install, and Mario Kart World, installed on this iPhone since, with On this iPhone in its place; then Balatro, not built.",
+      "screen": "cloud",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 1366,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-games"
+    },
+    {
       "name": "iphone-system-cloud",
-      "comment": "The System page down to Cartouche Cloud's row, linked, with the game built to install.",
+      "comment": "The System page down to Cartouche Cloud's row, linked, with the game built to install: 1, not counting the one built that this iPhone has installed already.",
       "screen": "system",
       "owned": [
         "0400C3F00006E000",
@@ -482,6 +524,28 @@
         34,
         0
       ]
+    },
+    {
+      "name": "iphone-sheet-games-folders",
+      "comment": "A game the player does not have yet, in both games folders, newer on the NAS, which does not answer: Install from Google Drive, also in the NAS, offline.",
+      "screen": "sheet",
+      "sheet": "01003FC01670C000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "games-folders"
     },
     {
       "name": "iphone-sheet-new-release",
@@ -1574,6 +1638,40 @@
       ]
     },
     {
+      "name": "iphone-setup-sidestore",
+      "comment": "The setup of a Cartouche the player's own SideStore installed, from Cartouche's source for SideStore (signing: sidestore): the pairing file asked of that SideStore, the sign-in with its Apple ID, and Increased Memory Limit, left for after the setup.",
+      "screen": "setup",
+      "signing": "sidestore",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-setup-sidestore-memory",
+      "comment": "The same once set up: Increased Memory Limit, which the player's SideStore left out on a free team, and the reinstall that gets it.",
+      "screen": "setup",
+      "signing": "sidestore",
+      "owned": [],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-setup-signed-elsewhere",
       "comment": "The IPA for an Apple ID, signed by a signing app without its app group, which cannot sign in (work: signed-elsewhere): the setup offers the IPA for the player's own certificate.",
       "screen": "setup",
@@ -2210,6 +2308,27 @@
         0
       ],
       "work": "offline"
+    },
+    {
+      "name": "iphone-storage-games-folders",
+      "comment": "Two games folders, a NAS's, out of reach away from home, and a Google Drive's: the NAS's games that the Drive holds too install from the Drive meanwhile.",
+      "screen": "storage",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "games-folders"
     },
     {
       "name": "iphone-storage-names",

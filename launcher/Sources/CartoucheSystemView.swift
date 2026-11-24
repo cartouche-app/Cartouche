@@ -350,7 +350,8 @@ struct CartoucheSystemView: View {
     /// Where the account is, in a word or two.
     private var cloudState: String {
         guard cloud.isLinked else { return CartoucheText.cloudNotLinked }
-        let built = cloud.builtGames.count
+        // Those on this iPhone already are installed.
+        let built = cloud.toInstall(installed: catalog.installedTitles(among: sharedModel.apps)).count
         if built > 0 { return CartoucheText.cloudBuiltCount(built) }
         if cloud.account?.isBusy == true { return CartoucheText.cloudUnderWay }
         return CartoucheText.cloudLinked
@@ -647,7 +648,7 @@ struct CartoucheSystemView: View {
         if let phase = updates.phase {
             let version = updates.target?.version ?? ""
             VStack(alignment: .leading, spacing: 8) {
-                Label(phase == .installing ? CartoucheText.updateInstallingTitle(version) : CartoucheText.updatePreparingTitle(version),
+                Label(updates.stepTitle(phase, version: version),
                       systemImage: "arrow.down.circle")
                     .foregroundStyle(.secondary)
                 if phase == .preparing, let progress = updates.progress {
@@ -657,7 +658,7 @@ struct CartoucheSystemView: View {
                         ProgressView(value: progress.fractionCompleted)
                     }
                 } else {
-                    Text(CartoucheText.updateInstallingMessage)
+                    Text(updates.stepMessage(.installing))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }

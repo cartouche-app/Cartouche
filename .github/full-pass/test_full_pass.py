@@ -504,6 +504,14 @@ class WaitTests(unittest.TestCase):
         self.assertTrue(outcome.passed)
         self.assertIn("The full test pass of bbbbbbbbbbbb passed, and the commits since change only", outcome.message)
 
+    def test_an_earlier_pass_holds_when_both_sources_changed_since(self):
+        # Since the IPA for the player's SideStore (docs/decisions/147.md),
+        # that pull request adds the release to its source too.
+        git = Git(history={SHA: EARLIER},
+                  changes={(EARLIER, SHA): {"app/sidestore-source.json", "app/sidestore-player-source.json"}})
+        outcome = self.wait(Api(passed_on_main=[run(13, sha=EARLIER)]), git, start=False)
+        self.assertTrue(outcome.passed)
+
     def test_an_earlier_pass_does_not_hold_when_anything_else_changed(self):
         git = Git(history={SHA: EARLIER},
                   changes={(EARLIER, SHA): {"app/sidestore-source.json", "launcher/Sources/CartoucheHome.swift"}})

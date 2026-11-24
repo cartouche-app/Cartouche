@@ -171,6 +171,7 @@ final class CartoucheSetup: ObservableObject {
 
     var canPlay: Bool { true }
     var needsSetup: Bool { false }
+    var showsBanner: Bool { false }
     var bannerIcon: String { "checkmark.circle.fill" }
     var bannerTitle: String { "" }
 
