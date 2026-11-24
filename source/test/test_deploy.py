@@ -1,14 +1,20 @@
 """Checks source/deploy.sh against a stand-in for Cloudflare's API and for
 the source's address.
 
-- without the secrets, the deploy does nothing;
-- it uploads worker.js as it is, as the Worker cartouche-source's module,
-  with no binding and no logs kept, and turns off its workers.dev address;
-- the token goes to Cloudflare in a header, and is never printed;
-- when the address gives the source, the deploy says so; when it does not,
-  as before the domain is attached to the Worker, it warns with the steps
-  that attach it, and does not fail;
-- Cloudflare refusing the upload fails the deploy with its errors.
+- without the domain's token, the deploy does nothing;
+- it reads the zone, and deploys in the zone's account: worker.js as it is,
+  as the Worker cartouche-source's module, with no binding and no logs kept,
+  without its workers.dev address;
+- it attaches source.cartouche.cloud to the Worker, with the zone, once:
+  a deploy again leaves the domain as it is; a domain another Worker has
+  stops it;
+- it removes the copy the first deploy left in the telemetry's account,
+  with the telemetry's token, and says when there is none;
+- while the domain's token may not deploy Workers, it warns with what to add
+  to it, and does not fail; any other refusal fails it with Cloudflare's
+  errors;
+- the tokens go to Cloudflare in headers, and are never printed;
+- it says whether the address gives the source, and warns when it does not.
 
 Run from the repository root: python3 -m unittest discover -s source/test -v
 """
@@ -24,13 +30,27 @@ from email.parser import BytesParser
 from email.policy import HTTP
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
 HERE = Path(__file__).resolve().parent
 DEPLOY = HERE.parent / "deploy.sh"
 WORKER = HERE.parent / "worker.js"
 SOURCE = HERE.parent.parent / "app" / "sidestore-player-source.json"
-TOKEN = "cf-token-that-must-never-be-printed"
-ACCOUNT = "0123456789abcdef0123456789abcdef"
+TOKEN = "domain-token-that-must-never-be-printed"
+TELEMETRY_TOKEN = "telemetry-token-that-must-never-be-printed"
+ACCOUNT = "c0ffee00c0ffee00c0ffee00c0ffee00"
+TELEMETRY_ACCOUNT = "0123456789abcdef0123456789abcdef"
+ZONE_ID = "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a"
+HOST = "source.cartouche.cloud"
+PERMISSIONS = "add Account › Workers Scripts › Edit and Zone › Workers Routes › Edit"
+
+
+def ok(result=None):
+    return 200, {"success": True, "errors": [], "messages": [], "result": {} if result is None else result}
+
+
+def refused(status, code, message):
+    return status, {"success": False, "errors": [{"code": code, "message": message}], "messages": [], "result": None}
 
 
 class StandIn:
@@ -38,18 +58,60 @@ class StandIn:
 
     def __init__(self):
         self.calls: list[tuple[str, str, dict, bytes]] = []
+        self.may_deploy = True
         self.refuse_upload = False
+        self.domains: list[dict] = []
+        self.telemetry_copy = True
         self.source: tuple[int, bytes] = (200, SOURCE.read_bytes())
 
-    def answer(self, method, path, headers, body):
+    def answer(self, method, url, headers, body):
+        parts = urlsplit(url)
+        path, query = parts.path, parse_qs(parts.query)
         if path == "/source/":
-            return self.source
-        self.calls.append((method, path, headers, body))
-        if headers.get("Authorization") != f"Bearer {TOKEN}":
-            return 403, json.dumps({"success": False, "errors": [{"code": 10000, "message": "Authentication error"}]}).encode()
-        if method == "PUT" and path.endswith("/workers/scripts/cartouche-source") and self.refuse_upload:
-            return 400, json.dumps({"success": False, "errors": [{"code": 10021, "message": "Uncaught SyntaxError"}]}).encode()
-        return 200, json.dumps({"success": True, "errors": [], "result": {}}).encode()
+            return self.source[0], self.source[1]
+        self.calls.append((method, url, headers, body))
+        status, answer = self.api(method, path, query, headers.get("Authorization"), body)
+        return status, json.dumps(answer).encode()
+
+    def api(self, method, path, query, authorization, body):
+        path = path.removeprefix("/client/v4")
+        if authorization == f"Bearer {TELEMETRY_TOKEN}":
+            if method == "DELETE" and path == f"/accounts/{TELEMETRY_ACCOUNT}/workers/scripts/cartouche-source":
+                if not self.telemetry_copy:
+                    return refused(404, 10007, "workers.api.error.script_not_found")
+                self.telemetry_copy = False
+                return ok(None)
+            return refused(403, 10000, "Authentication error")
+        if authorization != f"Bearer {TOKEN}":
+            return refused(403, 10000, "Authentication error")
+        if method == "GET" and path == "/zones":
+            self.assert_equal(query, {"name": ["cartouche.cloud"]})
+            return ok([{"id": ZONE_ID, "name": "cartouche.cloud", "account": {"id": ACCOUNT, "name": "cartouche.cloud"}}])
+        if not path.startswith(f"/accounts/{ACCOUNT}/workers/"):
+            return refused(404, 7003, "Could not route to " + path)
+        if not self.may_deploy:
+            return refused(403, 10000, "Authentication error")
+        rest = path.removeprefix(f"/accounts/{ACCOUNT}/workers/")
+        if method == "PUT" and rest == "scripts/cartouche-source":
+            if self.refuse_upload:
+                return refused(400, 10021, "Uncaught SyntaxError")
+            return ok({"id": "cartouche-source"})
+        if method == "POST" and rest == "scripts/cartouche-source/subdomain":
+            return ok({"enabled": False})
+        if method == "GET" and rest == "domains":
+            return ok([one for one in self.domains if one["hostname"] in query.get("hostname", [one["hostname"]])])
+        if method == "PUT" and rest == "domains":
+            asked = json.loads(body)
+            domain = {"id": "d1", "hostname": asked["hostname"], "service": asked["service"], "zone_id": asked["zone_id"],
+                      "zone_name": "cartouche.cloud", "environment": "production"}
+            self.domains.append(domain)
+            return ok(domain)
+        return refused(404, 7003, "Could not route to " + path)
+
+    @staticmethod
+    def assert_equal(a, b):
+        if a != b:
+            raise AssertionError(f"{a!r} != {b!r}")
 
 
 def serve(standin: StandIn) -> ThreadingHTTPServer:
@@ -64,7 +126,7 @@ def serve(standin: StandIn) -> ThreadingHTTPServer:
             self.end_headers()
             self.wfile.write(answer)
 
-        do_GET = do_PUT = do_POST = handle_one
+        do_GET = do_PUT = do_POST = do_DELETE = handle_one
 
         def log_message(self, *args):
             pass
@@ -93,27 +155,38 @@ class DeployTest(unittest.TestCase):
 
     def deploy(self, **values) -> subprocess.CompletedProcess:
         env = {key: value for key, value in os.environ.items() if not key.startswith(("CLOUDFLARE_", "GITHUB_"))}
-        env.update(CLOUDFLARE_API_TOKEN=TOKEN, CLOUDFLARE_ACCOUNT_ID=ACCOUNT, CLOUDFLARE_API=f"{self.base}/client/v4",
-                   CARTOUCHE_SOURCE_ADDRESS=f"{self.base}/source/", GITHUB_STEP_SUMMARY=str(self.summary))
+        env.update(CLOUDFLARE_DOMAIN_TOKEN=TOKEN, CLOUDFLARE_API_TOKEN=TELEMETRY_TOKEN, CLOUDFLARE_ACCOUNT_ID=TELEMETRY_ACCOUNT,
+                   CLOUDFLARE_API=f"{self.base}/client/v4", CARTOUCHE_SOURCE_ADDRESS=f"{self.base}/source/",
+                   CARTOUCHE_SOURCE_TRIES="1", GITHUB_STEP_SUMMARY=str(self.summary))
         env.update(values)
         env = {key: value for key, value in env.items() if value is not None}
         result = subprocess.run([str(DEPLOY)], env=env, capture_output=True, text=True, timeout=60)
-        self.assertNotIn(TOKEN, result.stdout + result.stderr)
+        for token in (TOKEN, TELEMETRY_TOKEN):
+            self.assertNotIn(token, result.stdout + result.stderr)
         return result
 
-    def test_without_the_secrets_it_does_nothing(self):
-        result = self.deploy(CLOUDFLARE_API_TOKEN=None)
+    def asked(self):
+        return [(method, url.removeprefix("/client/v4")) for method, url, _, _ in self.standin.calls]
+
+    def test_without_the_domains_token_it_does_nothing(self):
+        result = self.deploy(CLOUDFLARE_DOMAIN_TOKEN=None)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("is not deployed", result.stdout)
         self.assertEqual(self.standin.calls, [])
 
-    def test_it_uploads_the_worker_and_turns_off_its_workers_dev_address(self):
+    def test_it_deploys_in_the_zones_account_and_attaches_the_domain(self):
         result = self.deploy()
         self.assertEqual(result.returncode, 0, result.stderr)
-        prefix = f"/client/v4/accounts/{ACCOUNT}/workers/scripts/cartouche-source"
-        self.assertEqual([(method, path) for method, path, _, _ in self.standin.calls],
-                         [("PUT", prefix), ("POST", prefix + "/subdomain")])
-        _, _, headers, body = self.standin.calls[0]
+        scripts = f"/accounts/{ACCOUNT}/workers/scripts/cartouche-source"
+        self.assertEqual(self.asked(), [
+            ("GET", "/zones?name=cartouche.cloud"),
+            ("PUT", scripts),
+            ("POST", scripts + "/subdomain"),
+            ("GET", f"/accounts/{ACCOUNT}/workers/domains?hostname={HOST}"),
+            ("PUT", f"/accounts/{ACCOUNT}/workers/domains"),
+            ("DELETE", f"/accounts/{TELEMETRY_ACCOUNT}/workers/scripts/cartouche-source"),
+        ])
+        _, _, headers, body = self.standin.calls[1]
         uploaded = parts(headers, body)
         self.assertEqual(uploaded["worker.js"], ("application/javascript+module", WORKER.read_bytes()))
         metadata = json.loads(uploaded["metadata"][1])
@@ -121,7 +194,46 @@ class DeployTest(unittest.TestCase):
         self.assertEqual(metadata["bindings"], [])
         self.assertEqual(metadata["observability"], {"enabled": False})
         self.assertRegex(metadata["compatibility_date"], r"^\d{4}-\d{2}-\d{2}$")
-        self.assertEqual(json.loads(self.standin.calls[1][3]), {"enabled": False, "previews_enabled": False})
+        self.assertEqual(json.loads(self.standin.calls[2][3]), {"enabled": False, "previews_enabled": False})
+        self.assertEqual(json.loads(self.standin.calls[4][3]), {"hostname": HOST, "service": "cartouche-source", "zone_id": ZONE_ID})
+        self.assertIn("Removed the copy of cartouche-source from the telemetry's account", result.stdout)
+        self.assertFalse(self.standin.telemetry_copy)
+
+    def test_a_deploy_again_keeps_the_domain_and_finds_no_copy_to_remove(self):
+        self.deploy()
+        self.standin.calls.clear()
+        result = self.deploy()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn(("PUT", f"/accounts/{ACCOUNT}/workers/domains"), self.asked())
+        self.assertIn(f"{HOST} is the Worker's domain", result.stdout)
+        self.assertIn("The telemetry's account has no copy of cartouche-source", result.stdout)
+        self.assertEqual(len(self.standin.domains), 1)
+
+    def test_without_the_telemetrys_secrets_it_removes_nothing(self):
+        result = self.deploy(CLOUDFLARE_API_TOKEN=None, CLOUDFLARE_ACCOUNT_ID=None)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn("DELETE", [method for method, _ in self.asked()])
+
+    def test_a_domain_another_worker_has_stops_it(self):
+        self.standin.domains.append({"id": "d0", "hostname": HOST, "service": "something-else", "zone_id": ZONE_ID})
+        result = self.deploy()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("is the domain of the Worker something-else", result.stderr)
+
+    def test_while_the_token_may_not_deploy_it_warns_with_what_to_add_and_does_not_fail(self):
+        self.standin.may_deploy = False
+        result = self.deploy()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("::warning::The token Cartouche domain may not deploy the source's Worker yet", result.stdout)
+        self.assertIn(PERMISSIONS, result.stdout)
+        self.assertIn(PERMISSIONS, self.summary.read_text())
+        self.assertEqual([method for method, _ in self.asked()], ["GET", "PUT"])
+
+    def test_a_refused_upload_fails_the_deploy(self):
+        self.standin.refuse_upload = True
+        result = self.deploy()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("10021: Uncaught SyntaxError", result.stderr)
 
     def test_it_says_when_the_address_gives_the_source(self):
         result = self.deploy()
@@ -129,22 +241,14 @@ class DeployTest(unittest.TestCase):
         self.assertNotIn("::warning::", result.stdout)
         self.assertIn(f"{self.base}/source/", self.summary.read_text())
 
-    def test_until_the_domain_is_attached_it_warns_with_the_steps_and_does_not_fail(self):
+    def test_it_warns_when_the_address_does_not_give_the_source_yet(self):
         for answer in [(404, b"not found"), (200, b"<!doctype html>"), (200, b'{"identifier": "another", "apps": []}')]:
             with self.subTest(answer=answer):
                 self.standin.source = answer
                 result = self.deploy()
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertIn("::warning::", result.stdout)
-                self.assertIn("Workers & Pages › cartouche-source › Settings › Domains & Routes › Add › Custom domain › source.cartouche.cloud",
-                              result.stdout)
-
-    def test_a_refused_upload_fails_the_deploy(self):
-        self.standin.refuse_upload = True
-        result = self.deploy()
-        self.assertEqual(result.returncode, 1)
-        self.assertIn("10021: Uncaught SyntaxError", result.stderr)
-        self.assertEqual(len(self.standin.calls), 1)
+                self.assertIn("does not give the source yet", result.stdout)
 
 
 if __name__ == "__main__":
