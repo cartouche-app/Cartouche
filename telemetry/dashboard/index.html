@@ -169,6 +169,7 @@
 
     /* Stat tiles. */
     .tiles { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
+    @media (min-width: 1000px) { .tiles { grid-template-columns: repeat(4, 1fr); } }
     .tile { background: var(--surface); border: 1px solid var(--ring); border-radius: var(--radius); padding: 14px 16px 12px; display: flex; flex-direction: column; min-width: 0; }
     .tile .label { color: var(--ink-2); font-size: 13px; }
     .tile .value { font-size: 30px; font-weight: 650; line-height: 1.15; margin-top: 4px; letter-spacing: -.02em; }
@@ -381,7 +382,8 @@
     <div class="wrap">
         <nav class="jump" aria-label="Sections">
             <a href="#regarder">À regarder</a><a href="#parcours">Parcours</a><a href="#versions">Versions</a><a href="#jeux">Jeux</a><a href="#compatibilite">Par appareil</a>
-            <a href="#fins">Plantages</a><a href="#erreurs">Erreurs</a><a href="#builder">Builder</a><a href="#mac">Mac</a>
+            <a href="#fins">Plantages</a><a href="#erreurs">Erreurs</a><a href="#renouvellements">Renouvellements</a><a href="#stockage">Stockage</a>
+            <a href="#builder">Builder</a><a href="#cloud">Cloud</a><a href="#mac">Mac</a>
             <a href="#activite">Activité</a><a href="#fluidite">Fluidité</a><a href="#chaleur">Chaleur</a><a href="#memoire">Mémoire</a>
             <a href="#appareils">Appareils</a><a href="#installations">Installations</a><a href="#problemes">Problèmes</a><a href="#serveur">Serveur</a>
         </nav>
@@ -455,7 +457,7 @@
 
     // What "À regarder" lists: how many points at most, and from how many
     // copies, iPhones, Macs or failures each kind is worth a look.
-    const ATTENTION = { items: 8, signInCopies: 3, gameIphones: 2, buildMacs: 2, newErrorCopies: 2, crashIphones: 2, memoryShare: 0.95 };
+    const ATTENTION = { items: 8, signInCopies: 3, gameIphones: 2, buildMacs: 2, newErrorCopies: 2, crashIphones: 2, memoryShare: 0.95, renewalCopies: 3, cloudBuilds: 2 };
 
     // Every field of a session the page shows, so that a field the server
     // starts to send is not left out (telemetry/test/dashboard.test.js).
@@ -603,6 +605,16 @@
 
     // Cartouche Builder's reports come from a Mac: events named builder.*.
     const fromMac = (report) => (typeof report.name === "string" && report.name.startsWith("builder.")) || /^Mac/.test(report.device ?? "");
+    // Cartouche Cloud's platform says how the builds of its Macs ended and
+    // what the page that sends a game refused: events named cloud.*, of no
+    // iPhone and no player's Mac.
+    const fromCloud = (report) => typeof report.name === "string" && report.name.startsWith("cloud.");
+    // Where a game installed on an iPhone came from: since 0.15.0, the file,
+    // the kind of storage, the Mac or Cartouche Cloud (from); before,
+    // whether it came from the games folder (fromStorage), or nothing.
+    const originOf = (event) => text(event.fields.from) ?? (event.fields.fromStorage === true ? "storage" : event.fields.fromStorage === false ? "file" : null);
+    // The latest of a list of reports, by seq.
+    const lastOf = (list) => latestBy(list, () => "")[0] ?? null;
     const endOf = (session) => END_OF[session["end.kind"]] ?? "ok";
     const cadence = (session) => {
         const fps = num(session["fps.median"]);
@@ -710,8 +722,9 @@
         const all = expand(data);
         const days = shownDays(data, [...all.sessions, ...all.events]);
         const sessionsAll = latestSessions(all.sessions.filter((session) => !fromMac(session)));
-        const phoneEvents = all.events.filter((event) => !fromMac(event));
-        const macEvents = all.events.filter(fromMac);
+        const phoneEvents = all.events.filter((event) => !fromMac(event) && !fromCloud(event));
+        const macEvents = all.events.filter((event) => fromMac(event) && !fromCloud(event));
+        const cloudEvents = all.events.filter(fromCloud);
         const gameId = (report) => gameOf(catalog, report.game).id;
 
         // What the filters offer, from the whole window.
@@ -1034,8 +1047,70 @@
             byGame: countBy(installed, (event) => gameId(event) ?? "?").map((row) => ({ ...row, name: gameOf(catalog, row.key).name })).slice(0, 12),
             versions: countBy(installed, (event) => (text(event.fields.version) ? (gameOf(catalog, event.game).name ?? event.game ?? "?") + " " + event.fields.version : null)).slice(0, 8),
             builds: countBy(installed, (event) => text(event.fields.nxnative)).slice(0, 6),
-            fromStorage: share(installed, (event) => event.fields.fromStorage),
+            // Where they came from, and how the Mac was reached for those of the
+            // Mac: through the cable or the network (link), from the version
+            // that brings the cable.
+            from: countBy(installed, originOf),
+            fromKnown: installed.filter((event) => originOf(event) !== null).length,
+            link: countBy(installed.filter((event) => originOf(event) === "mac"), (event) => text(event.fields.link)),
+            // A copy from another games folder than the first, offered as the
+            // first did not answer (folder, from the version that brings
+            // several games folders).
+            otherFolder: share(installed.filter((event) => text(event.fields.folder)), (event) => event.fields.folder === "other"),
             size: median(installed.map((event) => event.fields.sizeMiB)),
+        };
+
+        // MARK: Renewals
+        // Cartouche's signature: what renewed it, seen at the next start
+        // (signature.renewed, its via from the version of November 13),
+        // Cartouche's own renewals that went through (renewal.done) and those
+        // that failed (errors at renewal), and how many days each copy had
+        // left as it last opened. A copy whose last renewal of its own
+        // failed this week, with no signature renewed since, may run out.
+        const renewedList = named("signature.renewed");
+        const renewalsDone = named("renewal.done");
+        const renewalErrors = errors.filter((event) => event.fields.origin === "renewal");
+        const updateErrors = errors.filter((event) => event.fields.origin === "update");
+        const renewalCopies = [...groupBy([...renewalsDone, ...renewalErrors, ...renewedList], (event) => event.install).values()];
+        // A signature lasts seven days: a failure older than that, the copy
+        // silent since, is a copy gone.
+        const lastWeek = new Set(days.slice(-7));
+        const stuckRenewing = renewalCopies.filter((list) => lastOf(list)?.name === "error" && lastWeek.has(lastOf(list).day));
+        const renewalWhy = (event) => (text(event.fields.stage) ?? "") + "|" + (text(event.fields.cause) ?? "unknown");
+        const triedRenewing = new Set([...renewalsDone, ...renewalErrors].map((event) => event.install));
+        const renewalsView = {
+            renewed: renewedList.length,
+            renewedCopies: new Set(renewedList.map((event) => event.install)).size,
+            via: countBy(renewedList, (event) => text(event.fields.via) ?? "unsaid"),
+            done: renewalsDone.length,
+            automatic: share(renewalsDone, (event) => event.fields.automatic),
+            seconds: median(renewalsDone.map((event) => event.fields.seconds)),
+            vpnOpened: share(renewalsDone, (event) => event.fields.vpnOpened),
+            // The copies that tried to renew by themselves, and those that did.
+            tried: triedRenewing.size,
+            through: new Set(renewalsDone.map((event) => event.install)).size,
+            failed: renewalErrors.length,
+            failedCopies: new Set(renewalErrors.map((event) => event.install)).size,
+            background: share(renewalErrors, (event) => event.fields.background),
+            why: countBy(renewalErrors, renewalWhy).map((row) => ({ ...row, stage: row.key.split("|")[0] || null, cause: row.key.split("|")[1] })),
+            stuck: stuckRenewing.length,
+            // The cause most of the copies stuck met.
+            stuckCause: countBy(stuckRenewing.map((list) => ({ install: list[0].install, cause: text(lastOf(list).fields.cause) ?? "unknown" })), (item) => item.cause)[0] ?? null,
+            signature: devices.signature,
+            low: opened.filter((event) => num(event.fields.signatureDays) !== null && event.fields.signatureDays <= 1).length,
+            daily: days.map((day) => ({
+                day,
+                renewed: renewedList.filter((event) => event.day === day).length,
+                failed: renewalErrors.filter((event) => event.day === day).length,
+            })),
+            updates: {
+                count: updates.length,
+                copies: new Set(updates.map((event) => event.install)).size,
+                failed: updateErrors.length,
+                failedCopies: new Set(updateErrors.map((event) => event.install)).size,
+                byCause: countBy(updateErrors, (event) => text(event.fields.cause) ?? "unknown"),
+            },
+            imported: countBy(named("signing.imported"), (event) => text(event.fields.outcome) ?? "unknown"),
         };
 
         // MARK: Errors
@@ -1178,6 +1253,9 @@
                 macGames: new Set(failed.map(gameOfMac)).size,
                 macs: new Set(failed.map((event) => event.install)).size,
                 stages: countBy(failed, (event) => text(event.fields.stage)),
+                // The step and what the Builder found there: "shader split",
+                // tables.
+                whys: countBy(failed, (event) => (text(event.fields.stage) ?? "?") + "|" + (text(event.fields.cause) ?? "")).map((row) => ({ ...row, stage: row.key.split("|")[0], cause: row.key.split("|")[1] || null })),
                 reasons: reasons(failed),
                 games: countBy(failed, (event) => gameId(event)).map((row) => ({ ...row, name: gameOf(catalog, row.key).name })).slice(0, 8),
             },
@@ -1224,11 +1302,105 @@
             cleaned: { count: cleaned.length, freedMB: sum(cleaned.map((event) => event.fields.freedMB)) },
             paired: { count: paired.length, allowed: share(paired, (event) => event.fields.allowed) },
             errors: countBy(mac("builder.error"), (event) => [text(event.fields.origin), text(event.fields.kind) ?? text(event.fields.error), text(event.fields.exception), text(event.fields.where)].filter(Boolean).join(" · ") || "?").slice(0, 8),
+            // The errors Cartouche's console on the Mac showed, as the
+            // iPhone's (error), from the version that sends them.
+            console: countBy(mac("error"), (event) => (text(event.fields.origin) ?? "?") + "|" + (text(event.fields.cause) ?? "unknown")).map((row) => ({ ...row, origin: row.key.split("|")[0], cause: row.key.split("|")[1] })).slice(0, 8),
             updates: countBy(mac("builder.updated"), (event) => (text(event.fields.from) && text(event.fields.to) ? event.fields.from + " → " + event.fields.to : null)),
             daily: days.map((day) => ({
                 day,
                 built: built.filter((event) => event.day === day).length,
                 failed: failed.filter((event) => event.day === day).length,
+            })),
+        };
+
+        // MARK: Storage and saves
+        // Where each copy keeps its games and saves, as it last opened; the
+        // saves kept in step, on the iPhones (saves.synced, from the version
+        // that sends it) and on the Macs (builder.saves); and what failed
+        // there.
+        const savesPhone = named("saves.synced");
+        const savesMac = mac("builder.saves");
+        const storageErrors = errors.filter((event) => event.fields.origin === "storage");
+        const savesErrors = errors.filter((event) => event.fields.origin === "saves" || event.fields.origin === "cloud");
+        const foldersSaid = opened.filter((event) => num(event.fields.gamesFolders) !== null);
+        const storage = {
+            games: devices.storage,
+            savesKind: devices.saves,
+            folders: countBy(foldersSaid, (event) => (event.fields.gamesFolders >= 3 ? "3+" : String(event.fields.gamesFolders))),
+            foldersKnown: foldersSaid.length,
+            tailscale: share(opened, (event) => event.fields.tailscale),
+            errors: {
+                count: storageErrors.length,
+                copies: new Set(storageErrors.map((event) => event.install)).size,
+                background: share(storageErrors, (event) => event.fields.background),
+                byCause: countBy(storageErrors, (event) => text(event.fields.cause) ?? "unknown"),
+            },
+            saves: {
+                count: savesPhone.length + savesMac.length,
+                iphones: new Set(savesPhone.map((event) => event.install)).size,
+                macs: new Set(savesMac.map((event) => event.install)).size,
+                steps: countBy([...savesPhone, ...savesMac], (event) => text(event.fields.step) ?? "unknown"),
+                moments: countBy([...savesPhone, ...savesMac], (event) => text(event.fields.when) ?? "unknown"),
+                // Copies sent while a game played, the iPhone's counted at the
+                // game's end, the Mac's one by one.
+                during: sum(savesPhone.map((event) => event.fields.during)) + savesMac.filter((event) => event.fields.when === "during").length,
+                duringFailed: sum(savesPhone.map((event) => event.fields.duringFailed)),
+                errors: savesErrors.length,
+                errorCopies: new Set(savesErrors.map((event) => event.install)).size,
+                byCause: countBy(savesErrors, (event) => text(event.fields.cause) ?? "unknown"),
+            },
+        };
+
+        // MARK: Cartouche Cloud
+        // The builds of the platform's Macs (cloud.built, cloud.failed), each
+        // failure with the step the Mac stopped at and, at the build itself,
+        // the Builder's own stage and cause; what the page that sends a game
+        // refused (cloud.refused); and, on the iPhones, the games installed
+        // from it and the installs that failed.
+        const cloudOf = (name) => cloudEvents.filter((event) => event.name === name && (!filters.game || !event.game || gameId(event) === filters.game));
+        const cloudBuilt = cloudOf("cloud.built");
+        const cloudFailed = cloudOf("cloud.failed");
+        const cloudRefused = cloudOf("cloud.refused");
+        const cloudWhy = (event) => [text(event.fields.step) ?? "?", text(event.fields.stage) ?? "", text(event.fields.cause) ?? ""].join("|");
+        const fromCloudInstalls = installed.filter((event) => originOf(event) === "cloud");
+        const cloudInstallErrors = errors.filter((event) => event.fields.origin === "install" && event.fields.from === "cloud");
+        const cloudGames = [...groupBy([...cloudBuilt, ...cloudFailed], (event) => gameId(event))]
+            .map(([id, list]) => ({ id, name: gameOf(catalog, id).name, built: list.filter((event) => event.name === "cloud.built").length, failed: list.filter((event) => event.name === "cloud.failed").length }))
+            .sort((a, b) => b.built + b.failed - (a.built + a.failed));
+        const cloud = {
+            events: cloudEvents.length,
+            built: cloudBuilt.length,
+            failed: cloudFailed.length,
+            minutes: median(cloudBuilt.map((event) => event.fields.minutes)),
+            gigabytes: median(cloudBuilt.map((event) => event.fields.gigabytes)),
+            why: [...groupBy(cloudFailed, cloudWhy)]
+                .map(([key, list]) => {
+                    const [step, stage, cause] = key.split("|");
+                    return {
+                        key, step, stage: stage || null, cause: cause || null, count: list.length,
+                        games: new Set(list.map((event) => gameId(event)).filter(Boolean)).size,
+                        commit: mode(list.map((event) => text(event.fields.nxnative))),
+                        last: list.reduce((latest, event) => (event.day > latest ? event.day : latest), ""),
+                    };
+                })
+                .sort((a, b) => b.count - a.count || (b.last > a.last ? 1 : -1)),
+            games: cloudGames.slice(0, 10),
+            commits: countBy(cloudBuilt, (event) => text(event.fields.nxnative)).slice(0, 5),
+            refused: countBy(cloudRefused, (event) => text(event.fields.code) ?? "unknown"),
+            refusedKinds: countBy(cloudRefused, (event) => text(event.fields.kind)),
+            refusedCount: cloudRefused.length,
+            iphone: {
+                installs: fromCloudInstalls.length,
+                copies: new Set(fromCloudInstalls.map((event) => event.install)).size,
+                linked: share(opened, (event) => event.fields.cloud),
+                failed: cloudInstallErrors.length,
+                byCause: countBy(cloudInstallErrors, (event) => text(event.fields.cause) ?? "unknown"),
+            },
+            daily: days.map((day) => ({
+                day,
+                built: cloudBuilt.filter((event) => event.day === day).length,
+                failed: cloudFailed.filter((event) => event.day === day).length,
+                refused: cloudRefused.filter((event) => event.day === day).length,
             })),
         };
 
@@ -1448,6 +1620,17 @@
                 attention.push({ key: "memory", tone: "warning", copies: games.find((item) => item.id === game.id)?.iphones ?? 1, game: game.id, name: game.name, peak: game.peak, limit: game.limit, ratio: game.ratio });
             }
         }
+        // Copies whose renewals of their own fail, with no signature renewed
+        // since: in a few days, their games no longer start.
+        if (renewalsView.stuck >= ATTENTION.renewalCopies) {
+            attention.push({ key: "renewal", tone: "serious", copies: renewalsView.stuck, cause: renewalsView.stuckCause ? renewalsView.stuckCause.key : null, causeCopies: renewalsView.stuckCause ? renewalsView.stuckCause.installs : 0, section: "renouvellements" });
+        }
+        // Builds of Cartouche Cloud that fail the same way, at the same step.
+        for (const why of cloud.why) {
+            if (why.count >= ATTENTION.cloudBuilds) {
+                attention.push({ key: "cloud", tone: "serious", copies: why.count, step: why.step, stage: why.stage, cause: why.cause, games: why.games, commit: why.commit, last: why.last, section: "cloud" });
+            }
+        }
         const TONE_ORDER = { critical: 0, serious: 1, warning: 2 };
         attention.sort((a, b) => TONE_ORDER[a.tone] - TONE_ORDER[b.tone] || b.copies - a.copies);
 
@@ -1474,7 +1657,10 @@
                 })(),
                 builds: built.length + failed.length ? { built: built.length, failed: failed.length, share: built.length / (built.length + failed.length) } : null,
                 macs: macs.length,
-                reports: reports.length + macEvents.length + macSessions.length,
+                // The copies that renewed by themselves, of those that tried.
+                renewals: renewalsView.tried ? { copies: renewalsView.tried, through: renewalsView.through, share: renewalsView.through / renewalsView.tried } : null,
+                cloud: cloud.built + cloud.failed ? { built: cloud.built, failed: cloud.failed, share: cloud.built / (cloud.built + cloud.failed) } : null,
+                reports: reports.length + macEvents.length + macSessions.length + cloudEvents.length,
             },
             daily,
             journey,
@@ -1497,6 +1683,9 @@
             endings,
             devices,
             installs,
+            renewals: renewalsView,
+            storage,
+            cloud,
             errors: errorsView,
             builder,
             macGames,
@@ -1590,6 +1779,12 @@
             renewed: Math.floor(rand() * 7),
             activity: 0.35 + rand() * 0.55,
             builds: [],
+            // What they say since November, drawn from nothing so that the
+            // rest stays as it was.
+            folders: index % 4 === 1 ? 2 : 1,
+            cloud: index % 3 === 0,
+            tailscale: index % 4 === 2,
+            renewer: index % 6 === 4 ? "outside" : "cartouche",
         }));
         const builds = ["6c3aeb3d70a1", "f3ec8fc81e49", "0d9b6358a2c4"];
         const reports = [];
@@ -1637,7 +1832,7 @@
                     add(phone, day, {
                         kind: "event",
                         name: "app.opened",
-                        fields: { games: phone.favourites.length + (phone.device === "iPhone19,4" ? 2 : 0), setUp: phone.install !== phones[11].install || d > 3, storage: phone.storage, saves: phone.storage === "folder" ? "none" : phone.storage, signatureDays: 7 - ((d + phone.renewed) % 7) },
+                        fields: { games: phone.favourites.length + (phone.device === "iPhone19,4" ? 2 : 0), setUp: phone.install !== phones[11].install || d > 3, storage: phone.storage, saves: phone.storage === "folder" ? "none" : phone.storage, signatureDays: 7 - ((d + phone.renewed) % 7), gamesFolders: phone.folders, cloud: phone.cloud, tailscale: phone.tailscale },
                     });
                     if (rand() < 0.07) {
                         const [origin, error, , details] = weighted(origins);
@@ -1645,14 +1840,14 @@
                     }
                 }
                 if ((d + phone.renewed) % 7 === 3) add(phone, day, { kind: "event", name: "account.signedIn", fields: { seconds: 18, codeAsked: true, automatic: false } });
-                if ((d + phone.renewed) % 7 === 0) add(phone, day, { kind: "event", name: "signature.renewed", fields: { daysLeft: 7 } });
+                if ((d + phone.renewed) % 7 === 0) add(phone, day, { kind: "event", name: "signature.renewed", fields: { daysLeft: 7, via: d === phone.updatedOn ? "update" : phone.renewer } });
                 const sessions = Math.floor(rand() * 3.2);
                 for (let s = 0; s < sessions; s += 1) {
                     const profile = profiles[pick(phone.favourites) % profiles.length];
                     const build = d < dayIndex.length * 0.4 ? builds[2] : d < dayIndex.length * 0.75 ? builds[1] : builds[0];
                     if (!phone.builds.includes(profile.id + build)) {
                         phone.builds.push(profile.id + build);
-                        add(phone, day, { kind: "event", name: "game.installed", game: profile.id, fields: { version: profile.version, nxnative: build, fromStorage: phone.storage !== "folder", sizeMiB: Math.round(profile.peak * 3.4 + between(-400, 400)) } });
+                        add(phone, day, { kind: "event", name: "game.installed", game: profile.id, fields: { version: profile.version, nxnative: build, from: phone.storage === "folder" ? "file" : phone.builds.length % 4 === 3 ? "mac" : phone.cloud && phone.builds.length % 5 === 1 ? "cloud" : phone.storage, link: phone.builds.length % 4 === 3 ? (phone.builds.length % 8 === 3 ? "cable" : "network") : undefined, sizeMiB: Math.round(profile.peak * 3.4 + between(-400, 400)) } });
                     }
                     const minutes = round(between(4, 70) * (rand() < 0.15 ? 2 : 1));
                     const strain = phone.device.startsWith("iPhone18") ? 0.96 : 1;
@@ -1815,8 +2010,77 @@
                 if (step === "credentials") add(phone, day, { kind: "event", name: "error", fields: { origin: "signIn", error: "SideSign.ServerError 1", cause: "appleCredentials", stage: "credentials", kind: "incorrectCredentials", percent: 10, seconds: 6, vpn: true, pairing: true, codeAsked: false } });
                 if (step === "device") add(phone, day, { kind: "event", name: "error", fields: { origin: "signIn", error: "SideStore 1", cause: "device", stage: "device", kind: "noDevice", percent: 50, seconds: 21, vpn: false, pairing: true, codeAsked: true } });
                 if (step === "signedIn") add(phone, day, { kind: "event", name: "account.signedIn", fields: { seconds: 18, codeAsked: true, automatic: false } });
-                if (step === "installed") add(phone, day, { kind: "event", name: "game.installed", game: profiles[0].id, fields: { version: profiles[0].version, nxnative: builds[0], fromStorage: true, sizeMiB: 12000 } });
+                if (step === "installed") add(phone, day, { kind: "event", name: "game.installed", game: profiles[0].id, fields: { version: profiles[0].version, nxnative: builds[0], from: "smb" } });
             }
+        });
+
+        // What the versions of November say: Cartouche's own renewals and
+        // those that failed, the saves synced on the iPhones, and Cartouche
+        // Cloud's builds and refusals. A generator of their own, the rest
+        // staying as it was.
+        const novRand = random(20261124);
+        const novPick = (list) => list[Math.floor(novRand() * list.length)];
+        const novHex = (length) => Array.from({ length }, () => Math.floor(novRand() * 16).toString(16)).join("");
+        const renewalFailures = [
+            [{ cause: "device", stage: "ResignApp", kind: "noDevice", vpn: false, pairing: true }, 4],
+            [{ cause: "appleServer", stage: "FetchProvisioningProfiles", kind: "underlyingError", apple: -22411, vpn: true, pairing: true }, 2],
+            [{ cause: "offline", stage: "PreflightChecks", vpn: true, pairing: true }, 1],
+        ];
+        const savesSteps = [["send", 6], ["same", 5], ["fetch", 2], ["keep", 1], ["offline", 1]];
+        const weightedOf = (list) => {
+            const total = list.reduce((all, item) => all + item[1], 0);
+            let at = novRand() * total;
+            for (const item of list) if ((at -= item[1]) <= 0) return item[0];
+            return list[0][0];
+        };
+        dayIndex.forEach((day, d) => {
+            phones.forEach((phone, index) => {
+                // The day before a signature renewed, Cartouche renewed itself.
+                if (phone.renewer === "cartouche" && (d + phone.renewed) % 7 === 6) {
+                    if (novRand() < 0.12) add(phone, day, { kind: "event", name: "error", fields: { origin: "renewal", error: "SideStore 1", background: true, percent: 40, seconds: 30, ...weightedOf(renewalFailures) } });
+                    add(phone, day, { kind: "event", name: "renewal.done", fields: { seconds: Math.round(20 + novRand() * 50), automatic: novRand() < 0.8, vpnOpened: novRand() < 0.3 } });
+                }
+                if (phone.storage === "folder" || novRand() > phone.activity * 0.8) return;
+                const step = weightedOf(savesSteps);
+                add(phone, day, { kind: "event", name: "saves.synced", fields: { step: novPick(["fetch", "same"]), when: "before" } });
+                add(phone, day, { kind: "event", name: "saves.synced", fields: { step, when: "after", during: step === "offline" ? 0 : Math.floor(novRand() * 6), duringFailed: step === "offline" ? 2 : 0 } });
+                if (step === "offline" && index % 2) add(phone, day, { kind: "event", name: "error", fields: { origin: "saves", error: "NSURLErrorDomain -1001", cause: "network", stage: "savesSync", background: true } });
+            });
+        });
+        // The Macs sync their games' saves too, and say the console's errors.
+        dayIndex.forEach((day) => macs.forEach((macItem) => {
+            if (novRand() < 0.5) addMac(macItem, day, "builder.saves", { step: novPick(["send", "send", "same", "fetch"]), when: novPick(["during", "during", "after", "round"]), place: "share" });
+            if (novRand() < 0.05) addMac(macItem, day, "error", { origin: "storage", cause: "network", stage: "connect", background: true });
+        }));
+        // Two copies whose last renewal of their own failed, the signature
+        // running out.
+        for (const phone of [phones[1], phones[8]]) add(phone, today, { kind: "event", name: "error", fields: { origin: "renewal", error: "SideStore 1", cause: "device", stage: "ResignApp", kind: "noDevice", vpn: false, pairing: true, background: true } });
+        add(phones[3], dayIndex[Math.max(0, dayIndex.length - 2)], { kind: "event", name: "signing.imported", fields: { via: "installer", outcome: "imported" } });
+        add(phones[5], dayIndex[Math.max(0, dayIndex.length - 3)], { kind: "event", name: "signing.imported", fields: { via: "setup", outcome: "wrongPassword" } });
+
+        // Cartouche Cloud's platform: how its Macs' builds ended, and what
+        // the page that sends a game refused.
+        const platform = { install: novHex(8), device: "CartoucheCloud1,1", ios: "0", version: "1.0", language: null, increased: null, seq: 1 };
+        const addCloud = (day, name, fields, game = null) => {
+            reports.push({ kind: "event", install: platform.install, seq: platform.seq++, device: platform.device, ios: platform.ios, cartouche: platform.version, language: null, memoryLimitMiB: null, increasedMemoryLimit: null, day, game, name, fields });
+        };
+        const cloudFailures = [
+            [{ step: "build", stage: "shaders", cause: "tables" }, 3],
+            [{ step: "build", stage: "link", cause: "app_build" }, 1],
+            [{ step: "unpack", cause: "damaged" }, 2],
+            [{ step: "fetch" }, 1],
+            [{ step: "late" }, 1],
+        ];
+        const refusals = [[{ code: "unopened", kind: "packages" }, 4], [{ code: "heavy", kind: "packages" }, 2], [{ code: "nodump", kind: "zip" }, 2], [{ code: "credits", kind: "packages" }, 3], [{ code: "nobase", kind: "packages" }, 1], [{ code: "method", kind: "zip" }, 1]];
+        dayIndex.forEach((day, d) => {
+            if (d < dayIndex.length - 6 || dayIndex.length < 7) return;
+            const tries = 1 + Math.floor(novRand() * 4);
+            for (let t = 0; t < tries; t += 1) {
+                const game = profiles[Math.floor(novRand() * Math.min(6, profiles.length))].id;
+                if (novRand() < 0.78) addCloud(day, "cloud.built", { minutes: Math.round(30 + novRand() * 60), gigabytes: Math.round((2 + novRand() * 10) * 10) / 10, nxnative: builds[0], source: novPick(["nsp", "xci", "nsz"]) }, game);
+                else addCloud(day, "cloud.failed", { ...weightedOf(cloudFailures), nxnative: builds[0], minutes: Math.round(5 + novRand() * 40) }, game);
+            }
+            if (novRand() < 0.7) addCloud(day, "cloud.refused", weightedOf(refusals));
         });
 
         const rows = reports
@@ -1890,6 +2154,7 @@
         languageNames = null;
     }
     const DASH = "—";
+    const capital = (text) => String(text).charAt(0).toUpperCase() + String(text).slice(1);
     const has = (value) => value !== null && value !== undefined && !(typeof value === "number" && !Number.isFinite(value));
     const count = (value) => (has(value) ? n0.format(value) : DASH);
     const one = (value) => (has(value) ? n1.format(value) : DASH);
@@ -2007,7 +2272,68 @@
         "signature.renewed": "Signature renouvelée", "renewal.done": "Renouvellement réussi", "game.installed": "Jeu installé ou mis à jour",
         "game.infoChanged": "Infos d'un jeu modifiées", "game.shortcut": "Raccourci vers un jeu", "account.signedIn": "Connexion Apple réussie",
         "signing.imported": "Certificat importé", "import.picker": "Sélecteur de fichiers d'un import", error: "Erreur",
+        "saves.synced": "Sauvegardes synchronisées",
     };
+    // What renewed Cartouche's signature (signature.renewed's via).
+    const RENEWAL_VIA = {
+        update: "Une mise à jour de Cartouche", cartouche: "Cartouche lui-même", outside: "Une autre app ou un raccourci, Cartouche fermé",
+        reinstall: "Cartouche réinstallé", unsaid: "Non dit (avant le 13 nov.)",
+    };
+    const RENEWAL_VIA_TONES = { update: "var(--s1)", cartouche: "var(--good)", outside: "var(--s3)", reinstall: "var(--warning)", unsaid: "var(--other)" };
+    // The steps of SideStore's renewal (its operations), in words.
+    const RENEWAL_STAGES = {
+        VerifyCertificate: "Vérification du certificat", BackgroundRefreshApps: "Renouvellement en arrière-plan", RefreshApp: "Renouvellement de l'app",
+        ScheduleExpirationWarningNotification: "Rappel d'expiration", PreflightChecks: "Vérifications d'avant", FetchProvisioningProfiles: "Profils de l'app",
+        ResignApp: "Nouvelle signature", InstallApp: "Installation", SendApp: "Envoi à l'iPhone",
+    };
+    // How an import of the player's own certificate ended (signing.imported).
+    const IMPORT_OUTCOMES = {
+        imported: "importés", reinstall: "réinstallation demandée", refused: "refusés à la signature", keychain: "trousseau en échec", busy: "déjà en cours",
+        profileFile: "profil à la place", zipFile: "ZIP à la place", notCertificate: "pas un certificat", passwordNeeded: "mot de passe manquant",
+        wrongPassword: "mauvais mot de passe", noPrivateKey: "sans clé privée", unreadableKey: "illisibles", signerRefused: "refusés par le signataire",
+        noOwnProfile: "sans profil", ownProfileUnreadable: "profil illisible", expired: "profil expiré", invalidProfile: "profil illisible",
+        mismatch: "profil d'une autre équipe", invalidKey: "qui ne s'ouvrent pas (avant la 0.15.0)", other: "autre", unknown: "non dit",
+    };
+    // Where a game installed came from (game.installed's from), and how the
+    // Mac was reached (link).
+    const SOURCES = { ...STORAGE, file: "Fichier sur l'iPhone", cloud: "Cartouche Cloud", mac: "Mac (Cartouche Builder)", storage: "Stockage (avant la 0.15.0)" };
+    const LINKS = { cable: "Par le câble", network: "Par le réseau", tailnet: "Par Tailscale" };
+    // What a sync of a game's saves did, on an iPhone (saves.synced) or a
+    // Mac (builder.saves), and when.
+    const SAVE_STEPS = {
+        send: "Envoyées", fetch: "Venues d'un autre appareil", keep: "Gardées en copie sous de plus récentes", keepAndFetch: "Venues, les siennes gardées en copie",
+        heldBack: "Attendent la mise à jour du jeu", putBack: "Copie remise", same: "Déjà à jour", offline: "Stockage hors ligne", failed: "Échec", unknown: "Non dit",
+    };
+    const SAVE_TONES = { send: "var(--s1)", fetch: "var(--s3)", keep: "var(--warning)", keepAndFetch: "var(--warning)", heldBack: "var(--other)", putBack: "var(--s2)", same: "var(--good)", offline: "var(--other)", failed: "var(--critical)" };
+    const SAVE_MOMENTS = { before: "Avant la partie", during: "Pendant la partie", after: "Après la partie", round: "Hors partie (Mac)", player: "Demandé par le joueur", unknown: "Non dit" };
+    // Why Cartouche Builder did not build a game (builder/cartouche_builder/causes.py).
+    const BUILD_CAUSES = {
+        no_space: "un disque plein", metal: "le compilateur Metal de ce Mac", damaged: "des fichiers du jeu abîmés", app_build: "l'app iOS ne se construit pas",
+        tables: "tables de shaders différentes de son profil", crashed: "une exception de nxnative", signal: "nxnative arrêté par un signal", refused: "options refusées par nxnative",
+        no_start: "nxnative n'a pas démarré", no_ipa: "pas d'IPA à la fin", nxnative: "une erreur de nxnative", zip: "un ZIP illisible ou d'un autre jeu",
+        no_room: "moins de place que les réglages n'en gardent", keys: "pas de prod.keys", stopped: "arrêtée", builder: "une erreur du Builder",
+    };
+    // Where a Mac of Cartouche Cloud stopped (the platform's causes).
+    const CLOUD_STEPS = {
+        unpack: "Lecture du jeu envoyé", plan: "Préparation", build: "Construction", ipa: "IPA introuvable", disk: "Place du Mac", tools: "Outils du Mac",
+        fetch: "Téléchargement du jeu", send: "Envoi de l'IPA", mac: "Mac perdu", late: "Trop longue", stopped: "Arrêtée depuis la console", "?": "Non dit",
+    };
+    // What the page that sends a game to Cartouche Cloud refused (its codes).
+    const CLOUD_REFUSALS = {
+        away: "Cartouche Cloud injoignable", blocked: "Stockage bloqué (pare-feu, VPN, bloqueur)", browser: "Navigateur trop ancien pour ce ZIP",
+        catalogue: "Liste des jeux de nxnative muette", changed: "Fichiers changés pendant l'envoi", choice: "Plus d'une façon de donner le jeu",
+        credits: "Crédits insuffisants", damaged: "Jeu abîmé", duplicate: "Même fichier deux fois dans le ZIP", encrypted: "ZIP protégé par un mot de passe",
+        failed: "Problème du service", folder: "Un dossier au lieu de ses fichiers", full: "Déjà trois jeux gardés", gone: "Envoi effacé ou expiré",
+        heavy: "Plus de 35 Go", keys: "prod.keys illisible", link: "Lien à la place d'un fichier", many: "Trop de fichiers", method: "Compression du ZIP non lue",
+        missing: "Une partie du jeu manque", mixed: "Plusieurs jeux dans les fichiers", name: "Nom de fichier impossible", nobase: "Mise à jour sans le jeu de base",
+        nodump: "ZIP sans dump (main.npdm)", nogame: "Aucun jeu dans les fichiers", oldkeys: "prod.keys trop ancien pour ce jeu", package: "Paquet donné comme un ZIP",
+        path: "Chemin qui sort du ZIP", personal: "Ticket lié au compte de la console", profile: "Jeu sans profil nxnative", sent: "Jeu déjà arrivé",
+        several: "Plusieurs jeux dans un fichier", signin: "Plus connecté", split: "ZIP en plusieurs volumes", storage: "Stockage du service muet",
+        ticket: "Ticket manquant", today: "Cinq envois en 24 heures", unknown: "Fichier d'un format non lu", unopened: "Paquet fermé à ce prod.keys",
+        unreadable: "Fichier que le navigateur ne lit plus", unsupported: "Empaquetage pas encore lu", zip: "ZIP illisible",
+    };
+    // What the player chose, as the page that sends a game says it.
+    const CLOUD_CHOSEN = { zip: "un ZIP", packages: "des paquets", nup: "un NUP", keys: "un prod.keys seul", none: "rien de lisible" };
     // What the newest version of Cartouche does with an error (the model's state).
     const ERROR_STATES = {
         new: ["nouvelle en ", "var(--critical)"],
@@ -2447,6 +2773,8 @@
         const [signInValue, signInUnit] = shareFigure(t.signIn && t.signIn.share);
         const [badValue, badUnit] = has(t.bad) ? [n1.format(t.bad * 100), "%"] : [DASH, null];
         const [buildValue, buildUnit] = shareFigure(t.builds && t.builds.share);
+        const [renewValue, renewUnit] = shareFigure(t.renewals && t.renewals.share);
+        const [cloudValue, cloudUnit] = shareFigure(t.cloud && t.cloud.share);
         const tiles = [
             ["Copies actives", count(t.iphones), null, plural(t.players, "a joué", "ont joué") + " · " + duration(t.minutes) + " de jeu", spark("iphones")],
             ["Copies qui ont joué", playedValue, playedUnit, played !== null ? statusDot(toneOf(played, 0.6, 0.35), plural(t.players, "copie", "copies") + " sur " + count(t.iphones)) : "", spark("players")],
@@ -2454,6 +2782,8 @@
             ["Parties qui finissent mal", badValue, badUnit, has(t.bad) ? statusDot(toneOf(t.bad, 0.03, 0.1, false), plural(model.endings.ends.bad, "partie", "parties") + " sur " + count(t.sessions)) : "", spark("bad")],
             ["Erreurs / 100 ouvertures", has(t.errorsPer100) ? n0.format(t.errorsPer100) : DASH, null, t.errors ? plural(t.errors, "erreur", "erreurs") + " sur " + plural(t.errorIphones, "copie", "copies") : "Aucune erreur", spark("errorsPer100", { zoom: true })],
             ["Constructions réussies", buildValue, buildUnit, t.builds ? statusDot(toneOf(t.builds.share, 0.8, 0.5), count(t.builds.built) + " sur " + count(t.builds.built + t.builds.failed) + ", " + plural(t.macs, "Mac", "Macs")) : "Aucune construction", sparkline(model.builder.daily.map((day) => day.built + day.failed ? day.built / (day.built + day.failed) : null), { zoom: true })],
+            ["Renouvellements réussis", renewValue, renewUnit, t.renewals ? statusDot(toneOf(t.renewals.share, 0.8, 0.5), "des copies qui ont essayé (" + count(t.renewals.through) + " sur " + count(t.renewals.copies) + ")") : "Aucun essai de Cartouche", sparkline(model.renewals.daily.map((day) => day.renewed || 0))],
+            ["Cartouche Cloud", cloudValue, cloudUnit, t.cloud ? statusDot(toneOf(t.cloud.share, 0.8, 0.5), "des constructions (" + count(t.cloud.built) + " sur " + count(t.cloud.built + t.cloud.failed) + ")") : model.cloud.iphone.installs ? plural(model.cloud.iphone.installs, "jeu installé", "jeux installés") + " depuis le Cloud" : "Aucune construction", sparkline(model.cloud.daily.map((day) => day.built + day.failed ? day.built / (day.built + day.failed) : null), { zoom: true })],
         ];
         return h("div", { class: "tiles" }, tiles.map(([label, value, unit, note, chart]) =>
             h("div", { class: "tile" }, h("span", { class: "label", text: label }), h("span", { class: "value" }, value, unit ? h("small", { text: unit }) : null), h("span", { class: "note" }, note || ""), chart)));
@@ -2515,6 +2845,16 @@
                     sentence(plural(item.count, "arrêt", "arrêts") + (has(item.signal) ? " (" + (SIGNALS[item.signal] || "signal " + item.signal) + ")" : "") + (item.sessions ? " en " + plural(item.sessions, "partie", "parties") : "") + " : "
                         + (item.cause ? ABORT_WHY[item.cause] || "le jeu s'est arrêté de lui-même" : "le jeu s'est arrêté de lui-même, et son adresse, la même pour tous les jeux, ne dit pas pourquoi")),
                 ];
+            case "renewal":
+                return [
+                    "Ne se renouvellent plus",
+                    (item.cause ? "Cause la plus fréquente : " + (FAILURE_CAUSES[item.cause] || item.cause) + ", pour " + plural(item.causeCopies, "copie", "copies") + ". " : "") + "Leur dernier renouvellement a échoué, et aucun n'a réussi depuis : sans lui, Cartouche et leurs jeux ne démarrent plus au bout de 7 jours.",
+                ];
+            case "cloud":
+                return [
+                    "Cartouche Cloud : des constructions échouent " + (item.stage ? "à « " + item.stage + " »" : "à l'étape « " + (CLOUD_STEPS[item.step] || item.step).toLowerCase() + " »"),
+                    sentence((item.cause ? "Le Builder y a trouvé " + (BUILD_CAUSES[item.cause] || item.cause) + ", sur " : "Sur ") + plural(item.games, "jeu", "jeux") + (item.commit ? ", avec nxnative " + item.commit.slice(0, 8) : "") + ", la dernière le " + dayText(item.last)),
+                ];
             case "memory":
                 return [
                     name(item.game, item.name) + " frôle sa limite de mémoire",
@@ -2534,7 +2874,7 @@
             const action = item.game
                 ? h("button", { type: "button", class: "linkish", text: "Voir ce jeu", onclick: () => pickGame(item.game) })
                 : item.section ? h("a", { href: "#" + item.section, class: "linkish", text: "Voir le détail" }) : null;
-            const unit = item.key === "build" ? ["Mac", "Macs"] : ["game", "crash", "abort"].includes(item.key) ? ["iPhone", "iPhones"] : ["copie", "copies"];
+            const unit = item.key === "build" ? ["Mac", "Macs"] : item.key === "cloud" ? ["construction", "constructions"] : ["game", "crash", "abort"].includes(item.key) ? ["iPhone", "iPhones"] : ["copie", "copies"];
             return h("li", { "--tone": TONES[item.tone] || "var(--warning)" },
                 h("span", { class: "count" }, count(item.copies), h("small", { text: unit[item.copies > 1 ? 1 : 0] })),
                 h("div", {}, h("b", { text: title }), h("p", { text: detail }), action));
@@ -2889,14 +3229,9 @@
             card("Versions de Cartouche", null, ranked(d.versions),
                 d.updates.length ? h("p", { class: "foot", text: "Mises à jour : " + d.updates.map((item) => item.key + " (" + count(item.count) + ")").join(", ") }) : null),
             card("Langue de Cartouche", null, ranked(d.languages, language)),
-            card("Stockage des jeux", "Au dernier lancement de chaque iPhone.", ranked(d.storage, (key) => STORAGE[key] || key)),
-            card("Stockage des sauvegardes", null, ranked(d.saves, (key) => STORAGE[key] || key)),
             card("Jeux installés par iPhone", null,
                 columns(d.games.map((bin) => ({ label: bin.label, title: bin.label, value: bin.count, figure: plural(bin.count, "iPhone", "iPhones") })), { height: 110, bins: true, allLabels: true, label: "iPhones par nombre de jeux" }),
                 facts([["Ouvertures de l'app", count(d.opens)]])),
-            card("Signature", "Jours qu'il reste à la signature, au dernier lancement.",
-                segmented(d.signature.map((bin) => ({ label: bin.label, value: bin.count, tone: TONES[bin.tone], figure: plural(bin.count, "iPhone", "iPhones") })), { empty: "Pas encore de lancement." }),
-                facts([["Renouvellements", count(d.renewals)], ["Jours après un renouvellement", has(d.renewalDays) ? n0.format(d.renewalDays) : DASH]])),
         ];
     }
 
@@ -2905,8 +3240,11 @@
         if (!i.count) return [card("Jeux installés ou mis à jour", null, empty("Aucun jeu installé ni mis à jour sur cette période."))];
         return [
             card("Jeux installés ou mis à jour", plural(i.count, "installation", "installations") + " sur " + plural(i.iphones, "iPhone", "iPhones") + ".",
-                bars(i.byGame.map((row) => ({ label: gameName(row.key, row.name), value: row.count, figure: count(row.count), note: plural(row.installs, "iPhone", "iPhones") }))),
-                i.fromStorage || has(i.size) ? facts([["Depuis le stockage", shareText(i.fromStorage)], ["Taille médiane", mib(i.size)]]) : null),
+                bars(i.byGame.map((row) => ({ label: gameName(row.key, row.name), value: row.count, figure: count(row.count), note: plural(row.installs, "iPhone", "iPhones") })))),
+            card("D'où ils viennent", i.fromKnown ? "Ce que " + plural(i.fromKnown, "installation dit", "installations disent") + " de leur provenance, depuis la 0.15.0." : "Les versions de cette période ne le disent pas encore.",
+                bars(i.from.map((row) => ({ label: SOURCES[row.key] || row.key, value: row.count, figure: count(row.count), note: plural(row.installs, "iPhone", "iPhones"), tone: row.key === "cloud" ? "var(--s2)" : row.key === "mac" ? "var(--s3)" : "var(--s1)" })), { empty: "Aucune installation ne dit d'où elle vient." }),
+                i.link.length ? h("p", { class: "foot", text: "Depuis le Mac : " + i.link.map((row) => (LINKS[row.key] || row.key) + " " + count(row.count)).join(", ") + "." }) : null,
+                i.otherFolder ? h("p", { class: "foot", text: "Copie d'un autre dossier de jeux que le premier : " + percent(i.otherFolder.share) + "." }) : null),
             i.versions.length ? card("Versions installées", null, bars(i.versions.map((row) => ({ label: row.key, value: row.count, figure: count(row.count) })))) : null,
             i.builds.length ? card("Builds nxnative installés", null, bars(i.builds.map((row) => ({ label: row.key, value: row.count, figure: count(row.count) })))) : null,
         ];
@@ -2969,6 +3307,98 @@
         ];
     }
 
+    // MARK: Renewals
+
+    function renewalsSection(model) {
+        const r = model.renewals;
+        const tried = r.tried;
+        const ranked = (rows, label, unit = ["copie", "copies"]) => bars(rows.map((row) => ({ label: label(row), value: row.count, figure: count(row.count), note: plural(row.installs, unit[0], unit[1]) })));
+        return [
+            card("Signatures renouvelées", plural(r.renewed, "signature renouvelée", "signatures renouvelées") + " sur " + plural(r.renewedCopies, "copie", "copies") + ", vues au lancement suivant.",
+                columns(r.daily.map((day) => ({ label: dayText(day.day), title: long.format(new Date(day.day + "T00:00:00Z")) + (day.failed ? " · " + plural(day.failed, "échec", "échecs") : ""), value: day.renewed, figure: plural(day.renewed, "renouvelée", "renouvelées") + (day.failed ? ", " + plural(day.failed, "échec", "échecs") : ""), tone: day.failed > day.renewed ? "var(--critical)" : "var(--good)" })), { height: 110, label: "Signatures renouvelées par jour" }),
+                h("p", { class: "sub", text: "Ce qui les a renouvelées :" }),
+                segmented(r.via.map((row) => ({ label: RENEWAL_VIA[row.key] || row.key, value: row.count, tone: RENEWAL_VIA_TONES[row.key] || "var(--other)", figure: count(row.count) })), { empty: "Aucune signature renouvelée sur cette période." })),
+            card("Quand Cartouche se renouvelle lui-même", tried ? plural(r.through, "copie y est arrivée", "copies y sont arrivées") + " sur " + plural(tried, "qui a essayé", "qui ont essayé") + "." : "Aucun essai sur cette période.",
+                facts([
+                    ["Réussis", count(r.done)],
+                    ["Tout seul", shareText(r.automatic), r.automatic ? "sans le joueur" : ""],
+                    ["Durée médiane", has(r.seconds) ? n0.format(r.seconds) : DASH, "s"],
+                    ["Échecs", count(r.failed), r.failed ? "sur " + plural(r.failedCopies, "copie", "copies") : ""],
+                ]),
+                ranked(r.why.slice(0, 8), (row) => (row.stage ? (RENEWAL_STAGES[row.stage] || row.stage) + " › " : "") + (FAILURE_CAUSES[row.cause] || row.cause)),
+                r.stuck ? h("p", { class: "foot", text: plural(r.stuck, "copie a", "copies ont") + " échoué en dernier, sans renouvellement réussi depuis." }) : null),
+            card("Jours de signature", "Ce qu'il restait à chaque copie à son dernier lancement.",
+                segmented(r.signature.map((bin) => ({ label: bin.label, value: bin.count, tone: TONES[bin.tone], figure: plural(bin.count, "copie", "copies") })), { empty: "Pas encore de lancement." }),
+                facts([["À 1 jour ou moins", count(r.low), r.low === 1 ? "copie" : "copies"]])),
+            card("Mises à jour de Cartouche", plural(r.updates.count, "mise à jour", "mises à jour") + " sur " + plural(r.updates.copies, "copie", "copies") + (r.updates.failed ? ", " + plural(r.updates.failed, "échec", "échecs") + " sur " + plural(r.updates.failedCopies, "copie", "copies") + "." : "."),
+                ranked(r.updates.byCause.slice(0, 6), (row) => FAILURE_CAUSES[row.key] || row.key),
+                r.imported.length ? h("p", { class: "foot", text: "Certificats donnés : " + r.imported.map((row) => count(row.count) + " " + (IMPORT_OUTCOMES[row.key] || row.key) + " (" + plural(row.installs, "copie", "copies") + ")").join(", ") + "." }) : null),
+        ];
+    }
+
+    // MARK: Storage and saves
+
+    function storageSection(model) {
+        const st = model.storage;
+        const sv = st.saves;
+        const savesKnown = st.savesKind.reduce((all, row) => all + row.count, 0);
+        const savesKept = st.savesKind.filter((row) => row.key !== "none").reduce((all, row) => all + row.count, 0);
+        const ranked = (rows, label, unit = ["copie", "copies"]) => bars(rows.map((row) => ({ label: label(row.key), value: row.count, figure: count(row.count), note: plural(row.installs, unit[0], unit[1]) })));
+        return [
+            card("Où les copies gardent leurs jeux", "Au dernier lancement de chaque copie.",
+                ranked(st.games, (key) => STORAGE[key] || key),
+                facts([
+                    ["Sauvegardes gardées", savesKnown ? percent(savesKept / savesKnown) : DASH, savesKnown ? "des copies" : ""],
+                    ["Tailscale connecté", shareText(st.tailscale)],
+                    ["Plusieurs dossiers de jeux", st.foldersKnown ? percent(st.folders.filter((row) => row.key !== "0" && row.key !== "1").reduce((all, row) => all + row.count, 0) / st.foldersKnown) : DASH],
+                ]),
+                st.savesKind.length ? h("p", { class: "foot", text: "Sauvegardes : " + st.savesKind.map((row) => (STORAGE[row.key] || row.key) + " " + count(row.count)).join(", ") + "." }) : null),
+            card("Sauvegardes synchronisées", sv.count ? plural(sv.count, "synchronisation", "synchronisations") + (sv.iphones ? " de " + plural(sv.iphones, "iPhone", "iPhones") : "") + (sv.macs ? (sv.iphones ? " et " : " de ") + plural(sv.macs, "Mac", "Macs") : "") + "." : "Les iPhones le disent à partir de la version qui suit la 0.15.1 ; les Macs depuis le 19 nov.",
+                segmented(sv.steps.map((row) => ({ label: SAVE_STEPS[row.key] || row.key, value: row.count, tone: SAVE_TONES[row.key] || "var(--other)", figure: count(row.count) })), { empty: "Aucune synchronisation sur cette période." }),
+                facts([
+                    ["Envoyées en jouant", count(sv.during), sv.duringFailed ? count(sv.duringFailed) + " ratées" : ""],
+                    ["Après la partie", count(sv.moments.find((row) => row.key === "after")?.count ?? 0)],
+                    ["Avant la partie", count(sv.moments.find((row) => row.key === "before")?.count ?? 0)],
+                ])),
+            card("Ce qui échoue", plural(st.errors.count, "erreur de stockage", "erreurs de stockage") + " sur " + plural(st.errors.copies, "copie", "copies") + (st.errors.background ? ", " + percent(st.errors.background.share) + " en arrière-plan" : "") + " ; " + plural(sv.errors, "erreur", "erreurs") + " des sauvegardes sur " + plural(sv.errorCopies, "copie", "copies") + ".",
+                h("p", { class: "sub", text: "Stockage" }),
+                ranked(st.errors.byCause.slice(0, 6), (key) => FAILURE_CAUSES[key] || key),
+                h("p", { class: "sub", text: "Sauvegardes" }),
+                ranked(sv.byCause.slice(0, 5), (key) => FAILURE_CAUSES[key] || key)),
+        ];
+    }
+
+    // MARK: Cartouche Cloud
+
+    function cloudSection(model) {
+        const c = model.cloud;
+        const tried = c.built + c.failed;
+        const failures = c.why.map((row) => ({
+            label: row.cause ? capital(BUILD_CAUSES[row.cause] || row.cause) : CLOUD_STEPS[row.step] || row.step,
+            sub: row.cause ? (CLOUD_STEPS[row.step] || row.step) + (row.stage ? " › " + row.stage : "") : row.stage,
+            value: row.count,
+            figure: count(row.count),
+            note: plural(row.games, "jeu", "jeux"),
+            tone: "var(--critical)",
+        }));
+        return [
+            card("Constructions", tried ? plural(c.built, "construction réussie", "constructions réussies") + " sur " + count(tried) + (has(c.minutes) ? ", " + duration(c.minutes) + " de Mac en médiane." : ".") : null,
+                !tried ? empty("Aucune construction sur cette période : le service les dit à partir de sa version qui envoie ses mesures.") : columns(c.daily.map((day) => ({ label: dayText(day.day), title: long.format(new Date(day.day + "T00:00:00Z")) + (day.failed ? " · " + plural(day.failed, "échec", "échecs") : ""), value: day.built + day.failed, figure: plural(day.built, "réussie", "réussies") + (day.failed ? ", " + plural(day.failed, "échec", "échecs") : ""), tone: day.failed && !day.built ? "var(--critical)" : "var(--s2)" })), { height: 110, label: "Constructions de Cartouche Cloud par jour" }),
+                c.games.length ? h("p", { class: "foot", text: "Jeux : " + c.games.map((game) => gameName(game.id, game.name) + " (" + count(game.built) + (game.failed ? ", " + plural(game.failed, "échec", "échecs") : "") + ")").join(", ") + "." }) : null,
+                c.commits.length ? h("p", { class: "foot", text: (has(c.gigabytes) ? "IPA de " + one(c.gigabytes) + " Go en médiane. " : "") + "Commits de nxnative : " + c.commits.map((row) => row.key + " (" + count(row.count) + ")").join(", ") + "." }) : null),
+            card("Pourquoi elles échouent", "L'étape où le Mac s'est arrêté, et pour la construction elle-même, l'étape et la raison que donne le Builder.",
+                bars(failures, { empty: "Aucun échec sur cette période." })),
+            card("Ce que la page d'envoi refuse", c.refusedCount ? plural(c.refusedCount, "refus", "refus") + (c.refusedKinds.length ? ", pour " + c.refusedKinds.slice(0, 3).map((row) => (CLOUD_CHOSEN[row.key] || row.key) + " " + count(row.count)).join(", ") : "") + "." : null,
+                bars(c.refused.map((row) => ({ label: CLOUD_REFUSALS[row.key] || row.key, sub: CLOUD_REFUSALS[row.key] ? row.key : null, value: row.count, figure: count(row.count), tone: "var(--warning)" })), { empty: "Aucun refus sur cette période." })),
+            card("Sur les iPhones", c.iphone.installs ? plural(c.iphone.installs, "jeu installé", "jeux installés") + " depuis le Cloud sur " + plural(c.iphone.copies, "copie", "copies") + "." : "Aucun jeu installé depuis le Cloud sur cette période.",
+                facts([
+                    ["Copies liées", c.iphone.linked ? count(c.iphone.linked.yes) : DASH, c.iphone.linked ? "sur " + count(c.iphone.linked.known) : "à partir de la version qui le dit"],
+                    ["Installations ratées", count(c.iphone.failed)],
+                ]),
+                c.iphone.byCause.length ? bars(c.iphone.byCause.slice(0, 5).map((row) => ({ label: FAILURE_CAUSES[row.key] || row.key, value: row.count, figure: count(row.count), note: plural(row.installs, "copie", "copies"), tone: "var(--serious)" }))) : null),
+        ];
+    }
+
     function builder(model) {
         const b = model.builder;
         if (!b.events) return [card("Cartouche Builder", null, empty("Aucun Mac n'a envoyé de mesure sur cette période."))];
@@ -3002,14 +3432,15 @@
                 ], b.byCommit, { empty: "Aucune construction sur cette période." })),
             card("Pourquoi construire", "Ce qui a fait construire chaque jeu, à nouveau ou pour la première fois.", ranked(b.built.reasons, (key) => REBUILD[key] || key),
                 h("p", { class: "foot", text: "Sources : " + (b.built.sources.map((item) => item.key + " (" + count(item.count) + ")").join(", ") || DASH) })),
-            card("Échecs", plural(b.failed.count, "échec", "échecs") + " de construction" + (b.failed.count ? ", de " + plural(b.failed.macGames, "jeu", "jeux") + " sur " + plural(b.failed.macs, "Mac", "Macs") + " : un jeu relancé compte à chaque essai." : "."),
-                ranked(b.failed.stages.slice(0, 10), (key) => "Étape " + key),
-                b.failed.stages.length > 10 ? h("p", { class: "foot", text: "Et " + plural(b.failed.stages.length - 10, "autre étape", "autres étapes") + " : " + b.failed.stages.slice(10).map((item) => item.key + " (" + count(item.count) + ")").join(", ") + "." }) : null,
+            card("Échecs", plural(b.failed.count, "échec", "échecs") + " de construction" + (b.failed.count ? ", de " + plural(b.failed.macGames, "jeu", "jeux") + " sur " + plural(b.failed.macs, "Mac", "Macs") + " : un jeu relancé compte à chaque essai. Par raison, avec l'étape où il s'est arrêté." : "."),
+                bars(b.failed.whys.slice(0, 10).map((item) => ({ label: item.cause ? capital(BUILD_CAUSES[item.cause] || item.cause) : item.stage === "?" ? "Avant nxnative" : "Étape " + item.stage, sub: !item.cause ? "raison non dite" : item.stage === "?" ? "avant nxnative" : item.stage, tip: [item.stage === "?" ? "Avant que nxnative ne démarre" : "Étape " + item.stage], value: item.count, figure: count(item.count), note: plural(item.installs, "Mac", "Macs") }))),
+                b.failed.whys.length > 10 ? h("p", { class: "foot", text: "Et " + plural(b.failed.whys.length - 10, "autre raison", "autres raisons") + " : " + plural(b.failed.whys.slice(10).reduce((all, item) => all + item.count, 0), "échec", "échecs") + "." }) : null,
                 h("p", { class: "foot", text: "Raisons : " + (b.failed.reasons.map((item) => (REBUILD[item.key] || item.key) + " (" + count(item.count) + ")").join(", ") || DASH) + " · Jeux : " + (b.failed.games.map((item) => gameName(item.key, item.name)).join(", ") || DASH) })),
             card("Installation des outils et entretien", null,
                 bars(b.setup.map((item) => ({ label: SETUP[item.item] || item.item, value: item.count, figure: count(item.ready) + " prêt" + (item.ready > 1 ? "s" : ""), note: duration(has(item.seconds) ? item.seconds / 60 : null) })), { empty: "Aucun outil installé sur cette période." }),
                 facts([["Place libérée", has(b.cleaned.freedMB) ? n1.format(b.cleaned.freedMB / 1024) : DASH, "Go"], ["Jumelages", count(b.paired.count)], ["Erreurs", b.errors.reduce((all, item) => all + item.count, 0) ? count(b.errors.reduce((all, item) => all + item.count, 0)) : "0"]]),
                 b.errors.length ? h("p", { class: "foot", text: "Erreurs : " + b.errors.map((item) => item.key + " (" + count(item.count) + ")").join(", ") }) : null,
+                b.console.length ? h("p", { class: "foot", text: "Erreurs de la console : " + b.console.map((item) => (ORIGINS[item.origin] || item.origin) + " › " + (FAILURE_CAUSES[item.cause] || item.cause) + " (" + count(item.count) + ")").join(", ") }) : null,
                 b.updates.length ? h("p", { class: "foot", text: "Mises à jour : " + b.updates.map((item) => item.key + " (" + count(item.count) + ")").join(", ") }) : null),
         ];
     }
@@ -3117,7 +3548,10 @@
             section("compatibilite", "Par appareil", "Comment chaque jeu tourne sur chaque modèle.", h("div", { class: "grid wide" }, compatibility(model, pickGame))),
             section("fins", "Fins de partie et plantages", "Comment les parties se terminent, et ce qui les arrête.", h("div", { class: "grid wide" }, endings(model))),
             section("erreurs", "Erreurs de Cartouche", "Ce qui échoue dans l'app, et ce que la version la plus récente fait encore.", h("div", { class: "grid wide" }, errors(model))),
+            section("renouvellements", "Renouvellements et mises à jour", "Ce qui garde la signature de Cartouche en vie, et ce qui l'en empêche.", h("div", { class: "grid wide" }, renewalsSection(model))),
+            section("stockage", "Stockage et sauvegardes", "Où les copies gardent jeux et sauvegardes, et comment ça se synchronise.", h("div", { class: "grid" }, storageSection(model))),
             section("builder", "Cartouche Builder", "Les Macs qui construisent les jeux.", h("div", { class: "grid" }, builder(model))),
+            section("cloud", "Cartouche Cloud", "Les constructions du service, ce que sa page refuse, et les jeux qui en viennent.", h("div", { class: "grid wide" }, cloudSection(model))),
             section("mac", "Jeux sur le Mac", "Les parties jouées sur les Macs, à part de celles des iPhones.", h("div", { class: "grid wide" }, macGamesTable(model, pickGame))),
             section("activite", "Activité", null, h("div", { class: "grid wide" }, activity(model), eventsCard(model), weekdays(model))),
             section("fluidite", "Fluidité", "Ce que nxnative a mesuré pendant les parties.", h("div", { class: "grid" }, fluidity(model))),

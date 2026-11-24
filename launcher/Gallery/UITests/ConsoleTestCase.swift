@@ -87,6 +87,7 @@ enum Words {
     static let savesWaiting = "%lld games’ saves are waiting" // saves.waiting.many
     static let yourMac = "Your Mac"                         // storage.mac.title
     static let macsNearby = "Macs nearby"                   // storage.mac.nearby
+    static let byCable = "By cable"                         // storage.mac.byCable
     static let pairingWith = "Pairing with %@"              // storage.mac.pairing
     static let checkDigits = "Check that your Mac shows the same digits" // storage.mac.checkCode
     static let noLocalNetwork = "iOS does not let Cartouche look for your Mac" // storage.mac.localNetwork
@@ -132,7 +133,7 @@ enum GalleryWords {
     static let wrongCode = "Incorrect verification code."
     static let signedInAs = "player@icloud.com"
     /// The folder in Files the saves are kept in (GallerySaves).
-    static let savesFolder = "Gallery saves"
+    static let savesFolder = "NAS"
     /// The stand-in start's alert, and what Siri would say, over the
     /// console (GalleryTesting.swift).
     static let play = "Gallery play"

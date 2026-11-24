@@ -4,20 +4,24 @@
 //
 //  The player's Mac as storage, through Cartouche Builder's bridge
 //  (CartoucheBridge.swift): Cartouche finds the Mac on the Wi-Fi with
-//  Bonjour, pairs with it once, the player checking that both screens show
-//  the same six digits, and then reads and writes the two folders the Mac
-//  shares, Games and Saves, as it would a shared folder. The Mac's Games
-//  folder is where Cartouche Builder puts the games it builds, on the Mac
-//  or on the NAS it reaches.
+//  Bonjour, or through the cable when the iPhone is plugged into it
+//  (CartoucheBridgeCable.swift), pairs with it once, the player checking
+//  that both screens show the same six digits, and then reads and writes
+//  the two folders the Mac shares, Games and Saves, as it would a shared
+//  folder. The Mac's Games folder is where Cartouche Builder puts the games
+//  it builds, on the Mac or on the NAS it reaches.
 //
-//  The Mac is known by its ID in Cartouche Builder. Cartouche first tries
-//  the address it last reached the Mac at, which also answers through the
-//  player's VPN, where Bonjour does not go, and, while Tailscale is on
-//  here, the Mac's addresses in the player's tailnet, which its Cartouche
-//  Builder tells (CartoucheTailscale.swift): away from home, Tailscale
-//  reaches it. Then it looks for that ID on the network, so a new address
-//  from the router changes nothing. A Mac Bonjour cannot see pairs by its
-//  Tailscale name or address, typed on the Storage page.
+//  The Mac is known by its ID in Cartouche Builder. Plugged into it, the
+//  iPhone reaches it through the cable first, whatever its network: no
+//  Wi-Fi needed, and a long transfer does not depend on it. Without the
+//  cable, Cartouche first tries the address it last reached the Mac at,
+//  which also answers through the player's VPN, where Bonjour does not go,
+//  and, while Tailscale is on here, the Mac's addresses in the player's
+//  tailnet, which its Cartouche Builder tells (CartoucheTailscale.swift):
+//  away from home, Tailscale reaches it. Then it looks for that ID on the
+//  network, so a new address from the router changes nothing. A Mac
+//  Bonjour cannot see pairs by its Tailscale name or address, typed on the
+//  Storage page.
 //
 //  The paired key is the server's secret in the keychain, in base64. The
 //  iPhone's ID for the Mac is the server's own UUID: two Macs cannot tell
@@ -33,19 +37,31 @@ import Combine
 import Foundation
 import Network
 
-/// A Mac with Cartouche Builder on this network, as Bonjour lists it.
+/// A Mac with Cartouche Builder on this network, as Bonjour lists it, or
+/// linked through the cable.
 struct CartoucheNearbyMac: Identifiable, Hashable {
     /// The Mac's name.
     let name: String
-    /// Its ID in Cartouche Builder, from its Bonjour record.
+    /// Its ID in Cartouche Builder, from its Bonjour record or what it said
+    /// through the cable.
     let macID: String?
-    let endpoint: NWEndpoint
+    /// Where Bonjour found it; nil for a Mac seen through the cable alone.
+    let endpoint: NWEndpoint?
+    /// Whether the iPhone is plugged into it: pairing goes through the cable.
+    let cabled: Bool
+
+    init(name: String, macID: String?, endpoint: NWEndpoint?, cabled: Bool = false) {
+        self.name = name
+        self.macID = macID
+        self.endpoint = endpoint
+        self.cabled = cabled
+    }
 
     var id: String { macID ?? name }
 }
 
 /// The Macs whose Cartouche Builder shares with Cartouche on this network
-/// (_cartouche._tcp).
+/// (_cartouche._tcp), and those linked through the cable, once each.
 final class CartoucheMacBrowser: ObservableObject {
     @Published private(set) var found: [CartoucheNearbyMac] = []
     /// Whether iOS keeps Cartouche from looking: it may not reach the local
@@ -53,6 +69,14 @@ final class CartoucheMacBrowser: ObservableObject {
     @Published private(set) var refused = false
     private var browser: NWBrowser?
     private let queue = DispatchQueue(label: "Cartouche Mac browser")
+    private let cable: CartoucheCableLinks
+    private var cableWatch: NSObjectProtocol?
+    /// What Bonjour found last.
+    private var bonjour: [CartoucheNearbyMac] = []
+
+    init(cable: CartoucheCableLinks = .shared) {
+        self.cable = cable
+    }
 
     #if CARTOUCHE_GALLERY
     /// What the launcher's gallery (launcher/Gallery) shows in place of
@@ -70,10 +94,19 @@ final class CartoucheMacBrowser: ObservableObject {
         }
         #endif
         guard browser == nil else { return }
+        if cableWatch == nil {
+            cableWatch = NotificationCenter.default.addObserver(forName: CartoucheCableLinks.changed, object: cable, queue: .main) { [weak self] _ in
+                self?.merge()
+            }
+        }
+        merge()
         let browser = NWBrowser(for: Self.descriptor, using: .tcp)
         browser.browseResultsChangedHandler = { [weak self] results, _ in
             let macs = CartoucheMacBrowser.macs(in: results)
-            DispatchQueue.main.async { self?.found = macs }
+            DispatchQueue.main.async {
+                self?.bonjour = macs
+                self?.merge()
+            }
         }
         browser.stateUpdateHandler = { [weak self] state in
             let refused = CartoucheMacBrowser.isRefused(state)
@@ -86,6 +119,23 @@ final class CartoucheMacBrowser: ObservableObject {
     func stop() {
         browser?.cancel()
         browser = nil
+        if let cableWatch { NotificationCenter.default.removeObserver(cableWatch) }
+        cableWatch = nil
+    }
+
+    /// What Bonjour found and the Macs linked through the cable, once each.
+    private func merge() {
+        found = Self.merged(bonjour: bonjour, cable: cable.macs)
+    }
+
+    /// The Macs of BONJOUR and those linked through the CABLE, once each, by
+    /// name: a Mac on both pairs through the cable, Bonjour's place kept.
+    static func merged(bonjour: [CartoucheNearbyMac], cable: [CartoucheCableMac]) -> [CartoucheNearbyMac] {
+        let cabled = Set(cable.map(\.id))
+        let byID = Dictionary(bonjour.compactMap { mac in mac.macID.map { ($0, mac) } }, uniquingKeysWith: { first, _ in first })
+        let plugged = cable.map { CartoucheNearbyMac(name: $0.name, macID: $0.id, endpoint: byID[$0.id]?.endpoint, cabled: true) }
+        let others = bonjour.filter { mac in mac.macID.map { !cabled.contains($0) } ?? true }
+        return (plugged + others).sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
     static var descriptor: NWBrowser.Descriptor {
@@ -195,6 +245,11 @@ enum CartoucheMacStorage {
             throw explained(CartoucheBridgeError(.notPaired), mac: server.name, path: "")
         }
         let device = deviceID(of: server)
+        // The cable first: plugged into the Mac, the iPhone reaches it there
+        // whatever its network.
+        if let remote = try await throughCable(server, macID: macID, device: device, key: key, settings: settings) {
+            return remote
+        }
         // Where it was last, and where Tailscale reaches it: the Mac rarely
         // moves, and Bonjour crosses neither a VPN nor Tailscale.
         let endpoints = addresses(of: server, tailscale: tailscale).compactMap { address -> NWEndpoint? in
@@ -228,11 +283,38 @@ enum CartoucheMacStorage {
         }
     }
 
-    /// Whether the Mac of SERVER answers from here, at its last address,
-    /// at one of the tailnet while Tailscale is on here (TAILSCALE), or
-    /// found by Bonjour, without signing in: how Cartouche tries it again
-    /// once it was offline.
+    /// Signs in to the Mac of SERVER, MAC_ID, through the cable, when the
+    /// iPhone is plugged into it: nil when it is not, or when the cable
+    /// went meanwhile, for the network to be tried. The Mac's own refusal
+    /// is thrown: its other ways would say the same.
+    private static func throughCable(_ server: CartoucheStorageServer, macID: String, device: String, key: Data,
+                                     settings: CartoucheStorageSettings, cable: CartoucheCableLinks = .shared) async throws -> CartoucheRemote? {
+        guard let transport = await cable.session(with: macID) else { return nil }
+        do {
+            let channel = try await withTaskCancellationHandler {
+                try await CartoucheBridgeHandshake.client(transport, device: device, key: key, mac: macID)
+            } onCancel: {
+                transport.close()
+            }
+            try Task.checkCancellation()
+            // No address to keep: the cable has none.
+            return await remember(CartoucheBridgeClient(channel: channel, address: nil), server: server, settings: settings)
+        } catch let error as CartoucheBridgeError where [.notPaired, .protocolError].contains(error.kind) {
+            transport.close()
+            throw explained(error, mac: server.name, path: "")
+        } catch {
+            transport.close()
+            if Task.isCancelled { throw CancellationError() }
+            return nil
+        }
+    }
+
+    /// Whether the Mac of SERVER answers from here, through the cable, at
+    /// its last address, at one of the tailnet while Tailscale is on here
+    /// (TAILSCALE), or found by Bonjour, without signing in: how Cartouche
+    /// tries it again once it was offline.
     static func answers(_ server: CartoucheStorageServer, tailscale: Bool = CartoucheTailscale.isConnected) async -> Bool {
+        if let macID = server.macID, !macID.isEmpty, CartoucheCableLinks.shared.isLinked(macID) { return true }
         let tried = Self.addresses(of: server, tailscale: tailscale)
         if !tried.isEmpty {
             let patience = UInt64(lastAddressPatience * 1_000_000_000)
@@ -302,6 +384,22 @@ enum CartoucheMacStorage {
 
     // MARK: Pairing
 
+    /// Pairs this iPhone, named DEVICE_NAME, with MAC, nearby: through the
+    /// cable when the iPhone is plugged into it, else where Bonjour found
+    /// it. As pair(_:at:) does.
+    static func pair(_ server: CartoucheStorageServer, with mac: CartoucheNearbyMac, deviceName: String, cable: CartoucheCableLinks = .shared,
+                     code: @escaping @Sendable (String) -> Void) async throws -> (server: CartoucheStorageServer, secret: String) {
+        if mac.cabled, let macID = mac.macID, let transport = await cable.session(with: macID) {
+            return try await pair(server, over: transport, address: nil, port: nil, name: mac.name, deviceName: deviceName, code: code)
+        }
+        try Task.checkCancellation()
+        guard let endpoint = mac.endpoint else {
+            // Unplugged meanwhile, and Bonjour does not see it.
+            throw explained(CartoucheBridgeError(.closed), mac: mac.name, path: "")
+        }
+        return try await pair(server, at: endpoint, name: mac.name, deviceName: deviceName, code: code)
+    }
+
     /// Pairs this iPhone, named DEVICE_NAME, with the Mac at ENDPOINT, for
     /// SERVER: CODE gets the six digits both screens show, while the player
     /// allows the iPhone on the Mac. Gives SERVER to save, with the Mac's
@@ -315,6 +413,15 @@ enum CartoucheMacStorage {
         } catch let error as CartoucheBridgeError {
             throw explained(error, mac: name, path: "")
         }
+        return try await pair(server, over: connection, address: connection.remoteAddress, port: connection.remotePort,
+                              name: name, deviceName: deviceName, code: code)
+    }
+
+    /// Pairs on CONNECTION, which reached the Mac at ADDRESS and PORT (none
+    /// through the cable), then closes it.
+    private static func pair(_ server: CartoucheStorageServer, over connection: CartoucheBridgeTransport, address: String?, port: Int?,
+                             name: String, deviceName: String,
+                             code: @escaping @Sendable (String) -> Void) async throws -> (server: CartoucheStorageServer, secret: String) {
         defer { connection.close() }
         do {
             let paired = try await withTaskCancellationHandler {
@@ -332,7 +439,7 @@ enum CartoucheMacStorage {
             // Through Tailscale, the Mac's address in the tailnet, kept
             // beside the one of the player's network.
             let reached = CartoucheMacAddresses(host: made.host, port: made.port, tailnet: made.tailnet ?? [])
-                .reached(usable(connection.remoteAddress), port: connection.remotePort, told: nil)
+                .reached(usable(address), port: port, told: nil)
             made.host = reached.host
             made.port = reached.port
             made.tailnet = reached.tailnet.isEmpty ? nil : reached.tailnet

@@ -707,14 +707,20 @@ struct MacPlayCard: View {
                       "Ses sauvegardes restent sur ce Mac : leur mise en phase avec l’iPhone est désactivée (page iPhone).")
         }
         if let playing {
-            return tr("Playing since \(Format.clock(playing.started)). Its saves go to the saves folder when it ends.",
-                      "En jeu depuis \(Format.clock(playing.started)). Ses sauvegardes iront dans le dossier des sauvegardes à la fin.")
+            // What went since it started, as it saved.
+            if let event = games.last[game.titleID], event.when == .during, event.at >= playing.started,
+               event.step == "send" || event.step == "keep" {
+                return tr("Playing since \(Format.clock(playing.started)). Its saves went to the saves folder \(Format.relative(event.at)), a few seconds after it saved.",
+                          "En jeu depuis \(Format.clock(playing.started)). Ses sauvegardes sont parties dans le dossier des sauvegardes \(Format.relative(event.at)), quelques secondes après qu’il a sauvegardé.")
+            }
+            return tr("Playing since \(Format.clock(playing.started)). Its saves go to the saves folder a few seconds after it saves.",
+                      "En jeu depuis \(Format.clock(playing.started)). Ses sauvegardes partent dans le dossier des sauvegardes quelques secondes après chaque sauvegarde.")
         }
         guard let event = games.last[game.titleID] else {
             // Whichever device played last, an iPhone, an iPad or another
             // Mac, the newest copy comes: none is named.
-            return tr("Its saves are kept in step through the saves folder, before and after each game.",
-                      "Ses sauvegardes sont mises en phase par le dossier des sauvegardes, avant et après chaque partie.")
+            return tr("Its saves are kept in step through the saves folder, before each game and as it saves.",
+                      "Ses sauvegardes sont mises en phase par le dossier des sauvegardes, avant chaque partie et dès qu’il sauvegarde.")
         }
         let when = Format.relative(event.at)
         switch event.step {

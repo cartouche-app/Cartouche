@@ -5,8 +5,9 @@
 //  A game's saves kept in step with its folder in the player's saves
 //  folder, on a server Cartouche signed in to: the steps CartoucheSaveSync
 //  decides, taken there. CartoucheSaveBackups takes them for each game,
-//  after a game, when a game is installed and before it starts; the storage
-//  tests take them against real servers (launcher/StorageTests).
+//  while it plays and after it, when a game is installed and before it
+//  starts; the storage tests take them against real servers
+//  (launcher/StorageTests).
 //
 //  The game's folder holds its copies, "<game> [<title ID>]/<date>.zip",
 //  and the newest ones only: after each copy that goes there, the oldest
@@ -161,8 +162,12 @@ final class CartoucheSavesFolder {
     /// that moves nothing keeps that base for the next one; QUIET says, just
     /// before a copy takes the place of the saves, that the game still does
     /// not run (CartoucheSavesBusy). The iPhone passes neither.
+    /// REPLACING: the copy the saves here went to earlier in the same game,
+    /// while it played, which the copy that goes now takes the place of
+    /// when it is still the newest one there: one copy for each game.
     func sync(_ target: CartoucheSaveTarget, base given: CartoucheSaveBase?, fetching: Bool,
-              leaving: (() -> Bool)? = nil, quiet: () -> Bool = { true }) async throws -> CartoucheSaveOutcome {
+              leaving: (() -> Bool)? = nil, quiet: () -> Bool = { true },
+              replacing: String? = nil) async throws -> CartoucheSaveOutcome {
         let base = given?.place == place ? given : nil
         // The saves folder a Mac kept the game in step with before this one.
         let left = leaving != nil && given?.place != place ? given : nil
@@ -232,7 +237,8 @@ final class CartoucheSavesFolder {
         case .send:
             if let here {
                 let name = CartoucheSaveSync.sendName(written: here.written, after: newest?.date)
-                outcome.base = try await send(target, here, as: name, to: folder)
+                outcome.base = try await send(target, here, as: name, to: folder,
+                                              replacing: replacing != nil && replacing == newest?.name ? replacing : nil)
                 outcome.sent = name
             }
         case .keep:
@@ -343,10 +349,11 @@ final class CartoucheSavesFolder {
         return try await CartoucheZip.archive(of: source)
     }
 
-    /// Writes the saves HERE to NAME in FOLDER, then removes the copies past
-    /// the newest ones, but for this one and SPARING; the base it makes.
+    /// Writes the saves HERE to NAME in FOLDER, then removes REPLACING, the
+    /// copy it takes the place of, and the copies past the newest ones, but
+    /// for this one and SPARING; the base it makes.
     private func send(_ target: CartoucheSaveTarget, _ here: CartoucheLocalSaves, as name: String,
-                      to folder: String, sparing: String? = nil) async throws -> CartoucheSaveBase {
+                      to folder: String, sparing: String? = nil, replacing: String? = nil) async throws -> CartoucheSaveBase {
         let content = try here.content ?? CartoucheSaveSync.content(ofSavesIn: target.documents)
         let hasIt = try await hasFolder(folder)
         if !hasIt {
@@ -360,6 +367,14 @@ final class CartoucheSavesFolder {
         } catch {
             await upload.cancel()
             throw error
+        }
+        if let replacing, replacing != name, replacing != sparing {
+            do {
+                try await remote.delete(CartoucheStoragePath.join(folder, replacing))
+            } catch {
+                NSLog("[Cartouche] cannot remove the copy %@ of %@ the new one replaces: %@", replacing, target.name,
+                      error.localizedDescription)
+            }
         }
         do {
             try await prune(folder, made: name, sparing: sparing)

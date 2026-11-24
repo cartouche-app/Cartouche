@@ -117,9 +117,8 @@
       "cartouche": "0.10.0",
       "device": "iPhone19,4",
       "fields": {
-        "fromStorage": true,
+        "from": "mac",
         "nxnative": "6c3aeb3d70a1",
-        "sizeMiB": 19456,
         "version": "1.0.0"
       },
       "game": "0400C3F00006E000",

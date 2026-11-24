@@ -292,7 +292,7 @@ extension CartoucheText {
     /// Under the iPhone's saves folder, on a connection.
     static func macStorageIPhoneSavesFooter(_ kept: Int) -> String {
         f("mac.storage.iPhoneSaves.footer",
-          "The saves folder chosen on your iPhone: Cartouche keeps the saves of the games played on this Mac there too, through the same connection, before and after each game, as the iPhone does. The %lld newest copies are kept. To change it, choose another on the iPhone.",
+          "The saves folder chosen on your iPhone: Cartouche keeps the saves of the games played on this Mac there too, through the same connection, before each game and as it saves, as the iPhone does. The %lld newest copies are kept. To change it, choose another on the iPhone.",
           kept)
     }
 

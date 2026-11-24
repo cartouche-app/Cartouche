@@ -7,10 +7,11 @@
 //  player shares from its sheet as the game wrote it, or sends to
 //  Cartouche cleaned; the game paused behind the console, which the home
 //  offers to resume or to quit, Quit asking first; an install, under way
-//  over the console, or failed, with the report to copy; and its builds
-//  on the player's Mac, from its sheet. The gallery stands in for the
-//  games, their logs, their install and their process
-//  (GalleryStubs.swift), and for the Mac (GalleryMac).
+//  over the console, or failed, with the report to copy; its builds on
+//  the player's Mac, from its sheet; and the memory its sheet counts once
+//  Game Mode came. The gallery stands in for the games, their logs, their
+//  install and their process (GalleryStubs.swift), for Cartouche's own
+//  memory (GalleryState.ownLimitMiB), and for the Mac (GalleryMac).
 //
 
 import XCTest
@@ -41,6 +42,12 @@ extension Words {
     static let removeGameFromQueue = "Remove %@ from the queue" // mac.builds.remove
 }
 
+/// The words of what a game needs, on its sheet: the line that says this
+/// iPhone has it all, which shows only when the game's memory fits too.
+extension Words {
+    static let requirementsMet = "This iPhone has what it needs" // sheet.requirements.met
+}
+
 final class GameUITests: ConsoleTestCase {
     /// The first of the player's games, the one work: paused pauses; the
     /// console opens with another in focus, the first by name.
@@ -68,6 +75,21 @@ final class GameUITests: ConsoleTestCase {
         closeSheet(in: app)
         expect(app.buttons[game].waitForExistence(timeout: 10), "The home does not show \(game) again", in: app)
         expect(!app.buttons[name].exists, "The home still shows \(name)", in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// Game Mode gives Cartouche 8,192 MiB a moment after the console
+    /// opens, which measures 6,144 at first (work: game-mode-later), and a
+    /// game in Cartouche's place has the 8,192: Mario Kart World's sheet,
+    /// up to 8,183 MiB, says this iPhone has what the game needs. Measured
+    /// once, as the console opened, the sheet said a game may use 6,144 MiB,
+    /// and listed what the game needs, its memory short.
+    @MainActor
+    func testTheSheetCountsTheMemoryGameModeGivesAMomentLater() {
+        let app = openConsole(Launch(work: "game-mode-later"))
+        openSheet(of: game, in: app)
+        let met = element(beginningWith: Words.requirementsMet, in: app)
+        scrollTo(met, "\(Words.requirementsMet) on the sheet of \(game)", in: app)
         expectMainThreadAnswered(app)
     }
 

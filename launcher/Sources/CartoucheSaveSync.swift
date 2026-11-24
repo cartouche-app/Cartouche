@@ -27,9 +27,17 @@
 //    or this iPhone never synced the game with this folder, the saves
 //    written last win, and the others are kept as a copy of their own date.
 //  - The newest copy comes when the game is installed and before it starts;
-//    the saves here go after the game. A copy that goes as the newest is
-//    named after the newest one there, so that it is the newest whatever
-//    the iPhones' clocks say.
+//    the saves here go a few seconds after the game saves, while it plays
+//    and Cartouche runs beside it (CartoucheSaveWatch), and after the game.
+//    A copy that goes as the newest is named after the newest one there,
+//    so that it is the newest whatever the iPhones' clocks say.
+//  - While the game plays, its saves go from a copy of them made at one
+//    moment (snapshot): nxnative swaps a save's folder whole at each
+//    commit, and a folder read while it swaps would mix two saves. Each
+//    copy that goes while the game plays, and the one after it, takes the
+//    place of the one that went before in the same game, so that the
+//    copies kept are those of the last games, not of the last minutes of
+//    one.
 //  - Each copy names the version of the game that wrote its saves, in its
 //    zip's comment, which older Cartouches leave aside. A game older than
 //    the newest copy's never takes it, nor puts its own saves over it: they
@@ -490,5 +498,199 @@ public enum CartoucheSaveSync {
             }
             throw error
         }
+    }
+}
+
+// MARK: The saves while the game plays
+
+/// A game's saves copied as they were at one moment, while it plays: what
+/// goes to the saves folder then (CartoucheSaveSync.snapshot).
+public struct CartoucheSavesSnapshot: Hashable, Sendable {
+    /// The folder they were copied into, laid out as a game's Documents:
+    /// save/ and save_device/.
+    public let documents: URL
+    /// How the saves looked in the game's Documents as they were copied.
+    public let look: String
+    /// How they look in the copy: the same, but for dates a disk keeps less
+    /// finely than another.
+    public let copyLook: String
+
+    public init(documents: URL, look: String, copyLook: String) {
+        self.documents = documents
+        self.look = look
+        self.copyLook = copyLook
+    }
+
+    /// BASE, which holds for the saves in the game's Documents, as it holds
+    /// for the copy: for a sync from it.
+    public func forCopy(_ base: CartoucheSaveBase?) -> CartoucheSaveBase? {
+        guard var base, base.look == look else { return base }
+        base.look = copyLook
+        return base
+    }
+
+    /// BASE, which a sync from the copy made, as it holds for the saves in
+    /// the game's Documents.
+    public func forGame(_ base: CartoucheSaveBase?) -> CartoucheSaveBase? {
+        guard var base, base.look == copyLook else { return base }
+        base.look = look
+        return base
+    }
+}
+
+extension CartoucheSaveSync {
+    /// The saves in DOCUMENTS copied into FOLDER as they are at one moment,
+    /// for them to go to the saves folder while the game plays. nxnative
+    /// commits a game's saves by swapping each of their folders whole
+    /// (Commit, renamex_np), so that a folder read while it swaps could
+    /// hold files of two saves. The copy is made again, TRIES times at
+    /// most, until the saves did not change while it was made; on an APFS
+    /// disk it costs next to nothing (a clone). Nil when the game has no
+    /// saves, or when they kept changing: they go once the game has
+    /// stopped saving. COPIED runs once each copy is made, before the saves
+    /// are looked at again: for the tests, a game that saves meanwhile.
+    public static func snapshot(ofSavesIn documents: URL, into folder: URL, tries: Int = 3,
+                                copied: () -> Void = {}) throws -> CartoucheSavesSnapshot? {
+        let fileManager = FileManager.default
+        var failure: Error?
+        for _ in 0 ..< max(tries, 1) {
+            guard let before = saves(in: documents) else { return nil }
+            if fileManager.fileExists(atPath: folder.path) {
+                try fileManager.removeItem(at: folder)
+            }
+            try fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
+            failure = nil
+            for name in folders {
+                let source = documents.appendingPathComponent(name, isDirectory: true)
+                var isFolder: ObjCBool = false
+                guard fileManager.fileExists(atPath: source.path, isDirectory: &isFolder), isFolder.boolValue else { continue }
+                let copy = folder.appendingPathComponent(name, isDirectory: true)
+                do {
+                    try fileManager.copyItem(at: source, to: copy)
+                    keepDates(from: source, in: copy)
+                } catch {
+                    // A file the game's commit took away under the copy.
+                    failure = error
+                    break
+                }
+            }
+            copied()
+            guard let after = saves(in: documents), after.look == before.look else { continue }
+            // The saves did not change: a copy that failed all the same
+            // will fail again.
+            if let failure { throw failure }
+            guard let inCopy = saves(in: folder) else { continue }
+            return CartoucheSavesSnapshot(documents: folder, look: before.look, copyLook: inCopy.look)
+        }
+        try? fileManager.removeItem(at: folder)
+        return nil
+    }
+
+    /// Gives each file in COPY the date of its own in SOURCE, which an APFS
+    /// clone keeps already, and a copy on another disk may not.
+    private static func keepDates(from source: URL, in copy: URL) {
+        let fileManager = FileManager.default
+        guard let walker = fileManager.enumerator(atPath: copy.path) else { return }
+        while let relative = walker.nextObject() as? String {
+            let copied = copy.appendingPathComponent(relative)
+            guard let values = try? copied.resourceValues(forKeys: [.isRegularFileKey, .contentModificationDateKey]),
+                  values.isRegularFile == true,
+                  let date = try? source.appendingPathComponent(relative).resourceValues(forKeys: [.contentModificationDateKey])
+                      .contentModificationDate,
+                  values.contentModificationDate != date else { continue }
+            try? fileManager.setAttributes([.modificationDate: date], ofItemAtPath: copied.path)
+        }
+    }
+}
+
+/// When the saves a game makes while it plays go to the saves folder, the
+/// game's saves looked at every few seconds (interval): once they have
+/// stayed as they are for a few seconds since they last changed (quiet), as
+/// a game often saves several times in a row, which nxnative's own sender
+/// waits for too; and a minute at the latest after they first changed
+/// (longest), for a game that never stops saving. Saves that did not go
+/// are tried again a minute later (retry), or as soon as they change.
+public struct CartoucheSaveWatch: Equatable, Sendable {
+    /// How often the saves are looked at, in seconds.
+    public static let interval: TimeInterval = 2
+    public static let quiet: TimeInterval = 5
+    public static let longest: TimeInterval = 60
+    public static let retry: TimeInterval = 60
+
+    /// How the saves looked when they were last in step with the saves
+    /// folder: when they went, or when the game started.
+    public private(set) var inStep: String?
+    /// How they looked last, and since when.
+    private var seen: String?
+    private var seenSince: Date?
+    /// When they first changed since they were last in step.
+    private var changed: Date?
+    /// Not tried again before then, unless they change.
+    private var notBefore: Date?
+
+    /// INSTEP: how the saves look when they are in step with the saves
+    /// folder, as the game starts; nil when unknown, or never synced.
+    public init(inStep: String?) {
+        self.inStep = inStep
+    }
+
+    /// Whether the saves, which look as LOOK now (nil: the game has none),
+    /// are to go now.
+    public mutating func due(_ look: String?, now: Date = Date()) -> Bool {
+        guard let look, look != inStep else {
+            seen = look
+            seenSince = nil
+            changed = nil
+            return false
+        }
+        if look != seen {
+            seen = look
+            seenSince = now
+            notBefore = nil
+        }
+        let since = seenSince ?? now
+        let first = changed ?? since
+        changed = first
+        if let notBefore, now < notBefore { return false }
+        return now.timeIntervalSince(since) >= Self.quiet || now.timeIntervalSince(first) >= Self.longest
+    }
+
+    /// Whether saves that look as LOOK are yet to go: whatever is waiting
+    /// goes at once when Cartouche leaves the screen.
+    public func isPending(_ look: String?) -> Bool {
+        look != nil && look != inStep
+    }
+
+    /// The saves that looked as LOOK went, or were found in step: what
+    /// changed since goes in its turn.
+    public mutating func sent(_ look: String) {
+        inStep = look
+        notBefore = nil
+        if seen == look {
+            changed = nil
+        } else {
+            // They changed again meanwhile: since they were seen so.
+            changed = seenSince
+        }
+    }
+
+    /// The saves did not go: they are tried again a minute later, or as
+    /// soon as they change and the game stops saving, the longest wait
+    /// counted anew from that change.
+    public mutating func failed(now: Date = Date()) {
+        notBefore = now.addingTimeInterval(Self.retry)
+        changed = nil
+    }
+
+    /// The saves folder's server answers again: saves that did not go are
+    /// tried again at once.
+    public mutating func retryNow() {
+        notBefore = nil
+    }
+
+    /// The saves changed while they were being copied: they go once they
+    /// have stayed as they are for a few seconds.
+    public mutating func moved() {
+        seen = nil
     }
 }

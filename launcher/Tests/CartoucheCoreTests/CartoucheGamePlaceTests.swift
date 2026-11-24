@@ -8,7 +8,7 @@
 //  Cartouche with Game Mode, 6,144 for a game's process behind the console,
 //  and 3,376 for a process without the capability. What follows a game's
 //  first measurement there, and its end, and what Cartouche keeps of the
-//  capability from one launch to the next.
+//  capability, and of its own highest limit, from one launch to the next.
 //
 
 import XCTest
@@ -253,5 +253,85 @@ final class CartoucheBehindIMLRecordTests: XCTestCase {
         XCTAssertTrue(record().record(has: false, lacked: false))
         record().clear()
         XCTAssertFalse(record().load())
+    }
+}
+
+/// Cartouche's own limit, as a game in its place has it: Game Mode raises
+/// it a moment after Cartouche comes to the front, from 6,144 MiB to 8,192
+/// on an iPhone with 12 GB, and Cartouche keeps the highest it measured on
+/// the same iPhone, iOS and signature (CartoucheOwnLimitRecord).
+final class CartoucheOwnLimitRecordTests: XCTestCase {
+    private let suite = "CartoucheOwnLimitRecordTests"
+    private var defaults: UserDefaults!
+    private let system = "iPhone19,4 27.3 iml"
+
+    override func setUp() {
+        super.setUp()
+        UserDefaults().removePersistentDomain(forName: suite)
+        defaults = UserDefaults(suiteName: suite)
+    }
+
+    override func tearDown() {
+        defaults.removePersistentDomain(forName: suite)
+        defaults = nil
+        super.tearDown()
+    }
+
+    private func record(_ system: String? = nil) -> CartoucheOwnLimitRecord {
+        CartoucheOwnLimitRecord(defaults: defaults, system: system ?? self.system)
+    }
+
+    /// The console opens before Game Mode came, and measures 6,144 MiB, then
+    /// 8,192 a moment later: from then on, and at the next launch, a game
+    /// in Cartouche's place has 8,192, however low Cartouche reads its own
+    /// as it opens, or in the background.
+    func testTheHighestLimitIsKeptForTheNextLaunch() {
+        XCTAssertNil(record().load())
+        var highest = record().record(6_144, highest: nil)
+        XCTAssertEqual(highest, 6_144)
+        highest = record().record(8_192, highest: highest)
+        XCTAssertEqual(highest, 8_192)
+        XCTAssertEqual(record().record(6_144, highest: highest), 8_192)
+        XCTAssertEqual(record().load(), 8_192)
+        XCTAssertEqual(CartoucheOwnLimitRecord.placeMiB(measured: 6_144, highest: record().load()), 8_192)
+    }
+
+    /// Without a measurement kept, the one Cartouche makes now; with no
+    /// limit from iOS either, none.
+    func testWithoutARecordTheMeasurementCounts() {
+        XCTAssertEqual(CartoucheOwnLimitRecord.placeMiB(measured: 6_144, highest: nil), 6_144)
+        XCTAssertNil(CartoucheOwnLimitRecord.placeMiB(measured: nil, highest: nil))
+        XCTAssertEqual(CartoucheOwnLimitRecord.placeMiB(measured: nil, highest: 8_192), 8_192)
+        XCTAssertNil(record().record(nil, highest: nil))
+        XCTAssertNil(record().load())
+    }
+
+    /// Another iOS, or a signature without Increased Memory Limit, gives
+    /// another limit: the record of the one before goes.
+    func testAnotherSystemForgetsTheRecord() {
+        XCTAssertEqual(record().record(8_192, highest: nil), 8_192)
+        XCTAssertNil(record("iPhone19,4 27.4 iml").load())
+        XCTAssertNil(defaults.object(forKey: CartoucheOwnLimitRecord.key))
+        XCTAssertNil(record().load())
+        XCTAssertEqual(record("iPhone19,4 27.3 no-iml").record(3_376, highest: nil), 3_376)
+        XCTAssertEqual(record("iPhone19,4 27.3 no-iml").load(), 3_376)
+        XCTAssertNil(record().load())
+    }
+
+    /// The sheet of Mario Kart World, up to 8,183 MiB, with games kept in
+    /// Cartouche's place or behind the console: the game fits once Game
+    /// Mode came, though the console read 6,144 MiB as it opened.
+    func testTheSheetCountsCartouchesPlaceOnceGameModeCame() {
+        let opened = 6_144
+        let place = CartoucheOwnLimitRecord.placeMiB(measured: opened, highest: 8_192)
+        XCTAssertEqual(place, 8_192)
+        // Behind the console, 6,144 MiB there: the game goes to Cartouche's
+        // place, which has more, and the sheet counts its limit.
+        XCTAssertFalse(CartoucheGamePlace.startsBehind(needsIML: true, peakMiB: 8_183, behindMiB: 6_144, ownMiB: place))
+        XCTAssertEqual(CartoucheGamePlace.gameLimitMiB(behindMiB: 6_144, ownMiB: place), 8_192)
+        // Read as the console opened, Cartouche's place had no more than
+        // behind the console, and the game did not fit.
+        XCTAssertTrue(CartoucheGamePlace.startsBehind(needsIML: true, peakMiB: 8_183, behindMiB: 6_144, ownMiB: opened))
+        XCTAssertEqual(CartoucheGamePlace.gameLimitMiB(behindMiB: 6_144, ownMiB: opened), 6_144)
     }
 }

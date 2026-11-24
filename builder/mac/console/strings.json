@@ -49,8 +49,8 @@
       "fr": "Les sauvegardes les plus récentes, du %1$@, sont arrivées de votre dossier des sauvegardes. Celles de ce Mac y sont gardées : copie du %2$@."
     },
     "saves.footer": {
-      "en": "Cartouche keeps these saves in step with your saves folder: the newest come before the game starts and while it does not run, and go there after each game. When both changed, the newest win and the others stay as a copy. The %lld newest copies are kept.",
-      "fr": "Cartouche synchronise ces sauvegardes avec votre dossier des sauvegardes : les plus récentes arrivent avant chaque lancement et tant que le jeu ne tourne pas, et y repartent après chaque partie. Si les deux ont changé, les plus récentes l’emportent et les autres restent en copie. Les %lld copies les plus récentes sont gardées."
+      "en": "Cartouche keeps these saves in step with your saves folder: the newest come before the game starts and while it does not run, and go there a few seconds after each save of the game, after the game at the latest. When both changed, the newest win and the others stay as a copy. The %lld newest copies are kept, one for each game played.",
+      "fr": "Cartouche synchronise ces sauvegardes avec votre dossier des sauvegardes : les plus récentes arrivent avant chaque lancement et tant que le jeu ne tourne pas, et y repartent quelques secondes après chaque sauvegarde du jeu, au plus tard après la partie. Si les deux ont changé, les plus récentes l’emportent et les autres restent en copie. Les %lld copies les plus récentes sont gardées, une par partie."
     },
     "saves.kept": {
       "en": "Newer saves are in your saves folder: they come to this Mac next. This Mac’s are kept there as the copy of %@.",
@@ -415,8 +415,8 @@
       "fr": "Envoyés depuis ce Mac"
     },
     "mac.storage.iPhoneSaves.footer": {
-      "en": "The saves folder chosen on your iPhone: Cartouche keeps the saves of the games played on this Mac there too, through the same connection, before and after each game, as the iPhone does. The %lld newest copies are kept. To change it, choose another on the iPhone.",
-      "fr": "Le dossier des sauvegardes choisi sur votre iPhone : Cartouche y garde aussi celles des jeux joués sur ce Mac, par la même connexion, avant et après chaque partie, comme l’iPhone. Les %lld copies les plus récentes y restent. Pour en changer, choisissez-en un autre sur l’iPhone."
+      "en": "The saves folder chosen on your iPhone: Cartouche keeps the saves of the games played on this Mac there too, through the same connection, before each game and as it saves, as the iPhone does. The %lld newest copies are kept. To change it, choose another on the iPhone.",
+      "fr": "Le dossier des sauvegardes choisi sur votre iPhone : Cartouche y garde aussi celles des jeux joués sur ce Mac, par la même connexion, avant chaque partie et dès que le jeu sauvegarde, comme l’iPhone. Les %lld copies les plus récentes y restent. Pour en changer, choisissez-en un autre sur l’iPhone."
     },
     "mac.storage.thisMac": {
       "en": "This Mac",

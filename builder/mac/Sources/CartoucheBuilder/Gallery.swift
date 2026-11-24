@@ -60,6 +60,10 @@ enum Gallery {
         // The iPhone page with Tailscale on this Mac, and its address there
         // (BridgeView.swift); the iPhone page above has it off.
         case iphoneTailscale = "iphone-tailscale"
+        // The whole iPhone page, in a window as tall as it, the iPhone
+        // connected now plugged into this Mac, by its cable
+        // (BridgeCable.swift).
+        case iphoneCable = "iphone-cable"
         // The whole iPhone page, in a window as tall as it, down to the
         // iPhone's games folder on one of the player's connections, a NAS:
         // a game going there, and a Mac app another Mac sent
@@ -92,7 +96,7 @@ enum Gallery {
         /// Whether the page is in a window taller than the screen, as tall
         /// as the page, which AppKit would fit to the screen.
         var isTall: Bool {
-            isWholeSheet || [.storageMac, .iphoneGames, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport,
+            isWholeSheet || [.storageMac, .iphoneGames, .iphoneCable, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport,
                              .activitySplit, .gameSplit].contains(self)
         }
 
@@ -540,7 +544,7 @@ enum Gallery {
             case .library, .activity, .storage, .iphone: model.section = AppSection(rawValue: page.rawValue) ?? .library
             case .storageMac: model.section = .storage
             case .activitySplit: model.section = .activity
-            case .iphoneTailscale, .iphoneGames: model.section = .iphone
+            case .iphoneTailscale, .iphoneGames, .iphoneCable: model.section = .iphone
             case .libraryRoom, .game, .gameNarrow, .gameNewer, .gameQueue, .gameXcode, .gameUnbuilt, .gameAfterConsole, .gameSplit:
                 model.section = .library
             case .setup, .setupXcode: model.section = .setup
@@ -594,7 +598,8 @@ enum Gallery {
             ]
             let saves = URL(fileURLWithPath: info.home).appendingPathComponent("Saves", isDirectory: true)
             // A made-up address in the tailnet, never one of the project's.
-            model.bridge.preview(devices: iphones, connected: [iphones[0].id], games: config.games, name: "MacBook Air", saves: saves,
+            model.bridge.preview(devices: iphones, connected: [iphones[0].id], cabled: page == .iphoneCable ? [iphones[0].id] : [],
+                                 games: config.games, name: "MacBook Air", saves: saves,
                                  tailnet: page == .iphoneTailscale ? ["100.101.102.103", "fd7a:115c:a1e0::1"] : [])
             // Mario Kart 8 Deluxe played on this Mac, the iPhone's saves come
             // before its last game, or, on game-newer, held back, version

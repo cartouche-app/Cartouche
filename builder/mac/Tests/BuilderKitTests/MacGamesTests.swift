@@ -19,7 +19,7 @@ private final class Connection: MacConnectionSavesDriver, @unchecked Sendable {
     var place: String { connection.uuidString + "|" + path }
 
     func sync(_ game: MacSaveGame, documents: URL, base: Data?, fetching: Bool, leaving: @escaping @Sendable () -> Bool,
-              quiet: @Sendable () -> Bool) async throws -> MacConnectionOutcome {
+              quiet: @Sendable () -> Bool, replacing: String?) async throws -> MacConnectionOutcome {
         throw MacSavesError.offline
     }
 

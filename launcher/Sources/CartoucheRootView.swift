@@ -31,10 +31,14 @@ struct CartoucheRootView: View {
                 CartoucheImportPicker.noteLeftOpen()
                 // The player's connections, the same on the paired Mac.
                 CartoucheConnectionsExchange.shared.cameForward()
+                // The player's Mac through the cable, once plugged into it.
+                CartoucheCableListener.shared.startWithApp()
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
                 Self.clearBadge()
                 CartoucheConnectionsExchange.shared.cameForward()
+                // iOS may have closed it while Cartouche was away.
+                CartoucheCableListener.shared.startWithApp()
             }
     }
 

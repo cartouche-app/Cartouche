@@ -27,10 +27,10 @@ final class ConsoleConnectionSaves: MacConnectionSavesDriver, @unchecked Sendabl
     var place: String { saves.place }
 
     func sync(_ game: MacSaveGame, documents: URL, base: Data?, fetching: Bool, leaving: @escaping @Sendable () -> Bool,
-              quiet: @Sendable () -> Bool) async throws -> MacConnectionOutcome {
+              quiet: @Sendable () -> Bool, replacing: String?) async throws -> MacConnectionOutcome {
         do {
             let done = try await saves.sync(titleID: game.titleID, name: game.name, version: game.version, documents: documents,
-                                            base: base, fetching: fetching, leaving: leaving, quiet: quiet)
+                                            base: base, fetching: fetching, leaving: leaving, quiet: quiet, replacing: replacing)
             return Self.outcome(done)
         } catch let error as CartoucheMacSaveError {
             throw Self.builder(error)

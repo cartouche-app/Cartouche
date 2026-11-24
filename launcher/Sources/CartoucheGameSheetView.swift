@@ -101,7 +101,9 @@ struct CartoucheGameSheetView: View {
     }
 
     /// The memory the game has here, where Play starts it: behind the
-    /// console, iOS may give it more than Cartouche's own limit.
+    /// console, iOS may give it more than Cartouche's own limit; in
+    /// Cartouche's place, Cartouche's own, as Game Mode raises it a moment
+    /// after Cartouche comes to the front (CartoucheGameKeeping.placeLimitMiB).
     private var gameLimitMiB: Int? {
         keeping.gameLimitMiB(ownLimitMiB: memory?.limitMiB)
     }
@@ -476,7 +478,9 @@ struct CartoucheGameSheetView: View {
         // iOS's alone: a Mac gives a game its memory without it.
         #if os(iOS)
         if sheet.requirements.increasedMemoryLimit {
-            let limit = memory.map { CartoucheText.memoryAmount(mebibytes: $0.limitMiB) } ?? "–"
+            // Cartouche's own, as a game in its place has it, once Game
+            // Mode came (CartoucheGameKeeping.placeLimitMiB).
+            let limit = keeping.placeLimitMiB(memory?.limitMiB).map { CartoucheText.memoryAmount(mebibytes: $0) } ?? "–"
             list.append(Requirement(ok: CartoucheDevice.hasIncreasedMemoryLimit,
                                     title: CartoucheText.imlRequirement,
                                     detail: CartoucheDevice.hasIncreasedMemoryLimit ? CartoucheText.imlActive(limit) : CartoucheText.imlInactive(limit)))
