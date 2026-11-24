@@ -11,7 +11,10 @@ A game is built when:
   "always" or "never";
 - Xcode or the iOS SDK changed since;
 - its IPA was made from a commit nxnative's branch does not have (a fork's),
-  so what changed since cannot be known.
+  so what changed since cannot be known;
+- its IPA was made from another nxnative than the one the games are built
+  from now: nxnative's, and an iPhone paired since reads no BC, which the
+  no-bc fork builds for, or the other way round (build_for.py).
 
 A game whose last build failed at the current commit, with the same files and
 tools, waits for one of these to change instead of failing again every night.
@@ -39,7 +42,7 @@ from pathlib import Path
 
 from . import fallback
 from . import ipa as ipas
-from . import macapps
+from . import build_for, macapps
 from .config import Config
 from .engine import Commit, Engine, Profile
 from .i18n import t
@@ -102,9 +105,11 @@ def plan(
     now: float | None = None,
     mac: macapps.Place | None = None,
     held: dict[str, dict] | None = None,
+    source: str = "",
 ) -> Plan:
     """HELD: the games whose split differed from their profile's, as
-    fallback.splits() gives them."""
+    fallback.splits() gives them. SOURCE: the nxnative the games are built
+    from now, as build_for.key() says it ("" leaves it out)."""
     force = {f.upper() for f in force or set()}
     held = held or {}
     prints: dict[str, str] = {}
@@ -168,6 +173,12 @@ def plan(
         if build.toolchain and toolchain and build.toolchain != toolchain:
             reasons.append("toolchain")
             details.append(t("plan.toolchain", old=build.toolchain, new=toolchain))
+        made_from = build_for.recorded(build.engine, config)
+        if ios and source and made_from != source:
+            # The fork converts the BC textures an iPhone without BC cannot
+            # read: an IPA from nxnative's says Not supported there.
+            reasons.append("engine")
+            details.append(t("plan.engine", old=build_for.label(made_from), new=build_for.label(source)))
 
         base = engine.resolve(build.commit)
         if base is not None and base != head and engine.is_ancestor(head, base):

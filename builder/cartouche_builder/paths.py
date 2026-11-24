@@ -49,6 +49,12 @@ class Paths:
         return self.root / "nxnative"
 
     @property
+    def bridge(self) -> Path:
+        """The iPhones paired with this Mac, as the app keeps them
+        (BridgeDevices.swift): the engine reads their models only."""
+        return self.root / "bridge.json"
+
+    @property
     def engine_state(self) -> Path:
         """The nxnative commits whose app build failed where an older one built (fallback.py)."""
         return self.root / "nxnative.json"

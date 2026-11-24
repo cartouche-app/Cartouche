@@ -415,6 +415,9 @@ enum CartoucheText {
     static var installDone: String { s("work.install.done", "Installed") }
     static var installGPUTitle: String { s("work.install.gpu", "This iPhone cannot run nxnative’s games") }
     static var installAnyway: String { s("work.install.gpu.anyway", "Install anyway") }
+    /// Beside reasonGPU on an iPhone whose GPU reads no BC: the Mac's
+    /// builds of nxnative's no-bc variant (cartouche_builder/build_for.py).
+    static var installGPUBuilder: String { s("work.install.gpu.builder", "Cartouche Builder builds them for this iPhone from nxnative’s no-bc variant, which converts those textures, once this iPhone is paired with your Mac.") }
     static func installNotAGame(_ name: String) -> String { f("work.install.notAGame", "%@ is not an nxnative game: you will find it in Apps.", name) }
     static func installNoSpace(needed: String, free: String) -> String {
         f("work.install.noSpace", "Installing this game takes about %1$@ of free space, and this iPhone has %2$@. Free some space, then import it again.", needed, free)

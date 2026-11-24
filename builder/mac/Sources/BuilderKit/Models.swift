@@ -225,15 +225,22 @@ public struct EngineCommit: Codable, Equatable {
     public var latest: String?
     public var latestShort: String?
     public var held: Bool?
+    /// Which nxnative it is (cartouche_builder/build_for.py): "nxnative", its
+    /// own; "no-bc", its variant for a GPU without BC, for the model MODEL
+    /// (the paired iPhone DEVICE's, or the one chosen); "custom", the one
+    /// chosen under Advanced. Nil from an older engine.
+    public var kind: String?
+    public var model: String?
+    public var device: String?
 
     enum CodingKeys: String, CodingKey {
-        case head, short, time, subject, url, branch, latest, held
+        case head, short, time, subject, url, branch, latest, held, kind, model, device
         case commitURL = "commit_url"
         case latestShort = "latest_short"
     }
 
     public init(head: String, short: String, time: Double? = nil, subject: String? = nil, url: String? = nil, branch: String? = nil, commitURL: String? = nil,
-                latest: String? = nil, latestShort: String? = nil, held: Bool? = nil) {
+                latest: String? = nil, latestShort: String? = nil, held: Bool? = nil, kind: String? = nil, model: String? = nil, device: String? = nil) {
         self.head = head
         self.short = short
         self.time = time
@@ -244,6 +251,9 @@ public struct EngineCommit: Codable, Equatable {
         self.latest = latest
         self.latestShort = latestShort
         self.held = held
+        self.kind = kind
+        self.model = model
+        self.device = device
     }
 
     /// The newest commit's 12 digits, while the builder stays behind it.
@@ -1041,6 +1051,10 @@ public struct BuilderConfig: Codable, Equatable {
     public var engineURL: String
     public var engineBranch: String
     public var enginePolicy: String
+    /// Whom the games are for: "" the paired iPhones, else a model
+    /// ("iPhone15,4"). One whose GPU reads no BC has its games built from
+    /// nxnative's no-bc variant (BuildFor, cartouche_builder/build_for.py).
+    public var buildFor: String
     public var refreshDays: Int
     public var skip: [String]
     public var aliases: [String: [String]]
@@ -1074,6 +1088,7 @@ public struct BuilderConfig: Codable, Equatable {
         case engineURL = "engine_url"
         case engineBranch = "engine_branch"
         case enginePolicy = "engine_policy"
+        case buildFor = "build_for"
         case refreshDays = "refresh_days"
         case gameLanguage = "game_language"
         case keepIPA = "keep_ipa"
@@ -1091,7 +1106,7 @@ public struct BuilderConfig: Codable, Equatable {
     public static let engineBranch = "main"
 
     public init(sources: String = "", games: String = "", keys: String = "", workspace: String = "", minFreeGB: Int = 20, workspaceLimitGB: Int = 0,
-                engineURL: String = BuilderConfig.engineURL, engineBranch: String = BuilderConfig.engineBranch, enginePolicy: String = "weekly", refreshDays: Int = 7, skip: [String] = [], aliases: [String: [String]] = [:], unprofiled: Bool = false,
+                engineURL: String = BuilderConfig.engineURL, engineBranch: String = BuilderConfig.engineBranch, enginePolicy: String = "weekly", buildFor: String = "", refreshDays: Int = 7, skip: [String] = [], aliases: [String: [String]] = [:], unprofiled: Bool = false,
                 gameLanguage: String = "", jobs: Int = 1, keepIPA: Bool = false, keepExtracted: Bool = false, language: String = "",
                 notifications: Bool = true, schedule: Bool = false, scheduleHour: Int = 3, scheduleMinute: Int = 30, setupDone: Bool = false,
                 ios: Bool = true, mac: Bool = true, skipIOS: [String] = [], skipMac: [String] = [], macApps: String = "") {
@@ -1104,6 +1119,7 @@ public struct BuilderConfig: Codable, Equatable {
         self.engineURL = engineURL
         self.engineBranch = engineBranch
         self.enginePolicy = enginePolicy
+        self.buildFor = buildFor
         self.refreshDays = refreshDays
         self.skip = skip
         self.aliases = aliases
@@ -1137,6 +1153,7 @@ public struct BuilderConfig: Codable, Equatable {
         engineURL = try c.decodeIfPresent(String.self, forKey: .engineURL) ?? d.engineURL
         engineBranch = try c.decodeIfPresent(String.self, forKey: .engineBranch) ?? d.engineBranch
         enginePolicy = try c.decodeIfPresent(String.self, forKey: .enginePolicy) ?? d.enginePolicy
+        buildFor = try c.decodeIfPresent(String.self, forKey: .buildFor) ?? d.buildFor
         refreshDays = try c.decodeIfPresent(Int.self, forKey: .refreshDays) ?? d.refreshDays
         skip = try c.decodeIfPresent([String].self, forKey: .skip) ?? d.skip
         aliases = try c.decodeIfPresent([String: [String]].self, forKey: .aliases) ?? d.aliases
@@ -1173,6 +1190,7 @@ public struct BuilderConfig: Codable, Equatable {
         note(.engineURL, engineURL, other.engineURL, engineURL)
         note(.engineBranch, engineBranch, other.engineBranch, engineBranch)
         note(.enginePolicy, enginePolicy, other.enginePolicy, enginePolicy)
+        note(.buildFor, buildFor, other.buildFor, buildFor)
         note(.refreshDays, refreshDays, other.refreshDays, refreshDays)
         note(.skip, skip, other.skip, skip)
         note(.aliases, aliases, other.aliases, aliases)

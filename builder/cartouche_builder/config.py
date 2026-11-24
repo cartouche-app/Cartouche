@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import tempfile
 from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
@@ -23,6 +24,8 @@ ENGINE_BRANCH = "main"
 # What a change to nxnative's shared code (not a game's profile, and naming no
 # game) does to a game built before it.
 POLICIES = ("weekly", "always", "never")
+# A device's model identifier, as config.build_for names one (build_for.py).
+MODEL = re.compile(r"^(iPhone|iPad)[0-9]+,[0-9]+$")
 # The settings' version: migrate() brings an older file up to it.
 VERSION = 2
 
@@ -38,6 +41,7 @@ class Config:
     engine_url: str = ENGINE_URL
     engine_branch: str = ENGINE_BRANCH
     engine_policy: str = "weekly"
+    build_for: str = ""  # whom the games are for: "" the paired iPhones, else a model ("iPhone15,4"); one without BC takes the no-bc fork (build_for.py)
     refresh_days: int = 7  # "weekly": a game is built again at most this often for shared changes
     only: list[str] = field(default_factory=list)  # the games to build (title IDs); empty = all
     skip: list[str] = field(default_factory=list)  # games never built
@@ -136,6 +140,8 @@ class Config:
         self.aliases = clean
         if not isinstance(self.shares, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in self.shares.items()):
             self.shares = {}
+        if not isinstance(self.build_for, str) or (self.build_for and not MODEL.match(self.build_for)):
+            raise ValueError(t("config.bad_model", value=self.build_for))
         if self.language not in ("", "en", "fr"):
             raise ValueError(t("config.bad_language", value=self.language))
 

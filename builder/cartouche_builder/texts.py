@@ -55,6 +55,7 @@ TEXTS: dict[str, tuple[str, str]] = {
     "config.bad_number": ("{name}: a whole number from {low} to {high}.", "{name} : un nombre entier de {low} à {high}."),
     "config.bad_ids": ("{name}: a list of title IDs (16 hex digits).", "{name} : une liste d'ID de titre (16 chiffres hexadécimaux)."),
     "config.bad_aliases": ("aliases: title IDs, each with a list of names.", "aliases : des ID de titre, chacun avec une liste de noms."),
+    "config.bad_model": ("Unknown model: {value} (a model identifier such as iPhone15,4, or empty for the paired iPhones).", "Modèle inconnu : {value} (un identifiant de modèle comme iPhone15,4, ou vide pour les iPhone appairés)."),
     "config.bad_language": ("Unknown language: {value} (en, fr, or empty for the system's).", "Langue inconnue : {value} (en, fr, ou vide pour celle du système)."),
     # ---- nxnative's checkout (engine.py)
     "engine.no_git": ("git is not installed: run xcode-select --install.", "git n'est pas installé : lance xcode-select --install."),
@@ -69,6 +70,9 @@ TEXTS: dict[str, tuple[str, str]] = {
     "plan.new": ("Never built", "Jamais construit"),
     "plan.missing": ("Its IPA ({name}) is no longer in the games folder", "Son IPA ({name}) n'est plus dans le dossier des jeux"),
     "plan.source": ("Other files in its folder (an update, DLC or a new dump)", "D'autres fichiers dans son dossier (mise à jour, DLC ou nouveau dump)"),
+    "plan.engine": ("Built from {old}; the games are built from {new} now", "Construit avec {old} ; les jeux se construisent maintenant avec {new}"),
+    "build_for.fork": ("nxnative's no-bc variant, by mianmuhammadse", "la variante no-bc de nxnative, par mianmuhammadse"),
+    "build_for.custom": ("{repository} (branch {branch})", "{repository} (branche {branch})"),
     "plan.toolchain": ("Apple's tools changed ({old} → {new})", "Les outils d'Apple ont changé ({old} → {new})"),
     "plan.unknown_base": ("Its IPA was built from {commit}, which nxnative's branch does not have: built from it now", "Son IPA a été construite depuis {commit}, que la branche de nxnative n'a pas : reconstruite depuis elle"),
     "plan.profile.one": ("nxnative changed its profile (1 commit: {subject})", "nxnative a modifié son profil (1 commit : {subject})"),

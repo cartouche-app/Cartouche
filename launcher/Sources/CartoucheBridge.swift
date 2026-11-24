@@ -353,10 +353,14 @@ public struct CartoucheBridgeRequest: Codable, Equatable {
     /// connections: the folders the player chose on the iPhone for the
     /// games and the saves, with when.
     public var places: CartoucheChosenFolders?
+    /// info: the iPhone's model and whether its GPU reads BC textures, for
+    /// Cartouche Builder, which builds the games of an iPhone that reads
+    /// none from nxnative's no-bc variant. An older Mac leaves it aside.
+    public var device: CartoucheBridgeDevice?
 
     public init(_ op: Operation, path: String? = nil, offset: UInt64? = nil, count: Int? = nil, size: UInt64? = nil, upload: String? = nil,
                 game: String? = nil, followed: Bool? = nil, nightly: CartoucheBridgeBuilds.Nightly? = nil, due: Bool? = nil,
-                connections: [CartoucheConnection]? = nil, places: CartoucheChosenFolders? = nil) {
+                connections: [CartoucheConnection]? = nil, places: CartoucheChosenFolders? = nil, device: CartoucheBridgeDevice? = nil) {
         self.op = op
         self.path = path
         self.offset = offset
@@ -369,6 +373,21 @@ public struct CartoucheBridgeRequest: Codable, Equatable {
         self.due = due
         self.connections = connections
         self.places = places
+        self.device = device
+    }
+}
+
+/// What the iPhone tells its paired Mac of itself, with each info request:
+/// its model ("iPhone15,4"), the identifier its measures carry too, and
+/// whether its GPU reads BC-compressed textures. Never its name, which the
+/// pairing gave, nor anything else.
+public struct CartoucheBridgeDevice: Codable, Equatable, Sendable {
+    public var model: String
+    public var readsBC: Bool
+
+    public init(model: String, readsBC: Bool) {
+        self.model = model
+        self.readsBC = readsBC
     }
 }
 
@@ -789,6 +808,23 @@ public final class CartoucheBridgeClient {
     public var macID: String { channel.peer }
     public var macName: String { channel.peerName }
 
+    /// This iPhone, as its info requests tell the Mac (CartoucheBridgeDevice):
+    /// set once as Cartouche starts; nil tells nothing, as on the Mac.
+    public static var device: CartoucheBridgeDevice? {
+        get {
+            deviceLock.lock()
+            defer { deviceLock.unlock() }
+            return thisDevice
+        }
+        set {
+            deviceLock.lock()
+            thisDevice = newValue
+            deviceLock.unlock()
+        }
+    }
+    private static let deviceLock = NSLock()
+    nonisolated(unsafe) private static var thisDevice: CartoucheBridgeDevice?
+
     /// Connects to the Mac at ENDPOINT with the paired KEY. Cancelling the
     /// task closes the connection, which fails at once.
     public static func connect(_ endpoint: NWEndpoint, device: String, key: Data, mac: String?, timeout: TimeInterval = 8) async throws -> CartoucheBridgeClient {
@@ -891,7 +927,7 @@ public final class CartoucheBridgeClient {
     }
 
     public func info() async throws -> CartoucheBridgeResponse {
-        try await call(CartoucheBridgeRequest(.info)).0
+        try await call(CartoucheBridgeRequest(.info, device: Self.device)).0
     }
 
     public func list(_ path: String) async throws -> [CartoucheBridgeItem] {

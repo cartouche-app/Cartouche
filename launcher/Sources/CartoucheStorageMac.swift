@@ -250,6 +250,10 @@ enum CartoucheMacStorage {
             throw explained(CartoucheBridgeError(.notPaired), mac: server.name, path: "")
         }
         let device = deviceID(of: server)
+        // What its info requests tell the Mac of this device: its model and
+        // whether its GPU reads BC, which decide the nxnative Cartouche
+        // Builder builds its games from (CartoucheBridgeDevice).
+        CartoucheBridgeClient.device = CartoucheBridgeDevice(model: CartoucheDevice.modelIdentifier, readsBC: CartoucheDevice.supportsBCTextureCompression)
         // The cable first: plugged into the Mac, the iPhone reaches it there
         // whatever its network.
         if let remote = try await throughCable(server, macID: macID, device: device, key: key, settings: settings) {

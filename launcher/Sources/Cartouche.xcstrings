@@ -20554,6 +20554,23 @@
         }
       }
     },
+    "work.install.gpu.builder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Builder builds them for this iPhone from nxnative’s no-bc variant, which converts those textures, once this iPhone is paired with your Mac."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Builder les construit pour cet iPhone avec la variante no-bc de nxnative, qui convertit ces textures, une fois cet iPhone appairé à votre Mac."
+          }
+        }
+      }
+    },
     "work.install.noSpace" : {
       "extractionState" : "manual",
       "localizations" : {

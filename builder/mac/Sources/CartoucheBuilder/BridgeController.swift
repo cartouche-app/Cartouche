@@ -178,7 +178,14 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
 
     func bridgeServerChanged(_ server: BridgeServer) {
         state = server.state
+        let before = devices.map { BuildFor.readsBC($0) }
         devices = server.devices.all
+        if devices.map({ BuildFor.readsBC($0) }) != before {
+            // An iPhone paired, removed, or saying its model: the nxnative
+            // the games are built from may change (BuildFor), and with it
+            // what is due.
+            Task { await model?.refreshLibrary(update: false) }
+        }
         connected = server.connected
         cabled = server.connectedByCable
     }

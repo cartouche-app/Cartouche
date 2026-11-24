@@ -396,6 +396,9 @@ struct BuildSettings: View {
                 }
             }
             .disabled(ios && !mac)
+            if ios {
+                BuildForPicker()
+            }
             Toggle(isOn: setting(model, \.mac, true)) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(tr("This Mac", "Ce Mac"))
@@ -491,6 +494,82 @@ struct StorageSettings: View {
     }
 }
 
+/// Whom the games are built for: the paired iPhones, or a model chosen.
+/// For one whose GPU reads no BC texture, which nxnative refuses, they are
+/// built from nxnative's no-bc variant (BuildFor), and the iPhone's games
+/// are built again.
+struct BuildForPicker: View {
+    @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var bridge: BridgeController
+
+    var body: some View {
+        let config = model.config ?? BuilderConfig()
+        let choice = BuildFor.choice(config, devices: bridge.devices)
+        VStack(alignment: .leading, spacing: 4) {
+            Picker(tr("Build for", "Construire pour"), selection: setting(model, \.buildFor, "")) {
+                Text(paired).tag("")
+                Divider()
+                ForEach(BuildFor.models) { Text($0.name).tag($0.id) }
+                if !config.buildFor.isEmpty, BuildFor.name(of: config.buildFor) == nil {
+                    Text(config.buildFor).tag(config.buildFor)
+                }
+            }
+            Text(BuildForPicker.explanation(choice, chosen: config.buildFor, unknown: unknown(config)))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            if choice.kind == .noBC {
+                Link(tr("Its page on GitHub", "Sa page sur GitHub"), destination: BuildFor.forkPage)
+                    .font(.caption)
+            }
+        }
+    }
+
+    /// The paired iPhones, as the first choice says them.
+    private var paired: String {
+        let devices = bridge.devices
+        guard let only = devices.first else { return tr("The paired iPhone (none yet)", "L’iPhone appairé (aucun pour l’instant)") }
+        guard devices.count == 1 else { return tr("The \(devices.count) paired iPhones", "Les \(devices.count) iPhone appairés") }
+        if let identifier = only.model, let name = BuildFor.name(of: identifier) {
+            return tr("The paired iPhone (\(name))", "L’iPhone appairé (\(name))")
+        }
+        return tr("The paired iPhone (“\(only.name)”)", "L’iPhone appairé (« \(only.name) »)")
+    }
+
+    /// A paired iPhone that has not said its model yet, while the paired
+    /// iPhones decide: an older Cartouche, or one not opened since.
+    private func unknown(_ config: BuilderConfig) -> String? {
+        guard config.buildFor.isEmpty, !BuildFor.custom(config) else { return nil }
+        return bridge.devices.first { BuildFor.readsBC($0) == nil }?.name
+    }
+
+    /// Which nxnative builds the games, and why, in the player's words.
+    static func explanation(_ choice: BuildFor.Choice, chosen: String, unknown: String?) -> String {
+        var text: String
+        switch choice.kind {
+        case .custom:
+            return tr("The games are built from the repository chosen under Advanced.", "Les jeux se construisent avec le dépôt choisi dans Avancé.")
+        case .nxnative:
+            text = tr("The games are built from nxnative.", "Les jeux se construisent avec nxnative.")
+        case .noBC:
+            let who: String
+            if chosen.isEmpty, let device = choice.device {
+                who = tr("“\(device)” reads no BC texture", "« \(device) » ne lit pas les textures BC")
+            } else {
+                let name = choice.model.flatMap(BuildFor.name(of:)) ?? choice.model ?? "iPhone"
+                who = tr("The \(name) reads no BC texture", "L’\(name) ne lit pas les textures BC")
+            }
+            text = tr("\(who), which nxnative refuses: the games are built from nxnative’s no-bc variant, by mianmuhammadse, which converts them for its GPU. On an iPhone that reads them, and on this Mac, it does as nxnative does.",
+                      "\(who), que nxnative refuse : les jeux se construisent avec la variante no-bc de nxnative, par mianmuhammadse, qui les convertit pour son GPU. Sur un iPhone qui les lit, et sur ce Mac, elle fait comme nxnative.")
+        }
+        if let unknown {
+            text += " " + tr("“\(unknown)” has not said its model yet: open Cartouche on it with this Mac on.",
+                             "« \(unknown) » n’a pas encore dit son modèle : ouvrez Cartouche dessus, ce Mac allumé.")
+        }
+        return text + " " + tr("Changing it builds the iPhone’s games again.", "Le changer reconstruit les jeux de l’iPhone.")
+    }
+}
+
 struct AdvancedSettings: View {
     @EnvironmentObject private var model: AppModel
     @State private var url = ""
@@ -516,7 +595,8 @@ struct AdvancedSettings: View {
             } header: {
                 Text("nxnative")
             } footer: {
-                Text(tr("The nxnative games are built from. Change it only to try a fork.", "Le nxnative avec lequel les jeux sont construits. À changer seulement pour essayer une variante."))
+                Text(tr("The nxnative games are built from. Change it only to try a fork. While it is nxnative’s, an iPhone whose GPU reads no BC texture has its games built from nxnative’s no-bc variant (Builds, Build for).",
+                        "Le nxnative avec lequel les jeux sont construits. À changer seulement pour essayer une variante. Tant que c’est celui de nxnative, un iPhone qui ne lit pas les textures BC a ses jeux construits avec la variante no-bc de nxnative (Constructions, Construire pour)."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

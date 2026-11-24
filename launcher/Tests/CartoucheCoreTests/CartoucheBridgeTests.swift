@@ -367,6 +367,21 @@ final class CartoucheBridgeTests: XCTestCase {
         XCTAssertThrowsError(try CartoucheBridgeMessage.decode(CartoucheBridgeRequest.self, from: Data([0, 0, 1, 0])))
     }
 
+    func testInfoTellsTheMacThisIPhonesModelAndNothingElse() throws {
+        // Cartouche Builder builds the games of an iPhone whose GPU reads no
+        // BC from nxnative's no-bc variant (cartouche_builder/build_for.py).
+        let asked = CartoucheBridgeRequest(.info, device: CartoucheBridgeDevice(model: "iPhone15,4", readsBC: false))
+        let data = try CartoucheBridgeMessage.encode(asked, body: Data())
+        let (request, _) = try CartoucheBridgeMessage.decode(CartoucheBridgeRequest.self, from: data)
+        XCTAssertEqual(request.device, CartoucheBridgeDevice(model: "iPhone15,4", readsBC: false))
+        let told = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(asked)) as? [String: Any])
+        let device = try XCTUnwrap(told["device"] as? [String: Any])
+        XCTAssertEqual(Set(device.keys), ["model", "readsBC"])
+        // Without it, as on the Mac or from an older Cartouche, nothing.
+        let plain = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(CartoucheBridgeRequest(.info))) as? [String: Any])
+        XCTAssertNil(plain["device"])
+    }
+
     func testInfoTellsTheMacsAddressesInTheTailnet() throws {
         // With Tailscale on the Mac, its Cartouche Builder tells them; the
         // iPhone tries them away from home (CartoucheStorageMac.swift).

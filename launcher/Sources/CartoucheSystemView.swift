@@ -88,6 +88,9 @@ struct CartoucheSystemView: View {
     /// The row of a version on offer, in the updates' section.
     static let updateRow = "update"
 
+    /// The first row of this iPhone's section.
+    static let deviceRow = "device"
+
     #if CARTOUCHE_GALLERY
     /// Whether the gallery's page opens on the Mac's builds, as the row
     /// under Storage opens them (screen: mac-builds).
@@ -591,6 +594,7 @@ struct CartoucheSystemView: View {
     private var deviceSection: some View {
         CartoucheSection {
             LabeledContent(CartoucheText.model, value: CartoucheDevice.modelIdentifier)
+                .id(Self.deviceRow)
             #if os(iOS)
             if let device = catalog.device(CartoucheDevice.modelIdentifier) {
                 LabeledContent(CartoucheText.chip, value: device.chip)
@@ -614,7 +618,7 @@ struct CartoucheSystemView: View {
         } footer: {
             // nxnative refuses this GPU for every game.
             if !CartoucheDevice.supportsBCTextureCompression {
-                Text(CartoucheText.reasonGPU)
+                Text(CartoucheText.reasonGPU + " " + CartoucheText.installGPUBuilder)
             }
         }
     }

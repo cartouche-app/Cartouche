@@ -1,13 +1,14 @@
 {
   "api": 1,
-  "checked": "2026-11-13T21:49:05+00:00",
+  "checked": "2026-11-24T12:37:27+00:00",
   "engine": {
     "branch": "main",
     "commit_url": "",
-    "head": "04354859e9553bdef84af008d1b37871eeef82bf",
-    "short": "04354859e955",
+    "head": "315fbb57e8cafb1bdd295cd7aa3bdbc65d657013",
+    "kind": "custom",
+    "short": "315fbb57e8ca",
     "subject": "Super Mario Odyssey: the cap (PR #4)",
-    "time": 1794606545,
+    "time": 1795523847,
     "url": "/Users/player/Builder/remote"
   },
   "folders": {
@@ -102,11 +103,11 @@
       "aliases": [],
       "attempt": null,
       "build": {
-        "built_at": "2026-11-13T21:49:05+00:00",
+        "built_at": "2026-11-24T12:37:27+00:00",
         "chain": "abcdef012345",
-        "commit": "387149ac481b",
+        "commit": "ed990d617ecf",
         "dirty": false,
-        "duration": 0.038002123000296706,
+        "duration": 0.038618519000010565,
         "origin": "builder",
         "size": 846,
         "toolchain": "",
@@ -120,17 +121,17 @@
       "changes": [
         {
           "kind": "named",
-          "sha": "24bc9406a3fc108c9d2f7a01029668125988cef0",
-          "short": "24bc9406a3fc",
+          "sha": "b965faaaf37df0926e3bb1d24c8d76d2d06fc515",
+          "short": "b965faaaf37d",
           "subject": "Mario Kart World: the menus (PR #3)",
-          "time": 1794606545
+          "time": 1795523847
         },
         {
           "kind": "shared",
-          "sha": "04354859e9553bdef84af008d1b37871eeef82bf",
-          "short": "04354859e955",
+          "sha": "315fbb57e8cafb1bdd295cd7aa3bdbc65d657013",
+          "short": "315fbb57e8ca",
           "subject": "Super Mario Odyssey: the cap (PR #4)",
-          "time": 1794606545
+          "time": 1795523847
         }
       ],
       "detail": "An nxnative commit names it: Mario Kart World: the menus (PR #3)",
@@ -148,11 +149,11 @@
         "alone": false,
         "app": null,
         "attempt": {
-          "at": "2026-11-13T21:49:05+00:00",
-          "commit": "387149ac481b",
+          "at": "2026-11-24T12:37:27+00:00",
+          "commit": "ed990d617ecf",
           "error": "the Mac host did not build (exit 1): see mac_host.log",
-          "fingerprint": "6a436c7a759f3c0547379415",
-          "log": "/Users/player/Builder/home/logs/0400C3F00006E000/2026-11-13_21-49-05.log",
+          "fingerprint": "5e2d881a785dcf6231b014da",
+          "log": "/Users/player/Builder/home/logs/0400C3F00006E000/2026-11-24_12-37-26.log",
           "result": "failed",
           "toolchain": ""
         },
@@ -184,20 +185,20 @@
     {
       "aliases": [],
       "attempt": {
-        "at": "2026-11-13T21:49:05+00:00",
-        "commit": "04354859e955",
+        "at": "2026-11-24T12:37:27+00:00",
+        "commit": "315fbb57e8ca",
         "error": "the fake build failed on purpose",
-        "fingerprint": "54206c15d7dd378429e4a872",
-        "log": "/Users/player/Builder/home/logs/0100000000010000/2026-11-13_21-49-05.log",
+        "fingerprint": "8a581920d20c0a32f2d976ba",
+        "log": "/Users/player/Builder/home/logs/0100000000010000/2026-11-24_12-37-27.log",
         "result": "failed",
         "toolchain": ""
       },
       "build": {
-        "built_at": "2026-11-13T21:49:05+00:00",
+        "built_at": "2026-11-24T12:37:27+00:00",
         "chain": "abcdef012345",
-        "commit": "387149ac481b",
+        "commit": "ed990d617ecf",
         "dirty": false,
-        "duration": 0.03770910699995511,
+        "duration": 0.03903464699999404,
         "origin": "builder",
         "size": 849,
         "toolchain": "",
@@ -211,17 +212,17 @@
       "changes": [
         {
           "kind": "named",
-          "sha": "04354859e9553bdef84af008d1b37871eeef82bf",
-          "short": "04354859e955",
+          "sha": "315fbb57e8cafb1bdd295cd7aa3bdbc65d657013",
+          "short": "315fbb57e8ca",
           "subject": "Super Mario Odyssey: the cap (PR #4)",
-          "time": 1794606545
+          "time": 1795523847
         },
         {
           "kind": "shared",
-          "sha": "24bc9406a3fc108c9d2f7a01029668125988cef0",
-          "short": "24bc9406a3fc",
+          "sha": "b965faaaf37df0926e3bb1d24c8d76d2d06fc515",
+          "short": "b965faaaf37d",
           "subject": "Mario Kart World: the menus (PR #3)",
-          "time": 1794606545
+          "time": 1795523847
         }
       ],
       "detail": "Failed at this nxnative commit (the fake build failed on purpose); tried again when nxnative or its files change",
@@ -246,11 +247,11 @@
         "attempt": null,
         "behind": false,
         "build": {
-          "built_at": "2026-11-13T21:49:05+00:00",
+          "built_at": "2026-11-24T12:37:27+00:00",
           "chain": "abcdef012345",
-          "commit": "387149ac481b",
+          "commit": "ed990d617ecf",
           "dirty": false,
-          "duration": 0.0394491309998557,
+          "duration": 0.037371052000025884,
           "size": 1604,
           "version": "1.0.0"
         },
@@ -289,10 +290,8 @@
   "problems": [],
   "room": {
     "folders": 2,
-    "free_gb": 13,
-    "keep_gb": 20,
-    "text": "Cartouche Builder starts a build only with 20 GB free on your Mac's disk, and only 13 GB are free there. It first removes the build folders of the games built longest ago (2), which may be enough. Free some room there (Storage shows what the build folders take), choose build folders on another disk, or lower “Keep at least 20 GB free”.",
-    "title": "7 GB missing to build"
+    "free_gb": 57,
+    "keep_gb": 0
   },
   "updated": false
 }

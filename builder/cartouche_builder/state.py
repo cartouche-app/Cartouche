@@ -44,6 +44,7 @@ class Build:
     duration: float = 0.0
     origin: str = "builder"  # "builder", or "ipa" (read from the IPA)
     dirty: bool = False
+    engine: str = ""  # the nxnative it was made from, "<repository>#<branch>" (targets.key); "" before builds said it
 
     @property
     def time(self) -> float:
@@ -71,6 +72,7 @@ class MacBuild:
     name: str = ""
     duration: float = 0.0
     dirty: bool = False
+    engine: str = ""  # as Build's
 
     @property
     def time(self) -> float:

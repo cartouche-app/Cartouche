@@ -3,25 +3,25 @@
   "storage": {
     "disks": {
       "games": {
-        "free": 27741069312,
+        "free": 61874237440,
         "path": "/Users/player/Builder/games",
         "present": true,
         "total": 270553174016
       },
       "mac_apps": {
-        "free": 27741069312,
+        "free": 61874237440,
         "path": "/Users/player/Builder/user/Applications",
         "present": true,
         "total": 270553174016
       },
       "sources": {
-        "free": 27741069312,
+        "free": 61874237440,
         "path": "/Users/player/Builder/sources",
         "present": true,
         "total": 270553174016
       },
       "workspace": {
-        "free": 27741069312,
+        "free": 61874237440,
         "path": "/Users/player/Builder/home/workspace",
         "present": true,
         "total": 270553174016
@@ -42,7 +42,7 @@
         "path": "/Users/player/Builder/home/workspace/0100000000010000_build",
         "size": 863,
         "title_id": "0100000000010000",
-        "used": 1794606548.7363508,
+        "used": 1795523847.9836328,
         "workspace": "/Users/player/Builder/home/workspace"
       },
       {
@@ -59,7 +59,7 @@
         "path": "/Users/player/Builder/home/workspace/0400C3F00006E000_build",
         "size": 857,
         "title_id": "0400C3F00006E000",
-        "used": 1794606551.8852541,
+        "used": 1795523848.116685,
         "workspace": "/Users/player/Builder/home/workspace"
       }
     ],
@@ -70,7 +70,7 @@
         "same_disk": true,
         "size": 849,
         "title_id": "0100000000010000",
-        "used": 1794606551.7747798,
+        "used": 1795523848.017569,
         "workspace": "/Users/player/Builder/home/workspace"
       },
       {
@@ -79,13 +79,13 @@
         "same_disk": true,
         "size": 846,
         "title_id": "0400C3F00006E000",
-        "used": 1794606548.66429,
+        "used": 1795523847.9136815,
         "workspace": "/Users/player/Builder/home/workspace"
       }
     ],
     "mac_apps": [
       {
-        "built_at": "2026-11-13T21:49:11+00:00",
+        "built_at": "2026-11-24T12:37:28+00:00",
         "name": "Super Mario Odyssey",
         "on": false,
         "packed": false,
@@ -95,7 +95,7 @@
         "title_id": "0100000000010000"
       },
       {
-        "built_at": "2026-11-13T21:49:11+00:00",
+        "built_at": "2026-11-24T12:37:28+00:00",
         "name": "Mario Kart World",
         "on": true,
         "packed": true,
@@ -113,12 +113,12 @@
     },
     "totals": {
       "app": 0,
-      "engine": 46935,
+      "engine": 52063,
       "extracted": 0,
       "icons": 16,
       "ipa_copies": 1695,
       "ipa_copies_freeable": 0,
-      "logs": 15136,
+      "logs": 15131,
       "mac_apps": 3205,
       "other": 1120,
       "packages": 0,
