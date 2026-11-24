@@ -1421,8 +1421,9 @@ enum GalleryMac {
 /// copies run on them, as on an iPhone, with nothing stood in for but the
 /// game's data folder, which LiveContainer gives a game.
 enum GallerySaves {
-    /// The folder's name, as the Storage page and the sheet show it.
-    static let folderName = "Gallery saves"
+    /// The folder's name, as the Storage page and the sheet show it: a
+    /// name a player gives theirs, rather than the gallery's own.
+    static let folderName = "NAS"
 
     /// Whether the sheet is on its way down to its saves, which the
     /// screenshot waits for (GalleryScenario.settle).
