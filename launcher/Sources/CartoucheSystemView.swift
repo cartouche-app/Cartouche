@@ -546,16 +546,14 @@ struct CartoucheSystemView: View {
     /// Apple said that the session SideStore renews with has expired: a
     /// sign-in with the same Apple ID gives it a new one, and Cartouche
     /// renews itself as soon as it has gone through. Right under what the
-    /// page says of it, above Copy the report.
+    /// page says of it, above Copy the report: a row of the list, as Renew
+    /// now is, not a filled button, which Ad found out of place there.
     @ViewBuilder
     private var signInAgainButton: some View {
         if renewals.sessionExpired && !renewals.isRenewing {
-            Button {
+            Button(CartoucheText.signInAgain, systemImage: "person.crop.circle.badge.checkmark") {
                 signingIn = true
-            } label: {
-                Label(CartoucheText.signInAgain, systemImage: "person.crop.circle.badge.checkmark")
             }
-            .buttonStyle(.borderedProminent)
             .disabled(!setup.hasPairingFile || account.phase == .registeringDevice)
         }
     }
