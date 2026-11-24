@@ -818,7 +818,7 @@ class Causes(Base):
         os.environ["FAKE_XCODE"] = "27.3"
         plan, summary = self.run_due(only={MKW})
         self.assertTrue(summary.failed[0][1].endswith("and this Mac's Xcode 27.3 has another one, which nxnative has not tested yet. "
-                                                      "The game builds once it has: Cartouche Builder tries it again at each build."),
+                                                      "The game builds once it has: Cartouche tries it again at each build."),
                         summary.failed[0][1])
         self.assertEqual(self.game(MKW)["cause"], "metal")
 

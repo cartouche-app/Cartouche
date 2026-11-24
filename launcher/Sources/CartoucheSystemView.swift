@@ -775,8 +775,8 @@ struct CartoucheSystemView: View {
             #if os(iOS)
             Text(verbatim: "Cartouche")
             #else
-            // The app the console is in.
-            Text(verbatim: "Cartouche Builder")
+            // The app the console is in (ConsoleSystem.swift).
+            Text(CartoucheText.macSystemApp)
             #endif
         } footer: {
             Text(CartoucheText.coversCredit)

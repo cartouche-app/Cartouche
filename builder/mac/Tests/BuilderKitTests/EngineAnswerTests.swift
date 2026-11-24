@@ -199,7 +199,7 @@ final class EngineAnswerTests: XCTestCase {
         XCTAssertEqual(short.keepGB, 20)
         XCTAssertEqual(short.folders, 2)
         XCTAssertEqual(short.shortfall?.title, "7 GB missing to build")
-        XCTAssertTrue(short.shortfall?.text.hasPrefix("Cartouche Builder starts a build only with 20 GB free on your Mac's disk") ?? false)
+        XCTAssertTrue(short.shortfall?.text.hasPrefix("Cartouche starts a build only with 20 GB free on your Mac's disk") ?? false)
         let enough = try XCTUnwrap(try answer(Library.self, "library-building").room)
         XCTAssertNil(enough.shortfall)
         // A disk that cannot be read (a share not connected), or an engine

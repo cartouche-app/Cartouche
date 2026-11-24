@@ -151,7 +151,9 @@ struct CartoucheMacUpdatesSection: View {
 
 extension CartoucheText {
     /// Cartouche Builder, on the console's System page.
-    static var macSystemBuilder: String { s("mac.system.builder", "Open Cartouche Builder") }
+    /// The app the console is in, over its version on the System page.
+    static var macSystemApp: String { s("mac.system.app", "Cartouche for Mac") }
+    static var macSystemBuilder: String { s("mac.system.builder", "Open the Builder") }
     static var macSystemBuilderFooter: String {
         s("mac.system.builder.footer",
           "Your games built for this Mac, their builds, this Mac’s folders and its iPhones: the Builder, in this window in place of the console.")
@@ -173,12 +175,12 @@ extension CartoucheText {
     static var macUpdatesAutomatic: String { s("mac.updates.automatic", "Install updates by itself") }
     static var macUpdatesFooter: String {
         s("mac.updates.footer",
-          "Cartouche Builder looks for a new version every six hours, and installs it when it quits, never during a build.")
+          "Cartouche looks for a new version every six hours, and installs it when it quits, never during a build.")
     }
     static func macUpdateDownload(_ version: String) -> String { f("mac.updates.download", "Download %@", version) }
     static func macUpdateDownloading(_ version: String) -> String { f("mac.updates.downloading", "Downloading %@…", version) }
     static func macUpdateReady(_ version: String) -> String {
-        f("mac.updates.ready", "%@ is ready: it installs when Cartouche Builder quits.", version)
+        f("mac.updates.ready", "%@ is ready: it installs when Cartouche quits.", version)
     }
     static var macUpdateRestart: String { s("mac.updates.restart", "Restart to update") }
     static var macUpdateInstalling: String { s("mac.updates.installing", "Installing…") }

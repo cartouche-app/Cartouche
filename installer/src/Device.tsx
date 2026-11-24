@@ -30,6 +30,11 @@ export const Device = ({
   const [showPairingModal, setShowPairingModal] = useState(false);
 
   const listingDevices = useRef<boolean>(false);
+  // A refresh asked for while the iPhones are being listed: they are listed
+  // again once that list is in, as an iPhone may have been plugged in after
+  // it was taken.
+  const listAgain = useRef<boolean>(false);
+  const loadDevicesRef = useRef<() => void>(() => {});
   const pairingRequestId = useRef<number>(0);
   const pairingModalTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -91,7 +96,10 @@ export const Device = ({
   );
 
   const loadDevices = useCallback(async () => {
-    if (listingDevices.current) return;
+    if (listingDevices.current) {
+      listAgain.current = true;
+      return;
+    }
     const promise = new Promise<number>(async (resolve, reject) => {
       listingDevices.current = true;
       try {
@@ -134,13 +142,17 @@ export const Device = ({
             selectDevice(devicesWithPairing[0]);
           }
         }
-        listingDevices.current = false;
         resolve(devices.length);
       } catch (e) {
         setDevices([]);
         selectDevice(null);
-        listingDevices.current = false;
         reject(e);
+      } finally {
+        listingDevices.current = false;
+        if (listAgain.current) {
+          listAgain.current = false;
+          loadDevicesRef.current();
+        }
       }
     });
 
@@ -155,6 +167,9 @@ export const Device = ({
       error: (e) => err(t("device.unable_load_devices_prefix"), e),
     });
   }, [setDevices, selectDevice, t]);
+  useEffect(() => {
+    loadDevicesRef.current = loadDevices;
+  }, [loadDevices]);
   useEffect(() => {
     loadDevices();
   }, [loadDevices]);

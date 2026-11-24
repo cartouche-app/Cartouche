@@ -216,14 +216,14 @@ struct FolderSettings: View {
             } header: {
                 Text(tr("Your games", "Vos jeux"))
             } footer: {
-                Text(tr("A folder on your NAS works: connect its share in the Finder once; Cartouche Builder connects it again by itself.",
-                        "Un dossier sur votre NAS convient : connectez son partage dans le Finder une fois, Cartouche Builder le reconnecte ensuite tout seul."))
+                Text(tr("A folder on your NAS works: connect its share in the Finder once; Cartouche connects it again by itself.",
+                        "Un dossier sur votre NAS convient : connectez son partage dans le Finder une fois, Cartouche le reconnecte ensuite tout seul."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Section(tr("Builds", "Constructions")) {
                 FolderField(title: tr("Build folders", "Dossiers de construction"),
-                            help: tr("Where games are built; empty for Cartouche Builder’s own folder.", "Où les jeux se construisent ; vide pour le dossier de Cartouche Builder."),
+                            help: tr("Where games are built; empty for Cartouche’s own folder.", "Où les jeux se construisent ; vide pour le dossier de Cartouche."),
                             path: model.config?.workspace ?? "", clearable: true) { path in model.update { $0.workspace = path } }
             }
         }
@@ -282,8 +282,8 @@ struct NamingField: View {
         } label: {
             VStack(alignment: .leading, spacing: 2) {
                 Text(NamingHelp.title)
-                Text(tr("What Cartouche Builder and Cartouche find in each folder, with examples.",
-                        "Ce que Cartouche Builder et Cartouche trouvent dans chaque dossier, avec des exemples."))
+                Text(tr("What Cartouche finds in each folder, on this Mac and on the iPhone, with examples.",
+                        "Ce que Cartouche trouve dans chaque dossier, sur ce Mac et sur l’iPhone, avec des exemples."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -585,7 +585,7 @@ struct AdvancedSettings: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            Section(tr("Cartouche Builder", "Cartouche Builder")) {
+            Section(AppName.name) {
                 LabeledContent(tr("Version", "Version"), value: model.info?.version ?? "—")
                 LabeledContent("Python", value: model.engine?.python.path ?? "—")
                 Button(tr("Show its folder in the Finder", "Afficher son dossier dans le Finder")) { model.reveal(model.home.root.path) }

@@ -387,12 +387,12 @@ final class CartoucheGameLogShareTests: XCTestCase {
         var share = share(lines: [30, 20])
         share.environment = CartoucheReport.Environment(
             cartouche: "0.6.2", basedOn: nil, system: "26.1 (25B72)", device: "Mac16,10 (M4, 16 GB)", language: "fr (fr-FR)",
-            facts: [.init("Free on this Mac", "412.00 GB (412,000,000,000 bytes)")], app: "Cartouche Builder", systemName: "macOS")
+            facts: [.init("Free on this Mac", "412.00 GB (412,000,000,000 bytes)")], app: "Cartouche for Mac", systemName: "macOS")
         for summary in [share.summary, share.cleaned().summary] {
-            XCTAssertTrue(summary.contains("\nCartouche Builder: 0.6.2\nmacOS: 26.1 (25B72)\nDevice: Mac16,10 (M4, 16 GB)\n"), summary)
+            XCTAssertTrue(summary.contains("\nCartouche for Mac: 0.6.2\nmacOS: 26.1 (25B72)\nDevice: Mac16,10 (M4, 16 GB)\n"), summary)
             XCTAssertFalse(summary.contains("\niOS: "), summary)
         }
-        XCTAssertEqual(share.title, "Mario Kart World log, Cartouche Builder 0.6.2 on Mac16,10, macOS 26.1")
+        XCTAssertEqual(share.title, "Mario Kart World log, Cartouche for Mac 0.6.2 on Mac16,10, macOS 26.1")
     }
 
     func testTheIssuesTitle() {

@@ -69,12 +69,12 @@ final class BuildStoppersTests: XCTestCase {
         let pokopia = UnbuiltGame(titleID: "0400A3A01EE4C000", macs: 4, failures: 8, hours: 4.7, stage: "iOS shaders")
         L10n.use("en")
         XCTAssertEqual(UnbuiltGames.words(pokopia),
-                       "In the last 4 weeks, 4 Macs tried it with Cartouche Builder and all 8 of their builds failed, most often at the step “iOS shaders”, "
+                       "In the last 4 weeks, 4 Macs tried it with Cartouche and all 8 of their builds failed, most often at the step “iOS shaders”, "
                        + "after about 4.7 hours. Building it may keep this Mac busy for hours for nothing: better wait until nxnative improves it. "
                        + "The nightly builds leave it aside.")
         L10n.use("fr")
         XCTAssertEqual(UnbuiltGames.words(UnbuiltGame(titleID: "0400A3A01EE4C000", macs: 3, failures: 5), named: { $0.uppercased() }),
-                       "Ces 4 dernières semaines, 3 Mac l’ont essayé avec Cartouche Builder et leurs 5 constructions ont toutes échoué. "
+                       "Ces 4 dernières semaines, 3 Mac l’ont essayé avec Cartouche et leurs 5 constructions ont toutes échoué. "
                        + "Sa construction peut occuper ce Mac des heures pour rien : mieux vaut attendre que nxnative l’améliore. "
                        + "Les constructions de la nuit le laissent de côté.")
         XCTAssertTrue(UnbuiltGames.words(pokopia, named: { $0.uppercased() }).contains("à l’étape « IOS SHADERS », après 4,7 h environ."))

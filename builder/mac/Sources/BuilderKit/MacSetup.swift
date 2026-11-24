@@ -333,11 +333,11 @@ public final class MacSetup: ObservableObject {
         case .xcode:
             NSWorkspace.shared.open(MacSetup.xcodeStore)
             if outdatedXcode != nil {
-                states[item] = .waiting(tr("Update Xcode in the App Store: Cartouche Builder goes on by itself once Xcode \(wantedXcode) or later is there.",
-                                           "Mettez Xcode à jour dans l’App Store : Cartouche Builder continue tout seul une fois Xcode \(wantedXcode) ou plus récent là."))
+                states[item] = .waiting(tr("Update Xcode in the App Store: Cartouche goes on by itself once Xcode \(wantedXcode) or later is there.",
+                                           "Mettez Xcode à jour dans l’App Store : Cartouche continue tout seul une fois Xcode \(wantedXcode) ou plus récent là."))
             } else {
-                states[item] = .waiting(tr("Install Xcode from the App Store: Cartouche Builder goes on by itself once it is there.",
-                                           "Installez Xcode depuis l’App Store : Cartouche Builder continue tout seul une fois qu’il est là."))
+                states[item] = .waiting(tr("Install Xcode from the App Store: Cartouche goes on by itself once it is there.",
+                                           "Installez Xcode depuis l’App Store : Cartouche continue tout seul une fois qu’il est là."))
             }
             return await wait(for: item, every: 15)
         case .xcodeReady:
@@ -346,7 +346,7 @@ public final class MacSetup: ObservableObject {
             let developer = "\(xcode)/Contents/Developer"
             let tool = "\(developer)/usr/bin/xcodebuild"
             let command = "/usr/bin/xcode-select -s \(MacSetup.quoted(developer)) && \(MacSetup.quoted(tool)) -license accept && \(MacSetup.quoted(tool)) -runFirstLaunch"
-            let result = await administrator(command, prompt: tr("Cartouche Builder readies Xcode to build your games.", "Cartouche Builder prépare Xcode pour construire vos jeux."))
+            let result = await administrator(command, prompt: tr("Cartouche readies Xcode to build your games.", "Cartouche prépare Xcode pour construire vos jeux."))
             return await finish(item, result)
         case .iosPlatform:
             return await runStep(item, "/usr/bin/xcodebuild", ["-downloadPlatform", "iOS"], working: tr("Downloading the iOS platform…", "Téléchargement de la plateforme iOS…"))
@@ -358,8 +358,8 @@ public final class MacSetup: ObservableObject {
                 let package = try await MacSetup.downloadHomebrew()
                 say(package.lastPathComponent)
                 NSWorkspace.shared.open(package)
-                states[item] = .waiting(tr("Follow Homebrew’s installer: Cartouche Builder goes on by itself after.",
-                                           "Suivez l’installeur de Homebrew : Cartouche Builder continue tout seul après."))
+                states[item] = .waiting(tr("Follow Homebrew’s installer: Cartouche goes on by itself after.",
+                                           "Suivez l’installeur de Homebrew : Cartouche continue tout seul après."))
                 return await wait(for: item, every: 5)
             } catch {
                 states[item] = .failed(error.localizedDescription)

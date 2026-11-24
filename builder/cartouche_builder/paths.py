@@ -1,7 +1,8 @@
 """Where Cartouche Builder keeps its settings, records, logs, engine and tools.
 
 Everything lives in one folder, ~/Library/Application Support/Cartouche Builder
-(CARTOUCHE_BUILDER_HOME overrides it, for tests). The player's games, their
+(CARTOUCHE_BUILDER_HOME overrides it, for tests), which keeps its name now that
+the Mac's app is Cartouche: settings, games and builds stay where they are. The player's games, their
 sources and the IPAs in their games folder are never inside it, and nothing
 of another app's is ever read: the builder starts from its own defaults.
 """
@@ -12,7 +13,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-APP_NAME = "Cartouche Builder"
+APP_NAME = "Cartouche"
+FOLDER_NAME = "Cartouche Builder"
 
 
 @dataclass(frozen=True)
@@ -24,7 +26,7 @@ class Paths:
         override = os.environ.get("CARTOUCHE_BUILDER_HOME")
         if override:
             return cls(Path(override).expanduser())
-        return cls(Path.home() / "Library" / "Application Support" / APP_NAME)
+        return cls(Path.home() / "Library" / "Application Support" / FOLDER_NAME)
 
     @property
     def config(self) -> Path:

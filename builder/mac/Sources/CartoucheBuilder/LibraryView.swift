@@ -373,7 +373,7 @@ struct ProblemsCard: View {
                     .font(.title)
                     .foregroundStyle(.orange)
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(tr("Cartouche Builder needs your folders", "Cartouche Builder a besoin de vos dossiers"))
+                    Text(tr("Cartouche needs your folders", "Cartouche a besoin de vos dossiers"))
                         .font(.headline)
                     ForEach(problems, id: \.self) { problem in
                         Text(problem)
@@ -572,8 +572,8 @@ struct EmptyLibrary: View {
         case .due: return tr("Every game is built from nxnative’s latest improvements.", "Chaque jeu est construit avec les dernières améliorations de nxnative.")
         case .all:
             if !(model.library?.issues.isEmpty ?? true) {
-                return tr("Above, what Cartouche Builder left aside in your dumps folder, and why.",
-                          "Ci-dessus, ce que Cartouche Builder a laissé de côté dans votre dossier des dumps, et pourquoi.")
+                return tr("Above, what Cartouche left aside in your dumps folder, and why.",
+                          "Ci-dessus, ce que Cartouche a laissé de côté dans votre dossier des dumps, et pourquoi.")
             }
             return tr("Put your dumps in your dumps folder: loose, or each in a folder.", "Mettez vos dumps dans votre dossier des dumps : en vrac, ou chacun dans un dossier.")
         default: return ""

@@ -184,7 +184,7 @@ class NamedWithoutTheirId(Home):
         self.assertEqual(found.issues, [
             "romfs.img: a game’s files (its RomFS image), not a dump. They go in your games folder, "
             "beside the IPA nxnative built without them, where Cartouche installs the two together.",
-            f"{MKW}_build: a folder nxnative builds a game in, which Cartouche Builder leaves alone. "
+            f"{MKW}_build: a folder nxnative builds a game in, which Cartouche leaves alone. "
             "An IPA nxnative made goes in your games folder, with its romfs.img if it has one.",
             "Mario Kart World/Mario Kart World.ipa: an IPA built already, not a dump. It goes in your games folder, "
             "where Cartouche installs it from, with its romfs.img if it was built without its game files.",
@@ -235,7 +235,7 @@ class NamedWithoutTheirId(Home):
         found = self.discover()
         self.assertEqual(found.games, [])
         self.assertEqual(len(found.issues), 1)
-        self.assertIn("Zelda/zelda.xci: not a game Cartouche Builder can read", found.issues[0])
+        self.assertIn("Zelda/zelda.xci: not a game Cartouche can read", found.issues[0])
 
 
 class Zips(Home):

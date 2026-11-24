@@ -297,7 +297,7 @@ struct GameDetailView: View {
                     if let version = build.version, !version.isEmpty { Fact(tr("Version", "Version"), version) }
                     if let toolchain = build.toolchain, !toolchain.isEmpty { Fact(tr("With", "Avec"), toolchain) }
                 } else {
-                    Text(tr("Never built by Cartouche Builder.", "Jamais construit par Cartouche Builder."))
+                    Text(tr("Never built by Cartouche.", "Jamais construit par Cartouche."))
                         .font(.callout)
                         .foregroundStyle(.secondary)
                 }
@@ -699,8 +699,8 @@ struct MacPlayCard: View {
     /// Where its saves are and what they did last, in the player's words.
     private func savesLine(playing: MacGameRun?) -> String {
         if games.cloud[game.titleID] != nil {
-            return tr("Its saves go through nxnative’s own cloud saves, chosen in its settings: Cartouche Builder leaves them to it.",
-                      "Ses sauvegardes passent par le cloud de nxnative, choisi dans ses réglages : Cartouche Builder les lui laisse.")
+            return tr("Its saves go through nxnative’s own cloud saves, chosen in its settings: Cartouche leaves them to it.",
+                      "Ses sauvegardes passent par le cloud de nxnative, choisi dans ses réglages : Cartouche les lui laisse.")
         }
         guard games.folder != nil else {
             return tr("Its saves stay on this Mac: keeping them with the iPhone’s is off (iPhone page).",

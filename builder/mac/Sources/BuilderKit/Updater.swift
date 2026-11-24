@@ -491,8 +491,8 @@ public final class Updater: ObservableObject {
     // MARK: Installing
 
     public static var moveFirst: String {
-        tr("Drag Cartouche Builder to Applications and open it from there: it can then update itself.",
-           "Glissez Cartouche Builder dans Applications et ouvrez-la de là : elle pourra alors se mettre à jour.")
+        tr("Drag Cartouche to Applications and open it from there: it can then update itself.",
+           "Glissez Cartouche dans Applications et ouvrez-le de là : il pourra alors se mettre à jour.")
     }
 
     /// Installs the update when nothing runs and no window is open, and
@@ -586,7 +586,7 @@ public final class Updater: ObservableObject {
     nonisolated static func check(_ found: URL, version: String, identifier: String) throws {
         let info = NSDictionary(contentsOf: found.appendingPathComponent("Contents/Info.plist")) as? [String: Any] ?? [:]
         guard info["CFBundleIdentifier"] as? String == identifier else {
-            throw UpdateError(tr("The update’s app is not Cartouche Builder.", "L’app de la mise à jour n’est pas Cartouche Builder."))
+            throw UpdateError(tr("The update’s app is not Cartouche.", "L’app de la mise à jour n’est pas Cartouche."))
         }
         guard info["CFBundleShortVersionString"] as? String == version else {
             throw UpdateError(tr("The update’s app is not version \(version).", "L’app de la mise à jour n’est pas la version \(version)."))
@@ -634,7 +634,7 @@ public final class Updater: ObservableObject {
         let q = { (url: URL) in MacSetup.quoted(url.path) }
         let script = "set -e; /bin/rm -rf \(q(staged)); /usr/bin/ditto \(q(found)) \(q(staged)); /bin/mv \(q(app)) \(q(old)); "
             + "if ! /bin/mv \(q(staged)) \(q(app)); then /bin/mv \(q(old)) \(q(app)); exit 1; fi; /bin/rm -rf \(q(old))"
-        let prompt = tr("Cartouche Builder installs its update.", "Cartouche Builder installe sa mise à jour.")
+        let prompt = tr("Cartouche installs its update.", "Cartouche installe sa mise à jour.")
         let command = "do shell script \"\(MacSetup.escaped(script))\" with prompt \"\(MacSetup.escaped(prompt))\" with administrator privileges"
         let result = try await Run.program("/usr/bin/osascript", ["-e", command], timeout: 900)
         guard result.succeeded else {

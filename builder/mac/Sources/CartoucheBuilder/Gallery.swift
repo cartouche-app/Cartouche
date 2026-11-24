@@ -317,7 +317,7 @@ enum Gallery {
         case .settingsBuilds, .settingsBuildsNoBC: window.title = SettingsTab.builds.title
         case .settingsFolders: window.title = SettingsTab.folders.title
         case _ where page.isConsole: window.title = "Cartouche"
-        default: window.title = "Cartouche Builder"
+        default: window.title = AppName.name
         }
         if [.settings, .settingsBuilds, .settingsBuildsNoBC, .settingsFolders].contains(page) {
             window.toolbarStyle = .preference
@@ -684,8 +684,8 @@ enum Gallery {
     /// free, as the engine says it (disks.py, room).
     static var room: LibraryRoom {
         LibraryRoom(freeGB: 13, keepGB: 20, folders: 2, title: tr("7 GB missing to build", "Il manque 7 Go pour construire"),
-                    text: tr("Cartouche Builder starts a build only with 20 GB free on your Mac's disk, and only 13 GB are free there. It first removes the build folders of the games built longest ago (2), which may be enough. Free some room there (Storage shows what the build folders take), choose build folders on another disk, or lower “Keep at least 20 GB free”.",
-                             "Cartouche Builder ne commence une construction qu'avec 20 Go libres sur le disque du Mac, et il n'y en a que 13. Il supprime d'abord les dossiers de construction des jeux construits il y a le plus longtemps (2), ce qui peut suffire. Libérez-y de la place (Stockage montre ce que prennent les dossiers de construction), choisissez des dossiers de construction sur un autre disque ou baissez « Garder au moins 20 Go libres »."))
+                    text: tr("Cartouche starts a build only with 20 GB free on your Mac's disk, and only 13 GB are free there. It first removes the build folders of the games built longest ago (2), which may be enough. Free some room there (Storage shows what the build folders take), choose build folders on another disk, or lower “Keep at least 20 GB free”.",
+                             "Cartouche ne commence une construction qu'avec 20 Go libres sur le disque du Mac, et il n'y en a que 13. Il supprime d'abord les dossiers de construction des jeux construits il y a le plus longtemps (2), ce qui peut suffire. Libérez-y de la place (Stockage montre ce que prennent les dossiers de construction), choisissez des dossiers de construction sur un autre disque ou baissez « Garder au moins 20 Go libres »."))
     }
 
     /// A game skipped for the Mac's Xcode, as the engine records it
@@ -791,8 +791,8 @@ enum Gallery {
     static var issues: [String] {
         [tr("Splatoon 3 (copy): the same game (0100C2500FC20000) as Splatoon 3; only Splatoon 3 is built.",
             "Splatoon 3 (copie) : le même jeu (0100C2500FC20000) que Splatoon 3 ; seul Splatoon 3 est construit."),
-         tr("Downloads/Pikmin 4.nsp: not a game Cartouche Builder can read (the file is incomplete: copied or downloaded in part?).",
-            "Téléchargements/Pikmin 4.nsp : pas un jeu que Cartouche Builder sait lire (le fichier est incomplet : copié ou téléchargé en partie ?).")]
+         tr("Downloads/Pikmin 4.nsp: not a game Cartouche can read (the file is incomplete: copied or downloaded in part?).",
+            "Téléchargements/Pikmin 4.nsp : pas un jeu que Cartouche sait lire (le fichier est incomplet : copié ou téléchargé en partie ?).")]
     }
 
     static let libraryJSON = """

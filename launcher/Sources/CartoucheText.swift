@@ -635,7 +635,7 @@ enum CartoucheText {
     // MARK: The player's storage
 
     static var storageTitle: String { s("storage.title", "Storage") }
-    static var storageIntro: String { s("storage.intro", "Your games and saves on your own storage: your Mac with Cartouche Builder, a shared folder of your Mac, PC or NAS, an S3 bucket, an FTP or SFTP server, your Google Drive, or a folder in Files. Its games show in your library.") }
+    static var storageIntro: String { s("storage.intro", "Your games and saves on your own storage: your Mac with Cartouche, a shared folder of your Mac, PC or NAS, an S3 bucket, an FTP or SFTP server, your Google Drive, or a folder in Files. Its games show in your library.") }
     static var storageNotSet: String { s("storage.notSet", "Not set up") }
     static var storageGamesFolder: String { s("storage.games", "Games folder") }
     static var storageSavesFolder: String { s("storage.saves", "Saves folder") }
@@ -654,9 +654,9 @@ enum CartoucheText {
     static func storageGameFilesLoose(_ names: [String]) -> String {
         let list = names.formatted(.list(type: .and).locale(locale))
         if names.count == 1 {
-            return f("storage.gameFiles.loose.one", "%@: a game’s files, but no IPA here was built to go with them. Put beside them the IPA nxnative built with them, or build the game with Cartouche Builder.", list)
+            return f("storage.gameFiles.loose.one", "%@: a game’s files, but no IPA here was built to go with them. Put beside them the IPA nxnative built with them, or build the game with Cartouche on your Mac.", list)
         }
-        return f("storage.gameFiles.loose", "%@: games’ files, but no IPA here was built to go with them. Put beside each the IPA nxnative built with it, or build the games with Cartouche Builder.", list)
+        return f("storage.gameFiles.loose", "%@: games’ files, but no IPA here was built to go with them. Put beside each the IPA nxnative built with it, or build the games with Cartouche on your Mac.", list)
     }
     static var storageReadAgain: String { s("storage.readAgain", "Read the folder again") }
     static var storageChangeFolder: String { s("storage.changeFolder", "Change folder") }
@@ -674,7 +674,7 @@ enum CartoucheText {
     /// Under a games folder whose server does not answer, among several.
     static var storageGamesElsewhere: String { s("storage.games.elsewhere", "Its games that another folder holds too install from that folder meanwhile.") }
     static var storageServers: String { s("storage.servers", "Places") }
-    static var storageServersFooter: String { s("storage.servers.footer", "Only storage of your own, with your own account: Cartouche keeps the password, the secret key or the Google sign-in in this iPhone’s keychain. The Mac you pair with Cartouche Builder keeps the same connections, passwords included, over the bridge’s encryption.") }
+    static var storageServersFooter: String { s("storage.servers.footer", "Only storage of your own, with your own account: Cartouche keeps the password, the secret key or the Google sign-in in this iPhone’s keychain. The Mac you pair keeps the same connections, passwords included, over the bridge’s encryption.") }
     static var storageAddSMB: String { s("storage.addSMB", "Add a shared folder (SMB)") }
     static var storageAddFolder: String { s("storage.addFolder", "Add a folder in Files") }
     static var storageAddS3: String { s("storage.addS3", "Add S3 storage") }

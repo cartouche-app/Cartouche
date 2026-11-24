@@ -548,7 +548,7 @@ class MacConsoleSystem(unittest.TestCase):
 
     def test_the_version_shows_once_as_on_the_iphone(self):
         # The iPhone has its version in its Cartouche section, which the Mac
-        # shows as Cartouche Builder, and its updates say only what the
+        # shows as Cartouche for Mac, and its updates say only what the
         # updater found: a Version row in the Mac's updates showed it twice,
         # and empty in the gallery (17 November).
         page = "\n".join(line for _, line in outside_iphone_parts(SYSTEM_PAGE.read_text()))
