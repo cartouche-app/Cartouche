@@ -10,6 +10,7 @@ in mac/Tests/BuilderKitTests/AppNameTests.swift). Its settings, games and
 builds stay in ~/Library/Application Support/Cartouche Builder; a nightly
 batch tells of itself only while neither app runs, and in Cartouche's name."""
 
+import json
 import re
 import unittest
 from pathlib import Path
@@ -68,6 +69,15 @@ class AppName(unittest.TestCase):
         # The engine's own Python, inside the app, is not the app.
         self.assertFalse(running.search("python3 /Applications/Cartouche.app/Contents/Resources/engine/cartouche_builder"))
         self.assertFalse(running.search("/Applications/Mario Kart World.app/Contents/MacOS/Mario Kart World"))
+
+    def test_the_consoles_system_page_names_it_in_its_language(self):
+        # Cartouche for Mac in English, Cartouche pour Mac in French: a
+        # verbatim name stayed in English in the French console.
+        system = text("launcher/Sources/CartoucheSystemView.swift")
+        self.assertNotRegex(system, r'Text\(verbatim: "Cartouche (?:for Mac|Builder)"\)')
+        self.assertIn("Text(CartoucheText.macSystemApp)", system)
+        words = json.loads(text("builder/mac/console/strings.json"))["strings"]["mac.system.app"]
+        self.assertEqual(words, {"en": "Cartouche for Mac", "fr": "Cartouche pour Mac"})
 
     def test_its_notifications_say_cartouche(self):
         scripts = []

@@ -151,6 +151,8 @@ struct CartoucheMacUpdatesSection: View {
 
 extension CartoucheText {
     /// Cartouche Builder, on the console's System page.
+    /// The app the console is in, over its version on the System page.
+    static var macSystemApp: String { s("mac.system.app", "Cartouche for Mac") }
     static var macSystemBuilder: String { s("mac.system.builder", "Open the Builder") }
     static var macSystemBuilderFooter: String {
         s("mac.system.builder.footer",

@@ -430,6 +430,10 @@
       "en": "The Builder’s games folder, which your iPhones reach through this Mac, keeps the games it builds.",
       "fr": "Le dossier des jeux du Builder, que vos iPhone atteignent à travers ce Mac, garde les jeux qu’il construit."
     },
+    "mac.system.app": {
+      "en": "Cartouche for Mac",
+      "fr": "Cartouche pour Mac"
+    },
     "mac.system.back": {
       "en": "Back to the console",
       "fr": "Retour à la console"
