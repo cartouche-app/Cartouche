@@ -310,3 +310,19 @@ public struct CartoucheTypedAddress: Equatable, Sendable {
         return CartoucheTypedAddress(host: host, port: given ?? port)
     }
 }
+
+/// How the iPhone reached its Mac, for the measurements (game.installed's
+/// link): through the cable, at an address of the player's tailnet, or on
+/// the network otherwise. Never the address.
+public enum CartoucheMacLink: String, CaseIterable, Sendable {
+    case cable, tailnet, network
+
+    /// The way a connection went: through the CABLE, or to ADDRESS, the
+    /// one it reached on a network, nil when unknown; TAILNET, the Mac's
+    /// addresses there, which its Cartouche Builder tells.
+    public static func of(cable: Bool, address: String?, tailnet: [String] = []) -> CartoucheMacLink {
+        if cable { return .cable }
+        guard let address, !address.isEmpty else { return .network }
+        return CartoucheTailscale.isTailnetHost(address) || tailnet.contains(address) ? .tailnet : .network
+    }
+}

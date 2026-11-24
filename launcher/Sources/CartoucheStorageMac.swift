@@ -212,6 +212,10 @@ enum CartoucheMacStorage {
     /// first connection after, in seconds: Tailscale gives a device the same
     /// ones for good.
     static let tailnetAskSpacing: TimeInterval = 3_600
+    /// How Cartouche last reached each Mac, by its server's ID, for the
+    /// measurements: a game installed from it says so (game.installed's
+    /// link). Never an address.
+    @MainActor static private(set) var links: [UUID: CartoucheMacLink] = [:]
 
     /// The iPhone's ID for the Mac of SERVER.
     static func deviceID(of server: CartoucheStorageServer) -> String {
@@ -298,7 +302,8 @@ enum CartoucheMacStorage {
             }
             try Task.checkCancellation()
             // No address to keep: the cable has none.
-            return await remember(CartoucheBridgeClient(channel: channel, address: nil), server: server, settings: settings)
+            return await remember(CartoucheBridgeClient(channel: channel, address: nil), server: server, settings: settings,
+                                  cable: true)
         } catch let error as CartoucheBridgeError where [.notPaired, .protocolError].contains(error.kind) {
             transport.close()
             throw explained(error, mac: server.name, path: "")
@@ -357,11 +362,13 @@ enum CartoucheMacStorage {
     /// next time, and the Mac's addresses in the tailnet, as its Cartouche
     /// Builder tells them now and then.
     private static func remember(_ client: CartoucheBridgeClient, server: CartoucheStorageServer,
-                                 settings: CartoucheStorageSettings) async -> CartoucheRemote {
+                                 settings: CartoucheStorageSettings, cable: Bool = false) async -> CartoucheRemote {
         // An older Cartouche Builder says nothing of them.
         let told = asksTailnet(of: server.id, at: Date()) ? (try? await client.info())?.tailscale : nil
         let known = CartoucheMacAddresses(host: server.host, port: server.port, tailnet: server.tailnet ?? [])
         let now = known.reached(usable(client.address), port: client.port, told: told)
+        let link = CartoucheMacLink.of(cable: cable, address: client.address, tailnet: now.tailnet)
+        await MainActor.run { links[server.id] = link }
         if now != known {
             await MainActor.run {
                 // As the player has it now, unless they removed it meanwhile.
