@@ -63,6 +63,27 @@
       "work": "certificate"
     },
     {
+      "name": "iphone-home-sidestore-memory",
+      "comment": "The home of a Cartouche the player's own SideStore installed, once set up (signing: sidestore): the banner for Increased Memory Limit, which that SideStore left out on a free team.",
+      "screen": "games",
+      "signing": "sidestore",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-home-landscape",
       "screen": "games",
       "owned": [
@@ -1562,6 +1583,40 @@
       "comment": "The setup of a Cartouche installed by the Cartouche Installer with the player's own certificate (signing: installer).",
       "screen": "setup",
       "signing": "installer",
+      "owned": [],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-setup-sidestore",
+      "comment": "The setup of a Cartouche the player's own SideStore installed, from Cartouche's source for SideStore (signing: sidestore): the pairing file asked of that SideStore, the sign-in with its Apple ID, and Increased Memory Limit, left for after the setup.",
+      "screen": "setup",
+      "signing": "sidestore",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-setup-sidestore-memory",
+      "comment": "The same once set up: Increased Memory Limit, which the player's SideStore left out on a free team, and the reinstall that gets it.",
+      "screen": "setup",
+      "signing": "sidestore",
       "owned": [],
       "setup": true,
       "controller": false,

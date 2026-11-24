@@ -2,13 +2,16 @@ name: Release
 
 # Publishes a release of Cartouche when a tag v<CARTOUCHE_VERSION> is pushed
 # on main, or when the workflow is run on main from the Actions tab, which
-# needs no computer and makes the tag itself: builds the IPA, and the IPA a
+# needs no computer and makes the tag itself: builds the IPA, the IPA a
 # player signs on the iPhone with their own certificate
-# (app/scripts/own_certificate_ipa.py, docs/imported-signing.md), runs the
-# publish guard on both and attaches them to a GitHub release. main takes no
-# push, this workflow's included: it pushes the branch release/v<version>,
-# which adds the release to app/sidestore-source.json once both IPAs,
-# downloaded again from the addresses it gives, are the ones it lists, and
+# (app/scripts/own_certificate_ipa.py, docs/imported-signing.md) and the one a
+# player installs with their own SideStore (app/scripts/sidestore_ipa.py,
+# docs/decisions/147.md), runs the publish guard on the three and attaches
+# them to a GitHub release. main takes no push, this workflow's included: it
+# pushes the branch release/v<version>, which adds the release to
+# app/sidestore-source.json, and to app/sidestore-player-source.json with the
+# IPA for the player's SideStore, once the IPAs, downloaded again from the
+# addresses they give, are the ones they list, and
 # its summary links the pull request to open from it, with what it checked.
 # Once that pull request is merged, Cartouche's built-in SideStore finds the
 # release and offers the update on the iPhone. Nothing is published before
@@ -111,12 +114,16 @@ jobs:
         run: app/scripts/build.sh
       - name: The IPA for the player's own certificate
         run: python3 app/scripts/own_certificate_ipa.py --ipa build/app/Cartouche.ipa --out build/app/Cartouche-Own-Certificate.ipa
+      # ldid signs its executables again, with their own app group.
+      - name: The IPA for the player's SideStore
+        run: python3 app/scripts/sidestore_ipa.py --ipa build/app/Cartouche.ipa --out build/app/Cartouche-SideStore.ipa
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: Cartouche-${{ steps.tag.outputs.version }}
           path: |
             build/app/Cartouche.ipa
             build/app/Cartouche-Own-Certificate.ipa
+            build/app/Cartouche-SideStore.ipa
           retention-days: 14
           if-no-files-found: error
 
@@ -159,7 +166,8 @@ jobs:
         run: |
           python3 -m venv .venv
           .venv/bin/pip install --quiet -e guard
-          .venv/bin/cartouche-guard --kind app build/download/Cartouche.ipa build/download/Cartouche-Own-Certificate.ipa
+          .venv/bin/cartouche-guard --kind app build/download/Cartouche.ipa build/download/Cartouche-Own-Certificate.ipa \
+            build/download/Cartouche-SideStore.ipa
 
   # The only job that can write: it runs git, gh and the standard library
   # only, nothing installed from a package index.
@@ -185,12 +193,14 @@ jobs:
           mkdir -p build/release
           IPA="build/release/Cartouche-$VERSION.ipa"
           OWN_IPA="build/release/Cartouche-$VERSION-Own-Certificate.ipa"
+          SIDESTORE_IPA="build/release/Cartouche-$VERSION-SideStore.ipa"
           cp build/download/Cartouche.ipa "$IPA"
           cp build/download/Cartouche-Own-Certificate.ipa "$OWN_IPA"
+          cp build/download/Cartouche-SideStore.ipa "$SIDESTORE_IPA"
           if gh release view "$TAG" >/dev/null 2>&1; then
             # A release that is not in the source yet; once published, an
             # immutable release refuses this.
-            gh release upload "$TAG" "$IPA" "$OWN_IPA" --clobber
+            gh release upload "$TAG" "$IPA" "$OWN_IPA" "$SIDESTORE_IPA" --clobber
           else
             # Versions 0.x are test builds: marked as pre-releases on GitHub.
             PRERELEASE=()
@@ -200,7 +210,7 @@ jobs:
             TARGET=(--verify-tag)
             if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then TARGET=(--target "$GITHUB_SHA"); fi
             # A draft until its IPAs are attached, so that it can be immutable.
-            gh release create "$TAG" "$IPA" "$OWN_IPA" --draft --title "Cartouche $VERSION" \
+            gh release create "$TAG" "$IPA" "$OWN_IPA" "$SIDESTORE_IPA" --draft --title "Cartouche $VERSION" \
               --notes-file "app/releases/$VERSION.md" "${TARGET[@]}" "${PRERELEASE[@]}"
           fi
           gh release edit "$TAG" --draft=false
@@ -223,6 +233,8 @@ jobs:
             --url "https://github.com/clabeuhtegrite/Cartouche/releases/download/$TAG/Cartouche-$VERSION.ipa" \
             --own-certificate-ipa "build/release/Cartouche-$VERSION-Own-Certificate.ipa" \
             --own-certificate-url "https://github.com/clabeuhtegrite/Cartouche/releases/download/$TAG/Cartouche-$VERSION-Own-Certificate.ipa" \
+            --sidestore-ipa "build/release/Cartouche-$VERSION-SideStore.ipa" \
+            --sidestore-url "https://github.com/clabeuhtegrite/Cartouche/releases/download/$TAG/Cartouche-$VERSION-SideStore.ipa" \
             --notes "app/releases/$VERSION.md" \
             --version "$VERSION"
           # Both IPAs downloaded again, as iPhones and the Cartouche Installer
@@ -233,7 +245,10 @@ jobs:
           gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" > build/release.json
           python3 app/scripts/check_release_downloads.py --version "$VERSION" \
             --release build/release.json --summary build/downloads.md
-          git add app/sidestore-source.json
+          python3 app/scripts/check_release_downloads.py --version "$VERSION" --player \
+            --source app/sidestore-player-source.json --release build/release.json --summary build/downloads-sidestore.md
+          cat build/downloads-sidestore.md >> build/downloads.md
+          git add app/sidestore-source.json app/sidestore-player-source.json
           git -c user.name="github-actions[bot]" \
               -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
               commit -m "Source: Cartouche $VERSION" -m "Added by the Release workflow for $TAG."

@@ -87,6 +87,11 @@
 //                                        which kept the profile's keychain
 //                                        pattern as it is
 //                                        (GalleryScenario.ownSignature)
+//        sidestore                       the IPA for the player's own
+//                                        SideStore, which signed it with
+//                                        the player's Apple ID and left
+//                                        Increased Memory Limit out
+//                                        (CartoucheSideStoreInstall)
 //      -GalleryWidth 402 -GalleryHeight 874     (none: the whole screen)
 //      -GalleryInsets 62,0,34,0          top, leading, bottom, trailing
 //      -GalleryWidthClass compact        the width class at a scenario's
@@ -555,7 +560,9 @@ struct GalleryScenario {
     /// Puts the files the stand-ins read where the launcher looks for them.
     func prepare() {
         GalleryState.setupDone = setupDone
-        GalleryState.signing = signing == "iphone" ? .iPhone : signing == "installer" ? .installer : .account
+        GalleryState.signing = signing == "iphone" ? .iPhone : signing == "installer" ? .installer
+            : signing == "sidestore" ? .sideStore : .account
+        GalleryState.sideStoreMemory = signing == "sidestore" ? (setupDone ? .reinstall : .afterSetup) : nil
         GalleryState.ownSignature = ownSignature
         GalleryState.ownProfile = signingTrial != nil && work != "signing-no-own-profile" ? Self.standInProfile : nil
         // errSecAuthFailed, as iOS answers a password that does not open a

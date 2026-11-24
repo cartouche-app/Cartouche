@@ -24,6 +24,13 @@
 //  the new version's notes (CartoucheWhatsNewView), or a word that it is
 //  installed when the version has none.
 //
+//  Installed by the player's own SideStore, Cartouche has the built-in
+//  SideStore install the version that runs again, once, the same way
+//  (reinstallForMemory): signed by the built-in SideStore, it gets
+//  Increased Memory Limit, which the player's SideStore leaves out on a
+//  free team (CartoucheSideStoreInstall.swift, docs/decisions/147.md). As
+//  it opens again, Cartouche says whether iOS gives it now.
+//
 
 import Foundation
 import UIKit
@@ -48,6 +55,13 @@ final class CartoucheUpdates: ObservableObject {
         case installing
     }
 
+    /// What the built-in SideStore installs: a newer version, or, once, the
+    /// version that runs, for Increased Memory Limit.
+    enum Kind: String, Equatable {
+        case update
+        case memory
+    }
+
     /// The newest version the source lists for this iOS, when it is higher
     /// than this one.
     @Published private(set) var available: CartoucheRelease?
@@ -63,6 +77,7 @@ final class CartoucheUpdates: ObservableObject {
     /// The version being installed, and how far it has gone.
     @Published private(set) var target: CartoucheRelease?
     @Published private(set) var phase: Phase?
+    @Published private(set) var kind: Kind = .update
     @Published private(set) var progress: Progress?
     /// When the update started.
     private var started: Date?
@@ -83,6 +98,9 @@ final class CartoucheUpdates: ObservableObject {
     /// The version being installed, kept until Cartouche opens again: iOS
     /// closes it to install the new one.
     private static let pendingKey = "Cartouche.update.pending"
+    /// What it installs, beside it: an update, or the reinstall for
+    /// Increased Memory Limit.
+    private static let pendingKindKey = "Cartouche.update.pending.kind"
     /// The version the player put off, and when.
     private static let laterVersionKey = "Cartouche.update.later.version"
     private static let laterDateKey = "Cartouche.update.later.date"
@@ -121,17 +139,33 @@ final class CartoucheUpdates: ObservableObject {
         AnyObject, Selector, Progress, @escaping @convention(block) (NSString?) -> Void) -> Void
 
     private static let updateSelector = NSSelectorFromString("updateCartoucheWithProgress:completion:")
+    private static let reinstallSelector = NSSelectorFromString("reinstallCartoucheWithProgress:completion:")
+
+    private static func selector(for kind: Kind) -> Selector {
+        kind == .memory ? reinstallSelector : updateSelector
+    }
 
     /// CartoucheUpdate is in SideStoreSupport, which LiveContainer loads only
     /// when the app carries the built-in SideStore.
-    private static var bridge: (receiver: AnyObject, call: UpdateCartouche)? {
+    private static func bridge(_ selector: Selector) -> (receiver: AnyObject, call: UpdateCartouche)? {
         guard let update = NSClassFromString("CartoucheUpdate"),
-              let method = class_getClassMethod(update, updateSelector) else { return nil }
+              let method = class_getClassMethod(update, selector) else { return nil }
         return (update as AnyObject, unsafeBitCast(method_getImplementation(method), to: UpdateCartouche.self))
     }
 
     /// Whether this build can update itself.
-    var canUpdate: Bool { !CartoucheImportedSigning.accountSigningDisabled && Self.bridge != nil && canCheck }
+    var canUpdate: Bool { !CartoucheImportedSigning.accountSigningDisabled && Self.bridge(Self.updateSelector) != nil && canCheck }
+
+    /// Whether the player can have Cartouche install itself again now, for
+    /// Increased Memory Limit: installed by the player's own SideStore,
+    /// without it, and set up, as for an update.
+    var canReinstallForMemory: Bool {
+        #if CARTOUCHE_GALLERY
+        if CartoucheSideStoreInstall.isSideStoreInstall, CartoucheSideStoreInstall.memory == .reinstall { return phase == nil }
+        #endif
+        return CartoucheSideStoreInstall.isSideStoreInstall && CartoucheSideStoreInstall.memory == .reinstall
+            && phase == nil && canCheck && Self.bridge(Self.reinstallSelector) != nil
+    }
 
     /// Whether this build reads its source, to install its updates or, signed
     /// with the player's own certificate, to say that one is out.
@@ -313,11 +347,26 @@ final class CartoucheUpdates: ObservableObject {
     func start() {
         guard !CartoucheImportedSigning.accountSigningDisabled else { return }
         guard phase == nil, let release = available else { return }
+        run(release, kind: .update)
+    }
+
+    /// Has the built-in SideStore install the version that runs again, or a
+    /// newer one, signed by itself: once, installed by the player's own
+    /// SideStore, for Increased Memory Limit.
+    func reinstallForMemory() {
+        guard CartoucheSideStoreInstall.isSideStoreInstall, phase == nil else { return }
+        run(available ?? CartoucheRelease(version: Self.runningVersion, notes: "", size: nil), kind: .memory)
+    }
+
+    private func run(_ release: CartoucheRelease, kind: Kind) {
         isOffered = false
         notice = nil
         problemReport = nil
-        CartoucheReports.note("Update to Cartouche " + release.version + " started")
-        guard let bridge = Self.bridge else {
+        self.kind = kind
+        CartoucheReports.note(kind == .memory ? "Reinstall of Cartouche " + release.version + " for Increased Memory Limit started"
+                              : "Update to Cartouche " + release.version + " started")
+        let selector = Self.selector(for: kind)
+        guard let bridge = Self.bridge(selector) else {
             failed(CartoucheText.updateUnavailable, version: release.version, step: nil, fraction: nil,
                    failure: CartoucheFailure(.bridgeMissing, stage: "start"))
             return
@@ -328,12 +377,12 @@ final class CartoucheUpdates: ObservableObject {
         phase = .preparing
         started = Date()
         defaults.set(release.version, forKey: Self.pendingKey)
+        defaults.set(kind.rawValue, forKey: Self.pendingKindKey)
         vpn = nil
-        let selector = Self.updateSelector
         Task { [weak self] in
             // SideStore reaches this iPhone through LocalDevVPN, which
             // Cartouche has connect first, when it is off.
-            let vpn = await CartoucheLocalDevVPN.shared.connect(for: "Update", playerAsked: true)
+            let vpn = await CartoucheLocalDevVPN.shared.connect(for: kind == .memory ? "Reinstall" : "Update", playerAsked: true)
             self?.vpn = vpn
             // SideStore takes one action at a time: a renewal under way, as
             // when Cartouche renews itself as it opens, ends first.
@@ -351,7 +400,7 @@ final class CartoucheUpdates: ObservableObject {
     /// either failed or finished while Cartouche was still running.
     private func finished(_ message: String?) {
         let version = target?.version ?? ""
-        let step = phase == .installing ? CartoucheText.updateInstallingTitle(version) : CartoucheText.updatePreparingTitle(version)
+        let step = stepTitle(phase ?? .preparing, version: version)
         let fraction = phase == .preparing ? progress?.fractionCompleted : nil
         let seconds = started.map { Date().timeIntervalSince($0) }
         phase = nil
@@ -360,6 +409,7 @@ final class CartoucheUpdates: ObservableObject {
         started = nil
         endBackground()
         defaults.removeObject(forKey: Self.pendingKey)
+        defaults.removeObject(forKey: Self.pendingKindKey)
         // How SideStore's action ended, which it left for Cartouche.
         let outcome = Self.takeOutcome()
         let vpn = self.vpn
@@ -374,8 +424,29 @@ final class CartoucheUpdates: ObservableObject {
             failed(CartoucheRenewal.playerMessage(message, failure: failure), version: version, step: step, fraction: fraction,
                    failure: failure)
         } else {
-            CartoucheReports.note("Update to Cartouche " + version + " installed")
+            CartoucheReports.note((kind == .memory ? "Reinstall of Cartouche " : "Update to Cartouche ") + version + " installed")
             notice = CartoucheGameNotice(title: CartoucheText.updateInstalledTitle(version), message: CartoucheText.updateInstalledMessage)
+        }
+    }
+
+    /// The title of PHASE of what the built-in SideStore installs: an
+    /// update to VERSION, or the reinstall for Increased Memory Limit.
+    func stepTitle(_ phase: Phase, version: String) -> String {
+        switch (kind, phase) {
+        case (.memory, .preparing): return CartoucheText.memoryReinstallPreparingTitle
+        case (.memory, .installing): return CartoucheText.memoryReinstallInstallingTitle
+        case (.update, .preparing): return CartoucheText.updatePreparingTitle(version)
+        case (.update, .installing): return CartoucheText.updateInstallingTitle(version)
+        }
+    }
+
+    /// What the player reads under it.
+    func stepMessage(_ phase: Phase) -> String {
+        switch (kind, phase) {
+        case (.memory, .preparing): return CartoucheText.memoryReinstallPreparingMessage
+        case (.memory, .installing): return CartoucheText.memoryReinstallInstallingMessage
+        case (.update, .preparing): return CartoucheText.updatePreparingMessage
+        case (.update, .installing): return CartoucheText.updateInstallingMessage
         }
     }
 
@@ -397,11 +468,12 @@ final class CartoucheUpdates: ObservableObject {
     /// the notice always said to check LocalDevVPN and try again, before
     /// SideStore's words.
     private func failed(_ message: String, version: String, step: String?, fraction: Double?, failure: CartoucheFailure) {
-        let report = CartoucheReports.make(.update, CartoucheText.updateFailedTitle, message: message, step: step,
+        let title = kind == .memory ? CartoucheText.memoryReinstallFailedTitle : CartoucheText.updateFailedTitle
+        let report = CartoucheReports.make(.update, title, message: message, step: step,
                                            fraction: fraction, failure: failure, facts: [.init("New version", version)])
         problemReport = report
         let saysWhatToDo = CartoucheRenewalTrouble.of(failure) != nil
-        notice = CartoucheGameNotice(title: CartoucheText.updateFailedTitle,
+        notice = CartoucheGameNotice(title: title,
                                      message: saysWhatToDo ? message : CartoucheText.updateFailed(message), report: report)
     }
 
@@ -409,7 +481,13 @@ final class CartoucheUpdates: ObservableObject {
     private func reportPendingUpdate() {
         guard let pending = defaults.string(forKey: Self.pendingKey) else { return }
         defaults.removeObject(forKey: Self.pendingKey)
+        let pendingKind = defaults.string(forKey: Self.pendingKindKey).flatMap(Kind.init(rawValue:)) ?? .update
+        defaults.removeObject(forKey: Self.pendingKindKey)
         let running = Self.runningVersion
+        if pendingKind == .memory, !CartoucheVersion.isHigher(pending, than: running) {
+            reportReinstall(running)
+            return
+        }
         if CartoucheVersion.isHigher(pending, than: running) {
             let message = CartoucheText.updateUnfinished(pending)
             // SideStore may have ended after Cartouche left the screen: what
@@ -425,6 +503,29 @@ final class CartoucheUpdates: ObservableObject {
             // What's new says so, with what the version brings.
             guard !CartoucheWhatsNew.shared.shows(running) else { return }
             noteInstalled(running)
+        }
+    }
+
+    /// Cartouche opens on version RUNNING, which the built-in SideStore
+    /// installed again for Increased Memory Limit: whether iOS gives it now.
+    private func reportReinstall(_ running: String) {
+        kind = .memory
+        if CartoucheDevice.hasIncreasedMemoryLimit {
+            CartoucheReports.note("Reinstall of Cartouche " + running + " installed, with Increased Memory Limit")
+            notice = CartoucheGameNotice(title: CartoucheText.memoryReinstallDoneTitle, message: CartoucheText.memoryReinstallDone)
+        } else {
+            // SideStore's action failed, or ended without Apple giving the
+            // capability to the profile.
+            let outcome = Self.takeOutcome(maximumAge: 86_400)
+            let failure = outcome.map { !$0.ok } == true
+                ? CartoucheFailure.sideStore(outcome: outcome, message: nil, fraction: nil, seconds: nil, vpn: nil, pairing: nil)
+                : CartoucheFailure(.profile, stage: "memoryReinstall")
+            let report = CartoucheReports.make(.update, CartoucheText.memoryReinstallWithoutTitle,
+                                               message: CartoucheText.memoryReinstallWithout, failure: failure,
+                                               facts: [.init("New version", running)])
+            problemReport = report
+            notice = CartoucheGameNotice(title: CartoucheText.memoryReinstallWithoutTitle,
+                                         message: CartoucheText.memoryReinstallWithout, report: report)
         }
     }
 

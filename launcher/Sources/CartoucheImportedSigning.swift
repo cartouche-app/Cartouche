@@ -15,7 +15,7 @@ enum CartoucheImportedSigning {
         return CartoucheSigningMode(info: Bundle.main.infoDictionary ?? [:])
         #endif
     }
-    static var isImportedInstall: Bool { mode != .account }
+    static var isImportedInstall: Bool { mode.isImported }
     /// Signed by a signing app on the iPhone, from the IPA for the player's
     /// own certificate: the player gives Cartouche the certificate alone,
     /// and Cartouche reads the profile the signing app put in it.

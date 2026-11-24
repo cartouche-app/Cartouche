@@ -1,0 +1,9 @@
+{
+  "name": "Cartouche for SideStore",
+  "identifier": "io.github.clabeuhtegrite.cartouche.sidestore",
+  "subtitle": "Install Cartouche with your SideStore",
+  "description": "The source to add to your own SideStore to install Cartouche without a computer. It lists Cartouche and nothing else: Cartouche never lists, hosts or downloads games. When SideStore asks about Cartouche's app extensions, keep them on the main profile.",
+  "website": "https://github.com/cartouche-app/Cartouche",
+  "news": [],
+  "apps": []
+}
