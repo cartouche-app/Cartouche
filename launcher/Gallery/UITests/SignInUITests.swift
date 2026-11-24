@@ -71,7 +71,10 @@ final class SignInUITests: ConsoleTestCase {
         expect(waitForGone(again, timeout: 30), "Sign in again stayed once signed in", in: app)
         expect(waitForGone(said, timeout: 30), "The System page still says that the session has expired", in: app)
 
-        tap(element(in: app.buttons, beginningWith: Words.setup), "Setup on the System page", in: app)
+        // Back up the page, scrolled down to the signature.
+        let setupRow = element(in: app.buttons, beginningWith: Words.setup)
+        scrollBackTo(setupRow, "Setup on the System page", in: app)
+        tap(setupRow, "Setup on the System page", in: app)
         let signedIn = element(in: app.staticTexts, beginningWith: Words.signedIn)
         expect(signedIn.waitForExistence(timeout: 15), "The setup does not say the Apple ID is signed in", in: app)
         expect(!app.buttons[Words.signInAgain].exists, "The setup still offers Sign in again", in: app)

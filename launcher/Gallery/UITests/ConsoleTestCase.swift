@@ -489,6 +489,19 @@ class ConsoleTestCase: XCTestCase {
         expect(element.exists && element.isHittable, "No \(what), even after scrolling", in: app, file: file, line: line)
     }
 
+    /// Swipes the page down, slowly, until ELEMENT can be tapped: back to
+    /// the top of a page scrolled down to something under it.
+    @MainActor
+    func scrollBackTo(_ element: XCUIElement, _ what: String, in app: XCUIApplication, swipes: Int = 10,
+                      file: StaticString = #filePath, line: UInt = #line) {
+        let element = element.firstMatch
+        for _ in 0..<swipes {
+            if element.exists && element.isHittable { return }
+            app.swipeDown(velocity: .slow)
+        }
+        expect(element.exists && element.isHittable, "No \(what), even after scrolling back", in: app, file: file, line: line)
+    }
+
     /// Scrolls to ELEMENT, then taps it once it stays where it can be: the
     /// rows of a list above it can grow as they are drawn and push it off
     /// the screen, as a game's sheet did to its Edit the game's info, at
