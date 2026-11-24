@@ -191,6 +191,11 @@ final class CartoucheGameActions: ObservableObject {
     /// Whether an install or a copy is on its way, which keeps the iPhone
     /// from locking until it is over (beginTransfer).
     var isTransferring: Bool { transfer != nil }
+    /// How fast the game of the install under way comes, from its server
+    /// (CartoucheTransferMeter), and what reads it each second for the
+    /// install's screen.
+    private var meter: CartoucheTransferMeter?
+    private var measuring: Task<Void, Never>?
     /// Whether the player, or iOS, stopped it from outside Cartouche.
     private var stopped = false
     /// The game to start once the running one has ended.
@@ -375,8 +380,9 @@ final class CartoucheGameActions: ObservableObject {
             return
         }
         work = CartoucheGameWork(kind: .installing, name: offered.name, step: CartoucheText.installFromStorageStep(first.name),
-                                 fraction: nil, stage: "reading", place: first.name)
+                                 fraction: nil, stage: "reading", place: first.name, local: Self.isLocal(first))
         beginTransfer()
+        let meter = CartoucheTransferMeter()
         transfer = Task {
             var file: CartoucheResumingSource?
             var image: CartoucheResumingSource?
@@ -405,15 +411,24 @@ final class CartoucheGameActions: ObservableObject {
                             + [.init("Copy", "the copy offered was offline, this one is the next", own: true)]
                         work?.step = step
                         work?.place = server.name
+                        work?.local = Self.isLocal(server)
                         installing = (server.kind.rawValue, server.id)
                     }
                     break
                 }
                 guard let source = opened else { throw CancellationError() }
                 file = source
+                // How fast it comes, and, from the Mac, how: the install's
+                // screen shows them (CartoucheTransferSpeed.swift).
+                source.onRead = { meter.add($0) }
+                work?.way = Self.way(to: server)
+                measure(meter, from: server)
                 let serverName = server.name
                 let readingStep = step
                 source.onRetry = { @Sendable _, _ in
+                    // The minutes the connection takes to come back are not
+                    // its speed.
+                    meter.pause()
                     Task { @MainActor in
                         CartoucheGameActions.shared.work?.step = CartoucheText.installFromStorageRetry(serverName)
                         CartoucheGameActions.shared.work?.stage = "reconnecting"
@@ -442,6 +457,7 @@ final class CartoucheGameActions: ObservableObject {
                     return opened
                 }
                 image?.onRetry = source.onRetry
+                image?.onRead = source.onRead
                 image?.onResumed = { @Sendable in
                     Task { @MainActor in
                         CartoucheGameActions.shared.work?.step = CartoucheText.installGameFiles
@@ -464,7 +480,8 @@ final class CartoucheGameActions: ObservableObject {
                     try await CartoucheZip.extract(source, entries: entries, into: folder, progress: progress)
                     if let copied = gameFiles.copied, let copying {
                         // The IPA is read: its connection goes before the
-                        // image's work.
+                        // image's work, and the image is measured anew.
+                        meter.pause()
                         await source.close()
                         try await copyGameFiles(copied, into: folder, progress: copying)
                     }
@@ -534,12 +551,17 @@ final class CartoucheGameActions: ObservableObject {
         work = CartoucheGameWork(kind: .installing, name: game.name, step: step, fraction: nil, stage: "reading",
                                  place: place)
         beginTransfer()
+        let meter = CartoucheTransferMeter()
         transfer = Task {
             var file: CartoucheResumingSource?
             do {
                 let source = try await link.client.ipa(game.id, token: token)
                 file = source
+                // How fast it comes: the install's screen shows it.
+                source.onRead = { meter.add($0) }
+                measure(meter, from: nil)
                 source.onRetry = { @Sendable _, _ in
+                    meter.pause()
                     Task { @MainActor in
                         CartoucheGameActions.shared.work?.step = CartoucheText.installFromStorageRetry(place)
                         CartoucheGameActions.shared.work?.stage = "reconnecting"
@@ -600,6 +622,12 @@ final class CartoucheGameActions: ObservableObject {
             // the key it gave the first time.
             let current = await MainActor.run { CartoucheStorageSettings.shared.server(server.id) } ?? server
             let remote = try await CartoucheStorage.connect(current)
+            if let mac = remote as? CartoucheMacRemote {
+                // How the connection reaches the Mac on its side, its Wi-Fi's
+                // band: the install's screen says it.
+                let network = await mac.network()
+                await MainActor.run { CartoucheMacStorage.note(network, of: server.id) }
+            }
             do {
                 let opened = try await remote.open(path)
                 return CartoucheResumingSource.Opened(source: opened, close: { await remote.disconnect() })
@@ -738,6 +766,9 @@ final class CartoucheGameActions: ObservableObject {
     /// The install or the copy is over, whether it went through or not.
     private func endTransfer() {
         progressObservation = nil
+        measuring?.cancel()
+        measuring = nil
+        meter = nil
         transfer = nil
         UIApplication.shared.isIdleTimerDisabled = false
         CartoucheContinuedWork.shared.end(success: !workFailed)
@@ -790,6 +821,12 @@ final class CartoucheGameActions: ObservableObject {
     /// (game.installed's `link`): through the cable, the tailnet or the
     /// network (CartoucheMacLink); nil for another place.
     private(set) var installedLink: String?
+    /// How fast the game installed last came, in megabytes a second
+    /// (game.installed's `speed`); nil from a file on this iPhone.
+    private(set) var installedSpeed: Double?
+    /// The band of the Mac's Wi-Fi the game installed last came over
+    /// (game.installed's `macBand`): "2.4", "5" or "6"; nil otherwise.
+    private(set) var installedMacBand: String?
     /// Where the install under way comes from, as installedFrom says it,
     /// and its server, for the measurements of an install that fails.
     private var installing: (from: String, server: UUID?)?
@@ -797,6 +834,8 @@ final class CartoucheGameActions: ObservableObject {
     private func finishInstall(_ app: LCAppModel, signing: CartoucheSigningError?, from: String, link: String? = nil) {
         installedFrom = from
         installedLink = link
+        installedSpeed = measuredSpeed
+        installedMacBand = Self.macBand(of: work?.way)
         installed = app
         if let signing {
             // Installed, but not signed whole: the game may not start. The
@@ -1835,6 +1874,50 @@ final class CartoucheGameActions: ObservableObject {
         server.kind == .mac ? CartoucheMacStorage.links[server.id]?.rawValue : nil
     }
 
+    /// How a game comes from SERVER, its Mac: by cable, through Tailscale
+    /// or on the local network, with what the Mac told of its side; nil
+    /// from another server.
+    private static func way(to server: CartoucheStorageServer) -> CartoucheTransferWay? {
+        guard server.kind == .mac else { return nil }
+        return CartoucheTransferWay.toMac(link: link(to: server), network: CartoucheMacStorage.networks[server.id])
+    }
+
+    /// Whether SERVER is one of the local network, a NAS whose Wi-Fi may be
+    /// the slow one: not a bucket, a Google Drive nor a folder of Files.
+    private static func isLocal(_ server: CartoucheStorageServer) -> Bool {
+        [.smb, .ftp, .sftp].contains(server.kind)
+    }
+
+    /// Reads, each second while the game comes, how fast it comes with
+    /// METER and, from SERVER's Mac, how: the install's screen shows them.
+    private func measure(_ meter: CartoucheTransferMeter, from server: CartoucheStorageServer?) {
+        self.meter = meter
+        measuring?.cancel()
+        measuring = Task { @MainActor [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                guard let self, !Task.isCancelled, var shown = self.work else { return }
+                // Connected again meanwhile, perhaps another way.
+                if let server { shown.way = Self.way(to: server) }
+                shown.speed = meter.speed()
+                shown.slow = CartoucheTransferMeter.isSlow(shown.speed, wasSlow: shown.slow)
+                if shown != self.work { self.work = shown }
+            }
+        }
+    }
+
+    /// The speed of the install under way, in megabytes a second with one
+    /// decimal, for its measurements; nil before a few seconds of it.
+    private var measuredSpeed: Double? {
+        meter?.average().map { ($0 / 100_000).rounded() / 10 }
+    }
+
+    /// The band of the Mac's Wi-Fi a game comes over WAY; nil another way.
+    private static func macBand(of way: CartoucheTransferWay?) -> String? {
+        guard case .network(let mac)? = way, mac?.medium == CartoucheMacNetwork.wifi else { return nil }
+        return mac?.band
+    }
+
     /// What an install's error says of where the game came from: as
     /// game.installed says it, with the way to the Mac. Nil for any other
     /// step.
@@ -1844,6 +1927,10 @@ final class CartoucheGameActions: ObservableObject {
         if let id = installing.server, let server = CartoucheStorageSettings.shared.server(id), let link = Self.link(to: server) {
             measures["link"] = .text(link)
         }
+        // How fast it came until then, and over which band of the Mac's
+        // Wi-Fi: a slow Wi-Fi is the first suspect of a connection lost.
+        if let speed = measuredSpeed { measures["speed"] = .number(speed) }
+        if let band = Self.macBand(of: work?.way) { measures["macBand"] = .text(band) }
         return measures
     }
 

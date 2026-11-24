@@ -299,6 +299,22 @@ final class CartoucheResumingSourceTests: XCTestCase {
         XCTAssertEqual(source.reopened, 1)
     }
 
+    func testEachReadTellsItsBytesOnceItEnds() async throws {
+        // The install's screen measures the speed on them
+        // (CartoucheTransferMeter): a read that failed tells nothing, the
+        // one made again its bytes once.
+        let data = noise(10_000, seed: 3)
+        let server = FlakyServer(data)
+        let source = try await CartoucheResumingSource.open(pauses: [0, 0, 0]) { try await server.open() }
+        var told: [Int] = []
+        source.onRead = { told.append($0) }
+        server.plan([.serve, .drop, .serve])
+        _ = try await source.read(at: 0, count: 4_000)
+        _ = try await source.read(at: 4_000, count: 4_000)
+        _ = try await source.read(at: 8_000, count: 4_000)
+        XCTAssertEqual(told, [4_000, 4_000, 2_000], "the end of the file, shorter")
+    }
+
     func testTheFirstConnectionIsNotRetried() async throws {
         let server = FlakyServer(noise(100, seed: 3))
         server.refuse(1)

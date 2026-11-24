@@ -44,6 +44,12 @@
 //  through usbmuxd, and serves them as the network's, the same handshake,
 //  pairing and folders; the window tells which iPhones come that way.
 //
+//  Its info tells each iPhone how its connection reaches the Mac: the
+//  cable, the Mac's Wi-Fi with its band, its Ethernet, or another way
+//  (BridgeNetwork.swift), for the install's screen there. The window shows
+//  the speed at which each iPhone reads a game, and how (sending), with
+//  the same advice when it is slow (decision 151).
+//
 
 import CartoucheCore
 import Foundation
@@ -65,6 +71,19 @@ public protocol BridgeServerDelegate: AnyObject {
     func bridgeServer(_ server: BridgeServer, allowPairing name: String, code: String) async -> Bool
     /// The server's state, its sessions or its devices changed.
     func bridgeServerChanged(_ server: BridgeServer)
+}
+
+/// A game an iPhone reads now from the games folder: how fast, over the
+/// last seconds (nil for the first ones), and how its connection reaches
+/// this Mac.
+public struct BridgeSending: Equatable, Sendable {
+    public var speed: Double?
+    public var network: CartoucheMacNetwork?
+
+    public init(speed: Double?, network: CartoucheMacNetwork?) {
+        self.speed = speed
+        self.network = network
+    }
 }
 
 /// The app's builds, for the paired iPhones: what they show, and a game one
@@ -140,9 +159,9 @@ public final class BridgeServer: @unchecked Sendable {
     private var _state: State = .stopped
     private var _roots = BridgeRoots()
     private var _name: String
-    /// The sessions now: the device of each, and whether it came through
-    /// the cable.
-    private var sessions: [UUID: (peer: String, cable: Bool)] = [:]
+    /// The sessions now: the device of each, whether it came through the
+    /// cable, and what it read of the games folder.
+    private var sessions: [UUID: (peer: String, cable: Bool, reads: BridgeReads)] = [:]
     /// The iPhones plugged into this Mac, through usbmuxd: none for the
     /// tests that have no usbmuxd.
     private(set) var cable: BridgeCable?
@@ -240,6 +259,35 @@ public final class BridgeServer: @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         return Set(sessions.values.filter(\.cable).map(\.peer))
+    }
+
+    /// How long after its last read of the games folder an iPhone is no
+    /// longer sending a game: a read of 4 MB on a weak Wi-Fi takes seconds.
+    public static let sendingPatience: TimeInterval = 15
+
+    /// The games the paired devices read now from the games folder, by
+    /// ID: how fast and how, NOW. A session that read nothing for a while
+    /// is left out, and its next read starts a new measure.
+    public func sending(at now: Date = Date()) -> [String: BridgeSending] {
+        Self.sending(of: lock.withLock { sessions.values.map { ($0.peer, $0.reads) } }, at: now)
+    }
+
+    /// What SESSIONS, each an iPhone's ID and what it read, send NOW.
+    static func sending(of sessions: [(peer: String, reads: BridgeReads)], at now: Date) -> [String: BridgeSending] {
+        var sending: [String: BridgeSending] = [:]
+        for session in sessions {
+            guard let last = session.reads.last else { continue }
+            guard now.timeIntervalSince(last) <= sendingPatience else {
+                session.reads.meter.pause()
+                continue
+            }
+            // The faster of two sessions of the same iPhone: an install
+            // reads on one.
+            let speed = session.reads.meter.speed(at: now)
+            if let known = sending[session.peer], (known.speed ?? 0) >= (speed ?? 0) { continue }
+            sending[session.peer] = BridgeSending(speed: speed, network: session.reads.network())
+        }
+        return sending
     }
 
     private func set(_ state: State) {
@@ -388,7 +436,7 @@ public final class BridgeServer: @unchecked Sendable {
             handshaking.clear()
             switch opening {
             case let .session(channel):
-                await serve(channel, cable: cable)
+                await serve(channel, cable: cable, network: Self.network(of: transport, cable: cable))
             case .paired:
                 changed()
                 transport.close()
@@ -399,6 +447,15 @@ public final class BridgeServer: @unchecked Sendable {
             handshaking.clear()
             transport.close()
         }
+    }
+
+    /// How a session on TRANSPORT reaches this Mac, read as its info is
+    /// asked (BridgeNetwork.swift): through the CABLE, or the network the
+    /// connection goes on now.
+    static func network(of transport: any CartoucheBridgeTransport & Sendable, cable: Bool) -> @Sendable () -> CartoucheMacNetwork? {
+        if cable { return { CartoucheMacNetwork(medium: CartoucheMacNetwork.cable) } }
+        guard let connection = transport as? CartoucheBridgeConnection else { return { nil } }
+        return { BridgeNetwork.of(connection.connection) }
     }
 
     /// One pairing at a time, a few in ten minutes, each asked of the player.
@@ -417,18 +474,20 @@ public final class BridgeServer: @unchecked Sendable {
         return await delegate.bridgeServer(self, allowPairing: name, code: code)
     }
 
-    private func serve(_ channel: CartoucheBridgeSecureChannel, cable: Bool) async {
+    private func serve(_ channel: CartoucheBridgeSecureChannel, cable: Bool,
+                       network: @escaping @Sendable () -> CartoucheMacNetwork?) async {
         let id = UUID()
         devices.seen(channel.peer)
+        let reads = BridgeReads(network: network)
         lock.withLock {
-            sessions[id] = (channel.peer, cable)
+            sessions[id] = (channel.peer, cable, reads)
             if activity == nil {
                 activity = ProcessInfo.processInfo.beginActivity(options: [.idleSystemSleepDisabled, .userInitiated],
                                                                  reason: "Cartouche on an iPhone reads or writes its games")
             }
         }
         changed()
-        let session = Session(server: self, peer: channel.peer)
+        let session = Session(server: self, peer: channel.peer, reads: reads)
         let idle = Flag()
         watchIdle(idle, channel: channel)
         defer {
@@ -592,6 +651,28 @@ final class Flag: @unchecked Sendable {
     }
 }
 
+/// What a session read of the games folder: its speed, when it last read,
+/// and how its connection reaches the Mac.
+final class BridgeReads: @unchecked Sendable {
+    let meter = CartoucheTransferMeter()
+    let network: @Sendable () -> CartoucheMacNetwork?
+    private let lock = NSLock()
+    private var lastRead: Date?
+
+    init(network: @escaping @Sendable () -> CartoucheMacNetwork? = { nil }) {
+        self.network = network
+    }
+
+    /// When the session last read a file of the games folder.
+    var last: Date? { lock.withLock { lastRead } }
+
+    /// A read of BYTES of the games folder, NOW.
+    func add(_ bytes: Int, at now: Date = Date()) {
+        meter.add(bytes, at: now)
+        lock.withLock { lastRead = now }
+    }
+}
+
 // MARK: A session's requests
 
 /// What one connected iPhone asks: its uploads under way, and the answers.
@@ -605,11 +686,14 @@ final class Session {
 
     weak var server: BridgeServer?
     let peer: String
+    /// What it reads of the games folder, and how it reaches the Mac.
+    let reads: BridgeReads
     private var uploads: [String: Upload] = [:]
 
-    init(server: BridgeServer, peer: String) {
+    init(server: BridgeServer, peer: String, reads: BridgeReads = BridgeReads()) {
         self.server = server
         self.peer = peer
+        self.reads = reads
     }
 
     func handle(_ request: CartoucheBridgeRequest, body: Data) -> (CartoucheBridgeResponse, Data) {
@@ -645,6 +729,7 @@ final class Session {
             // ones Tailscale gives this Mac for good.
             let tailnet = server?.tailnetAddresses() ?? []
             response.tailscale = tailnet.isEmpty ? nil : tailnet
+            response.network = reads.network()
         case .list:
             let place = try resolve(request.path)
             guard let place else {
@@ -674,7 +759,10 @@ final class Session {
             response.size = size
             guard offset < size, count > 0 else { return (response, Data()) }
             try handle.seek(toOffset: offset)
-            return (response, try handle.read(upToCount: count) ?? Data())
+            let data = try handle.read(upToCount: count) ?? Data()
+            // A game, its IPA or its game files: the window shows how fast.
+            if place.root == server?.roots.games { reads.add(data.count) }
+            return (response, data)
         case .create:
             guard let place = try resolve(request.path), !place.isRoot else { throw CartoucheBridgeError(.denied, "a folder") }
             let folder = place.url.deletingLastPathComponent()

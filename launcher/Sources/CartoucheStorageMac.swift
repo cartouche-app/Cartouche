@@ -217,6 +217,16 @@ enum CartoucheMacStorage {
     /// measurements: a game installed from it says so (game.installed's
     /// link). Never an address.
     @MainActor static private(set) var links: [UUID: CartoucheMacLink] = [:]
+    /// How the connection an install made last reached each Mac, on the
+    /// Mac's side, as its Cartouche Builder told (CartoucheMacNetwork): the
+    /// install's screen says so, and warns of a Mac on its 2.4 GHz Wi-Fi.
+    /// None from a Cartouche Builder older than this.
+    @MainActor static private(set) var networks: [UUID: CartoucheMacNetwork] = [:]
+
+    /// What the Mac of SERVER told of its side of the connection, NETWORK.
+    @MainActor static func note(_ network: CartoucheMacNetwork?, of server: UUID) {
+        networks[server] = network
+    }
 
     /// The iPhone's ID for the Mac of SERVER.
     static func deviceID(of server: CartoucheStorageServer) -> String {
@@ -623,6 +633,13 @@ final class CartoucheMacRemote: CartoucheRemote {
 
     /// The Mac says folder by folder where Cartouche may write (canWrite).
     var isReadOnly: Bool { false }
+
+    /// How this connection reaches the Mac, on its side, as its info says
+    /// (CartoucheMacNetwork): nil from a Cartouche Builder older than this,
+    /// or when it does not answer.
+    func network() async -> CartoucheMacNetwork? {
+        try? await client.info().network
+    }
 
     func list(_ path: String) async throws -> [CartoucheRemoteItem] {
         let items = try await CartoucheMacStorage.bridged(mac, path) { try await client.list(path) }

@@ -970,6 +970,48 @@
       ]
     },
     {
+      "name": "iphone-installing-mac",
+      "comment": "A game being installed from the player's Mac on the Wi-Fi, the Mac on its 2.4 GHz band as its Cartouche Builder tells, at 3.1 MB/s: how it comes, how fast, and what would go faster, the cable or the 5 GHz Wi-Fi (decision 151).",
+      "screen": "games",
+      "sheet": "0400C3F00006E000",
+      "work": "installing-mac",
+      "owned": [
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-installing-cable",
+      "comment": "The same game from the same Mac, this iPhone plugged into it: by cable, at 31 MB/s, and nothing to advise.",
+      "screen": "games",
+      "sheet": "0400C3F00006E000",
+      "work": "installing-cable",
+      "owned": [
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-install-failed",
       "screen": "games",
       "sheet": "0400C3F00006E000",

@@ -187,6 +187,11 @@
 //                                        What's new has no notes to show
 //        installing                      a game being installed, over the
 //                                        console
+//        installing-cable                the same from the MacBook Air, by
+//                                        cable, at 31 MB/s
+//        installing-mac                  the same on the Wi-Fi, the MacBook
+//                                        Air on its 2.4 GHz band, at 3.1 MB/s,
+//                                        with what would go faster
 //        iphone-step                     a sign-in Apple accepted that
 //                                        stopped at the step that registers
 //                                        this iPhone, LocalDevVPN being off
@@ -655,6 +660,22 @@ struct GalleryScenario {
                 CartoucheGameActions.shared.work = CartoucheGameWork(kind: .installing, name: name,
                                                                      step: CartoucheText.installUnpacking, fraction: 0.42,
                                                                      outside: true)
+            }
+            if work == "installing-cable" || work == "installing-mac" {
+                // From the player's Mac, how it comes and how fast
+                // (CartoucheTransferSpeed.swift), as from iOS 26.
+                let name = sheet.flatMap { CartoucheCatalog.shared.game(titleId: $0)?.name } ?? "Game"
+                var shown = CartoucheGameWork(kind: .installing, name: name, step: CartoucheText.installFromStorageStep("MacBook Air"),
+                                              fraction: 0.42, stage: "unpacking", place: "MacBook Air", outside: true)
+                if work == "installing-cable" {
+                    shown.way = .cable
+                    shown.speed = 31_400_000
+                } else {
+                    shown.way = .network(mac: CartoucheMacNetwork(medium: CartoucheMacNetwork.wifi, band: "2.4"))
+                    shown.speed = 3_140_000
+                    shown.slow = true
+                }
+                CartoucheGameActions.shared.work = shown
             }
             if work == "install-failed" {
                 // An install the network dropped halfway, with its report.
