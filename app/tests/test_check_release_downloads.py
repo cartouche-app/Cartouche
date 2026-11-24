@@ -26,6 +26,7 @@ import check_release_downloads as check  # noqa: E402
 
 IPA = b"PK\x03\x04 Cartouche 0.2.0" * 1000
 OWN = b"PK\x03\x04 Cartouche 0.2.0 for the player's own certificate" * 700
+SIDESTORE = b"PK\x03\x04 Cartouche 0.2.0 for the player's SideStore" * 800
 
 
 class Releases(http.server.BaseHTTPRequestHandler):
@@ -65,7 +66,8 @@ def sha256(data):
 
 class CheckReleaseDownloadsTest(unittest.TestCase):
     def setUp(self):
-        Releases.files = {"Cartouche-0.2.0.ipa": IPA, "Cartouche-0.2.0-Own-Certificate.ipa": OWN}
+        Releases.files = {"Cartouche-0.2.0.ipa": IPA, "Cartouche-0.2.0-Own-Certificate.ipa": OWN,
+                          "Cartouche-0.2.0-SideStore.ipa": SIDESTORE}
         Releases.failures = {}
         Releases.asked = []
         self.server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Releases)
@@ -88,7 +90,12 @@ class CheckReleaseDownloadsTest(unittest.TestCase):
         self.release = {"tag_name": "v0.2.0", "assets": [
             {"name": "Cartouche-0.2.0.ipa", "size": len(IPA), "digest": f"sha256:{sha256(IPA)}"},
             {"name": "Cartouche-0.2.0-Own-Certificate.ipa", "size": len(OWN), "digest": f"sha256:{sha256(OWN)}"},
+            {"name": "Cartouche-0.2.0-SideStore.ipa", "size": len(SIDESTORE), "digest": f"sha256:{sha256(SIDESTORE)}"},
         ]}
+        self.player_source = {"apps": [{"bundleIdentifier": "io.github.clabeuhtegrite.cartouche", "versions": [{
+            "version": "0.2.0", "downloadURL": f"{base}/Cartouche-0.2.0-SideStore.ipa",
+            "size": len(SIDESTORE), "sha256": sha256(SIDESTORE),
+        }]}]}
         self.slept = []
 
     def check(self, version="0.2.0", release=None):
@@ -159,6 +166,19 @@ class CheckReleaseDownloadsTest(unittest.TestCase):
         self.assertEqual(len(self.check()), 1)
         self.assertNotIn("/cartouche-app/Cartouche/releases/download/v0.2.0/Cartouche-0.2.0-Own-Certificate.ipa",
                          Releases.asked)
+
+    def test_the_source_for_the_players_sidestore_checks_its_own_ipa(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            lines = check.check(self.player_source, "0.2.0", self.release, sleep=self.slept.append, player=True)
+        self.assertEqual(lines, [
+            f"- The SideStore source's size ({len(SIDESTORE):,} bytes) and SHA-256 "
+            f"(`{sha256(SIDESTORE)[:8]}…{sha256(SIDESTORE)[-8:]}`) are those of `Cartouche-0.2.0-SideStore.ipa` "
+            "downloaded again from the release by its `downloadURL`, and those GitHub gives for the asset.",
+        ])
+        Releases.files["Cartouche-0.2.0-SideStore.ipa"] = SIDESTORE[:-1]
+        with self.assertRaisesRegex(check.CheckError, "the IPA for the player's SideStore"), \
+                contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            check.check(self.player_source, "0.2.0", self.release, sleep=self.slept.append, player=True)
 
     def test_the_version_must_be_in_the_source(self):
         with self.assertRaisesRegex(check.CheckError, "no version 0.3.0"):

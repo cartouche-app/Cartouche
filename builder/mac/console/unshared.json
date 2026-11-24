@@ -175,6 +175,14 @@
       "kind": "iphone",
       "why": "Cartouche's App Intents, by which Siri and the Shortcuts app start a game in the iPhone's console as Play does: on the Mac, each game is an app of its own, which Siri, Spotlight and Shortcuts open as the Dock does, and the Builder follows it and its saves as it follows a game started from the Dock."
     },
+    "CartoucheSideStoreInstall.swift": {
+      "kind": "iphone",
+      "why": "Cartouche installed by the player's own SideStore on the iPhone, from its source for SideStore: the pairing file asked of that SideStore and Increased Memory Limit left out on a free team. The Mac's app is installed from its own disk image."
+    },
+    "CartoucheSideStoreLink.swift": {
+      "kind": "iphone",
+      "why": "The links that ask the player's own SideStore on the iPhone for its pairing file, and what is left of Increased Memory Limit once set up: a Mac pairs no iPhone through SideStore."
+    },
     "CartoucheSignInView.swift": {
       "kind": "iphone",
       "why": "The Apple ID sign-in for the built-in SideStore."
@@ -216,6 +224,10 @@
     "CartoucheTextShortcuts.swift": {
       "kind": "iphone",
       "why": "The words of Siri and Home Screen (CartoucheShortcuts.swift, CartoucheGameShortcutsView.swift), the iPhone's alone."
+    },
+    "CartoucheTextSideStoreInstall.swift": {
+      "kind": "iphone",
+      "why": "The words of Cartouche installed by the player's own SideStore on the iPhone: its setup's pairing file, sign-in and Increased Memory Limit, and the reinstall that gets it."
     },
     "CartoucheUpdateView.swift": {
       "kind": "mac",

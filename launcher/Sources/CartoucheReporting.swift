@@ -352,7 +352,13 @@ enum CartoucheReports {
     /// "a games folder on SMB": where a step reads or writes, without a name.
     static func place(_ role: CartoucheStorageRole) -> String {
         guard let server = CartoucheStorageSettings.shared.location(role)?.server else { return "no \(role.rawValue) folder" }
-        return "the \(role.rawValue) folder, on \(kindName(server.kind))"
+        return place(role, on: server)
+    }
+
+    /// "the games folder, on SMB": a folder of ROLE on SERVER, one of
+    /// several games folders.
+    static func place(_ role: CartoucheStorageRole, on server: CartoucheStorageServer) -> String {
+        "the \(role.rawValue) folder, on \(kindName(server.kind))"
     }
 
     /// "From: the games folder, on SMB": place(_:) as a step's fact, of

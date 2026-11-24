@@ -487,6 +487,11 @@ enum CartoucheText {
     static var importOtherCopy: String { s("action.importOther", "Import another copy") }
     static func exportTo(_ server: String) -> String { f("action.exportTo", "Copy to %@", server) }
     static func storedIn(_ server: String, _ file: String) -> String { f("sheet.storedIn", "A copy is in %1$@: %2$@", server, file) }
+    /// The other places that hold a copy of the game, by their names.
+    static func storedAlsoIn(_ places: [String]) -> String {
+        f("sheet.storedAlsoIn", "Also in %@.", places.formatted(.list(type: .and).locale(locale)))
+    }
+    static func storedAlsoInOffline(_ place: String) -> String { f("sheet.storedAlsoIn.offline", "%@ (offline)", place) }
     static func buildHere(_ build: String) -> String { f("sheet.build.here", "On this iPhone: %@", build) }
     static func buildNewer(_ server: String, _ build: String) -> String { f("sheet.build.newer", "Newer, in %1$@: %2$@", server, build) }
     static func buildVersion(_ version: String) -> String { f("build.version", "version %@", version) }
@@ -632,6 +637,15 @@ enum CartoucheText {
     static var storageAddFirst: String { s("storage.addFirst", "First add your Mac, a shared folder, an S3 bucket, an FTP or SFTP server, your Google Drive, or a folder in Files, below.") }
     static var storageChooseFolder: String { s("storage.chooseFolder", "Choose a folder") }
     static var storageGamesFooter: String { s("storage.games.footer", "Your library shows the IPAs of this folder, ready to install. Copy a game here before you uninstall it.") }
+    /// Several games folders, one after the other (CartoucheGameCopies).
+    static var storageGamesFolders: String { s("storage.games.several", "Games folders") }
+    static var storageOtherGamesFolder: String { s("storage.games.other", "Other folder") }
+    static var storageReadAllAgain: String { s("storage.readAgain.all", "Read the folders again") }
+    static var storageAddGamesFolder: String { s("storage.games.add", "Add another games folder") }
+    static var storageStopReading: String { s("storage.stopReading", "Stop reading this folder") }
+    static var storageGamesFoldersFooter: String { s("storage.games.several.footer", "Your library shows the IPAs of these folders, ready to install: a game in more than one shows once, and installs from a folder that answers. Copy a game to the first one before you uninstall it.") }
+    /// Under a games folder whose server does not answer, among several.
+    static var storageGamesElsewhere: String { s("storage.games.elsewhere", "Its games that another folder holds too install from that folder meanwhile.") }
     static var storageServers: String { s("storage.servers", "Places") }
     static var storageServersFooter: String { s("storage.servers.footer", "Only storage of your own, with your own account: Cartouche keeps the password, the secret key or the Google sign-in in this iPhone’s keychain. The Mac you pair keeps the same connections, passwords included, over the bridge’s encryption.") }
     static var storageAddSMB: String { s("storage.addSMB", "Add a shared folder (SMB)") }

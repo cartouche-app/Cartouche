@@ -40,7 +40,9 @@ from typing import Callable, Protocol
 WORKFLOW = "full-pass.yml"
 
 # What the commits after a pass may change without a new one.
-UNTESTED_SINCE = {"app/sidestore-source.json"}
+# The pull request "Source: Cartouche X" changes both sources: the built-in
+# SideStore's and the one for the player's SideStore.
+UNTESTED_SINCE = {"app/sidestore-source.json", "app/sidestore-player-source.json"}
 
 FAILED = {"failure", "timed_out", "startup_failure", "action_required"}
 

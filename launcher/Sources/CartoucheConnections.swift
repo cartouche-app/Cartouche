@@ -134,7 +134,9 @@ public struct CartoucheConnection: Codable, Equatable, Sendable {
 /// saves of the games played on it in the same saves folder, and sends its
 /// builds to the same games folder, when they are on a connection both
 /// have. Of what its iPhones told it, a Mac keeps, for each, the folder
-/// chosen last (taking).
+/// chosen last (taking). The other games folders the iPhone reads come
+/// with its games folder: the Mac offers the Mac apps another Mac sent to
+/// any of them, from one that answers (CartoucheGameCopies.swift).
 public struct CartoucheChosenFolders: Codable, Equatable, Sendable {
     public struct Folder: Codable, Equatable, Sendable {
         /// The connection it is on; nil for none the Mac has: a folder
@@ -155,22 +157,31 @@ public struct CartoucheChosenFolders: Codable, Equatable, Sendable {
 
     public var games: Folder?
     public var saves: Folder?
+    /// The games folders the iPhone reads besides its games folder, in
+    /// their order, on connections the Mac has: chosen with the games
+    /// folder. None from an older iPhone, or for none.
+    public var otherGames: [Folder]?
 
-    public init(games: Folder? = nil, saves: Folder? = nil) {
+    public init(games: Folder? = nil, saves: Folder? = nil, otherGames: [Folder]? = nil) {
         self.games = games
         self.saves = saves
+        self.otherGames = otherGames
     }
 
     /// These, with the folders TOLD gives that were chosen later, as a Mac
     /// keeps what its iPhones tell it: one chosen at the same time as the
-    /// one kept leaves it, so that two iPhones never take turns.
+    /// one kept leaves it, so that two iPhones never take turns. The other
+    /// games folders go with the games folder.
     public func taking(_ told: CartoucheChosenFolders) -> CartoucheChosenFolders {
-        func later(_ kept: Folder?, _ told: Folder?) -> Folder? {
-            guard let told else { return kept }
-            guard let kept else { return told }
-            return told.chosen > kept.chosen ? told : kept
+        func isLater(_ kept: Folder?, _ told: Folder?) -> Bool {
+            guard let told else { return false }
+            guard let kept else { return true }
+            return told.chosen > kept.chosen
         }
-        return CartoucheChosenFolders(games: later(games, told.games), saves: later(saves, told.saves))
+        let games = isLater(self.games, told.games)
+        return CartoucheChosenFolders(games: games ? told.games : self.games,
+                                      saves: isLater(saves, told.saves) ? told.saves : saves,
+                                      otherGames: games ? told.otherGames : otherGames)
     }
 }
 

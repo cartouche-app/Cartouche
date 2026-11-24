@@ -45,6 +45,8 @@ Each server adds what only it has:
 
 [`ConnectionsExchangeTests`](Tests/CartoucheStorageTests/ConnectionsExchangeTests.swift) needs no server either: the Mac of `MacBridgeTests` keeps the player's connections as Cartouche Builder's console does, and Cartouche gives it its own and takes the Mac's (`CartoucheConnectionsExchange`, [`CartoucheStorageMac.swift`](../Sources/CartoucheStorageMac.swift)). Both end with the same, passwords and an SFTP server's key included, never the Mac's pairing nor a folder picked in Files; what the Mac removed goes here, with the folders chosen on it; the same NAS added on both sides becomes one, the folders chosen here kept on it; a change made here meanwhile stays; the servers an older Cartouche kept are dated once; a Mac too old to take them is left alone; and each change goes to the Mac a moment after it is made. The rule both sides follow is tested on its own in `launcher/Tests` (`CartoucheConnectionsTests`), and the Mac's side in `builder/mac`'s tests (`BridgeConnectionsTests`, `ConsoleStorageTests`).
 
+[`GamesFoldersTests`](Tests/CartoucheStorageTests/GamesFoldersTests.swift) needs no server: the player's games folders, several at once. Another one added is read after the games folder, never the same twice; stop using the games folder and the next takes its place; a server removed takes its folders with it, here or on the paired Mac, and one the Mac replaced moves them to the new one; choosing another games folder takes it from the others; and the paired Mac is told them all with the games folder, those on a connection it has. The rule for their order and for the copy of a game Cartouche offers is tested on its own in `launcher/Tests` (`CartoucheGameCopiesTests`).
+
 ## Running them
 
 [`servers.sh`](servers.sh) starts the servers on 127.0.0.1, puts the IPAs in each, and writes `servers.json`, which tells the tests where each server is and its accounts:
@@ -56,7 +58,7 @@ CARTOUCHE_STORAGE_SERVERS=/tmp/cartouche-servers/servers.json swift test --packa
 launcher/StorageTests/servers.sh stop /tmp/cartouche-servers
 ```
 
-The stand-in needs nothing but Python 3. It adds a user, `cartouche-test`, and runs smbd and sshd as root with sudo, so it runs only on a throwaway Mac, as GitHub's are, or with `CARTOUCHE_STORAGE_THROWAWAY=1`; `stop` removes the user. The passwords and keys are made up at each start and stay in `servers.json`. Without `CARTOUCHE_STORAGE_SERVERS`, every test but `OfflineTests`, `MacBridgeTests` and `SMBRefusalTests` is skipped. The IPA past 4 GiB is made only when the disk has room for it four times over, else its test is skipped.
+The stand-in needs nothing but Python 3. It adds a user, `cartouche-test`, and runs smbd and sshd as root with sudo, so it runs only on a throwaway Mac, as GitHub's are, or with `CARTOUCHE_STORAGE_THROWAWAY=1`; `stop` removes the user. The passwords and keys are made up at each start and stay in `servers.json`. Without `CARTOUCHE_STORAGE_SERVERS`, every test but `OfflineTests`, `MacBridgeTests`, `ConnectionsExchangeTests`, `GamesFoldersTests` and `SMBRefusalTests` is skipped. The IPA past 4 GiB is made only when the disk has room for it four times over, else its test is skipped.
 
 | Server | Port | Accounts | Games folder |
 | --- | --- | --- | --- |

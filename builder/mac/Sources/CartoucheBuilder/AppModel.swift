@@ -1147,8 +1147,7 @@ final class AppModel: ObservableObject {
         let offers = iPhoneGames.offers.filter { !built.contains($0.titleID) }
         ConsoleLink.show(games: apps, kept: kept, offers: offers, keptIn: ConnectionGames.shownPlace(
             kept: kept.isEmpty ? nil : (gamesOnShare ? tr("the NAS", "le NAS") : tr("the games folder", "le dossier des jeux")),
-            offers: offers.isEmpty ? nil : iPhoneGames.folder.flatMap { ConsoleLink.connectionName($0.connection) }
-                ?? tr("the iPhone’s games folder", "le dossier des jeux de l’iPhone")))
+            offers: offers.isEmpty ? nil : iPhoneGames.placeName(of: offers)))
         // The sessions of the games it shows, played since the app last
         // read them, from the Finder or the Dock too: the console reads the
         // logs of its games only.
@@ -1381,14 +1380,18 @@ final class AppModel: ObservableObject {
 
     /// The games folder chosen on the iPhone, when it is on one of the
     /// player's connections: the Builder sends its games there, and the
-    /// console installs from there the Mac apps another Mac sent.
+    /// console installs from there the Mac apps another Mac sent, as from
+    /// the other games folders the iPhone reads.
     func useIPhoneGames() {
         guard !sample else { return }
-        if let told = AppSettings.toldFolders.games, let id = told.connection, let connection = ConsoleLink.currentConnection(id) {
-            iPhoneGames.use(IPhoneGames.Folder(connection: connection, path: told.path))
-        } else {
-            iPhoneGames.use(nil)
+        let told = AppSettings.toldFolders
+        func folder(_ told: CartoucheChosenFolders.Folder?) -> IPhoneGames.Folder? {
+            guard let told, let id = told.connection, let connection = ConsoleLink.currentConnection(id) else { return nil }
+            return IPhoneGames.Folder(connection: connection, path: told.path)
         }
+        // The other games folders the iPhone reads, for the Mac apps
+        // another Mac sent there.
+        iPhoneGames.use(folder(told.games), others: (told.otherGames ?? []).compactMap { folder($0) })
     }
 
     private func heard(_ news: MacGamesNews) {

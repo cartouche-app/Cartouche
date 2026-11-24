@@ -5577,6 +5577,159 @@
         }
       }
     },
+    "memoryReinstall.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche installed itself again with it: iOS now gives Cartouche and its games more memory."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche s’est réinstallé avec elle : iOS donne désormais plus de mémoire à Cartouche et à ses jeux."
+          }
+        }
+      }
+    },
+    "memoryReinstall.done.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Increased Memory Limit is active"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La mémoire augmentée est active"
+          }
+        }
+      }
+    },
+    "memoryReinstall.failed.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The reinstall did not go through"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La réinstallation n’a pas abouti"
+          }
+        }
+      }
+    },
+    "memoryReinstall.installing.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche goes to the home screen for iOS to install it again. Open it again in a few seconds."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche passe à l’écran d’accueil pour qu’iOS l’installe à nouveau. Rouvrez-le dans quelques secondes."
+          }
+        }
+      }
+    },
+    "memoryReinstall.installing.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installing Cartouche again"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installation de Cartouche"
+          }
+        }
+      }
+    },
+    "memoryReinstall.preparing.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche downloads itself again and the built-in SideStore signs it, with Increased Memory Limit. Keep Cartouche open."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche se télécharge à nouveau et le SideStore intégré le signe, avec la mémoire augmentée. Gardez Cartouche ouvert."
+          }
+        }
+      }
+    },
+    "memoryReinstall.preparing.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reinstalling Cartouche"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinstallation de Cartouche"
+          }
+        }
+      }
+    },
+    "memoryReinstall.without" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche opened again without it. Try again from Setup, with LocalDevVPN on. If it stays this way, copy the report."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche s’est rouvert sans elle. Réessayez depuis la mise en route, avec LocalDevVPN allumé. Si rien ne change, copiez le rapport."
+          }
+        }
+      }
+    },
+    "memoryReinstall.without.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Still without Increased Memory Limit"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toujours sans mémoire augmentée"
+          }
+        }
+      }
+    },
     "naming.buildFolder" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10762,6 +10915,40 @@
         }
       }
     },
+    "sheet.storedAlsoIn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also in %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aussi dans %@."
+          }
+        }
+      }
+    },
+    "sheet.storedAlsoIn.offline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (offline)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (hors ligne)"
+          }
+        }
+      }
+    },
     "sheet.storedIn" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11030,6 +11217,261 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Siri et écran d’accueil"
+          }
+        }
+      }
+    },
+    "sideStore.appleID.how" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in once, with the Apple ID your SideStore uses: Cartouche takes the certificate SideStore signed it with, then renews itself every week."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connectez-vous une fois, avec l’identifiant Apple de votre SideStore : Cartouche reprend le certificat avec lequel SideStore l’a signé, puis se renouvelle chaque semaine."
+          }
+        }
+      }
+    },
+    "sideStore.intro" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Four steps, once on this iPhone. Then Cartouche renews itself."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quatre étapes, une seule fois sur cet iPhone. Ensuite, Cartouche se renouvelle tout seul."
+          }
+        }
+      }
+    },
+    "sideStore.memory.afterSetup" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your SideStore leaves it out with a free Apple ID: without it, iOS gives Cartouche and its games about 3 GB. Once the steps above are done, Cartouche installs itself again, once, to get it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre SideStore la laisse de côté avec un identifiant Apple gratuit : sans elle, iOS donne environ 3 Go à Cartouche et à ses jeux. Une fois les étapes ci-dessus faites, Cartouche s’installe à nouveau, une fois, pour l’obtenir."
+          }
+        }
+      }
+    },
+    "sideStore.memory.banner.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche installs itself again, once"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche s’installe à nouveau, une fois"
+          }
+        }
+      }
+    },
+    "sideStore.memory.banner.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get Increased Memory Limit"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtenir la mémoire augmentée"
+          }
+        }
+      }
+    },
+    "sideStore.memory.button" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reinstall Cartouche"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinstaller Cartouche"
+          }
+        }
+      }
+    },
+    "sideStore.memory.granted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active: iOS gives Cartouche and its games more memory."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active : iOS donne plus de mémoire à Cartouche et à ses jeux."
+          }
+        }
+      }
+    },
+    "sideStore.memory.left" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Increased Memory Limit, which your games need: Cartouche installs itself again, once, to get it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La mémoire augmentée, dont vos jeux ont besoin : Cartouche s’installe à nouveau, une fois, pour l’obtenir."
+          }
+        }
+      }
+    },
+    "sideStore.memory.left.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One last step"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une dernière étape"
+          }
+        }
+      }
+    },
+    "sideStore.memory.reinstall" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your SideStore left it out with a free Apple ID: without it, iOS gives Cartouche and its games about 3 GB. Cartouche installs itself again, once, signed by itself, which gets it. It then goes to the home screen: open it again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre SideStore l’a laissée de côté avec un identifiant Apple gratuit : sans elle, iOS donne environ 3 Go à Cartouche et à ses jeux. Cartouche s’installe à nouveau, une fois, signé par lui-même, ce qui la lui donne. Il passe ensuite à l’écran d’accueil : rouvrez-le."
+          }
+        }
+      }
+    },
+    "sideStore.memory.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Increased Memory Limit"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mémoire augmentée"
+          }
+        }
+      }
+    },
+    "sideStore.pairing.ask" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask SideStore"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demander à SideStore"
+          }
+        }
+      }
+    },
+    "sideStore.pairing.how" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your SideStore holds this iPhone’s pairing file: Cartouche asks it for it. SideStore opens for a moment, then brings you back here."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre SideStore a le fichier de jumelage de cet iPhone : Cartouche le lui demande. SideStore s’ouvre un instant, puis vous ramène ici."
+          }
+        }
+      }
+    },
+    "sideStore.pairing.noAnswer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche could not open your SideStore. Open SideStore once, then try again, or choose the pairing file here."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche n’a pas pu ouvrir votre SideStore. Ouvrez SideStore une fois, puis réessayez, ou choisissez le fichier de jumelage ici."
+          }
+        }
+      }
+    },
+    "sideStore.signIn.otherCertificate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Apple ID has a certificate that Cartouche does not hold, and Cartouche never revokes it. Sign in with the Apple ID your SideStore uses: Cartouche takes the certificate SideStore signed it with. If it is this one, install Cartouche again from your SideStore, then sign in again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cet identifiant Apple a un certificat que Cartouche n’a pas, et Cartouche ne le révoque jamais. Connectez-vous avec l’identifiant Apple de votre SideStore : Cartouche reprend le certificat avec lequel SideStore l’a signé. Si c’est celui-ci, réinstallez Cartouche depuis votre SideStore, puis reconnectez-vous."
           }
         }
       }
@@ -14349,6 +14791,40 @@
         }
       }
     },
+    "storage.games.add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add another games folder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un autre dossier de jeux"
+          }
+        }
+      }
+    },
+    "storage.games.elsewhere" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its games that another folder holds too install from that folder meanwhile."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses jeux présents aussi dans un autre dossier s’installent depuis cet autre dossier en attendant."
+          }
+        }
+      }
+    },
     "storage.games.footer" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14379,6 +14855,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jeux trouvés"
+          }
+        }
+      }
+    },
+    "storage.games.other" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other folder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autre dossier"
+          }
+        }
+      }
+    },
+    "storage.games.several" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Games folders"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dossiers des jeux"
+          }
+        }
+      }
+    },
+    "storage.games.several.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your library shows the IPAs of these folders, ready to install: a game in more than one shows once, and installs from a folder that answers. Copy a game to the first one before you uninstall it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre bibliothèque montre les IPA de ces dossiers, prêtes à installer : un jeu présent dans plusieurs n’y est qu’une fois, et s’installe depuis un dossier qui répond. Copiez un jeu dans le premier avant de le désinstaller."
           }
         }
       }
@@ -15352,6 +15879,23 @@
         }
       }
     },
+    "storage.readAgain.all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read the folders again"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relire les dossiers"
+          }
+        }
+      }
+    },
     "storage.readOnly.games" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16028,6 +16572,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "le serveur a refusé le nom d’utilisateur ou le mot de passe."
+          }
+        }
+      }
+    },
+    "storage.stopReading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop reading this folder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne plus lire ce dossier"
           }
         }
       }

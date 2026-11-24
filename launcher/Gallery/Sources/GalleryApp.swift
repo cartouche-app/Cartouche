@@ -87,6 +87,11 @@
 //                                        which kept the profile's keychain
 //                                        pattern as it is
 //                                        (GalleryScenario.ownSignature)
+//        sidestore                       the IPA for the player's own
+//                                        SideStore, which signed it with
+//                                        the player's Apple ID and left
+//                                        Increased Memory Limit out
+//                                        (CartoucheSideStoreInstall)
 //      -GalleryWidth 402 -GalleryHeight 874     (none: the whole screen)
 //      -GalleryInsets 62,0,34,0          top, leading, bottom, trailing
 //      -GalleryWidthClass compact        the width class at a scenario's
@@ -149,6 +154,11 @@
 //                                        with two games' saves waiting for it
 //        erasing                         on Reset Cartouche's page, the reset
 //                                        under way
+//        games-folders                   two games folders, a NAS's, out of
+//                                        reach away from home, and a Google
+//                                        Drive's, the player's games in
+//                                        both, the sheet's game newer on the
+//                                        NAS (GalleryGamesFolders)
 //        game-mode-later                 Game Mode coming 1.5 s after
 //                                        Cartouche first measures its
 //                                        memory: its own limit 6,144 MiB
@@ -550,7 +560,9 @@ struct GalleryScenario {
     /// Puts the files the stand-ins read where the launcher looks for them.
     func prepare() {
         GalleryState.setupDone = setupDone
-        GalleryState.signing = signing == "iphone" ? .iPhone : signing == "installer" ? .installer : .account
+        GalleryState.signing = signing == "iphone" ? .iPhone : signing == "installer" ? .installer
+            : signing == "sidestore" ? .sideStore : .account
+        GalleryState.sideStoreMemory = signing == "sidestore" ? (setupDone ? .reinstall : .afterSetup) : nil
         GalleryState.ownSignature = ownSignature
         GalleryState.ownProfile = signingTrial != nil && work != "signing-no-own-profile" ? Self.standInProfile : nil
         // errSecAuthFailed, as iOS answers a password that does not open a
@@ -801,6 +813,11 @@ struct GalleryScenario {
                 if work == "mac-too-old" {
                     CartoucheMacBuildsWatch.galleryTooOld = mac.name
                 }
+            }
+            if work == "games-folders" {
+                let catalog = CartoucheCatalog.shared
+                GalleryGamesFolders.prepare(owned: ownedTitles.compactMap { catalog.game(titleId: $0) },
+                                            sheet: sheet.flatMap { ownedTitles.contains($0) ? nil : catalog.game(titleId: $0) })
             }
             if work == "drive-signed-out" {
                 // The player's Google Drive, seven days after the sign-in:

@@ -47,6 +47,7 @@ on:
       - "launcher/Sources/CartoucheFailure.swift"
       - "launcher/Sources/CartoucheFreeSpace.swift"
       - "launcher/Sources/CartoucheGameBuild.swift"
+      - "launcher/Sources/CartoucheGameCopies.swift"
       - "launcher/Sources/CartoucheGameFit.swift"
       - "launcher/Sources/CartoucheGameInfoView.swift"
       - "launcher/Sources/CartoucheGameLanguage.swift"

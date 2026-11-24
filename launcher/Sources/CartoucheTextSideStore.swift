@@ -46,7 +46,14 @@ extension CartoucheText {
         case .unreadable(nil)?: return appleUnreadable
         case .sideStoreQuit?: return signIn ? signInSideStoreQuit : readable
         case .noAppGroup?: return signIn ? signInNoAppGroup : readable
-        case .otherCertificate?: return signIn ? signInOtherCertificate : readable
+        case .otherCertificate?:
+            guard signIn else { return readable }
+            #if os(iOS)
+            // Installed by the player's own SideStore, whose certificate
+            // the sign-in takes.
+            if CartoucheSideStoreInstall.isSideStoreInstall { return signInOtherCertificateSideStore }
+            #endif
+            return signInOtherCertificate
         case .noLiveProcess?: return noLiveProcess
         case .provisioningRefused(let status)?: return signIn ? signInProvisioningRefused(status) : appleProvisioningRefused(status)
         case .sessionExpired?: return signIn ? signInSessionExpired : readable

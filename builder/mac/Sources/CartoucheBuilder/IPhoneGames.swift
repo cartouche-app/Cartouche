@@ -13,6 +13,10 @@
 //  first, one file at a time; a batch that starts lets the file going end
 //  and stops the round. A round also makes this Mac's copy of an app
 //  installed from there again of a newer file there, unless the game runs.
+//  The other games folders the iPhone reads, a round looks at too, for the
+//  Mac apps another Mac sent there: a game in several is offered once, from
+//  one that answers (ConnectionGames.macApps), and installs from the next
+//  when that one does not.
 //
 
 import BuilderKit
@@ -72,6 +76,14 @@ final class IPhoneGames: ObservableObject {
     }
 
     @Published private(set) var folder: Folder?
+    /// The other games folders the iPhone reads, in their order: whether
+    /// each answered the last look, and the Mac apps offered from it.
+    struct Other: Equatable {
+        var folder: Folder
+        var offline = false
+        var offers = 0
+    }
+    @Published private(set) var others: [Other] = []
     /// The file going, or coming, now.
     @Published private(set) var progress: ConnectionGamesProgress?
     /// Why the last round stopped before its end, if it did.
@@ -90,6 +102,10 @@ final class IPhoneGames: ObservableObject {
     let store: ConnectionGamesStore
     private let scratch: URL
     private var sender: ConnectionGamesSender?
+    /// The other games folders, which nothing goes to.
+    private var readers: [ConnectionGamesSender] = []
+    /// What each folder held at its last look, by its place.
+    private var looked: [String: [ConnectionFile]] = [:]
     private var running: Task<Void, Never>?
     /// Which round runs, so that one stopped says nothing once it ends.
     private var runningID = UUID()
@@ -125,28 +141,41 @@ final class IPhoneGames: ObservableObject {
         }
     }
 
-    /// The iPhone's games folder, FOLDER, or none: a round in it at once
-    /// when it is another.
-    func use(_ folder: Folder?) {
-        guard folder != self.folder || (folder != nil && sender == nil) else { return }
+    /// The iPhone's games folder, FOLDER, or none, and the OTHERS it reads:
+    /// a round in them at once when they are others.
+    func use(_ folder: Folder?, others: [Folder] = []) {
+        let others = others.filter { $0 != folder }
+        guard folder != self.folder || others != self.others.map(\.folder)
+            || (folder != nil && sender == nil) || readers.count != others.count else { return }
         running?.cancel()
         running = nil
         self.folder = folder
+        self.others = others.map { Other(folder: $0) }
         progress = nil
         stopped = nil
         failure = nil
         offers = []
+        looked = [:]
         sentCount = 0
         total = 0
         left = 0
         lastRound = nil
-        guard let folder, model != nil else {
+        guard model != nil else {
             sender = nil
+            readers = []
             return
         }
-        sender = ConnectionGamesSender(driver: ConsoleConnectionGames(connection: folder.connection, path: folder.path), store: store) { [weak self] game in
-            guard let self else { throw CancellationError() }
-            return try await self.pack(game)
+        sender = folder.map { folder in
+            ConnectionGamesSender(driver: ConsoleConnectionGames(connection: folder.connection, path: folder.path), store: store) { [weak self] game in
+                guard let self else { throw CancellationError() }
+                return try await self.pack(game)
+            }
+        }
+        // Nothing is packed for them: nothing goes there.
+        readers = others.map { other in
+            ConnectionGamesSender(driver: ConsoleConnectionGames(connection: other.connection, path: other.path), store: store) { _ in
+                throw CancellationError()
+            }
         }
         round()
     }
@@ -164,12 +193,50 @@ final class IPhoneGames: ObservableObject {
         offers.first { $0.titleID == titleID.uppercased() }
     }
 
-    /// The Mac apps installed from the folder in use, still on this Mac.
+    /// The Mac apps installed from the folders in use, still on this Mac.
     var fetchedApps: [FetchedApp] {
-        guard let sender else { return [] }
-        let place = sender.driver.place
-        return store.fetched.values.filter { $0.place == place && FileManager.default.fileExists(atPath: $0.app) }
+        let places = Set(folders.map(\.driver.place))
+        return store.fetched.values.filter { places.contains($0.place) && FileManager.default.fileExists(atPath: $0.app) }
             .sorted { $0.titleID < $1.titleID }
+    }
+
+    /// The folders in use, the iPhone's games folder first.
+    private var folders: [ConnectionGamesSender] {
+        (sender.map { [$0] } ?? []) + readers
+    }
+
+    /// The folders as their last looks found them, in their order.
+    private var looks: [ConnectionGamesLook] {
+        var looks: [ConnectionGamesLook] = []
+        if let sender {
+            looks.append(ConnectionGamesLook(place: sender.driver.place, files: looked[sender.driver.place] ?? [],
+                                             answered: stopped != .offline))
+        }
+        for (reader, other) in zip(readers, others) {
+            looks.append(ConnectionGamesLook(place: reader.driver.place, files: looked[reader.driver.place] ?? [],
+                                             answered: !other.offline))
+        }
+        return looks
+    }
+
+    /// Where OFFERS are, in the player's words: their folder's connection,
+    /// or the iPhone's games folders, of offers in several.
+    func placeName(of offers: [ConnectionMacApp]) -> String {
+        let folders = self.folders
+        var connections: [UUID] = []
+        for offer in offers {
+            guard let connection = folders.first(where: { $0.driver.place == offer.place })?.driver.connection,
+                  !connections.contains(connection) else { continue }
+            connections.append(connection)
+        }
+        if connections.count > 1 { return tr("your games folders", "vos dossiers de jeux") }
+        return (connections.first ?? folder?.connection).flatMap { ConsoleLink.connectionName($0) }
+            ?? tr("the iPhone’s games folder", "le dossier des jeux de l’iPhone")
+    }
+
+    /// The Mac apps offered from the iPhone's games folder, the first.
+    var offersInFirst: Int {
+        offers.count - others.reduce(0) { $0 + $1.offers }
     }
 
     // MARK: Rounds
@@ -184,7 +251,7 @@ final class IPhoneGames: ObservableObject {
 
     /// A round, now unless one runs, or once it ends; none during a batch.
     func round() {
-        guard sender != nil, let model, !model.sample else { return }
+        guard !folders.isEmpty, let model, !model.sample else { return }
         guard running == nil else {
             again = true
             return
@@ -202,48 +269,71 @@ final class IPhoneGames: ObservableObject {
     }
 
     private func roundOnce() async {
-        guard let sender, let model else { return }
-        let local = await Self.files(of: model.library?.games ?? [])
-        let report = await sender.send(local, progress: { [weak self] progress in
-            Task { @MainActor in
-                // None from a round stopped since.
-                guard let self, sender === self.sender else { return }
-                self.progress = progress
+        guard let model else { return }
+        let sender = self.sender
+        let readers = self.readers
+        if let sender {
+            let local = await Self.files(of: model.library?.games ?? [])
+            let report = await sender.send(local, progress: { [weak self] progress in
+                Task { @MainActor in
+                    // None from a round stopped since.
+                    guard let self, sender === self.sender else { return }
+                    self.progress = progress
+                }
+            }, stop: { [weak self] in await self?.stops() ?? true })
+            guard !Task.isCancelled, sender === self.sender else { return }
+            progress = nil
+            stopped = report.stopped
+            failure = report.failure
+            left = report.left
+            let server = folder.flatMap { ConsoleLink.connectionKind($0.connection) }
+            for went in report.sent {
+                model.telemetry.event("builder.sent", game: went.game.titleID,
+                                      fields: BuilderTelemetry.sentFields(kind: went.game.kind == .ipa ? "ipa" : "mac", bytes: went.bytes,
+                                                                          seconds: went.seconds, packed: went.game.kind == .macApp,
+                                                                          server: server))
             }
-        }, stop: { [weak self] in await self?.stops() ?? true })
-        guard !Task.isCancelled, sender === self.sender else { return }
-        progress = nil
+            total = local.count
+            if let files = report.files {
+                sentCount = local.filter { game in
+                    files.contains { $0.name == (game.fileName ?? "") } || store.sent(to: sender.driver.place)[game.sentKey]?.build == game.build
+                }.count
+                looked[sender.driver.place] = files
+            }
+        }
+        // The other folders, for the Mac apps another Mac sent there.
+        for (index, reader) in readers.enumerated() {
+            let files = try? await reader.driver.files()
+            guard !Task.isCancelled, readers.map(\.driver.place) == self.readers.map(\.driver.place), index < others.count else { return }
+            others[index].offline = files == nil
+            if let files { looked[reader.driver.place] = files }
+        }
+        // None from folders changed since.
+        guard !Task.isCancelled, sender === self.sender, readers.map(\.driver.place) == self.readers.map(\.driver.place),
+              readers.count == others.count else { return }
         lastRound = Date()
-        stopped = report.stopped
-        failure = report.failure
-        left = report.left
-        let server = folder.flatMap { ConsoleLink.connectionKind($0.connection) }
-        for went in report.sent {
-            model.telemetry.event("builder.sent", game: went.game.titleID,
-                                  fields: BuilderTelemetry.sentFields(kind: went.game.kind == .ipa ? "ipa" : "mac", bytes: went.bytes,
-                                                                      seconds: went.seconds, packed: went.game.kind == .macApp,
-                                                                      server: server))
+        let looks = self.looks
+        offers = ConnectionGames.macApps(in: looks, known: model.macTitleIDs())
+        for index in others.indices {
+            let place = readers[index].driver.place
+            others[index].offers = offers.filter { $0.place == place }.count
         }
-        total = local.count
-        if let files = report.files {
-            sentCount = local.filter { game in
-                files.contains { $0.name == (game.fileName ?? "") } || store.sent(to: sender.driver.place)[game.sentKey]?.build == game.build
-            }.count
-            offers = ConnectionGames.macApps(in: files, known: model.macTitleIDs())
-            await makeAgain(from: files)
-        }
+        await makeAgain(from: looks.filter(\.answered))
         model.showConsoleGames()
     }
 
-    /// The apps installed from the folder, made again of a newer file
-    /// there, but while their game runs, or once this Mac builds the game
-    /// itself, and none during a batch.
-    private func makeAgain(from files: [ConnectionFile]) async {
+    /// The apps installed from the folders, made again of a newer file
+    /// there, in the folder each came from, but while their game runs, or
+    /// once this Mac builds the game itself, and none during a batch.
+    private func makeAgain(from looks: [ConnectionGamesLook]) async {
         guard let model else { return }
         let own = Set((model.library?.games ?? []).filter { $0.mac?.kept == true || $0.mac?.build != nil }.map { $0.titleID.uppercased() })
         for fetched in fetchedApps where !own.contains(fetched.titleID) {
             guard !Task.isCancelled, !model.isBuilding else { return }
-            guard let newer = ConnectionGames.newer(for: fetched, in: files), !model.macGames.isPlaying(fetched.titleID) else { continue }
+            guard let look = looks.first(where: { $0.place == fetched.place }),
+                  var newer = ConnectionGames.newer(for: fetched, in: look.files),
+                  !model.macGames.isPlaying(fetched.titleID) else { continue }
+            newer.place = look.place
             do {
                 try await install(newer, again: true)
             } catch {
@@ -252,23 +342,53 @@ final class IPhoneGames: ObservableObject {
         }
     }
 
+    /// Where APP's copies are to fetch, APP's first, then the others in
+    /// the order to try them: each with the folder it is in.
+    private func copies(of app: ConnectionMacApp) -> [(app: ConnectionMacApp, folder: ConnectionGamesSender)] {
+        let folders = self.folders
+        let others = ConnectionGames.copies(of: app.titleID, in: looks).filter { $0.place != app.place }
+        return ([app] + others).compactMap { copy in
+            let folder = copy.place.isEmpty ? folders.first : folders.first(where: { $0.driver.place == copy.place })
+            return folder.map { (copy, $0) }
+        }
+    }
+
     /// Installs APP on this Mac: its file fetched into the Builder's folder,
-    /// then installed by the engine, how far each is said on the console.
+    /// from the folder it is in, or the next one with the game when that
+    /// one does not answer, then installed by the engine, how far each is
+    /// said on the console.
     func install(_ app: ConnectionMacApp, again: Bool = false) async throws {
-        guard let sender, let model, let engine = model.engine else { return }
-        let place = folder.flatMap { ConsoleLink.connectionName($0.connection) } ?? tr("the iPhone’s games folder", "le dossier des jeux de l’iPhone")
-        let server = folder.flatMap { ConsoleLink.connectionKind($0.connection) }
-        let total = app.file.size
+        guard let model, let engine = model.engine else { return }
+        let copies = self.copies(of: app)
+        guard !copies.isEmpty else { return }
         let began = Date()
+        let scratch = self.scratch
         try await model.runInstall(of: app.titleID, name: app.game) { say in
-            say(tr("Fetching from \(place)…", "Téléchargement depuis \(place)…"))
-            let file = try await sender.fetch(app, into: self.scratch) { done in
-                say(tr("Fetching from \(place): \(Format.size(done)) of \(Format.size(total))",
-                       "Téléchargement depuis \(place) : \(Format.size(done)) sur \(Format.size(total))"))
+            var fetched: URL?
+            var installed: (app: ConnectionMacApp, folder: ConnectionGamesSender)?
+            for (index, copy) in copies.enumerated() {
+                let connection = copy.folder.driver.connection
+                let place = ConsoleLink.connectionName(connection) ?? tr("the iPhone’s games folder", "le dossier des jeux de l’iPhone")
+                let total = copy.app.file.size
+                say(tr("Fetching from \(place)…", "Téléchargement depuis \(place)…"))
+                do {
+                    fetched = try await copy.folder.fetch(copy.app, into: scratch) { done in
+                        say(tr("Fetching from \(place): \(Format.size(done)) of \(Format.size(total))",
+                               "Téléchargement depuis \(place) : \(Format.size(done)) sur \(Format.size(total))"))
+                    }
+                } catch ConnectionGamesError.offline where index < copies.count - 1 {
+                    // Its server does not answer from here: the next
+                    // folder with the game may.
+                    continue
+                }
+                installed = copy
+                break
             }
+            guard let file = fetched, let copy = installed else { throw ConnectionGamesError.offline }
             defer { try? FileManager.default.removeItem(at: file) }
-            let answer = try await engine.installMac(app.titleID, from: file) { line in say(line) }
-            sender.installed(app, at: answer.app.path)
+            let answer = try await engine.installMac(copy.app.titleID, from: file) { line in say(line) }
+            copy.folder.installed(copy.app, at: answer.app.path)
+            let server = ConsoleLink.connectionKind(copy.folder.driver.connection)
             model.telemetry.event("builder.macInstalled", game: answer.titleID,
                                   fields: BuilderTelemetry.installedFields(bytes: answer.bytes, seconds: Date().timeIntervalSince(began), again: again,
                                                                            server: server ?? "other"))

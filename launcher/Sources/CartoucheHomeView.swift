@@ -176,7 +176,7 @@ struct CartoucheHomeView: View {
             // the setup banner's place, whose steps it begins with.
             let guideProgress = guide.progress(entries)
             let showsGuide = guide.showsCard(guideProgress)
-            let metrics = Metrics(size: proxy.size, hasBanner: showsGuide || setup.needsSetup, hasHero: showsHero,
+            let metrics = Metrics(size: proxy.size, hasBanner: showsGuide || setup.showsBanner, hasHero: showsHero,
                                   measuredBanner: bannerHeight)
             ScrollView(.vertical) {
                 VStack(alignment: .leading, spacing: metrics.spacing) {
@@ -184,7 +184,7 @@ struct CartoucheHomeView: View {
                     Group {
                         if showsGuide {
                             CartoucheGuideCard(progress: guideProgress, action: onGuide)
-                        } else if setup.needsSetup {
+                        } else if setup.showsBanner {
                             CartoucheHomeSetupBanner(action: onSetup)
                         }
                     }
@@ -463,10 +463,10 @@ struct CartoucheHomeView: View {
         } else if let app = entry.app {
             Button { onPlay(app) } label: { Label(CartoucheText.play, systemImage: "play.fill") }
             if let update = entry.update {
-                Button { onInstall(update) } label: { Label(updateTitle, systemImage: "arrow.down.circle.fill") }
+                Button { onInstall(update) } label: { Label(updateTitle(update), systemImage: "arrow.down.circle.fill") }
             }
         } else if let stored = entry.stored {
-            Button { onInstall(stored) } label: { Label(installTitle, systemImage: "arrow.down.circle.fill") }
+            Button { onInstall(stored) } label: { Label(installTitle(stored), systemImage: "arrow.down.circle.fill") }
         } else if let cloud = entry.cloud {
             Button { onInstallCloud(cloud) } label: { Label(CartoucheText.cloudInstall, systemImage: "icloud.and.arrow.down.fill") }
         } else {
@@ -530,7 +530,7 @@ struct CartoucheHomeView: View {
                 heroTitle(entry.name, metrics: metrics)
                 CartoucheMetaLine(entry: entry, isPaused: actions.isRunning(entry.app))
                 CartoucheGameStatsLine(entry: entry)
-                if let detail = heroDetail(status) {
+                if let detail = heroDetail(status, entry: entry) {
                     Text(detail)
                         .font(.subheadline)
                         .foregroundStyle(CartoucheTheme.secondaryText)
@@ -549,38 +549,28 @@ struct CartoucheHomeView: View {
 
     /// The line under the badges: what stops the game, or what the player
     /// can do with it. A game ready to play needs none: its badge says so.
-    private func heroDetail(_ status: CartouchePlayStatus) -> String? {
+    /// A game of the games folders whose copy offered is on a server that
+    /// does not answer from here, as every copy of it is: it installs once
+    /// one does.
+    private func heroDetail(_ status: CartouchePlayStatus, entry: CartoucheEntry) -> String? {
+        let stored = CartoucheStoredGames.shared
+        let copy = entry.update ?? entry.stored
+        let offline = copy?.isOffline ?? false
+        let signedOut = copy.map { stored.isSignedOut($0) } ?? false
+        let serverName = stored.place(of: copy)
         switch status {
         case .ready, .update:
             if !setup.canPlay {
                 return setup.bannerDetail(signingInAgain: CartoucheAccount.shared.isAutomatic)
             }
             guard status == .update else { return nil }
-            guard isGamesFolderOffline else { return status.long }
-            return isGamesFolderSignedOut ? CartoucheText.statusUpdateSignedOut(serverName) : CartoucheText.statusUpdateOffline(serverName)
-        case .stored where isGamesFolderOffline:
-            return isGamesFolderSignedOut ? CartoucheText.statusStoredSignedOut(serverName) : CartoucheText.statusStoredOffline(serverName)
+            guard offline else { return status.long }
+            return signedOut ? CartoucheText.statusUpdateSignedOut(serverName) : CartoucheText.statusUpdateOffline(serverName)
+        case .stored where offline:
+            return signedOut ? CartoucheText.statusStoredSignedOut(serverName) : CartoucheText.statusStoredOffline(serverName)
         default:
             return status.long
         }
-    }
-
-    /// Whether the games folder's server does not answer from here: its
-    /// games install once it does.
-    private var isGamesFolderOffline: Bool {
-        guard let server = CartoucheStorageSettings.shared.location(.games)?.server else { return false }
-        return reach.isOffline(server.id)
-    }
-
-    /// Whether the games folder is on a Google Drive whose sign-in Google
-    /// ended: its games install once the player signs in again.
-    private var isGamesFolderSignedOut: Bool {
-        guard let server = CartoucheStorageSettings.shared.location(.games)?.server else { return false }
-        return CartoucheStorageOffline(server).isSignedOut
-    }
-
-    private var serverName: String {
-        CartoucheStoredGames.shared.serverName ?? ""
     }
 
     /// The buttons of the game in focus; with COMPACT, its last ones show
@@ -600,7 +590,7 @@ struct CartoucheHomeView: View {
                                  iconOnly: compact >= 2) { onInstall(update) }
                 }
             } else if let stored = entry.stored {
-                actionButton(installTitle, systemImage: "arrow.down.circle.fill", primary: true, input: .a) { onInstall(stored) }
+                actionButton(installTitle(stored), systemImage: "arrow.down.circle.fill", primary: true, input: .a) { onInstall(stored) }
             } else if let cloud = entry.cloud {
                 actionButton(CartoucheText.cloudInstall, systemImage: "icloud.and.arrow.down.fill", primary: true,
                              input: .a) { onInstallCloud(cloud) }
@@ -613,14 +603,15 @@ struct CartoucheHomeView: View {
         }
     }
 
-    /// Install from the player's games folder, naming its server.
-    private var installTitle: String {
-        CartoucheText.installFrom(CartoucheStoredGames.shared.serverName ?? "")
+    /// Install from the player's games folder, naming the server of the
+    /// copy offered: one that answers, of a game in several folders.
+    private func installTitle(_ copy: CartoucheStoredGame) -> String {
+        CartoucheText.installFrom(CartoucheStoredGames.shared.place(of: copy))
     }
 
-    /// Update from the player's games folder, naming its server.
-    private var updateTitle: String {
-        CartoucheText.updateFrom(CartoucheStoredGames.shared.serverName ?? "")
+    /// Update from the player's games folder, naming the server of the copy.
+    private func updateTitle(_ copy: CartoucheStoredGame) -> String {
+        CartoucheText.updateFrom(CartoucheStoredGames.shared.place(of: copy))
     }
 
     /// A button of the game in focus. While a controller is connected, it

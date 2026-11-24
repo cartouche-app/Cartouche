@@ -1,0 +1,128 @@
+From 76fcafcc56a5d630893b9bcab33847326e475be6 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 24 Nov 2026 12:31:48 +0000
+Subject: [PATCH] Let Cartouche install itself again through the built-in
+ SideStore
+
+Cartouche installed by the player's own SideStore (its IPA for the
+player's SideStore, docs/decisions/147.md) runs without Increased Memory
+Limit: a SideStore on a free team leaves the capability out of the apps
+it signs (SideStore#1616). The built-in SideStore asks Apple for it
+(patch 0002), but only for an app it signs itself.
+
+A new action, Reinstall Cartouche, does what Update Cartouche does
+(patch 0010), with the version that is running too: it reads the
+sources again, then installs the newest version for this iOS, the
+running one included, never an older one. Cartouche runs it once, in
+LiveProcess, after its setup; Shortcuts does not list it. It leaves its
+outcome for Cartouche as an update does (patch 0014).
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01MzPJouBNse6nNy5526AYaf
+---
+ .../Intents/ReinstallCartoucheIntent.swift    | 93 +++++++++++++++++++
+ 1 file changed, 93 insertions(+)
+ create mode 100644 SideStore/Intents/ReinstallCartoucheIntent.swift
+
+diff --git a/SideStore/Intents/ReinstallCartoucheIntent.swift b/SideStore/Intents/ReinstallCartoucheIntent.swift
+new file mode 100644
+index 0000000..cbaa268
+--- /dev/null
++++ b/SideStore/Intents/ReinstallCartoucheIntent.swift
+@@ -0,0 +1,93 @@
++//
++//  ReinstallCartoucheIntent.swift
++//  SideStore
++//
++//  Cartouche: installs the version of the app this SideStore is built into
++//  that is running, or a newer one, from the app's own source, so that
++//  this SideStore signs it itself. Cartouche installed by the player's own
++//  SideStore runs it once (docs/decisions/147.md): a SideStore on a free
++//  team leaves Increased Memory Limit out of the apps it signs, and this
++//  one asks Apple for it (app/patches/sidestore/0002). Cartouche runs it
++//  as it runs Update Cartouche (UpdateCartoucheIntent), in LiveProcess;
++//  Shortcuts does not list it.
++//
++
++import AppIntents
++import CoreData
++import Foundation
++import SemanticVersion
++
++@available(iOS 17.0, tvOS 17.0, *)
++struct ReinstallCartoucheIntent: AppIntent, ProgressReportingIntent
++{
++    static var title: LocalizedStringResource = "Reinstall Cartouche"
++    static var description = IntentDescription("Installs Cartouche again from its source, signed by this SideStore.")
++    static var openAppWhenRun = false
++    static var isDiscoverable: Bool { false }
++
++    init()
++    {
++        self.progress.completedUnitCount = 0
++        self.progress.totalUnitCount = 100
++    }
++
++    func perform() async throws -> some IntentResult
++    {
++        // How it ended, for Cartouche, which waits for it as for an update
++        // (CartoucheOutcome).
++        let outcome = CartoucheOutcome(action: .update)
++        do
++        {
++            try await DatabaseManager.shared.start()
++
++            do
++            {
++                _ = try await AppManager.shared.fetchSources()
++            }
++            catch
++            {
++                debugLog("[ReinstallCartoucheIntent] fetchSources: \(error.localizedDescription)")
++            }
++            self.progress.completedUnitCount = 5
++
++            let intentProgress = self.progress
++            _ = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<InstalledApp, Error>) in
++                // As My Apps does, on the main queue with the view context.
++                DispatchQueue.main.async {
++                    let context = DatabaseManager.shared.viewContext
++                    guard let installedApp = InstalledApp.fetchAltStore(in: context),
++                          let latestVersion = installedApp.storeApp?.latestSupportedVersion
++                    else {
++                        continuation.resume(throwing: OperationError.missingUpdate(appName: "Cartouche"))
++                        return
++                    }
++
++                    // The version that is running, or a newer one: never an
++                    // older one. Needs proper testing on an iPhone.
++                    let runningVersion = (Bundle.Info.activeBundle.infoDictionary?["CFBundleShortVersionString"] as? String) ?? installedApp.version
++                    guard let latest = SemanticVersion(latestVersion.version),
++                          let running = SemanticVersion(runningVersion),
++                          latest >= running
++                    else {
++                        continuation.resume(throwing: OperationError.missingUpdate(appName: installedApp.name))
++                        return
++                    }
++
++                    debugLog("[ReinstallCartoucheIntent] installing \(installedApp.bundleIdentifier) \(latestVersion.version) over \(runningVersion)")
++                    let installProgress = AppManager.shared.update(installedApp, to: latestVersion, presentingViewController: nil) { result in
++                        continuation.resume(with: result)
++                    }
++                    intentProgress.addChild(installProgress, withPendingUnitCount: 95)
++                }
++            }
++
++            outcome.save(error: nil, progress: self.progress)
++            return .result()
++        }
++        catch
++        {
++            outcome.save(error: error, progress: self.progress)
++            throw IntentError(error)
++        }
++    }
++}
+-- 
+2.43.0
+

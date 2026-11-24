@@ -176,12 +176,15 @@ enum ConsoleGallery {
         console.showStorageForGallery(language: language)
         // The games folder chosen on the iPhone, on the NAS: Mario Kart
         // World's Mac app going there, Animal Crossing's, another Mac's,
-        // to install.
+        // to install; and the other one the iPhone reads, on the Google
+        // Drive, with another Mac's app too.
         console.showIPhoneGames(CartoucheMacGamesFolder(connection: CartoucheMacConsole.galleryNAS,
                                                         path: language == "fr" ? "Cartouche/Jeux" : "Cartouche/Games",
                                                         state: .sending(game: "Mario Kart World", packing: false, done: 1_288_490_188,
                                                                         total: 2_915_000_000, index: 1, count: 2),
-                                                        offers: 1))
+                                                        offers: 1,
+                                                        others: [.init(connection: CartoucheMacConsole.galleryDrive,
+                                                                       path: language == "fr" ? "Jeux" : "Games", offers: 1)]))
         // System › Game measurements: on, reports sent, the last one a
         // session of the sheet's game; a server, which the console never
         // reaches itself.

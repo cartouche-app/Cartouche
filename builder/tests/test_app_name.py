@@ -79,6 +79,18 @@ class AppName(unittest.TestCase):
         words = json.loads(text("builder/mac/console/strings.json"))["strings"]["mac.system.app"]
         self.assertEqual(words, {"en": "Cartouche for Mac", "fr": "Cartouche pour Mac"})
 
+    def test_no_word_of_the_apps_says_cartouche_builder(self):
+        # The words the Mac's console, the iPhone and the engine show: a
+        # change made beside the rename brought the former name back.
+        mac = json.loads(text("builder/mac/console/strings.json"))
+        words = [value for section in mac.values() for entry in section.values() for value in entry.values()]
+        catalog = json.loads(text("launcher/Sources/Cartouche.xcstrings"))
+        words += [unit["stringUnit"]["value"] for entry in catalog["strings"].values()
+                  for unit in entry.get("localizations", {}).values() if "stringUnit" in unit]
+        said = [word for word in words if "Cartouche Builder" in word]
+        self.assertEqual(said, [])
+        self.assertNotIn("Cartouche Builder", text("builder/cartouche_builder/texts.py"))
+
     def test_its_notifications_say_cartouche(self):
         scripts = []
         with mock.patch.object(notify.sys, "platform", "darwin"), \
