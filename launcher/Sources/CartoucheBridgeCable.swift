@@ -244,10 +244,7 @@ public final class CartoucheCableLinks: @unchecked Sendable {
     /// the connection within PATIENCE, in seconds. Cancelling the task gives
     /// nil at once.
     public func session(with macID: String, patience: TimeInterval = CartoucheBridgeCable.ticketPatience) async -> CartoucheBridgeTransport? {
-        lock.lock()
-        let link = links.last { $0.mac == macID }
-        lock.unlock()
-        guard let link else { return nil }
+        guard let link = link(of: macID) else { return nil }
         let ticket = UUID().uuidString
         return await withTaskCancellationHandler {
             await withCheckedContinuation { (continuation: CheckedContinuation<CartoucheBridgeTransport?, Never>) in
@@ -284,9 +281,7 @@ public final class CartoucheCableLinks: @unchecked Sendable {
     /// Keeps LINK until it goes: closed by the Mac, unplugged, or silent
     /// too long.
     private func keep(_ link: Link) async {
-        lock.lock()
-        links.append(link)
-        lock.unlock()
+        add(link)
         announce()
         let silence = self.silence
         let watch = Task {
@@ -309,10 +304,29 @@ public final class CartoucheCableLinks: @unchecked Sendable {
         }
         watch.cancel()
         link.transport.close()
+        remove(link)
+        announce()
+    }
+
+    // The links, under the lock, from synchronous code alone: an NSLock is
+    // not to be held across a suspension.
+
+    private func link(of macID: String) -> Link? {
+        lock.lock()
+        defer { lock.unlock() }
+        return links.last { $0.mac == macID }
+    }
+
+    private func add(_ link: Link) {
+        lock.lock()
+        links.append(link)
+        lock.unlock()
+    }
+
+    private func remove(_ link: Link) {
         lock.lock()
         links.removeAll { $0 === link }
         lock.unlock()
-        announce()
     }
 
     /// The connection TRANSPORT, which the Mac MAC opened for TICKET, to the

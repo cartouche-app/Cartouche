@@ -52,10 +52,10 @@ final class CartoucheCableListener: @unchecked Sendable {
     /// or could not.
     @discardableResult
     func start() async -> Bool {
-        lock.lock()
-        let running = listener != nil
-        wanted = true
-        lock.unlock()
+        let running = locked {
+            wanted = true
+            return listener != nil
+        }
         if running { return true }
         let parameters = CartoucheBridgeConnection.parameters()
         // The loopback alone: the Mac's connections come out of usbmuxd
@@ -76,9 +76,7 @@ final class CartoucheCableListener: @unchecked Sendable {
                 await self.links.take(transport)
             }
         }
-        lock.lock()
-        listener = made
-        lock.unlock()
+        locked { listener = made }
         let once = CartoucheBridgeOnce()
         return await withCheckedContinuation { (continuation: CheckedContinuation<Bool, Never>) in
             made.stateUpdateHandler = { [weak self, weak made] state in
@@ -112,6 +110,14 @@ final class CartoucheCableListener: @unchecked Sendable {
             }
             made.start(queue: queue)
         }
+    }
+
+    /// BODY under the lock, from synchronous code: an NSLock is not to be
+    /// held across a suspension.
+    private func locked<T>(_ body: () throws -> T) rethrows -> T {
+        lock.lock()
+        defer { lock.unlock() }
+        return try body()
     }
 
     func stop() {

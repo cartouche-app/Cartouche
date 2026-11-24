@@ -42,10 +42,13 @@ final class MacCableTests: XCTestCase {
         await eventually("unlinked") { !CartoucheCableLinks.shared.isLinked(macID) }
     }
 
-    private func eventually(_ what: String, within seconds: TimeInterval = 5, _ condition: () -> Bool) async {
+    private func eventually(_ what: String, within seconds: TimeInterval = 5, _ condition: @escaping () -> Bool) async {
         let end = Date().addingTimeInterval(seconds)
         while !condition() {
-            if Date() > end { return XCTFail("never: \(what)") }
+            if Date() > end {
+                XCTFail("never: \(what)")
+                return
+            }
             try? await Task.sleep(nanoseconds: 20_000_000)
         }
     }

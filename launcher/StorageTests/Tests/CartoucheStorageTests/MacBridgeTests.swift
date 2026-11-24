@@ -96,9 +96,7 @@ final class FakeMac: @unchecked Sendable {
     func plug(into port: UInt16) async throws {
         let endpoint = NWEndpoint.hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: port)!)
         let link = try await CartoucheBridgeConnection.open(endpoint, timeout: 5)
-        lock.lock()
-        cableLink = link
-        lock.unlock()
+        locked { cableLink = link }
         let macID = self.macID, name = self.name
         Task {
             await CartoucheBridgeCable.serveLink(link, mac: macID, name: name) { [weak self] ticket in
@@ -109,9 +107,7 @@ final class FakeMac: @unchecked Sendable {
                     return connection.close()
                 }
                 guard let self else { return connection.close() }
-                self.lock.lock()
-                self.throughCable += 1
-                self.lock.unlock()
+                self.countThroughCable()
                 await self.handshake(connection)
             }
         }
@@ -124,6 +120,18 @@ final class FakeMac: @unchecked Sendable {
         cableLink = nil
         lock.unlock()
         link?.close()
+    }
+
+    private func countThroughCable() {
+        lock.lock()
+        throughCable += 1
+        lock.unlock()
+    }
+
+    private func locked(_ body: () -> Void) {
+        lock.lock()
+        body()
+        lock.unlock()
     }
 
     /// How many connections it opened through the cable.

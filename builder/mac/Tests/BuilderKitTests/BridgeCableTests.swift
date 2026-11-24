@@ -72,6 +72,14 @@ private final class FakeUsbmuxd: @unchecked Sendable {
         }
     }
 
+    /// BODY under the lock, from synchronous code: an NSLock is not to be
+    /// held across a suspension.
+    private func locked<T>(_ body: () throws -> T) rethrows -> T {
+        lock.lock()
+        defer { lock.unlock() }
+        return try body()
+    }
+
     func stop() {
         shutdown(listening, Int32(SHUT_RDWR))
         unlink(path)
@@ -97,11 +105,11 @@ private final class FakeUsbmuxd: @unchecked Sendable {
 
     /// The iPhone unplugged: usbmuxd says so, and its connections end.
     func unplug() async {
-        lock.lock()
-        plugged = false
-        let listens = self.listens, connections = toIPhone
-        toIPhone = []
-        lock.unlock()
+        let (listens, connections) = locked {
+            plugged = false
+            defer { toIPhone = [] }
+            return (self.listens, toIPhone)
+        }
         for socket in listens {
             try? await socket.sendMessage(["MessageType": "Detached", "DeviceID": Self.device], tag: 0)
         }
@@ -113,9 +121,7 @@ private final class FakeUsbmuxd: @unchecked Sendable {
             guard let message = try? await socket.receiveMessage() else { return socket.close() }
             switch message["MessageType"] as? String {
             case "Listen":
-                lock.lock()
-                listens.append(socket)
-                lock.unlock()
+                locked { listens.append(socket) }
                 try? await socket.sendMessage(["MessageType": "Result", "Number": 0], tag: 1)
                 // An iPhone syncing over Wi-Fi, which the Mac leaves to Bonjour, then the one plugged in.
                 try? await socket.sendMessage(["MessageType": "Attached", "DeviceID": 9,
@@ -127,12 +133,12 @@ private final class FakeUsbmuxd: @unchecked Sendable {
                 let number = (message["PortNumber"] as? NSNumber)?.intValue ?? 0
                 // In network order, as libimobiledevice and macOS read it.
                 let port = UInt16(bigEndian: UInt16(truncatingIfNeeded: number))
-                lock.lock()
-                connects += 1
-                ports.append(number)
-                if let device { devices.insert(device) }
-                let listens = cartoucheListens, plugged = self.plugged
-                lock.unlock()
+                let (listens, plugged) = locked {
+                    connects += 1
+                    ports.append(number)
+                    if let device { devices.insert(device) }
+                    return (cartoucheListens, self.plugged)
+                }
                 guard device == Self.device, plugged else {
                     try? await socket.sendMessage(["MessageType": "Result", "Number": 2], tag: 2)
                     continue
@@ -142,9 +148,7 @@ private final class FakeUsbmuxd: @unchecked Sendable {
                     continue
                 }
                 try? await socket.sendMessage(["MessageType": "Result", "Number": 0], tag: 2)
-                lock.lock()
-                toIPhone.append(socket)
-                lock.unlock()
+                locked { toIPhone.append(socket) }
                 // From here on, the iPhone's connection: Cartouche takes it.
                 await iphone.take(UsbmuxStream(socket))
                 return
@@ -207,10 +211,13 @@ final class BridgeCableTests: XCTestCase {
         return (server, iphone, muxd)
     }
 
-    private func eventually(_ what: String, within seconds: TimeInterval = 5, _ condition: () -> Bool) async {
+    private func eventually(_ what: String, within seconds: TimeInterval = 5, _ condition: @escaping () -> Bool) async {
         let end = Date().addingTimeInterval(seconds)
         while !condition() {
-            if Date() > end { return XCTFail("never: \(what)") }
+            if Date() > end {
+                XCTFail("never: \(what)")
+                return
+            }
             try? await Task.sleep(nanoseconds: 20_000_000)
         }
     }

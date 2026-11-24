@@ -21,10 +21,13 @@ final class CartoucheBridgeCableTests: XCTestCase {
     let key = Data((0 ..< 32).map { UInt8($0) })
 
     /// Waits until CONDITION holds, or fails after SECONDS.
-    func eventually(_ what: String, within seconds: TimeInterval = 3, _ condition: () -> Bool) async {
+    private func eventually(_ what: String, within seconds: TimeInterval = 3, _ condition: @escaping () -> Bool) async {
         let end = Date().addingTimeInterval(seconds)
         while !condition() {
-            if Date() > end { return XCTFail("never: \(what)") }
+            if Date() > end {
+                XCTFail("never: \(what)")
+                return
+            }
             try? await Task.sleep(nanoseconds: 10_000_000)
         }
     }
@@ -51,11 +54,11 @@ final class CartoucheBridgeCableTests: XCTestCase {
         let links = CartoucheCableLinks()
         XCTAssertFalse(links.isLinked(mac))
         let (macSide, served) = link(links) { _, connection in connection.close() }
-        await eventually("linked") { links.isLinked(mac) }
+        await eventually("linked") { links.isLinked(self.mac) }
         XCTAssertEqual(links.macs, [CartoucheCableMac(id: mac, name: "MacBook Air")])
         macSide.close()
         await served.value
-        await eventually("gone") { !links.isLinked(mac) }
+        await eventually("gone") { !links.isLinked(self.mac) }
         XCTAssertEqual(links.macs, [])
     }
 
@@ -79,7 +82,7 @@ final class CartoucheBridgeCableTests: XCTestCase {
             }
         }
         defer { macSide.close() }
-        await eventually("linked") { links.isLinked(mac) }
+        await eventually("linked") { links.isLinked(self.mac) }
         let opened = await links.session(with: mac)
         let transport = try XCTUnwrap(opened)
         let channel = try await CartoucheBridgeHandshake.client(transport, device: device, key: key, mac: mac)
@@ -98,7 +101,7 @@ final class CartoucheBridgeCableTests: XCTestCase {
             try? await CartoucheBridgeCable.sayTicket(ticket, on: connection, mac: mac, name: "MacBook Air")
         }
         defer { macSide.close() }
-        await eventually("linked") { links.isLinked(mac) }
+        await eventually("linked") { links.isLinked(self.mac) }
         async let first = links.session(with: mac)
         async let second = links.session(with: mac)
         let (a, b) = await (first, second)
@@ -119,7 +122,7 @@ final class CartoucheBridgeCableTests: XCTestCase {
         let links = CartoucheCableLinks()
         let (macSide, _) = link(links) { _, _ in }
         defer { macSide.close() }
-        await eventually("linked") { links.isLinked(mac) }
+        await eventually("linked") { links.isLinked(self.mac) }
         let started = Date()
         let transport = await links.session(with: mac, patience: 0.3)
         XCTAssertNil(transport)
@@ -132,7 +135,7 @@ final class CartoucheBridgeCableTests: XCTestCase {
             try? await CartoucheBridgeCable.sayTicket(ticket, on: connection, mac: UUID().uuidString, name: "Another Mac")
         }
         defer { macSide.close() }
-        await eventually("linked") { links.isLinked(mac) }
+        await eventually("linked") { links.isLinked(self.mac) }
         let transport = await links.session(with: mac, patience: 2)
         XCTAssertNil(transport)
     }
@@ -142,7 +145,7 @@ final class CartoucheBridgeCableTests: XCTestCase {
         let (macSide, _) = link(links) { _, _ in }
         defer { macSide.close() }
         let mac = self.mac
-        await eventually("linked") { links.isLinked(mac) }
+        await eventually("linked") { links.isLinked(self.mac) }
         let asked = Task { await links.session(with: mac, patience: 30) }
         try? await Task.sleep(nanoseconds: 100_000_000)
         let started = Date()
@@ -175,8 +178,8 @@ final class CartoucheBridgeCableTests: XCTestCase {
         let (silentPhone, silentMac) = MemoryTransport.pair()
         Task { await links.take(silentPhone) }
         try await silentMac.sendFrame(JSONEncoder().encode(CartoucheBridgeCable.Hello(mac: mac, name: "MacBook Air")))
-        await eventually("linked") { links.isLinked(mac) }
-        await eventually("gone, silent", within: 3) { !links.isLinked(mac) }
+        await eventually("linked") { links.isLinked(self.mac) }
+        await eventually("gone, silent", within: 3) { !links.isLinked(self.mac) }
     }
 
     func testAConnectionThatNeverSaysWhichMacItIsIsClosed() async {

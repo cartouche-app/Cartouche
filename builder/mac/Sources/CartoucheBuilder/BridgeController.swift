@@ -153,13 +153,15 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
         devices = server?.devices.all ?? []
     }
 
-    /// Shows sample iPhones, without a server, and a made-up Mac name,
-    /// saves folder and addresses in the tailnet in place of this Mac's:
-    /// the gallery's pictures.
-    func preview(devices: [PairedDevice], connected: Set<String>, games: String, name: String, saves: URL,
+    /// Shows sample iPhones, those connected now and those of them
+    /// plugged into this Mac (CABLED), without a server, and a made-up Mac
+    /// name, saves folder and addresses in the tailnet in place of this
+    /// Mac's: the gallery's pictures.
+    func preview(devices: [PairedDevice], connected: Set<String>, cabled: Set<String> = [], games: String, name: String, saves: URL,
                  tailnet: [String] = []) {
         self.devices = devices
         self.connected = connected
+        self.cabled = cabled
         self.games = URL(fileURLWithPath: games, isDirectory: true)
         sampleMac = (name, saves)
         self.tailnet = tailnet
