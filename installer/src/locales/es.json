@@ -1,0 +1,289 @@
+{
+  "subtitle": "Pone Cartouche en tu iPhone",
+  "version": "Versión",
+  "common": {
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "dismiss": "Cerrar",
+    "refresh": "Actualizar",
+    "delete": "Borrar",
+    "copy_to_clipboard": "Copiar",
+    "more_details": "Más detalles",
+    "no_error": "Ningún error",
+    "copied_success": "Copiado",
+    "retry": "Reintentar"
+  },
+  "dropdown": {
+    "custom_value": "Otro valor",
+    "custom": "Otro",
+    "use_custom_value": "Usar otro valor",
+    "back_preset_options": "Volver a las opciones propuestas",
+    "select": "Elegir"
+  },
+  "app": {
+    "title": "Instalador de Cartouche",
+    "language": "Idioma",
+    "github": "GitHub",
+    "open_github_failed": "No se puede abrir el enlace de GitHub",
+    "settings": "Ajustes",
+    "certificates": "Certificados",
+    "app_ids": "App IDs",
+    "must_be_logged_in": "Primero inicia sesión con tu cuenta de Apple.",
+    "must_select_device": "Primero conecta tu iPhone y elígelo.",
+    "ipa_files": "Archivos IPA",
+    "credits": "Hecho a partir de iloader de nab138 (MIT), con isideload e idevice. Sin relación con iloader ni con Apple."
+  },
+  "steps": {
+    "iphone_title": "Tu iPhone",
+    "iphone_hint": "Conéctalo a este ordenador con un cable y desbloquéalo. La primera vez, toca Confiar en el iPhone e introduce su código.",
+    "apple_id_title": "Tu cuenta de Apple",
+    "apple_id_hint": "Cartouche se firma con ella, como cualquier app que instales tú mismo. Basta con una cuenta gratuita.",
+    "install_title": "Cartouche",
+    "install_hint": "El Cartouche más reciente, con la memoria ampliada, su certificado y el archivo de emparejamiento que necesita."
+  },
+  "install": {
+    "latest": "Versión más reciente: Cartouche {{version}}",
+    "release_loading": "Buscando el Cartouche más reciente…",
+    "release_failed": "No se pueden leer las versiones de Cartouche. Comprueba la conexión a internet de este ordenador.",
+    "installed": "En este iPhone: Cartouche {{version}}. Tus juegos y tus partidas guardadas se quedan cuando lo vuelves a instalar.",
+    "not_installed": "Cartouche aún no está en este iPhone.",
+    "button": "Instalar Cartouche {{version}}",
+    "update_button": "Volver a instalar Cartouche {{version}}",
+    "needs_both": "Primero conecta tu iPhone e inicia sesión.",
+    "place_pairing": "Volver a poner el archivo de emparejamiento en Cartouche",
+    "from_file": "Instalar Cartouche desde un archivo IPA…"
+  },
+  "apple_id": {
+    "title": "Cuenta de Apple",
+    "logged_in_as": "Sesión iniciada como",
+    "sign_out": "Cerrar sesión",
+    "signing_out": "Cerrando sesión…",
+    "sign_out_failed": "No se pudo cerrar la sesión",
+    "signed_out_success": "Sesión cerrada",
+    "saved_logins": "Cuentas guardadas",
+    "sign_in": "Iniciar sesión",
+    "logging_in": "Iniciando sesión…",
+    "logged_in_success": "Sesión iniciada",
+    "login_failed": "No se pudo iniciar sesión",
+    "deleting": "Borrando…",
+    "deletion_failed": "No se pudo borrar",
+    "deleted_success": "Borrado",
+    "add_account": "Añadir una cuenta +",
+    "new_login": "Otra cuenta",
+    "email_placeholder": "Correo de la cuenta de Apple…",
+    "password_placeholder": "Contraseña de la cuenta de Apple…",
+    "save_credentials": "Recordar en este ordenador",
+    "enter_email_password": "Introduce el correo y la contraseña.",
+    "valid_email": "Introduce un correo válido.",
+    "login": "Iniciar sesión",
+    "two_factor_title": "Autenticación de doble factor",
+    "two_factor_prompt": "Introduce el código de verificación que Apple envió a tus dispositivos.",
+    "verification_placeholder": "Código de verificación…",
+    "valid_6digit": "Introduce un código de 6 cifras.",
+    "submit": "Continuar",
+    "max_certs_title": "Demasiados certificados",
+    "max_certs_desc": "Tu cuenta de Apple tiene tantos certificados de desarrollo como Apple permite. El instalador los revocará y creará uno nuevo: las apps firmadas con ellos dejarán de abrirse hasta que se vuelvan a instalar.",
+    "hide_certificate_list": "Ocultar los certificados",
+    "choose_what_to_revoke": "Elegir qué se revoca",
+    "continue": "Continuar",
+    "no_keyring_available": "Este ordenador no puede guardar la contraseña: la escribirás cada vez."
+  },
+  "device": {
+    "title": "iPhone",
+    "loading_devices": "Buscando iPhone…",
+    "no_devices_found": "Ningún iPhone encontrado",
+    "found_device": "iPhone encontrado",
+    "found_devices": "iPhone encontrados",
+    "unable_load_devices_prefix": "No se pueden listar los iPhone",
+    "no_devices_found_period": "Ningún iPhone encontrado. Conéctalo, desbloquéalo y pulsa Actualizar.",
+    "selected": "Elegido",
+    "pairing_in_progress_header": "Emparejando con {{device}}…",
+    "pairing_in_progress_hint": "Desbloquea el iPhone y toca Confiar, luego introduce su código si lo pide.",
+    "pairing_cancel": "Cancelar",
+    "failed_select": "No se puede usar este iPhone"
+  },
+  "operation": {
+    "failed": "No funcionó.",
+    "completed": "Hecho",
+    "please_wait": "Mantén el iPhone conectado y desbloqueado…",
+    "copy_error_clipboard": "Copiar el error"
+  },
+  "operations": {
+    "install_title": "Instalando Cartouche",
+    "install_success_title": "Cartouche está instalado",
+    "install_success_message": "En el iPhone, solo la primera vez: en Ajustes › General › VPN y gestión de dispositivos, confía en tu cuenta de Apple; si iOS lo pide, activa el modo de desarrollador en Ajustes › Privacidad y seguridad y reinicia. Después abre Cartouche: su puesta a punto ya tiene el archivo de emparejamiento.",
+    "install_step_download": "Descargar Cartouche",
+    "install_step_check": "Comprobar la IPA",
+    "install_step_install": "Firmarlo e instalarlo, con la memoria ampliada",
+    "install_step_pairing": "Poner el archivo de emparejamiento en Cartouche",
+    "pairing_title": "Archivo de emparejamiento",
+    "pairing_success_title": "Archivo de emparejamiento en su sitio",
+    "pairing_success_message": "Cartouche lo encuentra solo."
+  },
+  "certificates": {
+    "manage": "Certificados",
+    "loading": "Cargando los certificados…",
+    "loaded_success": "Certificados cargados",
+    "failed_load": "No se pueden cargar los certificados",
+    "revoking": "Revocando el certificado…",
+    "revoked_success": "Certificado revocado",
+    "failed_revoke": "No se puede revocar el certificado",
+    "none_found": "Ningún certificado.",
+    "name": "Nombre",
+    "serial_number": "Número de serie",
+    "machine_name": "Nombre de la máquina",
+    "machine_id": "ID de la máquina",
+    "revoke": "Revocar"
+  },
+  "app_ids": {
+    "manage": "App IDs",
+    "loading": "Cargando los App IDs…",
+    "loaded_success": "App IDs cargados",
+    "failed_load": "No se pueden cargar los App IDs",
+    "deleted_success": "App ID borrado",
+    "failed_delete": "No se puede borrar el App ID",
+    "available": "{{available}}/{{max}} App IDs disponibles",
+    "none_found": "Ningún App ID.",
+    "name": "Nombre",
+    "expiration": "Caduca",
+    "id": "ID",
+    "identifier": "Identificador",
+    "never": "Nunca"
+  },
+  "settings": {
+    "anisette_server": "Servidor anisette:",
+    "custom_anisette_placeholder": "Otro servidor anisette",
+    "custom_anisette": "Otro",
+    "use_custom_anisette": "Usar otro servidor anisette",
+    "back_preset_servers": "Volver a los servidores propuestos",
+    "reset_anisette_title": "Restablecer el estado anisette",
+    "reset_anisette_message": "¿Restablecer el estado anisette? Apple volverá a pedir un código de doble factor.",
+    "resetting_anisette_state": "Restableciendo el estado anisette…",
+    "anisette_state_reset_success": "Estado anisette restablecido",
+    "anisette_state_not_found": "No hay estado anisette que restablecer",
+    "failed_reset_anisette_state": "No se puede restablecer el estado anisette",
+    "view_logs": "Registros",
+    "logs": "Registros",
+    "log_level": "Nivel:",
+    "no_logs_yet": "Aún no hay registros.",
+    "debug": "Depuración",
+    "info": "Info",
+    "warn": "Aviso",
+    "error": "Error",
+    "delete_stored_rppairing": "Borrar el emparejamiento guardado",
+    "delete_stored_rppairing_message": "¿Borrar el emparejamiento que este ordenador guarda para este iPhone? Se volverá a emparejar, y el iPhone pedirá confiar en él.",
+    "deleting_stored_rppairing": "Borrando el emparejamiento guardado…",
+    "stored_rppairing_deleted_success": "Emparejamiento guardado borrado",
+    "failed_delete_stored_rppairing": "No se puede borrar el emparejamiento guardado",
+    "dont_use_keyring": "No usar el llavero",
+    "dont_use_keyring_message": "El instalador guarda entonces los emparejamientos, el estado anisette y los certificados en archivos de este ordenador, lo que es menos seguro. Actívalo solo si el llavero no funciona."
+  },
+  "dialog": {
+    "confirm": "Confirmar",
+    "cancel": "Cancelar"
+  },
+  "error": {
+    "title": "Algo salió mal: {{msg}}",
+    "unknown": "Desconocido",
+    "suggestions_heading": "Qué probar",
+    "suggestions": {
+      "underage": [
+        "Puede que tu cuenta de Apple no tenga la edad que piden los servicios para desarrolladores de Apple."
+      ],
+      "account_locked": [
+        "Suele pasar tras varios inicios de sesión fallidos, y no es grave.",
+        "Desbloquea tu cuenta en ((link:https://iforgot.apple.com/))."
+      ],
+      "auth": [
+        "Comprueba el correo y la contraseña, y vuelve a intentarlo aunque fueran correctos.",
+        "Si sigue fallando, prueba con otra cuenta de Apple.",
+        "Las llaves de seguridad no son compatibles: usa una cuenta que reciba sus códigos en tus dispositivos."
+      ],
+      "download": [
+        "Comprueba la conexión a internet de este ordenador y vuelve a intentarlo.",
+        "Descarga Cartouche-<version>.ipa desde ((link:https://github.com/cartouche-app/Cartouche/releases:las versiones de Cartouche)) y usa Instalar Cartouche desde un archivo IPA."
+      ],
+      "not_cartouche": [
+        "Elige la IPA del propio Cartouche, Cartouche-<version>.ipa de ((link:https://github.com/cartouche-app/Cartouche/releases:las versiones de Cartouche)). Un juego se instala en Cartouche, con su Importar."
+      ],
+      "cartouche_missing": [
+        "Primero instala Cartouche, con el botón del paso 3."
+      ],
+      "profile_for_another_app": [
+        "Elige un perfil comodín (su App ID termina en *), o uno hecho para io.github.clabeuhtegrite.cartouche, y vuelve a instalar."
+      ],
+      "house_arrest": [
+        "[ios::26.3]Comprueba que el iPhone no tenga una beta para desarrolladores de iOS 26.3, que tiene un fallo con house arrest."
+      ],
+      "pairing": [
+        "Desconecta y vuelve a conectar el iPhone y vuelve a intentarlo.",
+        "Comprueba que el iPhone tenga un código.",
+        "Conecta el iPhone con un cable, no por Wi-Fi."
+      ],
+      "usbmuxd": [
+        "[platform::windows]Instala Dispositivos Apple desde Microsoft Store, o ((link:https://apple.co/ms:iTunes)), y comprueba que ve el iPhone.",
+        "[platform::windows]Si iTunes está instalado, desinstálalo junto con Apple Mobile Device Support e instala Dispositivos Apple desde Microsoft Store.",
+        "[platform::linux]Comprueba que usbmuxd está instalado y en marcha."
+      ],
+      "trust": [
+        "Desbloquea el iPhone, ve a la pantalla de inicio y acepta la pregunta Confiar."
+      ],
+      "device_coms": [
+        "Comprueba que el iPhone está conectado a este ordenador.",
+        "Desconéctalo y vuelve a conectarlo. Si sigue fallando, prueba otro puerto USB y otro cable."
+      ],
+      "not_logged_in": [
+        "Primero inicia sesión con tu cuenta de Apple."
+      ],
+      "no_device_selected": [
+        "Primero elige tu iPhone."
+      ],
+      "anisette": [
+        "Comprueba la conexión a internet de este ordenador.",
+        "Elige otro servidor anisette en los ajustes, y prueba varios.",
+        "Comprueba que ((link:{{anisetteServerUrl}})) se abre en un navegador."
+      ],
+      "keyring": [
+        "Activa No usar el llavero en los ajustes para evitarlo. Es menos seguro."
+      ],
+      "misc": [
+        "Vuelve a intentarlo. Reiniciar el instalador, el ordenador o el iPhone puede ayudar."
+      ],
+      "admin": [
+        "Prueba a ejecutar el instalador como administrador."
+      ],
+      "filesystem": [
+        "Comprueba que el instalador puede leer y escribir archivos en este ordenador."
+      ],
+      "not_enough_app_ids": [
+        "A tu cuenta de Apple no le queda ningún App ID para Cartouche: una cuenta gratuita tiene 10 por semana.",
+        "Un App ID caduca 7 días después de crearse y no se puede borrar antes. Vuelve a intentarlo entonces."
+      ],
+      "max_apps": [
+        "Una cuenta de Apple gratuita puede tener 3 apps propias instaladas a la vez, caducadas incluidas.",
+        "Borra otra app que instalaste tú mismo y vuelve a intentarlo."
+      ]
+    },
+    "support_message": "Si sigue fallando, pulsa Copiar y pega el error en una <issues>issue de Cartouche</issues>."
+  },
+  "signing": {
+    "title": "Tu certificado",
+    "hint": "Elige tu certificado de firma (.p12) y su perfil de aprovisionamiento. La firma se hace en este ordenador; no hace falta ningún ID de Apple.",
+    "choose_p12": "Elegir el certificado (.p12)",
+    "choose_profile": "Elegir su perfil (.mobileprovision)",
+    "password": "Contraseña del certificado (déjala vacía si no tiene)",
+    "limitations": "Los juegos se abren en lugar de Cartouche, nunca detrás de la consola. Cartouche no se renueva cada semana: instala sus actualizaciones con este instalador. La memoria ampliada depende de tu perfil.",
+    "needs_files": "Elige tu certificado (.p12) y su perfil.",
+    "needs_ready": "Elige un iPhone, luego tu certificado y su perfil.",
+    "mode_label": "Firmar Cartouche con",
+    "mode_certificate": "Certificado (.p12)",
+    "profile_checking": "Comprobando el perfil de aprovisionamiento…",
+    "profile_invalid": "No se puede leer este perfil de aprovisionamiento. Elige un archivo .mobileprovision válido.",
+    "no_memory_limit": "Este perfil no tiene la memoria ampliada: la mayoría de los juegos no arrancarán. Sin ella, la app tiene unos 3 GB de memoria.",
+    "profile_other_app": "Este perfil es para {{app}}, no para Cartouche: iOS no lo instalaría. Elige un perfil comodín (su App ID termina en *), o uno hecho para io.github.clabeuhtegrite.cartouche.",
+    "install_hint": "Cartouche firmado con tu certificado y los permisos que da tu perfil de aprovisionamiento.",
+    "step_install": "Firmarlo con tu certificado e instalarlo",
+    "step_handoff": "Poner tu certificado, cifrado, en Cartouche",
+    "success_message": "Abre Cartouche en el iPhone: toma tu certificado solo. Si iOS te pide confiar en el desarrollador o activar el modo de desarrollador, hazlo en Ajustes. No hace falta ni ID de Apple ni archivo de emparejamiento."
+  }
+}

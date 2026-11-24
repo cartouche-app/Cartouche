@@ -5,6 +5,8 @@ import LanguageDetector from "i18next-browser-languagedetector";
 const languages = [
   ["en", "English"],
   ["fr", "Français"],
+  ["es", "Español"],
+  ["de", "Deutsch"],
 ] as const;
 
 export const sortedLanguages = [...languages].sort((a, b) =>

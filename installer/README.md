@@ -8,7 +8,7 @@ The app that puts Cartouche on an iPhone or an iPad from a Mac or a Windows PC, 
 
 Cartouche then opens on its setup with the pairing file and the certificate in place: the player only signs in to the built-in SideStore ([launcher/README.md](../launcher/README.md#setup)). Installing again over Cartouche keeps its App ID, its games and their saves, and updates it to the latest release.
 
-The window also installs Cartouche from an IPA of Cartouche on the computer, and puts the pairing file in Cartouche again, after the iPhone was erased or its stored pairing deleted. Settings hold the language (English or French), the anisette server, the account's certificates and App IDs, the logs, and the pairing stored for the selected iPhone.
+The window also installs Cartouche from an IPA of Cartouche on the computer, and puts the pairing file in Cartouche again, after the iPhone was erased or its stored pairing deleted. Settings hold the language (English, French, Spanish or German), the anisette server, the account's certificates and App IDs, the logs, and the pairing stored for the selected iPhone.
 
 It installs nothing but Cartouche: an IPA whose bundle identifier is not Cartouche's is refused, and it never downloads anything but Cartouche's own releases.
 
@@ -31,7 +31,7 @@ The installer is a fork of [iloader](https://github.com/nab138/iloader) by nab13
 
 - **Cartouche only.** [`src-tauri/src/cartouche.rs`](src-tauri/src/cartouche.rs) reads Cartouche's source, downloads its newest release with a progress bar and checks it, finds Cartouche on the iPhone by its bundle identifier, with or without the team appended, and places the pairing file in it. iloader's list of apps, its other installs and its pairing page are gone.
 - **Increased Memory Limit and the certificate.** isideload asks for the capability on Cartouche's App ID, and takes Cartouche for a LiveContainer+SideStore by its `com.SideStore.SideStore` framework, so it writes the certificate into it ([app/README.md](../app/README.md#identity)).
-- **One window of three steps**, with Cartouche's icon and colours, in English and French ([`src/locales`](src/locales)). The account's password stays in the computer's keychain, when there is one.
+- **One window of three steps**, with Cartouche's icon and colours, in English, French, Spanish and German ([`src/locales`](src/locales)). The account's password stays in the computer's keychain, when there is one.
 - **No updater.** The window shows its version; a new one is a new release.
 - **Names of its own:** the app `Cartouche Installer`, the identifier `io.github.clabeuhtegrite.cartouche.installer`, its own keychain service and its own label on the pairing records and certificates it makes. iloader's name and logos are its author's ([iloader's LICENSE-BRANDING](https://github.com/nab138/iloader/blob/main/LICENSE-BRANDING)); the installer uses neither.
 
@@ -50,7 +50,7 @@ npm run build                 # the window only: TypeScript, then Vite
 (cd src-tauri && cargo test --locked --features ui-tests --test ui)   # the window's, once built
 ```
 
-The tests run the installer against a fake iPhone, fake Apple, anisette and GitHub servers and a keychain in memory, never the real ones: from listing the iPhone to Cartouche installed with its certificate and pairing file, and what goes wrong on the way. The window's tests click through the window as it ships, in English and French; on Linux they need a display (`xvfb-run -a`). What they cover, and how to add one: [src-tauri/tests/README.md](src-tauri/tests/README.md).
+The tests run the installer against a fake iPhone, fake Apple, anisette and GitHub servers and a keychain in memory, never the real ones: from listing the iPhone to Cartouche installed with its certificate and pairing file, and what goes wrong on the way. The window's tests click through the window as it ships, in English, French, Spanish and German; on Linux they need a display (`xvfb-run -a`). What they cover, and how to add one: [src-tauri/tests/README.md](src-tauri/tests/README.md).
 
 On Windows, isideload's cryptography needs Strawberry Perl, make, and the Visual Studio build tools' environment, as in iloader's own build.
 
