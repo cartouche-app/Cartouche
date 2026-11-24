@@ -78,12 +78,12 @@ struct BridgeView: View {
                     Divider().padding(.leading, 12)
                     if let place = model.macGames.folder, let connection = place.connection {
                         // The iPhone's, on one of the player's connections:
-                        // chosen there.
+                        // chosen there, or on the console's Storage page.
                         let name = ConsoleLink.connectionName(connection) ?? tr("its connection", "sa connexion")
                         FolderRow(symbol: "externaldrive.connected.to.line.below", title: tr("Saves folder", "Dossier des sauvegardes"),
                                   path: place.path.isEmpty ? name : name + " › " + place.path.split(separator: "/").joined(separator: " › "),
-                                  note: tr("The iPhone’s, chosen on it: this Mac reaches it through the same connection, “\(name)”.",
-                                           "Celui de l’iPhone, choisi sur lui : ce Mac l’atteint par la même connexion, « \(name) ».")) {
+                                  note: tr("The iPhone’s, chosen on it or on the console’s Storage page: this Mac reaches it through the same connection, “\(name)”.",
+                                           "Celui de l’iPhone, choisi sur lui ou dans la page Stockage de la console : ce Mac l’atteint par la même connexion, « \(name) ».")) {
                             EmptyView()
                         }
                     } else {
@@ -315,8 +315,8 @@ private struct IPhoneGamesSection: View {
                     VStack(alignment: .leading, spacing: 0) {
                         FolderRow(symbol: "externaldrive.connected.to.line.below", title: tr("Games folder", "Dossier des jeux"),
                                   path: folder.path.isEmpty ? name : name + " › " + folder.path.split(separator: "/").joined(separator: " › "),
-                                  note: tr("The iPhone’s, chosen on it: this Mac sends its IPAs and its Mac apps there too, through the same connection, “\(name)”, the newest first, and never removes anything there.",
-                                           "Celui de l’iPhone, choisi sur lui : ce Mac y envoie aussi ses IPA et ses apps Mac, par la même connexion, « \(name) », les plus récentes d’abord, et n’y supprime jamais rien.")) {
+                                  note: tr("The iPhone’s, chosen on it or on the console’s Storage page: this Mac sends its IPAs and its Mac apps there too, through the same connection, “\(name)”, the newest first, and never removes anything there.",
+                                           "Celui de l’iPhone, choisi sur lui ou dans la page Stockage de la console : ce Mac y envoie aussi ses IPA et ses apps Mac, par la même connexion, « \(name) », les plus récentes d’abord, et n’y supprime jamais rien.")) {
                             Button(tr("Send now", "Envoyer maintenant")) { games.round() }
                                 .controlSize(.small)
                                 .disabled(games.progress != nil)

@@ -477,12 +477,18 @@ final class CartoucheTelemetry: ObservableObject {
             "setUp": .flag(setup.isComplete),
             "storage": .text(CartoucheStorageSettings.shared.location(.games)?.server.kind.rawValue ?? "none"),
             "saves": .text(CartoucheStorageSettings.shared.location(.saves)?.server.kind.rawValue ?? "none"),
+            // How many games folders Cartouche reads (decision 142): never
+            // their servers or paths.
+            "gamesFolders": .number(Double(CartoucheStorageSettings.shared.gamesFolders.all.count)),
             // The Apple ID's, or the player's own certificate, given by the
             // Cartouche Installer or on the iPhone (docs/imported-signing.md).
             "signing": .text(CartoucheImportedSigning.mode.rawValue),
             // Whether Tailscale is connected, which the player installs
             // apart: never their tailnet, its names or its addresses.
             "tailscale": .flag(CartoucheTailscale.isConnected),
+            // Whether this iPhone is linked to a Cartouche Cloud account:
+            // never the account.
+            "cloud": .flag(CartoucheCloudLink.shared.isLinked),
         ]
         // What it is made of: never the Apple ID, only whether there is one.
         fields.merge(setup.facts.fields) { _, made in made }
@@ -567,47 +573,18 @@ final class CartoucheTelemetry: ObservableObject {
         // Where it came from: a file, the kind of storage, or Cartouche
         // Cloud; nothing of the server nor of the account.
         if let from = CartoucheGameActions.shared.installedFrom { fields["from"] = .text(from) }
+        // From a Mac, how it was reached: the cable, the tailnet or the
+        // network, never its address.
+        if let link = CartoucheGameActions.shared.installedLink { fields["link"] = .text(link) }
         event("game.installed", game: found.isEmpty ? catalog.titleId(matchingName: app.displayName) : found, fields: fields)
     }
 
     /// An error Cartouche showed: what it was doing, the error's domain and
     /// code with those under it, and why it failed (CartoucheFailure): its
     /// cause, the step, how far it got and how long it took, the error's
-    /// names and numbers. Never its words.
+    /// names and numbers (CartoucheErrorEvent). Never its words.
     private func noteError(_ note: Notification) {
-        var fields: [String: CartoucheTelemetryValue] = [:]
-        let failure = note.userInfo?["failure"] as? CartoucheFailure
-        if let failure {
-            fields = failure.fields
-        }
-        if let origin = note.userInfo?["origin"] as? String {
-            fields["origin"] = .text(origin)
-        }
-        // The built-in SideStore's error comes back as its text alone: its
-        // codes come with the failure.
-        if let codes = failure?.codes {
-            fields["error"] = .text(codes)
-        } else if let error = note.userInfo?["error"] as? Error {
-            fields["error"] = .text(Self.codes(of: error))
-        }
-        // What Cartouche checks by itself, such as the games folder at each
-        // return, fails whenever the player is away from home.
-        if let background = note.userInfo?["background"] as? Bool {
-            fields["background"] = .flag(background)
-        }
-        event("error", fields: fields)
-    }
-
-    /// "NSCocoaErrorDomain 640 < NSPOSIXErrorDomain 28": an error and the
-    /// ones under it.
-    static func codes(of error: Error) -> String {
-        var parts: [String] = []
-        var current: NSError? = error as NSError
-        while let found = current, parts.count < 4 {
-            parts.append("\(found.domain) \(found.code)")
-            current = found.userInfo[NSUnderlyingErrorKey] as? NSError
-        }
-        return parts.joined(separator: " < ")
+        event("error", fields: CartoucheErrorEvent.fields(of: note.userInfo))
     }
 
     /// Queues an event, if the player has telemetry on.

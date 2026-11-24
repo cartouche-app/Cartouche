@@ -14,13 +14,20 @@
 //  saves folder, This Mac: the Builder's own, where the console takes the
 //  games it shows and the Builder keeps the saves of the games played
 //  here, which the player changes in the Builder; unless the saves folder
-//  chosen on the iPhone is on one of the connections, where the Builder
-//  keeps them then, and which the page shows as the iPhone does. The games
-//  folder chosen on the iPhone, when it is on one of the connections, the
-//  page shows under This Mac: the Builder sends its games there, how many
-//  went, the one going, or why none goes; then the other games folders the
+//  of the iPhones is on one of the connections, where the Builder keeps
+//  them then, and which the page shows as the iPhone does. The games
+//  folder of the iPhones, when it is on one of the connections, the page
+//  shows under This Mac: the Builder sends its games there, how many went,
+//  the one going, or why none goes; then the other games folders the
 //  iPhone reads, where the console finds the Mac apps another Mac sent too,
 //  each whether it answers.
+//
+//  The player changes those folders here as on an iPhone, on one of the
+//  connections: Change folder, Add another games folder, Stop reading this
+//  folder, or Choose a folder when none is on a connection. The app keeps
+//  the change as the folders chosen last, which the paired iPhones take
+//  the next time they give their connections (CartoucheChosenFolders,
+//  changing): the folder chosen last wins, on whichever side.
 //
 
 import Combine
@@ -116,6 +123,13 @@ extension CartoucheMacConsole {
         return try? JSONEncoder().encode(settings.connections())
     }
 
+    /// CHANGE, made on the Storage page to the folders for the games or the
+    /// saves, for the app (onChangeFolders).
+    func changeFolders(_ change: CartoucheChosenFolders.Change) {
+        guard let data = try? JSONEncoder().encode(change) else { return }
+        onChangeFolders(data)
+    }
+
     /// A moment after the player adds, changes or removes one of their
     /// connections here, on the Storage page: the iPhone's saves folder,
     /// where the Builder keeps this Mac's games' saves, may be on it.
@@ -152,21 +166,57 @@ extension CartoucheMacConsole {
 /// This Mac, on the Storage page in place of the iPhone's games folder and
 /// saves folder: the Builder's own, which the player changes in the
 /// Builder, and the row of those sections that opens how to name the
-/// games.
+/// games. Then the iPhones' games folders, on a connection, which the
+/// player changes here too, BROWSE looking through a connection's folders
+/// for one: for a role, ADDING another games folder; with none on a
+/// connection, a way to choose one, as for the saves folder.
 struct CartoucheMacFoldersSection: View {
     @ObservedObject private var console = CartoucheMacConsole.shared
     @ObservedObject private var settings = CartoucheStorageSettings.shared
+    let browse: (_ server: CartoucheStorageServer, _ role: CartoucheStorageRole, _ adding: Bool) -> Void
 
     // Written out, as the private state above makes the synthesized
     // initializer private.
-    init() {}
+    init(browse: @escaping (_ server: CartoucheStorageServer, _ role: CartoucheStorageRole, _ adding: Bool) -> Void) {
+        self.browse = browse
+    }
+
+    /// The connections a folder is chosen on.
+    private var choices: [CartoucheStorageServer] {
+        settings.servers.filter(\.travels)
+    }
 
     var body: some View {
         thisMac
         // The iPhone's games folder, on a connection: the Builder sends its
         // games there.
         if let folder = console.iPhoneGames, let server = settings.server(folder.connection) {
-            CartoucheMacIPhoneGamesSection(folder: folder, server: server) { console.onSendGames() }
+            CartoucheMacIPhoneGamesSection(folder: folder, server: server, choices: choices, browse: browse,
+                                           send: { console.onSendGames() },
+                                           stopReading: { console.changeFolders(.removeGames(connection: $0, path: $1)) })
+        } else if !choices.isEmpty {
+            chooseSection(.games, header: CartoucheText.macIPhoneGamesHeader, footer: CartoucheText.macIPhoneGamesChooseFooter)
+        }
+        // The saves folder, on a connection, shows below as the iPhone's
+        // (CartoucheStorageView.savesSection).
+        if !settings.keepsMacSavesOnConnection && !choices.isEmpty {
+            chooseSection(.saves, header: CartoucheText.storageSavesFolder, footer: CartoucheText.macStorageSavesChooseFooter)
+        }
+    }
+
+    /// Choose a folder for ROLE on one of the connections, with none of the
+    /// iPhones' there.
+    private func chooseSection(_ role: CartoucheStorageRole, header: String, footer: String) -> some View {
+        CartoucheSection {
+            Menu {
+                CartoucheMacFolderChoices(choices: choices, role: role, browse: browse)
+            } label: {
+                CartoucheMacMenuLabel(CartoucheText.storageChooseFolder, symbol: "folder.badge.plus")
+            }
+        } header: {
+            Text(header)
+        } footer: {
+            Text(footer)
         }
     }
 
@@ -225,13 +275,24 @@ struct CartoucheMacFoldersSection: View {
 struct CartoucheMacIPhoneGamesSection: View {
     let folder: CartoucheMacGamesFolder
     let server: CartoucheStorageServer
+    /// The connections another folder is chosen on, and how one of theirs
+    /// is looked for (CartoucheMacFoldersSection).
+    let choices: [CartoucheStorageServer]
+    let browse: (_ server: CartoucheStorageServer, _ role: CartoucheStorageRole, _ adding: Bool) -> Void
     let send: () -> Void
+    /// Stop reading this folder, under another games folder.
+    let stopReading: (_ connection: UUID, _ path: String) -> Void
     @ObservedObject private var settings = CartoucheStorageSettings.shared
 
-    init(folder: CartoucheMacGamesFolder, server: CartoucheStorageServer, send: @escaping () -> Void) {
+    init(folder: CartoucheMacGamesFolder, server: CartoucheStorageServer, choices: [CartoucheStorageServer],
+         browse: @escaping (_ server: CartoucheStorageServer, _ role: CartoucheStorageRole, _ adding: Bool) -> Void,
+         send: @escaping () -> Void, stopReading: @escaping (_ connection: UUID, _ path: String) -> Void) {
         self.folder = folder
         self.server = server
+        self.choices = choices
+        self.browse = browse
         self.send = send
+        self.stopReading = stopReading
     }
 
     var body: some View {
@@ -249,6 +310,11 @@ struct CartoucheMacIPhoneGamesSection: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
+            Menu {
+                CartoucheMacFolderChoices(choices: choices, role: .games, browse: browse)
+            } label: {
+                CartoucheMacMenuLabel(CartoucheText.storageChangeFolder, symbol: "folder")
+            }
             Button(CartoucheText.macIPhoneGamesSendNow, systemImage: "arrow.up.circle", action: send)
                 .disabled(sending)
             ForEach(Array(folder.others.enumerated()), id: \.offset) { _, other in
@@ -256,6 +322,12 @@ struct CartoucheMacIPhoneGamesSection: View {
                     otherRows(other, server: server)
                 }
             }
+            Menu {
+                CartoucheMacFolderChoices(choices: choices, role: .games, adding: true, browse: browse)
+            } label: {
+                CartoucheMacMenuLabel(CartoucheText.storageAddGamesFolder, symbol: "folder.badge.plus")
+            }
+            .accessibilityIdentifier(CartoucheStorageView.addGamesRow)
         } header: {
             Text(folder.others.isEmpty ? CartoucheText.macIPhoneGamesHeader : CartoucheText.macIPhoneGamesSeveralHeader)
         } footer: {
@@ -281,6 +353,11 @@ struct CartoucheMacIPhoneGamesSection: View {
             Label(CartoucheText.macIPhoneGamesOffers(other.offers), systemImage: "arrow.down.circle")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
+        }
+        Button(role: .destructive) {
+            stopReading(other.connection, other.path)
+        } label: {
+            Label(CartoucheText.storageStopReading, systemImage: "xmark.circle")
         }
     }
 
@@ -337,6 +414,55 @@ struct CartoucheMacIPhoneGamesSection: View {
     }
 }
 
+/// A menu's label on the Storage page. In a form, macOS draws a menu's
+/// symbol right against its words, where it keeps a button's apart: an en
+/// space keeps them as far apart as on the page's buttons.
+struct CartoucheMacMenuLabel: View {
+    let title: String
+    let symbol: String
+
+    init(_ title: String, symbol: String) {
+        self.title = title
+        self.symbol = symbol
+    }
+
+    var body: some View {
+        Label("\u{2002}" + title, systemImage: symbol)
+    }
+}
+
+/// The connections to look for ROLE's folder on, or, ADDING, for another
+/// games folder, in a menu of the Storage page: one that lets the account
+/// read only shows, but cannot hold the saves (as on the iPhone).
+struct CartoucheMacFolderChoices: View {
+    let choices: [CartoucheStorageServer]
+    let role: CartoucheStorageRole
+    var adding = false
+    let browse: (_ server: CartoucheStorageServer, _ role: CartoucheStorageRole, _ adding: Bool) -> Void
+    @ObservedObject private var settings = CartoucheStorageSettings.shared
+
+    init(choices: [CartoucheStorageServer], role: CartoucheStorageRole, adding: Bool = false,
+         browse: @escaping (_ server: CartoucheStorageServer, _ role: CartoucheStorageRole, _ adding: Bool) -> Void) {
+        self.choices = choices
+        self.role = role
+        self.adding = adding
+        self.browse = browse
+    }
+
+    var body: some View {
+        ForEach(choices) { server in
+            let readOnly = settings.readOnlyServers.contains(server.id)
+            Button {
+                browse(server, role, adding)
+            } label: {
+                Label(readOnly ? CartoucheText.storageReadOnlyServer(server.name) : server.name,
+                      systemImage: CartoucheStorageView.symbol(server))
+            }
+            .disabled(readOnly && role == .saves)
+        }
+    }
+}
+
 extension CartoucheText {
     static var macStorageThisMac: String { s("mac.storage.thisMac", "This Mac") }
     static var macStorageThisMacFooter: String {
@@ -352,7 +478,7 @@ extension CartoucheText {
     /// Under the iPhone's saves folder, on a connection.
     static func macStorageIPhoneSavesFooter(_ kept: Int) -> String {
         f("mac.storage.iPhoneSaves.footer",
-          "The saves folder chosen on your iPhone: Cartouche Builder keeps the saves of the games played on this Mac there too, through the same connection, before each game and as it saves, as the iPhone does. The %lld newest copies are kept. To change it, choose another on the iPhone.",
+          "The saves folder of your iPhones: Cartouche Builder keeps the saves of the games played on this Mac there too, through the same connection, before each game and as it saves, as the iPhone does. The %lld newest copies are kept. Change it here or on an iPhone: the folder chosen last wins, and your iPhones take it the next time Cartouche opens on them.",
           kept)
     }
 
@@ -398,11 +524,21 @@ extension CartoucheText {
     }
     static var macIPhoneGamesSeveralFooter: String {
         s("mac.storage.iPhoneGames.several.footer",
-          "The games folders chosen on your iPhone: Cartouche Builder sends the first each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent to any of them install from the library, from a folder that answers. To change them, do so on the iPhone.")
+          "The games folders of your iPhones: Cartouche Builder sends the first each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent to any of them install from the library, from a folder that answers. Change them here or on an iPhone: the folders chosen last win, and your iPhones take them the next time Cartouche opens on them.")
     }
     static var macIPhoneGamesFooter: String {
         s("mac.storage.iPhoneGames.footer",
-          "The games folder chosen on your iPhone: Cartouche Builder sends it each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent there install from the library. To change it, choose another on the iPhone.")
+          "The games folder of your iPhones: Cartouche Builder sends it each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent there install from the library. Change it here or on an iPhone: the folder chosen last wins, and your iPhones take it the next time Cartouche opens on them.")
+    }
+    /// With none of the iPhones' games folders on a connection.
+    static var macIPhoneGamesChooseFooter: String {
+        s("mac.storage.iPhoneGames.choose.footer",
+          "None of your iPhones’ games folders is on one of your connections. Choose one here: your iPhones read it too, the next time Cartouche opens on them, and Cartouche Builder sends its games there.")
+    }
+    /// With the iPhones' saves folder on none of the connections.
+    static var macStorageSavesChooseFooter: String {
+        s("mac.storage.saves.choose.footer",
+          "The saves of the games played on this Mac stay in Cartouche Builder’s saves folder. Choose a folder on one of your connections to keep them there with your iPhones’: your iPhones take it too, the next time Cartouche opens on them, and the newest saves win.")
     }
 
     /// Under the connections of the console's Storage page.

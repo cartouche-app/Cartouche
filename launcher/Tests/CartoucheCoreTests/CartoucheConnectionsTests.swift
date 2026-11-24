@@ -8,7 +8,7 @@
 //  secret the other side does not give kept, the same place added on both
 //  sides made one under the ID that sorts first, what stays on its device
 //  left out, and both sides ending with the same whichever asked; of the
-//  folders its iPhones chose, those a Mac keeps.
+//  folders its iPhones chose, those a Mac keeps, and gives back.
 //
 
 import Foundation
@@ -282,6 +282,21 @@ final class CartoucheConnectionsTests: XCTestCase {
         XCTAssertEqual(back.places, told)
         // From an iPhone a little older, which tells none.
         let older = try JSONDecoder().decode(CartoucheBridgeRequest.self, from: Data(#"{"op":"connections","connections":[]}"#.utf8))
+        XCTAssertNil(older.places)
+    }
+
+    /// The Mac answers with the folders it keeps, chosen last on its console
+    /// or on another iPhone; a Mac a little older says none.
+    func testTheFoldersTheMacKeepsComeBack() throws {
+        var response = CartoucheBridgeResponse()
+        response.connections = []
+        let kept = CartoucheChosenFolders(games: .init(connection: a, path: "Jeux", chosen: now + 60),
+                                          saves: .init(connection: b, path: "Saves", chosen: now),
+                                          otherGames: [.init(connection: c, path: "jeux", chosen: now + 60)])
+        response.places = kept
+        let back = try JSONDecoder().decode(CartoucheBridgeResponse.self, from: JSONEncoder().encode(response))
+        XCTAssertEqual(back.places, kept)
+        let older = try JSONDecoder().decode(CartoucheBridgeResponse.self, from: Data(#"{"connections":[]}"#.utf8))
         XCTAssertNil(older.places)
     }
 }

@@ -445,6 +445,11 @@ struct CartoucheGamesView: View {
             storedGames.refresh()
             actions.copySaves(of: sharedModel.apps)
         }
+        // The games folders chosen later on the paired Mac's console, or on
+        // another iPhone, which the Mac gave: read at once.
+        .onReceive(CartoucheStorageSettings.shared.gamesFoldersTaken) { _ in
+            storedGames.refresh()
+        }
     }
 
     /// The home, and every game one step further.

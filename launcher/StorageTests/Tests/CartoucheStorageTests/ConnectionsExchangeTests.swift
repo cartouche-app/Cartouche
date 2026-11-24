@@ -13,7 +13,8 @@
 //  made here meanwhile stays; a Mac too old to take them is left alone;
 //  each change goes to the Mac a moment after it is made; the folders
 //  chosen here go with them, on a connection the Mac has or on none, with
-//  when they were chosen. The rule both
+//  when they were chosen, and those chosen later on the Mac come back
+//  here. The rule both
 //  sides follow is tested on its own (launcher/Tests,
 //  CartoucheConnectionsTests), the Mac's side in builder/mac's tests
 //  (BridgeConnectionsTests). It needs no server, so it always runs.
@@ -219,6 +220,41 @@ final class ConnectionsExchangeTests: XCTestCase {
         let removed = try XCTUnwrap(settings.chosenFolders().saves)
         XCTAssertNil(removed.connection)
         XCTAssertGreaterThanOrEqual(removed.chosen, chosenAgain.chosen)
+    }
+
+    /// The player chose, on the Mac's console, folders of the NAS for the
+    /// games and the saves, after the Mac's own folders here: the exchange
+    /// brings the NAS and the folders, the Mac's own staying among the
+    /// games folders. Chosen here later still, they go to the Mac, which
+    /// keeps them and gives them back.
+    func testTheFoldersChosenLaterOnTheMacComeHere() async throws {
+        let nas = CartoucheConnection(id: UUID(), kind: "smb", name: "NAS", host: "192.168.1.2", username: "player", share: "Games",
+                                      secret: "nas password", changed: Date())
+        mac.takeConnections([nas])
+        let settings = settings()
+        let paired = try await pair(in: settings)
+        settings.setPlace(CartoucheStoragePlace(server: paired.id, path: "Games"), for: .games)
+        settings.setPlace(CartoucheStoragePlace(server: paired.id, path: "Saves"), for: .saves)
+        let onMac = Date().addingTimeInterval(0.001)
+        mac.keepFolders(CartoucheChosenFolders(games: .init(connection: nas.id, path: "Cartouche/Jeux", chosen: onMac),
+                                               saves: .init(connection: nas.id, path: "Cartouche/Sauvegardes", chosen: onMac)))
+
+        let took = await CartoucheConnectionsExchange.exchange(with: paired, settings: settings)
+        XCTAssertTrue(took)
+        XCTAssertEqual(settings.place(.games), CartoucheStoragePlace(server: nas.id, path: "Cartouche/Jeux"))
+        XCTAssertEqual(settings.otherGames, [CartoucheStoragePlace(server: paired.id, path: "Games")], "the Mac's own, read too")
+        XCTAssertEqual(settings.place(.saves), CartoucheStoragePlace(server: nas.id, path: "Cartouche/Sauvegardes"))
+        XCTAssertEqual(settings.chosen[.saves], onMac)
+        XCTAssertEqual(mac.keptFolders?.saves?.path, "Cartouche/Sauvegardes", "the iPhone's, older, left it")
+
+        // Chosen here since: the Mac takes it, and gives it back.
+        try await Task.sleep(nanoseconds: 10_000_000)
+        settings.setPlace(CartoucheStoragePlace(server: nas.id, path: "Autres"), for: .saves)
+        let again = await CartoucheConnectionsExchange.exchange(with: paired, settings: settings)
+        XCTAssertTrue(again)
+        XCTAssertEqual(mac.keptFolders?.saves?.path, "Autres")
+        XCTAssertEqual(settings.place(.saves), CartoucheStoragePlace(server: nas.id, path: "Autres"))
+        XCTAssertEqual(settings.place(.games), CartoucheStoragePlace(server: nas.id, path: "Cartouche/Jeux"))
     }
 
     func testAFolderAnOlderCartoucheChoseGoesAsChosenLongAgo() throws {

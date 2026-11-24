@@ -29,7 +29,9 @@
 //  (BridgeConnectionsSource, CartoucheConnections.swift), with the folders
 //  the player chose on the iPhone for the games and the saves, which the
 //  Mac follows when they are on one of them; its info says so
-//  (hasConnections).
+//  (hasConnections). The Mac answers with the folders it keeps, those
+//  chosen last, on its console or on another iPhone, which the iPhone
+//  takes when they are later than its own.
 //
 //  With Tailscale on this Mac, which the player installs apart, its info
 //  tells the paired iPhone the Mac's addresses in their tailnet
@@ -100,6 +102,16 @@ public protocol BridgeConnectionsSource: AnyObject {
     /// throws when it could not take them, which leaves the iPhone's as
     /// they are.
     func bridgeConnections(_ theirs: [CartoucheConnection], places: CartoucheChosenFolders?) throws -> [CartoucheConnection]
+    /// The folders for the games and the saves the Mac keeps, once it took
+    /// those an iPhone told it: the ones chosen last, on any of its iPhones
+    /// or on the console's Storage page, which the iPhone takes when they
+    /// are later than its own; nil for none.
+    func bridgeFolders() -> CartoucheChosenFolders?
+}
+
+public extension BridgeConnectionsSource {
+    /// None: the iPhone keeps its own.
+    func bridgeFolders() -> CartoucheChosenFolders? { nil }
 }
 
 public final class BridgeServer: @unchecked Sendable {
@@ -486,7 +498,11 @@ public final class BridgeServer: @unchecked Sendable {
         do {
             var response = CartoucheBridgeResponse()
             let places = request.places
-            response.connections = try await MainActor.run { try source.bridgeConnections(theirs, places: places) }
+            let answer: ([CartoucheConnection], CartoucheChosenFolders?) = try await MainActor.run {
+                (try source.bridgeConnections(theirs, places: places), source.bridgeFolders())
+            }
+            response.connections = answer.0
+            response.places = answer.1
             return response
         } catch {
             return .failure(.failed, "connections")

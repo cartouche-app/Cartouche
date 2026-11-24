@@ -122,6 +122,23 @@ final class CartoucheTailscaleTests: XCTestCase {
         XCTAssertEqual(CartoucheTailscale.addressesToTry(host: " ", tailnet: ["100.101.102.103"], tailscaleOn: true), ["100.101.102.103"])
     }
 
+    /// How a game installed from the player's Mac came, for the
+    /// measurements (game.installed's link): never the address.
+    func testTheWayToTheMacIsTheCableTheTailnetOrTheNetwork() {
+        XCTAssertEqual(CartoucheMacLink.of(cable: true, address: nil), .cable)
+        XCTAssertEqual(CartoucheMacLink.of(cable: false, address: "192.168.1.20"), .network)
+        XCTAssertEqual(CartoucheMacLink.of(cable: false, address: "fe80::1c2b:3d4e"), .network)
+        XCTAssertEqual(CartoucheMacLink.of(cable: false, address: nil), .network)
+        XCTAssertEqual(CartoucheMacLink.of(cable: false, address: "100.101.102.103"), .tailnet)
+        XCTAssertEqual(CartoucheMacLink.of(cable: false, address: "fd7a:115c:a1e0::3"), .tailnet)
+        XCTAssertEqual(CartoucheMacLink.of(cable: false, address: "mac.tail1234.ts.net"), .tailnet)
+        // An address of the tailnet its Cartouche Builder told, whatever it
+        // looks like.
+        XCTAssertEqual(CartoucheMacLink.of(cable: false, address: "10.0.0.7", tailnet: ["10.0.0.7"]), .tailnet)
+        XCTAssertEqual(CartoucheMacLink.of(cable: true, address: "100.101.102.103"), .cable)
+        XCTAssertEqual(CartoucheMacLink.allCases.map(\.rawValue), ["cable", "tailnet", "network"])
+    }
+
     // MARK: What Cartouche keeps of the Mac
 
     private let home = CartoucheMacAddresses(host: "192.168.1.20", port: 47920, tailnet: [])
