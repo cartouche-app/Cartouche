@@ -221,38 +221,56 @@ struct BuildSourceChoice: View {
     var body: some View {
         let config = model.config ?? BuilderConfig()
         let isOpen = open ?? shown
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(BuildSourceChoice.line(BuildFor.choice(config, devices: bridge.devices),
-                                            repository: BuildFor.repository(config, devices: bridge.devices)))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .textSelection(.enabled)
-                Button(isOpen ? tr("Done", "OK") : tr("Change…", "Changer…")) {
-                    withAnimation(.easeInOut(duration: 0.2)) { open = !isOpen }
-                }
-                .buttonStyle(.link)
-                .font(.caption)
-                .disabled(model.config == nil)
-            }
-            if isOpen {
-                VStack(alignment: .leading, spacing: 12) {
-                    BuildForPicker()
-                    Divider()
-                    EngineRepositoryFields(labeled: true)
-                    Text(tr("Chosen before nxnative is downloaded, it is what this step downloads. Changed after, the next build fetches it.",
-                            "Choisi avant que nxnative soit téléchargé, c’est lui que cette étape télécharge. Changé après, la prochaine construction va le chercher."))
+        ScrollViewReader { proxy in
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(BuildSourceChoice.line(BuildFor.choice(config, devices: bridge.devices),
+                                                repository: BuildFor.repository(config, devices: bridge.devices)))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
+                        .textSelection(.enabled)
+                    Button(isOpen ? tr("Done", "OK") : tr("Change…", "Changer…")) {
+                        withAnimation(.easeInOut(duration: 0.2)) { open = !isOpen }
+                    }
+                    .buttonStyle(.link)
+                    .font(.caption)
+                    .disabled(model.config == nil)
                 }
-                .padding(12)
-                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(nsColor: .controlBackgroundColor)))
+                if isOpen {
+                    VStack(alignment: .leading, spacing: 12) {
+                        BuildForPicker()
+                        Divider()
+                        EngineRepositoryFields(labeled: true)
+                        Text(tr("Chosen before nxnative is downloaded, it is what this step downloads. Changed after, the next build fetches it.",
+                                "Choisi avant que nxnative soit téléchargé, c’est lui que cette étape télécharge. Changé après, la prochaine construction va le chercher."))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(12)
+                    .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(nsColor: .controlBackgroundColor)))
+                    .id(BuildSourceChoice.panel)
+                }
+            }
+            .padding(.top, 2)
+            // nxnative's row is the list's last: what Change… opens is brought
+            // into sight, below the steps' fold.
+            .onChange(of: open) { _, now in
+                guard now == true else { return }
+                DispatchQueue.main.async {
+                    withAnimation(.easeInOut(duration: 0.2)) { proxy.scrollTo(BuildSourceChoice.panel, anchor: .bottom) }
+                }
+            }
+            .task {
+                guard shown else { return }
+                try? await Task.sleep(nanoseconds: 300_000_000)
+                proxy.scrollTo(BuildSourceChoice.panel, anchor: .bottom)
             }
         }
-        .padding(.top, 2)
     }
+
+    static let panel = "build-source-choice"
 
     /// Where nxnative comes from, in the player's words.
     static func line(_ choice: BuildFor.Choice, repository: (url: String, branch: String)) -> String {
