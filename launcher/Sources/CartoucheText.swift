@@ -426,6 +426,9 @@ enum CartoucheText {
     static var installDone: String { s("work.install.done", "Installed") }
     static var installGPUTitle: String { s("work.install.gpu", "This iPhone cannot run nxnative’s games") }
     static var installAnyway: String { s("work.install.gpu.anyway", "Install anyway") }
+    /// Beside reasonGPU on an iPhone whose GPU reads no BC: the Mac's
+    /// builds of nxnative-nobc, a separate fork (cartouche_builder/build_for.py).
+    static var installGPUBuilder: String { s("work.install.gpu.builder", "Cartouche on your Mac builds them for this iPhone from nxnative-nobc, a separate fork of nxnative that converts those textures, once the two are paired.") }
     /// Where an app that is not an nxnative game is once installed: on the
     /// System page, as the console shows games only (docs/decisions/154.md).
     /// Up to 0.15.1, "in Apps", LiveContainer's tab, which Cartouche hides.

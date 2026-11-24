@@ -45,6 +45,7 @@
     "unprofiled": false,
     "version": 2,
     "workspace": "",
-    "workspace_limit_gb": 0
+    "workspace_limit_gb": 0,
+    "build_for": ""
   }
 }

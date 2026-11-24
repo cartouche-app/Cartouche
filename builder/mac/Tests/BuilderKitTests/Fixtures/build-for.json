@@ -1,0 +1,209 @@
+{
+  "models": {
+    "iPhone12,1": false,
+    "iPhone12,3": false,
+    "iPhone12,5": false,
+    "iPhone12,8": false,
+    "iPhone13,1": false,
+    "iPhone13,2": false,
+    "iPhone13,3": false,
+    "iPhone13,4": false,
+    "iPhone14,2": false,
+    "iPhone14,3": false,
+    "iPhone14,4": false,
+    "iPhone14,5": false,
+    "iPhone14,6": false,
+    "iPhone14,7": false,
+    "iPhone14,8": false,
+    "iPhone15,2": false,
+    "iPhone15,3": false,
+    "iPhone15,4": false,
+    "iPhone15,5": false,
+    "iPhone16,1": true,
+    "iPhone16,2": true,
+    "iPhone17,1": true,
+    "iPhone17,2": true,
+    "iPhone17,3": true,
+    "iPhone17,4": true,
+    "iPhone17,5": true,
+    "iPhone18,1": true,
+    "iPhone18,2": true,
+    "iPhone18,3": true,
+    "iPhone18,4": true,
+    "iPhone19,1": true,
+    "iPhone19,2": true,
+    "iPhone19,4": true,
+    "iPad12,1": false,
+    "iPad12,2": false,
+    "iPad13,1": false,
+    "iPad13,2": false,
+    "iPad13,4": true,
+    "iPad13,8": true,
+    "iPad13,16": true,
+    "iPad13,17": true,
+    "iPad13,18": false,
+    "iPad13,19": false,
+    "iPad14,1": false,
+    "iPad14,2": false,
+    "iPad14,3": true,
+    "iPad14,5": true,
+    "iPad14,8": true,
+    "iPad14,10": true,
+    "iPad15,3": true,
+    "iPad15,5": true,
+    "iPad15,7": false,
+    "iPad15,8": false,
+    "iPad16,1": true,
+    "iPad16,3": true,
+    "iPad16,5": true,
+    "iPad17,1": true,
+    "Mac16,12": true,
+    "": true,
+    "iPhone15": true,
+    "iPhone15,": true,
+    "iPhone 15,4": true,
+    "iPhone١٥,4": true
+  },
+  "choices": [
+    {
+      "config": {},
+      "devices": [],
+      "kind": "nxnative",
+      "model": "",
+      "device": "",
+      "url": "https://github.com/seedds/nxnative.git",
+      "branch": "main"
+    },
+    {
+      "config": {},
+      "devices": [
+        {
+          "name": "iPhone 17 Pro",
+          "model": "iPhone18,1",
+          "readsBC": true
+        },
+        {
+          "name": "iPhone de Lou",
+          "model": "iPhone15,4",
+          "readsBC": false
+        }
+      ],
+      "kind": "no-bc",
+      "model": "iPhone15,4",
+      "device": "iPhone de Lou",
+      "url": "https://github.com/mianmuhammadse/nxnative-nobc.git",
+      "branch": "no-bc"
+    },
+    {
+      "config": {},
+      "devices": [
+        {
+          "name": "iPhone de Lou",
+          "model": "iPhone15,4"
+        }
+      ],
+      "kind": "no-bc",
+      "model": "iPhone15,4",
+      "device": "iPhone de Lou",
+      "url": "https://github.com/mianmuhammadse/nxnative-nobc.git",
+      "branch": "no-bc"
+    },
+    {
+      "config": {},
+      "devices": [
+        {
+          "name": "iPad",
+          "model": "iPad13,4",
+          "readsBC": false
+        }
+      ],
+      "kind": "no-bc",
+      "model": "iPad13,4",
+      "device": "iPad",
+      "url": "https://github.com/mianmuhammadse/nxnative-nobc.git",
+      "branch": "no-bc"
+    },
+    {
+      "config": {},
+      "devices": [
+        {
+          "name": "iPhone"
+        }
+      ],
+      "kind": "nxnative",
+      "model": "",
+      "device": "",
+      "url": "https://github.com/seedds/nxnative.git",
+      "branch": "main"
+    },
+    {
+      "config": {
+        "build_for": "iPhone18,2"
+      },
+      "devices": [
+        {
+          "name": "iPhone de Lou",
+          "model": "iPhone15,4",
+          "readsBC": false
+        }
+      ],
+      "kind": "nxnative",
+      "model": "iPhone18,2",
+      "device": "",
+      "url": "https://github.com/seedds/nxnative.git",
+      "branch": "main"
+    },
+    {
+      "config": {
+        "build_for": "iPhone14,7"
+      },
+      "devices": [],
+      "kind": "no-bc",
+      "model": "iPhone14,7",
+      "device": "",
+      "url": "https://github.com/mianmuhammadse/nxnative-nobc.git",
+      "branch": "no-bc"
+    },
+    {
+      "config": {
+        "build_for": "iPad15,7"
+      },
+      "devices": [],
+      "kind": "no-bc",
+      "model": "iPad15,7",
+      "device": "",
+      "url": "https://github.com/mianmuhammadse/nxnative-nobc.git",
+      "branch": "no-bc"
+    },
+    {
+      "config": {
+        "engine_url": "https://github.com/someone/nxnative.git",
+        "engine_branch": "dev",
+        "build_for": "iPhone15,4"
+      },
+      "devices": [],
+      "kind": "custom",
+      "model": "",
+      "device": "",
+      "url": "https://github.com/someone/nxnative.git",
+      "branch": "dev"
+    },
+    {
+      "config": {
+        "engine_url": "https://github.com/seedds/nxnative/"
+      },
+      "devices": [
+        {
+          "name": "iPhone de Lou",
+          "model": "iPhone15,4",
+          "readsBC": false
+        }
+      ],
+      "kind": "no-bc",
+      "model": "iPhone15,4",
+      "device": "iPhone de Lou",
+      "url": "https://github.com/mianmuhammadse/nxnative-nobc.git",
+      "branch": "no-bc"
+    }
+  ]
+}

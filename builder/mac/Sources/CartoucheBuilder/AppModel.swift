@@ -277,7 +277,11 @@ final class AppModel: ObservableObject {
             fields["jobs"] = .count(config.jobs)
             fields["keepExtracted"] = .flag(config.keepExtracted)
             fields["policy"] = .text(config.enginePolicy)
-            fields["forkOfNxnative"] = .flag(config.engineURL != BuilderConfig.engineURL || config.engineBranch != BuilderConfig.engineBranch)
+            // nxnative-nobc, for an iPhone without BC (BuildFor), is a fork too.
+            let choice = BuildFor.choice(config, devices: bridge.devices)
+            fields["forkOfNxnative"] = .flag(choice.kind != .nxnative)
+            fields["noBC"] = .flag(choice.kind == .noBC)
+            fields["buildFor"] = .text(config.buildFor.isEmpty ? "paired" : "model")
             fields["gameLanguage"] = .text(config.gameLanguage.isEmpty ? "default" : config.gameLanguage)
         }
         if let engine = library?.engine {
@@ -885,7 +889,7 @@ final class AppModel: ObservableObject {
                 let answer = try await engine.setConfig(changes)
                 apply(answer)
                 let refolded = ["sources", "games", "keys", "workspace", "unprofiled", "skip", "aliases", "engine_policy", "refresh_days",
-                                "ios", "mac", "skip_ios", "skip_mac", "mac_apps"]
+                                "ios", "mac", "skip_ios", "skip_mac", "mac_apps", "build_for", "engine_url", "engine_branch"]
                 if changes.keys.contains(where: refolded.contains) {
                     await refreshLibrary(update: false)
                 }

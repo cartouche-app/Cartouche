@@ -54,7 +54,7 @@ import zipfile
 from dataclasses import asdict, fields
 from pathlib import Path
 
-from . import __version__, batch, config as configs, disks, failure, fallback, ipa as ipas, macapps, schedule, shares, storage, titles, toolchain
+from . import __version__, batch, config as configs, disks, failure, fallback, ipa as ipas, macapps, schedule, shares, storage, build_for, titles, toolchain
 from . import queue as queues
 from . import status as statuses
 from .engine import Commit, EngineError
@@ -391,7 +391,15 @@ def engine_info(ctx: batch.Context, head: str | None) -> dict | None:
         when = int(stamp) if stamp.isdigit() else 0
     except EngineError:
         pass
-    info = {"head": head, "short": head[:12], "time": when, "subject": subject, "url": ctx.config.engine_url, "branch": ctx.config.engine_branch, "commit_url": commit_url(ctx.config.engine_url)}
+    # The nxnative the games are built from now (build_for.py): nxnative's,
+    # the no-bc fork for an iPhone whose GPU reads no BC, or the player's.
+    source = ctx.source or build_for.Source(ctx.config.engine_url, ctx.config.engine_branch, "custom" if build_for.custom(ctx.config) else "nxnative")
+    info = {"head": head, "short": head[:12], "time": when, "subject": subject, "url": source.url, "branch": source.branch, "commit_url": commit_url(source.url),
+            "kind": source.kind}
+    if source.model:
+        info["model"] = source.model
+    if source.device:
+        info["device"] = source.device
     # The branch's newest commit, when the checkout stays on an older one
     # because the newest does not build (fallback.py).
     latest = ctx.engine.latest()

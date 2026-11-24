@@ -40,7 +40,7 @@ from pathlib import Path
 from . import build as builds
 from . import config as configs
 from . import ipa as ipas
-from . import causes, disks, failure, fallback, library, macapps, notify, report, schedule, shares, toolchain
+from . import causes, disks, failure, fallback, library, macapps, notify, report, schedule, shares, build_for, toolchain
 from . import queue as queues
 from . import status as statuses
 from .engine import Engine, EngineError
@@ -151,6 +151,13 @@ class Context:
     config: configs.Config
     engine: Engine
     store: Store
+    # The nxnative the games are built from now: nxnative's, or the no-bc
+    # fork for an iPhone whose GPU reads no BC (build_for.py).
+    source: build_for.Source | None = None
+
+    @property
+    def source_key(self) -> str:
+        return self.source.key if self.source else build_for.key(self.config.engine_url, self.config.engine_branch)
 
     @property
     def workspace(self) -> Workspace:
@@ -173,8 +180,9 @@ def context(paths: Paths | None = None) -> Context:
         if not config.schedule and schedule.installed():
             schedule.uninstall()
         marker.unlink(missing_ok=True)
-    engine = Engine(paths.engine, config.engine_url, config.engine_branch)
-    return Context(paths, config, engine, store)
+    source = build_for.current(config, paths)
+    engine = Engine(paths.engine, source.url, source.branch)
+    return Context(paths, config, engine, store, source)
 
 
 def known_names(ctx: Context) -> dict[str, str]:
@@ -215,7 +223,7 @@ def survey(ctx: Context, update: bool = True, force: set[str] | None = None, log
     identity = toolchain.identity(toolchain.environment(ctx.paths)) if sys.platform == "darwin" else ""
     games = [g for g in found.games if g.title_id in only] if only else found.games
     result = plan(games, ctx.engine, head, profiles, ctx.store, ctx.config, ctx.config.path("games"), identity, force, mac=macapps.place(ctx.config),
-                  held=fallback.splits(ctx.paths))
+                  held=fallback.splits(ctx.paths), source=ctx.source_key)
     result.issues = found.issues
     return result
 
@@ -631,6 +639,7 @@ class Runner:
                     name=str(result.game.get("name") or info.name or ""),
                     duration=result.duration,
                     dirty=info.dirty,
+                    engine=ctx.source_key,
                 )
                 ctx.store.built(title_id, build)
                 if split is not None:
@@ -825,6 +834,7 @@ class Runner:
                 name=str(result.game.get("name") or info.name or ""),
                 duration=result.duration,
                 dirty=info.dirty,
+                engine=ctx.source_key,
             )
             ctx.store.mac_built(title_id, build)
             if split is not None:

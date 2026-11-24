@@ -193,6 +193,7 @@ func reasonText(_ reason: String) -> String {
     case "shared": return tr("nxnative’s shared code changed", "Le code commun de nxnative a changé", "El código compartido de nxnative cambió", "Der gemeinsame Code von nxnative hat sich geändert")
     case "toolchain": return tr("Xcode changed", "Xcode a changé", "Xcode cambió", "Xcode hat sich geändert")
     case "unknown_base": return tr("Built from a commit main no longer has", "Construit depuis un commit absent de main", "Compilado desde un commit que main ya no tiene", "Von einem Commit erstellt, den main nicht mehr hat")
+    case "engine": return tr("Built from another nxnative than the one for this iPhone", "Construit avec un autre nxnative que celui de cet iPhone", "Compilado con otro nxnative que el de este iPhone", "Mit einem anderen nxnative erstellt als dem für dieses iPhone")
     case "failed_here": return tr("Failed at this commit of nxnative", "Échec à ce commit de nxnative", "Falló en este commit de nxnative", "Bei diesem Commit von nxnative fehlgeschlagen")
     case "up_to_date": return tr("Up to date", "À jour", "Al día", "Aktuell")
     case "forced": return tr("Asked for", "Demandé", "Solicitado", "Angefordert")

@@ -33,6 +33,10 @@ enum Gallery {
         case assistantWelcome = "assistant-welcome", assistantTools = "assistant-tools", assistantSources = "assistant-sources"
         case assistantGames = "assistant-games", assistantKeys = "assistant-keys", assistantBuilds = "assistant-builds"
         case assistantIPhone = "assistant-iphone", assistantDone = "assistant-done"
+        // The tools step, nxnative not downloaded yet, the choice of what
+        // it downloads open under its row: an iPhone 15 chosen, whose GPU
+        // reads no BC texture (BuildFor).
+        case assistantToolsSource = "assistant-tools-source"
         // The settings' Folders tab, where the dumps folder and the games
         // folder are chosen; and the help on naming what they hold, as the
         // sheet it opens shows it, at its top and on the dumps folder, as
@@ -56,8 +60,10 @@ enum Gallery {
         case consoleReport = "console-report", consoleGuide = "console-guide", consoleFirstGame = "console-first-game"
         // What the window's height leaves out: the settings' Builds tab, and
         // the storage page down to the games on this Mac, in a window as
-        // tall as it.
-        case settingsBuilds = "settings-builds", storageMac = "storage-mac"
+        // tall as it. The Builds tab again, an iPhone 15 paired in place of
+        // the iPhone Duo: its GPU reads no BC texture, and the games are
+        // built from nxnative-nobc, a separate fork (BuildFor).
+        case settingsBuilds = "settings-builds", settingsBuildsNoBC = "settings-builds-no-bc", storageMac = "storage-mac"
         // The iPhone page with Tailscale on this Mac, and its address there
         // (BridgeView.swift); the iPhone page above has it off.
         case iphoneTailscale = "iphone-tailscale"
@@ -120,7 +126,7 @@ enum Gallery {
         var step: SetupStep? {
             switch self {
             case .assistantWelcome: return .welcome
-            case .assistantTools: return .tools
+            case .assistantTools, .assistantToolsSource: return .tools
             case .assistantSources: return .sources
             case .assistantGames: return .games
             case .assistantKeys: return .keys
@@ -135,7 +141,7 @@ enum Gallery {
             if step != nil { return SetupAssistant.size }
             switch self {
             case .names, .namesDumps: return NamingHelp.size
-            case .settings, .settingsBuilds, .settingsFolders: return SettingsTab.size
+            case .settings, .settingsBuilds, .settingsBuildsNoBC, .settingsFolders: return SettingsTab.size
             case .storageMac: return CGSize(width: 1024, height: 1440)
             case .iphoneGames: return CGSize(width: 1024, height: 1500)
             // Down to the iPhone sending a game, and what would go faster.
@@ -177,7 +183,7 @@ enum Gallery {
         var styleMask: NSWindow.StyleMask {
             if step != nil || isNaming { return [.borderless] }
             switch self {
-            case .settings, .settingsBuilds, .settingsFolders: return [.titled, .closable]
+            case .settings, .settingsBuilds, .settingsBuildsNoBC, .settingsFolders: return [.titled, .closable]
             case .menubar, .menubarBuilding: return [.borderless]
             default: return [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
             }
@@ -269,8 +275,8 @@ enum Gallery {
                                 model, bridged: false)
         case .settingsFolders:
             controller = settings(model, open: .folders)
-        case .settings, .settingsBuilds:
-            controller = settings(model, open: page == .settingsBuilds ? .builds : .general)
+        case .settings, .settingsBuilds, .settingsBuildsNoBC:
+            controller = settings(model, open: page == .settings ? .general : .builds)
         case .console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet, .consoleSheetNewer, .consoleSaves, .consoleSwitchSave,
              .consoleGameLog, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport, .consoleGuide, .consoleFirstGame:
             ConsoleGallery.prepare(language: L10n.code, newer: page == .consoleSheetNewer,
@@ -298,6 +304,7 @@ enum Gallery {
                 // The sheet it is: on the window's background, its corners
                 // rounded.
                 controller = hosted(SetupAssistant(start: step)
+                                        .environment(\.showsBuildSource, page == .assistantToolsSource)
                                         .background(Color(nsColor: .windowBackgroundColor))
                                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous)),
                                     model, bridged: false)
@@ -315,12 +322,12 @@ enum Gallery {
         window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
         switch page {
         case .settings: window.title = SettingsTab.general.title
-        case .settingsBuilds: window.title = SettingsTab.builds.title
+        case .settingsBuilds, .settingsBuildsNoBC: window.title = SettingsTab.builds.title
         case .settingsFolders: window.title = SettingsTab.folders.title
         case _ where page.isConsole: window.title = "Cartouche"
         default: window.title = AppName.name
         }
-        if page == .settings || page == .settingsBuilds || page == .settingsFolders {
+        if [.settings, .settingsBuilds, .settingsBuildsNoBC, .settingsFolders].contains(page) {
             window.toolbarStyle = .preference
         }
         if page.step != nil || page.isNaming {
@@ -542,6 +549,8 @@ enum Gallery {
                     if let state = states[library.games[index].titleID] { library.games[index].state = state }
                 }
             }
+            var config = self.config
+            if page == .assistantToolsSource { config.buildFor = "iPhone15,4" }
             let model = AppModel.sampled(library: library, status: building ? self.building : split ? Gallery.splitBatch : nil,
                                          storage: storage, config: config, info: info,
                                          unbuilt: page == .gameUnbuilt ? [Gallery.unbuilt.titleID: Gallery.unbuiltFigures] : [:])
@@ -565,7 +574,7 @@ enum Gallery {
             if page == .gameSplit { model.selection = Gallery.splitTitleID }
             // A game up to date, while a batch runs: added to its queue.
             if page == .gameQueue { model.selection = "01006F8002326000" }
-            if page == .setup || page == .assistantTools {
+            if page == .setup || page == .assistantTools || page == .assistantToolsSource {
                 model.setup.preview([
                     .mac: .ready("macOS 26.1"),
                     .xcode: .ready("Xcode 27.2"),
@@ -601,11 +610,16 @@ enum Gallery {
                 ], xcode: "/Applications/Xcode-27.2.app")
             }
             let now = Date()
+            // Each with its model, as Cartouche tells it (BuildFor); on
+            // settings-builds-no-bc, an iPhone 15 in the Duo's place.
             let iphones = [
                 PairedDevice(id: "5D1C9A70-3E1B-4A7C-9D51-2F0E6B8A4C13", name: "iPhone 17 Pro", key: Data(repeating: 7, count: 32),
-                             paired: now.addingTimeInterval(-6 * 86_400), seen: now.addingTimeInterval(-90)),
-                PairedDevice(id: "A0F4E2B6-81C3-4D9E-B7A5-6C2D1E3F4A5B", name: "iPhone Duo", key: Data(repeating: 9, count: 32),
-                             paired: now.addingTimeInterval(-2 * 86_400), seen: now.addingTimeInterval(-26 * 3600)),
+                             paired: now.addingTimeInterval(-6 * 86_400), seen: now.addingTimeInterval(-90), model: "iPhone18,1", readsBC: true),
+                page == .settingsBuildsNoBC
+                    ? PairedDevice(id: "A0F4E2B6-81C3-4D9E-B7A5-6C2D1E3F4A5B", name: "iPhone 15", key: Data(repeating: 9, count: 32),
+                                   paired: now.addingTimeInterval(-2 * 86_400), seen: now.addingTimeInterval(-26 * 3600), model: "iPhone15,4", readsBC: false)
+                    : PairedDevice(id: "A0F4E2B6-81C3-4D9E-B7A5-6C2D1E3F4A5B", name: "iPhone Duo", key: Data(repeating: 9, count: 32),
+                                   paired: now.addingTimeInterval(-2 * 86_400), seen: now.addingTimeInterval(-26 * 3600), model: "iPhone19,4", readsBC: true),
             ]
             let saves = URL(fileURLWithPath: info.home).appendingPathComponent("Saves", isDirectory: true)
             // A made-up address in the tailnet, never one of the project's.

@@ -35323,6 +35323,35 @@
         }
       }
     },
+    "work.install.gpu.builder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche auf deinem Mac erstellt sie für dieses iPhone mit nxnative-nobc, einem eigenständigen Fork von nxnative, der diese Texturen umwandelt, sobald beide gekoppelt sind."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche on your Mac builds them for this iPhone from nxnative-nobc, a separate fork of nxnative that converts those textures, once the two are paired."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche en tu Mac los compila para este iPhone con nxnative-nobc, un fork independiente de nxnative que convierte esas texturas, una vez emparejados los dos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche sur votre Mac les construit pour cet iPhone avec nxnative-nobc, une fourche distincte de nxnative qui convertit ces textures, une fois les deux appairés."
+          }
+        }
+      }
+    },
     "work.install.noSpace" : {
       "extractionState" : "manual",
       "localizations" : {

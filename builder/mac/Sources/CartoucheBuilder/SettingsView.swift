@@ -410,6 +410,9 @@ struct BuildSettings: View {
                 }
             }
             .disabled(ios && !mac)
+            if ios {
+                BuildForPicker()
+            }
             Toggle(isOn: setting(model, \.mac, true)) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(tr("This Mac", "Ce Mac", "Este Mac", "Dieser Mac"))
@@ -511,32 +514,100 @@ struct StorageSettings: View {
     }
 }
 
+/// Whom the games are built for: the paired iPhones, or a model chosen.
+/// For one whose GPU reads no BC texture, which nxnative refuses, they are
+/// built from nxnative-nobc, a separate fork (BuildFor), and the iPhone's games
+/// are built again.
+struct BuildForPicker: View {
+    @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var bridge: BridgeController
+
+    var body: some View {
+        let config = model.config ?? BuilderConfig()
+        let choice = BuildFor.choice(config, devices: bridge.devices)
+        VStack(alignment: .leading, spacing: 4) {
+            Picker(tr("Build for", "Construire pour", "Compilar para", "Erstellen für"), selection: setting(model, \.buildFor, "")) {
+                Text(paired).tag("")
+                Divider()
+                ForEach(BuildFor.models) { Text($0.name).tag($0.id) }
+                if !config.buildFor.isEmpty, BuildFor.name(of: config.buildFor) == nil {
+                    Text(config.buildFor).tag(config.buildFor)
+                }
+            }
+            Text(BuildForPicker.explanation(choice, chosen: config.buildFor, unknown: unknown(config)))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            if choice.kind == .noBC {
+                Link(tr("nxnative-nobc on GitHub", "nxnative-nobc sur GitHub", "nxnative-nobc en GitHub", "nxnative-nobc auf GitHub"), destination: BuildFor.forkPage)
+                    .font(.caption)
+            }
+        }
+    }
+
+    /// The paired iPhones, as the first choice says them.
+    private var paired: String {
+        let devices = bridge.devices
+        guard let only = devices.first else { return tr("The paired iPhone (none yet)", "L’iPhone appairé (aucun pour l’instant)", "El iPhone emparejado (ninguno por ahora)", "Das gekoppelte iPhone (noch keines)") }
+        guard devices.count == 1 else { return tr("The \(devices.count) paired iPhones", "Les \(devices.count) iPhone appairés", "Los \(devices.count) iPhone emparejados", "Die \(devices.count) gekoppelten iPhones") }
+        if let identifier = only.model, let name = BuildFor.name(of: identifier) {
+            return tr("The paired iPhone (\(name))", "L’iPhone appairé (\(name))", "El iPhone emparejado (\(name))", "Das gekoppelte iPhone (\(name))")
+        }
+        return tr("The paired iPhone (“\(only.name)”)", "L’iPhone appairé (« \(only.name) »)", "El iPhone emparejado (“\(only.name)”)", "Das gekoppelte iPhone („\(only.name)“)")
+    }
+
+    /// A paired iPhone that has not said its model yet, while the paired
+    /// iPhones decide: an older Cartouche, or one not opened since.
+    private func unknown(_ config: BuilderConfig) -> String? {
+        guard config.buildFor.isEmpty, !BuildFor.custom(config) else { return nil }
+        return bridge.devices.first { BuildFor.readsBC($0) == nil }?.name
+    }
+
+    /// Which nxnative builds the games, and why, in the player's words.
+    static func explanation(_ choice: BuildFor.Choice, chosen: String, unknown: String?) -> String {
+        var text: String
+        switch choice.kind {
+        case .custom:
+            return tr("The games are built from the repository chosen under Advanced.", "Les jeux se construisent avec le dépôt choisi dans Avancé.", "Los juegos se compilan con el repositorio elegido en Avanzado.", "Die Spiele werden mit dem unter „Erweitert“ gewählten Repository erstellt.")
+        case .nxnative:
+            text = tr("The games are built from nxnative.", "Les jeux se construisent avec nxnative.", "Los juegos se compilan con nxnative.", "Die Spiele werden mit nxnative erstellt.")
+        case .noBC:
+            let who: String
+            if chosen.isEmpty, let device = choice.device {
+                who = tr("“\(device)” reads no BC texture", "« \(device) » ne lit pas les textures BC", "“\(device)” no lee texturas BC", "„\(device)“ liest keine BC-Texturen")
+            } else {
+                let name = choice.model.flatMap(BuildFor.name(of:)) ?? choice.model ?? "iPhone"
+                who = tr("The \(name) reads no BC texture", "L’\(name) ne lit pas les textures BC", "El \(name) no lee texturas BC", "Das \(name) liest keine BC-Texturen")
+            }
+            text = tr("\(who), so nxnative refuses it: the games are built from nxnative-nobc, a separate fork of nxnative by mianmuhammadse, which converts those textures for its GPU. On an iPhone that reads them, and on this Mac, it does as nxnative does.",
+                      "\(who) et nxnative le refuse : les jeux se construisent avec nxnative-nobc, une fourche distincte de nxnative par mianmuhammadse, qui convertit ces textures pour son GPU. Sur un iPhone qui les lit, et sur ce Mac, elle fait comme nxnative.",
+                      "\(who), así que nxnative lo rechaza: los juegos se compilan con nxnative-nobc, un fork independiente de nxnative, de mianmuhammadse, que convierte esas texturas para su GPU. En un iPhone que las lee, y en este Mac, hace lo mismo que nxnative.",
+                      "\(who), daher lehnt nxnative es ab: Die Spiele werden mit nxnative-nobc erstellt, einem eigenständigen Fork von nxnative, von mianmuhammadse, der diese Texturen für seine GPU umwandelt. Auf einem iPhone, das sie liest, und auf diesem Mac verhält er sich wie nxnative.")
+        }
+        if let unknown {
+            text += " " + tr("“\(unknown)” has not said its model yet: open Cartouche on it with this Mac on.",
+                             "« \(unknown) » n’a pas encore dit son modèle : ouvrez Cartouche dessus, ce Mac allumé.",
+                             "“\(unknown)” aún no ha dicho su modelo: abre Cartouche en él con este Mac encendido.",
+                             "„\(unknown)“ hat sein Modell noch nicht genannt: Öffne Cartouche darauf, während dieser Mac eingeschaltet ist.")
+        }
+        return text + " " + tr("Changing it builds the iPhone’s games again.", "Le changer reconstruit les jeux de l’iPhone.", "Cambiarlo vuelve a compilar los juegos del iPhone.", "Eine Änderung erstellt die Spiele des iPhones neu.")
+    }
+}
+
 struct AdvancedSettings: View {
     @EnvironmentObject private var model: AppModel
-    @State private var url = ""
-    @State private var branch = ""
 
     var body: some View {
         Form {
             Section {
-                TextField(tr("Repository", "Dépôt", "Repositorio", "Repository"), text: $url)
-                    .onSubmit { save() }
-                TextField(tr("Branch", "Branche", "Rama", "Branch"), text: $branch)
-                    .onSubmit { save() }
-                HStack {
-                    Button(tr("Back to nxnative’s", "Revenir à celui de nxnative", "Volver al de nxnative", "Zurück zu dem von nxnative")) {
-                        url = BuilderConfig.engineURL
-                        branch = BuilderConfig.engineBranch
-                        save()
-                    }
-                    Spacer()
-                    Button(tr("Save", "Enregistrer", "Guardar", "Sichern")) { save() }
-                        .disabled(url == model.config?.engineURL && branch == model.config?.engineBranch)
-                }
+                EngineRepositoryFields()
             } header: {
                 Text("nxnative")
             } footer: {
-                Text(tr("The nxnative games are built from. Change it only to try a fork.", "Le nxnative avec lequel les jeux sont construits. À changer seulement pour essayer une variante.", "El nxnative con el que se compilan los juegos. Cámbialo solo para probar un fork.", "Das nxnative, mit dem die Spiele erstellt werden. Ändere es nur, um einen Fork auszuprobieren."))
+                Text(tr("The nxnative games are built from. Change it only to try a fork. While it is nxnative’s, an iPhone whose GPU reads no BC texture has its games built from nxnative-nobc, a separate fork (Builds, Build for).",
+                        "Le nxnative avec lequel les jeux sont construits. À changer seulement pour essayer une variante. Tant que c’est celui de nxnative, un iPhone qui ne lit pas les textures BC a ses jeux construits avec nxnative-nobc, une fourche distincte (Constructions, Construire pour).",
+                        "El nxnative con el que se compilan los juegos. Cámbialo solo para probar un fork. Mientras sea el de nxnative, un iPhone cuya GPU no lee texturas BC tiene sus juegos compilados con nxnative-nobc, un fork independiente (Compilaciones, Compilar para).",
+                        "Das nxnative, mit dem die Spiele erstellt werden. Ändere es nur, um einen Fork auszuprobieren. Solange es das von nxnative ist, werden die Spiele eines iPhones, dessen GPU keine BC-Texturen liest, mit nxnative-nobc erstellt, einem eigenständigen Fork (Builds, Erstellen für)."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -551,10 +622,67 @@ struct AdvancedSettings: View {
             }
         }
         .formStyle(.grouped)
-        .onAppear {
-            url = model.config?.engineURL ?? BuilderConfig.engineURL
-            branch = model.config?.engineBranch ?? BuilderConfig.engineBranch
+    }
+}
+
+/// The repository and branch nxnative is fetched from: under Advanced, as
+/// rows of its form, and on the setup assistant's tools step, LABELED
+/// beside their fields, before nxnative is downloaded.
+struct EngineRepositoryFields: View {
+    @EnvironmentObject private var model: AppModel
+    var labeled = false
+    @State private var url = ""
+    @State private var branch = ""
+
+    var body: some View {
+        if labeled {
+            VStack(alignment: .leading, spacing: 8) {
+                Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 10, verticalSpacing: 8) {
+                    GridRow {
+                        Text(tr("Repository", "Dépôt", "Repositorio", "Repository"))
+                            .gridColumnAlignment(.trailing)
+                        TextField(tr("Repository", "Dépôt", "Repositorio", "Repository"), text: $url)
+                            .labelsHidden()
+                            .onSubmit { save() }
+                    }
+                    GridRow {
+                        Text(tr("Branch", "Branche", "Rama", "Branch"))
+                        TextField(tr("Branch", "Branche", "Rama", "Branch"), text: $branch)
+                            .labelsHidden()
+                            .onSubmit { save() }
+                    }
+                }
+                buttons
+            }
+            .onAppear { load() }
+        } else {
+            Group {
+                TextField(tr("Repository", "Dépôt", "Repositorio", "Repository"), text: $url)
+                    .onSubmit { save() }
+                TextField(tr("Branch", "Branche", "Rama", "Branch"), text: $branch)
+                    .onSubmit { save() }
+                buttons
+            }
+            .onAppear { load() }
         }
+    }
+
+    private var buttons: some View {
+        HStack {
+            Button(tr("Back to nxnative’s", "Revenir à celui de nxnative", "Volver al de nxnative", "Zurück zu dem von nxnative")) {
+                url = BuilderConfig.engineURL
+                branch = BuilderConfig.engineBranch
+                save()
+            }
+            Spacer()
+            Button(tr("Save", "Enregistrer", "Guardar", "Sichern")) { save() }
+                .disabled(url == model.config?.engineURL && branch == model.config?.engineBranch)
+        }
+    }
+
+    private func load() {
+        url = model.config?.engineURL ?? BuilderConfig.engineURL
+        branch = model.config?.engineBranch ?? BuilderConfig.engineBranch
     }
 
     private func save() {

@@ -822,6 +822,28 @@
       ]
     },
     {
+      "name": "iphone-system-gpu-no-bc",
+      "comment": "System on the same iPhone, whose GPU reads no BC-compressed texture: this iPhone's section says that nxnative refuses it, and that Cartouche on a Mac builds its games from nxnative-nobc, a separate fork of nxnative, once it is paired with it.",
+      "screen": "system",
+      "work": "gpu-no-bc",
+      "category": "device",
+      "owned": [
+        "01007EF00011E000",
+        "0400C3F00006E000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-sheet-game-mode-later",
       "comment": "Mario Kart World's sheet on what the game needs, opened on each need, as the console opens before Game Mode came: Cartouche's own limit 6,144 MiB as it first measures it, 8,192 a moment later, which a game has in Cartouche's place (work: game-mode-later). The sheet says 8,192 MiB, and the game, up to 8,183, fits.",
       "screen": "sheet",

@@ -399,6 +399,8 @@
 //                                        saves
 //        cloud                           on the System page, the page
 //                                        scrolled down to Cartouche Cloud
+//        device                          on the System page, the page
+//                                        scrolled down to this iPhone
 //        dumps                           on how to name the games (screen
 //                                        storage-names), the page down to
 //                                        Cartouche Builder's dumps folder

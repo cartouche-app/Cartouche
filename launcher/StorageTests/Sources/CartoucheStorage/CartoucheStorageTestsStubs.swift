@@ -5,9 +5,10 @@
 //  What the launcher's storage files need from the rest of the launcher,
 //  which this package does not build: the class whose bundle holds the
 //  launcher's words (CartoucheText.bundle), and the journal the storage
-//  notes its steps in (CartoucheReports.note), here the test's output.
-//  Without Cartouche.xcstrings here, every text is the English the code
-//  carries.
+//  notes its steps in (CartoucheReports.note), here the test's output,
+//  and the device its info requests tell the Mac (CartoucheDevice), an
+//  iPhone whose GPU reads BC. Without Cartouche.xcstrings here, every text
+//  is the English the code carries.
 //
 
 final class CartoucheCatalog {}
@@ -17,4 +18,9 @@ enum CartoucheReports {
     static func note(_ text: String) {
         print("[journal] " + text)
     }
+}
+
+enum CartoucheDevice {
+    static let modelIdentifier = "iPhone18,1"
+    static let supportsBCTextureCompression = true
 }

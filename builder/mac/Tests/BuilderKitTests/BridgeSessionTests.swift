@@ -62,6 +62,23 @@ final class BridgeSessionTests: XCTestCase {
         XCTAssertEqual(list.items?.first?.folder, false)
     }
 
+    func testInfoKeepsTheModelThePairedIPhoneTells() {
+        // What decides the nxnative its games are built from (BuildFor).
+        server.devices.add(id: "iphone", name: "iPhone de Lou", key: Data([1, 2, 3]))
+        XCTAssertNil(ask(CartoucheBridgeRequest(.info)).0.error)
+        XCTAssertNil(server.devices.all[0].model, "an older Cartouche tells nothing")
+        let (info, _) = ask(CartoucheBridgeRequest(.info, device: CartoucheBridgeDevice(model: "iPhone15,4", readsBC: false)))
+        XCTAssertNil(info.error)
+        XCTAssertEqual(server.devices.all.map(\.model), ["iPhone15,4"])
+        XCTAssertEqual(server.devices.all.map(\.readsBC), [false])
+        // Another session's peer, not paired, changes nothing.
+        let (stranger, _) = Session(server: server, peer: "stranger").handle(CartoucheBridgeRequest(.info, device: CartoucheBridgeDevice(model: "iPhone18,1", readsBC: true)),
+                                                                             body: Data())
+        XCTAssertNil(stranger.error)
+        XCTAssertEqual(server.devices.all.map(\.id), ["iphone"])
+        XCTAssertEqual(server.devices.all.map(\.model), ["iPhone15,4"])
+    }
+
     func testInfoTellsTheMacsAddressesInTheTailnet() {
         // An iPhone away from home reaches the Mac there, with Tailscale on
         // both (CartoucheStorageMac.swift).

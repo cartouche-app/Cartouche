@@ -304,6 +304,12 @@ public final class BridgeServer: @unchecked Sendable {
         }
     }
 
+    /// What the paired iPhone PEER told of itself with its info request:
+    /// kept with it, for the builds' nxnative (BridgeDevices.describe).
+    func described(_ peer: String, as device: CartoucheBridgeDevice) {
+        if devices.describe(peer, as: device) { changed() }
+    }
+
     // MARK: Listening
 
     /// Starts listening on the bridge's port, or on another one when it is
@@ -717,6 +723,7 @@ final class Session {
         var response = CartoucheBridgeResponse()
         switch request.op {
         case .info:
+            if let device = request.device { server?.described(peer, as: device) }
             let roots = server?.roots ?? BridgeRoots()
             response.name = server?.name
             response.items = rootItems(roots)

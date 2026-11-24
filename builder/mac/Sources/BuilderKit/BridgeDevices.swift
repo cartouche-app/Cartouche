@@ -8,6 +8,7 @@
 //  only; removing it here ends them.
 //
 
+import CartoucheCore
 import Foundation
 
 public struct PairedDevice: Codable, Identifiable, Equatable, Sendable {
@@ -17,13 +18,22 @@ public struct PairedDevice: Codable, Identifiable, Equatable, Sendable {
     public var key: Data
     public var paired: Date
     public var seen: Date?
+    /// Its model ("iPhone15,4") and whether its GPU reads BC textures, as
+    /// Cartouche tells them with its info requests (CartoucheBridgeDevice):
+    /// nil until it does, from an older Cartouche. The engine reads these
+    /// two, never the key, to build the games of an iPhone without BC from
+    /// nxnative-nobc, a separate fork (cartouche_builder/build_for.py).
+    public var model: String?
+    public var readsBC: Bool?
 
-    public init(id: String, name: String, key: Data, paired: Date = Date(), seen: Date? = nil) {
+    public init(id: String, name: String, key: Data, paired: Date = Date(), seen: Date? = nil, model: String? = nil, readsBC: Bool? = nil) {
         self.id = id
         self.name = name
         self.key = key
         self.paired = paired
         self.seen = seen
+        self.model = model
+        self.readsBC = readsBC
     }
 }
 
@@ -73,6 +83,22 @@ public final class BridgeDevices: @unchecked Sendable {
         file.devices.append(PairedDevice(id: id, name: name, key: key, paired: Date(), seen: Date()))
         lock.unlock()
         save()
+    }
+
+    /// Keeps what the paired device ID tells of itself: whether it changed.
+    @discardableResult
+    public func describe(_ id: String, as device: CartoucheBridgeDevice) -> Bool {
+        lock.lock()
+        guard let index = file.devices.firstIndex(where: { $0.id == id }),
+              file.devices[index].model != device.model || file.devices[index].readsBC != device.readsBC else {
+            lock.unlock()
+            return false
+        }
+        file.devices[index].model = device.model
+        file.devices[index].readsBC = device.readsBC
+        lock.unlock()
+        save()
+        return true
     }
 
     public func remove(_ id: String) {
