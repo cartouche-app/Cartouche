@@ -162,4 +162,17 @@ final class BridgeNetworkTests: XCTestCase {
         XCTAssertEqual(words.line, "Sending a game: 3.1\u{00A0}MB/s, on this Mac’s 2.4\u{00A0}GHz Wi-Fi")
         XCTAssertEqual(Format.speed(31_400_000), "31\u{00A0}MB/s")
     }
+
+    /// In Spanish and German, a decimal comma, and MB/s.
+    func testTheLineInSpanishAndGerman() {
+        let chosen = L10n.chosen
+        defer { L10n.use(chosen) }
+        let sending = BridgeSending(speed: 3_140_000, network: CartoucheMacNetwork(medium: "wifi", band: "2.4"))
+        L10n.use("es")
+        XCTAssertEqual(BridgeSendingWords(sending, slow: false).line, "Enviando un juego: 3,1\u{00A0}MB/s, por la Wi-Fi de 2,4\u{00A0}GHz de este Mac")
+        L10n.use("de")
+        let words = BridgeSendingWords(sending, slow: false)
+        XCTAssertEqual(words.line, "Sendet ein Spiel: 3,1\u{00A0}MB/s, über das 2,4-GHz-WLAN dieses Mac")
+        XCTAssertEqual(words.advice, "Dieser Mac ist in seinem 2,4-GHz-WLAN, dem langsamsten: Ein Kabel zwischen dem iPhone und diesem Mac oder das 5-GHz-WLAN wäre viel schneller.")
+    }
 }

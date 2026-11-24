@@ -44,7 +44,7 @@ struct NamingHelp: View {
             Divider()
             HStack {
                 Spacer()
-                Button(tr("Close", "Fermer")) { dismiss() }
+                Button(tr("Close", "Fermer", "Cerrar", "Schließen")) { dismiss() }
                     .keyboardShortcut(.defaultAction)
             }
             .padding(16)
@@ -83,7 +83,7 @@ struct NamingHelpButton: View {
 
     /// The words of the button that opens it, at its top, on the games
     /// folder, as Cartouche's under its Storage page.
-    static var games: String { tr("How to name your games", "Comment nommer vos jeux") }
+    static var games: String { tr("How to name your games", "Comment nommer vos jeux", "Cómo nombrar tus juegos", "So benennst du deine Spiele") }
     /// The words of the button that opens it on the dumps folder.
-    static var dumps: String { tr("How to name your dumps", "Comment nommer vos dumps") }
+    static var dumps: String { tr("How to name your dumps", "Comment nommer vos dumps", "Cómo nombrar tus dumps", "So benennst du deine Dumps") }
 }

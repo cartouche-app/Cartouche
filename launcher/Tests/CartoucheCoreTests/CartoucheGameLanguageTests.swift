@@ -39,6 +39,21 @@ final class CartoucheGameLanguageTests: XCTestCase {
         XCTAssertEqual(Language.parts(of: "").language, "")
     }
 
+    /// The telemetry sends the first of the device's languages, its
+    /// language and script only: never its region.
+    func testTheDevicesLanguageLeavesItsRegionOut() {
+        XCTAssertEqual(Language.deviceLanguage(["es-419", "en-US"]), "es")
+        XCTAssertEqual(Language.deviceLanguage(["de_DE"]), "de")
+        XCTAssertEqual(Language.deviceLanguage(["zh-Hant-TW"]), "zh-Hant")
+        XCTAssertEqual(Language.deviceLanguage(["sr-latn-RS"]), "sr-Latn")
+        XCTAssertEqual(Language.deviceLanguage(["FR-ca@calendar=gregorian"]), "fr")
+        XCTAssertEqual(Language.deviceLanguage(["yue-Hant-HK"]), "yue-Hant")
+        XCTAssertNil(Language.deviceLanguage([]))
+        XCTAssertNil(Language.deviceLanguage([""]))
+        XCTAssertNil(Language.deviceLanguage(["x-private"]))
+        XCTAssertNil(Language.deviceLanguage(["1234"]))
+    }
+
     func testEachLanguageStandsForItsSwitchForms() {
         XCTAssertEqual(Language.codes(for: "fr-FR"), ["fr", "fr-CA"])
         XCTAssertEqual(Language.codes(for: "fr-CA"), ["fr-CA", "fr"])

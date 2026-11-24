@@ -1,6 +1,7 @@
-//! The window's texts: every text it names exists in English, and French
-//! has the same texts, with the same {{values}}, links and platforms. A
-//! missing one shows as its key in the window (en.json, fr.json).
+//! The window's texts: every text it names exists in English, and French,
+//! Spanish and German have the same texts, with the same {{values}},
+//! links and platforms. A missing one shows as its key in the window
+//! (en.json, fr.json, es.json, de.json).
 
 use std::{collections::BTreeMap, path::Path};
 
@@ -41,31 +42,50 @@ fn shape(text: &str) -> (Vec<&str>, usize, Option<&str>) {
     (values(text), text.matches("((link:").count(), platform)
 }
 
+/// The languages the window speaks besides English, with their names
+/// for the messages (src/i18next.ts).
+const LANGUAGES: [(&str, &str); 3] = [("fr", "French"), ("es", "Spanish"), ("de", "German")];
+
 #[test]
-fn french_has_every_english_text_with_the_same_values() {
+fn every_language_has_every_english_text_with_the_same_values() {
     let en = locale("en");
-    let fr = locale("fr");
-    let missing: Vec<&String> = en.keys().filter(|k| !fr.contains_key(*k)).collect();
-    let extra: Vec<&String> = fr.keys().filter(|k| !en.contains_key(*k)).collect();
-    assert!(missing.is_empty(), "French lacks {missing:?}");
-    assert!(extra.is_empty(), "French has texts English has not: {extra:?}");
-    for (key, english) in &en {
-        let french = &fr[key];
-        match (english, french) {
-            (Value::String(e), Value::String(f)) => {
-                assert_eq!(shape(e), shape(f), "{key}: {e:?} / {f:?}");
-                assert!(!f.trim().is_empty(), "{key} is empty in French");
-            }
-            (Value::Array(e), Value::Array(f)) => {
-                assert_eq!(e.len(), f.len(), "{key}: not as many suggestions");
-                for (e, f) in e.iter().zip(f) {
-                    let (e, f) = (e.as_str().unwrap(), f.as_str().unwrap());
-                    assert_eq!(shape(e), shape(f), "{key}: {e:?} / {f:?}");
+    for (code, name) in LANGUAGES {
+        let other = locale(code);
+        let missing: Vec<&String> = en.keys().filter(|k| !other.contains_key(*k)).collect();
+        let extra: Vec<&String> = other.keys().filter(|k| !en.contains_key(*k)).collect();
+        assert!(missing.is_empty(), "{name} lacks {missing:?}");
+        assert!(extra.is_empty(), "{name} has texts English has not: {extra:?}");
+        for (key, english) in &en {
+            match (english, &other[key]) {
+                (Value::String(e), Value::String(o)) => {
+                    assert_eq!(shape(e), shape(o), "{name}, {key}: {e:?} / {o:?}");
+                    assert!(!o.trim().is_empty(), "{key} is empty in {name}");
                 }
+                (Value::Array(e), Value::Array(o)) => {
+                    assert_eq!(e.len(), o.len(), "{name}, {key}: not as many suggestions");
+                    for (e, o) in e.iter().zip(o) {
+                        let (e, o) = (e.as_str().unwrap(), o.as_str().unwrap());
+                        assert_eq!(shape(e), shape(o), "{name}, {key}: {e:?} / {o:?}");
+                    }
+                }
+                _ => panic!("{name}, {key}: not the same kind of text in both"),
             }
-            _ => panic!("{key}: not the same kind of text in both"),
         }
     }
+}
+
+#[test]
+fn the_window_offers_every_language() {
+    let i18next = std::fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("../src/i18next.ts")).expect("i18next.ts");
+    for code in ["en"].into_iter().chain(LANGUAGES.iter().map(|(code, _)| *code)) {
+        assert!(i18next.contains(&format!("[\"{code}\", ")), "src/i18next.ts does not offer {code}");
+    }
+    let locales: Vec<String> = std::fs::read_dir(Path::new(env!("CARGO_MANIFEST_DIR")).join("../src/locales"))
+        .expect("locales")
+        .flatten()
+        .map(|entry| entry.file_name().to_string_lossy().trim_end_matches(".json").to_string())
+        .collect();
+    assert_eq!(locales.len(), LANGUAGES.len() + 1, "a locale the test does not check: {locales:?}");
 }
 
 /// Every key the frontend names literally: t("…"), the operations' keys,

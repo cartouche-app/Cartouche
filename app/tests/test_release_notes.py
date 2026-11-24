@@ -136,7 +136,7 @@ class ReleaseNotesTest(unittest.TestCase):
                         self.assertRegex(line, r"^- \S", "each line after the blank one is an item")
 
     def test_a_translation_is_in_a_language_of_the_launcher_beside_its_english(self):
-        self.assertEqual(self.translations, ["fr"])
+        self.assertEqual(self.translations, ["de", "es", "fr"])
         for number, languages in self.notes.items():
             for language, path in languages.items():
                 if language is None:

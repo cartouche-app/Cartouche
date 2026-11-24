@@ -124,26 +124,32 @@ public enum MacGameEnding: String, Codable, Sendable {
 /// start: what the player chose is in the app's saved choices, which a
 /// start from the Finder or the Dock reads too.
 public enum MacPlayEnvironment {
-    /// The prompts' texts in the builder's LANGUAGE ("fr"), none for
-    /// English, nxnative's own: the Home button's quit prompt for the game
-    /// NAME, and the prompt that waits for more players, five lines each.
+    /// The prompts' texts in the builder's LANGUAGE ("fr", "es", "de"),
+    /// none for English, nxnative's own: the Home button's quit prompt for
+    /// the game NAME, and the prompt that waits for more players, five
+    /// lines each.
     public static func texts(game name: String, language: String) -> [String: String] {
-        guard language == "fr" else { return [:] }
+        let lines: (quit: [String], players: [String])
+        switch language {
+        case "fr":
+            lines = (["Maintenez pour quitter", "Quitter \(name) ?", "La progression non sauvegardée sera perdue.", "Quitter", "Annuler"],
+                     ["{min} joueurs attendus", "Appuyez sur un bouton de chaque manette pour la faire rejoindre.",
+                      "Joueurs : {joined} sur {min}", "Terminé", "Annuler"])
+        case "es":
+            lines = (["Mantén pulsado para salir", "¿Salir de \(name)?", "Se perderá el progreso no guardado.", "Salir", "Cancelar"],
+                     ["Se esperan {min} jugadores", "Pulsa un botón de cada mando para que se una.",
+                      "Jugadores: {joined} de {min}", "Hecho", "Cancelar"])
+        case "de":
+            lines = (["Zum Beenden gedrückt halten", "\(name) beenden?", "Nicht gespeicherter Fortschritt geht verloren.", "Beenden",
+                      "Abbrechen"],
+                     ["{min} Spieler erwartet", "Drücke eine Taste auf jedem Controller, um ihn hinzuzufügen.",
+                      "Spieler: {joined} von {min}", "Fertig", "Abbrechen"])
+        default:
+            return [:]
+        }
         return [
-            "DM_HOME_QUIT_TEXT": [
-                "Maintenez pour quitter",
-                "Quitter \(name) ?",
-                "La progression non sauvegardée sera perdue.",
-                "Quitter",
-                "Annuler",
-            ].joined(separator: "\n"),
-            "DM_CTRL_PROMPT_TEXT": [
-                "{min} joueurs attendus",
-                "Appuyez sur un bouton de chaque manette pour la faire rejoindre.",
-                "Joueurs : {joined} sur {min}",
-                "Terminé",
-                "Annuler",
-            ].joined(separator: "\n"),
+            "DM_HOME_QUIT_TEXT": lines.quit.joined(separator: "\n"),
+            "DM_CTRL_PROMPT_TEXT": lines.players.joined(separator: "\n"),
         ]
     }
 

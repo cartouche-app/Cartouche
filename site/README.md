@@ -1,6 +1,6 @@
 # Showcase site
 
-[`index.html`](index.html) is Cartouche's showcase page: one static page, in French and English, that shows the app's screens rebuilt in HTML and CSS at their sizes in points, around nine games of nxnative's list, and says how to install Cartouche. A visitor can move the console's focus, and send the game behind the console, then bring it back.
+[`index.html`](index.html) is Cartouche's showcase page: one static page, in French, English, Spanish and German, that shows the app's screens rebuilt in HTML and CSS at their sizes in points, around nine games of nxnative's list, and says how to install Cartouche. A visitor can move the console's focus, and send the game behind the console, then bring it back.
 
 | Screen | Where the page shows it |
 | --- | --- |
@@ -18,7 +18,7 @@
 - **Pictures of its own, never a game's.** [`apple-touch-icon.png`](apple-touch-icon.png) is Cartouche's icon ([`app/icon`](../app/icon/)) at 180 × 180, for an iPhone or an iPad that puts the site on its Home Screen. [`social.png`](social.png), 1200 × 630, is what a link to the site shows where it is shared, on Discord, Reddit or in Messages (`og:image`): Cartouche's icon beside the page's title, drawn from [`tools/social.html`](tools/social.html). Each page names its own address at the domain (`canonical`, `og:url`).
 - **Nothing else third-party.** No font, script or analytics from another site, no cookie, no request but IGDB's images, sent without the page's address, and no address of a server of the project. The page links only to this repository, nxnative's, IGDB and Cartouche's Discord server, by the one invite its bot keeps, `https://discord.gg/wG3DZjdAeF` ([decision 129](../docs/decisions/129.md)): in the header beside GitHub, in the footer and in the FAQ's answer on help, and in the download page's footer. It links to Cartouche Cloud's site too, its first page and its privacy notice, from its section and the FAQ, and to nothing else of it ([decision 138](../docs/decisions/138.md)): the page says what Cartouche Cloud does for a player with no Mac, never its price, which its own site and the app give. The tests fail on an amount of money on any page of the site.
 
-[`tests/test_site.py`](tests/test_site.py) checks all of this: each game, its status, its cover and artwork and its colours against the catalog and the app, every text in French and English, the pictures by their names and sizes, what a shared link shows, and the download page and the 404 page too; [`tests/test_downloads.py`](tests/test_downloads.py) checks the script that gives the downloads their newest release. CI runs it on every pull request (Showcase site); a catalog change that touches a game of the page fails it until the page's list follows.
+[`tests/test_site.py`](tests/test_site.py) checks all of this: each game, its status, its cover and artwork and its colours against the catalog and the app, every text in French, English, Spanish and German, the pictures by their names and sizes, what a shared link shows, and the download page and the 404 page too; [`tests/test_downloads.py`](tests/test_downloads.py) checks the script that gives the downloads their newest release. CI runs it on every pull request (Showcase site); a catalog change that touches a game of the page fails it until the page's list follows.
 
 ## Working on it
 

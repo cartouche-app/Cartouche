@@ -72,23 +72,24 @@ public struct BridgeSendingWords: Equatable {
         var way: String?
         switch network?.medium ?? "" {
         case CartoucheMacNetwork.cable:
-            way = tr("by cable", "par câble")
+            way = tr("by cable", "par câble", "por cable", "per Kabel")
         case CartoucheMacNetwork.wifi:
             if let band = network?.band {
-                let shown = L10n.french ? band.replacingOccurrences(of: ".", with: ",") : band
-                way = tr("on this Mac’s \(shown)\u{00A0}GHz Wi-Fi", "par le Wi-Fi \(shown)\u{00A0}GHz de ce Mac")
+                let shown = L10n.decimalComma ? band.replacingOccurrences(of: ".", with: ",") : band
+                way = tr("on this Mac’s \(shown)\u{00A0}GHz Wi-Fi", "par le Wi-Fi \(shown)\u{00A0}GHz de ce Mac",
+                         "por la Wi-Fi de \(shown)\u{00A0}GHz de este Mac", "über das \(shown)-GHz-WLAN dieses Mac")
             } else {
-                way = tr("on this Mac’s Wi-Fi", "par le Wi-Fi de ce Mac")
+                way = tr("on this Mac’s Wi-Fi", "par le Wi-Fi de ce Mac", "por la Wi-Fi de este Mac", "über das WLAN dieses Mac")
             }
         case CartoucheMacNetwork.ethernet:
-            way = tr("on this Mac’s Ethernet", "par l’Ethernet de ce Mac")
+            way = tr("on this Mac’s Ethernet", "par l’Ethernet de ce Mac", "por el Ethernet de este Mac", "über das Ethernet dieses Mac")
         case CartoucheMacNetwork.other:
-            way = tr("through Tailscale or a VPN", "par Tailscale ou un VPN")
+            way = tr("through Tailscale or a VPN", "par Tailscale ou un VPN", "a través de Tailscale o una VPN", "über Tailscale oder ein VPN")
         default:
             way = nil
         }
-        var line = tr("Sending a game", "Envoie un jeu")
-        if let speed = sending.speed { line += tr(": ", "\u{00A0}: ") + Format.speed(speed) }
+        var line = tr("Sending a game", "Envoie un jeu", "Enviando un juego", "Sendet ein Spiel")
+        if let speed = sending.speed { line += tr(": ", "\u{00A0}: ", ": ", ": ") + Format.speed(speed) }
         if let way { line += ", " + way }
         self.line = line
 
@@ -101,13 +102,19 @@ public struct BridgeSendingWords: Equatable {
         switch CartoucheTransferAdvice.of(way: travel, local: true, slow: slow) {
         case .macOnSlowBand?:
             advice = tr("This Mac is on its 2.4\u{00A0}GHz Wi-Fi, the slowest: a cable between the iPhone and this Mac, or the 5\u{00A0}GHz Wi-Fi, would be much faster.",
-                        "Ce Mac est sur le Wi-Fi 2,4\u{00A0}GHz, le plus lent\u{00A0}: un câble entre l’iPhone et ce Mac, ou le Wi-Fi 5\u{00A0}GHz, irait bien plus vite.")
+                        "Ce Mac est sur le Wi-Fi 2,4\u{00A0}GHz, le plus lent\u{00A0}: un câble entre l’iPhone et ce Mac, ou le Wi-Fi 5\u{00A0}GHz, irait bien plus vite.",
+                        "Este Mac está en su Wi-Fi de 2,4\u{00A0}GHz, la más lenta: un cable entre el iPhone y este Mac, o la Wi-Fi de 5\u{00A0}GHz, iría mucho más rápido.",
+                        "Dieser Mac ist in seinem 2,4-GHz-WLAN, dem langsamsten: Ein Kabel zwischen dem iPhone und diesem Mac oder das 5-GHz-WLAN wäre viel schneller.")
         case .slowToMac?, .slowNetwork?:
             advice = tr("It is slow: a cable between the iPhone and this Mac, or a 5\u{00A0}GHz Wi-Fi for both, would be much faster.",
-                        "C’est lent\u{00A0}: un câble entre l’iPhone et ce Mac, ou un Wi-Fi 5\u{00A0}GHz pour les deux, irait bien plus vite.")
+                        "C’est lent\u{00A0}: un câble entre l’iPhone et ce Mac, ou un Wi-Fi 5\u{00A0}GHz pour les deux, irait bien plus vite.",
+                        "Va lento: un cable entre el iPhone y este Mac, o una Wi-Fi de 5\u{00A0}GHz para ambos, iría mucho más rápido.",
+                        "Es ist langsam: Ein Kabel zwischen dem iPhone und diesem Mac oder ein 5-GHz-WLAN für beide wäre viel schneller.")
         case .slowTailnet?:
             advice = tr("It is slow: through Tailscale, the game goes over the internet. At home, on the same Wi-Fi or by cable, it would be much faster.",
-                        "C’est lent\u{00A0}: par Tailscale, le jeu passe par internet. À la maison, sur le même Wi-Fi ou par câble, il irait bien plus vite.")
+                        "C’est lent\u{00A0}: par Tailscale, le jeu passe par internet. À la maison, sur le même Wi-Fi ou par câble, il irait bien plus vite.",
+                        "Va lento: a través de Tailscale, el juego pasa por internet. En casa, en la misma Wi-Fi o por cable, iría mucho más rápido.",
+                        "Es ist langsam: Über Tailscale geht das Spiel durchs Internet. Zu Hause, im selben WLAN oder per Kabel, wäre es viel schneller.")
         case nil:
             advice = nil
         }

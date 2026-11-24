@@ -11,7 +11,11 @@ import Foundation
 public enum Format {
     /// "15,8 Go", in units of 1000 bytes, as the Finder counts.
     public static func size(_ bytes: UInt64) -> String {
-        let units = L10n.french ? ["o", "Ko", "Mo", "Go", "To"] : ["bytes", "KB", "MB", "GB", "TB"]
+        let units = switch L10n.code {
+        case "fr": ["o", "Ko", "Mo", "Go", "To"]
+        case "de": ["Byte", "KB", "MB", "GB", "TB"]
+        default: ["bytes", "KB", "MB", "GB", "TB"]
+        }
         var value = Double(bytes)
         var unit = 0
         while value >= 1000, unit < units.count - 1 {
@@ -46,7 +50,8 @@ public enum Format {
 
     public static func percent(_ fraction: Double) -> String {
         let value = Int((max(0, min(1, fraction)) * 100).rounded(.down))
-        return L10n.french ? "\(value) %" : "\(value)%"
+        // A space before the sign in French, Spanish and German.
+        return L10n.decimalComma ? "\(value) %" : "\(value)%"
     }
 
     /// "1 h 16 min", "4 min 32 s", "45 s".
@@ -62,7 +67,7 @@ public enum Format {
 
     /// "il y a 2 heures", "yesterday".
     public static func relative(_ date: Date, now: Date = Date()) -> String {
-        if abs(now.timeIntervalSince(date)) < 60 { return tr("just now", "à l’instant") }
+        if abs(now.timeIntervalSince(date)) < 60 { return tr("just now", "à l’instant", "ahora mismo", "gerade eben") }
         let formatter = RelativeDateTimeFormatter()
         formatter.locale = L10n.locale
         formatter.unitsStyle = .full

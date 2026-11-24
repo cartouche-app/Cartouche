@@ -98,14 +98,15 @@ def free_bytes(path: Path | None) -> int | None:
 
 
 def amount(size: int | None) -> str:
-    """"0.4 GB", "12 GB" (Go, with a decimal comma, in French)."""
+    """"0.4 GB", "12 GB": with a decimal comma in French, Spanish and German,
+    and Go in French."""
     if size is None:
         return ""
     gb = size / 1e9
     text = f"{gb:.1f}" if gb < 10 else f"{gb:.0f}"
-    if language() == "fr":
-        return text.replace(".", ",") + " Go"
-    return text + " GB"
+    if language() != "en":
+        text = text.replace(".", ",")
+    return text + (" Go" if language() == "fr" else " GB")
 
 
 def message(path: Path | None, text: str = "") -> str:

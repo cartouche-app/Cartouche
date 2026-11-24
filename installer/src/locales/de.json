@@ -1,0 +1,289 @@
+{
+  "subtitle": "Bringt Cartouche auf dein iPhone",
+  "version": "Version",
+  "common": {
+    "confirm": "Bestätigen",
+    "cancel": "Abbrechen",
+    "dismiss": "Schließen",
+    "refresh": "Aktualisieren",
+    "delete": "Löschen",
+    "copy_to_clipboard": "Kopieren",
+    "more_details": "Mehr Details",
+    "no_error": "Kein Fehler",
+    "copied_success": "Kopiert",
+    "retry": "Erneut versuchen"
+  },
+  "dropdown": {
+    "custom_value": "Anderer Wert",
+    "custom": "Andere",
+    "use_custom_value": "Anderen Wert verwenden",
+    "back_preset_options": "Zurück zu den vorgeschlagenen Optionen",
+    "select": "Auswählen"
+  },
+  "app": {
+    "title": "Cartouche-Installer",
+    "language": "Sprache",
+    "github": "GitHub",
+    "open_github_failed": "Der GitHub-Link lässt sich nicht öffnen",
+    "settings": "Einstellungen",
+    "certificates": "Zertifikate",
+    "app_ids": "App-IDs",
+    "must_be_logged_in": "Melde dich zuerst mit deinem Apple Account an.",
+    "must_select_device": "Schließe zuerst dein iPhone an und wähle es aus.",
+    "ipa_files": "IPA-Dateien",
+    "credits": "Entstanden aus iloader von nab138 (MIT), mit isideload und idevice. Weder mit iloader noch mit Apple verbunden."
+  },
+  "steps": {
+    "iphone_title": "Dein iPhone",
+    "iphone_hint": "Schließe es mit einem Kabel an diesen Computer an und entsperre es. Tippe beim ersten Mal auf dem iPhone auf „Vertrauen“ und gib seinen Code ein.",
+    "apple_id_title": "Dein Apple Account",
+    "apple_id_hint": "Cartouche wird damit signiert, wie jede App, die du selbst installierst. Ein kostenloser Account genügt.",
+    "install_title": "Cartouche",
+    "install_hint": "Das neueste Cartouche, mit dem erhöhten Speicherlimit, seinem Zertifikat und der Kopplungsdatei, die es braucht."
+  },
+  "install": {
+    "latest": "Neueste Version: Cartouche {{version}}",
+    "release_loading": "Neuestes Cartouche wird gesucht …",
+    "release_failed": "Die Versionen von Cartouche lassen sich nicht lesen. Prüfe die Internetverbindung dieses Computers.",
+    "installed": "Auf diesem iPhone: Cartouche {{version}}. Deine Spiele und Spielstände bleiben, wenn du es erneut installierst.",
+    "not_installed": "Cartouche ist noch nicht auf diesem iPhone.",
+    "button": "Cartouche {{version}} installieren",
+    "update_button": "Cartouche {{version}} erneut installieren",
+    "needs_both": "Schließe zuerst dein iPhone an und melde dich an.",
+    "place_pairing": "Kopplungsdatei erneut in Cartouche ablegen",
+    "from_file": "Cartouche aus einer IPA-Datei installieren …"
+  },
+  "apple_id": {
+    "title": "Apple Account",
+    "logged_in_as": "Angemeldet als",
+    "sign_out": "Abmelden",
+    "signing_out": "Wird abgemeldet …",
+    "sign_out_failed": "Abmelden fehlgeschlagen",
+    "signed_out_success": "Abgemeldet",
+    "saved_logins": "Gespeicherte Accounts",
+    "sign_in": "Anmelden",
+    "logging_in": "Wird angemeldet …",
+    "logged_in_success": "Angemeldet",
+    "login_failed": "Anmelden fehlgeschlagen",
+    "deleting": "Wird gelöscht …",
+    "deletion_failed": "Löschen fehlgeschlagen",
+    "deleted_success": "Gelöscht",
+    "add_account": "Account hinzufügen +",
+    "new_login": "Anderer Account",
+    "email_placeholder": "E-Mail-Adresse des Apple Accounts …",
+    "password_placeholder": "Passwort des Apple Accounts …",
+    "save_credentials": "Auf diesem Computer merken",
+    "enter_email_password": "Gib die E-Mail-Adresse und das Passwort ein.",
+    "valid_email": "Gib eine gültige E-Mail-Adresse ein.",
+    "login": "Anmelden",
+    "two_factor_title": "Zwei-Faktor-Authentifizierung",
+    "two_factor_prompt": "Gib den Bestätigungscode ein, den Apple an deine Geräte gesendet hat.",
+    "verification_placeholder": "Bestätigungscode …",
+    "valid_6digit": "Gib einen 6-stelligen Code ein.",
+    "submit": "Weiter",
+    "max_certs_title": "Zu viele Zertifikate",
+    "max_certs_desc": "Dein Apple Account hat so viele Entwicklerzertifikate, wie Apple erlaubt. Der Installer widerruft sie und erstellt ein neues: Damit signierte Apps öffnen sich nicht mehr, bis sie erneut installiert werden.",
+    "hide_certificate_list": "Zertifikate ausblenden",
+    "choose_what_to_revoke": "Auswählen, was widerrufen wird",
+    "continue": "Weiter",
+    "no_keyring_available": "Dieser Computer kann das Passwort nicht aufbewahren: Du gibst es jedes Mal ein."
+  },
+  "device": {
+    "title": "iPhone",
+    "loading_devices": "iPhones werden gesucht …",
+    "no_devices_found": "Kein iPhone gefunden",
+    "found_device": "iPhone gefunden",
+    "found_devices": "iPhones gefunden",
+    "unable_load_devices_prefix": "Die iPhones lassen sich nicht auflisten",
+    "no_devices_found_period": "Kein iPhone gefunden. Schließe es an, entsperre es und klicke dann auf „Aktualisieren“.",
+    "selected": "Ausgewählt",
+    "pairing_in_progress_header": "Kopplung mit {{device}} …",
+    "pairing_in_progress_hint": "Entsperre das iPhone und tippe auf „Vertrauen“, gib dann seinen Code ein, falls es danach fragt.",
+    "pairing_cancel": "Abbrechen",
+    "failed_select": "Dieses iPhone lässt sich nicht verwenden"
+  },
+  "operation": {
+    "failed": "Das hat nicht geklappt.",
+    "completed": "Fertig",
+    "please_wait": "Lass das iPhone angeschlossen und entsperrt …",
+    "copy_error_clipboard": "Fehler kopieren"
+  },
+  "operations": {
+    "install_title": "Cartouche wird installiert",
+    "install_success_title": "Cartouche ist installiert",
+    "install_success_message": "Auf dem iPhone, nur beim ersten Mal: Vertraue unter Einstellungen › Allgemein › VPN und Geräteverwaltung deinem Apple Account; wenn iOS danach fragt, schalte unter Einstellungen › Datenschutz & Sicherheit den Entwicklermodus ein und starte neu. Öffne dann Cartouche: Seine Einrichtung hat die Kopplungsdatei schon.",
+    "install_step_download": "Cartouche laden",
+    "install_step_check": "IPA prüfen",
+    "install_step_install": "Signieren und installieren, mit dem erhöhten Speicherlimit",
+    "install_step_pairing": "Kopplungsdatei in Cartouche ablegen",
+    "pairing_title": "Kopplungsdatei",
+    "pairing_success_title": "Kopplungsdatei abgelegt",
+    "pairing_success_message": "Cartouche findet sie von selbst."
+  },
+  "certificates": {
+    "manage": "Zertifikate",
+    "loading": "Zertifikate werden geladen …",
+    "loaded_success": "Zertifikate geladen",
+    "failed_load": "Die Zertifikate lassen sich nicht laden",
+    "revoking": "Zertifikat wird widerrufen …",
+    "revoked_success": "Zertifikat widerrufen",
+    "failed_revoke": "Das Zertifikat lässt sich nicht widerrufen",
+    "none_found": "Kein Zertifikat.",
+    "name": "Name",
+    "serial_number": "Seriennummer",
+    "machine_name": "Name des Geräts",
+    "machine_id": "ID des Geräts",
+    "revoke": "Widerrufen"
+  },
+  "app_ids": {
+    "manage": "App-IDs",
+    "loading": "App-IDs werden geladen …",
+    "loaded_success": "App-IDs geladen",
+    "failed_load": "Die App-IDs lassen sich nicht laden",
+    "deleted_success": "App-ID gelöscht",
+    "failed_delete": "Die App-ID lässt sich nicht löschen",
+    "available": "{{available}}/{{max}} App-IDs verfügbar",
+    "none_found": "Keine App-ID.",
+    "name": "Name",
+    "expiration": "Läuft ab",
+    "id": "ID",
+    "identifier": "Kennung",
+    "never": "Nie"
+  },
+  "settings": {
+    "anisette_server": "Anisette-Server:",
+    "custom_anisette_placeholder": "Anderer Anisette-Server",
+    "custom_anisette": "Anderer",
+    "use_custom_anisette": "Anderen Anisette-Server verwenden",
+    "back_preset_servers": "Zurück zu den vorgeschlagenen Servern",
+    "reset_anisette_title": "Anisette-Zustand zurücksetzen",
+    "reset_anisette_message": "Anisette-Zustand zurücksetzen? Apple fragt dann erneut nach einem Zwei-Faktor-Code.",
+    "resetting_anisette_state": "Anisette-Zustand wird zurückgesetzt …",
+    "anisette_state_reset_success": "Anisette-Zustand zurückgesetzt",
+    "anisette_state_not_found": "Kein Anisette-Zustand zum Zurücksetzen",
+    "failed_reset_anisette_state": "Der Anisette-Zustand lässt sich nicht zurücksetzen",
+    "view_logs": "Protokolle",
+    "logs": "Protokolle",
+    "log_level": "Stufe:",
+    "no_logs_yet": "Noch keine Protokolle.",
+    "debug": "Debug",
+    "info": "Info",
+    "warn": "Warnung",
+    "error": "Fehler",
+    "delete_stored_rppairing": "Gespeicherte Kopplung löschen",
+    "delete_stored_rppairing_message": "Die Kopplung löschen, die dieser Computer für dieses iPhone aufbewahrt? Er koppelt sich erneut, und das iPhone fragt, ob es ihm vertrauen soll.",
+    "deleting_stored_rppairing": "Gespeicherte Kopplung wird gelöscht …",
+    "stored_rppairing_deleted_success": "Gespeicherte Kopplung gelöscht",
+    "failed_delete_stored_rppairing": "Die gespeicherte Kopplung lässt sich nicht löschen",
+    "dont_use_keyring": "Schlüsselbund nicht verwenden",
+    "dont_use_keyring_message": "Der Installer bewahrt Kopplungen, Anisette-Zustand und Zertifikate dann in Dateien auf diesem Computer auf, was weniger sicher ist. Schalte das nur ein, wenn der Schlüsselbund nicht funktioniert."
+  },
+  "dialog": {
+    "confirm": "Bestätigen",
+    "cancel": "Abbrechen"
+  },
+  "error": {
+    "title": "Etwas ist schiefgegangen: {{msg}}",
+    "unknown": "Unbekannt",
+    "suggestions_heading": "Was du versuchen kannst",
+    "suggestions": {
+      "underage": [
+        "Dein Apple Account hat vielleicht nicht das Alter, das die Entwicklerdienste von Apple verlangen."
+      ],
+      "account_locked": [
+        "Das passiert meist nach mehreren fehlgeschlagenen Anmeldungen und ist harmlos.",
+        "Entsperre deinen Account unter ((link:https://iforgot.apple.com/))."
+      ],
+      "auth": [
+        "Prüfe die E-Mail-Adresse und das Passwort und versuche es erneut, auch wenn sie stimmten.",
+        "Wenn es weiter fehlschlägt, versuche es mit einem anderen Apple Account.",
+        "Sicherheitsschlüssel werden nicht unterstützt: Verwende einen Account, der seine Codes auf deinen Geräten erhält."
+      ],
+      "download": [
+        "Prüfe die Internetverbindung dieses Computers und versuche es dann erneut.",
+        "Lade Cartouche-<version>.ipa von ((link:https://github.com/cartouche-app/Cartouche/releases:den Versionen von Cartouche)) und verwende dann „Cartouche aus einer IPA-Datei installieren“."
+      ],
+      "not_cartouche": [
+        "Wähle die IPA von Cartouche selbst, Cartouche-<version>.ipa von ((link:https://github.com/cartouche-app/Cartouche/releases:den Versionen von Cartouche)). Ein Spiel kommt in Cartouche, mit seinem „Importieren“."
+      ],
+      "cartouche_missing": [
+        "Installiere zuerst Cartouche, mit der Taste von Schritt 3."
+      ],
+      "profile_for_another_app": [
+        "Wähle ein Platzhalterprofil (seine App-ID endet auf *) oder eines für io.github.clabeuhtegrite.cartouche und installiere dann erneut."
+      ],
+      "house_arrest": [
+        "[ios::26.3]Prüfe, dass das iPhone keine Entwickler-Beta von iOS 26.3 hat, die einen Fehler mit house arrest hat."
+      ],
+      "pairing": [
+        "Trenne das iPhone, schließe es wieder an und versuche es dann erneut.",
+        "Prüfe, dass das iPhone einen Code hat.",
+        "Schließe das iPhone mit einem Kabel an, nicht über WLAN."
+      ],
+      "usbmuxd": [
+        "[platform::windows]Installiere Apple-Geräte aus dem Microsoft Store oder ((link:https://apple.co/ms:iTunes)) und prüfe, dass es das iPhone sieht.",
+        "[platform::windows]Wenn iTunes installiert ist, deinstalliere es mit Apple Mobile Device Support und installiere dann Apple-Geräte aus dem Microsoft Store.",
+        "[platform::linux]Prüfe, dass usbmuxd installiert ist und läuft."
+      ],
+      "trust": [
+        "Entsperre das iPhone, gehe zum Home-Bildschirm und bestätige die Frage „Vertrauen“."
+      ],
+      "device_coms": [
+        "Prüfe, dass das iPhone an diesen Computer angeschlossen ist.",
+        "Trenne es und schließe es wieder an. Wenn es weiter fehlschlägt, versuche einen anderen USB-Anschluss und ein anderes Kabel."
+      ],
+      "not_logged_in": [
+        "Melde dich zuerst mit deinem Apple Account an."
+      ],
+      "no_device_selected": [
+        "Wähle zuerst dein iPhone aus."
+      ],
+      "anisette": [
+        "Prüfe die Internetverbindung dieses Computers.",
+        "Wähle in den Einstellungen einen anderen Anisette-Server und probiere mehrere aus.",
+        "Prüfe, ob sich ((link:{{anisetteServerUrl}})) in einem Browser öffnet."
+      ],
+      "keyring": [
+        "Schalte in den Einstellungen „Schlüsselbund nicht verwenden“ ein, um das zu umgehen. Das ist weniger sicher."
+      ],
+      "misc": [
+        "Versuche es erneut. Den Installer, den Computer oder das iPhone neu zu starten, kann helfen."
+      ],
+      "admin": [
+        "Versuche, den Installer als Administrator auszuführen."
+      ],
+      "filesystem": [
+        "Prüfe, ob der Installer auf diesem Computer Dateien lesen und schreiben darf."
+      ],
+      "not_enough_app_ids": [
+        "Dein Apple Account hat keine App-ID mehr für Cartouche frei: Ein kostenloser Account bekommt 10 pro Woche.",
+        "Eine App-ID läuft 7 Tage nach ihrer Erstellung ab und lässt sich nicht früher löschen. Versuche es dann erneut."
+      ],
+      "max_apps": [
+        "Ein kostenloser Apple Account kann 3 eigene Apps gleichzeitig installiert haben, abgelaufene mitgezählt.",
+        "Lösche eine andere App, die du selbst installiert hast, und versuche es dann erneut."
+      ]
+    },
+    "support_message": "Wenn es weiter fehlschlägt, klicke auf „Kopieren“ und füge den Fehler in ein <issues>Issue von Cartouche</issues> ein."
+  },
+  "signing": {
+    "title": "Dein Zertifikat",
+    "hint": "Wähle dein Signaturzertifikat (.p12) und sein Bereitstellungsprofil. Signiert wird auf diesem Computer; keine Apple-ID nötig.",
+    "choose_p12": "Zertifikat auswählen (.p12)",
+    "choose_profile": "Sein Profil auswählen (.mobileprovision)",
+    "password": "Passwort des Zertifikats (leer lassen, wenn es keines hat)",
+    "limitations": "Die Spiele öffnen sich anstelle von Cartouche, nie hinter der Konsole. Cartouche erneuert sich nicht jede Woche: Installiere seine Updates mit diesem Installer. Das erhöhte Speicherlimit hängt von deinem Profil ab.",
+    "needs_files": "Wähle dein Zertifikat (.p12) und sein Profil.",
+    "needs_ready": "Wähle ein iPhone, dann dein Zertifikat und sein Profil.",
+    "mode_label": "Cartouche signieren mit",
+    "mode_certificate": "Zertifikat (.p12)",
+    "profile_checking": "Bereitstellungsprofil wird geprüft …",
+    "profile_invalid": "Dieses Bereitstellungsprofil lässt sich nicht lesen. Wähle eine gültige .mobileprovision-Datei.",
+    "no_memory_limit": "Dieses Profil hat kein erhöhtes Speicherlimit: Die meisten Spiele starten nicht. Ohne es hat die App etwa 3 GB Arbeitsspeicher.",
+    "profile_other_app": "Dieses Profil ist für {{app}}, nicht für Cartouche: iOS würde es nicht installieren. Wähle ein Platzhalterprofil (seine App-ID endet auf *) oder eines für io.github.clabeuhtegrite.cartouche.",
+    "install_hint": "Cartouche, signiert mit deinem Zertifikat und den Berechtigungen, die dein Bereitstellungsprofil gewährt.",
+    "step_install": "Mit deinem Zertifikat signieren und installieren",
+    "step_handoff": "Dein Zertifikat verschlüsselt in Cartouche ablegen",
+    "success_message": "Öffne Cartouche auf dem iPhone: Es übernimmt dein Zertifikat von selbst. Wenn iOS dich bittet, dem Entwickler zu vertrauen oder den Entwicklermodus einzuschalten, tu es in den Einstellungen. Weder eine Apple-ID noch eine Kopplungsdatei wird benötigt."
+  }
+}

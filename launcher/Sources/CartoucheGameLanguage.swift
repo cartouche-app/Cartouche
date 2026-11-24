@@ -99,6 +99,17 @@ public enum CartoucheGameLanguage {
         return (language, script, region)
     }
 
+    /// The device's own language as Cartouche's telemetry sends it: of the
+    /// first of the iPhone's or the Mac's languages, such as "zh-Hant-TW",
+    /// "es-419" or "de_DE", its language and its script, "zh-Hant", "es",
+    /// "de"; never its region. Nil when it names no language.
+    public static func deviceLanguage(_ preferred: [String]) -> String? {
+        guard let first = preferred.first else { return nil }
+        let found = parts(of: first)
+        guard (2...3).contains(found.language.count), found.language.allSatisfy({ $0.isASCII && $0.isLetter }) else { return nil }
+        return found.language + (found.script.map { "-" + $0 } ?? "")
+    }
+
     /// The Switch's languages, by nxnative's codes (its nacp.py), that one
     /// of the iPhone's languages stands for, the closest first: "fr-CA"
     /// gives Canadian French, then French. Empty for a language no Switch

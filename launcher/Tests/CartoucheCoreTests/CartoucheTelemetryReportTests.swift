@@ -12,8 +12,8 @@ import XCTest
 
 final class CartoucheTelemetryReportTests: XCTestCase {
     private let context = CartoucheTelemetryContext(install: "8c1f6c2e-7a2f-4e19-8c3d-2f6a9b0e1d7c", cartouche: "0.10.0",
-                                                    device: "iPhone19,4", ios: "27.3", language: "fr", memoryLimitMiB: 6143,
-                                                    increasedMemoryLimit: true)
+                                                    device: "iPhone19,4", ios: "27.3", language: "fr", deviceLanguage: "fr",
+                                                    memoryLimitMiB: 6143, increasedMemoryLimit: true)
     private let now = Date(timeIntervalSince1970: 1_794_300_000)
 
     private func object(_ json: String) throws -> [String: Any] {
@@ -36,6 +36,8 @@ final class CartoucheTelemetryReportTests: XCTestCase {
         XCTAssertEqual(fields["kind"] as? String, "session")
         XCTAssertEqual(fields["install"] as? String, context.install)
         XCTAssertEqual(fields["device"] as? String, "iPhone19,4")
+        XCTAssertEqual(fields["language"] as? String, "fr")
+        XCTAssertEqual(fields["deviceLanguage"] as? String, "fr")
         XCTAssertEqual(fields["memoryLimitMiB"] as? Int, 6143)
         XCTAssertEqual(fields["game"] as? String, "0400C3F00006E000")
         XCTAssertEqual(fields["frames"] as? Int, 9000)

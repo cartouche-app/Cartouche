@@ -219,6 +219,7 @@ final class MacConsoleTests: XCTestCase {
         let resources = root.appendingPathComponent("Resources", isDirectory: true)
         try writeWords(["action.play": "Jouer", "sheet.onThisIPhone": "Sur ce Mac"], language: "fr", in: resources)
         try writeWords(["action.play": "Play", "sheet.onThisIPhone": "On this Mac"], language: "en", in: resources)
+        try writeWords(["action.play": "Spielen", "sheet.onThisIPhone": "Auf diesem Mac"], language: "de", in: resources)
         defer { console.speak(nil) }
 
         console.speak("fr", from: resources)
@@ -234,9 +235,14 @@ final class MacConsoleTests: XCTestCase {
         XCTAssertEqual(CartoucheText.onThisIPhone, "On this Mac")
         XCTAssertNil(CartoucheGameSummaryView.language)
 
+        // German, as Spanish, since decision 152.
+        console.speak("de", from: resources)
+        XCTAssertEqual(console.language, "de")
+        XCTAssertEqual(CartoucheText.play, "Spielen")
+
         // A language the console does not have: the Mac's, from the app's
         // own bundle.
-        console.speak("de", from: resources)
+        console.speak("it", from: resources)
         XCTAssertNil(console.language)
         XCTAssertEqual(CartoucheText.bundle.bundleURL, Bundle(for: CartoucheCatalog.self).bundleURL)
     }

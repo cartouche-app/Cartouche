@@ -160,25 +160,25 @@ struct AppCommands: Commands {
             Divider()
         }
         CommandGroup(after: .newItem) {
-            Button(tr("Check nxnative", "Vérifier nxnative")) {
+            Button(tr("Check nxnative", "Vérifier nxnative", "Comprobar nxnative", "nxnative prüfen")) {
                 Task { await model.refreshLibrary(update: true) }
             }
             .keyboardShortcut("r")
             .disabled(model.engine == nil || model.checking)
-            Button(tr("Build what is due", "Construire ce qui est à reconstruire")) {
+            Button(tr("Build what is due", "Construire ce qui est à reconstruire", "Compilar lo pendiente", "Fälliges erstellen")) {
                 model.build()
             }
             .keyboardShortcut("b")
             .disabled(!model.canBuild || model.dueOutsideBatch.isEmpty)
-            Button(tr("Stop the builds", "Arrêter les constructions")) {
+            Button(tr("Stop the builds", "Arrêter les constructions", "Detener las compilaciones", "Builds stoppen")) {
                 model.stop()
             }
             .keyboardShortcut(".")
             .disabled(!model.isBuilding)
         }
         CommandGroup(replacing: .help) {
-            Link(tr("The Builder’s guide", "Guide du Builder"), destination: AppModel.guide)
-            Link(tr("nxnative on GitHub", "nxnative sur GitHub"), destination: URL(string: "https://github.com/seedds/nxnative")!)
+            Link(tr("The Builder’s guide", "Guide du Builder", "Guía del Builder", "Anleitung des Builder"), destination: AppModel.guide)
+            Link(tr("nxnative on GitHub", "nxnative sur GitHub", "nxnative en GitHub", "nxnative auf GitHub"), destination: URL(string: "https://github.com/seedds/nxnative")!)
         }
     }
 }

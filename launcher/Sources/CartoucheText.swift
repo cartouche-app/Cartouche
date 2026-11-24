@@ -2,7 +2,8 @@
 //  CartoucheText.swift
 //  Cartouche
 //
-//  The launcher's words, in Cartouche.xcstrings (English and French). Each
+//  The launcher's words, in Cartouche.xcstrings (English, French, Spanish and
+//  German). Each
 //  call also carries the English text, which shows if a translation is missing.
 //  They call the device Cartouche runs on the iPhone: on an iPad, the iPad
 //  (CartoucheDeviceWords.swift).
@@ -1007,7 +1008,7 @@ enum CartoucheText {
     static var telemetryFooter: String { s("telemetry.footer", "After each game, Cartouche sends what nxnative measured while it ran, with Cartouche’s own events. They show which games run well on which iPhone, and what to fix.") }
     static var telemetryWhat: String { s("telemetry.what", "What is sent") }
     static var telemetryWhatGames: String { s("telemetry.what.games", "For each game session: frame rate, frame and GPU times, stutters and what caused them, shader preparation, memory, heat and power, sound, the screen’s sizes, how the game ended, and the game’s version and settings.") }
-    static var telemetryWhatDevice: String { s("telemetry.what.device", "This iPhone’s model, iOS version and memory limit, Cartouche’s version and language, and a random number of this copy of Cartouche.") }
+    static var telemetryWhatDevice: String { s("telemetry.what.device", "This iPhone’s model, iOS version, language and memory limit, Cartouche’s version and language, and a random number of this copy of Cartouche.") }
     static var telemetryWhatEvents: String { s("telemetry.what.events", "Each start of Cartouche, game installs, updates, renewals, resets, Apple ID sign-ins, signing certificates you import, how the Files picker of each import went, and errors, by their codes and the step they stopped at.") }
     static var telemetryWhatNever: String { s("telemetry.what.never", "Never your Apple ID, your iPhone’s name, your files, the addresses of your storage or the game’s log itself.") }
     static var telemetryLastSent: String { s("telemetry.lastSent", "Last sent") }

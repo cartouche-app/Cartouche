@@ -67,7 +67,7 @@ final class ConsoleTelemetryTests: XCTestCase {
     private let started = Date(timeIntervalSince1970: 1_794_000_000)
     /// This copy's context, as builder-reports.json has it.
     private let context = CartoucheMacTelemetryContext(install: "8c1f6c2e-7a2f-4e19-8c3d-2f6a9b0e1d7c", version: "0.2.1",
-                                                       device: "Mac16,12", system: "26.6", language: "fr")
+                                                       device: "Mac16,12", system: "26.6", language: "fr", deviceLanguage: "fr")
 
     override func setUp() async throws {
         root = FileManager.default.temporaryDirectory.appendingPathComponent("console-telemetry-\(UUID().uuidString)", isDirectory: true)

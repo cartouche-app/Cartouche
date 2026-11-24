@@ -241,10 +241,10 @@ public final class CartoucheMacConsole: ObservableObject {
     }
 
     /// The language the console speaks, as the app's settings choose it:
-    /// "fr" or "en", or nil for the Mac's.
+    /// "en", "fr", "es" or "de", or nil for the Mac's.
     @Published public private(set) var language: String?
 
-    /// Speaks LANGUAGE from now on, "fr" or "en", or the Mac's language for
+    /// Speaks LANGUAGE from now on, "en", "fr", "es" or "de", or the Mac's language for
     /// nil: the console's words change at once, as the app's do.
     public func speak(_ language: String?) {
         speak(language, from: Bundle.main.resourceURL)
@@ -254,7 +254,7 @@ public final class CartoucheMacConsole: ObservableObject {
     /// holds that language alone (bundle.sh, console/strings.py), and names
     /// the games' languages in it.
     func speak(_ language: String?, from resources: URL?) {
-        let chosen = language.flatMap { ["fr", "en"].contains($0) ? $0 : nil }
+        let chosen = language.flatMap { ["en", "fr", "es", "de"].contains($0) ? $0 : nil }
         let folder = chosen.flatMap { resources?.appendingPathComponent("Console/" + $0, isDirectory: true) }
         CartoucheText.bundle = folder.flatMap { Bundle(url: $0) } ?? Bundle(for: CartoucheCatalog.self)
         CartoucheText.locale = chosen.map { Locale(identifier: $0) } ?? Locale.current

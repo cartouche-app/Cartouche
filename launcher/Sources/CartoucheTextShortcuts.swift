@@ -8,8 +8,8 @@
 //  cannot start it (CartoucheShortcuts.swift), in Cartouche.xcstrings with
 //  the others (CartoucheText.swift). The words Siri and Shortcuts show of
 //  Cartouche's action, its title and phrases, are the action's own, with
-//  their French in launcher/AppIntents/fr.json: the steps below name the
-//  action as Shortcuts does.
+//  their French, Spanish and German in launcher/AppIntents: the steps below
+//  name the action as Shortcuts does.
 //
 
 import Foundation

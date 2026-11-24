@@ -1,497 +1,743 @@
 {
   "overrides": {
     "action.uninstall": {
+      "de": "Von diesem Mac entfernen",
       "en": "Remove from this Mac",
+      "es": "Quitar de este Mac",
       "fr": "Retirer de ce Mac"
     },
     "errorReport.hint": {
+      "de": "Kopiert, was schiefgelaufen ist, mit den Versionen von Cartouche und macOS, ohne Passwort oder Serveradresse.",
       "en": "Copies what went wrong, with the versions of Cartouche and macOS, without any password or server address.",
+      "es": "Copia lo que salió mal, con las versiones de Cartouche y de macOS, sin ninguna contraseña ni dirección de servidor.",
       "fr": "Copie ce qui s’est passé, avec les versions de Cartouche et de macOS, sans mot de passe ni adresse de serveur."
     },
     "gameInfo.footer": {
+      "de": "Was du hier änderst, bleibt auf diesem Mac.",
       "en": "What you change here stays on this Mac.",
+      "es": "Lo que cambies aquí se queda en este Mac.",
       "fr": "Ce que vous changez ici reste sur ce Mac."
     },
     "games.empty.message": {
+      "de": "Füge deine Spiele im Builder hinzu: Er erstellt jedes für diesen Mac aus deiner eigenen Kopie.",
       "en": "Add your games in the Builder: it builds each one for this Mac from your own copy.",
+      "es": "Añade tus juegos en el Builder: compila cada uno para este Mac a partir de tu propia copia.",
       "fr": "Ajoutez vos jeux dans le Builder : il construit chacun pour ce Mac à partir de votre propre copie."
     },
     "reason.doesNotRun": {
+      "de": "Die Tester konnten es auf diesem Mac-Modell nicht starten.",
       "en": "Testers could not run it on this Mac model.",
+      "es": "Los testers no pudieron ejecutarlo en este modelo de Mac.",
       "fr": "Les testeurs n’ont pas pu le lancer sur ce modèle de Mac."
     },
     "reason.gpu": {
+      "de": "Die Spiele von nxnative brauchen einen Mac mit Apple Chip: Die GPU dieses Mac kann ihre komprimierten Texturen nicht lesen, und ein Spiel hält dort vor seinem ersten Bild an.",
       "en": "nxnative’s games need a Mac with an Apple chip: this Mac’s GPU cannot read their compressed textures, and a game stops there before its first image.",
+      "es": "Los juegos de nxnative necesitan un Mac con chip de Apple: la GPU de este Mac no puede leer sus texturas comprimidas, y un juego se detiene ahí antes de su primera imagen.",
       "fr": "Les jeux nxnative demandent un Mac avec une puce Apple : le GPU de ce Mac ne lit pas leurs textures compressées, et un jeu s’y arrête avant sa première image."
     },
     "reason.ios": {
+      "de": "Benötigt macOS %@ oder neuer.",
       "en": "Needs macOS %@ or later.",
+      "es": "Necesita macOS %@ o posterior.",
       "fr": "Nécessite macOS %@ ou ultérieur."
     },
     "reason.memory": {
+      "de": "Benötigt etwa %1$@; ein Spiel kann auf diesem Mac %2$@ nutzen.",
       "en": "Needs about %1$@; a game may use %2$@ on this Mac.",
+      "es": "Necesita unos %1$@; un juego puede usar %2$@ en este Mac.",
       "fr": "Nécessite environ %1$@ ; un jeu peut utiliser %2$@ sur ce Mac."
     },
     "report.privacy": {
+      "de": "Er verlässt diesen Mac nur, wenn du ihn sendest, ohne Passwörter, Servernamen oder -adressen oder Benutzernamen, auch nicht in dem, was du schreibst.",
       "en": "It leaves this Mac only when you send it, without passwords, server names or addresses or user names, even in what you write.",
+      "es": "Solo sale de este Mac cuando lo envías, sin contraseñas, nombres ni direcciones de servidores ni nombres de usuario, ni siquiera en lo que escribas.",
       "fr": "Il ne quitte ce Mac que si vous l’envoyez, sans mots de passe, noms ni adresses de serveurs ni noms d’utilisateur, même dans ce que vous écrivez."
     },
     "report.what.footer": {
+      "de": "Cartouche fügt Modell und Arbeitsspeicher dieses Mac, die Versionen sowie seine letzten Schritte und Fehler hinzu.",
       "en": "Cartouche adds this Mac’s model and memory, the versions, and its last steps and errors.",
+      "es": "Cartouche añade el modelo y la memoria de este Mac, las versiones, y sus últimos pasos y errores.",
       "fr": "Cartouche y ajoute le modèle et la mémoire de ce Mac, les versions, ses dernières étapes et erreurs."
     },
     "running.paused": {
+      "de": "Läuft in seinem eigenen Fenster.",
       "en": "Running in its own window.",
+      "es": "En curso, en su propia ventana.",
       "fr": "En cours, dans sa propre fenêtre."
     },
     "saves.fetched.kept": {
+      "de": "Die neuesten Spielstände, vom %1$@, kamen aus deinem Spielstandordner. Die dieses Mac werden dort als Kopie vom %2$@ aufbewahrt.",
       "en": "The newest saves, of %1$@, came from your saves folder. This Mac’s are kept there as the copy of %2$@.",
+      "es": "Las partidas guardadas más recientes, del %1$@, llegaron de tu carpeta de partidas guardadas. Las de este Mac se guardan allí como la copia del %2$@.",
       "fr": "Les sauvegardes les plus récentes, du %1$@, sont arrivées de votre dossier des sauvegardes. Celles de ce Mac y sont gardées : copie du %2$@."
     },
     "saves.footer": {
+      "de": "Cartouche gleicht diese Spielstände mit deinem Spielstandordner ab: Die neuesten kommen, bevor das Spiel startet und solange es nicht läuft, und gehen wenige Sekunden nach jedem Speichern des Spiels dorthin, spätestens nach dem Spiel. Haben sich beide geändert, gewinnen die neuesten, und die anderen bleiben als Kopie. Die %lld neuesten Kopien werden aufbewahrt, eine für jedes gespielte Spiel.",
       "en": "Cartouche keeps these saves in step with your saves folder: the newest come before the game starts and while it does not run, and go there a few seconds after each save of the game, after the game at the latest. When both changed, the newest win and the others stay as a copy. The %lld newest copies are kept, one for each game played.",
+      "es": "Cartouche mantiene estas partidas guardadas al día con tu carpeta de partidas guardadas: las más recientes llegan antes de que empiece el juego y mientras no está en marcha, y van allí unos segundos después de cada guardado del juego, como muy tarde al terminar la partida. Cuando ambas cambiaron, ganan las más recientes y las otras se quedan como copia. Se conservan las %lld copias más recientes, una por partida jugada.",
       "fr": "Cartouche synchronise ces sauvegardes avec votre dossier des sauvegardes : les plus récentes arrivent avant chaque lancement et tant que le jeu ne tourne pas, et y repartent quelques secondes après chaque sauvegarde du jeu, au plus tard après la partie. Si les deux ont changé, les plus récentes l’emportent et les autres restent en copie. Les %lld copies les plus récentes sont gardées, une par partie."
     },
     "saves.kept": {
+      "de": "Neuere Spielstände sind in deinem Spielstandordner: Sie kommen als Nächstes auf diesen Mac. Die dieses Mac werden dort als Kopie vom %@ aufbewahrt.",
       "en": "Newer saves are in your saves folder: they come to this Mac next. This Mac’s are kept there as the copy of %@.",
+      "es": "Hay partidas guardadas más recientes en tu carpeta de partidas guardadas: llegan después a este Mac. Las de este Mac se guardan allí como la copia del %@.",
       "fr": "Des sauvegardes plus récentes sont dans votre dossier des sauvegardes : elles arrivent ensuite sur ce Mac. Celles de ce Mac y sont gardées : copie du %@."
     },
     "saves.noFolder": {
+      "de": "Der Abgleich der Spielstände der auf diesem Mac gespielten Spiele ist ausgeschaltet: Schalte ihn im Builder ein, unter „Auf diesem Mac gespielte Spiele“.",
       "en": "Keeping the saves of the games played on this Mac in step is off: turn it on in the Builder, under Games played on this Mac.",
+      "es": "Mantener al día las partidas guardadas de los juegos jugados en este Mac está desactivado: actívalo en el Builder, en Juegos jugados en este Mac.",
       "fr": "La synchronisation des sauvegardes des jeux joués sur ce Mac est désactivée : activez-la dans le Builder, sous « Jeux joués sur ce Mac »."
     },
     "saves.putBack.footer": {
+      "de": "Eine Kopie zurückzulegen ersetzt die Spielstände dieses Spiels auf diesem Mac. Cartouche sendet zuerst die aktuellen in deinen Spielstandordner, und die zurückgelegte Kopie wird dort die neueste, die auch deine anderen Geräte übernehmen.",
       "en": "Putting back a copy replaces this game’s saves on this Mac. Cartouche sends the current ones to your saves folder first, and the copy put back becomes the newest one there, which your other devices take too.",
+      "es": "Restaurar una copia sustituye las partidas guardadas de este juego en este Mac. Cartouche envía primero las actuales a tu carpeta de partidas guardadas, y la copia restaurada pasa a ser allí la más reciente, que también toman tus otros dispositivos.",
       "fr": "Remettre une copie remplace les sauvegardes de ce jeu sur ce Mac. Cartouche envoie d’abord les actuelles dans votre dossier des sauvegardes, et la copie remise y devient la plus récente, que vos autres appareils prennent aussi."
     },
     "saves.putBack.message": {
+      "de": "Sie ersetzt die Spielstände des Spiels auf diesem Mac. Cartouche sendet sie zuerst in deinen Spielstandordner, damit du zu ihnen zurückkehren kannst.",
       "en": "It replaces the game’s saves on this Mac. Cartouche sends them to your saves folder first, so you can come back to them.",
+      "es": "Sustituye las partidas guardadas del juego en este Mac. Cartouche las envía primero a tu carpeta de partidas guardadas, así que podrás volver a ellas.",
       "fr": "Elle remplace les sauvegardes du jeu sur ce Mac. Cartouche les envoie d’abord dans votre dossier des sauvegardes : vous pourrez y revenir."
     },
     "saves.waiting.game": {
+      "de": "Diese Spielstände warten auf deinen Spielstandordner: Sie gehen, sobald er da ist.",
       "en": "These saves are waiting for your saves folder: they go as soon as it is there.",
+      "es": "Estas partidas guardadas esperan a tu carpeta de partidas guardadas: se van en cuanto esté disponible.",
       "fr": "Ces sauvegardes attendent votre dossier des sauvegardes : elles partent dès qu’il est là."
     },
     "setting.language.iPhone": {
+      "de": "Sprache des Mac",
       "en": "Mac language",
+      "es": "Idioma del Mac",
       "fr": "Langue du Mac"
     },
     "setting.language.iPhone.missing": {
+      "de": "Keine der Sprachen des Mac ist in diesem Spiel: Es startet auf %@.",
       "en": "None of the Mac’s languages is in this game: it starts in %@.",
+      "es": "Ninguno de los idiomas del Mac está en este juego: se inicia en %@.",
       "fr": "Aucune des langues du Mac n’est dans ce jeu : il démarre en %@."
     },
     "setting.language.iPhone.starts": {
+      "de": "Startet auf %@, der Sprache des Mac.",
       "en": "Starts in %@, the Mac’s language.",
+      "es": "Se inicia en %@, el idioma del Mac.",
       "fr": "Démarre en %@, la langue du Mac."
     },
     "settings.intro": {
+      "de": "Die Einstellungen, mit denen dieses Spiel startet, aus Cartouche, dem Finder oder dem Dock.",
       "en": "The settings this game starts with, from Cartouche, the Finder or the Dock.",
+      "es": "Los ajustes con los que se inicia este juego, desde Cartouche, el Finder o el Dock.",
       "fr": "Les réglages avec lesquels ce jeu démarre, depuis Cartouche, le Finder ou le Dock."
     },
     "settings.nxnativeScreen": {
+      "de": "Im Fenster von nxnative starten",
       "en": "Start on nxnative’s window",
+      "es": "Iniciar en la ventana de nxnative",
       "fr": "Lancer sur la fenêtre de nxnative"
     },
     "settings.nxnativeScreen.footer": {
+      "de": "Startet das Spiel im Einstellungsfenster von nxnative, auf Englisch, mit dieser Auswahl: Seine Taste „Play“ startet das Spiel.",
       "en": "Starts the game on nxnative’s own settings window, in English, with these choices: its Play button starts the game.",
+      "es": "Inicia el juego en la ventana de ajustes de nxnative, en inglés, con estas opciones: su botón Play inicia el juego.",
       "fr": "Lance le jeu sur la fenêtre de réglages de nxnative, en anglais, avec ces choix : son bouton Play démarre le jeu."
     },
     "settings.reset.footer": {
+      "de": "Stellt alle Einstellungen wieder her, mit denen dieses Spiel getestet wurde, und die Sprache des Mac.",
       "en": "Brings back all the settings this game was tested with, and the Mac’s language.",
+      "es": "Restablece todos los ajustes con los que se probó este juego, y el idioma del Mac.",
       "fr": "Remet tous les réglages avec lesquels ce jeu a été testé, et la langue du Mac."
     },
     "settings.unreachable": {
+      "de": "Cartouche kann die Einstellungen dieses Spiels nicht öffnen. Starte es im Fenster von nxnative, um sie zu wählen.",
       "en": "Cartouche cannot open this game’s settings. Start it on nxnative’s window to choose them.",
+      "es": "Cartouche no puede abrir los ajustes de este juego. Inícialo en la ventana de nxnative para elegirlos.",
       "fr": "Cartouche ne peut pas ouvrir les réglages de ce jeu. Lancez-le sur la fenêtre de nxnative pour les choisir."
     },
     "sheet.build.here": {
+      "de": "Auf diesem Mac: %@",
       "en": "On this Mac: %@",
+      "es": "En este Mac: %@",
       "fr": "Sur ce Mac : %@"
     },
     "sheet.noSheet.message": {
+      "de": "Cartouche hat noch keine Infoseite für dieses Spiel.",
       "en": "Cartouche has no sheet for this game yet.",
+      "es": "Cartouche aún no tiene ficha para este juego.",
       "fr": "Cartouche n’a pas encore de fiche pour ce jeu."
     },
     "sheet.onThisIPhone": {
+      "de": "Auf diesem Mac",
       "en": "On this Mac",
+      "es": "En este Mac",
       "fr": "Sur ce Mac"
     },
     "sheet.requirements.met": {
+      "de": "Dieser Mac hat, was es braucht",
       "en": "This Mac has what it needs",
+      "es": "Este Mac tiene lo que necesita",
       "fr": "Ce Mac a tout ce qu’il faut"
     },
     "sheet.result.thisModel": {
+      "de": "Dieses Mac-Modell",
       "en": "This Mac model",
+      "es": "Este modelo de Mac",
       "fr": "Ce modèle de Mac"
     },
     "sheet.results.translated": {
+      "de": "Notizen der Tester, vom Mac übersetzt",
       "en": "Testers’ notes translated by the Mac",
+      "es": "Notas de los testers traducidas por el Mac",
       "fr": "Notes des testeurs traduites par le Mac"
     },
     "status.notRecommended": {
+      "de": "Auf diesem Mac nicht empfohlen",
       "en": "Not recommended on this Mac",
+      "es": "No recomendado en este Mac",
       "fr": "Déconseillé sur ce Mac"
     },
     "status.recommended": {
+      "de": "Läuft auf diesem Mac",
       "en": "Runs on this Mac",
+      "es": "Funciona en este Mac",
       "fr": "Tourne sur ce Mac"
     },
     "status.unsupported": {
+      "de": "Auf diesem Mac nicht unterstützt",
       "en": "Not supported on this Mac",
+      "es": "No compatible con este Mac",
       "fr": "Non pris en charge sur ce Mac"
     },
     "status.untested": {
+      "de": "Auf diesem Mac noch nicht ausprobiert",
       "en": "Not tried on this Mac yet",
+      "es": "Aún no probado en este Mac",
       "fr": "Pas encore essayé sur ce Mac"
     },
     "storage.drive.account.footer": {
+      "de": "Google bittet dich, deinem Client das Ansehen, Bearbeiten und Löschen der Dateien deines Drive zu erlauben: Cartouche installiert deine Spiele von dort und bewahrt deine Spielstände dort auf, nur in „Meine Ablage“. Deine Anmeldung bleibt in einer Datei im Ordner von Cartouche, die nur dein Account lesen kann.",
       "en": "Google asks you to let your client see, edit and delete the files of your Drive: Cartouche installs your games from there and keeps your saves there, in My Drive alone. Your sign-in stays in a file of Cartouche’s folder that only your account can read.",
+      "es": "Google te pide que permitas a tu cliente ver, editar y borrar los archivos de tu Drive: Cartouche instala tus juegos desde allí y guarda allí tus partidas guardadas, solo en Mi unidad. Tu inicio de sesión se queda en un archivo de la carpeta de Cartouche que solo tu cuenta puede leer.",
       "fr": "Google vous demande de laisser votre client voir, modifier et supprimer les fichiers de votre Drive : Cartouche y installe vos jeux et y garde vos sauvegardes, dans Mon Drive seulement. Votre connexion reste dans un fichier du dossier de Cartouche que seul votre compte peut lire."
     },
     "storage.drive.guide.intro": {
+      "de": "Einmal, kostenlos, in Google Cloud, mit dem Google-Konto deines Drive. Jede Taste öffnet die Seite ihres Schritts in deinem Browser.",
       "en": "Once, for free, in Google Cloud, with the Google account of your Drive. Each button opens its step’s page in your browser.",
+      "es": "Una vez, gratis, en Google Cloud, con la cuenta de Google de tu Drive. Cada botón abre la página de su paso en tu navegador.",
       "fr": "Une fois, gratuitement, dans Google Cloud, avec le compte Google de votre Drive. Chaque bouton ouvre la page de son étape dans votre navigateur."
     },
     "storage.drive.weekly": {
+      "de": "Solange dein Projekt im Test ist, beendet Google die Anmeldung nach 7 Tagen: Cartouche bittet dich dann, dich mit wenigen Klicks erneut anzumelden, und deine Spielstände warten so lange. Um dich ein für alle Mal anzumelden, veröffentliche die App unter „Zielgruppe“, wenn Google es anbietet.",
       "en": "While your project is in testing, Google ends the sign-in after 7 days: Cartouche then asks you to sign in again, in a few clicks, and your saves wait meanwhile. To sign in once for good, publish the app under Audience, when Google offers it.",
+      "es": "Mientras tu proyecto está en pruebas, Google termina la sesión a los 7 días: Cartouche te pide entonces que vuelvas a iniciar sesión, en unos pocos clics, y tus partidas guardadas esperan mientras tanto. Para iniciar sesión de una vez por todas, publica la app en Audiencia, cuando Google lo ofrezca.",
       "fr": "Tant que votre projet est en test, Google met fin à la connexion au bout de 7 jours : Cartouche vous demande alors de vous reconnecter, en quelques clics, et vos sauvegardes attendent. Pour vous connecter une fois pour toutes, publiez l’app dans Audience, si Google le propose."
     },
     "storage.intro": {
+      "de": "Deine Spiele und Spielstände auf deinem eigenen Speicher: ein freigegebener Ordner deines Mac, PC oder NAS, ein S3-Bucket, ein FTP- oder SFTP-Server oder dein Google Drive.",
       "en": "Your games and saves on your own storage: a shared folder of your Mac, PC or NAS, an S3 bucket, an FTP or SFTP server, or your Google Drive.",
+      "es": "Tus juegos y partidas guardadas en tu propio almacenamiento: una carpeta compartida de tu Mac, PC o NAS, un bucket S3, un servidor FTP o SFTP, o tu Google Drive.",
       "fr": "Vos jeux et sauvegardes sur votre propre stockage : dossier partagé de votre Mac, PC ou NAS, bucket S3, serveur FTP ou SFTP, ou votre Google Drive."
     },
     "storage.offline": {
+      "de": "Cartouche erreicht %@ von diesem Mac aus nicht: Verbinde seinen freigegebenen Ordner im Finder, und die Spielstände gehen, sobald er da ist.",
       "en": "Cartouche cannot reach %@ from this Mac: mount its shared folder in the Finder, and the saves go as soon as it is there.",
+      "es": "Cartouche no puede llegar a %@ desde este Mac: monta su carpeta compartida en el Finder, y las partidas guardadas se van en cuanto esté.",
       "fr": "Cartouche ne peut pas joindre %@ depuis ce Mac : montez son dossier partagé dans le Finder, et les sauvegardes partiront dès qu’il sera là."
     },
     "storage.offline.check": {
+      "de": "%@ antwortet in diesem Netzwerk nicht: Prüfe seine Adresse und ob dieser Mac in seinem Netzwerk oder in deinem VPN ist.",
       "en": "%@ does not answer on this network: check its address, and that this Mac is on its network or on your VPN.",
+      "es": "%@ no responde en esta red: comprueba su dirección, y que este Mac esté en su red o en tu VPN.",
       "fr": "%@ ne répond pas sur ce réseau : vérifiez son adresse, et que ce Mac est sur son réseau ou sur votre VPN."
     },
     "storage.s3.keys.footer": {
+      "de": "Schlüssel deines eigenen Accounts, die diesen Bucket lesen und beschreiben dürfen. Cartouche signiert jede Anfrage damit, bewahrt den geheimen Schlüssel in einer Datei im Ordner von Cartouche auf, die nur dein Account lesen kann, und macht den Bucket nie öffentlich.",
       "en": "Keys of your own account, allowed to read and write this bucket. Cartouche signs each request with them, keeps the secret key in a file of Cartouche’s folder that only your account can read, and never makes the bucket public.",
+      "es": "Claves de tu propia cuenta, con permiso para leer y escribir en este bucket. Cartouche firma cada solicitud con ellas, guarda la clave secreta en un archivo de la carpeta de Cartouche que solo tu cuenta puede leer, y nunca hace público el bucket.",
       "fr": "Les clés de votre propre compte, autorisées à lire et écrire dans ce bucket. Cartouche signe chaque requête avec elles, garde la clé secrète dans un fichier du dossier de Cartouche que seul votre compte peut lire, et ne rend jamais le bucket public."
     },
     "summary.credit.translated": {
+      "de": "Beschreibung: IGDB.com, vom Mac übersetzt",
       "en": "Description: IGDB.com, translated by the Mac",
+      "es": "Descripción: IGDB.com, traducida por el Mac",
       "fr": "Description : IGDB.com, traduite par le Mac"
     },
     "switchSave.import.footer": {
+      "de": "Das Spiel auf deiner Switch sollte nicht neuer sein als das dieses Mac: Ein Spiel liest den Spielstand einer neueren Version vielleicht nicht.",
       "en": "The game on your Switch should not be newer than this Mac’s: a game may not read the save of a newer version.",
+      "es": "El juego de tu Switch no debería ser más reciente que el de este Mac: puede que un juego no lea la partida guardada de una versión más reciente.",
       "fr": "Le jeu de votre Switch ne doit pas être plus récent que celui de ce Mac : un jeu ne lit pas toujours la sauvegarde d’une version plus récente."
     },
     "switchSave.import.intro": {
+      "de": "Exportiere auf deiner Switch den Spielstand dieses Spiels mit JKSV oder Checkpoint und wähle hier seinen Ordner oder seine ZIP: auf der microSD-Karte in einem Kartenleser, auf diesem Mac oder auf deinem NAS.",
       "en": "On your Switch, export this game’s save with JKSV or Checkpoint, then choose its folder or its ZIP here: on the microSD card in a card reader, on this Mac or on your NAS.",
+      "es": "En tu Switch, exporta la partida guardada de este juego con JKSV o Checkpoint y elige aquí su carpeta o su ZIP: en la tarjeta microSD en un lector de tarjetas, en este Mac o en tu NAS.",
       "fr": "Sur votre Switch, exportez la sauvegarde de ce jeu avec JKSV ou Checkpoint, puis choisissez ici son dossier ou son ZIP : sur la carte microSD dans un lecteur de cartes, sur ce Mac ou sur votre NAS."
     },
     "switchSave.import.message": {
+      "de": "Er ersetzt den Spielstand dieses Spiels auf diesem Mac, den Cartouche hier aufbewahrt: Du kannst ihn zurücklegen.",
       "en": "It replaces this game’s save on this Mac, which Cartouche keeps here: you can put it back.",
+      "es": "Sustituye la partida guardada de este juego en este Mac, que Cartouche conserva aquí: podrás restaurarla.",
       "fr": "Elle remplace la sauvegarde de ce jeu sur ce Mac, que Cartouche garde ici : vous pourrez la remettre."
     },
     "switchSave.import.message.folder": {
+      "de": "Er ersetzt den Spielstand dieses Spiels auf diesem Mac, den Cartouche hier aufbewahrt: Du kannst ihn zurücklegen. Danach geht er in deinen Spielstandordner, als neueste Kopie.",
       "en": "It replaces this game’s save on this Mac, which Cartouche keeps here: you can put it back. It then goes to your saves folder, as the newest copy.",
+      "es": "Sustituye la partida guardada de este juego en este Mac, que Cartouche conserva aquí: podrás restaurarla. Luego va a tu carpeta de partidas guardadas, como la copia más reciente.",
       "fr": "Elle remplace la sauvegarde de ce jeu sur ce Mac, que Cartouche garde ici : vous pourrez la remettre. Elle part ensuite dans votre dossier des sauvegardes, comme la copie la plus récente."
     },
     "switchSave.import.sending": {
+      "de": "Er geht auch in deinen Spielstandordner, für deine anderen Geräte.",
       "en": "It goes to your saves folder too, for your other devices.",
+      "es": "También va a tu carpeta de partidas guardadas, para tus otros dispositivos.",
       "fr": "Elle part aussi dans votre dossier des sauvegardes, pour vos autres appareils."
     },
     "switchSave.problem.case": {
+      "de": "Zwei seiner Dateien unterscheiden sich nur durch Groß- und Kleinschreibung, %1$@ und %2$@: Dieser Mac kann nicht beide behalten.",
       "en": "Two of its files differ only by their capitals, %1$@ and %2$@: this Mac cannot keep both.",
+      "es": "Dos de sus archivos solo se distinguen por las mayúsculas, %1$@ y %2$@: este Mac no puede conservar ambos.",
       "fr": "Deux de ses fichiers ne diffèrent que par leurs majuscules, %1$@ et %2$@ : ce Mac ne peut pas garder les deux."
     },
     "switchSave.problem.cloudPull": {
+      "de": "nxnative hat den Spielstand dieses Spiels noch nicht ganz aus seiner Cloud geholt: Starte das Spiel einmal und komm dann zurück.",
       "en": "nxnative did not finish bringing this game’s save from its cloud saves: start the game once, then come back.",
+      "es": "nxnative no terminó de traer la partida guardada de este juego desde su nube: inicia el juego una vez y vuelve.",
       "fr": "nxnative n’a pas fini de ramener la sauvegarde de ce jeu depuis son cloud : lancez le jeu une fois, puis revenez."
     },
     "switchSave.putBack.footer": {
+      "de": "Cartouche hat den Spielstand dieses Mac behalten, als der von deiner Switch ihn am %@ ersetzt hat.",
       "en": "Cartouche kept this Mac’s save when the game from your Switch replaced it, on %@.",
+      "es": "Cartouche conservó la partida guardada de este Mac cuando la de tu Switch la sustituyó, el %@.",
       "fr": "Cartouche a gardé la sauvegarde de ce Mac quand la partie de votre Switch l’a remplacée, le %@."
     },
     "switchSave.putBack.message": {
+      "de": "Er ersetzt den Spielstand deiner Switch auf diesem Mac, den Cartouche ebenfalls aufbewahrt.",
       "en": "It replaces the game from your Switch on this Mac, which Cartouche keeps too.",
+      "es": "Sustituye la partida de tu Switch en este Mac, que Cartouche también conserva.",
       "fr": "Elle remplace la partie de votre Switch sur ce Mac, que Cartouche garde aussi."
     },
     "switchSave.send.none": {
+      "de": "Dieses Spiel hat noch keinen Spielstand auf diesem Mac.",
       "en": "This game has no save on this Mac yet.",
+      "es": "Este juego aún no tiene partida guardada en este Mac.",
       "fr": "Ce jeu n’a pas encore de sauvegarde sur ce Mac."
     },
     "switchSave.version": {
+      "de": "Version auf diesem Mac",
       "en": "Version on this Mac",
+      "es": "Versión en este Mac",
       "fr": "Version sur ce Mac"
     },
     "system.device": {
+      "de": "Dieser Mac",
       "en": "This Mac",
+      "es": "Este Mac",
       "fr": "Ce Mac"
     },
     "system.updates.notChecked": {
+      "de": "Cartouche hat noch nicht nach Updates gesucht.",
       "en": "Cartouche has not looked for an update yet.",
+      "es": "Cartouche aún no ha buscado actualizaciones.",
       "fr": "Cartouche n’a pas encore cherché de mise à jour."
     },
     "system.updates.upToDate": {
+      "de": "Cartouche für Mac %@ ist die neueste Version.",
       "en": "Cartouche for Mac %@ is the latest version.",
+      "es": "Cartouche para Mac %@ es la versión más reciente.",
       "fr": "Cartouche pour Mac %@ est la dernière version."
     },
     "telemetry.erase": {
+      "de": "Löschen, was dieser Mac gesendet hat",
       "en": "Erase what this Mac sent",
+      "es": "Borrar lo que envió este Mac",
       "fr": "Effacer les envois de ce Mac"
     },
     "telemetry.erase.failed": {
+      "de": "Der Server war nicht erreichbar. Versuche es erneut, wenn dieser Mac online ist.",
       "en": "The server could not be reached. Try again when this Mac is online.",
+      "es": "No se pudo conectar con el servidor. Vuelve a intentarlo cuando este Mac tenga conexión.",
       "fr": "Le serveur est injoignable. Réessayez quand ce Mac est en ligne."
     },
     "telemetry.erase.message": {
+      "de": "Der Server löscht alle Berichte dieser Kopie von Cartouche, die der Konsole eingeschlossen, die danach unter einer neuen Nummer sendet.",
       "en": "The server deletes every report of this copy of Cartouche, the console’s with them, which then sends under a new number.",
+      "es": "El servidor borra todos los informes de esta copia de Cartouche, incluidos los de la consola, que luego envía con un número nuevo.",
       "fr": "Le serveur supprime tous les rapports de cette copie de Cartouche, ceux de la console compris, qui envoie ensuite sous un nouveau numéro."
     },
     "telemetry.footer": {
+      "de": "Nach jedem auf diesem Mac gespielten Spiel sendet Cartouche, was nxnative während des Laufens gemessen hat, zusammen mit den eigenen Ereignissen der Konsole und des Builder. Sie zeigen, welche Spiele auf welchem Mac gut laufen und was zu beheben ist.",
       "en": "After each game played on this Mac, Cartouche sends what nxnative measured while it ran, with the console’s and the Builder’s own events. They show which games run well on which Mac, and what to fix.",
+      "es": "Tras cada partida jugada en este Mac, Cartouche envía lo que nxnative midió mientras funcionaba, con los propios eventos de la consola y del Builder. Muestran qué juegos funcionan bien en qué Mac, y qué hay que arreglar.",
       "fr": "Après chaque partie sur ce Mac, Cartouche envoie ce que nxnative a mesuré pendant le jeu, avec les événements de la console et du Builder. Ils montrent quels jeux tournent bien sur quel Mac, et ce qu’il faut corriger."
     },
     "telemetry.noServer": {
+      "de": "Dieser Build von Cartouche hat keinen Server zum Senden: Er bewahrt nichts zum Senden auf.",
       "en": "This build of Cartouche has no server to send to: it keeps nothing to send.",
+      "es": "Esta compilación de Cartouche no tiene servidor al que enviar: no guarda nada para enviar.",
       "fr": "Cette version de Cartouche n’a pas de serveur où envoyer : elle ne garde rien à envoyer."
     },
     "telemetry.what.device": {
-      "en": "This Mac’s model and macOS version, Cartouche’s version and language, and a random number of this copy of Cartouche.",
-      "fr": "Le modèle de ce Mac et sa version de macOS, la version et la langue de Cartouche, et un numéro tiré au hasard pour cette copie de Cartouche."
+      "de": "Modell, macOS-Version und Sprache dieses Mac, Version und Sprache von Cartouche sowie eine Zufallsnummer dieser Kopie von Cartouche.",
+      "en": "This Mac’s model, macOS version and language, Cartouche’s version and language, and a random number of this copy of Cartouche.",
+      "es": "El modelo, la versión de macOS y el idioma de este Mac, la versión y el idioma de Cartouche, y un número aleatorio de esta copia de Cartouche.",
+      "fr": "Le modèle de ce Mac, sa version de macOS et sa langue, la version et la langue de Cartouche, et un numéro tiré au hasard pour cette copie de Cartouche."
     },
     "telemetry.what.events": {
+      "de": "Jeder Start von Cartouche, die Einrichtung der Werkzeuge des Mac, Builds und ihre Durchläufe, auf diesem Mac installierte und gespielte Spiele und der Abgleich ihrer Spielstände, gekoppelte Geräte, Importe, freigegebener Platz, Updates, Änderungen an den Infos eines Spiels und Fehler, nach ihren Codes und dem Schritt, bei dem sie anhielten.",
       "en": "Each start of Cartouche, the setup of the Mac’s tools, builds and their batches, games installed and played on this Mac and their saves kept in step, devices paired, imports, room freed, updates, changes to a game’s info, and errors, by their codes and the step they stopped at.",
+      "es": "Cada inicio de Cartouche, la instalación de las herramientas del Mac, las compilaciones y sus tandas, los juegos instalados y jugados en este Mac y la sincronización de sus partidas guardadas, los dispositivos emparejados, las importaciones, el espacio liberado, las actualizaciones, los cambios en la información de un juego, y los errores, por sus códigos y el paso en que se detuvieron.",
       "fr": "Chaque ouverture de Cartouche, l’installation des outils du Mac, les constructions et leurs lots, les jeux installés et joués sur ce Mac et la synchronisation de leurs sauvegardes, les appareils jumelés, les imports, la place libérée, les mises à jour, les changements des infos d’un jeu et les erreurs, par leurs codes et l’étape où elles se sont arrêtées."
     },
     "telemetry.what.games": {
+      "de": "Für jede Spielsitzung: Bildrate, Bild- und GPU-Zeiten, Ruckler und ihre Ursache, Shader-Vorbereitung, Arbeitsspeicher, Energie, Ton, wie das Spiel endete, sowie Version und Einstellungen des Spiels.",
       "en": "For each game session: frame rate, frame and GPU times, stutters and what caused them, shader preparation, memory, power, sound, how the game ended, and the game’s version and settings.",
+      "es": "Para cada sesión de juego: fotogramas por segundo, tiempos de fotograma y de GPU, tirones y su causa, preparación de shaders, memoria, consumo, sonido, cómo terminó el juego, y la versión y los ajustes del juego.",
       "fr": "Pour chaque partie : images par seconde, temps d’image et du GPU, saccades et leurs causes, préparation des shaders, mémoire, énergie, son, la façon dont le jeu s’est arrêté, la version du jeu et ses réglages."
     },
     "telemetry.what.never": {
+      "de": "Nie dein Apple Account, die Namen dieses Mac und deiner Geräte, deine Dateien und ihre Pfade, die Adressen deines Speichers oder das Protokoll des Spiels selbst.",
       "en": "Never your Apple account, the names of this Mac and of your devices, your files and their paths, the addresses of your storage or the game’s log itself.",
+      "es": "Nunca tu cuenta de Apple, los nombres de este Mac y de tus dispositivos, tus archivos y sus rutas, las direcciones de tu almacenamiento ni el registro del juego en sí.",
       "fr": "Jamais votre compte Apple, le nom de ce Mac ni de vos appareils, vos fichiers ni leurs chemins, les adresses de votre stockage ni le journal du jeu lui-même."
     }
   },
   "strings": {
     "mac.current": {
+      "de": "Dieser Mac: %1$@, macOS %2$@",
       "en": "This Mac: %1$@, macOS %2$@",
+      "es": "Este Mac: %1$@, macOS %2$@",
       "fr": "Ce Mac : %1$@, macOS %2$@"
     },
     "mac.file.save": {
+      "de": "%@ sichern …",
       "en": "Save %@…",
+      "es": "Guardar %@…",
       "fr": "Enregistrer %@…"
     },
     "mac.file.saved": {
+      "de": "In %@ gesichert.",
       "en": "Saved in %@.",
+      "es": "Guardado en %@.",
       "fr": "Enregistré dans %@."
     },
     "mac.guide.build.action": {
+      "de": "Bibliothek öffnen",
       "en": "Open the library",
+      "es": "Abrir la biblioteca",
       "fr": "Ouvrir la bibliothèque"
     },
     "mac.guide.build.detail": {
+      "de": "Erstelle in der Bibliothek des Builder eines deiner Spiele für diesen Mac: Es kommt in die Konsole, sobald es erstellt ist.",
       "en": "In the Builder’s library, build one of your games for this Mac: it comes to the console once built.",
+      "es": "En la biblioteca del Builder, compila uno de tus juegos para este Mac: llega a la consola una vez compilado.",
       "fr": "Dans la bibliothèque du Builder, construisez un de vos jeux pour ce Mac : il arrive dans la console une fois construit."
     },
     "mac.guide.build.title": {
+      "de": "Ein Spiel für diesen Mac erstellen",
       "en": "Build a game for this Mac",
+      "es": "Compilar un juego para este Mac",
       "fr": "Construire un jeu pour ce Mac"
     },
     "mac.guide.finished": {
+      "de": "Dieser Mac ist bereit und dein erstes Spiel gespielt: Die Spiele, die du danach erstellst, kommen von selbst in die Konsole.",
       "en": "This Mac is ready, and your first game played: the games you build next come to the console by themselves.",
+      "es": "Este Mac está listo, y tu primer juego, jugado: los juegos que compiles después llegan solos a la consola.",
       "fr": "Ce Mac est prêt et votre premier jeu lancé : les jeux que vous construirez ensuite arriveront d’eux-mêmes dans la console."
     },
     "mac.guide.intro": {
+      "de": "Drei Schritte bis zu einem ersten Spiel auf diesem Mac. Jeder hakt sich von selbst ab, wenn er erledigt ist, in beliebiger Reihenfolge.",
       "en": "Three steps to a first game on this Mac. Each ticks itself once done, in any order.",
+      "es": "Tres pasos hasta un primer juego en este Mac. Cada uno se marca solo cuando está hecho, en cualquier orden.",
       "fr": "Trois étapes jusqu’à un premier jeu sur ce Mac. Chacune se coche d’elle-même une fois faite, dans n’importe quel ordre."
     },
     "mac.guide.play.action": {
+      "de": "Zurück zur Konsole",
       "en": "Back to the console",
+      "es": "Volver a la consola",
       "fr": "Retour à la console"
     },
     "mac.guide.play.detail": {
+      "de": "Wähle dein Spiel in der Konsole und dann „Spielen“.",
       "en": "Pick your game in the console, then Play.",
+      "es": "Elige tu juego en la consola y luego Jugar.",
       "fr": "Choisissez votre jeu dans la console, puis Jouer."
     },
     "mac.guide.play.title": {
+      "de": "Spielen",
       "en": "Play it",
+      "es": "Jugarlo",
       "fr": "Y jouer"
     },
     "mac.guide.setup.action": {
+      "de": "Assistenten öffnen",
       "en": "Open the assistant",
+      "es": "Abrir el asistente",
       "fr": "Ouvrir l’assistant"
     },
     "mac.guide.setup.detail": {
+      "de": "Der Assistent des Builder installiert, was nxnative braucht, und fragt dann, wo deine Dumps sind und wohin deine Spiele gehen.",
       "en": "The Builder’s assistant installs what nxnative needs, then asks where your dumps are and where your games go.",
+      "es": "El asistente del Builder instala lo que necesita nxnative y luego pregunta dónde están tus dumps y adónde van tus juegos.",
       "fr": "L’assistant du Builder installe ce dont nxnative a besoin, puis demande où sont vos dumps et où vont vos jeux."
     },
     "mac.guide.setup.title": {
+      "de": "Diesen Mac vorbereiten",
       "en": "Make this Mac ready",
+      "es": "Preparar este Mac",
       "fr": "Préparer ce Mac"
     },
     "mac.requirement": {
+      "de": "Apple Chip, macOS %@ oder neuer",
       "en": "Apple chip, macOS %@ or later",
+      "es": "Chip de Apple, macOS %@ o posterior",
       "fr": "Puce Apple, macOS %@ ou ultérieur"
     },
     "mac.saves.cloud": {
+      "de": "Seine Spielstände laufen über die Cloud-Spielstände von nxnative, in dessen Einstellungen gewählt: Cartouche überlässt sie ihm.",
       "en": "Its saves go through nxnative’s own cloud saves, chosen in its settings: Cartouche leaves them to it.",
+      "es": "Sus partidas guardadas pasan por la nube de nxnative, elegida en sus ajustes: Cartouche se las deja.",
       "fr": "Ses sauvegardes passent par le cloud de nxnative, choisi dans ses réglages : Cartouche les lui laisse."
     },
     "mac.settings.back": {
+      "de": "Zurück zum Spiel",
       "en": "Back to the game",
+      "es": "Volver al juego",
       "fr": "Retour au jeu"
     },
     "mac.storage.change": {
+      "de": "Im Builder ändern",
       "en": "Change in the Builder",
+      "es": "Cambiar en el Builder",
       "fr": "Changer dans le Builder"
     },
     "mac.storage.connections.footer": {
+      "de": "Nur eigener Speicher, mit deinem eigenen Account. Die mit diesem Mac gekoppelten iPhones haben dieselben Verbindungen, Passwörter inklusive, über die Verschlüsselung der Brücke: Sie übernehmen die hier gemachten Änderungen, wenn Cartouche auf ihnen startet, und senden ihre hierher, sobald sie sie machen. Cartouche bewahrt die Passwörter und Schlüssel in einer Datei seines Ordners auf, die nur dein Account lesen kann, nie im Schlüsselbund des Mac.",
       "en": "Only storage of your own, with your own account. The iPhones paired with this Mac have the same connections, passwords included, over the bridge’s encryption: they take the changes made here when Cartouche opens on them, and send theirs here as they make them. Cartouche keeps the passwords and keys in a file of its folder that only your account can read, never in the Mac’s keychain.",
+      "es": "Solo almacenamiento propio, con tu propia cuenta. Los iPhone emparejados con este Mac tienen las mismas conexiones, contraseñas incluidas, gracias al cifrado del puente: toman los cambios hechos aquí cuando Cartouche se abre en ellos, y envían aquí los suyos en cuanto los hacen. Cartouche guarda las contraseñas y las claves en un archivo de su carpeta que solo tu cuenta puede leer, nunca en el llavero del Mac.",
       "fr": "Uniquement votre propre stockage, avec votre propre compte. Les iPhone associés à ce Mac ont les mêmes connexions, mots de passe compris, par le chiffrement du pont : ils prennent les changements faits ici quand Cartouche s’ouvre sur eux, et envoient ici les leurs dès qu’ils les font. Cartouche garde les mots de passe et les clés dans un fichier de son dossier que seul votre compte peut lire, jamais dans le trousseau du Mac."
     },
     "mac.storage.connections.many": {
+      "de": "%lld Verbindungen",
       "en": "%lld connections",
+      "es": "%lld conexiones",
       "fr": "%lld connexions"
     },
     "mac.storage.connections.none": {
+      "de": "Keine Verbindung",
       "en": "No connection",
+      "es": "Ninguna conexión",
       "fr": "Aucune connexion"
     },
     "mac.storage.connections.one": {
+      "de": "1 Verbindung",
       "en": "1 connection",
+      "es": "1 conexión",
       "fr": "1 connexion"
     },
     "mac.storage.iPhoneGames.bytes": {
+      "de": "%1$@ von %2$@",
       "en": "%1$@ of %2$@",
+      "es": "%1$@ de %2$@",
       "fr": "%1$@ sur %2$@"
     },
     "mac.storage.iPhoneGames.choose.footer": {
+      "de": "Keiner der Spieleordner deiner iPhones liegt auf einer deiner Verbindungen. Wähle hier einen: Deine iPhones lesen ihn auch, wenn Cartouche das nächste Mal auf ihnen startet, und dieser Mac sendet seine Spiele dorthin.",
       "en": "None of your iPhones’ games folders is on one of your connections. Choose one here: your iPhones read it too, the next time Cartouche opens on them, and this Mac sends its games there.",
+      "es": "Ninguna de las carpetas de juegos de tus iPhone está en una de tus conexiones. Elige una aquí: tus iPhone también la leen la próxima vez que Cartouche se abra en ellos, y este Mac envía allí sus juegos.",
       "fr": "Aucun dossier des jeux de vos iPhone n’est sur une de vos connexions. Choisissez-en un ici : vos iPhone le liront aussi, la prochaine fois que Cartouche s’ouvrira sur eux, et ce Mac y enverra ses jeux."
     },
     "mac.storage.iPhoneGames.count": {
+      "de": "%1$lld von %2$lld",
       "en": "%1$lld of %2$lld",
+      "es": "%1$lld de %2$lld",
       "fr": "%1$lld sur %2$lld"
     },
     "mac.storage.iPhoneGames.failed": {
+      "de": "Der letzte Versand wurde gestoppt und beginnt bei der nächsten Prüfung erneut: %@",
       "en": "The last sending stopped, and starts again at the next look: %@",
+      "es": "El último envío se detuvo y se reanuda en la próxima revisión: %@",
       "fr": "Le dernier envoi s’est arrêté, et reprendra au prochain passage : %@"
     },
     "mac.storage.iPhoneGames.footer": {
+      "de": "Der Spieleordner deiner iPhones: Cartouche sendet ihm auch jede IPA und jede Mac-App seines eigenen Spieleordners, über dieselbe Verbindung, die neuesten zuerst, und löscht dort nie etwas. Die Mac-Apps, die ein anderer Mac dorthin gesendet hat, werden aus der Bibliothek installiert. Ändere ihn hier oder auf einem iPhone: Der zuletzt gewählte Ordner gewinnt, und deine iPhones übernehmen ihn, wenn Cartouche das nächste Mal auf ihnen startet.",
       "en": "The games folder of your iPhones: Cartouche sends it each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent there install from the library. Change it here or on an iPhone: the folder chosen last wins, and your iPhones take it the next time Cartouche opens on them.",
+      "es": "La carpeta de juegos de tus iPhone: Cartouche también le envía cada IPA y cada app de Mac de su propia carpeta de juegos, por la misma conexión, las más recientes primero, y nunca borra nada allí. Las apps de Mac que otro Mac envió allí se instalan desde la biblioteca. Cámbiala aquí o en un iPhone: gana la última carpeta elegida, y tus iPhone la toman la próxima vez que Cartouche se abra en ellos.",
       "fr": "Le dossier des jeux de vos iPhone : Cartouche y envoie aussi chaque IPA et chaque app Mac de son propre dossier des jeux, par la même connexion, les plus récentes d’abord, et n’y supprime jamais rien. Les apps Mac qu’un autre Mac y a envoyées s’installent depuis la bibliothèque. Changez-le ici ou sur un iPhone : le dossier choisi en dernier l’emporte, et vos iPhone le prennent la prochaine fois que Cartouche s’ouvre sur eux."
     },
     "mac.storage.iPhoneGames.header": {
+      "de": "Spieleordner des iPhones",
       "en": "The iPhone’s games folder",
+      "es": "Carpeta de juegos del iPhone",
       "fr": "Dossier des jeux de l’iPhone"
     },
     "mac.storage.iPhoneGames.noRoom": {
+      "de": "Dort ist nicht genug Platz für das nächste Spiel: %1$@ benötigt, %2$@ frei. Sobald es reicht, gehen die Spiele dieses Mac weiter.",
       "en": "Not enough room there for the next game: %1$@ needed, %2$@ left. Once there is, this Mac’s games go on.",
+      "es": "No hay espacio suficiente allí para el siguiente juego: se necesitan %1$@, quedan %2$@. En cuanto lo haya, los juegos de este Mac siguen yendo.",
       "fr": "Pas assez de place pour le jeu suivant : %1$@ nécessaires, %2$@ libres. Dès qu’il y en a, les jeux de ce Mac continuent de partir."
     },
     "mac.storage.iPhoneGames.offers.many": {
+      "de": "%lld Mac-Apps, die ein anderer Mac dorthin gesendet hat, aus der Bibliothek zu installieren",
       "en": "%lld Mac apps another Mac sent there, to install from the library",
+      "es": "%lld apps de Mac que otro Mac envió allí, para instalar desde la biblioteca",
       "fr": "%lld apps Mac envoyées par un autre Mac, à installer depuis la bibliothèque"
     },
     "mac.storage.iPhoneGames.offers.one": {
+      "de": "1 Mac-App, die ein anderer Mac dorthin gesendet hat, aus der Bibliothek zu installieren",
       "en": "1 Mac app another Mac sent there, to install from the library",
+      "es": "1 app de Mac que otro Mac envió allí, para instalar desde la biblioteca",
       "fr": "1 app Mac envoyée par un autre Mac, à installer depuis la bibliothèque"
     },
     "mac.storage.iPhoneGames.offline": {
+      "de": "%@ antwortet nicht von diesem Mac aus: Die Spiele dieses Mac gehen dorthin, sobald es antwortet.",
       "en": "%@ does not answer from this Mac: this Mac’s games go there once it does.",
+      "es": "%@ no responde desde este Mac: los juegos de este Mac irán allí en cuanto responda.",
       "fr": "%@ ne répond pas depuis ce Mac : les jeux de ce Mac y partiront dès qu’il répondra."
     },
     "mac.storage.iPhoneGames.other.offline": {
+      "de": "%@ antwortet nicht von diesem Mac aus: Seine Mac-Apps, die auch ein anderer Ordner hat, werden so lange aus diesem Ordner installiert.",
       "en": "%@ does not answer from this Mac: its Mac apps that another folder holds too install from that folder meanwhile.",
+      "es": "%@ no responde desde este Mac: sus apps de Mac que también tiene otra carpeta se instalan desde esa carpeta mientras tanto.",
       "fr": "%@ ne répond pas depuis ce Mac : ses apps Mac présentes aussi dans un autre dossier s’installent depuis cet autre dossier en attendant."
     },
     "mac.storage.iPhoneGames.packing": {
+      "de": "Seine Mac-App wird zuerst in eine Datei gepackt, wie ein NAS sie aufbewahrt.",
       "en": "Its Mac app is first packed in one file, as a NAS keeps it.",
+      "es": "Su app de Mac se empaqueta primero en un solo archivo, como la guarda un NAS.",
       "fr": "Son app Mac est d’abord mise en un seul fichier, comme la garde un NAS."
     },
     "mac.storage.iPhoneGames.readOnly": {
+      "de": "Dein Account darf diesen Ordner nur lesen: Die Spiele dieses Mac können nicht dorthin.",
       "en": "Your account may only read this folder: this Mac’s games cannot go there.",
+      "es": "Tu cuenta solo puede leer esta carpeta: los juegos de este Mac no pueden ir allí.",
       "fr": "Votre compte ne peut que lire ce dossier : les jeux de ce Mac ne peuvent pas y aller."
     },
     "mac.storage.iPhoneGames.sendNow": {
+      "de": "Jetzt senden",
       "en": "Send now",
+      "es": "Enviar ahora",
       "fr": "Envoyer maintenant"
     },
     "mac.storage.iPhoneGames.sending": {
+      "de": "Wird gesendet: %1$@ (%2$lld von %3$lld)",
       "en": "Sending: %1$@ (%2$lld of %3$lld)",
+      "es": "Enviando: %1$@ (%2$lld de %3$lld)",
       "fr": "Envoi en cours : %1$@ (%2$lld sur %3$lld)"
     },
     "mac.storage.iPhoneGames.sent": {
+      "de": "Von diesem Mac gesendet",
       "en": "Sent from this Mac",
+      "es": "Enviados desde este Mac",
       "fr": "Envoyés depuis ce Mac"
     },
     "mac.storage.iPhoneGames.several.footer": {
+      "de": "Die Spieleordner deiner iPhones: Cartouche sendet dem ersten auch jede IPA und jede Mac-App seines eigenen Spieleordners, über dieselbe Verbindung, die neuesten zuerst, und löscht dort nie etwas. Die Mac-Apps, die ein anderer Mac in einen von ihnen gesendet hat, werden aus der Bibliothek installiert, aus einem Ordner, der antwortet. Ändere sie hier oder auf einem iPhone: Die zuletzt gewählten Ordner gewinnen, und deine iPhones übernehmen sie, wenn Cartouche das nächste Mal auf ihnen startet.",
       "en": "The games folders of your iPhones: Cartouche sends the first each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent to any of them install from the library, from a folder that answers. Change them here or on an iPhone: the folders chosen last win, and your iPhones take them the next time Cartouche opens on them.",
+      "es": "Las carpetas de juegos de tus iPhone: Cartouche también envía a la primera cada IPA y cada app de Mac de su propia carpeta de juegos, por la misma conexión, las más recientes primero, y nunca borra nada allí. Las apps de Mac que otro Mac envió a cualquiera de ellas se instalan desde la biblioteca, desde una carpeta que responda. Cámbialas aquí o en un iPhone: ganan las últimas carpetas elegidas, y tus iPhone las toman la próxima vez que Cartouche se abra en ellos.",
       "fr": "Les dossiers des jeux de vos iPhone : Cartouche envoie aussi au premier chaque IPA et chaque app Mac de son propre dossier des jeux, par la même connexion, les plus récentes d’abord, et n’y supprime jamais rien. Les apps Mac envoyées par un autre Mac dans l’un d’eux s’installent depuis la bibliothèque, depuis un dossier qui répond. Changez-les ici ou sur un iPhone : les dossiers choisis en dernier l’emportent, et vos iPhone les prennent la prochaine fois que Cartouche s’ouvre sur eux."
     },
     "mac.storage.iPhoneGames.several.header": {
+      "de": "Spieleordner des iPhones",
       "en": "The iPhone’s games folders",
+      "es": "Carpetas de juegos del iPhone",
       "fr": "Les dossiers des jeux de l’iPhone"
     },
     "mac.storage.iPhoneSaves.footer": {
+      "de": "Der Spielstandordner deiner iPhones: Cartouche bewahrt dort auch die Spielstände der auf diesem Mac gespielten Spiele auf, über dieselbe Verbindung, vor jedem Spiel und sobald es speichert, wie das iPhone. Die %lld neuesten Kopien werden aufbewahrt. Ändere ihn hier oder auf einem iPhone: Der zuletzt gewählte Ordner gewinnt, und deine iPhones übernehmen ihn, wenn Cartouche das nächste Mal auf ihnen startet.",
       "en": "The saves folder of your iPhones: Cartouche keeps the saves of the games played on this Mac there too, through the same connection, before each game and as it saves, as the iPhone does. The %lld newest copies are kept. Change it here or on an iPhone: the folder chosen last wins, and your iPhones take it the next time Cartouche opens on them.",
+      "es": "La carpeta de partidas guardadas de tus iPhone: Cartouche también guarda allí las de los juegos jugados en este Mac, por la misma conexión, antes de cada partida y en cuanto el juego guarda, como hace el iPhone. Se conservan las %lld copias más recientes. Cámbiala aquí o en un iPhone: gana la última carpeta elegida, y tus iPhone la toman la próxima vez que Cartouche se abra en ellos.",
       "fr": "Le dossier des sauvegardes de vos iPhone : Cartouche y garde aussi celles des jeux joués sur ce Mac, par la même connexion, avant chaque partie et dès que le jeu sauvegarde, comme l’iPhone. Les %lld copies les plus récentes y restent. Changez-le ici ou sur un iPhone : le dossier choisi en dernier l’emporte, et vos iPhone le prennent la prochaine fois que Cartouche s’ouvre sur eux."
     },
     "mac.storage.saves.choose.footer": {
+      "de": "Die Spielstände der auf diesem Mac gespielten Spiele bleiben im Spielstandordner von Cartouche, auf diesem Mac. Wähle einen Ordner auf einer deiner Verbindungen, um sie dort mit denen deiner iPhones aufzubewahren: Deine iPhones übernehmen ihn auch, wenn Cartouche das nächste Mal auf ihnen startet, und die neuesten Spielstände gewinnen.",
       "en": "The saves of the games played on this Mac stay in Cartouche’s saves folder, on this Mac. Choose a folder on one of your connections to keep them there with your iPhones’: your iPhones take it too, the next time Cartouche opens on them, and the newest saves win.",
+      "es": "Las partidas guardadas de los juegos jugados en este Mac se quedan en la carpeta de partidas guardadas de Cartouche, en este Mac. Elige una carpeta en una de tus conexiones para guardarlas allí con las de tus iPhone: tus iPhone también la toman la próxima vez que Cartouche se abra en ellos, y ganan las partidas guardadas más recientes.",
       "fr": "Les sauvegardes des jeux joués sur ce Mac restent dans le dossier des sauvegardes de Cartouche, sur ce Mac. Choisissez un dossier sur une de vos connexions pour les y garder avec celles de vos iPhone : vos iPhone le prendront aussi, la prochaine fois que Cartouche s’ouvrira sur eux, et les sauvegardes les plus récentes l’emportent."
     },
     "mac.storage.thisMac": {
+      "de": "Dieser Mac",
       "en": "This Mac",
+      "es": "Este Mac",
       "fr": "Ce Mac"
     },
     "mac.storage.thisMac.footer": {
+      "de": "Die Ordner des Builder, die deine iPhones über diesen Mac erreichen: Sein Spieleordner bewahrt die Spiele auf, die er erstellt, und sein Spielstandordner die Spielstände deiner Spiele.",
       "en": "The Builder’s folders, which your iPhones reach through this Mac: its games folder keeps the games it builds, and its saves folder the saves of your games.",
+      "es": "Las carpetas del Builder, a las que tus iPhone llegan a través de este Mac: su carpeta de juegos guarda los juegos que compila, y su carpeta de partidas guardadas, las partidas guardadas de tus juegos.",
       "fr": "Les dossiers du Builder, que vos iPhone atteignent à travers ce Mac : son dossier des jeux garde les jeux qu’il construit, et son dossier des sauvegardes les sauvegardes de vos jeux."
     },
     "mac.storage.thisMac.games.footer": {
+      "de": "Der Spieleordner des Builder, den deine iPhones über diesen Mac erreichen, bewahrt die Spiele auf, die er erstellt.",
       "en": "The Builder’s games folder, which your iPhones reach through this Mac, keeps the games it builds.",
+      "es": "La carpeta de juegos del Builder, a la que tus iPhone llegan a través de este Mac, guarda los juegos que compila.",
       "fr": "Le dossier des jeux du Builder, que vos iPhone atteignent à travers ce Mac, garde les jeux qu’il construit."
     },
     "mac.system.app": {
+      "de": "Cartouche für Mac",
       "en": "Cartouche for Mac",
+      "es": "Cartouche para Mac",
       "fr": "Cartouche pour Mac"
     },
     "mac.system.back": {
+      "de": "Zurück zur Konsole",
       "en": "Back to the console",
+      "es": "Volver a la consola",
       "fr": "Retour à la console"
     },
     "mac.system.builder": {
+      "de": "Builder öffnen",
       "en": "Open the Builder",
+      "es": "Abrir el Builder",
       "fr": "Ouvrir le Builder"
     },
     "mac.system.builder.footer": {
+      "de": "Deine für diesen Mac erstellten Spiele, ihre Builds, die Ordner dieses Mac und seine iPhones: der Builder, in diesem Fenster anstelle der Konsole.",
       "en": "Your games built for this Mac, their builds, this Mac’s folders and its iPhones: the Builder, in this window in place of the console.",
+      "es": "Tus juegos compilados para este Mac, sus compilaciones, las carpetas de este Mac y sus iPhone: el Builder, en esta ventana en lugar de la consola.",
       "fr": "Vos jeux construits pour ce Mac, leurs constructions, les dossiers de ce Mac et ses iPhone : le Builder, dans cette fenêtre à la place de la console."
     },
     "mac.updates.automatic": {
+      "de": "Updates selbst installieren",
       "en": "Install updates by itself",
+      "es": "Instalar las actualizaciones automáticamente",
       "fr": "Installer les mises à jour toute seule"
     },
     "mac.updates.download": {
+      "de": "%@ laden",
       "en": "Download %@",
+      "es": "Descargar la %@",
       "fr": "Télécharger la %@"
     },
     "mac.updates.downloading": {
+      "de": "%@ wird geladen …",
       "en": "Downloading %@…",
+      "es": "Descargando la %@…",
       "fr": "Téléchargement de la %@…"
     },
     "mac.updates.footer": {
+      "de": "Cartouche sucht alle sechs Stunden nach einer neuen Version und installiert sie beim Beenden, nie während eines Builds.",
       "en": "Cartouche looks for a new version every six hours, and installs it when it quits, never during a build.",
+      "es": "Cartouche busca una nueva versión cada seis horas, y la instala al cerrarse, nunca durante una compilación.",
       "fr": "Cartouche cherche une nouvelle version toutes les six heures, et l’installe quand il quitte, jamais pendant une construction."
     },
     "mac.updates.installing": {
+      "de": "Wird installiert …",
       "en": "Installing…",
+      "es": "Instalando…",
       "fr": "Installation…"
     },
     "mac.updates.ready": {
+      "de": "%@ ist bereit: Wird installiert, wenn Cartouche beendet wird.",
       "en": "%@ is ready: it installs when Cartouche quits.",
+      "es": "La %@ está lista: se instala cuando Cartouche se cierre.",
       "fr": "La %@ est prête : elle s’installe quand Cartouche quitte."
     },
     "mac.updates.restart": {
+      "de": "Zum Aktualisieren neu starten",
       "en": "Restart to update",
+      "es": "Reiniciar para actualizar",
       "fr": "Redémarrer pour mettre à jour"
     }
   }
