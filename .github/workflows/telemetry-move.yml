@@ -1,0 +1,49 @@
+name: Telemetry move
+
+# Moves the telemetry from the Cloudflare account it started in, Ad's own, to
+# the account of the zone cartouche.cloud, where the Telemetry workflow
+# deploys it now (decision 158, telemetry/README.md#the-move), with
+# telemetry/move.sh: `move` holds the reports at the former address, copies
+# the former database into the new one until both hold the same rows, and
+# opens the relay there; `relay` deploys the relay again; `clean` deletes
+# the former database and dashboard once the move is checked. It reads the
+# new account with the secret CLOUDFLARE_DOMAIN_TOKEN, and the former with
+# CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID, of the environment
+# cloudflare. Only those who can write to the repository can run it.
+
+on:
+  workflow_dispatch:
+    inputs:
+      step:
+        description: "move, relay or clean (telemetry/move.sh)"
+        required: true
+        type: choice
+        options:
+          - move
+          - relay
+          - clean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: telemetry-move
+  cancel-in-progress: false
+
+jobs:
+  move:
+    name: Move the telemetry
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: cloudflare
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Move
+        env:
+          CLOUDFLARE_DOMAIN_TOKEN: ${{ secrets.CLOUDFLARE_DOMAIN_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          STEP: ${{ inputs.step }}
+        run: telemetry/move.sh "$STEP"

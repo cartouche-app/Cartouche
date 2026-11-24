@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
-# Deploys the telemetry server (README.md) to the Cloudflare account
-# CLOUDFLARE_ACCOUNT_ID with the API token CLOUDFLARE_API_TOKEN, through
-# Cloudflare's API, with curl and jq and nothing else:
+# Deploys the telemetry server (README.md) in the Cloudflare account that has
+# the zone cartouche.cloud, with CLOUDFLARE_DOMAIN_TOKEN, the token the
+# Domain workflow keeps the zone's records with (domain/README.md#the-token),
+# through Cloudflare's API, with curl and jq and nothing else (decision 158):
 #
+# 0. the zone, and the account it is in: the server's domain is in the
+#    account of its zone, and the project's Workers are all there;
 # 1. the D1 database cartouche-telemetry, created in the EU jurisdiction
 #    when it does not exist yet: a database's jurisdiction is set when it
 #    is created, and never changes;
@@ -16,27 +19,34 @@
 #    Worker keeps the problems until a deploy with them. With IGDB_CLIENT_ID and IGDB_CLIENT_SECRET, a Twitch
 #    application's, it finds on IGDB the covers of the games Cartouche does
 #    not know; the dashboard never gets them;
-# 4. its workers.dev address, on the account's workers.dev subdomain,
-#    which is created when the account has none;
+# 4. its address, telemetry.cartouche.cloud, attached when it is not yet:
+#    Cloudflare makes the name's DNS record and its certificate itself; the
+#    server has no workers.dev address of its own. Its former address, in
+#    the account it started in, is the relay's (move.sh, relay/worker.js);
 # 5. its daily run, which deletes the reports older than 25 months;
 # 6. the dashboard cartouche-dashboard, which shows the project what the
 #    database holds (README.md#dashboard): dashboard/worker.js and its
 #    page, with the catalog's names and covers of the games and chips of
 #    the iPhones, bound to the database and to the problems' repository as
-#    the server is, on its workers.dev address. It opens only behind
+#    the server is, on its workers.dev address, on the account's workers.dev
+#    subdomain, which is created when the account has none. It opens only behind
 #    Cloudflare Access; with CLOUDFLARE_ACCESS_TEAM and
 #    CLOUDFLARE_ACCESS_AUD, the team and the audience of a hostname's
 #    Access application, it also reads that application's tokens.
 #
-# It ends with the Worker's address, which goes in app/config.env as
+# It ends with the server's address, which goes in app/config.env as
 # CARTOUCHE_TELEMETRY_URL, and the dashboard's, with whether Access
-# protects it. Without the two variables it says so and does nothing: they
-# are secrets of the repository's environment cloudflare, which
+# protects it. Without the token it says so and does nothing: it is a
+# secret of the repository's environment cloudflare, which
 # .github/workflows/telemetry.yml deploys from.
 #
-#     CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=… telemetry/deploy.sh
+#     CLOUDFLARE_DOMAIN_TOKEN=… telemetry/deploy.sh
 #
-# The token needs Account › Workers Scripts › Edit and Account › D1 › Edit.
+# The token needs, besides the Domain workflow's Zone › DNS › Edit and
+# Zone › Zone › Read, Account › Workers Scripts › Edit, Zone › Workers
+# Routes › Edit and Account › D1 › Edit. While it has not, the deploy warns
+# with what to add, and does not fail: that is the owner's to do, in
+# Cloudflare's dashboard.
 
 set -euo pipefail
 
@@ -44,22 +54,29 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CATALOG="$HERE/../catalog"
 NAME=cartouche-telemetry
 DASHBOARD=cartouche-dashboard
+ZONE=cartouche.cloud
+HOST="telemetry.$ZONE"
+SUMMARY="${GITHUB_STEP_SUMMARY:-/dev/null}"
+PERMISSIONS="Manage account › Account API Tokens › Cartouche domain › Edit: add Account › D1 › Edit, Account › Workers Scripts › Edit and Zone › Workers Routes › Edit"
 # The Workers runtime worker.js is written for.
 COMPATIBILITY_DATE=2026-09-01
 # Every day at 03:17 UTC.
 SCHEDULE="17 3 * * *"
 
-if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
-  echo "::notice::No CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID: the telemetry server is not deployed."
+if [ -z "${CLOUDFLARE_DOMAIN_TOKEN:-}" ]; then
+  echo "::notice::No CLOUDFLARE_DOMAIN_TOKEN: the telemetry server is not deployed."
   exit 0
 fi
 
 # CLOUDFLARE_API stands in for Cloudflare's API in the tests (test/test_deploy.py).
-API="${CLOUDFLARE_API:-https://api.cloudflare.com/client/v4}/accounts/$CLOUDFLARE_ACCOUNT_ID"
+ROOT="${CLOUDFLARE_API:-https://api.cloudflare.com/client/v4}"
+API="$ROOT"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 # The token goes to curl in a file, never on a command line.
-printf 'Authorization: Bearer %s\n' "$CLOUDFLARE_API_TOKEN" >"$WORK/authorization"
+printf 'Authorization: Bearer %s\n' "$CLOUDFLARE_DOMAIN_TOKEN" >"$WORK/authorization"
+# The run's own output, for what call says while its result goes to a file.
+exec 3>&1
 
 # ask METHOD PATH [CURL ARGUMENTS...]: Cloudflare's whole answer, in
 # $WORK/answer.json; fails when Cloudflare says the call did not succeed.
@@ -71,9 +88,15 @@ ask() {
 }
 
 # call METHOD PATH [CURL ARGUMENTS...]: the call's result, or its errors and
-# the end of the deploy.
+# the end of the deploy; a token that may not do it yet ends it with the
+# warning that says what to add.
 call() {
   if ! ask "$@"; then
+    if jq -e '[.errors[]?.code] | any(. == 10000 or . == 9109 or . == 10001)' "$WORK/answer.json" >/dev/null 2>&1; then
+      echo "::warning::The token Cartouche domain may not deploy the telemetry yet ($1 $2). Once, in Cloudflare's dashboard: $PERMISSIONS (telemetry/README.md#deploy)." >&3
+      echo "The telemetry is not deployed: the token Cartouche domain may not do it yet. $PERMISSIONS." >>"$SUMMARY"
+      exit 0
+    fi
     echo "Cloudflare refused $1 $2:" >&2
     jq -r '.errors[]? | "  \(.code): \(.message)"' "$WORK/answer.json" >&2 2>/dev/null || cat "$WORK/answer.json" >&2
     exit 1
@@ -83,13 +106,24 @@ call() {
 
 json() { printf '%s' "$1" >"$WORK/body.json"; echo "@$WORK/body.json"; }
 
+# 0. The zone and its account.
+call GET "/zones?name=$ZONE" >"$WORK/zones.json"
+read -r zone account < <(jq -r '(.[0] // {}) | "\(.id // "") \(.account.id // "")"' "$WORK/zones.json")
+if [ -z "$zone" ] || [ -z "$account" ]; then
+  echo "The token does not see the zone $ZONE." >&2
+  exit 1
+fi
+echo "The zone $ZONE is in the account $account"
+API="$ROOT/accounts/$account"
+
 # 1. The database.
-found="$(call GET "/d1/database?name=$NAME" |
-  jq -r --arg name "$NAME" 'map(select(.name == $name)) | first // empty | "\(.uuid) \(.jurisdiction // "")"')"
+call GET "/d1/database?name=$NAME" >"$WORK/databases.json"
+found="$(jq -r --arg name "$NAME" 'map(select(.name == $name)) | first // empty | "\(.uuid) \(.jurisdiction // "")"' "$WORK/databases.json")"
 if [ -z "$found" ]; then
   echo "Creating the D1 database $NAME in the EU jurisdiction"
-  database="$(call POST /d1/database -H "Content-Type: application/json" \
-    --data-binary "$(json "$(jq -n --arg name "$NAME" '{name: $name, jurisdiction: "eu"}')")" | jq -r '.uuid')"
+  call POST /d1/database -H "Content-Type: application/json" \
+    --data-binary "$(json "$(jq -n --arg name "$NAME" '{name: $name, jurisdiction: "eu"}')")" >"$WORK/database.json"
+  database="$(jq -r '.uuid' "$WORK/database.json")"
 else
   read -r database jurisdiction <<<"$found"
   if [ -n "$jurisdiction" ] && [ "$jurisdiction" != eu ]; then
@@ -175,7 +209,24 @@ call PUT "/workers/scripts/$NAME" \
   -F "metadata=@$WORK/metadata.json;type=application/json" \
   -F "worker.js=@$HERE/worker.js;type=application/javascript+module" >/dev/null
 
-# 4. Its address.
+# 4. Its address: its domain alone.
+call GET "/workers/domains?hostname=$HOST" >"$WORK/domains.json"
+attached="$(jq -r --arg host "$HOST" '[.[]? | select(.hostname == $host)] | first | .service // empty' "$WORK/domains.json")"
+if [ "$attached" = "$NAME" ]; then
+  echo "$HOST is the server's domain"
+elif [ -n "$attached" ]; then
+  echo "$HOST is the domain of the Worker $attached, not $NAME: take it off that Worker, and deploy again." >&2
+  exit 1
+else
+  echo "Attaching $HOST to the Worker $NAME"
+  call PUT /workers/domains -H "Content-Type: application/json" \
+    --data-binary "$(json "$(jq -n --arg host "$HOST" --arg name "$NAME" --arg zone "$zone" \
+      '{hostname: $host, service: $name, zone_id: $zone}')")" >/dev/null
+fi
+call POST "/workers/scripts/$NAME/subdomain" -H "Content-Type: application/json" \
+  --data-binary "$(json '{"enabled": false, "previews_enabled": false}')" >/dev/null
+
+# The dashboard's address, on the account's workers.dev subdomain.
 if ask GET /workers/subdomain && subdomain="$(jq -er '.result.subdomain // empty' "$WORK/answer.json")"; then
   echo "The account's workers.dev subdomain is $subdomain"
 else
@@ -184,8 +235,6 @@ else
   call PUT /workers/subdomain -H "Content-Type: application/json" \
     --data-binary "$(json "$(jq -n --arg subdomain "$subdomain" '{subdomain: $subdomain}')")" >/dev/null
 fi
-call POST "/workers/scripts/$NAME/subdomain" -H "Content-Type: application/json" \
-  --data-binary "$(json '{"enabled": true, "previews_enabled": false}')" >/dev/null
 
 # 5. Its daily run.
 call PUT "/workers/scripts/$NAME/schedules" -H "Content-Type: application/json" \
@@ -234,18 +283,21 @@ call PUT "/workers/scripts/$DASHBOARD" \
 call POST "/workers/scripts/$DASHBOARD/subdomain" -H "Content-Type: application/json" \
   --data-binary "$(json '{"enabled": true, "previews_enabled": false}')" >/dev/null
 
-URL="https://$NAME.$subdomain.workers.dev"
+URL="https://$HOST"
 DASHBOARD_URL="https://$DASHBOARD.$subdomain.workers.dev"
-# reach WORKER: where the checks below ask a Worker, its workers.dev
-# address, or the stand-in's in the tests (TELEMETRY_CHECK_BASE).
+# reach WORKER: where the checks below ask a Worker, its address, or the
+# stand-in's in the tests (TELEMETRY_CHECK_BASE).
 reach() {
   if [ -n "${TELEMETRY_CHECK_BASE:-}" ]; then
     echo "$TELEMETRY_CHECK_BASE$1/"
+  elif [ "$1" = "$NAME" ]; then
+    echo "$URL/"
   else
     echo "https://$1.$subdomain.workers.dev/"
   fi
 }
-# A new workers.dev address can take a minute or two to answer. Behind
+# A new address can take a minute or two to answer, the time of its
+# certificate. Behind
 # Cloudflare Access, the server would send the iPhones to a sign-in page
 # instead of taking their reports: only the dashboard goes behind Access.
 answered=""
@@ -264,10 +316,10 @@ case "$answered" in
   yes)
     echo "The telemetry server answers at $URL" ;;
   access)
-    server="Cloudflare Access protects the telemetry server at $URL: the iPhones cannot send it their reports or their problems. Only $DASHBOARD goes behind Access: take $NAME out of it in Workers & Pages › $NAME › Access › Manage access"
+    server="Cloudflare Access protects the telemetry server at $URL: the iPhones cannot send it their reports or their problems. Only $DASHBOARD goes behind Access: take $HOST out of it in Zero Trust › Access › Applications, or Workers & Pages › $NAME › Access › Manage access"
     echo "::error::$server." ;;
   *)
-    echo "::warning::$URL does not answer yet: a new workers.dev address can take a few minutes." ;;
+    echo "::warning::$URL does not answer yet: a new address can take a few minutes, the time of its certificate." ;;
 esac
 
 # Behind Access, the dashboard's address sends to the team's sign-in; without

@@ -2,11 +2,14 @@ name: Telemetry
 
 # Tests the telemetry server (telemetry/README.md) and its weekly sum into the
 # game sheets on each pull request that changes them, and deploys the server
-# from main to Cloudflare: the Worker and its D1 database in the EU
-# jurisdiction (telemetry/deploy.sh). The deploy takes the secrets
-# CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID of the environment
-# cloudflare, and does nothing while they are not set. Run it by hand for a
-# first deploy, once they are. Its secret CARTOUCHE_REPORTS_TOKEN lets the
+# from main to Cloudflare: the Worker at telemetry.cartouche.cloud and its D1
+# database in the EU jurisdiction, in the account of the zone cartouche.cloud
+# (telemetry/deploy.sh, decision 158). The deploy takes the secret
+# CLOUDFLARE_DOMAIN_TOKEN of the environment cloudflare, the Domain
+# workflow's, and does nothing while it is not set; the Telemetry move
+# workflow brought the database from the account the telemetry started in,
+# and keeps the server's former address as a relay. Its secret
+# CARTOUCHE_REPORTS_TOKEN lets the
 # Worker file the problems players send in the organization's private
 # repository cartouche-app/cartouche-reports, or the variable
 # CARTOUCHE_REPORTS_REPOSITORY (decision 157).
@@ -27,6 +30,7 @@ on:
       - "catalog/covers.json"
       - "catalog/devices.json"
       - ".github/workflows/telemetry.yml"
+      - ".github/workflows/telemetry-move.yml"
   push:
     branches: [main]
     paths:
@@ -63,11 +67,11 @@ jobs:
           persist-credentials: false
       # The dashboard's Worker imports its page as Workers import a text
       # module: text-modules.mjs lets Node do the same.
-      - name: The server's Worker and the dashboard's
-        run: node --disable-warning=ExperimentalWarning --import ./telemetry/test/text-modules.mjs --test telemetry/test/worker.test.js telemetry/test/dashboard.test.js
+      - name: The server's Worker, the dashboard's and the relay's
+        run: node --disable-warning=ExperimentalWarning --import ./telemetry/test/text-modules.mjs --test telemetry/test/worker.test.js telemetry/test/dashboard.test.js telemetry/test/relay.test.js
       # The publish guard's dev extra brings jsonschema, for the sheets the
       # weekly sum writes.
-      - name: The database on SQLite, the deploy and the weekly sum against a stand-in for Cloudflare
+      - name: The database on SQLite, the deploy, the move and the weekly sum against a stand-in for Cloudflare
         run: |
           python3 -m venv .venv
           .venv/bin/pip install --quiet -e "guard[dev]"
@@ -87,8 +91,7 @@ jobs:
           persist-credentials: false
       - name: Deploy
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_DOMAIN_TOKEN: ${{ secrets.CLOUDFLARE_DOMAIN_TOKEN }}
           CARTOUCHE_REPORTS_TOKEN: ${{ secrets.CARTOUCHE_REPORTS_TOKEN }}
           IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
           IGDB_CLIENT_SECRET: ${{ secrets.IGDB_CLIENT_SECRET }}
