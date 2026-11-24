@@ -176,7 +176,7 @@ struct CartoucheHomeView: View {
             // the setup banner's place, whose steps it begins with.
             let guideProgress = guide.progress(entries)
             let showsGuide = guide.showsCard(guideProgress)
-            let metrics = Metrics(size: proxy.size, hasBanner: showsGuide || setup.needsSetup, hasHero: showsHero,
+            let metrics = Metrics(size: proxy.size, hasBanner: showsGuide || setup.showsBanner, hasHero: showsHero,
                                   measuredBanner: bannerHeight)
             ScrollView(.vertical) {
                 VStack(alignment: .leading, spacing: metrics.spacing) {
@@ -184,7 +184,7 @@ struct CartoucheHomeView: View {
                     Group {
                         if showsGuide {
                             CartoucheGuideCard(progress: guideProgress, action: onGuide)
-                        } else if setup.needsSetup {
+                        } else if setup.showsBanner {
                             CartoucheHomeSetupBanner(action: onSetup)
                         }
                     }

@@ -19,25 +19,33 @@
 import Foundation
 
 /// How this copy of Cartouche was signed, from its Info.plist: by the
-/// built-in SideStore, with the player's Apple ID; or with the player's own
-/// certificate (CartoucheImportedSigning), by the Cartouche Installer on a
-/// computer, which adds the key of the certificate it hands over
-/// (CartoucheSigningHandoffKey), or by a signing app on the iPhone, from the
-/// IPA for the player's own certificate (app/scripts/own_certificate_ipa.py),
-/// which has no such key. The raw values are those the measurements send
-/// (signing, in app.opened).
+/// built-in SideStore, with the player's Apple ID; by the player's own
+/// SideStore, with the same Apple ID, from the IPA for the player's
+/// SideStore (app/scripts/sidestore_ipa.py, CartoucheSideStoreInstall),
+/// after which the built-in SideStore renews and updates it as the first;
+/// or with the player's own certificate (CartoucheImportedSigning), by the
+/// Cartouche Installer on a computer, which adds the key of the certificate
+/// it hands over (CartoucheSigningHandoffKey), or by a signing app on the
+/// iPhone, from the IPA for the player's own certificate
+/// (app/scripts/own_certificate_ipa.py), which has no such key. The raw
+/// values are those the measurements send (signing, in app.opened).
 enum CartoucheSigningMode: String, Equatable, Sendable {
     case account
+    case sideStore = "sidestore"
     case installer = "imported"
     case iPhone = "iphone"
 
     init(info: [String: Any]) {
         guard info["CartoucheImportedSigning"] as? Bool == true else {
-            self = .account
+            self = info["CartoucheSideStoreInstall"] as? Bool == true ? .sideStore : .account
             return
         }
         self = info["CartoucheSigningHandoffKey"] == nil ? .iPhone : .installer
     }
+
+    /// Whether Cartouche signs with the player's own certificate, without
+    /// an Apple ID: by the Cartouche Installer, or on the iPhone.
+    var isImported: Bool { self == .installer || self == .iPhone }
 }
 
 extension CartoucheSigningMode {

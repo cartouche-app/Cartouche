@@ -264,7 +264,13 @@ enum CartouchePairing {
     static func importFile(at url: URL) throws {
         let access = url.startAccessingSecurityScopedResource()
         defer { if access { url.stopAccessingSecurityScopedResource() } }
-        let data = try Data(contentsOf: url)
+        try importFile(data: Data(contentsOf: url))
+    }
+
+    /// Puts DATA where SideStore reads a pairing file, once it reads as
+    /// one: a file the player picked, or the one their own SideStore gave
+    /// (CartoucheSideStoreInstall).
+    static func importFile(data: Data) throws {
         guard let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
               remoteKeys.allSatisfy({ plist[$0] != nil }) || lockdownKeys.allSatisfy({ plist[$0] != nil }) else {
             throw Failure.notAPairingFile
@@ -428,6 +434,28 @@ final class CartoucheSetup: ObservableObject {
     func importOpenedPairingFile(_ url: URL) {
         importPairingFile(url)
         openedPairingFile = true
+    }
+
+    /// The pairing file the player's own SideStore gave Cartouche, which
+    /// installed it (CartoucheSideStoreInstall): the games show the setup
+    /// and what came of it, as for a file opened with Cartouche.
+    func importPairingFile(data: Data) {
+        do {
+            try CartouchePairing.importFile(data: data)
+            pairingReport = nil
+            CartoucheReports.note("Pairing file received from the player's SideStore")
+        } catch {
+            pairingFailed(error)
+        }
+        refresh()
+        openedPairingFile = true
+    }
+
+    /// No SideStore answered Cartouche's request for the pairing file.
+    func pairingFromSideStoreFailed() {
+        pairingReport = CartoucheReports.make(.pairing, CartoucheText.setupPairingFailed,
+                                              message: CartoucheText.sideStoreNoAnswer,
+                                              step: "Asking the player's SideStore for the pairing file", stage: "pairingFile")
     }
 
     // MARK: Whether the certificate works

@@ -71,6 +71,7 @@ let package = Package(
                 "CartoucheSFTP.swift",
                 "CartoucheSaveSync.swift",
                 "CartoucheSetupFacts.swift",
+                "CartoucheSideStoreLink.swift",
                 "CartoucheSignInMessage.swift",
                 "CartoucheSigningCheck.swift",
                 "CartoucheSwitchSave.swift",

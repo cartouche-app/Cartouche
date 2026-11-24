@@ -632,7 +632,7 @@ struct CartoucheSystemView: View {
         if let phase = updates.phase {
             let version = updates.target?.version ?? ""
             VStack(alignment: .leading, spacing: 8) {
-                Label(phase == .installing ? CartoucheText.updateInstallingTitle(version) : CartoucheText.updatePreparingTitle(version),
+                Label(updates.stepTitle(phase, version: version),
                       systemImage: "arrow.down.circle")
                     .foregroundStyle(.secondary)
                 if phase == .preparing, let progress = updates.progress {
@@ -642,7 +642,7 @@ struct CartoucheSystemView: View {
                         ProgressView(value: progress.fractionCompleted)
                     }
                 } else {
-                    Text(CartoucheText.updateInstallingMessage)
+                    Text(updates.stepMessage(.installing))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
