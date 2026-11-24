@@ -4,14 +4,18 @@
 //
 //  The way from a new install to the first game, for a player who has never
 //  used Cartouche (CartoucheGuideView): LocalDevVPN, the Apple ID, the game
-//  built on a Mac with Cartouche Builder, the games folder, then the game
-//  installed. Signed with the player's own certificate, the certificate
-//  takes the place of LocalDevVPN and the Apple ID; for the IPA for an
+//  built on a Mac with Cartouche for Mac, or by Cartouche Cloud for a
+//  player with no Mac, the games folder, then the game installed. Signed
+//  with the player's own certificate, the certificate takes the place of
+//  LocalDevVPN and the Apple ID; for the IPA for an
 //  Apple ID that a signing app signed, which cannot sign in, the IPA for
 //  the player's own certificate takes it. Each step ticks itself
 //  from what Cartouche sees, in any order. The Mac's step is the player's
 //  to take: No thanks skips it, for a player whose games are built already
-//  or who has no Mac, and the guide goes on without it. The guide opens by
+//  or who has no Mac, and the guide goes on without it. Linked to
+//  Cartouche Cloud, which builds the player's games and installs them
+//  itself, the guide passes over the games folder, and its last step
+//  installs the game Cartouche Cloud built. The guide opens by
 //  itself once, the first time the console shows before the player has
 //  signed in, and stays a card at the top of the home until the first game
 //  is installed, unless the player takes the card off the home; from then
@@ -52,6 +56,9 @@ final class CartoucheGuide: ObservableObject {
         var hasInstalledGame = false
         /// The player said No thanks to building their game on a Mac.
         var buildSkipped = false
+        /// This iPhone is linked to Cartouche Cloud, which builds the
+        /// player's games and installs them itself: no games folder needed.
+        var usesCloud = false
         /// Cartouche signs with an Apple ID: one installed with the player's
         /// own certificate has neither LocalDevVPN's step nor the Apple ID's,
         /// and has the certificate's in their place. So has the IPA for an
@@ -90,9 +97,16 @@ final class CartoucheGuide: ObservableObject {
         }
 
         /// A step the player passed over without doing it: the Mac's, after
-        /// No thanks, until a game of theirs shows anyway.
+        /// No thanks, until a game of theirs shows anyway; the games
+        /// folder's, linked to Cartouche Cloud, until they choose one.
         func isSkipped(_ step: Step) -> Bool {
-            isLeftOut(step) || (step == .build && buildSkipped && !isDone(step))
+            if isLeftOut(step) { return true }
+            if isDone(step) { return false }
+            switch step {
+            case .build: return buildSkipped
+            case .folder: return usesCloud
+            default: return false
+            }
         }
 
         /// The first step left, nil once every step is done or skipped.
@@ -146,6 +160,7 @@ final class CartoucheGuide: ObservableObject {
                 || CartoucheStoredGames.shared.serverName != nil,
             hasInstalledGame: entries.owned.contains { $0.app != nil },
             buildSkipped: buildSkipped,
+            usesCloud: CartoucheCloudLink.shared.isLinked,
             requiresAccount: !setup.usesImportedSigning && !CartoucheImportedSigning.isSignedElsewhere)
     }
 
@@ -169,8 +184,9 @@ final class CartoucheGuide: ObservableObject {
     }
 
     /// No thanks to the Mac's step: the guide goes on to the games folder,
-    /// and the home's card with it. The step stays in the guide, closed, for
-    /// a player who wants it after all.
+    /// or to the game Cartouche Cloud builds, and the home's card with it.
+    /// The step stays in the guide, closed, for a player who wants it after
+    /// all.
     func skipBuild() {
         guard !buildSkipped else { return }
         buildSkipped = true

@@ -62,8 +62,9 @@ enum GalleryCloud {
     /// What WORK shows of Cartouche Cloud, or the page of SCREEN cloud: the
     /// account's games (cloud-games), one of them being installed from it
     /// (cloud-installing), the code of the account's page linking this
-    /// iPhone (cloud-linking) or refused (cloud-refused); on the page alone,
-    /// what the service tells an iPhone not linked yet.
+    /// iPhone (cloud-linking) or refused (cloud-refused); what the service
+    /// tells an iPhone not linked yet, on the page, or wherever the page
+    /// opens from (cloud-service), as from the guide.
     @MainActor
     static func show(screen: String, work: String?) {
         let link = CartoucheCloudLink.shared
@@ -75,6 +76,8 @@ enum GalleryCloud {
         case "cloud-refused":
             link.showForGallery(linked: false, service: service, account: nil, pendingCode: code,
                                 refusal: CartoucheCloudError(.code))
+        case "cloud-service":
+            link.showForGallery(linked: false, service: service, account: nil)
         default:
             guard screen == "cloud" else { return }
             link.showForGallery(linked: false, service: service, account: nil)

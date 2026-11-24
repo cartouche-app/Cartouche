@@ -13,9 +13,12 @@
 //  brings Cartouche back by itself, the sign-in is the setup's own screen,
 //  the games folder the storage page; the Mac's steps go to the Mac as a
 //  link to Cartouche Builder's page of Cartouche's site, by AirDrop or
-//  Messages. No thanks skips the Mac's step, which stays closed: a tap
-//  opens it again. Installing or importing a game closes the guide, for
-//  the console to show the install, then the game's sheet.
+//  Messages, and a player with no Mac goes to the page of Cartouche Cloud,
+//  which builds their game for them. No thanks skips the Mac's step, which
+//  stays closed: a tap opens it again. Linked to Cartouche Cloud, the
+//  guide passes over the games folder, and its last step installs the game
+//  Cartouche Cloud built. Installing or importing a game closes the guide,
+//  for the console to show the install, then the game's sheet.
 //
 //  The card at the top of the home (CartoucheGuideCard.swift) opens the
 //  guide, and its × takes it off the home; the System page opens it then.
@@ -30,6 +33,8 @@ struct CartoucheGuideView: View {
     let entries: CartoucheCatalog.Entries
     /// Installs a game of the games folder, once the guide has closed.
     let onInstall: (CartoucheStoredGame) -> Void
+    /// Installs the game Cartouche Cloud built, once the guide has closed.
+    let onInstallCloud: (CartoucheCloudBuilt) -> Void
     /// Installs an IPA the player picked, once the guide has closed.
     let onImport: (URL) -> Void
     /// Starts the player's game, once the guide has closed.
@@ -38,9 +43,11 @@ struct CartoucheGuideView: View {
     // Written out: before Swift 6.4 (SE-0502), the private state below made
     // the synthesized initializer private.
     init(entries: CartoucheCatalog.Entries, onInstall: @escaping (CartoucheStoredGame) -> Void,
+         onInstallCloud: @escaping (CartoucheCloudBuilt) -> Void,
          onImport: @escaping (URL) -> Void, onPlay: @escaping (LCAppModel) -> Void) {
         self.entries = entries
         self.onInstall = onInstall
+        self.onInstallCloud = onInstallCloud
         self.onImport = onImport
         self.onPlay = onPlay
     }
@@ -50,6 +57,7 @@ struct CartoucheGuideView: View {
     @ObservedObject private var account = CartoucheAccount.shared
     @ObservedObject private var storedGames = CartoucheStoredGames.shared
     @ObservedObject private var storage = CartoucheStorageSettings.shared
+    @ObservedObject private var cloud = CartoucheCloudLink.shared
     @Environment(\.openURL) private var openURL
     /// A later step the player opened; nil: the step left first.
     @State private var opened: Step?
@@ -57,24 +65,29 @@ struct CartoucheGuideView: View {
     @State private var showingSetup = false
     @State private var showingSigning = false
     @State private var showingStorage = false
+    @State private var showingCloud = false
 
     var body: some View {
         let progress = guide.progress(entries)
-        ScrollView {
-            VStack(alignment: .leading, spacing: 14) {
-                header(progress)
-                ForEach(progress.steps) { step in
-                    card(step, progress: progress)
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    header(progress)
+                    ForEach(progress.steps) { step in
+                        card(step, progress: progress)
+                            .id(step)
+                    }
+                    Label(CartoucheText.guideNoDownloads, systemImage: "lock.shield")
+                        .font(.footnote)
+                        .foregroundStyle(CartoucheTheme.tertiaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 4)
                 }
-                Label(CartoucheText.guideNoDownloads, systemImage: "lock.shield")
-                    .font(.footnote)
-                    .foregroundStyle(CartoucheTheme.tertiaryText)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 4)
+                .padding()
+                .frame(maxWidth: 640)
+                .frame(maxWidth: .infinity)
             }
-            .padding()
-            .frame(maxWidth: 640)
-            .frame(maxWidth: .infinity)
+            .onAppear { showStepLeft(progress, with: proxy) }
         }
         .background(CartoucheStage(key: nil))
         .navigationTitle(CartoucheText.guideTitle)
@@ -87,6 +100,9 @@ struct CartoucheGuideView: View {
         }
         .navigationDestination(isPresented: $showingSigning) {
             CartoucheSigningView()
+        }
+        .navigationDestination(isPresented: $showingCloud) {
+            CartoucheCloudPage()
         }
         .sheet(isPresented: $signingIn) {
             CartoucheSignInView()
@@ -116,6 +132,17 @@ struct CartoucheGuideView: View {
                 guide.refreshVPN()
             }
         }
+        // Linked to Cartouche Cloud, read the account's games while the
+        // guide shows, as its page does: the game it builds comes in the
+        // last step as soon as it is built.
+        .task(id: cloud.isLinked) {
+            guard cloud.isLinked else { return }
+            cloud.start()
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(3_600))
+            }
+            cloud.stop()
+        }
         .onChange(of: account.needsCode) { _, needsCode in
             if needsCode { signingIn = true }
         }
@@ -124,6 +151,18 @@ struct CartoucheGuideView: View {
             // The step the player opened is done: the next one left opens.
             if let opened, progress.isDone(opened) { self.opened = nil }
         }
+    }
+
+    /// Shows the step open with the one before it above, the steps done
+    /// and the header further up: the Mac's step's four buttons show
+    /// without the player scrolling for them, on an iPhone too. The first
+    /// step shows under the header, as it is.
+    private func showStepLeft(_ progress: CartoucheGuide.Progress, with proxy: ScrollViewProxy) {
+        guard let step = opened ?? progress.current,
+              let index = progress.steps.firstIndex(of: step), index > 0 else { return }
+        let above = progress.steps[index - 1]
+        // Once the steps are laid out.
+        DispatchQueue.main.async { proxy.scrollTo(above, anchor: .top) }
     }
 
     // MARK: Header
@@ -202,7 +241,7 @@ struct CartoucheGuideView: View {
                 } else if open {
                     content(step, progress)
                 } else if skipped {
-                    detail(CartoucheText.guideBuildSkipped)
+                    detail(step == .folder ? CartoucheText.guideFolderSkippedCloud : CartoucheText.guideBuildSkipped)
                 }
             }
             Spacer(minLength: 0)
@@ -293,11 +332,20 @@ struct CartoucheGuideView: View {
             accountContent(progress)
         case .certificate:
             certificateContent
+        case .build where progress.usesCloud:
+            // Linked to Cartouche Cloud: the player sends their copy on its
+            // site, and the game shows once built.
+            detail(CartoucheText.guideBuildCloudLinked)
+            action(CartoucheText.guideBuildCloudOpen, systemImage: "cloud", primary: true) {
+                showingCloud = true
+            }
         case .build:
             detail(CartoucheText.guideBuildHow)
             // Side by side where they fit, the one over the other otherwise,
-            // and before what the Mac needs: No thanks shows without the
-            // player scrolling for it, on an iPhone too.
+            // and before what the Mac needs: with the guide shown from the
+            // step before this one, Cartouche Cloud, the IPAs the player has
+            // already and No thanks show without the player scrolling for
+            // them, on an iPhone too.
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 10) { buildActions }
                 VStack(alignment: .leading, spacing: 10) { buildActions }
@@ -317,26 +365,35 @@ struct CartoucheGuideView: View {
                 chooseIPA()
             }
         case .play:
-            let stored = entries.owned.filter { $0.app == nil && $0.stored != nil }
-            if stored.isEmpty {
-                detail(progress.buildSkipped ? CartoucheText.guidePlayWaitingNoMac : CartoucheText.guidePlayWaiting)
+            // The games to install: of the games folder, or that Cartouche
+            // Cloud built.
+            let ready = entries.owned.filter { $0.app == nil && ($0.stored != nil || $0.cloud != nil) }
+            if ready.isEmpty {
+                detail(progress.usesCloud ? CartoucheText.guidePlayWaitingCloud
+                       : progress.buildSkipped ? CartoucheText.guidePlayWaitingNoMac : CartoucheText.guidePlayWaiting)
                 action(CartoucheText.importCopy, systemImage: "square.and.arrow.down", primary: true) {
                     chooseIPA()
                 }
             } else {
-                detail(CartoucheText.guidePlayReady)
-                ForEach(Array(stored.prefix(3).enumerated()), id: \.element.id) { index, entry in
+                detail(ready.contains { $0.stored != nil } ? CartoucheText.guidePlayReady : CartoucheText.guidePlayReadyCloud)
+                ForEach(Array(ready.prefix(3).enumerated()), id: \.element.id) { index, entry in
                     if let game = entry.stored {
                         action(CartoucheText.guidePlayInstall(entry.name), systemImage: "arrow.down.circle.fill",
                                primary: index == 0) { onInstall(game) }
+                    } else if let built = entry.cloud {
+                        action(CartoucheText.guidePlayInstall(entry.name), systemImage: "icloud.and.arrow.down.fill",
+                               primary: index == 0) { onInstallCloud(built) }
                     }
                 }
             }
         }
     }
 
-    /// The Mac's step's buttons: its page sent to the Mac, and No thanks,
-    /// which skips the step, or closes it again once skipped.
+    /// The Mac's step's buttons: its page sent to the Mac; Cartouche Cloud,
+    /// which builds the game of a player with no Mac; the Files picker, for
+    /// a player whose games are IPAs already, whose IPA picked closes the
+    /// guide for the install; and No thanks, which skips the step, or closes
+    /// it again once skipped.
     @ViewBuilder
     private var buildActions: some View {
         ShareLink(item: CartoucheGuide.builderPage, subject: Text(CartoucheText.guideBuildShareSubject),
@@ -348,6 +405,12 @@ struct CartoucheGuideView: View {
         }
         .controlSize(.large)
         .cartouchePrimaryButton()
+        action(CartoucheText.guideBuildCloud, systemImage: "cloud", primary: false) {
+            showingCloud = true
+        }
+        action(CartoucheText.guideBuildHaveIPA, systemImage: "folder", primary: false) {
+            chooseIPA()
+        }
         action(CartoucheText.guideBuildSkip, systemImage: "forward.fill", primary: false) {
             withAnimation(.easeInOut(duration: 0.2)) {
                 guide.skipBuild()

@@ -226,6 +226,10 @@ struct CartoucheGamesView: View {
                         showingGuide = false
                         installStored(game)
                     },
+                    onInstallCloud: { game in
+                        showingGuide = false
+                        installCloud(game)
+                    },
                     onImport: { url in
                         showingGuide = false
                         importCopy(url)
@@ -240,6 +244,9 @@ struct CartoucheGamesView: View {
                         }
                     }
             }
+            // The page of Cartouche Cloud, which the Mac's step opens, reads
+            // the games on this iPhone.
+            .environmentObject(sharedModel)
             .preferredColorScheme(.dark)
             // B closes the Files picker over the guide, not the guide.
             .onReceive(CartoucheGamepad.shared.inputs) { input in

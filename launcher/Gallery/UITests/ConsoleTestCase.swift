@@ -60,12 +60,16 @@ enum Words {
     static let accountStep = "Sign in with your Apple ID"   // guide.account.title
     static let noPairingFile = "The pairing file is missing." // guide.account.noPairing
     static let openSetup = "Open the setup"                 // guide.openSetup
-    static let buildStep = "Build your game on a Mac"       // guide.build.title
+    static let buildStep = "Build your game"                // guide.build.title
+    static let noMacCloud = "No Mac: Cartouche Cloud"       // guide.build.cloud
+    static let haveIPAs = "I have my own IPAs already"      // guide.build.haveIPA
+    static let cloud = "Cartouche Cloud"                    // cloud.name
     static let noThanks = "No thanks"                       // guide.build.skip
     static let folderStep = "Choose your games folder"      // guide.folder.title
     static let chooseGamesFolder = "Choose the games folder" // guide.folder.choose
     static let importInstead = "Import an IPA instead"      // guide.folder.import
     static let playStep = "Install your game and play"      // guide.play.title
+    static let installGame = "Install %@"                   // guide.play.install
     static let telemetry = "Game measurements"              // telemetry.title
     static let sendMeasurements = "Send game measurements"  // telemetry.send
     static let report = "Report a problem"                  // report.title

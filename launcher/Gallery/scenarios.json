@@ -2213,6 +2213,23 @@
       "work": "build-skipped"
     },
     {
+      "name": "iphone-guide-cloud",
+      "comment": "Your first game, this iPhone linked to Cartouche Cloud, which built games of the player (work: cloud-games): the Mac's step done, the games folder's passed over, and the last step installing the games Cartouche Cloud built.",
+      "screen": "guide",
+      "owned": [],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-games"
+    },
+    {
       "name": "iphone-guide-own-certificate",
       "comment": "Your first game, in a Cartouche signed by a signing app on the iPhone (signing: iphone).",
       "screen": "guide",

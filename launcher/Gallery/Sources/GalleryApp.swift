@@ -128,6 +128,10 @@
 //        cloud-installing                the same, its game built being
 //                                        installed from Cartouche Cloud,
 //                                        over the console
+//        cloud-service                   what Cartouche Cloud tells an
+//                                        iPhone not linked yet, wherever
+//                                        its page opens from, never asked
+//                                        of the platform (GalleryCloud)
 //        cloud-linking                   on Cartouche Cloud (screen cloud),
 //                                        the code of the account's page
 //                                        linking this iPhone, as the page's
@@ -1300,7 +1304,8 @@ struct CartoucheGalleryApp: App {
             }
         case "guide":
             NavigationStack {
-                CartoucheGuideView(entries: entries, onInstall: { _ in }, onImport: { _ in }, onPlay: { _ in })
+                CartoucheGuideView(entries: entries, onInstall: { _ in }, onInstallCloud: { _ in }, onImport: { _ in },
+                                   onPlay: { _ in })
                     .toolbar {
                         ToolbarItem(placement: .confirmationAction) {
                             Button(CartoucheText.done) {}

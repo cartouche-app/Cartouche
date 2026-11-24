@@ -2,13 +2,13 @@
 
 *English: [getting-started.md](getting-started.md)*
 
-De rien à votre premier jeu sur votre iPhone ou votre iPad, en quatre étapes. Cartouche ne télécharge jamais de jeu : vous construisez chacun des vôtres sur votre Mac, à partir de votre propre copie, extraite de votre propre console. Dans Cartouche, le guide **Votre premier jeu** reprend ces étapes, et coche chacune toute seule une fois faite.
+De rien à votre premier jeu sur votre iPhone ou votre iPad, en quatre étapes. Cartouche ne fournit aucun jeu : vous construisez chacun des vôtres sur votre Mac, ou Cartouche Cloud le construit pour vous, à partir de votre propre copie, extraite de votre propre console. Dans Cartouche, le guide **Votre premier jeu** reprend ces étapes, et coche chacune toute seule une fois faite.
 
 ## Ce qu’il vous faut
 
 - **Un iPhone ou un iPad :** un iPhone 15 Pro ou plus récent, ou un iPad à puce M1 ou plus récente, sous iOS ou iPadOS 26 ou ultérieur. Les plus gros jeux demandent un iPhone de 12 Go.
 - **Un Mac ou un PC Windows, une seule fois,** avec un câble pour l’iPhone ou l’iPad, pour installer Cartouche.
-- **Un Mac à puce Apple** (M1 ou plus récent) sous macOS 26.6 ou ultérieur, pour construire vos jeux et y jouer aussi sur le Mac, avec Xcode 27.2, gratuit chez Apple, et de la place pour les constructions. Seul un Mac peut les construire : sans Mac, Cartouche n’a rien à lancer, puisque personne n’a le droit de vous envoyer ses jeux.
+- **Un Mac à puce Apple** (M1 ou plus récent) sous macOS 26.6 ou ultérieur, pour construire vos jeux et y jouer aussi sur le Mac, avec Xcode 27.2, gratuit chez Apple, et de la place pour les constructions. Sans Mac, [Cartouche Cloud](https://build.cartouche.cloud/) les construit pour vous, à partir de la copie que vous lui envoyez depuis un ordinateur ; une construction réussie se paie en crédits, une construction qui échoue ne coûte rien.
 - **Un compte Apple** (identifiant Apple) : un compte gratuit suffit.
 - **Vos jeux,** copiés depuis votre propre console, et pour un jeu Switch les clés de votre console (`prod.keys`).
 
@@ -24,7 +24,7 @@ Sur un iPad, chaque étape est la même, avec l’iPad à la place de l’iPhone
 
 ## 2. Construisez votre jeu sur votre Mac
 
-**Envoyer les étapes à mon Mac**, dans le guide, envoie au Mac [la page de Cartouche pour Mac](https://cartouche.cloud/#builder) du site de Cartouche, par AirDrop ou Messages : son bouton **Télécharger Cartouche pour Mac** donne l’image disque, et les étapes ci-dessous prennent le relais. Vos jeux sont déjà construits, sur votre NAS par exemple, ou vous n’avez pas de Mac ? **Non merci** passe cette étape, et le guide continue avec votre dossier des jeux.
+**Envoyer les étapes à mon Mac**, dans le guide, envoie au Mac [la page de Cartouche pour Mac](https://cartouche.cloud/#builder) du site de Cartouche, par AirDrop ou Messages : son bouton **Télécharger Cartouche pour Mac** donne l’image disque, et les étapes ci-dessous prennent le relais. Pas de Mac ? **Sans Mac : Cartouche Cloud** ouvre la page de Cartouche Cloud, qui construit votre jeu pour vous ([plus bas](#pas-de-mac--cartouche-cloud-le-construit-pour-vous)). Vos jeux sont déjà des IPA ? **J’ai déjà mes propres IPA** ouvre Fichiers, et l’IPA choisie s’installe. Vos jeux sont déjà construits, sur votre NAS par exemple ? **Non merci** passe cette étape, et le guide continue avec votre dossier des jeux.
 
 1. Sur un Mac à puce Apple sous macOS 26.6 ou ultérieur, [téléchargez Cartouche pour Mac](https://cartouche.cloud/download/#builder), ouvrez l’image disque et glissez **Cartouche** sur **Applications**.
 2. Ouvrez Cartouche depuis Applications. La première fois, macOS dit qu’il ne peut pas le vérifier, car il n’est pas signé par Apple : dans **Réglages Système › Confidentialité et sécurité**, cliquez sur **Ouvrir quand même** à côté de Cartouche, une fois.
@@ -34,6 +34,15 @@ Sur un iPad, chaque étape est la même, avec l’iPad à la place de l’iPhone
    - **iPhone :** activez **Partager avec Cartouche sur l’iPhone**, pour que Cartouche installe vos jeux depuis le Mac.
 4. Choisissez **Builder** en haut de la fenêtre, qui s’ouvre la première fois sur la console de Cartouche, puis dans **Bibliothèque**, ouvrez votre jeu et choisissez **Construire**. La première construction d’un gros jeu prend des heures ; les suivantes réutilisent son dossier de construction. Un jeu que vous suivez est reconstruit quand nxnative l’améliore : **Reconstruire ce qui est dû** les construit, et avec **Construire ce qui est dû chaque nuit**, dans les réglages, le Mac s’en charge la nuit. Cartouche vous propose ensuite la mise à jour.
 5. Chaque jeu est construit pour l’iPhone et l’iPad, et pour ce Mac aussi, sauf si vous désactivez l’un des deux sous **Construit pour**. Sur sa fiche, **Jouer sur ce Mac** le lance sur le Mac, avec vos sauvegardes les plus récentes ([builder/README.md](../builder/README.md#playing-on-this-mac)). **Console**, en haut de la fenêtre ou ⌘1, les montre dans la console de Cartouche, comme sur l’iPhone, avec **Jouer** aussi ([builder/README.md](../builder/README.md#cartouches-console)).
+
+### Pas de Mac ? Cartouche Cloud le construit pour vous
+
+[Cartouche Cloud](https://build.cartouche.cloud/) construit votre jeu avec nxnative sur un Mac dans le cloud, pour vous seul, à partir de la copie que vous lui envoyez, puis l’installe sur votre iPhone. Il ne fournit aucun jeu.
+
+1. Sur un ordinateur, ouvrez [le site de Cartouche Cloud](https://build.cartouche.cloud/), créez votre compte et achetez-y des crédits : une construction réussie se paie, une construction qui échoue ne coûte rien.
+2. Envoyez votre propre copie du jeu : un paquet (`.nsp`, `.xci`, `.nsz`, `.xcz`, le `.nup` d’un jeu Switch 2) avec les clés de votre console (`prod.keys`), ou un ZIP. Votre navigateur ouvre le jeu sur l’ordinateur et n’envoie que lui : vos clés ne quittent jamais l’ordinateur. Votre copie est effacée dès que le jeu est construit.
+3. Sur la page de votre compte, **Lier Cartouche** donne un code valable dix minutes. Dans Cartouche, **Sans Mac : Cartouche Cloud**, dans le guide, ou **Système › Cartouche Cloud**, le prend sous **Lier cet iPhone** ; ouverte sur l’iPhone, cette page le remplit pour vous avec **Ouvrir dans Cartouche**.
+4. Cartouche suit la construction, étape par étape, et un e-mail vous prévient quand elle est finie. Le jeu construit reste deux jours sur Cartouche Cloud, pour votre seul compte : la dernière étape du guide et votre bibliothèque l’installent. Lié à Cartouche Cloud, le guide passe l’étape du dossier des jeux.
 
 ## 3. Choisissez votre dossier des jeux dans Cartouche
 
@@ -47,11 +56,11 @@ Cartouche y liste vos jeux et propose leurs mises à jour. Un jeu que nxnative a
 
 Un doute sur le nom des fichiers ? **Comment nommer vos jeux**, sous le dossier des jeux de la page du stockage, montre avec des exemples inventés les noms que Cartouche trouve dans votre dossier des jeux et votre dossier des sauvegardes, et ceux que Cartouche pour Mac trouve dans votre dossier des dumps ; sur le Mac, les réglages du builder ouvrent la même page, sous **Dossiers**.
 
-Pas de dossier des jeux ? Mettez l’IPA dans Fichiers sur l’iPhone, par AirDrop par exemple, et choisissez **Importer plutôt une IPA**.
+Pas de dossier des jeux ? Mettez l’IPA dans Fichiers sur l’iPhone, par AirDrop par exemple, et choisissez **Importer plutôt une IPA**. Avec Cartouche Cloud, il n’en faut pas : il installe les jeux qu’il a construits pour vous.
 
 ## 4. Installez votre jeu et jouez
 
-Votre jeu apparaît dans la dernière étape du guide et dans votre bibliothèque : **Installer** l’installe depuis votre dossier des jeux, puis sa fiche s’ouvre avec **Jouer**. Votre premier jeu est sur votre iPhone ou votre iPad ; les suivants prennent le même chemin, construits sur le Mac, puis installés.
+Votre jeu apparaît dans la dernière étape du guide et dans votre bibliothèque : **Installer** l’installe depuis votre dossier des jeux, ou depuis Cartouche Cloud, puis sa fiche s’ouvre avec **Jouer**. Votre premier jeu est sur votre iPhone ou votre iPad ; les suivants prennent le même chemin, construits sur le Mac ou par Cartouche Cloud, puis installés.
 
 ## Ensuite
 
