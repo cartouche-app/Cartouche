@@ -61,6 +61,9 @@ class Disks(unittest.TestCase):
         self.assertEqual((disks.amount(412_000_000), disks.amount(12_400_000_000)), ("0.4 GB", "12 GB"))
         i18n.set_language("fr")
         self.assertEqual((disks.amount(412_000_000), disks.amount(12_400_000_000)), ("0,4 Go", "12 Go"))
+        for language in ("es", "de"):
+            i18n.set_language(language)
+            self.assertEqual((disks.amount(412_000_000), disks.amount(12_400_000_000)), ("0,4 GB", "12 GB"))
 
     def test_the_players_words(self):
         with mock.patch.object(disks, "free_bytes", return_value=412_000_000):
@@ -91,6 +94,18 @@ class Disks(unittest.TestCase):
                          "sur le disque « SSD », dont 12 Go pour décompresser son zip, et il n'y en a que 25. Libérez-y de la place "
                          "(la page Stockage montre ce que prennent les dossiers de construction), choisissez des dossiers de construction "
                          "sur un autre disque (Réglages › Dossiers) ou baissez « Garder au moins 20 Go libres » (Réglages › Stockage).")
+        i18n.set_language("es")
+        self.assertEqual(disks.no_room(Path("/Volumes/SSD/builds"), 25.2, 31.4, 11.4, 20),
+                         "Faltan 7 GB para compilar este juego: Cartouche solo empieza una compilación con 32 GB libres "
+                         "en el disco “SSD”, de ellos 12 GB para descomprimir su zip, y allí solo quedan 25 GB libres. Libera espacio allí "
+                         "(la página Almacenamiento muestra lo que ocupan las carpetas de compilación), elige carpetas de compilación "
+                         "en otro disco (Ajustes › Carpetas) o baja “Mantener al menos 20 GB libres” (Ajustes › Almacenamiento).")
+        i18n.set_language("de")
+        self.assertEqual(disks.no_room(Path("/Users/player/Builder/workspace"), 13.7, 20, 0, 20),
+                         "Es fehlen 7 GB, um dieses Spiel zu erstellen: Cartouche beginnt einen Build nur mit 20 GB freiem Platz "
+                         "auf der Festplatte des Mac, und dort sind nur 13 GB frei. Gib dort Platz frei (die Seite „Speicher“ zeigt, "
+                         "was die Build-Ordner belegen), wähle Build-Ordner auf einer anderen Festplatte (Einstellungen › Ordner) "
+                         "oder senke „Mindestens 20 GB frei lassen“ (Einstellungen › Speicher).")
 
     def test_the_room_before_a_build(self):
         """What the app's card says before a game would be skipped for the

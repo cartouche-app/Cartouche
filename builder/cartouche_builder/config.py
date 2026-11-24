@@ -15,7 +15,7 @@ from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
 
 from . import titles
-from .i18n import t
+from .i18n import LANGUAGES, t
 from .paths import Paths
 
 ENGINE_URL = "https://github.com/seedds/nxnative.git"
@@ -55,7 +55,7 @@ class Config:
     jobs: int = 1  # games built at once
     keep_ipa: bool = False  # keep each IPA in the workspace even on another disk than the games folder (on the same one it is kept anyway: an APFS clone, free)
     keep_extracted: bool = False  # keep the extracted game files after a build (as big as the game, for a faster next build)
-    language: str = ""  # the builder's own language: "en", "fr" or "" for the system's
+    language: str = ""  # the builder's own language: "en", "fr", "es", "de" or "" for the system's
     notifications: bool = True
     schedule: bool = False  # build what is due every night (launchd)
     schedule_hour: int = 3
@@ -136,7 +136,7 @@ class Config:
         self.aliases = clean
         if not isinstance(self.shares, dict) or not all(isinstance(k, str) and isinstance(v, str) for k, v in self.shares.items()):
             self.shares = {}
-        if self.language not in ("", "en", "fr"):
+        if self.language not in ("", *LANGUAGES):
             raise ValueError(t("config.bad_language", value=self.language))
 
     def selected(self, title_id: str) -> bool:

@@ -17,11 +17,16 @@ PACKAGE = Path(__file__).resolve().parent.parent / "cartouche_builder"
 
 
 class Texts(unittest.TestCase):
-    def test_every_text_in_both_languages(self):
-        for key, (english, french) in TEXTS.items():
-            self.assertTrue(english and french, key)
-            fields = lambda text: sorted({f for _, f, _, _ in string.Formatter().parse(text) if f})
-            self.assertEqual(fields(english), fields(french), key)
+    def test_every_text_in_the_four_languages(self):
+        fields = lambda text: sorted({f for _, f, _, _ in string.Formatter().parse(text) if f})
+        for key, (english, *others) in TEXTS.items():
+            self.assertEqual(len(others), 3, key)
+            for other in others:
+                self.assertTrue(english and other, key)
+                self.assertEqual(fields(english), fields(other), key)
+                # A text that starts with a space follows another: so do its
+                # translations.
+                self.assertEqual(english.startswith(" "), other.startswith(" "), key)
 
     def test_every_key_used_exists(self):
         used = set()

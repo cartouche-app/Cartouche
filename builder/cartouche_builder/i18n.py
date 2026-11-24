@@ -1,27 +1,35 @@
-"""The builder's words, in English and French.
+"""The builder's words, in English, French, Spanish and German.
 
 t("key", name=value) gives the text in the builder's language: the one the
-settings name, else the system's (French when it is French, English
-otherwise). The catalog is texts.py.
+settings name, else the system's (French, Spanish or German when it is one
+of them, English otherwise). The catalog is texts.py.
 """
 
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 
 from .texts import TEXTS
 
-LANGUAGES = ("en", "fr")
+LANGUAGES = ("en", "fr", "es", "de")
 _language: str | None = None
+
+
+def language_of(tag: str) -> str:
+    """The builder's language for TAG, a language as the system writes it:
+    "fr_CA.UTF-8" is French, "es-419" Spanish, "de-CH" German, "it" English."""
+    base = re.match(r"[a-z]*", tag.lower()).group()
+    return base if base in LANGUAGES else "en"
 
 
 def system_language() -> str:
     for name in ("CARTOUCHE_BUILDER_LANG", "LC_ALL", "LC_MESSAGES", "LANG"):
         value = os.environ.get(name, "")
         if value and value not in ("C", "POSIX") and not value.startswith("C."):
-            return "fr" if value.lower().startswith("fr") else "en"
+            return language_of(value)
     if sys.platform == "darwin":
         try:
             out = subprocess.run(["defaults", "read", "-g", "AppleLanguages"], capture_output=True, text=True, timeout=5).stdout
@@ -30,7 +38,7 @@ def system_language() -> str:
         for line in out.splitlines():
             code = line.strip().strip('",()').lower()
             if code:
-                return "fr" if code.startswith("fr") else "en"
+                return language_of(code)
     return "en"
 
 

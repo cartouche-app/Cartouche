@@ -1,8 +1,10 @@
 import json
+import os
 import unittest
 from pathlib import Path
+from unittest import mock
 
-from cartouche_builder import batch, schedule, storage
+from cartouche_builder import batch, i18n, schedule, storage
 from cartouche_builder import config as configs
 from cartouche_builder.paths import Paths
 from cartouche_builder.state import TAKEN_OVER, Attempt, Build, MacBuild, Store, attempt_now
@@ -35,6 +37,23 @@ class Settings(Home):
             configs.Config(engine_policy="sometimes").validate()
         with self.assertRaises(ValueError):
             configs.Config(skip=["nope"]).validate()
+        with self.assertRaises(ValueError):
+            configs.Config(language="it").validate()
+
+    def test_the_four_languages(self):
+        # The app's settings name the builder's language: one of its four,
+        # or none for the Mac's.
+        for language in ("", "en", "fr", "es", "de"):
+            configs.Config(language=language).validate()
+        self.assertEqual([i18n.language_of(tag) for tag in ("fr_CA.UTF-8", "es-419", "de-CH", "en-GB", "it", "zh-Hans", "")],
+                         ["fr", "es", "de", "en", "en", "en", "en"])
+        for tag, language in (("es_ES.UTF-8", "es"), ("de_AT.UTF-8", "de"), ("pt_BR.UTF-8", "en")):
+            with mock.patch.dict(os.environ, {"CARTOUCHE_BUILDER_LANG": tag}):
+                self.assertEqual(i18n.system_language(), language)
+        i18n.set_language("de")
+        self.assertEqual(i18n.t("cli.due", count=3), "3 Spiele zu erstellen.")
+        i18n.set_language("es")
+        self.assertEqual(i18n.t("cli.due", count=1), "1 juego por compilar.")
 
     def test_a_broken_file_keeps_the_folders(self):
         paths = Paths.default()
