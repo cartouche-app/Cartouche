@@ -681,6 +681,24 @@ class MacApps(BatchHome):
         self.assertEqual((entry.build, entry.reasons, entry.mac_reason), (False, ["up_to_date"], "up_to_date"))
         self.assertTrue(kept.is_file())
 
+    def test_this_macs_copy_stays_out_of_time_machine(self):
+        """This Mac's copy of the file the NAS keeps, installed to be played
+        and made again of a new build, is left out of Time Machine each time
+        (decision 153); the games folder's file, the player's, never is."""
+        self.enterContext(mock.patch.dict(os.environ, {macapps.PACKED_ENV: "1"}))
+        chosen = self.tmp / "Games on this Mac"
+        self.settings(mac_apps=str(chosen))
+        left = self.enterContext(mock.patch.object(macapps, "leave_out_of_backups", return_value=True))
+        self.run_due(only={MKW})
+        left.assert_not_called()
+        api.mac_install(batch.context(), MKW)
+        copy = chosen / "Mario Kart World.app"
+        self.assertEqual(left.call_args_list, [mock.call(copy)])
+        commit(self.remote, "Mario Kart World's menus (PR #3)", {"dm/host/menu.c": "x"})
+        self.run_due(only={MKW})
+        self.assertEqual(macapps.read_info(copy).commit, batch.context().engine.head()[:12])
+        self.assertEqual(left.call_args_list, [mock.call(copy), mock.call(copy)])
+
     def test_installed_from_the_file_another_mac_sent(self):
         """An app another Mac sent to the iPhone's games folder, on one of the
         player's connections, which the app fetched: installed as the games

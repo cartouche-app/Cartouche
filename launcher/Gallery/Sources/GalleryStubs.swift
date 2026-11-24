@@ -235,6 +235,9 @@ final class CartoucheGameActions: ObservableObject {
     /// Nor any folder to measure: the scenario gives each game its size and
     /// play time (CartoucheGameStats.showForGallery).
     func folders(of app: LCAppModel) -> CartoucheGameFolders? { nil }
+    /// Nor any game to leave out of the iPhone's backups (CartoucheBackup).
+    @discardableResult
+    static func leaveGamesOutOfBackups(of model: SharedModel) async -> [URL] { [] }
 
     func settings(for app: LCAppModel, tileKey: String) -> CartoucheGameSettingsModel {
         CartoucheGameSettingsModel(name: app.displayName, tileKey: tileKey,
