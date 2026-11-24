@@ -5,9 +5,9 @@ name: nxnative page
 # telemetry/README.md#nxnatives-page): by game, by game and model, by game
 # and nxnative commit, the crashes several installs shared, the devices and
 # the builds on players' Macs, each line and each figure of at least three
-# installs. It reads the D1 database with the secrets CLOUDFLARE_API_TOKEN
-# and CLOUDFLARE_ACCOUNT_ID of the environment cloudflare, and does nothing
-# while they are not set. The page goes on the branch nxnative-measurements,
+# installs. It reads the D1 database in the account of the zone
+# cartouche.cloud (decision 158) with the secret CLOUDFLARE_DOMAIN_TOKEN of
+# the environment cloudflare, and does nothing while it is not set. The page goes on the branch nxnative-measurements,
 # as its README.md, on top of the weeks before, which its history keeps;
 # beside it, unbuilt.json, the games three Macs or more tried and none built,
 # which Cartouche Builder reads to warn before one is built.
@@ -42,9 +42,12 @@ jobs:
       - name: Read the sessions and write the page
         id: sum
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: python3 telemetry/nxnative.py --catalog catalog --out build/nxnative
+          # The Domain workflow's token: the database is in the zone's account (decision 158).
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_DOMAIN_TOKEN }}
+        run: |
+          CLOUDFLARE_ACCOUNT_ID="$(telemetry/account.sh)"
+          export CLOUDFLARE_ACCOUNT_ID
+          python3 telemetry/nxnative.py --catalog catalog --out build/nxnative
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: ${{ steps.sum.outputs.written == 'true' }}
         with:
