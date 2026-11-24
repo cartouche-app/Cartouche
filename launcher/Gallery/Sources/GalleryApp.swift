@@ -172,7 +172,11 @@
 //                                        (GalleryBCConversion)
 //        gpu-no-bc-converted             the same, the sheet's game built by
 //                                        a fork of nxnative that converts
-//                                        those textures for it
+//                                        those textures for it, a game drawn
+//                                        with NVN's, as on 18 November
+//        gpu-no-bc-converted-vulkan      the same, built by that fork as
+//                                        since 22 November, which converts
+//                                        a Vulkan game's too
 //        iml-left-out                    signed by a signing app on the
 //                                        iPhone (-GallerySigning iphone),
 //                                        without Increased Memory Limit,

@@ -198,7 +198,7 @@ final class CartoucheInstalledBuilds {
         return build
     }
 
-    /// Whether each installed game's executable converts its BC textures,
+    /// The APIs whose BC textures each installed game's executable converts,
     /// by the game's bundle, with what its Info.plist names and when the
     /// executable last changed, and its size: Cartouche signing the game
     /// again writes it again.
@@ -210,16 +210,17 @@ final class CartoucheInstalledBuilds {
         let executable: String
         let changed: Date?
         let size: Int?
-        let converts: Bool
+        let apis: CartoucheBCConversion.APIs
     }
 
-    /// Whether the installed game was built with an nxnative that converts
-    /// its BC-compressed textures for a GPU that reads none, as its
-    /// executable says (CartoucheBCConversion): read once for each build,
-    /// and only where the GPU reads none (CartoucheEntry.convertsBCTextures).
-    /// The iPhone's bundle, whose Info.plist and executable are at its top.
-    static func convertsBCTextures(of app: LCAppModel) -> Bool {
-        guard let path = app.appInfo.bundlePath() else { return false }
+    /// The graphics APIs whose BC-compressed textures the installed game's
+    /// build converts for a GPU that reads none, as its executable says
+    /// (CartoucheBCConversion), none for nxnative's own: read once for each
+    /// build, and only where the GPU reads none
+    /// (CartoucheEntry.convertsBCTextures). The iPhone's bundle, whose
+    /// Info.plist and executable are at its top.
+    static func bcConversion(of app: LCAppModel) -> CartoucheBCConversion.APIs {
+        guard let path = app.appInfo.bundlePath() else { return [] }
         let bundle = URL(fileURLWithPath: path, isDirectory: true)
         let info = bundle.appendingPathComponent("Info.plist")
         let infoChanged = (try? info.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
@@ -233,7 +234,7 @@ final class CartoucheInstalledBuilds {
                   let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
                   let name = plist["CFBundleExecutable"] as? String, !name.isEmpty, !name.contains("/") else {
                 readConversions[path] = nil
-                return false
+                return []
             }
             executable = name
         }
@@ -241,13 +242,13 @@ final class CartoucheInstalledBuilds {
         let values = try? file.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey])
         if let known = readConversions[path], known.infoChanged == infoChanged, known.executable == executable,
            known.changed == values?.contentModificationDate, known.size == values?.fileSize {
-            return known.converts
+            return known.apis
         }
-        let converts = CartoucheBCConversion.converts(executableAt: file)
+        let apis = CartoucheBCConversion.conversion(executableAt: file)
         readConversions[path] = Conversion(infoChanged: infoChanged, executable: executable,
                                            changed: values?.contentModificationDate, size: values?.fileSize,
-                                           converts: converts)
-        return converts
+                                           apis: apis)
+        return apis
     }
 
     /// The record of the game's install, when it is of the build installed

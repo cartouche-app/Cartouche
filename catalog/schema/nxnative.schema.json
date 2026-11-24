@@ -66,7 +66,7 @@
         "graphics": {
           "type": "string",
           "minLength": 1,
-          "description": "The graphics API the game draws with, as nxnative's table of games says it: NVN, NVN2 (Switch 2), Vulkan, OpenGL, or several, such as \"NVN, Vulkan\". A fork's conversion of BC textures for a GPU without them covers NVN's games alone (launcher/Sources/CartoucheBCConversion.swift)."
+          "description": "The graphics API the game draws with, as nxnative's table of games says it: NVN, NVN2 (Switch 2), Vulkan, OpenGL, or several, such as \"NVN, Vulkan\". A fork's conversion of BC textures for a GPU without them covers NVN's and Vulkan's games, as each build says, never OpenGL's (launcher/Sources/CartoucheBCConversion.swift)."
         },
         "variants": {
           "type": "array",
