@@ -19,6 +19,9 @@ import UniformTypeIdentifiers
 struct CartoucheSetupView: View {
     @ObservedObject private var setup = CartoucheSetup.shared
     @ObservedObject private var account = CartoucheAccount.shared
+    /// The automation of Shortcuts that renews Cartouche every night: the
+    /// last step, which Cartouche plays without (needsSetup).
+    @ObservedObject private var nightly = CartoucheNightly.shared
     @State private var choosingPairingFile = false
     @State private var signingIn = false
     @Environment(\.openURL) private var openURL
@@ -120,7 +123,24 @@ struct CartoucheSetupView: View {
                 if setup.usesImportedSigning, let signature = CartoucheOwnSignature.current {
                     CartoucheOwnSignatureBox(signature: signature)
                 }
-                if !setup.usesImportedSigning && !CartoucheImportedSigning.isSignedElsewhere { renewalNote }
+                if renewsItself {
+                    renewalNote
+                    // After LocalDevVPN, whose action the automation runs
+                    // before Refresh All Apps.
+                    step(
+                        number: 4,
+                        done: nightly.state.isDone,
+                        title: CartoucheText.renewEveryNight,
+                        detail: nightly.detail
+                    ) {
+                        NavigationLink {
+                            CartoucheNightlyRenewalView()
+                        } label: {
+                            Label(nightly.action, systemImage: "moon.zzz")
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
             }
             .padding()
             .frame(maxWidth: 640)
@@ -214,7 +234,15 @@ struct CartoucheSetupView: View {
         if setup.usesImportedSigning {
             return setup.needsSetup ? CartoucheText.setupIntroOwnCertificate : CartoucheText.setupAllDoneOwnCertificate
         }
-        return setup.needsSetup ? CartoucheText.setupIntro : CartoucheText.setupAllDoneDetail
+        if setup.needsSetup { return CartoucheText.setupIntro }
+        return nightly.state.isDone ? CartoucheText.setupAllDoneDetail : CartoucheText.setupAllDoneButNightly
+    }
+
+    /// Whether the built-in SideStore renews Cartouche with the player's
+    /// Apple ID: LocalDevVPN and the automation of every night serve it
+    /// alone. A certificate of the player's own is never renewed here.
+    private var renewsItself: Bool {
+        !setup.usesImportedSigning && !CartoucheImportedSigning.isSignedElsewhere
     }
 
     private func step<Actions: View>(

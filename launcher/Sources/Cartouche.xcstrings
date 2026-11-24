@@ -1803,19 +1803,87 @@
         }
       }
     },
-    "daily.intro" : {
+    "daily.action.fix" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "An automation in Shortcuts can renew Cartouche every night, with no computer. It connects LocalDevVPN, then runs Cartouche’s Refresh All Apps action, which does what Renew now does."
+            "value" : "Fix the automation"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Une automatisation de Raccourcis peut renouveler Cartouche chaque nuit, sans ordinateur. Elle connecte LocalDevVPN, puis lance l’action Refresh All Apps de Cartouche, qui fait comme Renouveler maintenant."
+            "value" : "Corriger l’automatisation"
+          }
+        }
+      }
+    },
+    "daily.action.make" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make the automation"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer l’automatisation"
+          }
+        }
+      }
+    },
+    "daily.action.see" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "See the steps"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voir les étapes"
+          }
+        }
+      }
+    },
+    "daily.made" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I made the automation"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "J’ai créé l’automatisation"
+          }
+        }
+      }
+    },
+    "daily.made.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche then checks after its first night that it renews it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche vérifie ensuite, après sa première nuit, qu’elle le renouvelle."
           }
         }
       }
@@ -1837,19 +1905,291 @@
         }
       }
     },
-    "daily.refreshAction" : {
+    "daily.refresh" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Then add the Refresh All Apps action of Cartouche, not LiveContainer’s: Cartouche waits for LocalDevVPN to connect before it renews."
+            "value" : "Then add Refresh All Apps, among Cartouche’s actions and not LiveContainer’s, and tap Done."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajoutez ensuite l’action Refresh All Apps de Cartouche, pas celle de LiveContainer : Cartouche attend que LocalDevVPN soit connecté avant de se renouveler."
+            "value" : "Ajoutez ensuite Refresh All Apps, parmi les actions de Cartouche et non de LiveContainer, puis touchez OK."
+          }
+        }
+      }
+    },
+    "daily.result" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What you make"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce que vous créez"
+          }
+        }
+      }
+    },
+    "daily.result.when" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every day at %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les jours à %@"
+          }
+        }
+      }
+    },
+    "daily.state.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On %@, it could not renew Cartouche: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le %@, elle n’a pas pu renouveler Cartouche : %@"
+          }
+        }
+      }
+    },
+    "daily.state.interrupted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On %@, iOS stopped it before it had renewed Cartouche. It tries again the next night."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le %@, iOS l’a arrêtée avant qu’elle ait renouvelé Cartouche. Elle réessaie la nuit suivante."
+          }
+        }
+      }
+    },
+    "daily.state.notRunning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Made on %@, it has not run yet. Check in Shortcuts its time, and that it runs immediately."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créée le %@, elle n’a pas encore tourné. Vérifiez dans Raccourcis son heure, et qu’elle s’exécute immédiatement."
+          }
+        }
+      }
+    },
+    "daily.state.renewed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It renewed Cartouche on %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elle a renouvelé Cartouche le %@."
+          }
+        }
+      }
+    },
+    "daily.state.running" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is renewing Cartouche now."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elle renouvelle Cartouche en ce moment."
+          }
+        }
+      }
+    },
+    "daily.state.stopped" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It has not run since %@. Check in Shortcuts that it is still there, on, and runs immediately."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elle n’a pas tourné depuis le %@. Vérifiez dans Raccourcis qu’elle est toujours là, activée, et qu’elle s’exécute immédiatement."
+          }
+        }
+      }
+    },
+    "daily.state.toMake" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An automation in Shortcuts renews Cartouche every night, even while it stays closed. Without it, Cartouche renews itself only when you open it, and expires 7 days after its last renewal."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une automatisation de Raccourcis renouvelle Cartouche chaque nuit, même s’il reste fermé. Sans elle, Cartouche ne se renouvelle que quand vous l’ouvrez, et expire 7 jours après son dernier renouvellement."
+          }
+        }
+      }
+    },
+    "daily.state.vpn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On %@, it ran without LocalDevVPN connected, and could not renew Cartouche. Add the Enable LocalDevVPN action just before Refresh All Apps."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le %@, elle a tourné sans LocalDevVPN connecté, et n’a pas pu renouveler Cartouche. Ajoutez l’action Enable LocalDevVPN juste avant Refresh All Apps."
+          }
+        }
+      }
+    },
+    "daily.state.waiting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Made on %@: Cartouche checks after its first night that it renews it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créée le %@ : Cartouche vérifie après sa première nuit qu’elle le renouvelle."
+          }
+        }
+      }
+    },
+    "daily.status.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échouée"
+          }
+        }
+      }
+    },
+    "daily.status.on" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active"
+          }
+        }
+      }
+    },
+    "daily.status.stopped" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not running"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêtée"
+          }
+        }
+      }
+    },
+    "daily.status.toMake" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To make"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "À créer"
+          }
+        }
+      }
+    },
+    "daily.status.waiting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Made"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créée"
           }
         }
       }
@@ -1871,40 +2211,6 @@
         }
       }
     },
-    "daily.step3" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose Time of Day: a time when the iPhone charges and is online, such as 4 AM, every day. Then choose Run Immediately."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choisissez Heure de la journée : une heure où l’iPhone charge et a internet, par exemple 4 h, chaque jour. Puis choisissez Exécuter immédiatement."
-          }
-        }
-      }
-    },
-    "daily.step5" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Each renewal shows on the System page as the last renewal, and gives Cartouche seven more days."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chaque renouvellement s’affiche sur la page Système comme dernier renouvellement, et donne sept jours de plus à Cartouche."
-          }
-        }
-      }
-    },
     "daily.tailscale" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1922,19 +2228,36 @@
         }
       }
     },
-    "daily.vpnAction" : {
+    "daily.time" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap Next, choose New Blank Automation, then add the Enable LocalDevVPN action: it connects LocalDevVPN without opening it. An older LocalDevVPN calls it Start LocalDevVPN."
+            "value" : "Choose Time of Day: 4:00 AM for instance, a time when the iPhone charges and is online, every day. Choose Run Immediately, then tap Next."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Touchez Suivant, choisissez Nouvelle automatisation vide, puis ajoutez l’action Enable LocalDevVPN : elle connecte LocalDevVPN sans l’ouvrir. Un LocalDevVPN plus ancien l’appelle Start LocalDevVPN."
+            "value" : "Choisissez Heure de la journée : 4 h par exemple, une heure où l’iPhone charge et a internet, chaque jour. Choisissez Exécuter immédiatement, puis touchez Suivant."
+          }
+        }
+      }
+    },
+    "daily.vpn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap New Blank Automation, then add the Enable LocalDevVPN action: it connects LocalDevVPN without opening it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez Nouvelle automatisation vide, puis ajoutez l’action Enable LocalDevVPN : elle connecte LocalDevVPN sans l’ouvrir."
           }
         }
       }
@@ -9657,6 +9980,23 @@
         }
       }
     },
+    "setup.done.nightly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche signs your games. One last step: the automation that renews it every night, even while it stays closed."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche signe vos jeux. Une dernière étape : l’automatisation qui le renouvelle chaque nuit, même s’il reste fermé."
+          }
+        }
+      }
+    },
     "setup.done.ownCertificate" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9697,13 +10037,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Three steps, once on this iPhone. Then Cartouche renews itself."
+            "value" : "Three steps, once on this iPhone, then an automation that renews Cartouche every night."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Trois étapes, une seule fois sur cet iPhone. Ensuite, Cartouche se renouvelle tout seul."
+            "value" : "Trois étapes, une seule fois sur cet iPhone, puis une automatisation qui renouvelle Cartouche chaque nuit."
           }
         }
       }

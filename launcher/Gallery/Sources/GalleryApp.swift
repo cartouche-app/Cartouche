@@ -221,6 +221,13 @@
 //        newer-build                     a newer build of the sheet's game,
 //                                        or of the first of the player's, in
 //                                        the games folder
+//        nightly-no-vpn                  the automation of Shortcuts that
+//                                        renews Cartouche every night,
+//                                        whose Refresh All Apps ran at 4:00
+//                                        this night without LocalDevVPN
+//                                        connected (CartoucheNightly)
+//        nightly-renewed                 the same, which renewed Cartouche
+//                                        at 4:00 this night
 //        no-app-group                    a sign-in whose built-in SideStore
 //                                        found no app group, as when a
 //                                        signing app signed the IPA for an
@@ -364,7 +371,9 @@
 //                                        the game's management
 //        nightly                         on the Mac's builds (screen
 //                                        mac-builds), down to the nightly
-//                                        build
+//                                        build; on the System page, the
+//                                        page scrolled down to Renew every
+//                                        night
 //        requirements                    on a game's sheet, what the game
 //                                        needs, opened on each need
 //        reset                           on the System page, the page at its
@@ -624,6 +633,9 @@ struct GalleryScenario {
             if work == "renewal-unanswered" {
                 CartoucheRenewals.shared.showUnansweredForGallery()
             }
+            // The automation of every night as the work has it, never as a
+            // scenario before this one left it.
+            CartoucheNightly.shared.showForGallery(work)
             CartoucheSetup.shared.refresh()
             if let trial = signingTrial {
                 // The import the setup refused, as the player tried it.

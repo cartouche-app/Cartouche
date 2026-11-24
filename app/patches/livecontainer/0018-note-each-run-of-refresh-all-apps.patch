@@ -1,0 +1,55 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 24 Nov 2026 12:30:00 +0000
+Subject: [PATCH] Note each run of Refresh All Apps for Cartouche's setup
+
+The automation of Shortcuts that renews Cartouche every night runs
+Refresh All Apps, and iOS lets no app see the player's automations:
+Cartouche could not say whether a player had one, nor whether it
+worked. Refresh All Apps now notes, in Cartouche's defaults, when it
+started, whether LocalDevVPN's tunnel was up once it had waited for it,
+and how it ended, with SideStore's words when it failed
+(launcher/SideStoreSupport/CartoucheShortcutRun.swift). The setup's
+last step, the page of the automation and the System page read it
+(CartoucheNightlyRenewal, launcher/Sources/CartoucheRenewalRules.swift).
+
+Renew now and Cartouche's own renewals go through performIntentRefresh
+from CartoucheRefresh, never through this action, and note nothing.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01MzPJosykrERzJF1rwhVJMA
+---
+ SideStoreSupport/SideStore.swift | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/SideStoreSupport/SideStore.swift b/SideStoreSupport/SideStore.swift
+index 0d8b89a..57bbdad 100644
+--- a/SideStoreSupport/SideStore.swift
++++ b/SideStoreSupport/SideStore.swift
+@@ -60,11 +60,22 @@ public struct RefreshAllAppsIntent: AppIntent, CustomIntentMigratedAppIntent, Pr
+     
+     public func perform() async throws -> some IntentResult & ProvidesDialog
+     {
++        // Cartouche: the setup and the System page say whether the
++        // automation renews Cartouche every night, from each run of this
++        // action (CartoucheShortcutRun).
++        CartoucheShortcutRun.started()
+         // Cartouche: LocalDevVPN's Enable action, just before this one in
+         // the automation that renews Cartouche every night, returns before
+         // its tunnel is up (CartoucheTunnelWait).
+         await CartoucheTunnelWait.waitForLocalDevVPN()
+-        try await performIntentRefresh(identifier: "RefreshAllIntent", mangledTypeName: "9SideStore20RefreshAllAppsIntentV", intentProgress: progress)
++        CartoucheShortcutRun.tunnel(CartoucheTunnelWait.isConnected)
++        do {
++            try await performIntentRefresh(identifier: "RefreshAllIntent", mangledTypeName: "9SideStore20RefreshAllAppsIntentV", intentProgress: progress)
++        } catch {
++            CartoucheShortcutRun.ended(error)
++            throw error
++        }
++        CartoucheShortcutRun.ended(nil)
+         return .result(dialog: "All apps have been refreshed.")
+     }
+     
+-- 
+2.43.0
+
