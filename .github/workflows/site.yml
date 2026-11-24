@@ -15,8 +15,10 @@ name: Showcase site
 # Cartouche (docs/decisions/155.md): merging the Release workflow's "Source"
 # pull request publishes it again. Then it deploys the Worker that answers
 # with it at https://source.cartouche.cloud/, the address a player adds to
-# their SideStore (source/README.md), with the secrets CLOUDFLARE_API_TOKEN
-# and CLOUDFLARE_ACCOUNT_ID of the environment cloudflare.
+# their SideStore (source/README.md), in the account of the zone, with the
+# secret CLOUDFLARE_DOMAIN_TOKEN of the environment cloudflare, the Domain
+# workflow's; the telemetry's CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID
+# remove the copy the first deploy left in the telemetry's account.
 # Each download link gets the newest file of its releases on the way: the
 # Builder and Installer workflows run this one again once they have published
 # a release.
@@ -141,6 +143,7 @@ jobs:
           persist-credentials: false
       - name: Deploy
         env:
+          CLOUDFLARE_DOMAIN_TOKEN: ${{ secrets.CLOUDFLARE_DOMAIN_TOKEN }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: source/deploy.sh

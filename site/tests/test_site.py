@@ -709,6 +709,9 @@ class Publication(unittest.TestCase):
         self.assertRegex(deploy, r"\n    if: \$\{\{ !inputs\.full \}\}\n")
         self.assertRegex(deploy, r"\n    environment: cloudflare\n")
         self.assertRegex(deploy, r"\n        run: source/deploy\.sh\n")
+        # In the account of the zone, with the domain's token: a Worker's
+        # domain is in the account of its zone.
+        self.assertIn("CLOUDFLARE_DOMAIN_TOKEN: ${{ secrets.CLOUDFLARE_DOMAIN_TOKEN }}", deploy)
         for workflow, job in (("site.yml", "page"), ("ci.yml", "site")):
             runs = job_text(root / ".github" / "workflows" / workflow, job)
             self.assertIn("node --test source/test/worker.test.js", runs, workflow)
