@@ -236,10 +236,22 @@
     "action.open" : {
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Öffnen"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Open"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir"
           }
         },
         "fr" : {
@@ -31573,10 +31585,22 @@
     "system.otherApps" : {
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Andere installierte Apps"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Other installed apps"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Otras apps instaladas"
           }
         },
         "fr" : {
@@ -31590,10 +31614,22 @@
     "system.otherApps.footer" : {
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IPAs, die du installiert hast und die keine Spiele von nxnative sind: Die Konsole zeigt nur Spiele. Sie öffnen sich anstelle von Cartouche."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "IPAs you installed that are not nxnative games: the console shows games only. They open in Cartouche’s place."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IPA que instalaste y que no son juegos de nxnative: la consola solo muestra juegos. Se abren en lugar de Cartouche."
           }
         },
         "fr" : {
@@ -31607,10 +31643,22 @@
     "system.otherApps.uninstall" : {
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die App und ihre Daten werden von diesem iPhone entfernt."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "The app and its data leave this iPhone."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La app y sus datos se van de este iPhone."
           }
         },
         "fr" : {
@@ -35310,7 +35358,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ ist kein Spiel von nxnative: Du findest es unter „Apps“."
+            "value" : "%@ ist kein Spiel von nxnative: Du findest die App unter „System“ bei „Andere installierte Apps“."
           }
         },
         "en" : {
@@ -35322,7 +35370,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ no es un juego de nxnative: lo encontrarás en Apps."
+            "value" : "%@ no es un juego de nxnative: la encontrarás en Sistema, en Otras apps instaladas."
           }
         },
         "fr" : {
@@ -35829,10 +35877,22 @@
     "work.open.failed" : {
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die App wurde nicht geöffnet"
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "The app did not open"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La app no se abrió"
           }
         },
         "fr" : {
@@ -35846,10 +35906,22 @@
     "work.open.soon" : {
       "extractionState" : "manual",
       "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die App öffnet sich gleich."
+          }
+        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "The app opens in a moment."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La app se abre en un momento."
           }
         },
         "fr" : {
