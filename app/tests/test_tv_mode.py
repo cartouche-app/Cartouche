@@ -194,6 +194,21 @@ class TVModeTest(unittest.TestCase):
                 body = re.search(re.escape(name) + r".*?\n    \}\n", self.host, re.S)
                 self.assertIsNotNone(body)
                 self.assertIn("notePictureOnTV(in: reading)", body.group(0))
+        # And without a pause or an end, which a player who closes Cartouche
+        # or unplugs the TV never gives: a few seconds after the game's
+        # scene opens there, and as the TV goes, before that scene closes.
+        opened = re.search(r"private func openGameOnTV\(\) \{.*?\n    \}\n", self.host, re.S)
+        self.assertIsNotNone(opened)
+        self.assertIn("try? await Task.sleep(for: Self.pictureOnTVCheck)", opened.group(0))
+        self.assertIn("guard let self, self.gameOnTV === made else { return }", opened.group(0))
+        self.assertIn("self.notePictureOnTV(in: CartoucheGameMemoryReading.last(pid: pid))", opened.group(0))
+        self.assertIn("static let pictureOnTVCheck: Duration = .seconds(6)", self.host,
+                      "three readings of the game's process, one every 2 seconds")
+        goes = re.search(r"func tvWillDisconnect\(_ tv: CartoucheTV\) \{.*?\n    \}\n", self.host, re.S)
+        self.assertIsNotNone(goes)
+        said = goes.group(0).find("notePictureOnTV(in: CartoucheGameMemoryReading.last(pid: Int(scene.pid)))")
+        self.assertGreater(said, -1, "the journal says it as the TV goes")
+        self.assertLess(said, goes.group(0).find("closeGameOnTV()"), "before the game's scene there closes")
         note = re.search(r"private func notePictureOnTV\(.*?\n    \}\n", self.host, re.S)
         self.assertIsNotNone(note, "the journal no longer says where the game's picture is")
         self.assertIn("CartoucheTV.note(step)", note.group(0))
