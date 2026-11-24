@@ -90,6 +90,7 @@ extension CartoucheText {
     static var cloudGamesNone: String { s("cloud.games.none", "You have sent no game yet: send one from a computer, on the site.") }
     static var cloudGamesFooter: String { s("cloud.games.footer", "You get an email as soon as a game is built, and it shows in your library: install it from there or from here.") }
     static var cloudGameInstall: String { s("cloud.game.install", "Install") }
+    static var cloudGameOnIPhone: String { s("cloud.game.onIPhone", "On this iPhone") }
 
     /// Where a game is, in a word or two, as the site's list says it.
     static func cloudGameState(_ state: CartoucheCloudGame.State) -> String {

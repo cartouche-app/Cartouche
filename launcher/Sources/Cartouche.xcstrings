@@ -732,6 +732,23 @@
         }
       }
     },
+    "cloud.game.onIPhone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On this iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sur cet iPhone"
+          }
+        }
+      }
+    },
     "cloud.game.open" : {
       "extractionState" : "manual",
       "localizations" : {

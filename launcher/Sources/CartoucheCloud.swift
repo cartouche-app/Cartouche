@@ -215,6 +215,12 @@ struct CartoucheCloudGame: Codable, Hashable, Identifiable {
         state == .built && expiresAt > now && (bytes ?? 0) > 0
     }
 
+    /// Whether its IPA is there to fetch at NOW, and its title is none of
+    /// INSTALLED, the title IDs of the games on this iPhone: Install.
+    func isToInstall(at now: Date = Date(), installed: Set<String>) -> Bool {
+        isBuilt(at: now) && !installed.contains(titleId)
+    }
+
     /// Whether it is on its way, in the queue or being built: the page
     /// asks of it more often.
     var isUnderWay: Bool {
@@ -257,9 +263,11 @@ struct CartoucheCloudAccount: Codable, Equatable {
     var isBusy: Bool { games.contains(where: \.isUnderWay) }
 
     /// What the library offers to install at NOW: of each title, the game
-    /// built last whose IPA is there to fetch, the latest built first.
-    func toInstall(at now: Date = Date()) -> [CartoucheCloudGame] {
-        var titles = Set<String>()
+    /// built last whose IPA is there to fetch, the latest built first; none
+    /// of a title in INSTALLED, the title IDs of the games on this iPhone
+    /// (CartoucheCatalog.installedTitles), which is installed already.
+    func toInstall(at now: Date = Date(), installed: Set<String> = []) -> [CartoucheCloudGame] {
+        var titles = installed
         return built(at: now).filter { titles.insert($0.titleId).inserted }
     }
 }

@@ -135,6 +135,26 @@ final class CartoucheCloudTests: XCTestCase {
         XCTAssertEqual(sent.authorization, "Bearer " + token)
     }
 
+    /// A game built whose title is on this iPhone is installed already: the
+    /// page offers no Install for it, and System counts it not among those
+    /// to install, whatever the library makes of it.
+    func testAGameBuiltWhoseTitleIsOnThisIPhoneIsNotToInstall() async throws {
+        let account = try await client.account(token: try await linked())
+        let built = account.games[2]
+        let now = CartoucheCloudStandIn.moment("2026-11-18T12:00:00Z")
+        let other: Set<String> = ["0100A3D008C5C000"]
+        XCTAssertEqual(account.toInstall(at: now, installed: other).map(\.id), [built.id])
+        XCTAssertTrue(built.isToInstall(at: now, installed: other))
+        XCTAssertEqual(account.toInstall(at: now, installed: other.union([built.titleId])).map(\.id), [])
+        XCTAssertFalse(built.isToInstall(at: now, installed: [built.titleId]))
+        // Still built, and still in the library's list, which leaves the
+        // games on this iPhone out by itself.
+        XCTAssertTrue(built.isBuilt(at: now))
+        XCTAssertEqual(account.toInstall(at: now).map(\.id), [built.id])
+        // Not built: nothing to install, installed or not.
+        XCTAssertFalse(account.games[0].isToInstall(at: now, installed: []))
+    }
+
     func testTheTimeLeftOfABuildIsTheUsualTimeSinceItsLaunch() async throws {
         let account = try await client.account(token: try await linked())
         let building = account.games[1]

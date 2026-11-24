@@ -11,11 +11,12 @@
 //  site's games page shows them, in the queue with their place, being built
 //  on the track of six steps with the time left, built with the day the
 //  service deletes them and Install, which brings the game here as a game
-//  of the games folder comes (CartoucheGameActions.install(cloud:)), or not
-//  built, and why. While the page shows, the account is read every few
-//  seconds (CartoucheCloud.pause). Sending a game, the credits and the
-//  account stay on the site, which the page opens in Safari; Unlink, last,
-//  undoes the link, here and on the site.
+//  of the games folder comes (CartoucheGameActions.install(cloud:)), or On
+//  this iPhone for a game installed already, or not built, and why. While
+//  the page shows, the account is read every few seconds
+//  (CartoucheCloud.pause). Sending a game, the credits and the account stay
+//  on the site, which the page opens in Safari; Unlink, last, undoes the
+//  link, here and on the site.
 //
 //  The iPhone's alone: a Mac builds its own games with Cartouche Builder.
 //
@@ -189,8 +190,9 @@ struct CartoucheCloudPage: View {
                     Text(CartoucheText.cloudGamesNone)
                         .foregroundStyle(.secondary)
                 } else {
+                    let installed = CartoucheCatalog.shared.installedTitles(among: sharedModel.apps)
                     ForEach(account.games) { game in
-                        gameRows(game)
+                        gameRows(game, installed: installed)
                     }
                 }
             } else if link.problem == nil {
@@ -208,9 +210,11 @@ struct CartoucheCloudPage: View {
     }
 
     /// A game: its name and state, its build's track while it is on its
-    /// way, what there is to know of it now, and Install once built.
+    /// way, what there is to know of it now, and Install once built, or
+    /// On this iPhone when its title is one of INSTALLED, the games on this
+    /// iPhone.
     @ViewBuilder
-    private func gameRows(_ game: CartoucheCloudGame) -> some View {
+    private func gameRows(_ game: CartoucheCloudGame, installed: Set<String>) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(game.name)
@@ -232,7 +236,7 @@ struct CartoucheCloudPage: View {
             }
         }
         .padding(.vertical, 2)
-        if game.isBuilt() {
+        if game.isToInstall(installed: installed) {
             Button {
                 install(game)
             } label: {
@@ -243,6 +247,9 @@ struct CartoucheCloudPage: View {
                 }
             }
             .disabled(actions.work != nil)
+        } else if game.isBuilt() {
+            Label(CartoucheText.cloudGameOnIPhone, systemImage: "checkmark.circle.fill")
+                .foregroundStyle(CartouchePlayStatus.ready.color)
         }
     }
 
