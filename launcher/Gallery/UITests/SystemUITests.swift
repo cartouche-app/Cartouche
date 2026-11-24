@@ -30,7 +30,7 @@ extension Words {
 }
 
 /// The words of the automation of Shortcuts that renews Cartouche every
-/// night, the setup's last step (decision 147).
+/// night, the setup's last step (decision 149).
 extension Words {
     static let makeTheAutomation = "Make the automation"    // daily.action.make
     static let seeTheSteps = "See the steps"                // daily.action.see
@@ -89,7 +89,7 @@ final class SystemUITests: ConsoleTestCase {
     /// The setup's last step opens Renew every night, the automation of
     /// Shortcuts still to make: once the player says they made it, the page
     /// waits for its first night, and the step is done, its button opening
-    /// the steps again (decision 147). Up to 0.15.1, nothing in the setup
+    /// the steps again (decision 149). Up to 0.15.1, nothing in the setup
     /// said to make it, and nothing told whether it was made.
     @MainActor
     func testTheSetupsLastStepWaitsForTheAutomationOnceMade() {
