@@ -26,6 +26,13 @@
 //  again of each newer file there, as this Mac's copy of an app a NAS
 //  keeps is of each new build (macapps.py).
 //
+//  The iPhone may read other games folders besides (CartoucheChosenFolders'
+//  otherGames): the Builder sends its games to the first only, and offers
+//  the Mac apps of all, a game in several once, from a folder that answers,
+//  as the iPhone offers a game (CartoucheGameCopies.swift): then the newest
+//  file, then the folder listed first. Its install goes on from the next
+//  folder when that one does not answer.
+//
 //  Platform-independent: Foundation and the library's models only.
 //
 
@@ -107,11 +114,30 @@ public struct ConnectionMacApp: Equatable, Sendable {
     /// The game's name, as the file's says it.
     public var game: String
     public var file: ConnectionFile
+    /// The games folder it is in, of the iPhone's (ConnectionGamesDriver's
+    /// place); "" when the folder is the only one.
+    public var place: String
 
-    public init(titleID: String, game: String, file: ConnectionFile) {
+    public init(titleID: String, game: String, file: ConnectionFile, place: String = "") {
         self.titleID = titleID.uppercased()
         self.game = game
         self.file = file
+        self.place = place
+    }
+}
+
+/// One of the iPhone's games folders as the Builder last looked at it: its
+/// files, and whether its server answered then (its files those of the
+/// look before, else none).
+public struct ConnectionGamesLook: Equatable, Sendable {
+    public var place: String
+    public var files: [ConnectionFile]
+    public var answered: Bool
+
+    public init(place: String, files: [ConnectionFile], answered: Bool) {
+        self.place = place
+        self.files = files
+        self.answered = answered
     }
 }
 
@@ -264,6 +290,38 @@ public enum ConnectionGames {
         }
         return newest.map { ConnectionMacApp(titleID: $0.key, game: gameName(of: $0.value.name), file: $0.value) }
             .sorted { $0.game.localizedStandardCompare($1.game) == .orderedAscending }
+    }
+
+    /// The Mac apps of the iPhone's games folders, LOOKS in their order,
+    /// but for the games of KNOWN, which this Mac has an app of: a game in
+    /// several once, the copy to offer first (copies(of:in:)), by name.
+    public static func macApps(in looks: [ConnectionGamesLook], known: Set<String>) -> [ConnectionMacApp] {
+        var titleIDs: [String] = []
+        for look in looks {
+            for file in look.files {
+                guard let titleID = Self.titleID(inName: file.name), !known.contains(titleID), !titleIDs.contains(titleID) else { continue }
+                titleIDs.append(titleID)
+            }
+        }
+        return titleIDs.compactMap { copies(of: $0, in: looks).first }
+            .sorted { $0.game.localizedStandardCompare($1.game) == .orderedAscending }
+    }
+
+    /// TITLE_ID's Mac app in each of LOOKS that holds one, the newest file
+    /// there, in the order to try them: one in a folder whose server
+    /// answered first, then the newest file, then the folder listed first.
+    public static func copies(of titleID: String, in looks: [ConnectionGamesLook]) -> [ConnectionMacApp] {
+        let found = looks.enumerated().compactMap { index, look -> (index: Int, answered: Bool, app: ConnectionMacApp)? in
+            guard let file = macFile(of: titleID, in: look.files) else { return nil }
+            return (index, look.answered, ConnectionMacApp(titleID: titleID, game: gameName(of: file.name), file: file, place: look.place))
+        }
+        return found.sorted { a, b in
+            if a.answered != b.answered { return a.answered }
+            let (x, y) = (a.app.file.modified ?? .distantPast, b.app.file.modified ?? .distantPast)
+            if x != y { return x > y }
+            return a.index < b.index
+        }
+        .map(\.app)
     }
 
     /// The file there that FETCHED, an app installed from the folder, is

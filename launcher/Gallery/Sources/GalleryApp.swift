@@ -149,6 +149,11 @@
 //                                        with two games' saves waiting for it
 //        erasing                         on Reset Cartouche's page, the reset
 //                                        under way
+//        games-folders                   two games folders, a NAS's, out of
+//                                        reach away from home, and a Google
+//                                        Drive's, the player's games in
+//                                        both, the sheet's game newer on the
+//                                        NAS (GalleryGamesFolders)
 //        game-mode-later                 Game Mode coming 1.5 s after
 //                                        Cartouche first measures its
 //                                        memory: its own limit 6,144 MiB
@@ -802,6 +807,11 @@ struct GalleryScenario {
                     CartoucheMacBuildsWatch.galleryTooOld = mac.name
                 }
             }
+            if work == "games-folders" {
+                let catalog = CartoucheCatalog.shared
+                GalleryGamesFolders.prepare(owned: ownedTitles.compactMap { catalog.game(titleId: $0) },
+                                            sheet: sheet.flatMap { ownedTitles.contains($0) ? nil : catalog.game(titleId: $0) })
+            }
             if work == "drive-signed-out" {
                 // The player's Google Drive, seven days after the sign-in:
                 // Google ended it, and the saves of two games wait for it.
@@ -1421,8 +1431,9 @@ enum GalleryMac {
 /// copies run on them, as on an iPhone, with nothing stood in for but the
 /// game's data folder, which LiveContainer gives a game.
 enum GallerySaves {
-    /// The folder's name, as the Storage page and the sheet show it.
-    static let folderName = "Gallery saves"
+    /// The folder's name, as the Storage page and the sheet show it: a
+    /// name a player gives theirs, rather than the gallery's own.
+    static let folderName = "NAS"
 
     /// Whether the sheet is on its way down to its saves, which the
     /// screenshot waits for (GalleryScenario.settle).

@@ -21,8 +21,12 @@ enum GalleryCloud {
 
     /// The account, $12.50 of credits, $2.50 of them held for the game
     /// being built: 13 Sentinels built, its IPA there for 45 hours more;
+    /// Mario Kart World built yesterday, and installed on this iPhone since,
+    /// one of the player's games;
     /// Ocarina of Time being built, at its fifth step of six, 25 minutes
-    /// into a build that usually takes 40; Animal Crossing waiting for it,
+    /// into a build that usually takes 40, its Mac compiling its shaders
+    /// for the iPhone, 42% of them, 25 minutes left of it as the builder
+    /// says, its files ready in 5 minutes 30; Animal Crossing waiting for it,
     /// one build at a time for an account; and Balatro, which nxnative did
     /// not manage to build, to start again on the site within two days.
     static func account(now: Date = Date()) -> CartoucheCloudAccount {
@@ -31,7 +35,9 @@ enum GalleryCloud {
             CartoucheCloudGame(id: "a3f1c9e27b4d4e18a6c05d9f3e7b2c41", title: "0400486024dec000",
                                name: "The Legend of Zelda: Ocarina of Time", state: .building, price: 250,
                                expiresAt: now.addingTimeInterval(47 * hour), stage: 4, usual: 2_400,
-                               step: "build", launchedAt: now.addingTimeInterval(-25 * 60)),
+                               step: "build", launchedAt: now.addingTimeInterval(-25 * 60),
+                               phase: "shaders", phasedAt: now.addingTimeInterval(-12 * 60), phaseDone: 0.42,
+                               phaseLeft: 1_520, reportedAt: now.addingTimeInterval(-20), phases: ["files": 330]),
             CartoucheCloudGame(id: "c81e4b07f2a94d3c9e6b5a1d0f8c7e23", title: "01006f8002326000",
                                name: "Animal Crossing: New Horizons", state: .queued, price: 250,
                                expiresAt: now.addingTimeInterval(47 * hour), stage: 0, usual: 1_800, behind: true),
@@ -39,6 +45,10 @@ enum GalleryCloud {
                                name: "13 Sentinels: Aegis Rim", state: .built, price: 250,
                                expiresAt: now.addingTimeInterval(45 * hour), bytes: 6_812_495_872,
                                file: "13 Sentinels Aegis Rim [01003FC01670C000].ipa", builtAt: now.addingTimeInterval(-3 * hour)),
+            CartoucheCloudGame(id: "9b4e2c7a0d1f4b8e93a6c5d2e1f0a7b4", title: "0400c3f00006e000",
+                               name: "Mario Kart World", state: .built, price: 250,
+                               expiresAt: now.addingTimeInterval(20 * hour), bytes: 24_418_369_536,
+                               file: "Mario Kart World [0400C3F00006E000].ipa", builtAt: now.addingTimeInterval(-28 * hour)),
             CartoucheCloudGame(id: "e47b0a3d9c2f4e1a8b6d5c3f2a1e0d9b", title: "0100cd801ce5e000",
                                name: "Balatro", state: .failed, price: 250,
                                expiresAt: now.addingTimeInterval(44 * hour), cause: "build", left: "again",

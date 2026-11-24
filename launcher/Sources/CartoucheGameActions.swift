@@ -352,42 +352,76 @@ final class CartoucheGameActions: ObservableObject {
         }
     }
 
-    /// Installs a game from the player's games folder, read where it sits:
+    /// Installs a game from the player's games folders, read where it sits:
     /// each file is unpacked as it arrives, so that the iPhone needs room for
     /// the game only, not for its IPA too. A connection that drops on the
     /// way, or stops answering, is made again, and the install reads on
-    /// from where it stopped (CartoucheResumingSource). ASKED, as above.
-    func install(stored game: CartoucheStoredGame, asked: Bool = false) {
-        guard work == nil, let location = CartoucheStorageSettings.shared.location(.games),
-              startsNow(CartoucheInstallQuestion(source: .stored(game)), answered: asked) else { return }
-        installing = (location.server.kind.rawValue, location.server.id)
-        facts = [.init("IPA", game.fileName), .init("IPA size", CartoucheReport.bytes(Int64(clamping: game.size))),
-                 CartoucheReports.place(.games, as: "From")] + Self.buildFacts(game.build)
+    /// from where it stopped (CartoucheResumingSource). A game in several
+    /// folders comes from the next copy when the server of the one offered
+    /// does not answer, as a NAS away from home (CartoucheGameCopies).
+    /// ASKED, as above.
+    func install(stored offered: CartoucheStoredGame, asked: Bool = false) {
+        let storedGames = CartoucheStoredGames.shared
+        guard work == nil, let first = storedGames.server(of: offered),
+              startsNow(CartoucheInstallQuestion(source: .stored(offered)), answered: asked) else { return }
+        // The copies to try, the one offered first, each with its server.
+        let copies: [(game: CartoucheStoredGame, server: CartoucheStorageServer)] = storedGames.copies(of: offered)
+            .compactMap { copy in storedGames.server(of: copy).map { (copy, $0) } }
+        installing = (first.kind.rawValue, first.id)
         let model = DataManager.shared.model
+        facts = Self.storedFacts(offered, on: first)
         guard model.multiLCStatus != 2 else {
             fail(.install, CartoucheText.installFailed, message: "lc.appList.manageInPrimaryTip".loc, cause: .notPrimary)
             return
         }
-        let server = location.server
-        let step = CartoucheText.installFromStorageStep(server.name)
-        work = CartoucheGameWork(kind: .installing, name: game.name, step: step, fraction: nil, stage: "reading",
-                                 place: server.name)
+        work = CartoucheGameWork(kind: .installing, name: offered.name, step: CartoucheText.installFromStorageStep(first.name),
+                                 fraction: nil, stage: "reading", place: first.name)
         beginTransfer()
         transfer = Task {
             var file: CartoucheResumingSource?
             var image: CartoucheResumingSource?
+            // The copy installed, and its server: the next one's when the
+            // one offered is offline.
+            var game = offered
+            var server = first
+            var step = CartoucheText.installFromStorageStep(server.name)
             do {
-                let source = try await Self.openStored(game.path, on: server)
+                var opened: CartoucheResumingSource?
+                for (index, copy) in copies.enumerated() {
+                    do {
+                        opened = try await Self.openStored(copy.game.path, on: copy.server)
+                    } catch is CartoucheStorageOffline where index < copies.count - 1 && !stopped {
+                        // Its server does not answer from here: the next
+                        // copy's may.
+                        CartoucheReports.note("Install: " + CartoucheReports.place(.games, on: copy.server)
+                                              + " is offline, trying the game's next copy")
+                        continue
+                    }
+                    if copy.game != game {
+                        game = copy.game
+                        server = copy.server
+                        step = CartoucheText.installFromStorageStep(server.name)
+                        facts = Self.storedFacts(game, on: server)
+                            + [.init("Copy", "the copy offered was offline, this one is the next", own: true)]
+                        work?.step = step
+                        work?.place = server.name
+                        installing = (server.kind.rawValue, server.id)
+                    }
+                    break
+                }
+                guard let source = opened else { throw CancellationError() }
                 file = source
+                let serverName = server.name
+                let readingStep = step
                 source.onRetry = { @Sendable _, _ in
                     Task { @MainActor in
-                        CartoucheGameActions.shared.work?.step = CartoucheText.installFromStorageRetry(server.name)
+                        CartoucheGameActions.shared.work?.step = CartoucheText.installFromStorageRetry(serverName)
                         CartoucheGameActions.shared.work?.stage = "reconnecting"
                     }
                 }
                 source.onResumed = { @Sendable in
                     Task { @MainActor in
-                        CartoucheGameActions.shared.work?.step = step
+                        CartoucheGameActions.shared.work?.step = readingStep
                         CartoucheGameActions.shared.work?.stage = "reading"
                     }
                 }
@@ -395,13 +429,15 @@ final class CartoucheGameActions: ObservableObject {
                 // An IPA built without its game files: their image comes from
                 // the games folder too, unless the installed copy of the game
                 // holds it already.
+                let copy = game
+                let copyServer = server
                 let gameFiles = try await planGameFiles(ofIPA: source, entries: entries, model: model) { needed in
                     // The image the last read of the games folder found for
                     // it, else one put beside it since.
-                    var path = game.gameFilesPath
-                    if path == nil { path = await Self.storedImage(beside: game.path, size: needed.size, on: server) }
+                    var path = copy.gameFilesPath
+                    if path == nil { path = await Self.storedImage(beside: copy.path, size: needed.size, on: copyServer) }
                     guard let path else { return nil }
-                    let opened = try await Self.openStored(path, on: server)
+                    let opened = try await Self.openStored(path, on: copyServer)
                     image = opened
                     return opened
                 }
@@ -458,6 +494,13 @@ final class CartoucheGameActions: ObservableObject {
             await file?.close()
             await image?.close()
         }
+    }
+
+    /// What a report says of an IPA of the games folders: its name, its
+    /// size, the kind of server it is on, and its build.
+    private static func storedFacts(_ game: CartoucheStoredGame, on server: CartoucheStorageServer) -> [CartoucheReport.Fact] {
+        [.init("IPA", game.fileName), .init("IPA size", CartoucheReport.bytes(Int64(clamping: game.size))),
+         .init("From", CartoucheReports.place(.games, on: server), own: true)] + buildFacts(game.build)
     }
 
     /// Installs the game Cartouche Cloud built for the account this iPhone

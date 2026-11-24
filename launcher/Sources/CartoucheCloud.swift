@@ -52,6 +52,11 @@ enum CartoucheCloud {
     /// sending back the game built.
     static let trackSteps = 6
 
+    /// How long the Mac may say nothing of the build of the game itself
+    /// before the page says when it last did, in seconds: it says where it
+    /// is every minute at the least.
+    static let quietSeconds: TimeInterval = 10 * 60
+
     /// The keychain service of the device's token (CartoucheCloudLink),
     /// which Reset Cartouche erases (CartoucheResetPlan).
     static let keychainService = "Cartouche Cloud"
@@ -145,6 +150,25 @@ struct CartoucheCloudService: Codable, Equatable {
     var price: Int
 }
 
+/// A phase of the build of the game itself, at the Mac's build step, as the
+/// Mac says it to the platform, in their order: the game's files read and
+/// made ready, its shaders compiled for the iPhone, the longest, the app
+/// built, the IPA packed.
+enum CartoucheCloudPhase: String, CaseIterable, Hashable {
+    case files, shaders, app, ipa
+}
+
+/// A phase of a game's build, as the page draws it: done, with how long it
+/// took when the Mac said; under way; or still to come.
+struct CartoucheCloudPhaseMark: Hashable {
+    enum At: Hashable { case done, now, next }
+
+    let phase: CartoucheCloudPhase
+    let at: At
+    /// Done: how long it took, in seconds.
+    var seconds: Int? = nil
+}
+
 /// A game of the account, as the site's games page shows it.
 struct CartoucheCloudGame: Codable, Hashable, Identifiable {
     enum State: String, Codable, Hashable {
@@ -189,6 +213,17 @@ struct CartoucheCloudGame: Codable, Hashable, Identifiable {
     /// Being built: the Mac's step, in the platform's words, and since when.
     var step: String? = nil
     var launchedAt: Date? = nil
+    /// At the build step, once the Mac says it: the phase of the build of
+    /// the game itself (CartoucheCloudPhase, in the platform's words) and
+    /// since when, how much of it is done, from 0 to 1, and the seconds
+    /// the builder says are left of it, when it says; when the Mac last
+    /// said where it is; and how long each phase it left took, in seconds.
+    var phase: String? = nil
+    var phasedAt: Date? = nil
+    var phaseDone: Double? = nil
+    var phaseLeft: Int? = nil
+    var reportedAt: Date? = nil
+    var phases: [String: Int]? = nil
     /// Built: its IPA's size, its name, and when.
     var bytes: UInt64? = nil
     var file: String? = nil
@@ -201,9 +236,13 @@ struct CartoucheCloudGame: Codable, Hashable, Identifiable {
     var until: Date? = nil
 
     enum CodingKeys: String, CodingKey {
-        case id, title, name, state, price, stage, usual, behind, place, step, bytes, file, cause, left, until
+        case id, title, name, state, price, stage, usual, behind, place, step, bytes, file, cause, left, until, phase, phases
         case expiresAt = "expires_at"
         case launchedAt = "launched_at"
+        case phasedAt = "phased_at"
+        case phaseDone = "phase_done"
+        case phaseLeft = "phase_left"
+        case reportedAt = "reported_at"
         case builtAt = "built_at"
     }
 
@@ -215,10 +254,63 @@ struct CartoucheCloudGame: Codable, Hashable, Identifiable {
         state == .built && expiresAt > now && (bytes ?? 0) > 0
     }
 
+    /// Whether its IPA is there to fetch at NOW, and its title is none of
+    /// INSTALLED, the title IDs of the games on this iPhone: Install.
+    func isToInstall(at now: Date = Date(), installed: Set<String>) -> Bool {
+        isBuilt(at: now) && !installed.contains(titleId)
+    }
+
     /// Whether it is on its way, in the queue or being built: the page
     /// asks of it more often.
     var isUnderWay: Bool {
         state == .open || state == .queued || state == .building
+    }
+
+    /// The phase of the build of the game itself, while the Mac is at its
+    /// build step and has said one this Cartouche knows; nil otherwise.
+    var currentPhase: CartoucheCloudPhase? {
+        guard state == .building, step == "build" else { return nil }
+        return phase.flatMap(CartoucheCloudPhase.init(rawValue:))
+    }
+
+    /// The phases of the build of the game itself, as the page draws them
+    /// under the track: those before the current one done, with how long
+    /// each took; the current one under way; the others to come. None
+    /// before the Mac says a phase, and for a game anywhere else.
+    var phaseMarks: [CartoucheCloudPhaseMark] {
+        guard let current = currentPhase else { return [] }
+        let at = CartoucheCloudPhase.allCases.firstIndex(of: current) ?? 0
+        return CartoucheCloudPhase.allCases.enumerated().map { index, phase in
+            if index < at {
+                let seconds = phases?[phase.rawValue]
+                return CartoucheCloudPhaseMark(phase: phase, at: .done, seconds: (seconds ?? 0) > 0 ? seconds : nil)
+            }
+            return CartoucheCloudPhaseMark(phase: phase, at: index == at ? .now : .next)
+        }
+    }
+
+    /// How much of the current phase is done, from 0 to 1, when the builder
+    /// says.
+    var phaseShare: Double? {
+        guard currentPhase != nil, let phaseDone, phaseDone.isFinite else { return nil }
+        return min(max(phaseDone, 0), 1)
+    }
+
+    /// How long the current phase has left at NOW, as the site says it:
+    /// what the builder said, less the time since the Mac said it, a minute
+    /// at the least; nil when the builder does not say.
+    func phaseTimeLeft(at now: Date = Date()) -> TimeInterval? {
+        guard currentPhase != nil, let phaseLeft else { return nil }
+        let since = reportedAt.map { max(0, now.timeIntervalSince($0)) } ?? 0
+        return max(60, TimeInterval(phaseLeft) - since)
+    }
+
+    /// How long the Mac has said nothing of the build at NOW, once it is
+    /// ten minutes or more (CartoucheCloud.quietSeconds); nil otherwise.
+    func quiet(at now: Date = Date()) -> TimeInterval? {
+        guard currentPhase != nil, let reportedAt else { return nil }
+        let since = now.timeIntervalSince(reportedAt)
+        return since >= CartoucheCloud.quietSeconds ? since : nil
     }
 
     /// Being built, how long it has left at NOW, as the site says it: a
@@ -257,9 +349,11 @@ struct CartoucheCloudAccount: Codable, Equatable {
     var isBusy: Bool { games.contains(where: \.isUnderWay) }
 
     /// What the library offers to install at NOW: of each title, the game
-    /// built last whose IPA is there to fetch, the latest built first.
-    func toInstall(at now: Date = Date()) -> [CartoucheCloudGame] {
-        var titles = Set<String>()
+    /// built last whose IPA is there to fetch, the latest built first; none
+    /// of a title in INSTALLED, the title IDs of the games on this iPhone
+    /// (CartoucheCatalog.installedTitles), which is installed already.
+    func toInstall(at now: Date = Date(), installed: Set<String> = []) -> [CartoucheCloudGame] {
+        var titles = installed
         return built(at: now).filter { titles.insert($0.titleId).inserted }
     }
 }

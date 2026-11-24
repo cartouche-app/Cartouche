@@ -732,6 +732,23 @@
         }
       }
     },
+    "cloud.game.onIPhone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On this iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sur cet iPhone"
+          }
+        }
+      }
+    },
     "cloud.game.open" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1204,6 +1221,176 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cartouche Cloud"
+          }
+        }
+      }
+    },
+    "cloud.phase.app" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Building the app"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Construction de l’app"
+          }
+        }
+      }
+    },
+    "cloud.phase.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fini : %@"
+          }
+        }
+      }
+    },
+    "cloud.phase.files" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing the game’s files"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préparation des fichiers du jeu"
+          }
+        }
+      }
+    },
+    "cloud.phase.ipa" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Packing the IPA"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empaquetage de l’IPA"
+          }
+        }
+      }
+    },
+    "cloud.phase.left" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "about %@ left"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "encore environ %@"
+          }
+        }
+      }
+    },
+    "cloud.phase.next" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "À venir : %@"
+          }
+        }
+      }
+    },
+    "cloud.phase.now" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Under way: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En cours : %@"
+          }
+        }
+      }
+    },
+    "cloud.phase.quiet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Mac last said where it is %@ ago."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le Mac a dit où il en est pour la dernière fois il y a %@."
+          }
+        }
+      }
+    },
+    "cloud.phase.shaders" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compiling shaders for the iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compilation des shaders pour l’iPhone"
+          }
+        }
+      }
+    },
+    "cloud.phases.header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Where the build is"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Où en est la construction"
           }
         }
       }
@@ -10575,6 +10762,40 @@
         }
       }
     },
+    "sheet.storedAlsoIn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also in %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aussi dans %@."
+          }
+        }
+      }
+    },
+    "sheet.storedAlsoIn.offline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (offline)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (hors ligne)"
+          }
+        }
+      }
+    },
     "sheet.storedIn" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14162,6 +14383,40 @@
         }
       }
     },
+    "storage.games.add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add another games folder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un autre dossier de jeux"
+          }
+        }
+      }
+    },
+    "storage.games.elsewhere" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its games that another folder holds too install from that folder meanwhile."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses jeux présents aussi dans un autre dossier s’installent depuis cet autre dossier en attendant."
+          }
+        }
+      }
+    },
     "storage.games.footer" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14192,6 +14447,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jeux trouvés"
+          }
+        }
+      }
+    },
+    "storage.games.other" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other folder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autre dossier"
+          }
+        }
+      }
+    },
+    "storage.games.several" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Games folders"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dossiers des jeux"
+          }
+        }
+      }
+    },
+    "storage.games.several.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your library shows the IPAs of these folders, ready to install: a game in more than one shows once, and installs from a folder that answers. Copy a game to the first one before you uninstall it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre bibliothèque montre les IPA de ces dossiers, prêtes à installer : un jeu présent dans plusieurs n’y est qu’une fois, et s’installe depuis un dossier qui répond. Copiez un jeu dans le premier avant de le désinstaller."
           }
         }
       }
@@ -15165,6 +15471,23 @@
         }
       }
     },
+    "storage.readAgain.all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read the folders again"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relire les dossiers"
+          }
+        }
+      }
+    },
     "storage.readOnly.games" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15841,6 +16164,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "le serveur a refusé le nom d’utilisateur ou le mot de passe."
+          }
+        }
+      }
+    },
+    "storage.stopReading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop reading this folder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne plus lire ce dossier"
           }
         }
       }

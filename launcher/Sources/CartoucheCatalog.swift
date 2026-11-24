@@ -129,8 +129,9 @@ struct CartoucheEntry: Identifiable, Hashable {
     let game: CartoucheNxGame?
     let sheet: CartoucheGameSheet?
     let app: LCAppModel?
-    /// The game's IPA in the player's games folder, the newest when there
-    /// are several.
+    /// The game's IPA in the player's games folders, the one Cartouche
+    /// offers when there are several: one whose server answers, the newest
+    /// of those (CartoucheStoredGame.isPreferredCopy(over:)).
     var stored: CartoucheStoredGame? = nil
     /// That IPA, when it is a newer build than the installed game: the
     /// console offers to update the game with it.
@@ -480,11 +481,12 @@ final class CartoucheCatalog: ObservableObject {
     /// and the games Cartouche Cloud built for them, the latest built first
     /// (CartoucheCloudLink): each of the player's nxnative games, installed,
     /// stored or built, then every other game nxnative has a profile for,
-    /// with the sheet testers wrote when there is one. An installed game
-    /// whose newest IPA in the games folder is a newer build of it has that
-    /// IPA as its update. A game Cartouche Cloud built is the player's when
-    /// neither this iPhone nor the games folder has it: its build made
-    /// last.
+    /// with the sheet testers wrote when there is one. A game in several
+    /// games folders, or in one several times, is one entry, with the copy
+    /// offered: one whose server answers, the newest of those. An installed
+    /// game whose IPA offered is a newer build of it has that IPA as its
+    /// update. A game Cartouche Cloud built is the player's when neither
+    /// this iPhone nor the games folders have it: its build made last.
     func entries(for apps: [LCAppModel], stored: [CartoucheStoredGame] = [],
                  cloud: [CartoucheCloudBuilt] = []) -> Entries {
         var result = Entries()
@@ -504,7 +506,7 @@ final class CartoucheCatalog: ObservableObject {
                 let stored = storedLeft[index]
                 return (stored.titleId.map { titles.contains($0) } ?? false) || (bundleId != nil && stored.bundleId == bundleId)
             }
-            let newest = copies.max { storedLeft[$1].isNewerCopy(than: storedLeft[$0]) }
+            let newest = copies.max { storedLeft[$1].isPreferredCopy(over: storedLeft[$0]) }
             let storedCopy = newest.map { storedLeft[$0] }
             for index in copies.reversed() { storedLeft.remove(at: index) }
             var update: CartoucheStoredGame?
@@ -514,15 +516,27 @@ final class CartoucheCatalog: ObservableObject {
             result.owned.append(CartoucheEntry(id: "app:" + folder, game: game, sheet: sheet, app: app, stored: storedCopy,
                                                update: update, ownTitleId: titleId))
         }
-        // The games of the games folder that are not installed, one entry
-        // each: the newest IPA of a game that has several.
-        for copy in storedLeft.sorted(by: { $0.isNewerCopy(than: $1) }) {
+        // The games of the games folders that are not installed, one entry
+        // each: the IPA offered of a game that has several, in one folder
+        // or in several.
+        var storedBundles = Set<String>()
+        for copy in storedLeft.sorted(by: { $0.isPreferredCopy(over: $1) }) {
             let game = copy.titleId.flatMap { self.game(titleId: $0) }
             let titleId = game?.titleId ?? copy.titleId
             if let titleId, ownedTitles.contains(titleId) { continue }
+            if titleId == nil, let bundleId = copy.bundleId, !storedBundles.insert(bundleId).inserted { continue }
             if let game { ownedTitles.formUnion(game.titleIds) } else if let titleId { ownedTitles.insert(titleId) }
             let sheet = titleId.flatMap { self.sheet(titleId: $0) }
-            result.owned.append(CartoucheEntry(id: "stored:" + copy.path, game: game, sheet: sheet, app: nil, stored: copy,
+            // Named by the copy of the first folder that has the game, the
+            // newest there: the same as the copy offered changes, a server
+            // going offline, so that its sheet stays open.
+            let titles = Set(game?.titleIds ?? titleId.map { [$0] } ?? [])
+            let named = storedLeft.filter { other in
+                (other.titleId.map { titles.contains($0) } ?? false) || (copy.bundleId != nil && other.bundleId == copy.bundleId)
+            }
+            .min { a, b in a.folderRank != b.folderRank ? a.folderRank < b.folderRank : a.isNewerCopy(than: b) } ?? copy
+            let id = named.folderRank == 0 ? named.path : named.id
+            result.owned.append(CartoucheEntry(id: "stored:" + id, game: game, sheet: sheet, app: nil, stored: copy,
                                                ownTitleId: titleId))
         }
         // The games Cartouche Cloud built that the player has nowhere else,
@@ -547,6 +561,20 @@ final class CartoucheCatalog: ObservableObject {
             .map { CartoucheEntry(id: "game:" + $0.titleId, game: nil, sheet: $0, app: nil) }
         result.others = others.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }.map { withCover($0) }
         return result
+    }
+
+    /// The title IDs of the nxnative games installed among APPS, as
+    /// entries(for:stored:cloud:) finds them: all those of a game the
+    /// catalogue knows. A game Cartouche Cloud built of one of them is on
+    /// this iPhone already.
+    func installedTitles(among apps: [LCAppModel]) -> Set<String> {
+        var titles = Set<String>()
+        for app in apps {
+            guard let found = gameTitle(of: app),
+                  let titleId = found.isEmpty ? titleMatchingName(of: app) : found else { continue }
+            if let game = game(titleId: titleId) { titles.formUnion(game.titleIds) } else { titles.insert(titleId) }
+        }
+        return titles
     }
 
     /// The title ID of an nxnative game, "" for an nxnative game whose title
