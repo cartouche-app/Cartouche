@@ -19704,6 +19704,23 @@
         }
       }
     },
+    "unit.mbps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ MB/s"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ Mo/s"
+          }
+        }
+      }
+    },
     "unit.mib" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -21128,6 +21145,176 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Elle a été arrêtée hors de Cartouche : depuis l’écran verrouillé ou la Dynamic Island, ou par iOS. Relancez-la quand vous voulez."
+          }
+        }
+      }
+    },
+    "work.transfer.advice.mac" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is slow: plug this iPhone into the Mac with a cable, or put both on a 5 GHz Wi-Fi, and the game comes much faster."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "C’est lent : branchez l’iPhone au Mac par un câble, ou mettez-les tous deux sur un Wi-Fi 5 GHz, et le jeu arrivera bien plus vite."
+          }
+        }
+      }
+    },
+    "work.transfer.advice.macBand" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Mac is on its 2.4 GHz Wi-Fi, the slowest: plug this iPhone into the Mac with a cable, or put the Mac on the 5 GHz Wi-Fi, and the game comes much faster."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le Mac est sur le Wi-Fi 2,4 GHz, le plus lent : branchez l’iPhone au Mac par un câble, ou passez le Mac sur le Wi-Fi 5 GHz, et le jeu arrivera bien plus vite."
+          }
+        }
+      }
+    },
+    "work.transfer.advice.network" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is slow: on a 5 GHz Wi-Fi, the game comes much faster."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "C’est lent : sur un Wi-Fi 5 GHz, le jeu arrivera bien plus vite."
+          }
+        }
+      }
+    },
+    "work.transfer.advice.tailnet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is slow: through Tailscale, the game goes over the internet. At home, on the same Wi-Fi or by cable, it comes much faster."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "C’est lent : par Tailscale, le jeu passe par internet. À la maison, sur le même Wi-Fi ou par câble, il arrivera bien plus vite."
+          }
+        }
+      }
+    },
+    "work.transfer.cable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By cable"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Par câble"
+          }
+        }
+      }
+    },
+    "work.transfer.line" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "work.transfer.macEthernet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On the local network, the Mac on Ethernet"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Par le réseau local, le Mac en Ethernet"
+          }
+        }
+      }
+    },
+    "work.transfer.macWiFi" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On the Wi-Fi, the Mac on %@ GHz"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Par le Wi-Fi, le Mac en %@ GHz"
+          }
+        }
+      }
+    },
+    "work.transfer.network" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On the local network"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Par le réseau local"
+          }
+        }
+      }
+    },
+    "work.transfer.tailnet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Through Tailscale"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Par Tailscale"
           }
         }
       }

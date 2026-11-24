@@ -46,6 +46,12 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
     @Published private(set) var connected: Set<String> = []
     /// Those of them connected through the cable, plugged into this Mac.
     @Published private(set) var cabled: Set<String> = []
+    /// Those reading a game now from the games folder: how fast, and how
+    /// their connection reaches this Mac (BridgeServer.sending).
+    @Published private(set) var sending: [String: BridgeSending] = [:]
+    /// Those of them slow (CartoucheTransferMeter.isSlow): the iPhone page
+    /// says what would go faster.
+    @Published private(set) var slow: Set<String> = []
     @Published private(set) var request: PairingRequest?
     @Published private(set) var games: URL?
     /// This Mac's addresses in the player's tailnet, while Tailscale is on
@@ -59,6 +65,9 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
     private var sampleMac: (name: String, saves: URL)?
     /// The Mac's network, which Tailscale's tunnel joins and leaves.
     private var network: NWPathMonitor?
+    /// Reads how fast the iPhones read their games, each second while one
+    /// is connected.
+    private var sendingWatch: Task<Void, Never>?
 
     init(home: BuilderHome, sample: Bool) {
         self.home = home
@@ -154,14 +163,16 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
     }
 
     /// Shows sample iPhones, those connected now and those of them
-    /// plugged into this Mac (CABLED), without a server, and a made-up Mac
-    /// name, saves folder and addresses in the tailnet in place of this
-    /// Mac's: the gallery's pictures.
-    func preview(devices: [PairedDevice], connected: Set<String>, cabled: Set<String> = [], games: String, name: String, saves: URL,
-                 tailnet: [String] = []) {
+    /// plugged into this Mac (CABLED) or reading a game (SENDING), without a
+    /// server, and a made-up Mac name, saves folder and addresses in the
+    /// tailnet in place of this Mac's: the gallery's pictures.
+    func preview(devices: [PairedDevice], connected: Set<String>, cabled: Set<String> = [], sending: [String: BridgeSending] = [:],
+                 games: String, name: String, saves: URL, tailnet: [String] = []) {
         self.devices = devices
         self.connected = connected
         self.cabled = cabled
+        self.sending = sending
+        slow = Set(sending.filter { CartoucheTransferMeter.isSlow($0.value.speed, wasSlow: false) }.keys)
         self.games = URL(fileURLWithPath: games, isDirectory: true)
         sampleMac = (name, saves)
         self.tailnet = tailnet
@@ -181,6 +192,33 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
         devices = server.devices.all
         connected = server.connected
         cabled = server.connectedByCable
+        watchSending()
+    }
+
+    /// Reads, each second while an iPhone is connected, the games they
+    /// read and how fast; nothing once none is.
+    private func watchSending() {
+        guard let server else { return }
+        if connected.isEmpty {
+            sendingWatch?.cancel()
+            sendingWatch = nil
+            if !sending.isEmpty { sending = [:] }
+            if !slow.isEmpty { slow = [] }
+            return
+        }
+        guard sendingWatch == nil else { return }
+        sendingWatch = Task { @MainActor [weak self] in
+            while !Task.isCancelled {
+                self?.showSending(server.sending())
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+            }
+        }
+    }
+
+    private func showSending(_ now: [String: BridgeSending]) {
+        let slowNow = Set(now.filter { CartoucheTransferMeter.isSlow($0.value.speed, wasSlow: slow.contains($0.key)) }.keys)
+        if now != sending { sending = now }
+        if slowNow != slow { slow = slowNow }
     }
 
     func bridgeServer(_ server: BridgeServer, allowPairing name: String, code: String) async -> Bool {

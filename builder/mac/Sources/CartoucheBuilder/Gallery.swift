@@ -64,6 +64,11 @@ enum Gallery {
         // connected now plugged into this Mac, by its cable
         // (BridgeCable.swift).
         case iphoneCable = "iphone-cable"
+        // The whole iPhone page, in a window as tall as it, the iPhone
+        // connected now reading a game on this Mac's 2.4 GHz Wi-Fi, at
+        // 3.1 MB/s, with what would go faster (BridgeSendingWords, decision
+        // 151).
+        case iphoneSending = "iphone-sending"
         // The whole iPhone page, in a window as tall as it, down to the
         // iPhone's games folder on one of the player's connections, a NAS:
         // a game going there, and a Mac app another Mac sent
@@ -96,7 +101,7 @@ enum Gallery {
         /// Whether the page is in a window taller than the screen, as tall
         /// as the page, which AppKit would fit to the screen.
         var isTall: Bool {
-            isWholeSheet || [.storageMac, .iphoneGames, .iphoneCable, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport,
+            isWholeSheet || [.storageMac, .iphoneGames, .iphoneCable, .iphoneSending, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport,
                              .activitySplit, .gameSplit].contains(self)
         }
 
@@ -132,6 +137,8 @@ enum Gallery {
             case .settings, .settingsBuilds, .settingsFolders: return SettingsTab.size
             case .storageMac: return CGSize(width: 1024, height: 1440)
             case .iphoneGames: return CGSize(width: 1024, height: 1500)
+            // Down to the iPhone sending a game, and what would go faster.
+            case .iphoneSending: return CGSize(width: 1024, height: 1000)
             case .consoleSheet, .consoleSheetNewer: return CGSize(width: 1024, height: 1640)
             // This Mac, the iPhone's games folders on a NAS and a Drive,
             // with the ways to change them, the saves folder to choose, and
@@ -545,7 +552,7 @@ enum Gallery {
             case .library, .activity, .storage, .iphone: model.section = AppSection(rawValue: page.rawValue) ?? .library
             case .storageMac: model.section = .storage
             case .activitySplit: model.section = .activity
-            case .iphoneTailscale, .iphoneGames, .iphoneCable: model.section = .iphone
+            case .iphoneTailscale, .iphoneGames, .iphoneCable, .iphoneSending: model.section = .iphone
             case .libraryRoom, .game, .gameNarrow, .gameNewer, .gameQueue, .gameXcode, .gameUnbuilt, .gameAfterConsole, .gameSplit:
                 model.section = .library
             case .setup, .setupXcode: model.section = .setup
@@ -599,8 +606,12 @@ enum Gallery {
             ]
             let saves = URL(fileURLWithPath: info.home).appendingPathComponent("Saves", isDirectory: true)
             // A made-up address in the tailnet, never one of the project's.
+            // On iphone-sending, a game on its way on this Mac's 2.4 GHz Wi-Fi.
+            let sending = page == .iphoneSending
+                ? [iphones[0].id: BridgeSending(speed: 3_140_000, network: CartoucheMacNetwork(medium: CartoucheMacNetwork.wifi, band: "2.4"))]
+                : [:]
             model.bridge.preview(devices: iphones, connected: [iphones[0].id], cabled: page == .iphoneCable ? [iphones[0].id] : [],
-                                 games: config.games, name: "MacBook Air", saves: saves,
+                                 sending: sending, games: config.games, name: "MacBook Air", saves: saves,
                                  tailnet: page == .iphoneTailscale ? ["100.101.102.103", "fd7a:115c:a1e0::1"] : [])
             // Mario Kart 8 Deluxe played on this Mac, the iPhone's saves come
             // before its last game, or, on game-newer, held back, version

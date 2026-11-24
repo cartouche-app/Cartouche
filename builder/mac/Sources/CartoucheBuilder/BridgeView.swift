@@ -258,13 +258,28 @@ struct BridgeView: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(device.name)
                                         .font(.callout.weight(.medium))
-                                    Text(bridge.cabled.contains(device.id)
-                                         ? tr("Connected now, by cable", "Connecté maintenant, par câble")
-                                         : bridge.connected.contains(device.id)
-                                         ? tr("Connected now", "Connecté maintenant")
-                                         : tr("Paired ", "Associé ") + Format.relative(device.paired) + (device.seen.map { tr(", seen ", ", vu ") + Format.relative($0) } ?? ""))
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                    if let sending = bridge.sending[device.id] {
+                                        // A game on its way, how fast and how
+                                        // (BridgeSendingWords).
+                                        let words = BridgeSendingWords(sending, slow: bridge.slow.contains(device.id))
+                                        Text(words.line)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                        if let advice = words.advice {
+                                            Label(advice, systemImage: "exclamationmark.triangle.fill")
+                                                .font(.caption)
+                                                .foregroundStyle(.orange)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                        }
+                                    } else {
+                                        Text(bridge.cabled.contains(device.id)
+                                             ? tr("Connected now, by cable", "Connecté maintenant, par câble")
+                                             : bridge.connected.contains(device.id)
+                                             ? tr("Connected now", "Connecté maintenant")
+                                             : tr("Paired ", "Associé ") + Format.relative(device.paired) + (device.seen.map { tr(", seen ", ", vu ") + Format.relative($0) } ?? ""))
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
                                 }
                                 Spacer()
                                 Button(tr("Remove", "Retirer"), role: .destructive) { bridge.forget(device) }

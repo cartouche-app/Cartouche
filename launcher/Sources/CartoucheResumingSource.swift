@@ -60,6 +60,10 @@ final class CartoucheResumingSource: CartoucheByteSource {
     /// Told when a read succeeds again after failing. Called on the reading
     /// task.
     var onResumed: (() -> Void)?
+    /// Told the bytes of each read once it ends, for the speed the
+    /// install's screen shows (CartoucheTransferMeter). Called on the
+    /// reading task.
+    var onRead: ((Int) -> Void)?
 
     private let reopen: () async throws -> Opened
     private let pauses: [UInt64]
@@ -87,6 +91,7 @@ final class CartoucheResumingSource: CartoucheByteSource {
             do {
                 let data = try await connected().read(at: offset, count: count)
                 if failures > 0 { onResumed?() }
+                onRead?(data.count)
                 return data
             } catch {
                 if error is CancellationError { throw error }

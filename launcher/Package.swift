@@ -80,6 +80,7 @@ let package = Package(
                 "CartoucheTailscale.swift",
                 "CartoucheTelemetryReport.swift",
                 "CartoucheTextResults.swift",
+                "CartoucheTransferSpeed.swift",
                 "CartoucheTranslations.swift",
                 "CartoucheVPN.swift",
                 "CartoucheZip.swift",

@@ -5,6 +5,7 @@
 //  Sizes, durations and dates, as the app shows them, in its language.
 //
 
+import CartoucheCore
 import Foundation
 
 public enum Format {
@@ -28,6 +29,19 @@ public enum Format {
         formatter.minimumFractionDigits = 0
         formatter.maximumFractionDigits = digits
         return formatter.string(from: NSNumber(value: value)) ?? String(value)
+    }
+
+    /// "3,1 Mo/s", "31 MB/s": a transfer's speed, BYTES a second, with one
+    /// decimal below 10 (CartoucheTransferMeter.megabytes).
+    public static func speed(_ bytes: Double) -> String {
+        let (value, decimals) = CartoucheTransferMeter.megabytes(bytes)
+        let formatter = NumberFormatter()
+        formatter.locale = L10n.locale
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = decimals
+        formatter.maximumFractionDigits = decimals
+        let text = formatter.string(from: NSNumber(value: value)) ?? String(value)
+        return text + (L10n.french ? "\u{00A0}Mo/s" : "\u{00A0}MB/s")
     }
 
     public static func percent(_ fraction: Double) -> String {
