@@ -213,6 +213,9 @@ struct CartoucheMacFoldersSection: View {
             } label: {
                 Label(CartoucheText.storageChooseFolder, systemImage: "folder.badge.plus")
             }
+            // As a button, its symbol apart from its words, as the menu
+            // bar's Play (MenuBarView).
+            .menuStyle(.button)
         } header: {
             Text(header)
         } footer: {
@@ -315,6 +318,7 @@ struct CartoucheMacIPhoneGamesSection: View {
             } label: {
                 Label(CartoucheText.storageChangeFolder, systemImage: "folder")
             }
+            .menuStyle(.button)
             Button(CartoucheText.macIPhoneGamesSendNow, systemImage: "arrow.up.circle", action: send)
                 .disabled(sending)
             ForEach(Array(folder.others.enumerated()), id: \.offset) { _, other in
@@ -327,6 +331,7 @@ struct CartoucheMacIPhoneGamesSection: View {
             } label: {
                 Label(CartoucheText.storageAddGamesFolder, systemImage: "folder.badge.plus")
             }
+            .menuStyle(.button)
             .accessibilityIdentifier(CartoucheStorageView.addGamesRow)
         } header: {
             Text(folder.others.isEmpty ? CartoucheText.macIPhoneGamesHeader : CartoucheText.macIPhoneGamesSeveralHeader)
