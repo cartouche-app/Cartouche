@@ -65,8 +65,8 @@ struct BridgeView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(tr("Keep their saves with the iPhone’s", "Garder leurs sauvegardes en phase avec l’iPhone"))
                                 .font(.callout.weight(.medium))
-                            Text(tr("Before and after each game, in the saves folder: the newest copy comes, this Mac’s go, as Cartouche does on the iPhone.",
-                                    "Avant et après chaque partie, dans le dossier des sauvegardes : la copie la plus récente arrive, celles de ce Mac partent, comme le fait Cartouche sur l’iPhone."))
+                            Text(tr("Before each game, the newest copy comes from the saves folder; this Mac’s go there a few seconds after the game saves, as Cartouche does on the iPhone.",
+                                    "Avant chaque partie, la copie la plus récente arrive du dossier des sauvegardes ; celles de ce Mac y partent quelques secondes après chaque sauvegarde du jeu, comme le fait Cartouche sur l’iPhone."))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .fixedSize(horizontal: false, vertical: true)

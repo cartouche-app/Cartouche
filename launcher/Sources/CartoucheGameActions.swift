@@ -1317,6 +1317,11 @@ final class CartoucheGameActions: ObservableObject {
             return false
         }
         app.appInfo.lastLaunched = Date()
+        // Cartouche runs beside the game: the saves it makes go as it makes
+        // them.
+        if let target = saves(of: app) {
+            CartoucheSaveBackups.shared.watch(target)
+        }
         return true
     }
 
@@ -1471,7 +1476,11 @@ final class CartoucheGameActions: ObservableObject {
                 notice = stopped
             }
         }
-        copySaves(of: [app])
+        // The saves it made since they last went go now, in place of the
+        // copy they went to while it played.
+        if let target = saves(of: app) {
+            CartoucheSaveBackups.shared.gameEnded(target)
+        }
         if let next = pendingStart {
             pendingStart = nil
             // Once LiveContainer has let go of the game's data folder.
@@ -1619,8 +1628,10 @@ final class CartoucheGameActions: ObservableObject {
     func copySaves(of apps: [LCAppModel]) {
         let backups = CartoucheSaveBackups.shared
         guard backups.isOn, work == nil else { return }
-        // The game behind the console may be writing its saves: they go
-        // once it has ended.
+        // The game behind the console may be writing its saves: they go as
+        // it makes them, from a copy made at one moment (watch), and what
+        // did not go yet is tried again now.
+        backups.retryPlaying()
         backups.copyChanged(apps.filter { $0 !== running?.app }.compactMap { saves(of: $0) })
     }
 
