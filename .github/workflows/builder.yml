@@ -3,11 +3,12 @@ name: Builder
 # Tests and builds Cartouche's Mac app, Cartouche.app (builder/mac): its tests, the
 # app with the builder's engine inside, its disk image, and a screenshot of
 # each page of the app on sample games (the --gallery the app takes), in
-# French and English, light and dark. The disk image stays with the run, and
-# the screenshots with it and, for a branch of this repository, on the branch
-# builder-screens/<branch>, one commit that each run replaces. The engine's
-# own tests run in CI (Cartouche Builder), and here on a Mac, as the app runs
-# it, with the end-to-end tests of both (builder/README.md, Development).
+# French, light and dark, and in English, Spanish and German. The disk image
+# stays with the run, and the screenshots with it and, for a branch of this
+# repository, on the branch builder-screens/<branch>, one commit that each run
+# replaces. The engine's own tests run in CI (Cartouche Builder), and here on
+# a Mac, as the app runs it, with the end-to-end tests of both
+# (builder/README.md, Development).
 #
 # A pull request's app is built once for what it changes in the files below:
 # a rebase or a merge of main that leaves those changes as they were keeps
