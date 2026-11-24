@@ -137,6 +137,8 @@ enum Gallery {
             case .settings, .settingsBuilds, .settingsFolders: return SettingsTab.size
             case .storageMac: return CGSize(width: 1024, height: 1440)
             case .iphoneGames: return CGSize(width: 1024, height: 1500)
+            // Down to the iPhone sending a game, and what would go faster.
+            case .iphoneSending: return CGSize(width: 1024, height: 1000)
             case .consoleSheet, .consoleSheetNewer: return CGSize(width: 1024, height: 1640)
             // This Mac, the iPhone's games folders on a NAS and a Drive,
             // with the ways to change them, the saves folder to choose, and
