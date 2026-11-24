@@ -205,9 +205,10 @@ enum CartoucheText {
 
     static var setupTitle: String { s("setup.title", "Setup") }
     static var setupIntroTitle: String { s("setup.intro.title", "Before your first game") }
-    static var setupIntro: String { s("setup.intro", "Three steps, once on this iPhone. Then Cartouche renews itself.") }
+    static var setupIntro: String { s("setup.intro", "Three steps, once on this iPhone, then an automation that renews Cartouche every night.") }
     static var setupAllDone: String { s("setup.done.title", "All set") }
     static var setupAllDoneDetail: String { s("setup.done.detail", "Cartouche signs your games and renews itself. There is nothing more to do here.") }
+    static var setupAllDoneButNightly: String { s("setup.done.nightly", "Cartouche signs your games. One last step: the automation that renews it every night, even while it stays closed.") }
     static func setupStepDone(_ step: String) -> String { f("setup.step.done", "%@, done", step) }
     static var setupPairingTitle: String { s("setup.pairing.title", "Pairing file") }
     static var setupPairingHow: String { s("setup.pairing.how", "Only a computer can make it: the Cartouche Installer puts it in Cartouche as it installs it, and this step ticks itself. You can also choose it here, or open it with Cartouche.") }
@@ -368,14 +369,36 @@ enum CartoucheText {
 
     // MARK: Renewing every night
 
-    static var dailyIntro: String { s("daily.intro", "An automation in Shortcuts can renew Cartouche every night, with no computer. It connects LocalDevVPN, then runs Cartouche’s Refresh All Apps action, which does what Renew now does.") }
     static var dailyStepAutomation: String { s("daily.step2", "In Shortcuts, open Automation, then tap +.") }
-    static var dailyStepTime: String { s("daily.step3", "Choose Time of Day: a time when the iPhone charges and is online, such as 4 AM, every day. Then choose Run Immediately.") }
-    static var dailyStepVPN: String { s("daily.vpnAction", "Tap Next, choose New Blank Automation, then add the Enable LocalDevVPN action: it connects LocalDevVPN without opening it. An older LocalDevVPN calls it Start LocalDevVPN.") }
-    static var dailyStepAction: String { s("daily.refreshAction", "Then add the Refresh All Apps action of Cartouche, not LiveContainer’s: Cartouche waits for LocalDevVPN to connect before it renews.") }
-    static var dailyStepCheck: String { s("daily.step5", "Each renewal shows on the System page as the last renewal, and gives Cartouche seven more days.") }
+    static var dailyStepTime: String { s("daily.time", "Choose Time of Day: 4:00 AM for instance, a time when the iPhone charges and is online, every day. Choose Run Immediately, then tap Next.") }
+    static var dailyStepVPN: String { s("daily.vpn", "Tap New Blank Automation, then add the Enable LocalDevVPN action: it connects LocalDevVPN without opening it. An older LocalDevVPN calls it Start LocalDevVPN.") }
+    static var dailyStepAction: String { s("daily.refresh", "Then add Refresh All Apps, among Cartouche’s actions and not LiveContainer’s, and tap Done.") }
     static var dailyTailscale: String { s("daily.tailscale", "With Tailscale, add its Connect action last, among those of the Tailscale app: LocalDevVPN turned Tailscale off, and the automation turns it on again.") }
     static var openShortcuts: String { s("daily.openShortcuts", "Open Shortcuts") }
+    /// What the player makes, as Shortcuts shows it once made.
+    static var dailyWhatYouMake: String { s("daily.result", "What you make") }
+    static func dailyEveryDay(_ time: String) -> String { f("daily.result.when", "Every day at %@", time) }
+    static var dailyMade: String { s("daily.made", "I made the automation") }
+    static var dailyMadeFooter: String { s("daily.made.footer", "Cartouche then checks after its first night that it renews it.") }
+    /// The setup's last step, and the System page's row.
+    static var dailyToMake: String { s("daily.state.toMake", "An automation in Shortcuts renews Cartouche every night, even while it stays closed. Without it, Cartouche renews itself only when you open it, and expires 7 days after its last renewal.") }
+    static func dailyWaiting(_ date: String) -> String { f("daily.state.waiting", "Made on %@: Cartouche checks after its first night that it renews it.", date) }
+    static func dailyNotRunning(_ date: String) -> String { f("daily.state.notRunning", "Made on %@, it has not run yet. Check in Shortcuts its time, and that it runs immediately.", date) }
+    static var dailyRunning: String { s("daily.state.running", "It is renewing Cartouche now.") }
+    static func dailyRenewed(_ date: String) -> String { f("daily.state.renewed", "It renewed Cartouche on %@.", date) }
+    static func dailyFailedVPN(_ date: String) -> String { f("daily.state.vpn", "On %@, it ran without LocalDevVPN connected, and could not renew Cartouche. Add the Enable LocalDevVPN action just before Refresh All Apps.", date) }
+    static func dailyInterrupted(_ date: String) -> String { f("daily.state.interrupted", "On %@, iOS stopped it before it had renewed Cartouche. It tries again the next night.", date) }
+    static func dailyFailed(_ date: String, _ why: String) -> String { f("daily.state.failed", "On %@, it could not renew Cartouche: %@", date, why) }
+    static func dailyStopped(_ date: String) -> String { f("daily.state.stopped", "It has not run since %@. Check in Shortcuts that it is still there, on, and runs immediately.", date) }
+    static var dailyMake: String { s("daily.action.make", "Make the automation") }
+    static var dailyFix: String { s("daily.action.fix", "Fix the automation") }
+    static var dailySee: String { s("daily.action.see", "See the steps") }
+    /// The System page's row, beside Renew every night.
+    static var dailyStatusToMake: String { s("daily.status.toMake", "To make") }
+    static var dailyStatusWaiting: String { s("daily.status.waiting", "Made") }
+    static var dailyStatusOn: String { s("daily.status.on", "On") }
+    static var dailyStatusFailed: String { s("daily.status.failed", "Failed") }
+    static var dailyStatusStopped: String { s("daily.status.stopped", "Not running") }
 
     // MARK: Installing, starting and uninstalling a game
 

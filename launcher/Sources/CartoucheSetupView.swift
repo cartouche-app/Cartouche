@@ -24,12 +24,23 @@ struct CartoucheSetupView: View {
     @ObservedObject private var setup = CartoucheSetup.shared
     @ObservedObject private var account = CartoucheAccount.shared
     @ObservedObject private var updates = CartoucheUpdates.shared
+    /// The automation of Shortcuts that renews Cartouche every night: the
+    /// last step, which Cartouche plays without (needsSetup).
+    @ObservedObject private var nightly = CartoucheNightly.shared
     @State private var choosingPairingFile = false
     @State private var signingIn = false
     @Environment(\.openURL) private var openURL
 
     static let localDevVPN = URL(string: "localdevvpn://")!
     static let localDevVPNAppStore = URL(string: "https://apps.apple.com/app/localdevvpn/id6755608044")!
+
+    /// Whether the setup opens scrolled down to its end, on Renew every
+    /// night: the launcher's gallery (launcher/Gallery); never in Cartouche.
+    #if CARTOUCHE_GALLERY
+    static var opensAtEnd = false
+    #else
+    static let opensAtEnd = false
+    #endif
 
     var body: some View {
         ScrollView {
@@ -135,12 +146,31 @@ struct CartoucheSetupView: View {
                 if setup.usesImportedSigning, let signature = CartoucheOwnSignature.current {
                     CartoucheOwnSignatureBox(signature: signature)
                 }
-                if !setup.usesImportedSigning && !CartoucheImportedSigning.isSignedElsewhere { renewalNote }
+                if renewsItself {
+                    renewalNote
+                    // After LocalDevVPN, whose action the automation runs
+                    // before Refresh All Apps; after Increased Memory Limit
+                    // for the IPA of the player's own SideStore.
+                    step(
+                        number: sideStoreInstall ? 5 : 4,
+                        done: nightly.state.isDone,
+                        title: CartoucheText.renewEveryNight,
+                        detail: nightly.detail
+                    ) {
+                        NavigationLink {
+                            CartoucheNightlyRenewalView()
+                        } label: {
+                            Label(nightly.action, systemImage: "moon.zzz")
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
             }
             .padding()
             .frame(maxWidth: 640)
             .frame(maxWidth: .infinity)
         }
+        .defaultScrollAnchor(Self.opensAtEnd ? .bottom : nil)
         .background(CartoucheStage(key: nil))
         .navigationTitle(CartoucheText.setupTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -306,7 +336,15 @@ struct CartoucheSetupView: View {
         if setup.usesImportedSigning {
             return setup.needsSetup ? CartoucheText.setupIntroOwnCertificate : CartoucheText.setupAllDoneOwnCertificate
         }
-        return setup.needsSetup ? CartoucheText.setupIntro : CartoucheText.setupAllDoneDetail
+        if setup.needsSetup { return CartoucheText.setupIntro }
+        return nightly.state.isDone ? CartoucheText.setupAllDoneDetail : CartoucheText.setupAllDoneButNightly
+    }
+
+    /// Whether the built-in SideStore renews Cartouche with the player's
+    /// Apple ID: LocalDevVPN and the automation of every night serve it
+    /// alone. A certificate of the player's own is never renewed here.
+    private var renewsItself: Bool {
+        !setup.usesImportedSigning && !CartoucheImportedSigning.isSignedElsewhere
     }
 
     private func step<Actions: View>(

@@ -16,7 +16,7 @@ import Foundation
 extension CartoucheText {
     // MARK: The setup
 
-    static var sideStoreIntro: String { s("sideStore.intro", "Four steps, once on this iPhone. Then Cartouche renews itself.") }
+    static var sideStoreIntro: String { s("sideStore.intro", "Four steps, once on this iPhone, then an automation that renews Cartouche every night.") }
     static var sideStorePairingHow: String { s("sideStore.pairing.how", "Your SideStore holds this iPhone’s pairing file: Cartouche asks it for it. SideStore opens for a moment, then brings you back here.") }
     static var sideStorePairingAsk: String { s("sideStore.pairing.ask", "Ask SideStore") }
     static var sideStoreNoAnswer: String { s("sideStore.pairing.noAnswer", "Cartouche could not open your SideStore. Open SideStore once, then try again, or choose the pairing file here.") }

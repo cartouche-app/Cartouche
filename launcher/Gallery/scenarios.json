@@ -1457,6 +1457,48 @@
       ]
     },
     {
+      "name": "iphone-setup-nightly-to-make",
+      "comment": "The setup of a Cartouche whose first three steps are done, the automation of Shortcuts that renews it every night still to make: its last step, which opens Renew every night.",
+      "screen": "setup",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-setup-nightly-renewed",
+      "comment": "The same, the automation having renewed Cartouche at 4:00 this night (work: nightly-renewed), as the built-in SideStore's support noted its run of Refresh All Apps: the page at its end (category: nightly), every step done, the last one's button showing the steps again.",
+      "screen": "setup",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "nightly-renewed",
+      "category": "nightly"
+    },
+    {
       "name": "iphone-setup-iphone-step",
       "screen": "setup",
       "work": "iphone-step",
@@ -2104,6 +2146,28 @@
       "work": "renewal-unanswered"
     },
     {
+      "name": "iphone-system-nightly",
+      "comment": "The System page down to Renew every night (category: nightly), the automation having failed this night without LocalDevVPN (work: nightly-no-vpn): its row says so.",
+      "screen": "system",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "nightly-no-vpn",
+      "category": "nightly"
+    },
+    {
       "name": "iphone-system-signature-setup-to-do",
       "screen": "system",
       "owned": [
@@ -2184,6 +2248,27 @@
         0
       ],
       "category": "tailscale"
+    },
+    {
+      "name": "iphone-nightly-renewal-no-vpn",
+      "comment": "Renew every night after its run at 4:00 this night, which Refresh All Apps made without LocalDevVPN connected (work: nightly-no-vpn): what to fix in the automation, and Cartouche checking it again once fixed.",
+      "screen": "nightly",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "nightly-no-vpn"
     },
     {
       "name": "iphone-storage",

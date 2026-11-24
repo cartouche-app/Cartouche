@@ -553,12 +553,14 @@ struct CartoucheSetupRefresh: ViewModifier {
                 CartoucheAccount.shared.resumeDeviceStep()
                 CartoucheAccount.shared.resumeSignIn()
                 CartoucheRenewals.shared.renewIfDue()
+                CartoucheNightly.shared.read()
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
                 setup.refresh()
                 CartoucheAccount.shared.resumeDeviceStep()
                 CartoucheAccount.shared.resumeSignIn()
                 CartoucheRenewals.shared.renewIfDue()
+                CartoucheNightly.shared.read()
             }
             // The certificate's check ends a few seconds after the launch.
             .onChange(of: setup.isComplete) { _, complete in

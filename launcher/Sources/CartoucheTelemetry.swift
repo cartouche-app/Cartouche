@@ -505,6 +505,15 @@ final class CartoucheTelemetry: ObservableObject {
         if let days = CartoucheSignature.current().daysLeft {
             fields["signatureDays"] = .number(Double(days))
         }
+        // The automation of Shortcuts that renews Cartouche every night,
+        // with the Apple ID's signing alone: where it stands, and what its
+        // last run failed on; never SideStore's words, nor when it ran.
+        if !CartoucheImportedSigning.accountSigningDisabled {
+            let nightly = CartoucheNightly.shared
+            nightly.read()
+            fields["nightly"] = .text(nightly.state.name)
+            if let problem = nightly.state.problem { fields["nightlyProblem"] = .text(problem.name) }
+        }
         event("app.opened", fields: fields)
         // It waited for both.
         launch.note(at: Date()) { noted in
