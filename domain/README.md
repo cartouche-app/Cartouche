@@ -17,6 +17,10 @@ The site's half is [`site/CNAME`](../site/CNAME), the domain, which the Showcase
 
 GitHub can also verify the domain for the organization: then no repository but the organization's can serve a site on `cartouche.cloud` or a name right under it, even if Cartouche's site ever stopped while the records still point to GitHub Pages. The organization's owner added the domain in the organization's **Settings › Pages › Add a domain**, which showed a TXT record, `_github-pages-challenge-cartouche-app.cartouche.cloud`, now in the file (2026-11-17); once it answers, the owner clicks **Verify** there. It must then stay, or the verification lapses.
 
+## Names Cloudflare keeps
+
+A Worker's custom domain has a DNS record Cloudflare makes and keeps itself, outside the file, which the Domain workflow leaves alone: `source.cartouche.cloud`, the source for the player's SideStore ([source/README.md](../source/README.md)), attached to the Worker `cartouche-source` in the dashboard.
+
 ## Mail
 
 `contact@cartouche.cloud` is forwarded to the owner's mailbox by Cloudflare's [Email Routing](https://developers.cloudflare.com/email-service/configuration/domains/), which the owner set up in the dashboard, under **Compute › Email Service › Email Routing** (2026-11-17, [decision 130](../docs/decisions/130.md)). Its records are its own, locked there, and not in the file: three MX records at the apex, `route1`, `route2` and `route3.mx.cloudflare.net`, with priorities Cloudflare picks; an SPF record at the apex, `v=spf1 include:_spf.mx.cloudflare.net ~all`, so that mail servers take the mail it forwards; and its DKIM key, `cf2024-1._domainkey.cartouche.cloud`. The Domain workflow leaves them as they are and lists them in its summary.
