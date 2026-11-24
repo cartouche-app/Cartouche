@@ -269,7 +269,12 @@ enum ConsoleLink {
         } else {
             state = .waiting
         }
-        return CartoucheMacGamesFolder(connection: folder.connection, path: folder.path, state: state, offers: games.offers.count)
+        let others = games.others.map { other in
+            CartoucheMacGamesFolder.Other(connection: other.folder.connection, path: other.folder.path, offline: other.offline,
+                                          offers: other.offers)
+        }
+        return CartoucheMacGamesFolder(connection: folder.connection, path: folder.path, state: state, offers: games.offersInFirst,
+                                       others: others)
     }
 
     // MARK: Updates

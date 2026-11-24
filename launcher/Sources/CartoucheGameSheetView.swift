@@ -110,21 +110,39 @@ struct CartoucheGameSheetView: View {
         entry.sheet.map { CartoucheFit.of($0, limitMiB: gameLimitMiB, convertsBCTextures: entry.convertsBCTextures) }
     }
 
+    /// The game's copy in the games folders, the one offered, of the
+    /// update first: on a server that answers, of a game in several.
+    private var storedCopy: CartoucheStoredGame? { entry.update ?? entry.stored }
+
+    /// The name of the server of the copy offered.
     private var serverName: String {
-        CartoucheStoredGames.shared.serverName ?? ""
+        CartoucheStoredGames.shared.place(of: storedCopy)
     }
 
-    /// Whether the games folder's server does not answer from here.
+    /// Whether the server of the copy offered does not answer from here,
+    /// nor any other copy's.
     private var isGamesFolderOffline: Bool {
-        guard let server = CartoucheStorageSettings.shared.location(.games)?.server else { return false }
-        return reach.isOffline(server.id)
+        storedCopy?.isOffline ?? false
     }
 
-    /// Whether the games folder is on a Google Drive whose sign-in Google
-    /// ended: the player signs in again, rather than waits.
+    /// Whether that server is a Google Drive whose sign-in Google ended:
+    /// the player signs in again, rather than waits.
     private var isGamesFolderSignedOut: Bool {
-        guard let server = CartoucheStorageSettings.shared.location(.games)?.server else { return false }
-        return reach.isOffline(server.id) && CartoucheStorageOffline(server).isSignedOut
+        storedCopy.map { CartoucheStoredGames.shared.isSignedOut($0) } ?? false
+    }
+
+    /// The other games folders' servers that hold the game too, each with
+    /// whether it answers, as a line: "Also in the NAS (offline)."
+    private var alsoIn: String? {
+        guard let copy = storedCopy else { return nil }
+        let stored = CartoucheStoredGames.shared
+        var seen: Set<String> = [stored.place(of: copy)]
+        let others = stored.copies(of: copy).dropFirst().compactMap { other -> String? in
+            let name = stored.place(of: other)
+            guard seen.insert(name).inserted else { return nil }
+            return other.isOffline ? CartoucheText.storedAlsoInOffline(name) : name
+        }
+        return others.isEmpty ? nil : CartoucheText.storedAlsoIn(others)
     }
 
     /// The header's row, which the sheet goes back to when what the player
@@ -374,6 +392,9 @@ struct CartoucheGameSheetView: View {
                     if let installed = installedBuild(of: app, showsCommit: false) {
                         buildLine(CartoucheText.buildHere(installed), systemImage: CartoucheDevice.symbol)
                     }
+                    if let alsoIn {
+                        buildLine(alsoIn, systemImage: "externaldrive")
+                    }
                 }
             } else if let stored = entry.stored {
                 primaryButton(CartoucheText.installFrom(serverName), systemImage: "arrow.down.circle.fill") { onInstallStored(stored) }
@@ -384,6 +405,9 @@ struct CartoucheGameSheetView: View {
                     } else {
                         buildLine(CartoucheText.statusStoredOffline(serverName), systemImage: "wifi.slash")
                     }
+                }
+                if let alsoIn {
+                    buildLine(alsoIn, systemImage: "externaldrive")
                 }
             } else if let cloud = entry.cloud {
                 primaryButton(CartoucheText.cloudInstall, systemImage: "icloud.and.arrow.down.fill") { onInstallCloud(cloud) }
@@ -591,6 +615,12 @@ struct CartoucheGameSheetView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .lineLimit(3)
+                    if let alsoIn {
+                        Label(alsoIn, systemImage: "externaldrive")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(3)
+                    }
                 }
             } else if let server = CartoucheStorageSettings.shared.location(.games)?.server,
                       // A folder the player's account only reads takes no copy.

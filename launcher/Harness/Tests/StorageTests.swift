@@ -9,11 +9,15 @@
 //  (CartoucheGameActions install(stored:), CartoucheZip), a game copied
 //  there that installs again as it was, and a game's saves, which go there
 //  after a game and come back with its next install (CartoucheSaveBackups).
+//  Several games folders at once: a game in two shows once, from one whose
+//  server answers, and an install goes on from its next copy when the one
+//  offered does not answer (CartoucheGameCopies.swift).
 //  The servers themselves are tested on their own, against real ones
 //  (launcher/StorageTests).
 //
 
 import Combine
+import Network
 import XCTest
 @testable import CartoucheHarness
 
@@ -172,6 +176,88 @@ final class StorageTests: HarnessCase {
         XCTAssertTrue(stored.games.isEmpty)
         XCTAssertNil(stored.serverName)
         XCTAssertNil(stored.problem)
+    }
+
+    // MARK: Several games folders
+
+    /// The same game in two games folders, as a NAS and a Google Drive keep
+    /// it: it shows once in the library, from the first folder; the NAS
+    /// away from home, from the other, which installs it.
+    func testAGameInTwoFoldersShowsOnceFromAFolderThatAnswers() async throws {
+        let (nas, nasFolder) = try await HarnessStorage.folder("NAS", for: [.games])
+        let (drive, driveFolder) = try await HarnessStorage.folder("Drive", for: [])
+        let nasPlace = CartoucheStoragePlace(server: nas.id, path: "")
+        let drivePlace = CartoucheStoragePlace(server: drive.id, path: "")
+        CartoucheStorageSettings.shared.addGamesFolder(drivePlace)
+        XCTAssertEqual(CartoucheStorageSettings.shared.gamesFolders.all, [nasPlace, drivePlace])
+        let game = HarnessGame.plain(5)
+        let name = "\(game.name) [\(game.titleId)].ipa"
+        let ipa = try put(game, in: nasFolder, at: name)
+        // The same file, written there at the same time.
+        let copy = driveFolder.appendingPathComponent(name)
+        try FileManager.default.copyItem(at: ipa, to: copy)
+        let written = try XCTUnwrap(try FileManager.default.attributesOfItem(atPath: ipa.path)[.modificationDate] as? Date)
+        try FileManager.default.setAttributes([.modificationDate: written], ofItemAtPath: copy.path)
+        let other = HarnessGame.plain(6)
+        try put(other, in: driveFolder, at: "\(other.name) [\(other.titleId)].ipa")
+        defer { CartoucheStorageReach.shared.noteAnswered(nas) }
+
+        await stored.reload()
+        XCTAssertNil(stored.problem)
+        XCTAssertEqual(stored.games.count, 3, "each copy: \(stored.games.map(\.path))")
+        XCTAssertEqual(stored.count(in: nasPlace), 1)
+        XCTAssertEqual(stored.count(in: drivePlace), 2)
+        var entries = CartoucheCatalog.shared.entries(for: model.apps, stored: stored.games).owned
+        XCTAssertEqual(entries.count, 2, "the game once, and the other: \(entries.map(\.name))")
+        let entry = try XCTUnwrap(entries.first { $0.stored?.titleId == game.titleId.uppercased() })
+        XCTAssertEqual(entry.stored?.server, nas.id, "the same copy in both: the first folder's")
+        XCTAssertEqual(stored.copies(of: try XCTUnwrap(entry.stored)).map(\.server), [nas.id, drive.id])
+
+        // The NAS does not answer from here: the Drive's copy is offered,
+        // in the same place of the library, and installs.
+        CartoucheStorageReach.shared.noteOffline(nas)
+        let offered = try XCTUnwrap(stored.game(titleId: game.titleId.uppercased(), bundleId: nil))
+        XCTAssertEqual(offered.server, drive.id)
+        XCTAssertFalse(offered.isOffline)
+        XCTAssertEqual(stored.copies(of: offered).map(\.server), [drive.id, nas.id])
+        XCTAssertTrue(try XCTUnwrap(stored.copies(of: offered).last).isOffline)
+        entries = CartoucheCatalog.shared.entries(for: model.apps, stored: stored.games).owned
+        let now = try XCTUnwrap(entries.first { $0.stored?.titleId == game.titleId.uppercased() })
+        XCTAssertEqual(now.stored?.server, drive.id)
+        XCTAssertEqual(now.id, entry.id, "the same entry: its sheet stays open")
+        XCTAssertEqual(stored.place(of: now.stored), "Drive")
+
+        let installedApp = try await install(stored: offered)
+        XCTAssertNil(actions.notice, "\(String(describing: actions.notice))")
+        try assertInstalled(try XCTUnwrap(installedApp), as: game)
+    }
+
+    /// The copy offered does not answer once the install starts, as a NAS
+    /// left behind a moment ago: the install goes on from the game's next
+    /// copy, in another games folder.
+    func testAnInstallGoesOnFromTheNextCopyWhenTheOneOfferedDoesNotAnswer() async throws {
+        let (_, folder) = try await HarnessStorage.folder("Jeux", for: [.games])
+        let game = HarnessGame.plain(7)
+        try put(game, in: folder, at: "\(game.name) [\(game.titleId)].ipa")
+        // An FTP server on a port of this Mac no server listens on: it
+        // refuses the connection, as one out of reach is offline.
+        let port = try await HarnessStorage.closedPort()
+        let ftp = CartoucheStorageServer(kind: .ftp, name: "NAS", host: "127.0.0.1", port: port, username: "joueur")
+        let settings = CartoucheStorageSettings.shared
+        settings.save(ftp, secret: "mot de passe")
+        await stored.reload()
+        let copy = try XCTUnwrap(stored.games.first)
+        settings.addGamesFolder(CartoucheStoragePlace(server: ftp.id, path: ""))
+        // The NAS's copy, as the last reading of its folder found it.
+        var away = copy
+        away.server = ftp.id
+        away.folder = ""
+        XCTAssertEqual(stored.copies(of: away).map(\.server), [ftp.id, copy.server])
+
+        let installedApp = try await install(stored: away)
+        XCTAssertNil(actions.notice, "\(String(describing: actions.notice))")
+        try assertInstalled(try XCTUnwrap(installedApp), as: game)
+        XCTAssertTrue(CartoucheStorageReach.shared.isOffline(ftp.id), "the NAS is said to be offline")
     }
 
     // MARK: A copy in the games folder

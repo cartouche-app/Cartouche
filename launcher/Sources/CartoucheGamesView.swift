@@ -815,7 +815,8 @@ struct CartoucheUninstallQuestion: ViewModifier {
         }
     }
 
-    /// The copy of the game in the games folder, if there is one.
+    /// The copy of the game in the games folders, if there is one: the one
+    /// offered, of a game in several.
     @MainActor
     static func storedCopy(of app: LCAppModel) -> CartoucheStoredGame? {
         let found = CartoucheCatalog.shared.gameTitle(of: app)
@@ -835,8 +836,8 @@ struct CartoucheUninstallQuestion: ViewModifier {
 
     @MainActor
     static func message(for app: LCAppModel) -> String {
-        if storedCopy(of: app) != nil, let server = CartoucheStoredGames.shared.serverName {
-            return CartoucheText.uninstallMessageStored(server)
+        if let copy = storedCopy(of: app) {
+            return CartoucheText.uninstallMessageStored(CartoucheStoredGames.shared.place(of: copy))
         }
         return CartoucheText.uninstallMessage
     }

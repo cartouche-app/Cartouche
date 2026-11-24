@@ -149,6 +149,11 @@
 //                                        with two games' saves waiting for it
 //        erasing                         on Reset Cartouche's page, the reset
 //                                        under way
+//        games-folders                   two games folders, a NAS's, out of
+//                                        reach away from home, and a Google
+//                                        Drive's, the player's games in
+//                                        both, the sheet's game newer on the
+//                                        NAS (GalleryGamesFolders)
 //        gpu-no-bc                       an iPhone whose GPU reads no
 //                                        BC-compressed texture, an A16's,
 //                                        the sheet's game built by nxnative,
@@ -783,6 +788,11 @@ struct GalleryScenario {
                 if work == "mac-too-old" {
                     CartoucheMacBuildsWatch.galleryTooOld = mac.name
                 }
+            }
+            if work == "games-folders" {
+                let catalog = CartoucheCatalog.shared
+                GalleryGamesFolders.prepare(owned: ownedTitles.compactMap { catalog.game(titleId: $0) },
+                                            sheet: sheet.flatMap { ownedTitles.contains($0) ? nil : catalog.game(titleId: $0) })
             }
             if work == "drive-signed-out" {
                 // The player's Google Drive, seven days after the sign-in:

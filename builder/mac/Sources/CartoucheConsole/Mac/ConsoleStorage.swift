@@ -18,7 +18,9 @@
 //  keeps them then, and which the page shows as the iPhone does. The games
 //  folder chosen on the iPhone, when it is on one of the connections, the
 //  page shows under This Mac: the Builder sends its games there, how many
-//  went, the one going, or why none goes.
+//  went, the one going, or why none goes; then the other games folders the
+//  iPhone reads, where the console finds the Mac apps another Mac sent too,
+//  each whether it answers.
 //
 
 import Combine
@@ -56,17 +58,38 @@ public struct CartoucheMacGamesFolder: Equatable, Sendable {
         case failed(String)
     }
 
+    /// Another games folder the iPhone reads, which nothing goes to: the
+    /// console installs from there the Mac apps another Mac sent.
+    public struct Other: Equatable, Sendable {
+        public var connection: UUID
+        public var path: String
+        /// Its server did not answer the last look.
+        public var offline: Bool
+        /// The Mac apps offered from there, to install from the library.
+        public var offers: Int
+
+        public init(connection: UUID, path: String, offline: Bool = false, offers: Int = 0) {
+            self.connection = connection
+            self.path = path
+            self.offline = offline
+            self.offers = offers
+        }
+    }
+
     public var connection: UUID
     public var path: String
     public var state: State
     /// The Mac apps another Mac sent there, to install from the library.
     public var offers: Int
+    /// The other games folders the iPhone reads, in their order.
+    public var others: [Other]
 
-    public init(connection: UUID, path: String, state: State, offers: Int = 0) {
+    public init(connection: UUID, path: String, state: State, offers: Int = 0, others: [Other] = []) {
         self.connection = connection
         self.path = path
         self.state = state
         self.offers = offers
+        self.others = others
     }
 }
 
@@ -105,6 +128,8 @@ extension CartoucheMacConsole {
     /// The gallery's NAS, among the made-up connections of
     /// showStorageForGallery(language:).
     public static let galleryNAS = UUID(uuidString: "6E617364-7520-4073-A000-000000000001")!
+    /// Its Google Drive.
+    public static let galleryDrive = UUID(uuidString: "64726976-6520-4073-A000-000000000002")!
 
     /// Made-up connections on the Storage page, a NAS, a bucket and a
     /// Google Drive, named in LANGUAGE, for the app's gallery: kept in
@@ -117,7 +142,8 @@ extension CartoucheMacConsole {
                                    username: french ? "joueur" : "player", share: french ? "Jeux" : "Games", changed: changed),
             CartoucheStorageServer(kind: .s3, name: french ? "Sauvegardes" : "Saves", host: "s3.eu-west-3.amazonaws.com",
                                    username: "AKIAIOSFODNN7EXAMPLE", share: "cartouche-saves", region: "eu-west-3", changed: changed),
-            CartoucheStorageServer(kind: .drive, name: "Google Drive", host: french ? "joueur@example.com" : "player@example.com",
+            CartoucheStorageServer(id: Self.galleryDrive, kind: .drive, name: "Google Drive",
+                                   host: french ? "joueur@example.com" : "player@example.com",
                                    username: "123456789012-example.apps.googleusercontent.com", changed: changed),
         ])
     }
@@ -194,11 +220,19 @@ struct CartoucheMacFoldersSection: View {
 /// The iPhone's games folder, on the connection SERVER, as the Builder
 /// sends its games there: the folder, how many of its files went, the one
 /// going, or why none goes; the Mac apps another Mac sent there; and Send
-/// now, SEND.
+/// now, SEND. Then the other games folders the iPhone reads, each with
+/// whether it answers and the Mac apps offered from it.
 struct CartoucheMacIPhoneGamesSection: View {
     let folder: CartoucheMacGamesFolder
     let server: CartoucheStorageServer
     let send: () -> Void
+    @ObservedObject private var settings = CartoucheStorageSettings.shared
+
+    init(folder: CartoucheMacGamesFolder, server: CartoucheStorageServer, send: @escaping () -> Void) {
+        self.folder = folder
+        self.server = server
+        self.send = send
+    }
 
     var body: some View {
         CartoucheSection {
@@ -217,10 +251,36 @@ struct CartoucheMacIPhoneGamesSection: View {
             }
             Button(CartoucheText.macIPhoneGamesSendNow, systemImage: "arrow.up.circle", action: send)
                 .disabled(sending)
+            ForEach(Array(folder.others.enumerated()), id: \.offset) { _, other in
+                if let server = settings.server(other.connection) {
+                    otherRows(other, server: server)
+                }
+            }
         } header: {
-            Text(CartoucheText.macIPhoneGamesHeader)
+            Text(folder.others.isEmpty ? CartoucheText.macIPhoneGamesHeader : CartoucheText.macIPhoneGamesSeveralHeader)
         } footer: {
-            Text(CartoucheText.macIPhoneGamesFooter)
+            Text(folder.others.isEmpty ? CartoucheText.macIPhoneGamesFooter : CartoucheText.macIPhoneGamesSeveralFooter)
+        }
+    }
+
+    /// Another games folder the iPhone reads: where it is, whether it
+    /// answers, and the Mac apps offered from it.
+    @ViewBuilder
+    private func otherRows(_ other: CartoucheMacGamesFolder.Other, server: CartoucheStorageServer) -> some View {
+        LabeledContent {
+            Text(CartoucheStorageView.placeName(server: server, path: other.path))
+                .lineLimit(2)
+                .multilineTextAlignment(.trailing)
+        } label: {
+            Label(CartoucheText.storageOtherGamesFolder, systemImage: "square.stack.3d.up")
+        }
+        if other.offline {
+            problem(CartoucheText.macIPhoneGamesOtherOffline(server.name), symbol: "wifi.slash")
+        }
+        if other.offers > 0 {
+            Label(CartoucheText.macIPhoneGamesOffers(other.offers), systemImage: "arrow.down.circle")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -329,6 +389,17 @@ extension CartoucheText {
             : f("mac.storage.iPhoneGames.offers.many", "%lld Mac apps another Mac sent there, to install from the library", count)
     }
     static var macIPhoneGamesSendNow: String { s("mac.storage.iPhoneGames.sendNow", "Send now") }
+    /// The iPhone's games folders, when it reads several: the Builder
+    /// sends its games to the first.
+    static var macIPhoneGamesSeveralHeader: String { s("mac.storage.iPhoneGames.several.header", "The iPhone’s games folders") }
+    static func macIPhoneGamesOtherOffline(_ server: String) -> String {
+        f("mac.storage.iPhoneGames.other.offline",
+          "%@ does not answer from this Mac: its Mac apps that another folder holds too install from that folder meanwhile.", server)
+    }
+    static var macIPhoneGamesSeveralFooter: String {
+        s("mac.storage.iPhoneGames.several.footer",
+          "The games folders chosen on your iPhone: Cartouche Builder sends the first each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent to any of them install from the library, from a folder that answers. To change them, do so on the iPhone.")
+    }
     static var macIPhoneGamesFooter: String {
         s("mac.storage.iPhoneGames.footer",
           "The games folder chosen on your iPhone: Cartouche Builder sends it each IPA and each Mac app of its own games folder too, through the same connection, the newest first, and never removes anything there. The Mac apps another Mac sent there install from the library. To change it, choose another on the iPhone.")

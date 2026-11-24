@@ -13,6 +13,7 @@
 
 import Combine
 import Foundation
+import Network
 import XCTest
 @testable import CartoucheHarness
 
@@ -380,6 +381,37 @@ enum HarnessStorage {
             settings.setPlace(CartoucheStoragePlace(server: server.id, path: ""), for: role)
         }
         return (server, url)
+    }
+
+    /// A port of this Mac no server listens on: a connection to it is
+    /// refused at once, as one to a server out of reach is offline.
+    static func closedPort() async throws -> Int {
+        let parameters = NWParameters.tcp
+        parameters.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: .any)
+        let listener = try NWListener(using: parameters)
+        listener.newConnectionHandler = { $0.cancel() }
+        let port: Int = try await withCheckedThrowingContinuation { continuation in
+            let once = HarnessBox(false)
+            listener.stateUpdateHandler = { state in
+                switch state {
+                case .ready:
+                    guard !once.value else { return }
+                    once.value = true
+                    continuation.resume(returning: Int(listener.port?.rawValue ?? 0))
+                case let .failed(error):
+                    guard !once.value else { return }
+                    once.value = true
+                    continuation.resume(throwing: error)
+                default:
+                    break
+                }
+            }
+            listener.start(queue: DispatchQueue(label: "Harness closed port"))
+        }
+        listener.cancel()
+        // Until the listener is gone, the port may still take a connection.
+        try await Task.sleep(nanoseconds: 200_000_000)
+        return port
     }
 }
 

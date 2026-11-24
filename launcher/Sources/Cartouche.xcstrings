@@ -10575,6 +10575,40 @@
         }
       }
     },
+    "sheet.storedAlsoIn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also in %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aussi dans %@."
+          }
+        }
+      }
+    },
+    "sheet.storedAlsoIn.offline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (offline)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (hors ligne)"
+          }
+        }
+      }
+    },
     "sheet.storedIn" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14162,6 +14196,40 @@
         }
       }
     },
+    "storage.games.add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add another games folder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un autre dossier de jeux"
+          }
+        }
+      }
+    },
+    "storage.games.elsewhere" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its games that another folder holds too install from that folder meanwhile."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses jeux présents aussi dans un autre dossier s’installent depuis cet autre dossier en attendant."
+          }
+        }
+      }
+    },
     "storage.games.footer" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14192,6 +14260,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jeux trouvés"
+          }
+        }
+      }
+    },
+    "storage.games.other" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other folder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autre dossier"
+          }
+        }
+      }
+    },
+    "storage.games.several" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Games folders"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dossiers des jeux"
+          }
+        }
+      }
+    },
+    "storage.games.several.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your library shows the IPAs of these folders, ready to install: a game in more than one shows once, and installs from a folder that answers. Copy a game to the first one before you uninstall it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre bibliothèque montre les IPA de ces dossiers, prêtes à installer : un jeu présent dans plusieurs n’y est qu’une fois, et s’installe depuis un dossier qui répond. Copiez un jeu dans le premier avant de le désinstaller."
           }
         }
       }
@@ -15148,6 +15267,23 @@
         }
       }
     },
+    "storage.readAgain.all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read the folders again"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relire les dossiers"
+          }
+        }
+      }
+    },
     "storage.readOnly.games" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15824,6 +15960,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "le serveur a refusé le nom d’utilisateur ou le mot de passe."
+          }
+        }
+      }
+    },
+    "storage.stopReading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop reading this folder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne plus lire ce dossier"
           }
         }
       }

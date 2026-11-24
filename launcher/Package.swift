@@ -40,6 +40,7 @@ let package = Package(
                 "CartoucheFailure.swift",
                 "CartoucheFreeSpace.swift",
                 "CartoucheGameBuild.swift",
+                "CartoucheGameCopies.swift",
                 "CartoucheGameFit.swift",
                 "CartoucheGameLanguage.swift",
                 "CartoucheGameLog.swift",
