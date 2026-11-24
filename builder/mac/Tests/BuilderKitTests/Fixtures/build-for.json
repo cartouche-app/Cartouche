@@ -70,7 +70,9 @@
       "devices": [],
       "kind": "nxnative",
       "model": "",
-      "device": ""
+      "device": "",
+      "url": "https://github.com/seedds/nxnative.git",
+      "branch": "main"
     },
     {
       "config": {},
@@ -88,7 +90,9 @@
       ],
       "kind": "no-bc",
       "model": "iPhone15,4",
-      "device": "iPhone de Lou"
+      "device": "iPhone de Lou",
+      "url": "https://github.com/mianmuhammadse/nxnative.git",
+      "branch": "no-bc"
     },
     {
       "config": {},
@@ -100,7 +104,9 @@
       ],
       "kind": "no-bc",
       "model": "iPhone15,4",
-      "device": "iPhone de Lou"
+      "device": "iPhone de Lou",
+      "url": "https://github.com/mianmuhammadse/nxnative.git",
+      "branch": "no-bc"
     },
     {
       "config": {},
@@ -113,7 +119,9 @@
       ],
       "kind": "no-bc",
       "model": "iPad13,4",
-      "device": "iPad"
+      "device": "iPad",
+      "url": "https://github.com/mianmuhammadse/nxnative.git",
+      "branch": "no-bc"
     },
     {
       "config": {},
@@ -124,7 +132,9 @@
       ],
       "kind": "nxnative",
       "model": "",
-      "device": ""
+      "device": "",
+      "url": "https://github.com/seedds/nxnative.git",
+      "branch": "main"
     },
     {
       "config": {
@@ -139,7 +149,9 @@
       ],
       "kind": "nxnative",
       "model": "iPhone18,2",
-      "device": ""
+      "device": "",
+      "url": "https://github.com/seedds/nxnative.git",
+      "branch": "main"
     },
     {
       "config": {
@@ -148,7 +160,9 @@
       "devices": [],
       "kind": "no-bc",
       "model": "iPhone14,7",
-      "device": ""
+      "device": "",
+      "url": "https://github.com/mianmuhammadse/nxnative.git",
+      "branch": "no-bc"
     },
     {
       "config": {
@@ -157,7 +171,9 @@
       "devices": [],
       "kind": "no-bc",
       "model": "iPad15,7",
-      "device": ""
+      "device": "",
+      "url": "https://github.com/mianmuhammadse/nxnative.git",
+      "branch": "no-bc"
     },
     {
       "config": {
@@ -168,7 +184,9 @@
       "devices": [],
       "kind": "custom",
       "model": "",
-      "device": ""
+      "device": "",
+      "url": "https://github.com/someone/nxnative.git",
+      "branch": "dev"
     },
     {
       "config": {
@@ -183,7 +201,9 @@
       ],
       "kind": "no-bc",
       "model": "iPhone15,4",
-      "device": "iPhone de Lou"
+      "device": "iPhone de Lou",
+      "url": "https://github.com/mianmuhammadse/nxnative.git",
+      "branch": "no-bc"
     }
   ]
 }

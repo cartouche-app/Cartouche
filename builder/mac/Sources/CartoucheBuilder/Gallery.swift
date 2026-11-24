@@ -32,6 +32,10 @@ enum Gallery {
         case assistantWelcome = "assistant-welcome", assistantTools = "assistant-tools", assistantSources = "assistant-sources"
         case assistantGames = "assistant-games", assistantKeys = "assistant-keys", assistantBuilds = "assistant-builds"
         case assistantIPhone = "assistant-iphone", assistantDone = "assistant-done"
+        // The tools step, nxnative not downloaded yet, the choice of what
+        // it downloads open under its row: an iPhone 15 chosen, whose GPU
+        // reads no BC texture (BuildFor).
+        case assistantToolsSource = "assistant-tools-source"
         // The settings' Folders tab, where the dumps folder and the games
         // folder are chosen; and the help on naming what they hold, as the
         // sheet it opens shows it, at its top and on the dumps folder, as
@@ -116,7 +120,7 @@ enum Gallery {
         var step: SetupStep? {
             switch self {
             case .assistantWelcome: return .welcome
-            case .assistantTools: return .tools
+            case .assistantTools, .assistantToolsSource: return .tools
             case .assistantSources: return .sources
             case .assistantGames: return .games
             case .assistantKeys: return .keys
@@ -292,6 +296,7 @@ enum Gallery {
                 // The sheet it is: on the window's background, its corners
                 // rounded.
                 controller = hosted(SetupAssistant(start: step)
+                                        .environment(\.showsBuildSource, page == .assistantToolsSource)
                                         .background(Color(nsColor: .windowBackgroundColor))
                                         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous)),
                                     model, bridged: false)
@@ -536,6 +541,8 @@ enum Gallery {
                     if let state = states[library.games[index].titleID] { library.games[index].state = state }
                 }
             }
+            var config = self.config
+            if page == .assistantToolsSource { config.buildFor = "iPhone15,4" }
             let model = AppModel.sampled(library: library, status: building ? self.building : split ? Gallery.splitBatch : nil,
                                          storage: storage, config: config, info: info,
                                          unbuilt: page == .gameUnbuilt ? [Gallery.unbuilt.titleID: Gallery.unbuiltFigures] : [:])
@@ -559,7 +566,7 @@ enum Gallery {
             if page == .gameSplit { model.selection = Gallery.splitTitleID }
             // A game up to date, while a batch runs: added to its queue.
             if page == .gameQueue { model.selection = "01006F8002326000" }
-            if page == .setup || page == .assistantTools {
+            if page == .setup || page == .assistantTools || page == .assistantToolsSource {
                 model.setup.preview([
                     .mac: .ready("macOS 26.1"),
                     .xcode: .ready("Xcode 27.2"),

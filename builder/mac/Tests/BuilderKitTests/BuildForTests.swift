@@ -27,6 +27,8 @@ final class BuildForTests: XCTestCase {
             var kind: String
             var model: String
             var device: String
+            var url: String
+            var branch: String
         }
 
         var models: [String: Bool]
@@ -70,7 +72,19 @@ final class BuildForTests: XCTestCase {
             XCTAssertEqual(choice.kind.rawValue, example.kind, said)
             XCTAssertEqual(choice.model ?? "", example.model, said)
             XCTAssertEqual(choice.device ?? "", example.device, said)
+            // What the setup assistant's tools step says it downloads.
+            let repository = BuildFor.repository(config, devices: devices)
+            XCTAssertEqual(repository.url, example.url, said)
+            XCTAssertEqual(repository.branch, example.branch, said)
         }
+    }
+
+    func testTheToolsStepSaysTheRepositoryAsThePlayerReadsIt() {
+        XCTAssertEqual(BuildFor.address(BuilderConfig.engineURL), "github.com/seedds/nxnative")
+        XCTAssertEqual(BuildFor.address(BuildFor.forkURL), "github.com/mianmuhammadse/nxnative")
+        XCTAssertEqual(BuildFor.address("https://github.com/someone/nxnative/"), "github.com/someone/nxnative")
+        XCTAssertEqual(BuildFor.address("git@github.com:someone/nxnative.git"), "github.com/someone/nxnative")
+        XCTAssertEqual(BuildFor.address(" /Users/me/nxnative "), "/Users/me/nxnative")
     }
 
     func testAPairedIPhoneKeepsWhatItTellsOfItself() throws {

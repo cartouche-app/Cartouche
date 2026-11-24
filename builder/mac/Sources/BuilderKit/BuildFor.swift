@@ -152,6 +152,27 @@ public enum BuildFor {
         return Choice(kind: .nxnative)
     }
 
+    /// The repository and branch the games are built from with CONFIG and
+    /// the paired DEVICES, as the engine fetches them (targets.source): what
+    /// the setup assistant's tools step downloads.
+    public static func repository(_ config: BuilderConfig, devices: [PairedDevice]) -> (url: String, branch: String) {
+        switch choice(config, devices: devices).kind {
+        case .custom: return (config.engineURL, config.engineBranch)
+        case .noBC: return (forkURL, forkBranch)
+        case .nxnative: return (BuilderConfig.engineURL, BuilderConfig.engineBranch)
+        }
+    }
+
+    /// URL as the player reads it: "github.com/seedds/nxnative".
+    public static func address(_ url: String) -> String {
+        var address = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        for scheme in ["https://", "http://"] where address.hasPrefix(scheme) { address.removeFirst(scheme.count) }
+        if address.hasPrefix("git@") { address = String(address.dropFirst(4)).replacingOccurrences(of: ":", with: "/") }
+        while address.hasSuffix("/") { address.removeLast() }
+        if address.hasSuffix(".git") { address.removeLast(4) }
+        return address
+    }
+
     /// Whether the player chose another repository or branch under Advanced.
     public static func custom(_ config: BuilderConfig) -> Bool {
         key(config.engineURL, config.engineBranch) != key(BuilderConfig.engineURL, BuilderConfig.engineBranch)

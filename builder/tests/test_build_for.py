@@ -116,7 +116,8 @@ class AppExamples(unittest.TestCase):
         for settings, devices in EXAMPLE_CHOICES:
             paired = [build_for.Device(d["name"], d.get("model", ""), d.get("readsBC")) for d in devices]
             source = build_for.source(configs.Config(**settings), paired)
-            choices.append({"config": settings, "devices": devices, "kind": source.kind, "model": source.model, "device": source.device})
+            choices.append({"config": settings, "devices": devices, "kind": source.kind, "model": source.model, "device": source.device,
+                            "url": source.url, "branch": source.branch})
         examples = {"models": {model: build_for.reads_bc(model) for model in EXAMPLE_MODELS}, "choices": choices}
         if os.environ.get("CARTOUCHE_BUILDER_FIXTURES") == "write":
             FIXTURE.write_text(json.dumps(examples, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -215,6 +216,21 @@ class Batches(Home):
 
     def run_due(self):
         return batch.run_due(batch.context(), python=PYTHON, check_tools=False)
+
+    def test_the_tools_step_downloads_the_nxnative_chosen_before_it(self):
+        """Build for chosen on the setup assistant's tools step, before
+        nxnative is on this Mac: the step downloads the variant at once,
+        not nxnative's own first."""
+        config = configs.load(self.paths)
+        config.build_for = "iPhone15,4"
+        configs.save(self.paths, config)
+        self.assertFalse(batch.context().engine.present)
+        with mock.patch.object(api.toolchain, "ensure_python"), mock.patch.object(api.toolchain, "write_dotnet_lock"), \
+                mock.patch.object(api, "doctor", return_value={}):
+            api.setup(batch.context())
+        engine = batch.context().engine
+        self.assertEqual(engine.head(), self.fork_head)
+        self.assertEqual(engine.git("remote", "get-url", "origin").strip(), str(self.fork))
 
     def test_a_paired_iphone_without_bc_rebuilds_the_games_from_the_fork(self):
         plan, summary = self.run_due()

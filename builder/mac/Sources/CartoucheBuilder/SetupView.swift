@@ -4,7 +4,9 @@
 //
 //  This Mac's tools: what a build needs, each with its state and the
 //  button that installs it. "Get everything ready" goes through them in
-//  order and waits where macOS asks something of the player.
+//  order and waits where macOS asks something of the player. Under
+//  nxnative's row, where it is downloaded from, which can be changed
+//  before it is: Build for, or another repository (BuildSourceChoice).
 //
 
 import BuilderKit
@@ -118,6 +120,9 @@ struct SetupRow: View {
                     .foregroundStyle(lineColor(state))
                     .fixedSize(horizontal: false, vertical: true)
                     .textSelection(.enabled)
+                if item == .nxnative {
+                    BuildSourceChoice()
+                }
                 if case let .working(_, fraction) = state {
                     if let fraction {
                         ProgressView(value: fraction)
@@ -198,5 +203,90 @@ struct SetupRow: View {
         case .iosPlatform, .metal, .nxnative: return tr("Download", "Télécharger")
         case .homebrew, .tools: return tr("Install", "Installer")
         }
+    }
+}
+
+/// Under nxnative's row: the repository it is downloaded from, the one the
+/// games are built from, and the choice of it, open on Change…: whom the
+/// games are built for (an iPhone whose GPU reads no BC texture has them
+/// built from nxnative's no-bc variant), and another repository. Chosen
+/// before the download, it is what the step downloads; changed after, the
+/// next build fetches the other one.
+struct BuildSourceChoice: View {
+    @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var bridge: BridgeController
+    @Environment(\.showsBuildSource) private var shown
+    @State private var open: Bool?
+
+    var body: some View {
+        let config = model.config ?? BuilderConfig()
+        let isOpen = open ?? shown
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(BuildSourceChoice.line(BuildFor.choice(config, devices: bridge.devices),
+                                            repository: BuildFor.repository(config, devices: bridge.devices)))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+                Button(isOpen ? tr("Done", "OK") : tr("Change…", "Changer…")) {
+                    withAnimation(.easeInOut(duration: 0.2)) { open = !isOpen }
+                }
+                .buttonStyle(.link)
+                .font(.caption)
+                .disabled(model.config == nil)
+            }
+            if isOpen {
+                VStack(alignment: .leading, spacing: 12) {
+                    BuildForPicker()
+                    Divider()
+                    EngineRepositoryFields(labeled: true)
+                    Text(tr("Chosen before nxnative is downloaded, it is what this step downloads. Changed after, the next build fetches it.",
+                            "Choisi avant que nxnative soit téléchargé, c’est lui que cette étape télécharge. Changé après, la prochaine construction va le chercher."))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(12)
+                .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(nsColor: .controlBackgroundColor)))
+            }
+        }
+        .padding(.top, 2)
+    }
+
+    /// Where nxnative comes from, in the player's words.
+    static func line(_ choice: BuildFor.Choice, repository: (url: String, branch: String)) -> String {
+        let address = BuildFor.address(repository.url)
+        switch choice.kind {
+        case .nxnative:
+            return tr("From nxnative: \(address), branch \(repository.branch).",
+                      "Depuis nxnative : \(address), branche \(repository.branch).")
+        case .noBC:
+            let whom: String
+            if let device = choice.device {
+                whom = tr("for “\(device)”", "pour « \(device) »")
+            } else {
+                let name = choice.model.flatMap(BuildFor.name(of:)) ?? choice.model ?? "iPhone"
+                whom = tr("for the \(name)", "pour l’\(name)")
+            }
+            return tr("From nxnative’s no-bc variant, \(whom): \(address), branch \(repository.branch).",
+                      "Depuis la variante no-bc de nxnative, \(whom) : \(address), branche \(repository.branch).")
+        case .custom:
+            return tr("From your repository: \(address), branch \(repository.branch).",
+                      "Depuis votre dépôt : \(address), branche \(repository.branch).")
+        }
+    }
+}
+
+private struct ShowsBuildSourceKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    /// The gallery's: the choice of nxnative open under its row, as Change…
+    /// opens it.
+    var showsBuildSource: Bool {
+        get { self[ShowsBuildSourceKey.self] }
+        set { self[ShowsBuildSourceKey.self] = newValue }
     }
 }

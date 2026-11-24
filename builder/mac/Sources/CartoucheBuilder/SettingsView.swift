@@ -572,26 +572,11 @@ struct BuildForPicker: View {
 
 struct AdvancedSettings: View {
     @EnvironmentObject private var model: AppModel
-    @State private var url = ""
-    @State private var branch = ""
 
     var body: some View {
         Form {
             Section {
-                TextField(tr("Repository", "Dépôt"), text: $url)
-                    .onSubmit { save() }
-                TextField(tr("Branch", "Branche"), text: $branch)
-                    .onSubmit { save() }
-                HStack {
-                    Button(tr("Back to nxnative’s", "Revenir à celui de nxnative")) {
-                        url = BuilderConfig.engineURL
-                        branch = BuilderConfig.engineBranch
-                        save()
-                    }
-                    Spacer()
-                    Button(tr("Save", "Enregistrer")) { save() }
-                        .disabled(url == model.config?.engineURL && branch == model.config?.engineBranch)
-                }
+                EngineRepositoryFields()
             } header: {
                 Text("nxnative")
             } footer: {
@@ -611,10 +596,67 @@ struct AdvancedSettings: View {
             }
         }
         .formStyle(.grouped)
-        .onAppear {
-            url = model.config?.engineURL ?? BuilderConfig.engineURL
-            branch = model.config?.engineBranch ?? BuilderConfig.engineBranch
+    }
+}
+
+/// The repository and branch nxnative is fetched from: under Advanced, as
+/// rows of its form, and on the setup assistant's tools step, LABELED
+/// beside their fields, before nxnative is downloaded.
+struct EngineRepositoryFields: View {
+    @EnvironmentObject private var model: AppModel
+    var labeled = false
+    @State private var url = ""
+    @State private var branch = ""
+
+    var body: some View {
+        if labeled {
+            VStack(alignment: .leading, spacing: 8) {
+                Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 10, verticalSpacing: 8) {
+                    GridRow {
+                        Text(tr("Repository", "Dépôt"))
+                            .gridColumnAlignment(.trailing)
+                        TextField(tr("Repository", "Dépôt"), text: $url)
+                            .labelsHidden()
+                            .onSubmit { save() }
+                    }
+                    GridRow {
+                        Text(tr("Branch", "Branche"))
+                        TextField(tr("Branch", "Branche"), text: $branch)
+                            .labelsHidden()
+                            .onSubmit { save() }
+                    }
+                }
+                buttons
+            }
+            .onAppear { load() }
+        } else {
+            Group {
+                TextField(tr("Repository", "Dépôt"), text: $url)
+                    .onSubmit { save() }
+                TextField(tr("Branch", "Branche"), text: $branch)
+                    .onSubmit { save() }
+                buttons
+            }
+            .onAppear { load() }
         }
+    }
+
+    private var buttons: some View {
+        HStack {
+            Button(tr("Back to nxnative’s", "Revenir à celui de nxnative")) {
+                url = BuilderConfig.engineURL
+                branch = BuilderConfig.engineBranch
+                save()
+            }
+            Spacer()
+            Button(tr("Save", "Enregistrer")) { save() }
+                .disabled(url == model.config?.engineURL && branch == model.config?.engineBranch)
+        }
+    }
+
+    private func load() {
+        url = model.config?.engineURL ?? BuilderConfig.engineURL
+        branch = model.config?.engineBranch ?? BuilderConfig.engineBranch
     }
 
     private func save() {
