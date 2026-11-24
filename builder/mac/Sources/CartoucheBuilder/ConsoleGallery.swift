@@ -204,7 +204,7 @@ enum ConsoleGallery {
     /// The last report System › Game measurements opens: a made-up session
     /// of the sheet's game, as the console makes them.
     static let lastReport = #"{"schema":1,"kind":"session","id":"6a1d9e3c-0000-4000-8000-000000000048","seq":48,"#
-        + #""install":"8c1f6c2e-7a2f-4e19-8c3d-2f6a9b0e1d7c","cartouche":"0.6.0","device":"Mac16,12","ios":"26.6","language":"fr","#
+        + #""install":"8c1f6c2e-7a2f-4e19-8c3d-2f6a9b0e1d7c","cartouche":"0.6.0","device":"Mac16,12","ios":"26.6","language":"fr","deviceLanguage":"fr","#
         + #""session":"c4d1b8e0-7a2f-4e19-8c3d-2f6a9b0e1d7c","game":"0400C3F00006E000","gameVersion":"1.0.0","#
         + #""nxnative":"6c3aeb3d70a1","nxnativeChanged":false,"settings":{"DM_FPS_TARGET":"60","DM_FULLSCREEN":"1"},"#
         + #""minutes":42,"reader":4,"frames":151200,"targetFps":60,"fps":{"median":60,"low5":58},"#

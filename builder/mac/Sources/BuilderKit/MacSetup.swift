@@ -22,30 +22,36 @@ public enum SetupItem: String, CaseIterable, Identifiable, Sendable {
 
     public var title: String {
         switch self {
-        case .mac: return tr("This Mac", "Ce Mac")
+        case .mac: return tr("This Mac", "Ce Mac", "Este Mac", "Dieser Mac")
         case .xcode: return "Xcode"
-        case .xcodeReady: return tr("Xcode’s first launch", "Premier lancement de Xcode")
-        case .iosPlatform: return tr("Xcode’s iOS platform", "Plateforme iOS de Xcode")
-        case .metal: return tr("Metal toolchain", "Metal toolchain")
+        case .xcodeReady: return tr("Xcode’s first launch", "Premier lancement de Xcode", "Primer inicio de Xcode", "Erster Start von Xcode")
+        case .iosPlatform: return tr("Xcode’s iOS platform", "Plateforme iOS de Xcode", "Plataforma iOS de Xcode", "iOS-Plattform von Xcode")
+        case .metal: return tr("Metal toolchain", "Metal toolchain", "Metal toolchain", "Metal-Toolchain")
         case .homebrew: return "Homebrew"
-        case .tools: return tr("nxnative’s tools", "Outils de nxnative")
+        case .tools: return tr("nxnative’s tools", "Outils de nxnative", "Herramientas de nxnative", "Werkzeuge von nxnative")
         case .nxnative: return "nxnative"
         }
     }
 
     public var explanation: String {
         switch self {
-        case .mac: return tr("macOS 26.6 or later, on Apple silicon.", "macOS 26.6 ou ultérieur, puce Apple.")
-        case .xcode: return tr("Apple’s free developer app, which builds iPhone apps.", "L’app gratuite d’Apple qui construit les apps d’iPhone.")
+        case .mac: return tr("macOS 26.6 or later, on Apple silicon.", "macOS 26.6 ou ultérieur, puce Apple.", "macOS 26.6 o posterior, con chip de Apple.", "macOS 26.6 oder neuer, mit Apple Chip.")
+        case .xcode: return tr("Apple’s free developer app, which builds iPhone apps.", "L’app gratuite d’Apple qui construit les apps d’iPhone.", "La app gratuita de Apple que compila apps de iPhone.", "Die kostenlose App von Apple, die iPhone-Apps erstellt.")
         case .xcodeReady: return tr("Its licence agreed and its parts installed: your Mac’s password, once.",
-                                    "Sa licence acceptée et ses éléments installés : le mot de passe du Mac, une fois.")
-        case .iosPlatform: return tr("What Xcode builds iPhone apps with, a few gigabytes.", "Ce avec quoi Xcode construit les apps d’iPhone, quelques gigaoctets.")
-        case .metal: return tr("Compiles the games’ shaders for the iPhone.", "Compile les shaders des jeux pour l’iPhone.")
+                                    "Sa licence acceptée et ses éléments installés : le mot de passe du Mac, une fois.",
+                                    "Su licencia aceptada y sus componentes instalados: la contraseña del Mac, una vez.",
+                                    "Lizenz akzeptiert und Komponenten installiert: das Passwort des Mac, einmal.")
+        case .iosPlatform: return tr("What Xcode builds iPhone apps with, a few gigabytes.", "Ce avec quoi Xcode construit les apps d’iPhone, quelques gigaoctets.", "Con lo que Xcode compila apps de iPhone, unos pocos gigabytes.", "Womit Xcode iPhone-Apps erstellt, einige Gigabyte.")
+        case .metal: return tr("Compiles the games’ shaders for the iPhone.", "Compile les shaders des jeux pour l’iPhone.", "Compila los shaders de los juegos para el iPhone.", "Kompiliert die Shader der Spiele für das iPhone.")
         case .homebrew: return tr("Installs the free tools below. macOS asks your password in its installer.",
-                                  "Installe les outils gratuits ci-dessous. macOS demande votre mot de passe dans son installeur.")
-        case .tools: return tr("Python, xcodegen, zstd and glslang, from Homebrew.", "Python, xcodegen, zstd et glslang, depuis Homebrew.")
+                                  "Installe les outils gratuits ci-dessous. macOS demande votre mot de passe dans son installeur.",
+                                  "Instala las herramientas gratuitas de abajo. macOS pide tu contraseña en su instalador.",
+                                  "Installiert die kostenlosen Werkzeuge unten. macOS fragt in seinem Installationsprogramm nach deinem Passwort.")
+        case .tools: return tr("Python, xcodegen, zstd and glslang, from Homebrew.", "Python, xcodegen, zstd et glslang, depuis Homebrew.", "Python, xcodegen, zstd y glslang, desde Homebrew.", "Python, xcodegen, zstd und glslang, von Homebrew.")
         case .nxnative: return tr("The project that makes the games native, and its Python environment.",
-                                  "Le projet qui rend les jeux natifs, et son environnement Python.")
+                                  "Le projet qui rend les jeux natifs, et son environnement Python.",
+                                  "El proyecto que hace nativos los juegos, y su entorno de Python.",
+                                  "Das Projekt, das die Spiele nativ macht, und seine Python-Umgebung.")
         }
     }
 
@@ -183,23 +189,25 @@ public final class MacSetup: ObservableObject {
             let version = ProcessInfo.processInfo.operatingSystemVersion
             let text = "macOS \(version.majorVersion).\(version.minorVersion)" + (version.patchVersion > 0 ? ".\(version.patchVersion)" : "")
             guard MacSetup.sysctl("hw.optional.arm64") == 1 else {
-                return .failed(tr("nxnative builds on a Mac with Apple silicon (M1 or later).", "nxnative construit sur un Mac à puce Apple (M1 ou plus récent)."))
+                return .failed(tr("nxnative builds on a Mac with Apple silicon (M1 or later).", "nxnative construit sur un Mac à puce Apple (M1 ou plus récent).", "nxnative compila en un Mac con chip de Apple (M1 o posterior).", "nxnative erstellt auf einem Mac mit Apple Chip (M1 oder neuer)."))
             }
             guard version.majorVersion > 26 || (version.majorVersion == 26 && version.minorVersion >= 6) else {
-                return .missing(tr("\(text): nxnative needs macOS 26.6 or later.", "\(text) : nxnative demande macOS 26.6 ou ultérieur."))
+                return .missing(tr("\(text): nxnative needs macOS 26.6 or later.", "\(text) : nxnative demande macOS 26.6 ou ultérieur.", "\(text): nxnative necesita macOS 26.6 o posterior.", "\(text): nxnative braucht macOS 26.6 oder neuer."))
             }
-            return .ready(text + tr(", Apple silicon", ", puce Apple"))
+            return .ready(text + tr(", Apple silicon", ", puce Apple", ", chip de Apple", ", Apple Chip"))
         case .xcode:
             guard let found = MacSetup.findXcode(wanted: wantedXcode) else {
                 xcode = nil
                 outdatedXcode = nil
-                return .missing(tr("Not installed yet.", "Pas encore installé."))
+                return .missing(tr("Not installed yet.", "Pas encore installé.", "Aún no instalado.", "Noch nicht installiert."))
             }
             xcode = found.path
             guard !MacSetup.older(found.version, than: wantedXcode) else {
                 outdatedXcode = found.version
                 return .missing(tr("Xcode \(found.version): nxnative builds the games’ shaders with the Metal compiler of Xcode \(wantedXcode), which it tested them with. Update Xcode in the App Store.",
-                                   "Xcode \(found.version) : nxnative construit les shaders des jeux avec le compilateur Metal de Xcode \(wantedXcode), avec lequel il les a testés. Mettez Xcode à jour dans l’App Store."))
+                                   "Xcode \(found.version) : nxnative construit les shaders des jeux avec le compilateur Metal de Xcode \(wantedXcode), avec lequel il les a testés. Mettez Xcode à jour dans l’App Store.",
+                                   "Xcode \(found.version): nxnative compila los shaders de los juegos con el compilador Metal de Xcode \(wantedXcode), con el que los probó. Actualiza Xcode en el App Store.",
+                                   "Xcode \(found.version): nxnative kompiliert die Shader der Spiele mit dem Metal-Compiler von Xcode \(wantedXcode), mit dem es sie getestet hat. Aktualisiere Xcode im App Store."))
             }
             outdatedXcode = nil
             return .ready("Xcode \(found.version)")
@@ -207,38 +215,38 @@ public final class MacSetup: ObservableObject {
             guard let xcode else { return .blocked }
             let selected = (try? await Run.program("/usr/bin/xcode-select", ["-p"], timeout: 30))?.text.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             guard selected.hasPrefix(xcode) else {
-                return .missing(tr("Xcode is installed but not chosen for builds yet.", "Xcode est installé mais pas encore choisi pour construire."))
+                return .missing(tr("Xcode is installed but not chosen for builds yet.", "Xcode est installé mais pas encore choisi pour construire.", "Xcode está instalado, pero aún no está elegido para compilar.", "Xcode ist installiert, aber noch nicht zum Erstellen ausgewählt."))
             }
             let launched = try? await Run.program("/usr/bin/xcodebuild", ["-checkFirstLaunchStatus"], timeout: 60)
             let licence = try? await Run.program("/usr/bin/xcodebuild", ["-license", "check"], timeout: 60)
             guard launched?.succeeded == true, licence?.succeeded == true else {
-                return .missing(tr("Its licence is to agree to, once.", "Sa licence est à accepter, une fois."))
+                return .missing(tr("Its licence is to agree to, once.", "Sa licence est à accepter, une fois.", "Hay que aceptar su licencia, una vez.", "Seine Lizenz muss einmal akzeptiert werden."))
             }
-            return .ready(tr("Licence agreed", "Licence acceptée"))
+            return .ready(tr("Licence agreed", "Licence acceptée", "Licencia aceptada", "Lizenz akzeptiert"))
         case .iosPlatform:
             guard let result = try? await Run.program("/usr/bin/xcrun", ["--sdk", "iphoneos", "--show-sdk-version"], timeout: 120), result.succeeded,
                   let version = result.text.split(whereSeparator: \.isNewline).last.map(String.init), !version.isEmpty else {
-                return .missing(tr("To download, a few gigabytes.", "À télécharger, quelques gigaoctets."))
+                return .missing(tr("To download, a few gigabytes.", "À télécharger, quelques gigaoctets.", "Por descargar, unos pocos gigabytes.", "Herunterzuladen, einige Gigabyte."))
             }
             return .ready("iOS \(version)")
         case .metal:
             guard let result = try? await Run.program("/usr/bin/xcrun", ["-sdk", "iphoneos", "metal", "--version"], timeout: 120), result.succeeded,
                   let first = result.text.split(whereSeparator: \.isNewline).first.map(String.init) else {
-                return .missing(tr("To download.", "À télécharger."))
+                return .missing(tr("To download.", "À télécharger.", "Por descargar.", "Herunterzuladen."))
             }
             return .ready(MacSetup.shortMetal(first))
         case .homebrew:
             guard FileManager.default.isExecutableFile(atPath: MacSetup.brew) else {
-                return .missing(tr("Not installed yet.", "Pas encore installé."))
+                return .missing(tr("Not installed yet.", "Pas encore installé.", "Aún no instalado.", "Noch nicht installiert."))
             }
-            return .ready(tr("Installed", "Installé"))
+            return .ready(tr("Installed", "Installé", "Instalado", "Installiert"))
         case .tools:
             let missing = MacSetup.missingFormulae()
             python = await PythonFinder.find()
             var wanted = missing.map(\.1)
             if python == nil { wanted.insert("python@3.13", at: 0) }
             guard wanted.isEmpty else {
-                return .missing(tr("To install: ", "À installer : ") + wanted.joined(separator: ", ") + ".")
+                return .missing(tr("To install: ", "À installer : ", "Por instalar: ", "Zu installieren: ") + wanted.joined(separator: ", ") + ".")
             }
             var version = "3"
             if let python, let found = await PythonFinder.version(python.path) { version = found }
@@ -253,12 +261,12 @@ public final class MacSetup: ObservableObject {
                 }
                 let venv = doctor.checks.first { $0.key == "venv" }
                 guard doctor.engine == true, venv?.ok ?? false else {
-                    return .missing(tr("To download, with its Python environment.", "À télécharger, avec son environnement Python."))
+                    return .missing(tr("To download, with its Python environment.", "À télécharger, avec son environnement Python.", "Por descargar, con su entorno de Python.", "Herunterzuladen, mit seiner Python-Umgebung."))
                 }
                 if let blocking = doctor.checks.first(where: { !$0.ok && $0.blocking }) {
                     return .failed("\(blocking.label) : \(blocking.fix)")
                 }
-                return .ready(tr("Downloaded, environment ready", "Téléchargé, environnement prêt"))
+                return .ready(tr("Downloaded, environment ready", "Téléchargé, environnement prêt", "Descargado, entorno listo", "Heruntergeladen, Umgebung bereit"))
             } catch {
                 return .failed(error.localizedDescription)
             }
@@ -311,7 +319,7 @@ public final class MacSetup: ObservableObject {
         case .ready: outcome = "ready"
         case .waiting: outcome = "waiting"
         case .failed: outcome = "failed"
-        case .missing(let text): outcome = text.hasPrefix(tr("Cancelled", "Annulé")) ? "cancelled" : "missing"
+        case .missing(let text): outcome = text.hasPrefix(tr("Cancelled", "Annulé", "Cancelado", "Abgebrochen")) ? "cancelled" : "missing"
         default: outcome = Task.isCancelled ? "cancelled" : "missing"
         }
         onStep?(item, outcome, Date().timeIntervalSince(started))
@@ -328,38 +336,44 @@ public final class MacSetup: ObservableObject {
         switch item {
         case .mac:
             NSWorkspace.shared.open(MacSetup.softwareUpdate)
-            states[item] = .waiting(tr("Update macOS in System Settings, then come back here.", "Mettez macOS à jour dans Réglages Système, puis revenez ici."))
+            states[item] = .waiting(tr("Update macOS in System Settings, then come back here.", "Mettez macOS à jour dans Réglages Système, puis revenez ici.", "Actualiza macOS en Ajustes del Sistema y vuelve aquí.", "Aktualisiere macOS in den Systemeinstellungen und komm dann hierher zurück."))
             return false
         case .xcode:
             NSWorkspace.shared.open(MacSetup.xcodeStore)
             if outdatedXcode != nil {
                 states[item] = .waiting(tr("Update Xcode in the App Store: Cartouche goes on by itself once Xcode \(wantedXcode) or later is there.",
-                                           "Mettez Xcode à jour dans l’App Store : Cartouche continue tout seul une fois Xcode \(wantedXcode) ou plus récent là."))
+                                           "Mettez Xcode à jour dans l’App Store : Cartouche continue tout seul une fois Xcode \(wantedXcode) ou plus récent là.",
+                                           "Actualiza Xcode en el App Store: Cartouche sigue solo en cuanto esté Xcode \(wantedXcode) o posterior.",
+                                           "Aktualisiere Xcode im App Store: Cartouche macht von selbst weiter, sobald Xcode \(wantedXcode) oder neuer da ist."))
             } else {
                 states[item] = .waiting(tr("Install Xcode from the App Store: Cartouche goes on by itself once it is there.",
-                                           "Installez Xcode depuis l’App Store : Cartouche continue tout seul une fois qu’il est là."))
+                                           "Installez Xcode depuis l’App Store : Cartouche continue tout seul une fois qu’il est là.",
+                                           "Instala Xcode desde el App Store: Cartouche sigue solo en cuanto esté.",
+                                           "Installiere Xcode aus dem App Store: Cartouche macht von selbst weiter, sobald es da ist."))
             }
             return await wait(for: item, every: 15)
         case .xcodeReady:
             guard let xcode else { return false }
-            states[item] = .working(tr("macOS asks your password…", "macOS demande votre mot de passe…"), nil)
+            states[item] = .working(tr("macOS asks your password…", "macOS demande votre mot de passe…", "macOS pide tu contraseña…", "macOS fragt nach deinem Passwort …"), nil)
             let developer = "\(xcode)/Contents/Developer"
             let tool = "\(developer)/usr/bin/xcodebuild"
             let command = "/usr/bin/xcode-select -s \(MacSetup.quoted(developer)) && \(MacSetup.quoted(tool)) -license accept && \(MacSetup.quoted(tool)) -runFirstLaunch"
-            let result = await administrator(command, prompt: tr("Cartouche readies Xcode to build your games.", "Cartouche prépare Xcode pour construire vos jeux."))
+            let result = await administrator(command, prompt: tr("Cartouche readies Xcode to build your games.", "Cartouche prépare Xcode pour construire vos jeux.", "Cartouche prepara Xcode para compilar tus juegos.", "Cartouche bereitet Xcode zum Erstellen deiner Spiele vor."))
             return await finish(item, result)
         case .iosPlatform:
-            return await runStep(item, "/usr/bin/xcodebuild", ["-downloadPlatform", "iOS"], working: tr("Downloading the iOS platform…", "Téléchargement de la plateforme iOS…"))
+            return await runStep(item, "/usr/bin/xcodebuild", ["-downloadPlatform", "iOS"], working: tr("Downloading the iOS platform…", "Téléchargement de la plateforme iOS…", "Descargando la plataforma iOS…", "iOS-Plattform wird geladen …"))
         case .metal:
-            return await runStep(item, "/usr/bin/xcodebuild", ["-downloadComponent", "MetalToolchain"], working: tr("Downloading the Metal toolchain…", "Téléchargement de la Metal toolchain…"))
+            return await runStep(item, "/usr/bin/xcodebuild", ["-downloadComponent", "MetalToolchain"], working: tr("Downloading the Metal toolchain…", "Téléchargement de la Metal toolchain…", "Descargando la Metal toolchain…", "Metal-Toolchain wird geladen …"))
         case .homebrew:
-            states[item] = .working(tr("Downloading Homebrew’s installer…", "Téléchargement de l’installeur de Homebrew…"), nil)
+            states[item] = .working(tr("Downloading Homebrew’s installer…", "Téléchargement de l’installeur de Homebrew…", "Descargando el instalador de Homebrew…", "Installationsprogramm von Homebrew wird geladen …"), nil)
             do {
                 let package = try await MacSetup.downloadHomebrew()
                 say(package.lastPathComponent)
                 NSWorkspace.shared.open(package)
                 states[item] = .waiting(tr("Follow Homebrew’s installer: Cartouche goes on by itself after.",
-                                           "Suivez l’installeur de Homebrew : Cartouche continue tout seul après."))
+                                           "Suivez l’installeur de Homebrew : Cartouche continue tout seul après.",
+                                           "Sigue el instalador de Homebrew: Cartouche sigue solo después.",
+                                           "Folge dem Installationsprogramm von Homebrew: Cartouche macht danach von selbst weiter."))
                 return await wait(for: item, every: 5)
             } catch {
                 states[item] = .failed(error.localizedDescription)
@@ -371,11 +385,11 @@ public final class MacSetup: ObservableObject {
             if await PythonFinder.find() == nil { formulae.insert("python@3.13", at: 0) }
             guard !formulae.isEmpty else { return true }
             return await runStep(item, MacSetup.brew, ["install"] + formulae,
-                                 working: tr("Installing ", "Installation de ") + formulae.joined(separator: ", ") + "…")
+                                 working: tr("Installing ", "Installation de ", "Instalando ", "Installiere ") + formulae.joined(separator: ", ") + "…")
         case .nxnative:
             guard let python = await PythonFinder.find(), let engine = makeEngine(python) else { return false }
             self.python = python
-            states[item] = .working(tr("Downloading nxnative…", "Téléchargement de nxnative…"), nil)
+            states[item] = .working(tr("Downloading nxnative…", "Téléchargement de nxnative…", "Descargando nxnative…", "nxnative wird geladen …"), nil)
             do {
                 _ = try await engine.setup { [weak self] line in
                     Task { @MainActor in
@@ -417,9 +431,9 @@ public final class MacSetup: ObservableObject {
         if let result, !result.succeeded {
             let tail = result.tail(3)
             if tail.contains("-128") || tail.localizedCaseInsensitiveContains("User canceled") {
-                states[item] = .missing(tr("Cancelled: the button starts again.", "Annulé : le bouton recommence."))
+                states[item] = .missing(tr("Cancelled: the button starts again.", "Annulé : le bouton recommence.", "Cancelado: el botón vuelve a empezar.", "Abgebrochen: Die Taste beginnt von vorn."))
             } else {
-                states[item] = .failed(tail.isEmpty ? tr("It did not work.", "Ça n’a pas marché.") : tail)
+                states[item] = .failed(tail.isEmpty ? tr("It did not work.", "Ça n’a pas marché.", "No ha funcionado.", "Das hat nicht funktioniert.") : tail)
             }
         }
         return false
@@ -556,7 +570,7 @@ public final class MacSetup: ObservableObject {
         let release = try JSONDecoder().decode(Release.self, from: data)
         guard let asset = release.assets.first(where: { $0.name.hasSuffix(".pkg") }), let url = URL(string: asset.browser_download_url),
               url.host == "github.com" || url.host?.hasSuffix(".githubusercontent.com") == true else {
-            throw SetupError(tr("Homebrew’s installer was not found.", "L’installeur de Homebrew est introuvable."))
+            throw SetupError(tr("Homebrew’s installer was not found.", "L’installeur de Homebrew est introuvable.", "No se encuentra el instalador de Homebrew.", "Das Installationsprogramm von Homebrew wurde nicht gefunden."))
         }
         let (downloaded, _) = try await URLSession.shared.download(from: url)
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent("Cartouche Builder", isDirectory: true)
@@ -566,7 +580,7 @@ public final class MacSetup: ObservableObject {
         try FileManager.default.moveItem(at: downloaded, to: package)
         let assessed = try await Run.program("/usr/sbin/spctl", ["--assess", "--type", "install", package.path], timeout: 120)
         guard assessed.succeeded else {
-            throw SetupError(tr("macOS did not accept Homebrew’s installer: ", "macOS n’a pas accepté l’installeur de Homebrew : ") + assessed.tail(2))
+            throw SetupError(tr("macOS did not accept Homebrew’s installer: ", "macOS n’a pas accepté l’installeur de Homebrew : ", "macOS no aceptó el instalador de Homebrew: ", "macOS hat das Installationsprogramm von Homebrew nicht akzeptiert: ") + assessed.tail(2))
         }
         return package
     }

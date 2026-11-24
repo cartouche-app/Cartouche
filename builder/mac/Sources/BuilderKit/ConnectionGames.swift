@@ -177,12 +177,14 @@ extension ConnectionGamesError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .offline:
-            return tr("The iPhone’s games folder does not answer from this Mac.", "Le dossier des jeux de l’iPhone ne répond pas depuis ce Mac.")
+            return tr("The iPhone’s games folder does not answer from this Mac.", "Le dossier des jeux de l’iPhone ne répond pas depuis ce Mac.", "La carpeta de juegos del iPhone no responde desde este Mac.", "Der Spieleordner des iPhones antwortet nicht von diesem Mac aus.")
         case .readOnly:
-            return tr("Your account may only read the iPhone’s games folder.", "Votre compte ne peut que lire le dossier des jeux de l’iPhone.")
+            return tr("Your account may only read the iPhone’s games folder.", "Votre compte ne peut que lire le dossier des jeux de l’iPhone.", "Tu cuenta solo puede leer la carpeta de juegos del iPhone.", "Dein Account darf den Spieleordner des iPhones nur lesen.")
         case let .noRoom(needed, free):
             return tr("Not enough room: \(Format.size(needed)) needed, \(Format.size(free)) free.",
-                      "Pas assez de place : \(Format.size(needed)) nécessaires, \(Format.size(free)) libres.")
+                      "Pas assez de place : \(Format.size(needed)) nécessaires, \(Format.size(free)) libres.",
+                      "No hay espacio suficiente: se necesitan \(Format.size(needed)), quedan \(Format.size(free)) libres.",
+                      "Nicht genug Platz: \(Format.size(needed)) benötigt, \(Format.size(free)) frei.")
         }
     }
 }
@@ -380,10 +382,10 @@ extension ConnectionGames {
     /// folder, or both.
     public static func shownPlace(kept: String?, offers: String?) -> String {
         switch (kept, offers) {
-        case let (kept?, offers?): return kept == offers ? kept : tr("your games folders", "vos dossiers de jeux")
+        case let (kept?, offers?): return kept == offers ? kept : tr("your games folders", "vos dossiers de jeux", "tus carpetas de juegos", "deine Spieleordner")
         case let (kept?, nil): return kept
         case let (nil, offers?): return offers
-        case (nil, nil): return tr("the games folder", "le dossier des jeux")
+        case (nil, nil): return tr("the games folder", "le dossier des jeux", "la carpeta de juegos", "der Spieleordner")
         }
     }
 }

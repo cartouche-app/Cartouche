@@ -112,11 +112,11 @@ struct MainView: View {
         // either.
         .confirmationDialog(model.askUnbuilt?.title ?? "", isPresented: Binding(get: { model.askUnbuilt != nil }, set: { if !$0 { model.askUnbuilt = nil } }),
                             presenting: model.askUnbuilt) { ask in
-            Button(tr("Build anyway", "Construire quand même")) { model.build(ask.games, force: ask.force, confirmed: true) }
+            Button(tr("Build anyway", "Construire quand même", "Compilar de todos modos", "Trotzdem erstellen")) { model.build(ask.games, force: ask.force, confirmed: true) }
             if !ask.others.isEmpty {
-                Button(tr("Build only the others", "Construire seulement les autres")) { model.build(ask.others, force: ask.force, confirmed: true) }
+                Button(tr("Build only the others", "Construire seulement les autres", "Compilar solo los demás", "Nur die anderen erstellen")) { model.build(ask.others, force: ask.force, confirmed: true) }
             }
-            Button(tr("Cancel", "Annuler"), role: .cancel) {}
+            Button(tr("Cancel", "Annuler", "Cancelar", "Abbrechen"), role: .cancel) {}
         } message: { ask in
             Text(model.unbuiltMessage(ask))
         }
@@ -182,7 +182,7 @@ struct InterfaceSwitch: View {
     @EnvironmentObject private var model: AppModel
 
     var body: some View {
-        Picker(tr("Show", "Afficher"), selection: Binding(get: { model.interface }, set: { model.show($0) })) {
+        Picker(tr("Show", "Afficher", "Mostrar", "Zeigen"), selection: Binding(get: { model.interface }, set: { model.show($0) })) {
             ForEach(AppInterface.allCases) { interface in
                 Text(interface.title).tag(interface)
             }
@@ -190,7 +190,7 @@ struct InterfaceSwitch: View {
         .pickerStyle(.segmented)
         .labelsHidden()
         .fixedSize()
-        .help(tr("Cartouche’s console, or the builder (⌘1, ⌘2)", "La console de Cartouche, ou le Builder (⌘1, ⌘2)"))
+        .help(tr("Cartouche’s console, or the builder (⌘1, ⌘2)", "La console de Cartouche, ou le Builder (⌘1, ⌘2)", "La consola de Cartouche, o el Builder (⌘1, ⌘2)", "Die Konsole von Cartouche oder der Builder (⌘1, ⌘2)"))
     }
 }
 
@@ -350,7 +350,8 @@ enum ConsoleLink {
         console.onMeasuresReport = { [weak telemetry] make in
             telemetry?.report { context, seq in
                 make(CartoucheMacTelemetryContext(install: context.install, version: context.cartouche, device: context.device,
-                                                  system: context.ios, language: context.language), seq)
+                                                  system: context.ios, language: context.language,
+                                                  deviceLanguage: context.deviceLanguage), seq)
                     .map { (id: $0.id, body: $0.body) }
             }
         }
@@ -516,11 +517,11 @@ enum ConsoleLink {
             // The iPhone's, on a connection: by the connection's name.
             if let connection = folder.connection {
                 return CartoucheMacSavesFolder(name: CartoucheMacConsole.shared.connectionName(connection)
-                                                   ?? tr("the saves folder", "le dossier des sauvegardes"),
+                                                   ?? tr("the saves folder", "le dossier des sauvegardes", "la carpeta de partidas guardadas", "der Spielstandordner"),
                                                path: folder.path, isAway: away, connection: connection)
             }
-            return CartoucheMacSavesFolder(name: folder.path.hasPrefix("/Volumes/") ? tr("the NAS", "le NAS")
-                                               : tr("the saves folder", "le dossier des sauvegardes"),
+            return CartoucheMacSavesFolder(name: folder.path.hasPrefix("/Volumes/") ? tr("the NAS", "le NAS", "el NAS", "das NAS")
+                                               : tr("the saves folder", "le dossier des sauvegardes", "la carpeta de partidas guardadas", "der Spielstandordner"),
                                            path: folder.path, isAway: away)
         }
         var saves: [String: CartoucheMacGameSaves] = [:]
@@ -535,7 +536,7 @@ enum ConsoleLink {
                 lastSync: [games.checked[titleID], moved].compactMap { $0 }.max(),
                 fetched: news?.fetchedDate, kept: news?.keptDate, waiting: event?.offline == true,
                 failure: event?.failed == true
-                    ? event?.failure ?? tr("Its saves could not be kept in step.", "Ses sauvegardes n’ont pas pu être mises en phase.")
+                    ? event?.failure ?? tr("Its saves could not be kept in step.", "Ses sauvegardes n’ont pas pu être mises en phase.", "Sus partidas guardadas no se pudieron sincronizar.", "Seine Spielstände konnten nicht abgeglichen werden.")
                     : nil,
                 inCloud: games.cloud[titleID] != nil, newer: held?.newer, game: held?.game)
         }

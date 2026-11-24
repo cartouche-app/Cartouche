@@ -385,7 +385,7 @@ public final class Updater: ObservableObject {
             if automatic || force { await download(newest) }
         } catch {
             if force {
-                state = .failed(tr("GitHub did not answer: ", "GitHub n’a pas répondu : ") + error.localizedDescription)
+                state = .failed(tr("GitHub did not answer: ", "GitHub n’a pas répondu : ", "GitHub no respondió: ", "GitHub hat nicht geantwortet: ") + error.localizedDescription)
             } else {
                 // A check the app makes by itself fails whenever the Mac is
                 // offline: nothing to say.
@@ -434,18 +434,18 @@ public final class Updater: ObservableObject {
 
     nonisolated private static func fetch(_ release: BuilderRelease, to destination: URL, session: URLSession) async throws {
         guard release.size <= 800_000_000 else {
-            throw UpdateError(tr("This update is too big to be right: it was not downloaded.", "Cette mise à jour est trop grosse pour être la bonne : elle n’a pas été téléchargée."))
+            throw UpdateError(tr("This update is too big to be right: it was not downloaded.", "Cette mise à jour est trop grosse pour être la bonne : elle n’a pas été téléchargée.", "Esta actualización es demasiado grande para ser correcta: no se ha descargado.", "Dieses Update ist zu groß, um das richtige zu sein: Es wurde nicht geladen."))
         }
         let (text, sumResponse) = try await session.data(from: release.checksum)
         try answered(sumResponse)
         guard let expected = BuilderReleases.checksum(in: String(decoding: text, as: UTF8.self)) else {
-            throw UpdateError(tr("The update has no valid checksum.", "La mise à jour n’a pas de somme de contrôle valide."))
+            throw UpdateError(tr("The update has no valid checksum.", "La mise à jour n’a pas de somme de contrôle valide.", "La actualización no tiene una suma de comprobación válida.", "Das Update hat keine gültige Prüfsumme."))
         }
         let (temporary, response) = try await session.download(from: release.image)
         defer { try? FileManager.default.removeItem(at: temporary) }
         try answered(response)
         guard try sha256(of: temporary) == expected else {
-            throw UpdateError(tr("The update arrived damaged: it downloads again at the next check.", "La mise à jour est arrivée abîmée : elle se télécharge à nouveau à la prochaine vérification."))
+            throw UpdateError(tr("The update arrived damaged: it downloads again at the next check.", "La mise à jour est arrivée abîmée : elle se télécharge à nouveau à la prochaine vérification.", "La actualización llegó dañada: se vuelve a descargar en la próxima comprobación.", "Das Update kam beschädigt an: Es wird bei der nächsten Prüfung erneut geladen."))
         }
         let manager = FileManager.default
         try manager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -474,7 +474,7 @@ public final class Updater: ObservableObject {
 
     nonisolated private static func answered(_ response: URLResponse) throws {
         if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-            throw UpdateError(tr("GitHub answered \(http.statusCode).", "GitHub a répondu \(http.statusCode)."))
+            throw UpdateError(tr("GitHub answered \(http.statusCode).", "GitHub a répondu \(http.statusCode).", "GitHub respondió \(http.statusCode).", "GitHub hat \(http.statusCode) geantwortet."))
         }
     }
 
@@ -492,7 +492,9 @@ public final class Updater: ObservableObject {
 
     public static var moveFirst: String {
         tr("Drag Cartouche to Applications and open it from there: it can then update itself.",
-           "Glissez Cartouche dans Applications et ouvrez-le de là : il pourra alors se mettre à jour.")
+           "Glissez Cartouche dans Applications et ouvrez-le de là : il pourra alors se mettre à jour.",
+           "Arrastra Cartouche a Aplicaciones y ábrelo desde allí: así podrá actualizarse solo.",
+           "Zieh Cartouche in „Programme“ und öffne es von dort: Dann kann es sich selbst aktualisieren.")
     }
 
     /// Installs the update when nothing runs and no window is open, and
@@ -509,7 +511,7 @@ public final class Updater: ObservableObject {
     public func install(relaunch: Bool, quietly: Bool = false) async -> Bool {
         guard case let .ready(release) = state else { return false }
         guard !isBuilding() else {
-            state = .failed(tr("A build is running: the update installs once it has ended.", "Une construction est en cours : la mise à jour s’installe une fois qu’elle est finie."))
+            state = .failed(tr("A build is running: the update installs once it has ended.", "Une construction est en cours : la mise à jour s’installe une fois qu’elle est finie.", "Hay una compilación en curso: la actualización se instala cuando termine.", "Ein Build läuft: Das Update wird installiert, sobald er beendet ist."))
             return false
         }
         guard !runsFromDiskImage else {
@@ -521,7 +523,7 @@ public final class Updater: ObservableObject {
             let image = image(release)
             guard try Self.verify(image) else {
                 clean(keeping: nil)
-                throw UpdateError(tr("The downloaded update changed: it downloads again at the next check.", "La mise à jour téléchargée a changé : elle se télécharge à nouveau à la prochaine vérification."))
+                throw UpdateError(tr("The downloaded update changed: it downloads again at the next check.", "La mise à jour téléchargée a changé : elle se télécharge à nouveau à la prochaine vérification.", "La actualización descargada ha cambiado: se vuelve a descargar en la próxima comprobación.", "Das geladene Update hat sich verändert: Es wird bei der nächsten Prüfung erneut geladen."))
             }
             try await Self.put(image, over: app, version: release.version, identifier: identifier)
         } catch {
@@ -546,7 +548,7 @@ public final class Updater: ObservableObject {
               let plist = try? PropertyListSerialization.propertyList(from: attached.output, format: nil) as? [String: Any],
               let entities = plist["system-entities"] as? [[String: Any]],
               let point = entities.compactMap({ $0["mount-point"] as? String }).first else {
-            throw UpdateError(tr("The update’s disk image does not open: ", "L’image disque de la mise à jour ne s’ouvre pas : ") + attached.tail(2))
+            throw UpdateError(tr("The update’s disk image does not open: ", "L’image disque de la mise à jour ne s’ouvre pas : ", "La imagen de disco de la actualización no se abre: ", "Das Disk-Image des Updates lässt sich nicht öffnen: ") + attached.tail(2))
         }
         let mount = URL(fileURLWithPath: point, isDirectory: true)
         do {
@@ -554,7 +556,7 @@ public final class Updater: ObservableObject {
             try check(found, version: version, identifier: identifier)
             let signature = try await Run.program("/usr/bin/codesign", ["--verify", "--deep", "--strict", found.path], timeout: 300)
             guard signature.succeeded else {
-                throw UpdateError(tr("The new version’s signature is not intact: ", "La signature de la nouvelle version n’est pas intacte : ") + signature.tail(2))
+                throw UpdateError(tr("The new version’s signature is not intact: ", "La signature de la nouvelle version n’est pas intacte : ", "La firma de la nueva versión no está intacta: ", "Die Signatur der neuen Version ist nicht intakt: ") + signature.tail(2))
             }
             try await replace(app, with: found)
         } catch {
@@ -578,7 +580,7 @@ public final class Updater: ObservableObject {
         if let other = try manager.contentsOfDirectory(atPath: mount.path).first(where: { $0.hasSuffix(".app") }) {
             return mount.appendingPathComponent(other)
         }
-        throw UpdateError(tr("The update’s disk image has no app.", "L’image disque de la mise à jour n’a pas d’app."))
+        throw UpdateError(tr("The update’s disk image has no app.", "L’image disque de la mise à jour n’a pas d’app.", "La imagen de disco de la actualización no contiene ninguna app.", "Das Disk-Image des Updates enthält keine App."))
     }
 
     /// The new app is Cartouche Builder, at the version its release names,
@@ -586,17 +588,19 @@ public final class Updater: ObservableObject {
     nonisolated static func check(_ found: URL, version: String, identifier: String) throws {
         let info = NSDictionary(contentsOf: found.appendingPathComponent("Contents/Info.plist")) as? [String: Any] ?? [:]
         guard info["CFBundleIdentifier"] as? String == identifier else {
-            throw UpdateError(tr("The update’s app is not Cartouche.", "L’app de la mise à jour n’est pas Cartouche."))
+            throw UpdateError(tr("The update’s app is not Cartouche.", "L’app de la mise à jour n’est pas Cartouche.", "La app de la actualización no es Cartouche.", "Die App des Updates ist nicht Cartouche."))
         }
         guard info["CFBundleShortVersionString"] as? String == version else {
-            throw UpdateError(tr("The update’s app is not version \(version).", "L’app de la mise à jour n’est pas la version \(version)."))
+            throw UpdateError(tr("The update’s app is not version \(version).", "L’app de la mise à jour n’est pas la version \(version).", "La app de la actualización no es la versión \(version).", "Die App des Updates ist nicht Version \(version)."))
         }
         if let minimum = info["LSMinimumSystemVersion"] as? String {
             let system = ProcessInfo.processInfo.operatingSystemVersion
             let running = "\(system.majorVersion).\(system.minorVersion).\(system.patchVersion)"
             if BuilderVersion.isHigher(minimum, than: running) {
                 throw UpdateError(tr("Version \(version) needs macOS \(minimum): update the Mac first.",
-                                     "La version \(version) demande macOS \(minimum) : mettez d’abord le Mac à jour."))
+                                     "La version \(version) demande macOS \(minimum) : mettez d’abord le Mac à jour.",
+                                     "La versión \(version) necesita macOS \(minimum): actualiza primero el Mac.",
+                                     "Version \(version) braucht macOS \(minimum): Aktualisiere zuerst den Mac."))
             }
         }
     }
@@ -615,18 +619,18 @@ public final class Updater: ObservableObject {
             let copied = try await Run.program("/usr/bin/ditto", [found.path, staged.path], timeout: 900)
             guard copied.succeeded else {
                 try? manager.removeItem(at: staged)
-                throw UpdateError(tr("The new version could not be copied: ", "La nouvelle version n’a pas pu être copiée : ") + copied.tail(2))
+                throw UpdateError(tr("The new version could not be copied: ", "La nouvelle version n’a pas pu être copiée : ", "No se pudo copiar la nueva versión: ", "Die neue Version konnte nicht kopiert werden: ") + copied.tail(2))
             }
             guard rename(app.path, old.path) == 0 else {
                 let reason = String(cString: strerror(errno))
                 try? manager.removeItem(at: staged)
-                throw UpdateError(tr("The app could not be replaced: ", "L’app n’a pas pu être remplacée : ") + reason)
+                throw UpdateError(tr("The app could not be replaced: ", "L’app n’a pas pu être remplacée : ", "No se pudo sustituir la app: ", "Die App konnte nicht ersetzt werden: ") + reason)
             }
             guard rename(staged.path, app.path) == 0 else {
                 let reason = String(cString: strerror(errno))
                 _ = rename(old.path, app.path)
                 try? manager.removeItem(at: staged)
-                throw UpdateError(tr("The app could not be replaced: ", "L’app n’a pas pu être remplacée : ") + reason)
+                throw UpdateError(tr("The app could not be replaced: ", "L’app n’a pas pu être remplacée : ", "No se pudo sustituir la app: ", "Die App konnte nicht ersetzt werden: ") + reason)
             }
             try? manager.removeItem(at: old)
             return
@@ -634,15 +638,15 @@ public final class Updater: ObservableObject {
         let q = { (url: URL) in MacSetup.quoted(url.path) }
         let script = "set -e; /bin/rm -rf \(q(staged)); /usr/bin/ditto \(q(found)) \(q(staged)); /bin/mv \(q(app)) \(q(old)); "
             + "if ! /bin/mv \(q(staged)) \(q(app)); then /bin/mv \(q(old)) \(q(app)); exit 1; fi; /bin/rm -rf \(q(old))"
-        let prompt = tr("Cartouche installs its update.", "Cartouche installe sa mise à jour.")
+        let prompt = tr("Cartouche installs its update.", "Cartouche installe sa mise à jour.", "Cartouche instala su actualización.", "Cartouche installiert sein Update.")
         let command = "do shell script \"\(MacSetup.escaped(script))\" with prompt \"\(MacSetup.escaped(prompt))\" with administrator privileges"
         let result = try await Run.program("/usr/bin/osascript", ["-e", command], timeout: 900)
         guard result.succeeded else {
             let tail = result.tail(2)
             if tail.contains("-128") || tail.localizedCaseInsensitiveContains("User canceled") {
-                throw UpdateError(tr("Cancelled: the update waits for the next time.", "Annulé : la mise à jour attend la prochaine fois."))
+                throw UpdateError(tr("Cancelled: the update waits for the next time.", "Annulé : la mise à jour attend la prochaine fois.", "Cancelado: la actualización espera a la próxima vez.", "Abgebrochen: Das Update wartet auf das nächste Mal."))
             }
-            throw UpdateError(tr("The app could not be replaced: ", "L’app n’a pas pu être remplacée : ") + tail)
+            throw UpdateError(tr("The app could not be replaced: ", "L’app n’a pas pu être remplacée : ", "No se pudo sustituir la app: ", "Die App konnte nicht ersetzt werden: ") + tail)
         }
     }
 

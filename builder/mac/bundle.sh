@@ -27,7 +27,8 @@ swift build -c release --arch arm64 --package-path "$here"
 binary="$(swift build -c release --arch arm64 --package-path "$here" --show-bin-path)/CartoucheBuilder"
 
 rm -rf "$app"
-mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources/engine" "$app/Contents/Resources/en.lproj" "$app/Contents/Resources/fr.lproj"
+mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources/engine" "$app/Contents/Resources/en.lproj" "$app/Contents/Resources/fr.lproj" \
+  "$app/Contents/Resources/es.lproj" "$app/Contents/Resources/de.lproj"
 cp "$binary" "$app/Contents/MacOS/Cartouche"
 cp -R "$builder/cartouche_builder" "$app/Contents/Resources/engine/"
 find "$app/Contents/Resources/engine" -name __pycache__ -type d -prune -exec rm -rf {} +
@@ -55,13 +56,19 @@ done
 iconutil -c icns "$icons/AppIcon.iconset" -o "$app/Contents/Resources/AppIcon.icns"
 
 # What macOS says when the bridge first listens on the network, or the
-# console first reaches the player's NAS or server, in French for a Mac in
-# French.
+# console first reaches the player's NAS or server, in French, Spanish or
+# German for a Mac in one of them.
 cat >"$app/Contents/Resources/en.lproj/InfoPlist.strings" <<'STRINGS'
 "NSLocalNetworkUsageDescription" = "Cartouche on your iPhone finds this Mac on your Wi-Fi to install your games from it and keep your saves here, and Cartouche’s console reaches your NAS and your servers there.";
 STRINGS
 cat >"$app/Contents/Resources/fr.lproj/InfoPlist.strings" <<'STRINGS'
 "NSLocalNetworkUsageDescription" = "Cartouche sur votre iPhone trouve ce Mac sur votre Wi-Fi pour y installer vos jeux et y garder vos sauvegardes, et la console de Cartouche y atteint votre NAS et vos serveurs.";
+STRINGS
+cat >"$app/Contents/Resources/es.lproj/InfoPlist.strings" <<'STRINGS'
+"NSLocalNetworkUsageDescription" = "Cartouche en tu iPhone encuentra este Mac en tu Wi-Fi para instalar tus juegos desde él y guardar aquí tus partidas guardadas, y la consola de Cartouche llega allí a tu NAS y a tus servidores.";
+STRINGS
+cat >"$app/Contents/Resources/de.lproj/InfoPlist.strings" <<'STRINGS'
+"NSLocalNetworkUsageDescription" = "Cartouche auf deinem iPhone findet diesen Mac in deinem WLAN, um deine Spiele von ihm zu installieren und deine Spielstände hier aufzubewahren, und die Konsole von Cartouche erreicht dort dein NAS und deine Server.";
 STRINGS
 
 cat >"$app/Contents/Info.plist" <<PLIST
@@ -75,6 +82,8 @@ cat >"$app/Contents/Info.plist" <<PLIST
   <array>
     <string>en</string>
     <string>fr</string>
+    <string>es</string>
+    <string>de</string>
   </array>
   <key>CFBundleDisplayName</key>
   <string>Cartouche</string>

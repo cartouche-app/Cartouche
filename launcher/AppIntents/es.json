@@ -1,0 +1,18 @@
+{
+  "comment": "The Spanish of Cartouche's App Intents (launcher/Sources/CartoucheShortcuts.swift), as fr.json is their French: app/scripts/app_intents.py writes strings into the app's es.lproj/Localizable.strings and phrases into its AppShortcuts.strings. Each key is the English as the intents give it, a phrase with its game as ${game} and Cartouche's name as ${applicationName}, which every phrase holds, as Siri needs it. The build stops when a title or a phrase of the intents has no Spanish here (app/tests/test_app_intents.py checks it on Linux too).",
+  "strings": {
+    "Play a Game": "Jugar a un juego",
+    "Opens Cartouche and starts one of your games, as Play does.": "Abre Cartouche e inicia uno de tus juegos, como Jugar.",
+    "Game": "Juego",
+    "Which game?": "¿Qué juego?",
+    "Play ${game}": "Jugar a ${game}"
+  },
+  "phrases": {
+    "Play ${game} in ${applicationName}": "Juega a ${game} en ${applicationName}",
+    "Play ${game} with ${applicationName}": "Juega a ${game} con ${applicationName}",
+    "Start ${game} in ${applicationName}": "Inicia ${game} en ${applicationName}",
+    "Launch ${game} in ${applicationName}": "Lanza ${game} en ${applicationName}",
+    "Open ${game} in ${applicationName}": "Abre ${game} en ${applicationName}",
+    "Play a game in ${applicationName}": "Juega a un juego en ${applicationName}"
+  }
+}

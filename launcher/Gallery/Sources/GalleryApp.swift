@@ -1483,11 +1483,15 @@ enum GalleryMac {
     /// that language says them (stageText in the Mac's Theme.swift).
     static func builds(now: Date = Date()) -> CartoucheBridgeBuilds {
         let hour: TimeInterval = 3_600
-        let french = CartoucheText.bundle.preferredLocalizations.first == "fr"
+        let language = CartoucheText.bundle.preferredLocalizations.first
+        let said = { (en: String, fr: String, es: String, de: String) in
+            ["fr": fr, "es": es, "de": de][language ?? "en"] ?? en
+        }
         let both = ["ios", "mac"]
         return CartoucheBridgeBuilds(running: true, games: [
             .init(id: "0400C3F00006E000", name: "Mario Kart World", state: "building", reasons: ["changes"],
-                  progress: 0.42, step: french ? "Compilation des shaders pour l’iPhone" : "Compiling shaders for the iPhone",
+                  progress: 0.42, step: said("Compiling shaders for the iPhone", "Compilation des shaders pour l’iPhone",
+                                                 "Compilando los shaders para el iPhone", "Shader für das iPhone werden kompiliert"),
                   left: 21 * 60, built: now.addingTimeInterval(-3 * 24 * hour), followed: true, stoppable: true, stopping: false,
                   platforms: both, makes: both, now: "ios",
                   mac: CartoucheBridgeBuilds.MacApp(built: now.addingTimeInterval(-3 * 24 * hour + 1_800))),
@@ -1498,8 +1502,10 @@ enum GalleryMac {
                   built: now.addingTimeInterval(-9 * hour), followed: true, platforms: ["ios"]),
             .init(id: "01003FC01670C000", name: "13 Sentinels: Aegis Rim", state: "failed",
                   failed: now.addingTimeInterval(-26 * hour),
-                  error: french ? "La construction de l’app s’est arrêtée\u{00A0}: Xcode n’a trouvé aucun SDK iOS."
-                                : "Building the app stopped: Xcode found no iOS SDK.",
+                  error: said("Building the app stopped: Xcode found no iOS SDK.",
+                              "La construction de l’app s’est arrêtée\u{00A0}: Xcode n’a trouvé aucun SDK iOS.",
+                              "La compilación de la app se detuvo: Xcode no encontró ningún SDK de iOS.",
+                              "Das Erstellen der App wurde abgebrochen: Xcode hat kein iOS-SDK gefunden."),
                   followed: true, platforms: ["ios"]),
             .init(id: "0100B7C00933A000", name: "Pikmin 4", state: "due", reasons: ["changes"],
                   built: now.addingTimeInterval(-12 * 24 * hour), followed: true,
@@ -1509,8 +1515,10 @@ enum GalleryMac {
             .init(id: "01004D300C5AE000", name: "Kirby and the Forgotten Land", state: "up_to_date",
                   built: now.addingTimeInterval(-20 * hour), followed: true, platforms: both,
                   mac: CartoucheBridgeBuilds.MacApp(built: now.addingTimeInterval(-8 * 24 * hour), failed: now.addingTimeInterval(-19 * hour),
-                             error: french ? "Les shaders pour le Mac n’ont pas pu être compilés\u{00A0}: Metal a refusé un pipeline."
-                                           : "The shaders for the Mac could not be compiled: Metal refused a pipeline.")),
+                             error: said("The shaders for the Mac could not be compiled: Metal refused a pipeline.",
+                                         "Les shaders pour le Mac n’ont pas pu être compilés\u{00A0}: Metal a refusé un pipeline.",
+                                         "No se pudieron compilar los shaders para el Mac: Metal rechazó un pipeline.",
+                                         "Die Shader für den Mac konnten nicht kompiliert werden: Metal hat eine Pipeline abgelehnt."))),
             .init(id: "010093801237C000", name: "Metroid Dread", state: "up_to_date",
                   built: now.addingTimeInterval(-2 * 24 * hour), followed: true, platforms: both, mac: CartoucheBridgeBuilds.MacApp(due: true)),
             .init(id: "0400380020056000", name: "Splatoon Raiders", state: "up_to_date",

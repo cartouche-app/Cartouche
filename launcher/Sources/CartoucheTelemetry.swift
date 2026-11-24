@@ -665,6 +665,7 @@ final class CartoucheTelemetry: ObservableObject {
         CartoucheTelemetryContext(install: state.install, cartouche: CartoucheUpdates.runningVersion,
                                   device: CartoucheDevice.modelIdentifier, ios: CartoucheDevice.iOSVersion,
                                   language: CartoucheText.bundle.preferredLocalizations.first,
+                                  deviceLanguage: CartoucheGameLanguage.deviceLanguage(Locale.preferredLanguages),
                                   memoryLimitMiB: limitMiB ?? CartoucheMemoryReading.now()?.limitMiB,
                                   increasedMemoryLimit: CartoucheDevice.hasIncreasedMemoryLimit)
     }

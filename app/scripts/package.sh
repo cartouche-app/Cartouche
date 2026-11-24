@@ -89,10 +89,12 @@ $PB -c "Print :CFBundleDevelopmentRegion" "$APP/Info.plist" >/dev/null 2>&1 \
 # The question iOS asks before Cartouche first reaches the local network, for
 # the player's shared folders (launcher/Sources/CartoucheStorageSMB.swift)
 # and their Mac's Cartouche Builder (CartoucheStorageMac.swift), in place of
-# LiveContainer's, which speaks of a guest app. French in French, in English
-# everywhere else.
+# LiveContainer's, which speaks of a guest app. French, Spanish and German in
+# their languages, in English everywhere else.
 LOCAL_NETWORK_EN="Cartouche connects to Cartouche on your Mac and to the shared folders of your Mac, PC or NAS on this network to keep your games and saves there."
 LOCAL_NETWORK_FR="Cartouche se connecte à Cartouche sur votre Mac et aux dossiers partagés de votre Mac, PC ou NAS sur ce réseau pour y garder vos jeux et vos sauvegardes."
+LOCAL_NETWORK_ES="Cartouche se conecta a Cartouche en tu Mac y a las carpetas compartidas de tu Mac, PC o NAS en esta red para guardar allí tus juegos y partidas guardadas."
+LOCAL_NETWORK_DE="Cartouche verbindet sich mit Cartouche auf deinem Mac und mit den freigegebenen Ordnern deines Mac, PC oder NAS in diesem Netzwerk, um dort deine Spiele und Spielstände aufzubewahren."
 plutil -replace NSLocalNetworkUsageDescription -string "$LOCAL_NETWORK_EN" "$APP/Info.plist"
 # iOS lets an app look only for the Bonjour types it names: LiveContainer's
 # list has _smb._tcp, not the bridge's to Cartouche Builder.
@@ -108,8 +110,12 @@ for LPROJ in "$APP"/*.lproj; do
     $PB -c "Set :$KEY $NAME" "$STRINGS" 2>/dev/null \
       || $PB -c "Add :$KEY string $NAME" "$STRINGS" >/dev/null
   done
-  LOCAL_NETWORK="$LOCAL_NETWORK_EN"
-  [ "$(basename "$LPROJ")" = fr.lproj ] && LOCAL_NETWORK="$LOCAL_NETWORK_FR"
+  case "$(basename "$LPROJ")" in
+    fr.lproj) LOCAL_NETWORK="$LOCAL_NETWORK_FR" ;;
+    es.lproj) LOCAL_NETWORK="$LOCAL_NETWORK_ES" ;;
+    de.lproj) LOCAL_NETWORK="$LOCAL_NETWORK_DE" ;;
+    *) LOCAL_NETWORK="$LOCAL_NETWORK_EN" ;;
+  esac
   plutil -replace NSLocalNetworkUsageDescription -string "$LOCAL_NETWORK" "$STRINGS"
   LOCALIZATIONS=$((LOCALIZATIONS + 1))
 done
@@ -246,13 +252,14 @@ sed -i '' 's/9SideStore26RefreshAllAppsWidgetIntentV/16SideStoreSupport26Refresh
 # The launcher's own, which start a game for Siri and Shortcuts
 # (launcher/Sources/CartoucheShortcuts.swift): Xcode wrote them into the
 # framework the launcher is built into, whose metadata iOS never reads. They
-# join SideStore's, with their French (docs/decisions.md, 90).
-python3 "$HERE/app_intents.py" "$APP" --french "$HERE/../../launcher/AppIntents/fr.json"
+# join SideStore's, with their French (docs/decisions.md, 90), Spanish and
+# German (docs/decisions/152.md).
+python3 "$HERE/app_intents.py" "$APP" --translations "$HERE/../../launcher/AppIntents"
 # Then the app as it will ship: the built-in SideStore's intents as above,
 # each under the same identifier and type, Refresh All Apps among them, which
 # the nightly renewal runs from Shortcuts; the strings the merge wrote
 # through plutil -lint. Any difference stops the build.
-python3 "$HERE/app_intents.py" "$APP" --french "$HERE/../../launcher/AppIntents/fr.json" --check
+python3 "$HERE/app_intents.py" "$APP" --translations "$HERE/../../launcher/AppIntents" --check
 
 # SideStore's widget becomes the app's widget.
 WIDGET="$APP/PlugIns/LiveWidgetExtension.appex"

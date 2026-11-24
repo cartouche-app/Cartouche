@@ -14,6 +14,7 @@
 //  month at most.
 //
 
+import CartoucheCore
 import Foundation
 
 /// A value of an event's field: text, a number or a yes or no.
@@ -57,13 +58,19 @@ public struct TelemetryContext: Codable, Equatable, Sendable {
     public var ios: String
     /// The language the app shows.
     public var language: String?
+    /// The Mac's own language, the first in System Settings › General ›
+    /// Language & Region: its language and script only, such as "es" or
+    /// "zh-Hans" (CartoucheGameLanguage.deviceLanguage).
+    public var deviceLanguage: String?
 
-    public init(install: String, cartouche: String, device: String, ios: String, language: String? = nil) {
+    public init(install: String, cartouche: String, device: String, ios: String, language: String? = nil,
+                deviceLanguage: String? = nil) {
         self.install = install
         self.cartouche = cartouche
         self.device = device
         self.ios = ios
         self.language = language
+        self.deviceLanguage = deviceLanguage
     }
 }
 
@@ -660,7 +667,8 @@ public final class BuilderTelemetry: ObservableObject {
 
     /// What each report says of this copy of the app and this Mac.
     public var context: TelemetryContext {
-        TelemetryContext(install: state.install, cartouche: version, device: device, ios: system, language: language)
+        TelemetryContext(install: state.install, cartouche: version, device: device, ios: system, language: language,
+                         deviceLanguage: CartoucheGameLanguage.deviceLanguage(Locale.preferredLanguages))
     }
 
     // MARK: Sending

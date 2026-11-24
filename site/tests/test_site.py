@@ -205,7 +205,30 @@ def check_shared(test: unittest.TestCase, page: Page, address: str) -> None:
 
 
 # What a page says to its visitor besides its elements' text.
-SAID = ("content", "data-fr", "data-en", "aria-label", "data-label-fr", "data-label-en", "title", "alt")
+SAID = ("content", "data-fr", "data-en", "data-es", "data-de", "aria-label", "data-label-fr", "data-label-en", "data-label-es", "data-label-de", "title", "alt")
+
+
+# The site's languages, in the order each text gives them.
+LANGUAGES = ("fr", "en", "es", "de")
+
+
+def check_languages(test: unittest.TestCase, text: str, least: int) -> None:
+    """Every text of a page in the four languages: each element in French
+    followed by its twins in English, Spanish and German, each label and
+    description in the four too."""
+    body = text[text.index("<body>"):]
+    found = re.findall(r'<(\w+)\b[^>]*\slang="(fr|en|es|de)"', body)
+    tags = {language: [tag for tag, lang in found if lang == language] for language in LANGUAGES}
+    for language in LANGUAGES[1:]:
+        test.assertEqual(tags["fr"], tags[language], f"the page's French and {language} elements differ")
+    test.assertGreater(len(tags["fr"]), least)
+    for language in LANGUAGES:
+        test.assertEqual(len(re.findall(rf"data-label-{language}=", text)), len(re.findall(r"data-label-fr=", text)), language)
+        test.assertIn(f'data-{language}="', text)
+    # The script that picks the language before the page is drawn knows the four.
+    for language in LANGUAGES:
+        test.assertIn(f'data-set-lang="{language}"', text)
+        test.assertIn(f'html:not([data-lang="{language}"]) [lang="{language}"]', text)
 
 
 def check_downloads(test: unittest.TestCase, text: str, page: Page) -> dict[str, str]:
@@ -373,33 +396,32 @@ class SiteTests(unittest.TestCase):
                 found = re.search(pattern, text)
                 self.assertIsNone(found, f"{path.name} holds {what}: {found and found.group(0)!r}")
 
-    def test_every_text_in_both_languages(self) -> None:
-        # Static text: each element in French is followed by its English twin.
-        body = self.text[self.text.index("<body>"):]
-        pairs = re.findall(r'<(\w+)\b[^>]*\slang="(fr|en)"', body)
-        french = [tag for tag, lang in pairs if lang == "fr"]
-        english = [tag for tag, lang in pairs if lang == "en"]
-        self.assertEqual(french, english, "the page's French and English elements differ")
-        self.assertGreater(len(french), 100)
-        labels_fr = re.findall(r"data-label-fr=", self.text)
-        self.assertEqual(len(labels_fr), len(re.findall(r"data-label-en=", self.text)))
+    def test_every_text_in_the_four_languages(self) -> None:
+        # Static text: each element in French is followed by its twins in
+        # English, Spanish and German.
+        check_languages(self, self.text, 100)
         for tag, attrs in self.page.tags:
             if "data-label-fr" in attrs:
                 self.assertIn("aria-label", attrs, f"<{tag}> has no label before the script names it")
-        self.assertIn('data-fr="', self.text)
-        self.assertIn('data-en="', self.text)
-        # The games' examples, in both languages too.
+        # The screens' texts: each call of t() and each group of words the
+        # script holds gives the four.
+        for call in re.findall(r"(?<![\w.])t\(([^()]*(?:\([^()]*\)[^()]*)*)\)", self.code):
+            if call == "fr, en, es, de":
+                continue
+            self.assertNotRegex(call, r'^"[^"]*", "[^"]*"$', f"t({call}) has two languages")
+        self.assertNotRegex(self.code, r'\[\s*"[^"]*",\s*"[^"]*"\s*\]', "a group of words in two languages")
+        # The games' examples, in the four languages too.
         for game in self.games:
             for key in ("time", "sessions", "size", "detail", "stored"):
                 if key in game:
-                    self.assertEqual(len(game[key]), 2, f"{game['name']}: {key}")
+                    self.assertEqual(len(game[key]), 4, f"{game['name']}: {key}")
                     self.assertTrue(all(game[key]), f"{game['name']}: {key}")
 
     def test_the_discord_server_by_its_one_invite(self) -> None:
         # In the header beside GitHub, in the footer, and in the FAQ's answer on help.
         discord = [attrs for tag, attrs in self.page.tags if tag == "a" and "discord" in attrs.get("href", "")]
         self.assertEqual({attrs["href"] for attrs in discord}, {DISCORD})
-        self.assertEqual(len(discord), 4, "header, footer, and the FAQ's answer in French and in English")
+        self.assertEqual(len(discord), 6, "header, footer, and the FAQ's answer in each of the four languages")
         self.assertIn('<a class="gh" href="' + DISCORD + '"', self.text)
         self.assertIn('<use href="#i-discord"/>', self.text)
         self.assertNotRegex(self.text, r"(?i)discord(?:app)?\.com/invite|discord\.gg/(?!wG3DZjdAeF\b)")
@@ -567,14 +589,8 @@ class DownloadPageTests(unittest.TestCase):
         text, page = read_page()
         self.assertEqual(check_downloads(self, self.text, self.page), check_downloads(self, text, page))
 
-    def test_every_text_in_both_languages(self) -> None:
-        body = self.text[self.text.index("<body>"):]
-        pairs = re.findall(r'<(\w+)\b[^>]*\slang="(fr|en)"', body)
-        self.assertEqual([tag for tag, lang in pairs if lang == "fr"], [tag for tag, lang in pairs if lang == "en"])
-        self.assertGreater(len(pairs), 30)
-        self.assertEqual(len(re.findall(r"data-label-fr=", self.text)), len(re.findall(r"data-label-en=", self.text)))
-        self.assertIn('data-fr="', self.text)
-        self.assertIn('data-en="', self.text)
+    def test_every_text_in_the_four_languages(self) -> None:
+        check_languages(self, self.text, 15)
 
     def test_provides_no_game(self) -> None:
         for sentence in (
@@ -630,14 +646,8 @@ class NotFoundPageTests(unittest.TestCase):
                 self.assertTrue(href.startswith("#") and href[1:] in self.page.ids, f"<use> of {href!r}")
         self.assertEqual([attrs["href"] for tag, attrs in self.page.tags if tag == "a" and "discord" in attrs.get("href", "")], [DISCORD])
 
-    def test_every_text_in_both_languages(self) -> None:
-        body = self.text[self.text.index("<body>"):]
-        pairs = re.findall(r'<(\w+)\b[^>]*\slang="(fr|en)"', body)
-        self.assertEqual([tag for tag, lang in pairs if lang == "fr"], [tag for tag, lang in pairs if lang == "en"])
-        self.assertGreater(len(pairs), 10)
-        self.assertEqual(len(re.findall(r"data-label-fr=", self.text)), len(re.findall(r"data-label-en=", self.text)))
-        self.assertIn('data-fr="', self.text)
-        self.assertIn('data-en="', self.text)
+    def test_every_text_in_the_four_languages(self) -> None:
+        check_languages(self, self.text, 5)
 
 
 class Publication(unittest.TestCase):

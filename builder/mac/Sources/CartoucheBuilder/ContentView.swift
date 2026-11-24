@@ -127,7 +127,7 @@ struct EngineFooter: View {
                         Image(systemName: "arrow.clockwise")
                     }
                     .buttonStyle(.borderless)
-                    .help(tr("Check nxnative now", "Vérifier nxnative maintenant"))
+                    .help(tr("Check nxnative now", "Vérifier nxnative maintenant", "Comprobar nxnative ahora", "nxnative jetzt prüfen"))
                     .disabled(model.engine == nil)
                 }
             }
@@ -139,7 +139,9 @@ struct EngineFooter: View {
                 // The newest commit does not build: the games are built from
                 // the last one that did on this Mac (fallback.py).
                 Label(tr("nxnative \(newest.prefix(8)), its newest commit, does not build for now: the Builder stays on the last one that built.",
-                         "nxnative \(newest.prefix(8)), son dernier commit, ne construit pas pour l’instant : le Builder reste sur le dernier qui a construit."),
+                         "nxnative \(newest.prefix(8)), son dernier commit, ne construit pas pour l’instant : le Builder reste sur le dernier qui a construit.",
+                         "nxnative \(newest.prefix(8)), su commit más reciente, no compila por ahora: el Builder se queda en el último que compiló.",
+                         "nxnative \(newest.prefix(8)), sein neuester Commit, erstellt vorerst nicht: Der Builder bleibt beim letzten, der erstellt hat."),
                       systemImage: "exclamationmark.triangle")
                     .font(.caption2)
                     .foregroundStyle(.orange)
@@ -152,9 +154,9 @@ struct EngineFooter: View {
     }
 
     private var checkedText: String {
-        if model.checking { return tr("Checking nxnative…", "Vérification de nxnative…") }
-        guard let checked = model.library?.checked.flatMap(ISODate.parse) else { return tr("Not checked yet", "Pas encore vérifié") }
-        return tr("Checked ", "Vérifié ") + Format.relative(checked)
+        if model.checking { return tr("Checking nxnative…", "Vérification de nxnative…", "Comprobando nxnative…", "nxnative wird geprüft …") }
+        guard let checked = model.library?.checked.flatMap(ISODate.parse) else { return tr("Not checked yet", "Pas encore vérifié", "Aún no comprobado", "Noch nicht geprüft") }
+        return tr("Checked ", "Vérifié ", "Comprobado ", "Geprüft ") + Format.relative(checked)
     }
 }
 

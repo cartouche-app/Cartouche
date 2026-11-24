@@ -8,12 +8,13 @@
 //  of the reports not sent yet.
 //
 
+import CartoucheCore
 import Foundation
 import XCTest
 @testable import BuilderKit
 
 final class TelemetryTests: XCTestCase {
-    private let context = TelemetryContext(install: "8c1f6c2e-7a2f-4e19-8c3d-2f6a9b0e1d7c", cartouche: "0.2.1", device: "Mac16,12", ios: "26.6", language: "fr")
+    private let context = TelemetryContext(install: "8c1f6c2e-7a2f-4e19-8c3d-2f6a9b0e1d7c", cartouche: "0.2.1", device: "Mac16,12", ios: "26.6", language: "fr", deviceLanguage: "fr")
     private let head = "6c3aeb3d70a1"
 
     /// One event of each kind the app makes, as telemetry/test/builder-reports.json holds them.
@@ -359,7 +360,7 @@ final class TelemetryTests: XCTestCase {
         let object = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(try TelemetryFormat.json(event).utf8)) as? [String: Any])
         XCTAssertEqual(object["schema"] as? Int, 1)
         XCTAssertEqual(object["kind"] as? String, "event")
-        for key in ["id", "seq", "install", "cartouche", "device", "ios", "language", "name", "fields"] {
+        for key in ["id", "seq", "install", "cartouche", "device", "ios", "language", "deviceLanguage", "name", "fields"] {
             XCTAssertNotNil(object[key], key)
         }
         XCTAssertNil(object["game"])
@@ -475,6 +476,7 @@ final class TelemetryTests: XCTestCase {
         XCTAssertFalse(again.isOn, "the switch is kept")
         XCTAssertEqual(again.context.cartouche, "0.2.1")
         XCTAssertTrue(TelemetryFormat.matches(TelemetryFormat.model, again.context.device))
+        XCTAssertEqual(again.context.deviceLanguage, CartoucheGameLanguage.deviceLanguage(Locale.preferredLanguages))
 
         let odd = BuilderTelemetry(file: nil, endpoint: nil, version: "dev")
         XCTAssertEqual(odd.context.cartouche, "0.0.0")

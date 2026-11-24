@@ -1,7 +1,7 @@
 //! The installer's window itself, built as it ships (the frontend of
 //! ../dist, in the system's webview), clicked through as a person does,
-//! against the fakes: in English and in French, the texts read from the
-//! window's own translations.
+//! against the fakes: in English, French, Spanish and German, the texts
+//! read from the window's own translations.
 //!
 //!     npm run build    # in installer/
 //!     cargo test --features ui-tests --test ui [scenario]
@@ -48,6 +48,8 @@ struct Scenario {
 const SCENARIOS: &[Scenario] = &[
     Scenario { name: "first_install_en", language: "en", prepare: publish, run: first_install, file_dialogs: false },
     Scenario { name: "first_install_fr", language: "fr", prepare: publish, run: first_install, file_dialogs: false },
+    Scenario { name: "first_install_es", language: "es", prepare: publish, run: first_install, file_dialogs: false },
+    Scenario { name: "first_install_de", language: "de", prepare: publish, run: first_install, file_dialogs: false },
     Scenario {
         name: "everything_goes_wrong_fr",
         language: "fr",

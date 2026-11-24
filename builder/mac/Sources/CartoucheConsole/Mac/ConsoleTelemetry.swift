@@ -59,13 +59,18 @@ public struct CartoucheMacTelemetryContext: Equatable, Sendable {
     public var system: String
     /// The language the app shows.
     public var language: String?
+    /// The Mac's own language, its language and script only
+    /// (CartoucheGameLanguage.deviceLanguage).
+    public var deviceLanguage: String?
 
-    public init(install: String, version: String, device: String, system: String, language: String? = nil) {
+    public init(install: String, version: String, device: String, system: String, language: String? = nil,
+                deviceLanguage: String? = nil) {
         self.install = install
         self.version = version
         self.device = device
         self.system = system
         self.language = language
+        self.deviceLanguage = deviceLanguage
     }
 }
 
@@ -233,7 +238,8 @@ final class CartoucheTelemetry: ObservableObject {
         guard isOn else { return }
         onReport { context, seq in
             let shared = CartoucheTelemetryContext(install: context.install, cartouche: context.version, device: context.device,
-                                                   ios: context.system, language: context.language)
+                                                   ios: context.system, language: context.language,
+                                                   deviceLanguage: context.deviceLanguage)
             guard let report = make(shared, seq), let body = try? CartoucheTelemetryFormat.json(report) else { return nil }
             return CartoucheMacReport(id: report.id, body: body)
         }

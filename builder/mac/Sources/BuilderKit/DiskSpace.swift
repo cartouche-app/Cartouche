@@ -31,11 +31,13 @@ public enum DiskSpace {
         return Int64(capacity)
     }
 
-    /// "0.4 GB", "12 GB": "0,4 Go" in French, as the engine says it.
+    /// "0.4 GB", "12 GB": "0,4 Go" in French, "0,4 GB" in Spanish and
+    /// German, as the engine says it.
     public static func amount(_ bytes: Int64) -> String {
         let gigabytes = Double(bytes) / 1e9
         let text = gigabytes < 10 ? String(format: "%.1f", gigabytes) : String(format: "%.0f", gigabytes)
-        return L10n.french ? text.replacingOccurrences(of: ".", with: ",") + " Go" : text + " GB"
+        let number = L10n.decimalComma ? text.replacingOccurrences(of: ".", with: ",") : text
+        return number + (L10n.french ? " Go" : " GB")
     }
 
     /// What the app says of ERROR: for a full disk, which and what is left
@@ -50,10 +52,14 @@ public enum DiskSpace {
     public static func message(free: Int64?) -> String {
         guard let free else {
             return tr("Your Mac's disk is full. Free some room, on the Storage page for example, then try again.",
-                      "Le disque du Mac est plein. Libérez de la place, par exemple dans Stockage, puis réessayez.")
+                      "Le disque du Mac est plein. Libérez de la place, par exemple dans Stockage, puis réessayez.",
+                      "El disco del Mac está lleno. Libera espacio, por ejemplo en Almacenamiento, y vuelve a intentarlo.",
+                      "Die Festplatte des Mac ist voll. Gib Platz frei, zum Beispiel unter „Speicher“, und versuche es dann erneut.")
         }
         let left = amount(free)
         return tr("Your Mac's disk is full (\(left) left). Free some room, on the Storage page for example, then try again.",
-                  "Le disque du Mac est plein (il reste \(left)). Libérez de la place, par exemple dans Stockage, puis réessayez.")
+                  "Le disque du Mac est plein (il reste \(left)). Libérez de la place, par exemple dans Stockage, puis réessayez.",
+                  "El disco del Mac está lleno (quedan \(left)). Libera espacio, por ejemplo en Almacenamiento, y vuelve a intentarlo.",
+                  "Die Festplatte des Mac ist voll (noch \(left) frei). Gib Platz frei, zum Beispiel unter „Speicher“, und versuche es dann erneut.")
     }
 }

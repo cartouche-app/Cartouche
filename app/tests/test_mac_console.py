@@ -65,7 +65,7 @@ STORAGE_PAGE = LAUNCHER / "CartoucheStorageView.swift"
 MAC_STORAGE = CONSOLE / "Mac" / "ConsoleStorage.swift"
 SYSTEM_PAGE = LAUNCHER / "CartoucheSystemView.swift"
 MAC_SYSTEM = CONSOLE / "Mac" / "ConsoleSystem.swift"
-LANGUAGES = ("en", "fr")
+LANGUAGES = ("en", "fr", "es", "de")
 
 # Names the Mac does not have: UIKit's, and the iPhone's alone in SwiftUI.
 IPHONE_ONLY = re.compile(
@@ -429,19 +429,20 @@ class MacConsoleWords(unittest.TestCase):
             with self.subTest(key=key):
                 self.assertIn(key, self.catalog, "a word the launcher does not have: put it in \"strings\"")
                 english = self.catalog[key]["localizations"]["en"]["stringUnit"]["value"]
-                self.assertEqual(sorted(values), list(LANGUAGES))
+                self.assertEqual(sorted(values), sorted(LANGUAGES))
                 for language in LANGUAGES:
                     self.assertTrue(values[language].strip())
                     self.assertEqual(placeholders(values[language]), placeholders(english), language)
-                self.assertNotIn("iPhone", values["en"] + values["fr"])
+                    self.assertNotIn("iPhone", values[language], language)
 
     def test_the_macs_own_words_are_its_own(self):
         for key, values in self.mac.get("strings", {}).items():
             with self.subTest(key=key):
                 self.assertNotIn(key, self.catalog, "a word of the launcher's: put it in \"overrides\"")
-                self.assertEqual(sorted(values), list(LANGUAGES))
+                self.assertEqual(sorted(values), sorted(LANGUAGES))
                 self.assertTrue(all(values[language].strip() for language in LANGUAGES))
-                self.assertEqual(placeholders(values["fr"]), placeholders(values["en"]))
+                for language in LANGUAGES:
+                    self.assertEqual(placeholders(values[language]), placeholders(values["en"]), language)
 
     def test_french_spacing(self):
         # As the launcher's words (test_launcher_strings.py): a no-break

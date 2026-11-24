@@ -922,6 +922,20 @@ class InFrench(EndToEnd):
         self.assertTrue(comet["error"].startswith("Des fichiers de ce jeu sont abîmés (sa mise à jour v131072) : "), comet["error"])
 
 
+class InGerman(EndToEnd):
+    language = "de"
+
+    def test_what_goes_wrong_said_in_german(self):
+        self.lantern()
+        self.comet(damaged="v131072")
+        self.set_up()
+        self.world.scenario(slack_gb={LANTERN: 1_000_000})
+        status = self.app.finish(self.app.build())
+        lantern, comet = (self.app.progress(i, status) for i in (LANTERN, COMET))
+        self.assertRegex(lantern["error"], r"^nxnative braucht 1000000 GB freien Platz auf der Festplatte des Mac, um dieses Spiel zu erstellen, und [\d,]+ GB sind übrig\.")
+        self.assertTrue(comet["error"].startswith("Einige Dateien dieses Spiels sind beschädigt (sein Update v131072): "), comet["error"])
+
+
 @unittest.skipUnless(sys.platform == "darwin", "a disk that really fills up: a disk image, on a Mac")
 class FullDisk(EndToEnd):
     """A disk of a few megabytes, as an external drive the player chose, that

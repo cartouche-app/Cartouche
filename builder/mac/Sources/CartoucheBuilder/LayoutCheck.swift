@@ -51,7 +51,9 @@ enum LayoutCheck {
             AppSettings.bridgeKey: false,
         ], forName: UserDefaults.argumentDomain)
         NSSetUncaughtExceptionHandler(sayException)
-        L10n.use("fr")
+        // French, or the language the workflow asks for: German's words
+        // are the longest.
+        L10n.use(ProcessInfo.processInfo.environment["CARTOUCHE_BUILDER_LANG"].map(L10n.language(of:)) ?? "fr")
     }
 
     // MARK: The games

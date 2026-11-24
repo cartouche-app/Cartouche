@@ -29,11 +29,11 @@ enum AppSection: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .library: return tr("Library", "Bibliothèque")
-        case .activity: return tr("Builds", "Constructions")
-        case .storage: return tr("Storage", "Stockage")
+        case .library: return tr("Library", "Bibliothèque", "Biblioteca", "Bibliothek")
+        case .activity: return tr("Builds", "Constructions", "Compilaciones", "Builds")
+        case .storage: return tr("Storage", "Stockage", "Almacenamiento", "Speicher")
         case .iphone: return "iPhone"
-        case .setup: return tr("This Mac’s tools", "Outils du Mac")
+        case .setup: return tr("This Mac’s tools", "Outils du Mac", "Herramientas de este Mac", "Werkzeuge dieses Mac")
         }
     }
 
@@ -331,7 +331,9 @@ final class AppModel: ObservableObject {
         if let engine, engine.python == python { return engine }
         guard let package = Engine.bundledPackage() else {
             banner = Banner(kind: .error, text: tr("The app is incomplete: its engine is missing. Download it again.",
-                                                   "L’app est incomplète : son moteur manque. Téléchargez-la à nouveau."))
+                                                   "L’app est incomplète : son moteur manque. Téléchargez-la à nouveau.",
+                                                   "La app está incompleta: le falta su motor. Vuelve a descargarla.",
+                                                   "Die App ist unvollständig: Ihre Engine fehlt. Lade sie erneut."))
             return nil
         }
         let made = Engine(package: package, python: python, home: home, language: L10n.code)
@@ -458,8 +460,8 @@ final class AppModel: ObservableObject {
         let others: [String]
 
         var title: String {
-            never.count == 1 ? tr("Build \(never[0].name) anyway?", "Construire \(never[0].name) quand même ?")
-                : tr("Build these \(never.count) games anyway?", "Construire ces \(never.count) jeux quand même ?")
+            never.count == 1 ? tr("Build \(never[0].name) anyway?", "Construire \(never[0].name) quand même ?", "¿Compilar \(never[0].name) de todos modos?", "\(never[0].name) trotzdem erstellen?")
+                : tr("Build these \(never.count) games anyway?", "Construire ces \(never.count) jeux quand même ?", "¿Compilar estos \(never.count) juegos de todos modos?", "Diese \(never.count) Spiele trotzdem erstellen?")
         }
     }
 
@@ -478,8 +480,10 @@ final class AppModel: ObservableObject {
         ask.never.map { game in
             let macs = unbuilt[game.titleID]?.macs ?? 0
             return tr("No Mac has built \(game.name) yet: its builds failed on \(macs) Macs in the last 4 weeks",
-                      "Aucun Mac n’a encore construit \(game.name) : ses constructions ont échoué sur \(macs) Mac ces 4 dernières semaines")
-                + (unbuilt[game.titleID]?.hours.map { tr(", after about \(UnbuiltGames.hoursText($0)) hours", ", après \(UnbuiltGames.hoursText($0)) h environ") } ?? "")
+                      "Aucun Mac n’a encore construit \(game.name) : ses constructions ont échoué sur \(macs) Mac ces 4 dernières semaines",
+                      "Ningún Mac ha compilado aún \(game.name): sus compilaciones fallaron en \(macs) Mac en las últimas 4 semanas",
+                      "Noch kein Mac hat \(game.name) erstellt: Seine Builds sind in den letzten 4 Wochen auf \(macs) Macs fehlgeschlagen")
+                + (unbuilt[game.titleID]?.hours.map { tr(", after about \(UnbuiltGames.hoursText($0)) hours", ", après \(UnbuiltGames.hoursText($0)) h environ", ", tras unas \(UnbuiltGames.hoursText($0)) horas", ", nach etwa \(UnbuiltGames.hoursText($0)) Stunden") } ?? "")
                 + "."
         }.joined(separator: "\n")
     }
@@ -737,7 +741,7 @@ final class AppModel: ObservableObject {
                 if let exception = FailureDetails.exception(in: lastLogLines(80)) { fields["exception"] = .text(exception) }
                 let said = lastLogLines()
                 startingDone()
-                banner = Banner(kind: .error, text: tr("The build did not start: ", "La construction n’a pas démarré : ") + said)
+                banner = Banner(kind: .error, text: tr("The build did not start: ", "La construction n’a pas démarré : ", "La compilación no empezó: ", "Der Build hat nicht begonnen: ") + said)
                 telemetry.event("builder.error", fields: fields)
             }
         }
@@ -773,17 +777,17 @@ final class AppModel: ObservableObject {
         if config?.notifications ?? true, !built.isEmpty || !failed.isEmpty {
             var lines: [String] = []
             if !built.isEmpty {
-                lines.append(tr("Built: ", "Construits : ") + built.map(\.name).joined(separator: ", "))
+                lines.append(tr("Built: ", "Construits : ", "Compilados: ", "Erstellt: ") + built.map(\.name).joined(separator: ", "))
             }
             if !failed.isEmpty {
-                lines.append(tr("Failed: ", "Échecs : ") + failed.map(\.name).joined(separator: ", "))
+                lines.append(tr("Failed: ", "Échecs : ", "Fallidos: ", "Fehlgeschlagen: ") + failed.map(\.name).joined(separator: ", "))
             }
             if !macFailed.isEmpty {
-                lines.append(tr("Mac app failed: ", "App Mac en échec : ") + macFailed.map(\.name).joined(separator: ", "))
+                lines.append(tr("Mac app failed: ", "App Mac en échec : ", "App de Mac fallida: ", "Mac-App fehlgeschlagen: ") + macFailed.map(\.name).joined(separator: ", "))
             }
             let title = failed.isEmpty && macFailed.isEmpty
-                ? tr("Your games are ready", "Vos jeux sont prêts")
-                : tr("Builds ended, with failures", "Constructions terminées, avec des échecs")
+                ? tr("Your games are ready", "Vos jeux sont prêts", "Tus juegos están listos", "Deine Spiele sind bereit")
+                : tr("Builds ended, with failures", "Constructions terminées, avec des échecs", "Compilaciones terminadas, con fallos", "Builds beendet, mit Fehlern")
             notify(title: title, body: lines.joined(separator: "\n"), section: .activity)
         }
         Task {
@@ -824,10 +828,10 @@ final class AppModel: ObservableObject {
         let news = due.filter { !told.contains($0.titleID) }
         guard !news.isEmpty, config?.notifications ?? true else { return }
         let title = news.count == 1
-            ? tr("nxnative improved \(news[0].name)", "nxnative a amélioré \(news[0].name)")
-            : tr("nxnative improved \(news.count) of your games", "nxnative a amélioré \(news.count) de vos jeux")
+            ? tr("nxnative improved \(news[0].name)", "nxnative a amélioré \(news[0].name)", "nxnative mejoró \(news[0].name)", "nxnative hat \(news[0].name) verbessert")
+            : tr("nxnative improved \(news.count) of your games", "nxnative a amélioré \(news.count) de vos jeux", "nxnative mejoró \(news.count) de tus juegos", "nxnative hat \(news.count) deiner Spiele verbessert")
         let body = news.count == 1
-            ? tr("A rebuild is ready to start.", "Une reconstruction est prête à lancer.")
+            ? tr("A rebuild is ready to start.", "Une reconstruction est prête à lancer.", "Una nueva compilación está lista para empezar.", "Ein neuer Build ist startbereit.")
             : news.prefix(4).map(\.name).joined(separator: ", ") + (news.count > 4 ? "…" : "")
         notify(title: title, body: body, section: .library, game: news.count == 1 ? news[0].titleID : nil)
     }
@@ -954,7 +958,7 @@ final class AppModel: ObservableObject {
         guard !sample else { return }
         let url = URL(fileURLWithPath: app.path)
         if NSWorkspace.shared.runningApplications.contains(where: { $0.bundleURL?.standardizedFileURL == url.standardizedFileURL }) {
-            banner = Banner(kind: .error, text: tr("Quit \(app.name) first: it is open on this Mac.", "Quittez d’abord \(app.name) : il est ouvert sur ce Mac."))
+            banner = Banner(kind: .error, text: tr("Quit \(app.name) first: it is open on this Mac.", "Quittez d’abord \(app.name) : il est ouvert sur ce Mac.", "Cierra primero \(app.name): está abierto en este Mac.", "Beende zuerst \(app.name): Es ist auf diesem Mac geöffnet."))
             return
         }
         Task {
@@ -969,9 +973,13 @@ final class AppModel: ObservableObject {
             if app.isInstalledCopy {
                 banner = Banner(kind: .info, text: gamesOnShare
                     ? tr("\(app.name) is in the Trash. The NAS keeps its app: it is installed again when you play it.",
-                         "\(app.name) est dans la Corbeille. Le NAS garde son app : elle se réinstalle quand vous y jouez.")
+                         "\(app.name) est dans la Corbeille. Le NAS garde son app : elle se réinstalle quand vous y jouez.",
+                         "\(app.name) está en la Papelera. El NAS guarda su app: se vuelve a instalar cuando juegues.",
+                         "\(app.name) ist im Papierkorb. Das NAS behält seine App: Sie wird wieder installiert, wenn du es spielst.")
                     : tr("\(app.name) is in the Trash. The games folder keeps its app: it is installed again when you play it.",
-                         "\(app.name) est dans la Corbeille. Le dossier des jeux garde son app : elle se réinstalle quand vous y jouez."))
+                         "\(app.name) est dans la Corbeille. Le dossier des jeux garde son app : elle se réinstalle quand vous y jouez.",
+                         "\(app.name) está en la Papelera. La carpeta de juegos guarda su app: se vuelve a instalar cuando juegues.",
+                         "\(app.name) ist im Papierkorb. Der Spieleordner behält seine App: Sie wird wieder installiert, wenn du es spielst."))
                 await loadStorage()
                 await refreshLibrary(update: false)
                 return
@@ -987,7 +995,7 @@ final class AppModel: ObservableObject {
                     show(error, origin: "platform")
                 }
             }
-            banner = Banner(kind: .info, text: tr("\(app.name) is in the Trash.", "\(app.name) est dans la Corbeille."))
+            banner = Banner(kind: .info, text: tr("\(app.name) is in the Trash.", "\(app.name) est dans la Corbeille.", "\(app.name) está en la Papelera.", "\(app.name) ist im Papierkorb."))
             await loadConfig()
             await loadStorage()
             await refreshLibrary(update: false)
@@ -1001,7 +1009,7 @@ final class AppModel: ObservableObject {
             defer { cleaning = false }
             do {
                 let cleaned = try await engine.clean(what, paths: paths)
-                banner = Banner(kind: .info, text: tr("Freed \(Format.size(cleaned.freed)).", "\(Format.size(cleaned.freed)) libérés."))
+                banner = Banner(kind: .info, text: tr("Freed \(Format.size(cleaned.freed)).", "\(Format.size(cleaned.freed)) libérés.", "Se liberaron \(Format.size(cleaned.freed)).", "\(Format.size(cleaned.freed)) freigegeben."))
                 telemetry.event("builder.cleaned", fields: ["what": .text(what), "items": .count(max(paths.count, cleaned.removed.count)),
                                                             "freedMB": .number((Double(cleaned.freed) / 1_000_000).rounded())])
                 await loadStorage()
@@ -1014,10 +1022,10 @@ final class AppModel: ObservableObject {
 
     func bundleIPA(_ ipa: URL, image: URL) async throws -> String {
         guard let engine, !sample, !isBuilding, !bundling else {
-            throw EngineFailure(kind: "busy", message: tr("Wait for the current operation to finish.", "Attendez la fin de l’opération en cours."))
+            throw EngineFailure(kind: "busy", message: tr("Wait for the current operation to finish.", "Attendez la fin de l’opération en cours.", "Espera a que termine la operación en curso.", "Warte, bis der laufende Vorgang beendet ist."))
         }
         bundling = true
-        bundleMessage = tr("Checking the IPA and game data…", "Vérification de l’IPA et des fichiers du jeu…")
+        bundleMessage = tr("Checking the IPA and game data…", "Vérification de l’IPA et des fichiers du jeu…", "Comprobando la IPA y los archivos del juego…", "IPA und Spieldateien werden geprüft …")
         defer { bundling = false }
         let started = Date()
         let answer: BundleIPAAnswer
@@ -1147,7 +1155,7 @@ final class AppModel: ObservableObject {
         // The Mac apps another Mac sent there, of the games it has none of.
         let offers = iPhoneGames.offers.filter { !built.contains($0.titleID) }
         ConsoleLink.show(games: apps, kept: kept, offers: offers, keptIn: ConnectionGames.shownPlace(
-            kept: kept.isEmpty ? nil : (gamesOnShare ? tr("the NAS", "le NAS") : tr("the games folder", "le dossier des jeux")),
+            kept: kept.isEmpty ? nil : (gamesOnShare ? tr("the NAS", "le NAS", "el NAS", "das NAS") : tr("the games folder", "le dossier des jeux", "la carpeta de juegos", "der Spieleordner")),
             offers: offers.isEmpty ? nil : iPhoneGames.placeName(of: offers)))
         // The sessions of the games it shows, played since the app last
         // read them, from the Finder or the Dock too: the console reads the
@@ -1212,7 +1220,9 @@ final class AppModel: ObservableObject {
                         guard mac.hasApp else { throw error }
                         show(error, origin: "install")
                         banner = Banner(kind: .error, text: tr("\(game.name) could not be updated on this Mac (\(DiskSpace.words(for: error))): the version already here starts.",
-                                                               "\(game.name) n’a pas pu être mis à jour sur ce Mac (\(DiskSpace.words(for: error))) : la version déjà là démarre."))
+                                                               "\(game.name) n’a pas pu être mis à jour sur ce Mac (\(DiskSpace.words(for: error))) : la version déjà là démarre.",
+                                                               "No se pudo actualizar \(game.name) en este Mac (\(DiskSpace.words(for: error))): se inicia la versión que ya está.",
+                                                               "\(game.name) konnte auf diesem Mac nicht aktualisiert werden (\(DiskSpace.words(for: error))): Die bereits vorhandene Version startet."))
                     }
                 }
                 try await macGames.play(game.titleID, settings: settings)
@@ -1234,10 +1244,10 @@ final class AppModel: ObservableObject {
     func installMac(_ game: Game) async throws {
         guard let engine, !sample else { return }
         guard installing == nil else {
-            throw EngineFailure(kind: "busy", message: tr("Wait for the installation under way to finish.", "Attendez la fin de l’installation en cours."))
+            throw EngineFailure(kind: "busy", message: tr("Wait for the installation under way to finish.", "Attendez la fin de l’installation en cours.", "Espera a que termine la instalación en curso.", "Warte, bis die laufende Installation beendet ist."))
         }
         installing = game.titleID
-        installMessage = tr("Installing \(game.name) on this Mac…", "Installation de \(game.name) sur ce Mac…")
+        installMessage = tr("Installing \(game.name) on this Mac…", "Installation de \(game.name) sur ce Mac…", "Instalando \(game.name) en este Mac…", "\(game.name) wird auf diesem Mac installiert …")
         defer {
             installing = nil
             installMessage = ""
@@ -1308,11 +1318,13 @@ final class AppModel: ObservableObject {
         guard !sample, let game = self.game(ofApp: app), macGames.isPlaying(game.titleID) else { return }
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = tr("Quit \(game.name)?", "Quitter \(game.name) ?")
+        alert.messageText = tr("Quit \(game.name)?", "Quitter \(game.name) ?", "¿Salir de \(game.name)?", "\(game.name) beenden?")
         alert.informativeText = tr("Progress since the game last saved will be lost.",
-                                   "La progression depuis la dernière sauvegarde du jeu sera perdue.")
-        alert.addButton(withTitle: tr("Quit the game", "Quitter le jeu")).hasDestructiveAction = true
-        alert.addButton(withTitle: tr("Cancel", "Annuler"))
+                                   "La progression depuis la dernière sauvegarde du jeu sera perdue.",
+                                   "Se perderá el progreso desde la última vez que el juego guardó.",
+                                   "Der Fortschritt seit dem letzten Speichern des Spiels geht verloren.")
+        alert.addButton(withTitle: tr("Quit the game", "Quitter le jeu", "Salir del juego", "Spiel beenden")).hasDestructiveAction = true
+        alert.addButton(withTitle: tr("Cancel", "Annuler", "Cancelar", "Abbrechen"))
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         macGames.quit(game.titleID)
     }
@@ -1327,19 +1339,25 @@ final class AppModel: ObservableObject {
         let packed = game.mac?.packed ?? false
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = tr("Remove \(game.name) from this Mac?", "Retirer \(game.name) de ce Mac ?")
+        alert.messageText = tr("Remove \(game.name) from this Mac?", "Retirer \(game.name) de ce Mac ?", "¿Quitar \(game.name) de este Mac?", "\(game.name) von diesem Mac entfernen?")
         if !packed {
             alert.informativeText = tr("Its app goes to the Trash, and the builder no longer builds it for this Mac. Its saves stay on this Mac and in the saves folder.",
-                                       "Son app va à la Corbeille, et le Builder ne le construit plus pour ce Mac. Ses sauvegardes restent sur ce Mac et dans le dossier des sauvegardes.")
+                                       "Son app va à la Corbeille, et le Builder ne le construit plus pour ce Mac. Ses sauvegardes restent sur ce Mac et dans le dossier des sauvegardes.",
+                                       "Su app va a la Papelera, y el Builder ya no lo compila para este Mac. Sus partidas guardadas se quedan en este Mac y en la carpeta de partidas guardadas.",
+                                       "Seine App kommt in den Papierkorb, und der Builder erstellt es nicht mehr für diesen Mac. Seine Spielstände bleiben auf diesem Mac und im Spielstandordner.")
         } else if gamesOnShare {
             alert.informativeText = tr("Its app goes to the Trash. The NAS keeps it: it is installed again when you play the game. Its saves stay on this Mac and in the saves folder.",
-                                       "Son app va à la Corbeille. Le NAS la garde : elle se réinstalle quand vous jouez au jeu. Ses sauvegardes restent sur ce Mac et dans le dossier des sauvegardes.")
+                                       "Son app va à la Corbeille. Le NAS la garde : elle se réinstalle quand vous jouez au jeu. Ses sauvegardes restent sur ce Mac et dans le dossier des sauvegardes.",
+                                       "Su app va a la Papelera. El NAS la guarda: se vuelve a instalar cuando juegues al juego. Sus partidas guardadas se quedan en este Mac y en la carpeta de partidas guardadas.",
+                                       "Seine App kommt in den Papierkorb. Das NAS behält sie: Sie wird wieder installiert, wenn du das Spiel spielst. Seine Spielstände bleiben auf diesem Mac und im Spielstandordner.")
         } else {
             alert.informativeText = tr("Its app goes to the Trash. The games folder keeps it: it is installed again when you play the game. Its saves stay on this Mac and in the saves folder.",
-                                       "Son app va à la Corbeille. Le dossier des jeux la garde : elle se réinstalle quand vous jouez au jeu. Ses sauvegardes restent sur ce Mac et dans le dossier des sauvegardes.")
+                                       "Son app va à la Corbeille. Le dossier des jeux la garde : elle se réinstalle quand vous jouez au jeu. Ses sauvegardes restent sur ce Mac et dans le dossier des sauvegardes.",
+                                       "Su app va a la Papelera. La carpeta de juegos la guarda: se vuelve a instalar cuando juegues al juego. Sus partidas guardadas se quedan en este Mac y en la carpeta de partidas guardadas.",
+                                       "Seine App kommt in den Papierkorb. Der Spieleordner behält sie: Sie wird wieder installiert, wenn du das Spiel spielst. Seine Spielstände bleiben auf diesem Mac und im Spielstandordner.")
         }
-        alert.addButton(withTitle: tr("Move to the Trash", "Mettre à la Corbeille")).hasDestructiveAction = true
-        alert.addButton(withTitle: tr("Cancel", "Annuler"))
+        alert.addButton(withTitle: tr("Move to the Trash", "Mettre à la Corbeille", "Mover a la Papelera", "In den Papierkorb legen")).hasDestructiveAction = true
+        alert.addButton(withTitle: tr("Cancel", "Annuler", "Cancelar", "Abbrechen"))
         guard alert.runModal() == .alertFirstButtonReturn else { return }
         removeMacApp(MacAppCopy(path: built.path, titleID: game.titleID, name: game.name, size: built.size,
                                 on: game.platforms?.mac ?? true, packed: packed))
@@ -1367,11 +1385,11 @@ final class AppModel: ObservableObject {
     /// a time, what it says shown on the console and on the game's page.
     func runInstall(of titleID: String, name: String, _ work: (@escaping @Sendable (String) -> Void) async throws -> Void) async throws {
         guard installing == nil else {
-            throw EngineFailure(kind: "busy", message: tr("Wait for the installation under way to finish.", "Attendez la fin de l’installation en cours."))
+            throw EngineFailure(kind: "busy", message: tr("Wait for the installation under way to finish.", "Attendez la fin de l’installation en cours.", "Espera a que termine la instalación en curso.", "Warte, bis die laufende Installation beendet ist."))
         }
         installing = titleID
         installingName = name
-        installMessage = tr("Installing \(name) on this Mac…", "Installation de \(name) sur ce Mac…")
+        installMessage = tr("Installing \(name) on this Mac…", "Installation de \(name) sur ce Mac…", "Instalando \(name) en este Mac…", "\(name) wird auf diesem Mac installiert …")
         defer {
             installing = nil
             installingName = nil
@@ -1424,7 +1442,9 @@ final class AppModel: ObservableObject {
             if ending == .crashed {
                 let log = "~/Library/Logs/nxnative/\(run.app.titleID).log"
                 banner = Banner(kind: .error, text: tr("\(run.app.name) stopped unexpectedly. Its log: \(log)",
-                                                       "\(run.app.name) s’est arrêté de façon inattendue. Son journal : \(log)"))
+                                                       "\(run.app.name) s’est arrêté de façon inattendue. Son journal : \(log)",
+                                                       "\(run.app.name) se cerró inesperadamente. Su registro: \(log)",
+                                                       "\(run.app.name) wurde unerwartet beendet. Sein Protokoll: \(log)"))
             }
         case let .saves(titleID: titleID, event: event, onShare: onShare):
             telemetry.event("builder.saves", game: titleID,

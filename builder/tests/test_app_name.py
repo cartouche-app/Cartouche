@@ -50,6 +50,8 @@ class AppName(unittest.TestCase):
         workflow = text(".github/workflows/builder.yml")
         self.assertNotIn("Cartouche Builder.app", workflow)
         self.assertIn('"build/builder/Cartouche.app/Contents/MacOS/Cartouche" --layout-check', workflow)
+        # Again in German, whose words are the longest.
+        self.assertRegex(workflow, r"id: layout_de\n.*\n        env:\n          CARTOUCHE_BUILDER_LANG: de\n        run: '\"build/builder/Cartouche.app/Contents/MacOS/Cartouche\" --layout-check'")
         self.assertIn('make_dmg.sh "build/builder/Cartouche.app" build/dmg', workflow)
         self.assertIn('"build/builder/Cartouche.app/Contents/MacOS/Cartouche" --gallery build/screens', workflow)
 
@@ -71,13 +73,13 @@ class AppName(unittest.TestCase):
         self.assertFalse(running.search("/Applications/Mario Kart World.app/Contents/MacOS/Mario Kart World"))
 
     def test_the_consoles_system_page_names_it_in_its_language(self):
-        # Cartouche for Mac in English, Cartouche pour Mac in French: a
-        # verbatim name stayed in English in the French console.
+        # Cartouche for Mac in English, Cartouche pour Mac in French, and so
+        # on: a verbatim name stayed in English in the French console.
         system = text("launcher/Sources/CartoucheSystemView.swift")
         self.assertNotRegex(system, r'Text\(verbatim: "Cartouche (?:for Mac|Builder)"\)')
         self.assertIn("Text(CartoucheText.macSystemApp)", system)
         words = json.loads(text("builder/mac/console/strings.json"))["strings"]["mac.system.app"]
-        self.assertEqual(words, {"en": "Cartouche for Mac", "fr": "Cartouche pour Mac"})
+        self.assertEqual(words, {"en": "Cartouche for Mac", "fr": "Cartouche pour Mac", "es": "Cartouche para Mac", "de": "Cartouche für Mac"})
 
     def test_no_word_of_the_apps_says_cartouche_builder(self):
         # The words the Mac's console, the iPhone and the engine show: a

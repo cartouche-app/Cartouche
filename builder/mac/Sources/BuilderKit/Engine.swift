@@ -194,7 +194,7 @@ public final class Engine: @unchecked Sendable {
     public let package: URL
     public let python: URL
     public let home: BuilderHome
-    /// The engine's language, "fr" or "en": the app's.
+    /// The engine's language, "en", "fr", "es" or "de": the app's.
     public var language: String
 
     public init(package: URL, python: URL, home: BuilderHome = .default, language: String = "") {

@@ -10,6 +10,7 @@
         "watts": 4.1
       },
       "device": "iPhone19,4",
+      "deviceLanguage": "fr",
       "display": {
         "foldSplit": true,
         "tv": false
@@ -116,6 +117,7 @@
     {
       "cartouche": "0.10.0",
       "device": "iPhone19,4",
+      "deviceLanguage": "fr",
       "fields": {
         "from": "mac",
         "link": "cable",

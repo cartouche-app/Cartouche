@@ -43,6 +43,10 @@ struct CartoucheTelemetryContext: Codable, Equatable {
     var ios: String
     /// The language Cartouche shows.
     var language: String?
+    /// The iPhone's own language, the first in Settings › General ›
+    /// Language & Region: its language and script only, such as "es" or
+    /// "zh-Hans" (CartoucheGameLanguage.deviceLanguage).
+    var deviceLanguage: String?
     /// The memory limit iOS sets for Cartouche, which a game started in its
     /// place shares: in the report of such a game's session, the limit the
     /// game had at its peak (CartoucheSessionReport.memoryLimit).
