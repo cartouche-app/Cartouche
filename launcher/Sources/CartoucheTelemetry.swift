@@ -477,6 +477,9 @@ final class CartoucheTelemetry: ObservableObject {
             "setUp": .flag(setup.isComplete),
             "storage": .text(CartoucheStorageSettings.shared.location(.games)?.server.kind.rawValue ?? "none"),
             "saves": .text(CartoucheStorageSettings.shared.location(.saves)?.server.kind.rawValue ?? "none"),
+            // How many games folders Cartouche reads (decision 142): never
+            // their servers or paths.
+            "gamesFolders": .number(Double(CartoucheStorageSettings.shared.gamesFolders.all.count)),
             // The Apple ID's, or the player's own certificate, given by the
             // Cartouche Installer or on the iPhone (docs/imported-signing.md).
             "signing": .text(CartoucheImportedSigning.mode.rawValue),
