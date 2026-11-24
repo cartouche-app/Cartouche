@@ -88,6 +88,11 @@ public final class CartoucheMacConsole: ObservableObject {
     @Published private(set) var iPhoneGames: CartoucheMacGamesFolder?
     /// Send now, under the iPhone's games folder on the Storage page.
     public var onSendGames: () -> Void = {}
+    /// The games folders or the saves folder, changed on the Storage page
+    /// on one of the player's connections: the change, as JSON, which the
+    /// app keeps as the folders chosen last and gives back to the paired
+    /// iPhones (changeFolders).
+    public var onChangeFolders: (_ change: Data) -> Void = { _ in }
     /// Removes the game from this Mac; the app asks the player first.
     public var onUninstall: (_ game: URL) -> Void = { _ in }
     /// Install, on a game the Builder keeps on a NAS: the app installs it

@@ -214,6 +214,10 @@ final class CartoucheStorageSettings: ObservableObject {
     /// A server that goes over the bridge was saved or removed here, or a
     /// folder chosen: the paired Mac takes it (CartoucheConnectionsExchange).
     let connectionsChanged = PassthroughSubject<Void, Never>()
+    /// The games folders the paired Mac gave were taken here, chosen later
+    /// on its console or on another iPhone (take(folders:)): the games
+    /// folders are read again.
+    let gamesFoldersTaken = PassthroughSubject<Void, Never>()
 
     private let defaults: UserDefaults
     /// Whether the keychain keeps the settings too (Kept).
@@ -475,6 +479,52 @@ final class CartoucheStorageSettings: ObservableObject {
         self.places = places
         self.otherGames = otherGames
         self.removed = removed
+        persist()
+        return true
+    }
+
+    /// Takes TOLD, the folders the paired Mac keeps, chosen last on its
+    /// console or on another iPhone paired with it: the games folders, and
+    /// the saves folder, chosen later than here, as if chosen here then,
+    /// when they are on servers here, or on those they were replaced by.
+    /// One on none of them leaves this iPhone's as it is, a games folder
+    /// with the others; the games folders of this iPhone the Mac cannot
+    /// see, a folder picked here or the Mac's own, stay after those told.
+    /// Whether anything changed. The Mac is not told again: it has them.
+    @discardableResult
+    func take(folders told: CartoucheChosenFolders) -> Bool {
+        let known = connections()
+        func here(_ folder: CartoucheChosenFolders.Folder?) -> CartoucheStoragePlace? {
+            guard let folder, let id = folder.connection else { return nil }
+            let now = server(id) != nil ? id : CartoucheConnections.current(id, in: known)
+            guard let now, server(now)?.travels == true else { return nil }
+            return CartoucheStoragePlace(server: now, path: folder.path)
+        }
+        func isLater(_ folder: CartoucheChosenFolders.Folder?, than role: CartoucheStorageRole) -> Bool {
+            guard let folder else { return false }
+            return folder.chosen > chosen[role] ?? Date(timeIntervalSince1970: 0)
+        }
+        var games: CartoucheGamesFolderList<CartoucheStoragePlace>?
+        if isLater(told.games, than: .games), let first = here(told.games) {
+            let mine = gamesFolders.all.filter { server($0.server)?.travels != true }
+            games = CartoucheGamesFolderList(first: first, others: (told.otherGames ?? []).compactMap(here) + mine)
+        }
+        var saves: CartoucheStoragePlace?
+        if isLater(told.saves, than: .saves) {
+            saves = here(told.saves)
+        }
+        guard games != nil || saves != nil else { return false }
+        if let games, let date = told.games?.chosen {
+            let moved = games.all != gamesFolders.all
+            places[.games] = games.first
+            otherGames = games.others
+            chosen[.games] = date
+            if moved { gamesFoldersTaken.send() }
+        }
+        if let saves, let date = told.saves?.chosen {
+            places[.saves] = saves
+            chosen[.saves] = date
+        }
         persist()
         return true
     }

@@ -16,10 +16,12 @@
 //  same as the paired iPhones' (CartoucheConnections.swift): this Mac's
 //  folders, the Builder's, stand in place of the games folder and the saves
 //  folder (builder/mac, ConsoleStorage.swift), and neither a Mac nor a
-//  folder of Files is added there. When the saves folder chosen on the
-//  iPhone is on one of the connections, the Builder keeps the saves of the
-//  Mac's games there too, and the page shows it as the iPhone does, the
-//  choice staying the iPhone's.
+//  folder of Files is added there. When the saves folder of the iPhones is
+//  on one of the connections, the Builder keeps the saves of the Mac's
+//  games there too, and the page shows it as the iPhone does. The player
+//  changes the iPhones' games folders and saves folder there too, on one
+//  of the connections: the app keeps the change, which the iPhones take
+//  (CartoucheChosenFolders.changing), the folder chosen last winning.
 //
 
 import Combine
@@ -74,7 +76,9 @@ struct CartoucheStorageView: View {
                 // This Mac's folders, the Builder's (ConsoleStorage.swift),
                 // and the iPhone's saves folder, where the Builder keeps the
                 // saves of this Mac's games when it is on a connection.
-                CartoucheMacFoldersSection()
+                CartoucheMacFoldersSection { server, role, adding in
+                    browsing = Browsing(server: server, role: role, adding: adding)
+                }
                 if settings.keepsMacSavesOnConnection {
                     savesSection()
                 }
@@ -121,6 +125,14 @@ struct CartoucheStorageView: View {
         .sheet(item: $browsing) { browsing in
             NavigationStack {
                 CartoucheStorageFolderBrowser(server: browsing.server, path: "", role: browsing.role) { path in
+                    #if os(macOS)
+                    // The iPhones' folders, which the app keeps
+                    // (ConsoleStorage.swift).
+                    let connection = browsing.server.id
+                    CartoucheMacConsole.shared.changeFolders(browsing.role == .saves ? .saves(connection: connection, path: path)
+                        : browsing.adding ? .addGames(connection: connection, path: path) : .games(connection: connection, path: path))
+                    self.browsing = nil
+                    #else
                     let place = CartoucheStoragePlace(server: browsing.server.id, path: path)
                     if browsing.adding {
                         settings.addGamesFolder(place)
@@ -129,6 +141,7 @@ struct CartoucheStorageView: View {
                     }
                     self.browsing = nil
                     if browsing.role == .games { stored.refresh() }
+                    #endif
                 }
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
@@ -136,6 +149,9 @@ struct CartoucheStorageView: View {
                     }
                 }
             }
+            #if os(macOS)
+            .frame(minWidth: 480, idealWidth: 520, minHeight: 540, idealHeight: 640)
+            #endif
             .preferredColorScheme(.dark)
         }
         #if os(iOS)
@@ -328,13 +344,15 @@ struct CartoucheStorageView: View {
                         .foregroundStyle(Color.orange)
                     CartoucheReportButton(report: problem)
                 }
-                #if os(iOS)
-                // On the Mac, the iPhone's: chosen there.
                 Menu {
                     serverChoices(.saves)
                 } label: {
                     Label(CartoucheText.storageChangeFolder, systemImage: "folder")
                 }
+                #if os(iOS)
+                // On the Mac, the iPhones' folder is changed, never stopped:
+                // the Builder's own setting keeps the Mac's saves in its
+                // folder.
                 Button(role: .destructive) {
                     settings.setPlace(nil, for: .saves)
                 } label: {
@@ -381,7 +399,7 @@ struct CartoucheStorageView: View {
     /// but cannot hold the saves.
     @ViewBuilder
     private func serverChoices(_ role: CartoucheStorageRole, adding: Bool = false) -> some View {
-        ForEach(settings.servers) { server in
+        ForEach(listed) { server in
             let readOnly = settings.readOnlyServers.contains(server.id)
             Button {
                 browsing = Browsing(server: server, role: role, adding: adding)

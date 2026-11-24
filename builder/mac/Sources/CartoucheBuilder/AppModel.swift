@@ -62,8 +62,9 @@ enum AppSettings {
     static let interfaceKey = "interface"
 
     /// The folders the paired iPhones chose for the games and the saves,
-    /// as they told them with their connections, the one chosen last of
-    /// each (CartoucheChosenFolders).
+    /// as they told them with their connections, or the player changed them
+    /// on the console's Storage page, the one chosen last of each
+    /// (CartoucheChosenFolders), which the iPhones are given back.
     static let toldFoldersKey = "toldFolders"
 
     static var menuBar: Bool { UserDefaults.standard.object(forKey: menuBarKey) as? Bool ?? true }
@@ -1173,6 +1174,19 @@ final class AppModel: ObservableObject {
         } else {
             macGames.use(saves: bridge.saves)
         }
+    }
+
+    /// CHANGE, made on the console's Storage page to the folders for the
+    /// games or the saves, on one of the player's connections, as JSON from
+    /// the console's copy of the type: kept as the folders chosen last,
+    /// which the paired iPhones take the next time they give their
+    /// connections (BridgeController.bridgeFolders), and used here at once.
+    func changeFolders(_ change: Data) {
+        guard !sample, let change = try? JSONDecoder().decode(CartoucheChosenFolders.Change.self, from: change) else { return }
+        AppSettings.toldFolders = AppSettings.toldFolders.changing(change)
+        useMacSaves()
+        useIPhoneGames()
+        bridge.objectWillChange.send()
     }
 
     func setMacSaves(_ on: Bool) {
