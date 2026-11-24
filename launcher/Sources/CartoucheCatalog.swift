@@ -562,6 +562,15 @@ final class CartoucheCatalog: ObservableObject {
         return result
     }
 
+    /// The apps among APPS that are not nxnative games, by name: an IPA the
+    /// player installed to try it. The console shows games only, so the
+    /// System page lists them, under Other installed apps, to open or
+    /// uninstall (docs/decisions/154.md).
+    func otherApps(among apps: [LCAppModel]) -> [LCAppModel] {
+        apps.filter { gameTitle(of: $0) == nil }
+            .sorted { $0.displayName.localizedStandardCompare($1.displayName) == .orderedAscending }
+    }
+
     /// The title IDs of the nxnative games installed among APPS, as
     /// entries(for:stored:cloud:) finds them: all those of a game the
     /// catalogue knows. A game Cartouche Cloud built of one of them is on

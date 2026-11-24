@@ -3104,6 +3104,28 @@
       ]
     },
     {
+      "name": "iphone-system-other-apps",
+      "comment": "The System page down to Other installed apps (category: otherApps): two IPAs the player installed that are not nxnative games (work: other-apps), each with Open and Uninstall (decision 154). Up to 0.15.1, Cartouche said they were in Apps, LiveContainer's tab, which it hides.",
+      "screen": "system",
+      "work": "other-apps",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "category": "otherApps"
+    },
+    {
       "name": "iphone-system-end",
       "comment": "The System page at its end, on Reset Cartouche.",
       "screen": "system",
@@ -3568,6 +3590,20 @@
       "owned": [
         "01007EF00011E000",
         "0400C3F00006E000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false
+    },
+    {
+      "name": "duo-sim-installed-not-a-game",
+      "comment": "What Cartouche says once it has installed an IPA that is not an nxnative game (work: installed-not-a-game), to a player who plays by touch: where it is, on the System page under Other installed apps (decision 154), where up to 0.15.1 it said Apps. An alert, so on the iPhone Duo's own simulator.",
+      "device": "iPhone Duo",
+      "screen": "games",
+      "work": "installed-not-a-game",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
         "01006BB00C6F0000"
       ],
       "setup": true,

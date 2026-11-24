@@ -180,8 +180,8 @@ final class LCAppModel: ObservableObject, Identifiable, Equatable {
 /// games with LiveContainer and opens their preferences, as the gallery
 /// stands it in: nothing happens, a scenario can show a step in progress,
 /// every game has the settings of GallerySettings, kept in memory, and an
-/// install or a start says, for the UI tests, which IPA or game it was
-/// given (GalleryTesting.swift).
+/// install, a start or an uninstall says, for the UI tests, which IPA, game
+/// or app it was given (GalleryTesting.swift).
 @MainActor
 final class CartoucheGameActions: ObservableObject {
     static let shared = CartoucheGameActions()
@@ -221,7 +221,7 @@ final class CartoucheGameActions: ObservableObject {
             self.running?.isInFront = false
         }
     }
-    func uninstall(_ app: LCAppModel, erasingData: Bool) {}
+    func uninstall(_ app: LCAppModel, erasingData: Bool) { GalleryTest.uninstall(app, with: self) }
     func export(_ app: LCAppModel, titleId: String?, then next: (() -> Void)? = nil) {}
     /// A game's saves live in its LiveContainer data folder, which the
     /// gallery has none of, but for the game whose saves a scenario syncs

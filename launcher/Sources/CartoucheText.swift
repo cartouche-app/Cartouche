@@ -333,6 +333,12 @@ enum CartoucheText {
     static var basedOn: String { s("system.cartouche.basedOn", "Based on") }
     static var sheets: String { s("system.cartouche.sheets", "Game sheets") }
     static var coversCredit: String { s("system.covers.credit", "Covers, artworks and descriptions of the games: IGDB.com.") }
+    /// The apps installed in Cartouche that are not nxnative games
+    /// (docs/decisions/154.md).
+    static var otherAppsTitle: String { s("system.otherApps", "Other installed apps") }
+    static var otherAppsFooter: String { s("system.otherApps.footer", "IPAs you installed that are not nxnative games: the console shows games only. They open in Cartouche’s place.") }
+    static var openApp: String { s("action.open", "Open") }
+    static var otherAppUninstallMessage: String { s("system.otherApps.uninstall", "The app and its data leave this iPhone.") }
 
     // MARK: Cartouche's updates
 
@@ -423,7 +429,12 @@ enum CartoucheText {
     /// Beside reasonGPU on an iPhone whose GPU reads no BC: the Mac's
     /// builds of nxnative-nobc, a separate fork (cartouche_builder/build_for.py).
     static var installGPUBuilder: String { s("work.install.gpu.builder", "Cartouche on your Mac builds them for this iPhone from nxnative-nobc, a separate fork of nxnative that converts those textures, once the two are paired.") }
-    static func installNotAGame(_ name: String) -> String { f("work.install.notAGame", "%@ is not an nxnative game: you will find it in Apps.", name) }
+    /// Where an app that is not an nxnative game is once installed: on the
+    /// System page, as the console shows games only (docs/decisions/154.md).
+    /// Up to 0.15.1, "in Apps", LiveContainer's tab, which Cartouche hides.
+    static func installNotAGame(_ name: String) -> String {
+        f("work.install.notAGame.system", "%@ is not an nxnative game: you will find it in System, under Other installed apps.", name)
+    }
     static func installNoSpace(needed: String, free: String) -> String {
         f("work.install.noSpace", "Installing this game takes about %1$@ of free space, and this iPhone has %2$@. Free some space, then import it again.", needed, free)
     }
@@ -431,6 +442,9 @@ enum CartoucheText {
     static var startSoon: String { s("work.start.soon", "The game opens in a moment.") }
     static var startSettings: String { s("work.start.settings", "The game opens on its settings: its Play button starts it and keeps your choices.") }
     static var startFailed: String { s("work.start.failed", "The game did not start") }
+    /// The same, for an app that is not an nxnative game.
+    static var openSoon: String { s("work.open.soon", "The app opens in a moment.") }
+    static var openFailed: String { s("work.open.failed", "The app did not open") }
     static var startCertificateRefused: String { s("work.start.certificateRefused", "iOS no longer accepts the certificate the game was signed with. Cartouche signs in again with your Apple ID to take the new one: try again in a moment.") }
 
     // A game LiveContainer did not sign, or whose process stopped as it

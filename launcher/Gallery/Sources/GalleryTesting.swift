@@ -30,7 +30,8 @@
 //    one in On My iPhone: the stand-in install says over the console which
 //    file it was given (GalleryStubs.swift);
 //  - a game started, which the stand-in start says over the console, with
-//    how many starts so far, as an install says its IPA;
+//    how many starts so far, as an install says its IPA; and an app
+//    uninstalled, which goes from the player's apps;
 //  - Siri or a shortcut asking for a game, as iOS hands Cartouche its
 //    action Play a Game (GalleryShortcut below): as the gallery opens,
 //    before its console is on screen (-GalleryShortcut <title ID>), or each
@@ -137,6 +138,30 @@ enum GalleryTest {
 
     /// The title of the alert the stand-in start shows.
     static let playTitle = "Gallery play"
+
+    /// How many apps the gallery was asked to uninstall since it opened.
+    @MainActor private static var uninstalls = 0
+
+    /// What the stand-in uninstall does with an app: takes it out of the
+    /// player's apps, as LiveContainer's list loses it, and says which,
+    /// and how many uninstalls so far, over the console, half a second
+    /// later, once what was over it has gone. The tests read it as an
+    /// alert.
+    @MainActor
+    static func uninstall(_ app: LCAppModel, with actions: CartoucheGameActions) {
+        guard isOn else { return }
+        uninstalls += 1
+        DataManager.shared.model.apps.removeAll { $0 === app }
+        let message = "Uninstall \(uninstalls): \(app.displayName)"
+        NSLog("[Gallery] %@", message)
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(500))
+            actions.notice = CartoucheGameNotice(title: uninstallTitle, message: message)
+        }
+    }
+
+    /// The title of the alert the stand-in uninstall shows.
+    static let uninstallTitle = "Gallery uninstall"
 }
 
 // MARK: Siri and Shortcuts

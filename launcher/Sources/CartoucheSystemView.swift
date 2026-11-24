@@ -13,10 +13,11 @@
 //  whether games run behind the console, and the memory they have there;
 //  when its signature expires, and how it is renewed; the device that the
 //  game sheets are compared with; Cartouche's updates; the game
-//  measurements it sends (CartoucheTelemetryView); Cartouche's version and
-//  what the last versions brought (CartoucheReleaseNotesView); Report a
-//  problem (CartoucheReportView); and Reset Cartouche (CartoucheResetView),
-//  last.
+//  measurements it sends (CartoucheTelemetryView); the other apps installed
+//  in Cartouche, which are not nxnative games, to open or uninstall;
+//  Cartouche's version and what the last versions brought
+//  (CartoucheReleaseNotesView); Report a problem (CartoucheReportView); and
+//  Reset Cartouche (CartoucheResetView), last.
 //  It opens over the console (CartoucheRootView), and OK or the
 //  controller's Menu button closes it.
 //
@@ -26,8 +27,9 @@
 //  the storage, Cartouche Builder where the iPhone has its Mac's builds,
 //  This Mac, the Builder's updates (ConsoleSystem.swift), the game
 //  measurements, the version and Report a problem; a Mac has no memory
-//  limit, no game behind the console, no signature to renew and nothing
-//  to reset.
+//  limit, no game behind the console, no signature to renew, nothing to
+//  reset, and no other app: its console lists the games the Builder made
+//  for it, and installs no IPA.
 //
 
 import SwiftUI
@@ -117,6 +119,7 @@ struct CartoucheSystemView: View {
                     deviceSection
                     updateSection
                     telemetrySection
+                    otherAppsSection
                     cartoucheSection
                     reportSection
                     resetSection
@@ -783,6 +786,50 @@ struct CartoucheSystemView: View {
         }
     }
 
+    // MARK: Other installed apps
+
+    #if os(iOS)
+    /// The apps installed in Cartouche that are not nxnative games, an IPA
+    /// the player installed to try it, near the page's end: the console
+    /// shows games only, and LiveContainer's Apps tab, where they were,
+    /// never shows (docs/decisions/154.md). Each opens, in Cartouche's
+    /// place, or goes with its data. Both close the page first, so that the
+    /// console shows the step and what went wrong, as for a game. Shown
+    /// only when there is one.
+    @ViewBuilder
+    private var otherAppsSection: some View {
+        let apps = catalog.otherApps(among: sharedModel.apps)
+        if !apps.isEmpty {
+            CartoucheSection {
+                ForEach(apps, id: \.appInfo.relativeBundlePath) { app in
+                    CartoucheOtherAppRow(app: app, canOpen: setup.canPlay && actions.work == nil,
+                                         onOpen: { openApp(app) }, onUninstall: { uninstallApp(app) })
+                        .id(app === apps.first ? Self.otherAppsRow : app.appInfo.relativeBundlePath ?? app.displayName)
+                }
+            } header: {
+                Text(CartoucheText.otherAppsTitle)
+            } footer: {
+                Text(CartoucheText.otherAppsFooter)
+            }
+        }
+    }
+
+    /// The section's first row: the gallery opens the page on it.
+    static let otherAppsRow = "otherApps"
+
+    /// Opens APP once the page has gone, as Play starts a game.
+    private func openApp(_ app: LCAppModel) {
+        close()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { actions.play(app) }
+    }
+
+    /// Uninstalls APP, with its data, once the page has gone.
+    private func uninstallApp(_ app: LCAppModel) {
+        close()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { actions.uninstall(app, erasingData: true) }
+    }
+    #endif
+
     // MARK: Cartouche
 
     private var cartoucheSection: some View {
@@ -894,6 +941,47 @@ struct CartoucheSystemView: View {
 }
 
 #if os(iOS)
+/// An app installed in Cartouche that is not an nxnative game, on the
+/// System page (docs/decisions/154.md): its icon and its name, Open, and
+/// Uninstall, which asks first, as it takes the app's data with it.
+@available(iOS 17.0, *)
+struct CartoucheOtherAppRow: View {
+    let app: LCAppModel
+    /// Cartouche has its certificate, and installs or starts nothing.
+    let canOpen: Bool
+    let onOpen: () -> Void
+    let onUninstall: () -> Void
+    @State private var asksToUninstall = false
+
+    var body: some View {
+        HStack(spacing: 12) {
+            CartoucheAppIcon(app: app, size: 40)
+                .accessibilityHidden(true)
+            Text(app.displayName)
+                .lineLimit(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Button(CartoucheText.openApp, action: onOpen)
+                .buttonStyle(.borderedProminent)
+                .disabled(!canOpen)
+            Button(role: .destructive) {
+                asksToUninstall = true
+            } label: {
+                Image(systemName: "trash")
+            }
+            .buttonStyle(.bordered)
+            .accessibilityLabel(CartoucheText.uninstall)
+            .confirmationDialog(CartoucheText.uninstallQuestion(app.displayName), isPresented: $asksToUninstall,
+                                titleVisibility: .visible) {
+                Button(CartoucheText.uninstall, role: .destructive, action: onUninstall)
+                Button(CartoucheText.cancel, role: .cancel) {}
+            } message: {
+                Text(CartoucheText.otherAppUninstallMessage)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+}
+
 /// How to have Shortcuts renew Cartouche every night, and whether it does:
 /// iOS lets no app make an automation, nor see the player's, and Cartouche
 /// tells from each run of its Refresh All Apps action, and from the

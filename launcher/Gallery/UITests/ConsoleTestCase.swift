@@ -134,9 +134,10 @@ enum GalleryWords {
     static let signedInAs = "player@icloud.com"
     /// The folder in Files the saves are kept in (GallerySaves).
     static let savesFolder = "NAS"
-    /// The stand-in start's alert, and what Siri would say, over the
-    /// console (GalleryTesting.swift).
+    /// The stand-in start's and uninstall's alerts, and what Siri would
+    /// say, over the console (GalleryTesting.swift).
     static let play = "Gallery play"
+    static let uninstall = "Gallery uninstall"
     static let shortcutFailed = "Gallery shortcut"
     /// What a test posts for Siri to ask for the game of
     /// Launch.siriOnPost (GalleryShortcut.posted).
