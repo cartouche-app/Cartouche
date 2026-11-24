@@ -62,8 +62,9 @@ enum AppSettings {
     static let interfaceKey = "interface"
 
     /// The folders the paired iPhones chose for the games and the saves,
-    /// as they told them with their connections, the one chosen last of
-    /// each (CartoucheChosenFolders).
+    /// as they told them with their connections, or the player changed them
+    /// on the console's Storage page, the one chosen last of each
+    /// (CartoucheChosenFolders), which the iPhones are given back.
     static let toldFoldersKey = "toldFolders"
 
     static var menuBar: Bool { UserDefaults.standard.object(forKey: menuBarKey) as? Bool ?? true }
@@ -184,7 +185,7 @@ final class AppModel: ObservableObject {
         macGames = MacGames(store: home.macSaves, scratch: home.savesScratch, sample: sample)
         iPhoneGames = IPhoneGames(store: ConnectionGamesStore(url: home.connectionGames), scratch: home.gamesScratch)
         if sample {
-            updater = Updater(app: URL(fileURLWithPath: "/Applications/Cartouche Builder.app"), version: "0.2.0", identifier: Updater.identifier,
+            updater = Updater(app: URL(fileURLWithPath: "/Applications/Cartouche.app"), version: "0.2.0", identifier: Updater.identifier,
                               folder: home.root.appendingPathComponent("Updates"), enabled: false)
             telemetry = BuilderTelemetry(file: nil, endpoint: nil, version: "0.2.0")
         } else {
@@ -1147,8 +1148,7 @@ final class AppModel: ObservableObject {
         let offers = iPhoneGames.offers.filter { !built.contains($0.titleID) }
         ConsoleLink.show(games: apps, kept: kept, offers: offers, keptIn: ConnectionGames.shownPlace(
             kept: kept.isEmpty ? nil : (gamesOnShare ? tr("the NAS", "le NAS") : tr("the games folder", "le dossier des jeux")),
-            offers: offers.isEmpty ? nil : iPhoneGames.folder.flatMap { ConsoleLink.connectionName($0.connection) }
-                ?? tr("the iPhone’s games folder", "le dossier des jeux de l’iPhone")))
+            offers: offers.isEmpty ? nil : iPhoneGames.placeName(of: offers)))
         // The sessions of the games it shows, played since the app last
         // read them, from the Finder or the Dock too: the console reads the
         // logs of its games only.
@@ -1174,6 +1174,19 @@ final class AppModel: ObservableObject {
         } else {
             macGames.use(saves: bridge.saves)
         }
+    }
+
+    /// CHANGE, made on the console's Storage page to the folders for the
+    /// games or the saves, on one of the player's connections, as JSON from
+    /// the console's copy of the type: kept as the folders chosen last,
+    /// which the paired iPhones take the next time they give their
+    /// connections (BridgeController.bridgeFolders), and used here at once.
+    func changeFolders(_ change: Data) {
+        guard !sample, let change = try? JSONDecoder().decode(CartoucheChosenFolders.Change.self, from: change) else { return }
+        AppSettings.toldFolders = AppSettings.toldFolders.changing(change)
+        useMacSaves()
+        useIPhoneGames()
+        bridge.objectWillChange.send()
     }
 
     func setMacSaves(_ on: Bool) {
@@ -1381,14 +1394,18 @@ final class AppModel: ObservableObject {
 
     /// The games folder chosen on the iPhone, when it is on one of the
     /// player's connections: the Builder sends its games there, and the
-    /// console installs from there the Mac apps another Mac sent.
+    /// console installs from there the Mac apps another Mac sent, as from
+    /// the other games folders the iPhone reads.
     func useIPhoneGames() {
         guard !sample else { return }
-        if let told = AppSettings.toldFolders.games, let id = told.connection, let connection = ConsoleLink.currentConnection(id) {
-            iPhoneGames.use(IPhoneGames.Folder(connection: connection, path: told.path))
-        } else {
-            iPhoneGames.use(nil)
+        let told = AppSettings.toldFolders
+        func folder(_ told: CartoucheChosenFolders.Folder?) -> IPhoneGames.Folder? {
+            guard let told, let id = told.connection, let connection = ConsoleLink.currentConnection(id) else { return nil }
+            return IPhoneGames.Folder(connection: connection, path: told.path)
         }
+        // The other games folders the iPhone reads, for the Mac apps
+        // another Mac sent there.
+        iPhoneGames.use(folder(told.games), others: (told.otherGames ?? []).compactMap { folder($0) })
     }
 
     private func heard(_ news: MacGamesNews) {
@@ -1451,7 +1468,7 @@ final class AppModel: ObservableObject {
     /// ended, on the page or the console it was started from; a window the
     /// player closed, the game started from the menu bar, stays closed.
     private func comeBack() {
-        guard let window = NSApp.windows.first(where: { $0.identifier?.rawValue == AppModel.mainWindow || $0.title == "Cartouche Builder" }),
+        guard let window = NSApp.windows.first(where: { $0.identifier?.rawValue == AppModel.mainWindow || $0.title == AppName.name }),
               window.isVisible else { return }
         NSApp.activate()
         window.makeKeyAndOrderFront(nil)
@@ -1459,7 +1476,7 @@ final class AppModel: ObservableObject {
 
     func showMainWindow() {
         NSApp.activate()
-        if let window = NSApp.windows.first(where: { $0.identifier?.rawValue == AppModel.mainWindow || $0.title == "Cartouche Builder" }) {
+        if let window = NSApp.windows.first(where: { $0.identifier?.rawValue == AppModel.mainWindow || $0.title == AppName.name }) {
             window.makeKeyAndOrderFront(nil)
         } else {
             NotificationCenter.default.post(name: .openMainWindow, object: nil)

@@ -30,7 +30,8 @@
 //  The player's connections to their storage go to the Mac, and its own
 //  come back, so that both have the same (CartoucheConnectionsExchange):
 //  after a pairing, after each change here, and when Cartouche comes to
-//  the front.
+//  the front. So do the folders chosen for the games and the saves: the
+//  ones chosen last, here, on another iPhone or on the Mac's console, win.
 //
 
 import Combine
@@ -212,6 +213,10 @@ enum CartoucheMacStorage {
     /// first connection after, in seconds: Tailscale gives a device the same
     /// ones for good.
     static let tailnetAskSpacing: TimeInterval = 3_600
+    /// How Cartouche last reached each Mac, by its server's ID, for the
+    /// measurements: a game installed from it says so (game.installed's
+    /// link). Never an address.
+    @MainActor static private(set) var links: [UUID: CartoucheMacLink] = [:]
 
     /// The iPhone's ID for the Mac of SERVER.
     static func deviceID(of server: CartoucheStorageServer) -> String {
@@ -298,7 +303,8 @@ enum CartoucheMacStorage {
             }
             try Task.checkCancellation()
             // No address to keep: the cable has none.
-            return await remember(CartoucheBridgeClient(channel: channel, address: nil), server: server, settings: settings)
+            return await remember(CartoucheBridgeClient(channel: channel, address: nil), server: server, settings: settings,
+                                  cable: true)
         } catch let error as CartoucheBridgeError where [.notPaired, .protocolError].contains(error.kind) {
             transport.close()
             throw explained(error, mac: server.name, path: "")
@@ -357,11 +363,13 @@ enum CartoucheMacStorage {
     /// next time, and the Mac's addresses in the tailnet, as its Cartouche
     /// Builder tells them now and then.
     private static func remember(_ client: CartoucheBridgeClient, server: CartoucheStorageServer,
-                                 settings: CartoucheStorageSettings) async -> CartoucheRemote {
+                                 settings: CartoucheStorageSettings, cable: Bool = false) async -> CartoucheRemote {
         // An older Cartouche Builder says nothing of them.
         let told = asksTailnet(of: server.id, at: Date()) ? (try? await client.info())?.tailscale : nil
         let known = CartoucheMacAddresses(host: server.host, port: server.port, tailnet: server.tailnet ?? [])
         let now = known.reached(usable(client.address), port: client.port, told: told)
+        let link = CartoucheMacLink.of(cable: cable, address: client.address, tailnet: now.tailnet)
+        await MainActor.run { links[server.id] = link }
         if now != known {
             await MainActor.run {
                 // As the player has it now, unless they removed it meanwhile.
@@ -489,7 +497,9 @@ enum CartoucheMacStorage {
 /// The player's connections to their storage, given to each paired Mac
 /// with their secrets, and the Mac's taken, so that both have the same
 /// (CartoucheConnections.swift), with the folders chosen here for the games
-/// and the saves, which the Mac uses too when they are on one of them:
+/// and the saves, which the Mac uses too when they are on one of them, and
+/// those it keeps taken when they were chosen later, on its console or on
+/// another iPhone (take(folders:)):
 /// after a pairing, a moment after a server that goes over the bridge was
 /// saved or removed here or a folder chosen, and when Cartouche comes to
 /// the front, at most every ten minutes then. A Mac away, closed or too old
@@ -578,13 +588,17 @@ final class CartoucheConnectionsExchange: ObservableObject {
         guard let mac = remote as? CartoucheMacRemote else { return false }
         do {
             guard try await mac.client.info().hasConnections == true else {
-                NSLog("[Cartouche] the Mac takes no connections: its Cartouche Builder is older")
+                NSLog("[Cartouche] the Mac takes no connections: its Cartouche is older")
                 return false
             }
-            let theirs = try await mac.client.connections(settings.connections(), places: settings.chosenFolders())
+            let (theirs, places) = try await mac.client.exchange(settings.connections(), places: settings.chosenFolders())
             let changed = settings.take(theirs)
-            NSLog("[Cartouche] the Mac took the connections and gave %ld, %@", theirs.filter { !$0.removed }.count,
-                  changed ? "which changed some here" : "the same as here")
+            // The folders chosen last there, on a connection taken just now
+            // too.
+            let moved = places.map { settings.take(folders: $0) } ?? false
+            NSLog("[Cartouche] the Mac took the connections and gave %ld, %@%@", theirs.filter { !$0.removed }.count,
+                  changed ? "which changed some here" : "the same as here",
+                  moved ? ", and folders chosen later there" : "")
             return true
         } catch {
             NSLog("[Cartouche] the Mac did not take the connections: %@", error.localizedDescription)

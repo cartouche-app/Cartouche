@@ -1,10 +1,14 @@
 #!/bin/bash
-# Makes Cartouche Builder's disk image from the app bundle.sh made: the app
-# and a link to Applications on Cartouche's colours, in a Finder window the
-# size of its background, with the app's icon on the volume; and its SHA-256
-# beside it, which the app's updates check (Updater.swift).
+# Makes the disk image of the Mac's Cartouche from the app bundle.sh made:
+# the app and a link to Applications on Cartouche's colours, in a Finder
+# window the size of its background, with the app's icon on the volume
+# "Cartouche"; and its SHA-256 beside it, which the app's updates check
+# (Updater.swift).
 #
 #   builder/mac/make_dmg.sh APP FOLDER    # FOLDER/Cartouche-Builder-<version>.dmg
+#
+# The file keeps the name it had while the app was Cartouche Builder: the
+# copies already installed look for that name (builder/tests/test_updates.py).
 #
 # Needs dmgbuild (Resources/dmg/requirements.txt) and macOS's tiffutil. The
 # background is Resources/dmg/background.html rendered at 1x and 2x.
@@ -25,7 +29,7 @@ mkdir -p "$folder"
 rm -f "$folder/$name" "$folder/$name.sha256"
 dmgbuild -s "$here/Resources/dmg/settings.py" \
   -D app="$app" -D background="$work/background.tiff" -D icon="$app/Contents/Resources/AppIcon.icns" \
-  "Cartouche Builder" "$folder/$name"
+  "Cartouche" "$folder/$name"
 hdiutil verify "$folder/$name" >/dev/null
 (cd "$folder" && shasum -a 256 "$name" >"$name.sha256")
 cat "$folder/$name.sha256"

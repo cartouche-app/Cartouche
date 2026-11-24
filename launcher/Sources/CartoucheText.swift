@@ -168,8 +168,9 @@ enum CartoucheText {
     static var gpuSupported: String { s("sheet.gpu.supported", "Supported by this GPU") }
     static var gpuUnsupported: String { s("sheet.gpu.unsupported", "Not supported by this GPU") }
     /// The player's build of the game converts its BC textures for this
-    /// GPU, which reads none (CartoucheBCConversion).
-    static var gpuConverted: String { s("sheet.gpu.converted", "Textures converted to ASTC by this game’s build") }
+    /// GPU, which reads none (CartoucheBCConversion): BC1 to BC3 to ASTC,
+    /// the others decompressed, so not "to ASTC" alone.
+    static var gpuConverted: String { s("sheet.gpu.converted", "Textures converted for this GPU by this game’s build") }
     static var recommendedSettings: String { s("sheet.recommended", "Recommended settings") }
     static var resolution: String { s("sheet.resolution", "Resolution") }
     static var mode: String { s("sheet.mode", "Mode") }
@@ -205,11 +206,12 @@ enum CartoucheText {
 
     static var setupTitle: String { s("setup.title", "Setup") }
     static var setupIntroTitle: String { s("setup.intro.title", "Before your first game") }
-    static var setupIntro: String { s("setup.intro", "Three steps, once on this iPhone. Then Cartouche renews itself.") }
+    static var setupIntro: String { s("setup.intro", "Three steps, once on this iPhone, then an automation that renews Cartouche every night.") }
     static var setupAllDone: String { s("setup.done.title", "All set") }
     static var setupAllDoneDetail: String { s("setup.done.detail", "Cartouche signs your games and renews itself. There is nothing more to do here.") }
     static var setupSessionExpiredTitle: String { s("setup.sessionExpired.title", "One step to do again") }
     static var setupSessionExpiredDetail: String { s("setup.sessionExpired.detail", "Apple asks for a new sign-in with your Apple ID. Cartouche renews itself again as soon as it has gone through; your games and saves stay.") }
+    static var setupAllDoneButNightly: String { s("setup.done.nightly", "Cartouche signs your games. One last step: the automation that renews it every night, even while it stays closed.") }
     static func setupStepDone(_ step: String) -> String { f("setup.step.done", "%@, done", step) }
     static var setupPairingTitle: String { s("setup.pairing.title", "Pairing file") }
     static var setupPairingHow: String { s("setup.pairing.how", "Only a computer can make it: the Cartouche Installer puts it in Cartouche as it installs it, and this step ticks itself. You can also choose it here, or open it with Cartouche.") }
@@ -372,14 +374,36 @@ enum CartoucheText {
 
     // MARK: Renewing every night
 
-    static var dailyIntro: String { s("daily.intro", "An automation in Shortcuts can renew Cartouche every night, with no computer. It connects LocalDevVPN, then runs Cartouche’s Refresh All Apps action, which does what Renew now does.") }
     static var dailyStepAutomation: String { s("daily.step2", "In Shortcuts, open Automation, then tap +.") }
-    static var dailyStepTime: String { s("daily.step3", "Choose Time of Day: a time when the iPhone charges and is online, such as 4 AM, every day. Then choose Run Immediately.") }
-    static var dailyStepVPN: String { s("daily.vpnAction", "Tap Next, choose New Blank Automation, then add the Enable LocalDevVPN action: it connects LocalDevVPN without opening it. An older LocalDevVPN calls it Start LocalDevVPN.") }
-    static var dailyStepAction: String { s("daily.refreshAction", "Then add the Refresh All Apps action of Cartouche, not LiveContainer’s: Cartouche waits for LocalDevVPN to connect before it renews.") }
-    static var dailyStepCheck: String { s("daily.step5", "Each renewal shows on the System page as the last renewal, and gives Cartouche seven more days.") }
+    static var dailyStepTime: String { s("daily.time", "Choose Time of Day: 4:00 AM for instance, a time when the iPhone charges and is online, every day. Choose Run Immediately, then tap Next.") }
+    static var dailyStepVPN: String { s("daily.vpn", "Tap New Blank Automation, then add the Enable LocalDevVPN action: it connects LocalDevVPN without opening it. An older LocalDevVPN calls it Start LocalDevVPN.") }
+    static var dailyStepAction: String { s("daily.refresh", "Then add Refresh All Apps, among Cartouche’s actions and not LiveContainer’s, and tap Done.") }
     static var dailyTailscale: String { s("daily.tailscale", "With Tailscale, add its Connect action last, among those of the Tailscale app: LocalDevVPN turned Tailscale off, and the automation turns it on again.") }
     static var openShortcuts: String { s("daily.openShortcuts", "Open Shortcuts") }
+    /// What the player makes, as Shortcuts shows it once made.
+    static var dailyWhatYouMake: String { s("daily.result", "What you make") }
+    static func dailyEveryDay(_ time: String) -> String { f("daily.result.when", "Every day at %@", time) }
+    static var dailyMade: String { s("daily.made", "I made the automation") }
+    static var dailyMadeFooter: String { s("daily.made.footer", "Cartouche then checks after its first night that it renews it.") }
+    /// The setup's last step, and the System page's row.
+    static var dailyToMake: String { s("daily.state.toMake", "An automation in Shortcuts renews Cartouche every night, even while it stays closed. Without it, Cartouche renews itself only when you open it, and expires 7 days after its last renewal.") }
+    static func dailyWaiting(_ date: String) -> String { f("daily.state.waiting", "Made on %@: Cartouche checks after its first night that it renews it.", date) }
+    static func dailyNotRunning(_ date: String) -> String { f("daily.state.notRunning", "Made on %@, it has not run yet. Check in Shortcuts its time, and that it runs immediately.", date) }
+    static var dailyRunning: String { s("daily.state.running", "It is renewing Cartouche now.") }
+    static func dailyRenewed(_ date: String) -> String { f("daily.state.renewed", "It renewed Cartouche on %@.", date) }
+    static func dailyFailedVPN(_ date: String) -> String { f("daily.state.vpn", "On %@, it ran without LocalDevVPN connected, and could not renew Cartouche. Add the Enable LocalDevVPN action just before Refresh All Apps.", date) }
+    static func dailyInterrupted(_ date: String) -> String { f("daily.state.interrupted", "On %@, iOS stopped it before it had renewed Cartouche. It tries again the next night.", date) }
+    static func dailyFailed(_ date: String, _ why: String) -> String { f("daily.state.failed", "On %@, it could not renew Cartouche: %@", date, why) }
+    static func dailyStopped(_ date: String) -> String { f("daily.state.stopped", "It has not run since %@. Check in Shortcuts that it is still there, on, and runs immediately.", date) }
+    static var dailyMake: String { s("daily.action.make", "Make the automation") }
+    static var dailyFix: String { s("daily.action.fix", "Fix the automation") }
+    static var dailySee: String { s("daily.action.see", "See the steps") }
+    /// The System page's row, beside Renew every night.
+    static var dailyStatusToMake: String { s("daily.status.toMake", "To make") }
+    static var dailyStatusWaiting: String { s("daily.status.waiting", "Made") }
+    static var dailyStatusOn: String { s("daily.status.on", "On") }
+    static var dailyStatusFailed: String { s("daily.status.failed", "Failed") }
+    static var dailyStatusStopped: String { s("daily.status.stopped", "Not running") }
 
     // MARK: Installing, starting and uninstalling a game
 
@@ -491,6 +515,11 @@ enum CartoucheText {
     static var importOtherCopy: String { s("action.importOther", "Import another copy") }
     static func exportTo(_ server: String) -> String { f("action.exportTo", "Copy to %@", server) }
     static func storedIn(_ server: String, _ file: String) -> String { f("sheet.storedIn", "A copy is in %1$@: %2$@", server, file) }
+    /// The other places that hold a copy of the game, by their names.
+    static func storedAlsoIn(_ places: [String]) -> String {
+        f("sheet.storedAlsoIn", "Also in %@.", places.formatted(.list(type: .and).locale(locale)))
+    }
+    static func storedAlsoInOffline(_ place: String) -> String { f("sheet.storedAlsoIn.offline", "%@ (offline)", place) }
     static func buildHere(_ build: String) -> String { f("sheet.build.here", "On this iPhone: %@", build) }
     static func buildNewer(_ server: String, _ build: String) -> String { f("sheet.build.newer", "Newer, in %1$@: %2$@", server, build) }
     static func buildVersion(_ version: String) -> String { f("build.version", "version %@", version) }
@@ -607,7 +636,7 @@ enum CartoucheText {
     // MARK: The player's storage
 
     static var storageTitle: String { s("storage.title", "Storage") }
-    static var storageIntro: String { s("storage.intro", "Your games and saves on your own storage: your Mac with Cartouche Builder, a shared folder of your Mac, PC or NAS, an S3 bucket, an FTP or SFTP server, your Google Drive, or a folder in Files. Its games show in your library.") }
+    static var storageIntro: String { s("storage.intro", "Your games and saves on your own storage: your Mac with Cartouche, a shared folder of your Mac, PC or NAS, an S3 bucket, an FTP or SFTP server, your Google Drive, or a folder in Files. Its games show in your library.") }
     static var storageNotSet: String { s("storage.notSet", "Not set up") }
     static var storageGamesFolder: String { s("storage.games", "Games folder") }
     static var storageSavesFolder: String { s("storage.saves", "Saves folder") }
@@ -626,9 +655,9 @@ enum CartoucheText {
     static func storageGameFilesLoose(_ names: [String]) -> String {
         let list = names.formatted(.list(type: .and).locale(locale))
         if names.count == 1 {
-            return f("storage.gameFiles.loose.one", "%@: a game’s files, but no IPA here was built to go with them. Put beside them the IPA nxnative built with them, or build the game with Cartouche Builder.", list)
+            return f("storage.gameFiles.loose.one", "%@: a game’s files, but no IPA here was built to go with them. Put beside them the IPA nxnative built with them, or build the game with Cartouche on your Mac.", list)
         }
-        return f("storage.gameFiles.loose", "%@: games’ files, but no IPA here was built to go with them. Put beside each the IPA nxnative built with it, or build the games with Cartouche Builder.", list)
+        return f("storage.gameFiles.loose", "%@: games’ files, but no IPA here was built to go with them. Put beside each the IPA nxnative built with it, or build the games with Cartouche on your Mac.", list)
     }
     static var storageReadAgain: String { s("storage.readAgain", "Read the folder again") }
     static var storageChangeFolder: String { s("storage.changeFolder", "Change folder") }
@@ -636,8 +665,17 @@ enum CartoucheText {
     static var storageAddFirst: String { s("storage.addFirst", "First add your Mac, a shared folder, an S3 bucket, an FTP or SFTP server, your Google Drive, or a folder in Files, below.") }
     static var storageChooseFolder: String { s("storage.chooseFolder", "Choose a folder") }
     static var storageGamesFooter: String { s("storage.games.footer", "Your library shows the IPAs of this folder, ready to install. Copy a game here before you uninstall it.") }
+    /// Several games folders, one after the other (CartoucheGameCopies).
+    static var storageGamesFolders: String { s("storage.games.several", "Games folders") }
+    static var storageOtherGamesFolder: String { s("storage.games.other", "Other folder") }
+    static var storageReadAllAgain: String { s("storage.readAgain.all", "Read the folders again") }
+    static var storageAddGamesFolder: String { s("storage.games.add", "Add another games folder") }
+    static var storageStopReading: String { s("storage.stopReading", "Stop reading this folder") }
+    static var storageGamesFoldersFooter: String { s("storage.games.several.footer", "Your library shows the IPAs of these folders, ready to install: a game in more than one shows once, and installs from a folder that answers. Copy a game to the first one before you uninstall it.") }
+    /// Under a games folder whose server does not answer, among several.
+    static var storageGamesElsewhere: String { s("storage.games.elsewhere", "Its games that another folder holds too install from that folder meanwhile.") }
     static var storageServers: String { s("storage.servers", "Places") }
-    static var storageServersFooter: String { s("storage.servers.footer", "Only storage of your own, with your own account: Cartouche keeps the password, the secret key or the Google sign-in in this iPhone’s keychain. The Mac you pair with Cartouche Builder keeps the same connections, passwords included, over the bridge’s encryption.") }
+    static var storageServersFooter: String { s("storage.servers.footer", "Only storage of your own, with your own account: Cartouche keeps the password, the secret key or the Google sign-in in this iPhone’s keychain. The Mac you pair keeps the same connections, passwords included, over the bridge’s encryption.") }
     static var storageAddSMB: String { s("storage.addSMB", "Add a shared folder (SMB)") }
     static var storageAddFolder: String { s("storage.addFolder", "Add a folder in Files") }
     static var storageAddS3: String { s("storage.addS3", "Add S3 storage") }

@@ -4,8 +4,10 @@
 //
 //  The player's own storage, off the iPhone: the servers, S3 buckets and
 //  Google Drive they sign in to in Cartouche and the folders of theirs that
-//  iOS lets it keep, and the two places Cartouche uses there, kept apart:
-//  one for the games' IPAs, one for the backups of their saves.
+//  iOS lets it keep, and the places Cartouche uses there, kept apart: the
+//  games folders, one or several, for the games' IPAs, and one folder for
+//  the backups of their saves. A game in several games folders shows once,
+//  from one Cartouche can reach (CartoucheGameCopies.swift).
 //
 //  Cartouche reaches only what the player signs in to with their own
 //  account or keys, or a folder they picked: there is no link to paste or
@@ -190,6 +192,12 @@ final class CartoucheStorageSettings: ObservableObject {
 
     @Published private(set) var servers: [CartoucheStorageServer] = []
     @Published private(set) var places: [CartoucheStorageRole: CartoucheStoragePlace] = [:]
+    /// The games folders Cartouche reads besides the games folder (places'
+    /// games), in the order the player added them: a game in several shows
+    /// once, from one whose server answers. The games folder stays the one
+    /// a game is copied to; stop using it, and the first of these takes its
+    /// place (CartoucheGamesFolderList).
+    @Published private(set) var otherGames: [CartoucheStoragePlace] = []
     /// The servers whose shared folder lets the player's account read only,
     /// and the folders it cannot add a file to, "<server>|<path>", as
     /// Cartouche last found: it offers none of them for the saves, and
@@ -206,6 +214,10 @@ final class CartoucheStorageSettings: ObservableObject {
     /// A server that goes over the bridge was saved or removed here, or a
     /// folder chosen: the paired Mac takes it (CartoucheConnectionsExchange).
     let connectionsChanged = PassthroughSubject<Void, Never>()
+    /// The games folders the paired Mac gave were taken here, chosen later
+    /// on its console or on another iPhone (take(folders:)): the games
+    /// folders are read again.
+    let gamesFoldersTaken = PassthroughSubject<Void, Never>()
 
     private let defaults: UserDefaults
     /// Whether the keychain keeps the settings too (Kept).
@@ -215,6 +227,7 @@ final class CartoucheStorageSettings: ObservableObject {
     private static let readOnlyFoldersKey = "Cartouche.storage.readOnly.folders"
     private static let removedKey = "Cartouche.storage.removed"
     private static let chosenKey = "Cartouche.storage.chosen"
+    private static let otherGamesKey = "Cartouche.storage.games.others"
     private static let keychainService = "Cartouche storage"
 
     /// KEEPSINKEYCHAIN: the settings go to the keychain too, and come from
@@ -238,6 +251,14 @@ final class CartoucheStorageSettings: ObservableObject {
                servers.contains(where: { $0.id == place.server }) {
                 places[role] = place
             }
+        }
+        if let data = defaults.data(forKey: Self.otherGamesKey),
+           let others = try? decoder.decode([CartoucheStoragePlace].self, from: data) {
+            let servers = self.servers
+            let folders = CartoucheGamesFolderList(first: places[.games],
+                                                   others: others.filter { place in servers.contains { $0.id == place.server } })
+            places[.games] = folders.first
+            otherGames = folders.others
         }
         readOnlyServers = Set((defaults.stringArray(forKey: Self.readOnlyServersKey) ?? []).compactMap(UUID.init(uuidString:)))
         readOnlyFolders = Set(defaults.stringArray(forKey: Self.readOnlyFoldersKey) ?? [])
@@ -284,6 +305,45 @@ final class CartoucheStorageSettings: ObservableObject {
         return (server, place.path)
     }
 
+    // MARK: The games folders
+
+    /// The games folders, the games folder first, then the others.
+    var gamesFolders: CartoucheGamesFolderList<CartoucheStoragePlace> {
+        CartoucheGamesFolderList(first: places[.games], others: otherGames)
+    }
+
+    /// Each games folder's server, with the folder, the games folder first.
+    var gamesLocations: [(server: CartoucheStorageServer, path: String)] {
+        gamesFolders.all.compactMap { place in server(place.server).map { ($0, place.path) } }
+    }
+
+    /// Reads PLACE too, after the games folders there are, or as the games
+    /// folder when there is none.
+    func addGamesFolder(_ place: CartoucheStoragePlace) {
+        var folders = gamesFolders
+        guard folders.add(place) else { return }
+        useGamesFolders(folders)
+    }
+
+    /// Stops reading PLACE: for the games folder, the next one takes its
+    /// place, as the folder the paired Mac sends its games to.
+    func removeGamesFolder(_ place: CartoucheStoragePlace) {
+        var folders = gamesFolders
+        folders.remove(place)
+        guard folders.all != gamesFolders.all else { return }
+        useGamesFolders(folders)
+    }
+
+    /// FOLDERS as the games folders, chosen now: the paired Mac sends its
+    /// games to the first and offers the Mac apps of all (chosenFolders).
+    private func useGamesFolders(_ folders: CartoucheGamesFolderList<CartoucheStoragePlace>) {
+        places[.games] = folders.first
+        otherGames = folders.others
+        chosen[.games] = Date()
+        persist()
+        connectionsChanged.send()
+    }
+
     /// Adds SERVER, or changes it, as changed now; a SECRET of nil keeps
     /// the one it has.
     func save(_ server: CartoucheStorageServer, secret: String?) {
@@ -310,6 +370,13 @@ final class CartoucheStorageSettings: ObservableObject {
 
     func remove(_ server: CartoucheStorageServer) {
         servers.removeAll { $0.id == server.id }
+        var games = gamesFolders
+        games.move { $0.server == server.id ? nil : $0 }
+        if games.all != gamesFolders.all {
+            chosen[.games] = Date()
+        }
+        places[.games] = games.first
+        otherGames = games.others
         for (role, place) in places where place.server == server.id {
             places[role] = nil
             chosen[role] = Date()
@@ -383,6 +450,16 @@ final class CartoucheStorageSettings: ObservableObject {
             }
             moved = true
         }
+        // The other games folders too; the next one takes the games
+        // folder's place when it is gone.
+        var games = CartoucheGamesFolderList(first: places[.games], others: otherGames)
+        games.move { place in
+            if servers.contains(where: { $0.id == place.server }) { return place }
+            return CartoucheConnections.current(place.server, in: merged).map { CartoucheStoragePlace(server: $0, path: place.path) }
+        }
+        places[.games] = games.first
+        let otherGames = games.others
+        if otherGames != self.otherGames { moved = true }
         let removed = merged.filter(\.removed)
         guard servers != self.servers || places != self.places || removed != self.removed || !secrets.isEmpty || moved else {
             return false
@@ -400,7 +477,54 @@ final class CartoucheStorageSettings: ObservableObject {
         }
         self.servers = servers
         self.places = places
+        self.otherGames = otherGames
         self.removed = removed
+        persist()
+        return true
+    }
+
+    /// Takes TOLD, the folders the paired Mac keeps, chosen last on its
+    /// console or on another iPhone paired with it: the games folders, and
+    /// the saves folder, chosen later than here, as if chosen here then,
+    /// when they are on servers here, or on those they were replaced by.
+    /// One on none of them leaves this iPhone's as it is, a games folder
+    /// with the others; the games folders of this iPhone the Mac cannot
+    /// see, a folder picked here or the Mac's own, stay after those told.
+    /// Whether anything changed. The Mac is not told again: it has them.
+    @discardableResult
+    func take(folders told: CartoucheChosenFolders) -> Bool {
+        let known = connections()
+        func here(_ folder: CartoucheChosenFolders.Folder?) -> CartoucheStoragePlace? {
+            guard let folder, let id = folder.connection else { return nil }
+            let now = server(id) != nil ? id : CartoucheConnections.current(id, in: known)
+            guard let now, server(now)?.travels == true else { return nil }
+            return CartoucheStoragePlace(server: now, path: folder.path)
+        }
+        func isLater(_ folder: CartoucheChosenFolders.Folder?, than role: CartoucheStorageRole) -> Bool {
+            guard let folder else { return false }
+            return folder.chosen > chosen[role] ?? Date(timeIntervalSince1970: 0)
+        }
+        var games: CartoucheGamesFolderList<CartoucheStoragePlace>?
+        if isLater(told.games, than: .games), let first = here(told.games) {
+            let mine = gamesFolders.all.filter { server($0.server)?.travels != true }
+            games = CartoucheGamesFolderList(first: first, others: (told.otherGames ?? []).compactMap(here) + mine)
+        }
+        var saves: CartoucheStoragePlace?
+        if isLater(told.saves, than: .saves) {
+            saves = here(told.saves)
+        }
+        guard games != nil || saves != nil else { return false }
+        if let games, let date = told.games?.chosen {
+            let moved = games.all != gamesFolders.all
+            places[.games] = games.first
+            otherGames = games.others
+            chosen[.games] = date
+            if moved { gamesFoldersTaken.send() }
+        }
+        if let saves, let date = told.saves?.chosen {
+            places[.saves] = saves
+            chosen[.saves] = date
+        }
         persist()
         return true
     }
@@ -485,7 +609,19 @@ final class CartoucheStorageSettings: ObservableObject {
         }
     }
 
+    /// Makes PLACE the folder of ROLE. For the games, none stops using
+    /// every games folder, and a folder Cartouche read besides the games
+    /// folder leaves its place among the others.
     func setPlace(_ place: CartoucheStoragePlace?, for role: CartoucheStorageRole) {
+        if role == .games {
+            var games = gamesFolders
+            if let place {
+                games.choose(place)
+                otherGames = games.others
+            } else {
+                otherGames = []
+            }
+        }
         places[role] = place
         chosen[role] = Date()
         persist()
@@ -497,7 +633,8 @@ final class CartoucheStorageSettings: ObservableObject {
     /// Mac is told them with the connections: on a server that goes over
     /// the bridge, or on none the Mac has, a folder picked here, the Mac's
     /// own or none. A folder an older Cartouche kept goes as chosen long
-    /// ago, which a Mac told of none takes.
+    /// ago, which a Mac told of none takes. The other games folders go
+    /// with the games folder, those on a server that goes over the bridge.
     func chosenFolders() -> CartoucheChosenFolders {
         func folder(_ role: CartoucheStorageRole) -> CartoucheChosenFolders.Folder? {
             let place = places[role]
@@ -507,7 +644,11 @@ final class CartoucheStorageSettings: ObservableObject {
             }
             return CartoucheChosenFolders.Folder(connection: place.server, path: place.path, chosen: date)
         }
-        return CartoucheChosenFolders(games: folder(.games), saves: folder(.saves))
+        let games = folder(.games)
+        let others = otherGames.filter { server($0.server)?.travels == true }.map { place in
+            CartoucheChosenFolders.Folder(connection: place.server, path: place.path, chosen: games?.chosen ?? Date(timeIntervalSince1970: 0))
+        }
+        return CartoucheChosenFolders(games: games, saves: folder(.saves), otherGames: others.isEmpty ? nil : others)
     }
 
     private static func byRole(_ dates: [String: Date]) -> [CartoucheStorageRole: Date] {
@@ -562,6 +703,20 @@ final class CartoucheStorageSettings: ObservableObject {
         servers = [server]
         places = [.games: CartoucheStoragePlace(server: server.id, path: games),
                   .saves: CartoucheStoragePlace(server: server.id, path: saves)]
+        otherGames = []
+    }
+
+    /// SERVERS, with GAMES as the games folders, the first being the games
+    /// folder, and SAVES as the saves folder, for the launcher's gallery:
+    /// kept in memory only.
+    func showForGallery(_ servers: [CartoucheStorageServer], games: [CartoucheStoragePlace], saves: CartoucheStoragePlace?) {
+        showsGallery = true
+        self.servers = servers
+        let folders = CartoucheGamesFolderList(first: nil, others: games)
+        places = [:]
+        places[.games] = folders.first
+        places[.saves] = saves
+        otherGames = folders.others
     }
     #endif
 
@@ -606,6 +761,7 @@ final class CartoucheStorageSettings: ObservableObject {
         }
         defaults.set(try? encoder.encode(Dictionary(uniqueKeysWithValues: chosen.map { ($0.key.rawValue, $0.value) })),
                      forKey: Self.chosenKey)
+        defaults.set(try? encoder.encode(otherGames), forKey: Self.otherGamesKey)
         #endif
         defaults.set(try? encoder.encode(removed), forKey: Self.removedKey)
         if keepsInKeychain {
@@ -631,6 +787,9 @@ final class CartoucheStorageSettings: ObservableObject {
         /// When each folder was chosen, by role; none for what an older
         /// Cartouche kept.
         var chosen: [String: Date]?
+        /// The games folders read besides the games folder; none for what
+        /// an older Cartouche kept.
+        var otherGames: [CartoucheStoragePlace]?
 
         /// Puts them in the preferences, where the settings read them.
         func write(to defaults: UserDefaults) {
@@ -649,6 +808,9 @@ final class CartoucheStorageSettings: ObservableObject {
             if let chosen {
                 defaults.set(try? encoder.encode(chosen), forKey: CartoucheStorageSettings.chosenKey)
             }
+            if let otherGames {
+                defaults.set(try? encoder.encode(otherGames), forKey: CartoucheStorageSettings.otherGamesKey)
+            }
         }
     }
 
@@ -658,7 +820,8 @@ final class CartoucheStorageSettings: ObservableObject {
              readOnlyServers: readOnlyServers.map(\.uuidString).sorted(),
              readOnlyFolders: readOnlyFolders.sorted(),
              removed: removed,
-             chosen: Dictionary(uniqueKeysWithValues: chosen.map { ($0.key.rawValue, $0.value) }))
+             chosen: Dictionary(uniqueKeysWithValues: chosen.map { ($0.key.rawValue, $0.value) }),
+             otherGames: otherGames)
     }
 
     /// The keychain item of the settings, beside the servers' secrets.

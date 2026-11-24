@@ -22,6 +22,7 @@
 //  version and settings, and the nxnative commit it was built from.
 //
 
+import Combine
 import Foundation
 
 // MARK: What the app gives the console
@@ -171,6 +172,16 @@ final class CartoucheTelemetry: ObservableObject {
     var onErase: () async -> Bool = { false }
     var onEvent: (String, String?, [String: CartoucheMacMeasure]) -> Void = { _, _, _ in }
     var onReport: ((CartoucheMacTelemetryContext, Int) -> CartoucheMacReport?) -> Void = { _ in }
+    private var reports: AnyCancellable?
+
+    init() {
+        // Each error the console shows, with its report, as the iPhone's
+        // Cartouche sends it (CartoucheTelemetry.noteError): an error
+        // event, its origin, cause and codes, never its words. Reports are
+        // posted on the main thread.
+        reports = NotificationCenter.default.publisher(for: CartoucheReports.reported)
+            .sink { [weak self] note in self?.event("error", fields: CartoucheErrorEvent.fields(of: note.userInfo)) }
+    }
 
     func show(_ measures: CartoucheMacMeasures) {
         if isOn != measures.isOn {
@@ -385,7 +396,7 @@ final class CartoucheMacSessions {
                                settings: actions.settings(for: app, tileKey: "").values,
                                bcTextures: CartoucheSessionReport.bcTextures(
                                    readsBCTextures: CartoucheDevice.supportsBCTextureCompression) {
-                                       CartoucheInstalledBuilds.convertsBCTextures(of: app)
+                                       !CartoucheInstalledBuilds.bcConversion(of: app).isEmpty
                                    })
                 }
                 let build = details?.build

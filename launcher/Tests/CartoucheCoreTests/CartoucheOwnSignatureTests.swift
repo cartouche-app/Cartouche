@@ -35,6 +35,24 @@ final class CartoucheOwnSignatureTests: XCTestCase {
         XCTAssertEqual([CartoucheSigningMode.account, .installer, .iPhone].map(\.rawValue), ["account", "imported", "iphone"])
     }
 
+    /// The IPA for the player's own SideStore says so in its Info.plist
+    /// (app/scripts/sidestore_ipa.py): signed with the player's Apple ID,
+    /// which the built-in SideStore signs in with as for any other install,
+    /// never with the player's own certificate.
+    func testTheIPAForThePlayersSideStoreSignsWithTheAppleID() {
+        let mode = CartoucheSigningMode(info: ["CartoucheSideStoreInstall": true])
+        XCTAssertEqual(mode, .sideStore)
+        XCTAssertEqual(mode.rawValue, "sidestore")
+        XCTAssertFalse(mode.isImported)
+        XCTAssertFalse(mode.isSignedElsewhere(hasAppGroup: true))
+        XCTAssertEqual(CartoucheSigningMode(info: ["CartoucheSideStoreInstall": false]), .account)
+        // The mode of the player's own certificate comes first: no IPA has
+        // both, and that one never signs in to an Apple ID.
+        XCTAssertEqual(CartoucheSigningMode(info: ["CartoucheSideStoreInstall": true, "CartoucheImportedSigning": true]), .iPhone)
+        XCTAssertEqual([CartoucheSigningMode.account, .sideStore, .installer, .iPhone].map(\.isImported),
+                       [false, false, true, true])
+    }
+
     // MARK: Increased Memory Limit
 
     /// The IPA for an Apple ID that a signing app signed has no app group,

@@ -29,6 +29,11 @@ enum GalleryState {
     static var signing: CartoucheSigningMode = .account
     /// What that signature gives Cartouche (GalleryScenario.ownSignature).
     static var ownSignature: CartoucheOwnSignature?
+    /// Installed by the player's own SideStore (-GallerySigning sidestore):
+    /// Increased Memory Limit left for after the setup, then for
+    /// Cartouche's reinstall once it is done, as a free team's SideStore
+    /// leaves it out.
+    static var sideStoreMemory: CartoucheSideStoreMemory?
     /// The profile in Cartouche (CartoucheImportedSigning.ownProfile), for
     /// the imports of the works signing-…: none, as in the simulator's app,
     /// for a Cartouche its signing app put no profile in (work:

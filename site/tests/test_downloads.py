@@ -176,7 +176,7 @@ class MainTests(unittest.TestCase):
             self.assertIn(BASE + "builder-v0.3.0/Cartouche-Builder-0.3.0.dmg", html)
             self.assertIn(BASE + "installer-v0.2.0/Cartouche-Installer-0.2.0-Mac.dmg", html)
             self.assertIn(BASE + "installer-v0.2.0/Cartouche-Installer-0.2.0-Windows.exe", html)
-        self.assertIn("- Cartouche Builder 0.3.0: " + BASE + "builder-v0.3.0/Cartouche-Builder-0.3.0.dmg", out)
+        self.assertIn("- Cartouche for Mac 0.3.0: " + BASE + "builder-v0.3.0/Cartouche-Builder-0.3.0.dmg", out)
 
     def test_the_files_of_the_repository_the_workflow_names(self) -> None:
         # .github/workflows/site.yml gives GITHUB_REPOSITORY, the
@@ -189,7 +189,7 @@ class MainTests(unittest.TestCase):
             self.assertIn(moved + "builder-v0.3.0/Cartouche-Builder-0.3.0.dmg", html)
             self.assertIn(moved + "installer-v0.2.0/Cartouche-Installer-0.2.0-Windows.exe", html)
             self.assertNotIn(BASE, html)
-        self.assertIn("- Cartouche Builder 0.3.0: " + moved + "builder-v0.3.0/Cartouche-Builder-0.3.0.dmg", out)
+        self.assertIn("- Cartouche for Mac 0.3.0: " + moved + "builder-v0.3.0/Cartouche-Builder-0.3.0.dmg", out)
         self.assertEqual(self.run_on_the_pages(releases)[0], 1)
 
     def test_the_pages_as_they_are_for_the_releases_they_name(self) -> None:

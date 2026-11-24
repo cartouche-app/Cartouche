@@ -56,7 +56,7 @@ struct CartoucheReport: Codable, Equatable, Sendable {
         /// what is shaped like an address out of them (redacted(by:)).
         var facts: [Fact]
         /// The app the report comes from, whose version CARTOUCHE is, when
-        /// it is not Cartouche: "Cartouche Builder", whose window the
+        /// it is not Cartouche: "Cartouche for Mac", whose window the
         /// console is in on a Mac.
         var app: String? = nil
         /// SYSTEM's name, when it is not iOS: "macOS".

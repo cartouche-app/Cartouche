@@ -59,6 +59,9 @@ struct CartoucheSystemView: View {
     /// The sign-in, over this page, once Apple has said that the session
     /// SideStore renews with has expired.
     @State private var signingIn = false
+    /// The automation of Shortcuts that renews Cartouche every night, as
+    /// its last run says.
+    @ObservedObject private var nightly = CartoucheNightly.shared
     #else
     /// The games built for this Mac and the Builder's setup, which the
     /// guide's steps read.
@@ -186,6 +189,7 @@ struct CartoucheSystemView: View {
         memory = CartoucheMemoryReading.now()
         keeping.measuredOwn(memory)
         signature = CartoucheSignature.current()
+        nightly.read()
         CartoucheRenewal.scheduleWarnings()
         Task { alertStatus = await CartoucheRenewal.alertStatus() }
     }
@@ -355,7 +359,8 @@ struct CartoucheSystemView: View {
     /// Where the account is, in a word or two.
     private var cloudState: String {
         guard cloud.isLinked else { return CartoucheText.cloudNotLinked }
-        let built = cloud.builtGames.count
+        // Those on this iPhone already are installed.
+        let built = cloud.toInstall(installed: catalog.installedTitles(among: sharedModel.apps)).count
         if built > 0 { return CartoucheText.cloudBuiltCount(built) }
         if cloud.account?.isBusy == true { return CartoucheText.cloudUnderWay }
         return CartoucheText.cloudLinked
@@ -561,13 +566,25 @@ struct CartoucheSystemView: View {
 
     // MARK: Automatic renewal
 
+    /// Renew every night's row, which the gallery opens the page on.
+    private static let nightlyRow = "nightly"
+
     private var automaticRenewalSection: some View {
         Section {
             NavigationLink {
                 CartoucheNightlyRenewalView()
             } label: {
-                Label(CartoucheText.renewEveryNight, systemImage: "moon.zzz")
+                // Whether the automation renewed Cartouche last night, as
+                // the setup's row says whether the setup is done.
+                LabeledContent {
+                    Label(nightly.status, systemImage: CartoucheNightlyStateRow.symbol(of: nightly.state))
+                        .labelStyle(CartoucheTightLabelStyle())
+                        .foregroundStyle(CartoucheNightlyStateRow.color(of: nightly.state))
+                } label: {
+                    Label(CartoucheText.renewEveryNight, systemImage: "moon.zzz")
+                }
             }
+            .id(Self.nightlyRow)
             LabeledContent(CartoucheText.alerts) {
                 alertControl
             }
@@ -663,7 +680,7 @@ struct CartoucheSystemView: View {
         if let phase = updates.phase {
             let version = updates.target?.version ?? ""
             VStack(alignment: .leading, spacing: 8) {
-                Label(phase == .installing ? CartoucheText.updateInstallingTitle(version) : CartoucheText.updatePreparingTitle(version),
+                Label(updates.stepTitle(phase, version: version),
                       systemImage: "arrow.down.circle")
                     .foregroundStyle(.secondary)
                 if phase == .preparing, let progress = updates.progress {
@@ -673,7 +690,7 @@ struct CartoucheSystemView: View {
                         ProgressView(value: progress.fractionCompleted)
                     }
                 } else {
-                    Text(CartoucheText.updateInstallingMessage)
+                    Text(updates.stepMessage(.installing))
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -786,8 +803,8 @@ struct CartoucheSystemView: View {
             #if os(iOS)
             Text(verbatim: "Cartouche")
             #else
-            // The app the console is in.
-            Text(verbatim: "Cartouche Builder")
+            // The app the console is in (ConsoleSystem.swift).
+            Text(CartoucheText.macSystemApp)
             #endif
         } footer: {
             Text(CartoucheText.coversCredit)
@@ -873,9 +890,15 @@ struct CartoucheSystemView: View {
 }
 
 #if os(iOS)
-/// How to have Shortcuts renew Cartouche every night.
+/// How to have Shortcuts renew Cartouche every night, and whether it does:
+/// iOS lets no app make an automation, nor see the player's, and Cartouche
+/// tells from each run of its Refresh All Apps action, and from the
+/// player's word once they made it (CartoucheNightly). The System page and
+/// the setup's last step open it.
 @available(iOS 17.0, *)
 struct CartoucheNightlyRenewalView: View {
+    @ObservedObject private var nightly = CartoucheNightly.shared
+
     /// LocalDevVPN's action connects it before Refresh All Apps, which
     /// waits for its tunnel (app/patches/livecontainer/0015): up to 0.12.1,
     /// the player had to leave LocalDevVPN connected all day.
@@ -885,7 +908,6 @@ struct CartoucheNightlyRenewalView: View {
             CartoucheText.dailyStepTime,
             CartoucheText.dailyStepVPN,
             CartoucheText.dailyStepAction,
-            CartoucheText.dailyStepCheck,
         ]
     }
 
@@ -900,11 +922,56 @@ struct CartoucheNightlyRenewalView: View {
     /// Tailscale's section, which the gallery opens the page on.
     private static let tailscaleRow = "tailscale"
 
+    /// Where the automation stands, at the top of the page.
+    private static let stateRow = "state"
+
+    /// The time the steps suggest, in the reader's language: 4:00 AM, 04:00.
+    private var fourInTheMorning: String {
+        let four = Calendar.current.date(bySettingHour: 4, minute: 0, second: 0, of: Date()) ?? Date()
+        return four.formatted(Date.FormatStyle(date: .omitted, time: .shortened).locale(CartoucheText.locale))
+    }
+
+    /// Whether the player has something to make, or to make again.
+    private var asksToMake: Bool {
+        switch nightly.state {
+        case .toMake, .notRunning, .failed, .stopped: return true
+        case .waiting, .running, .renewed: return false
+        }
+    }
+
     var body: some View {
         ScrollViewReader { reader in
             List {
                 Section {
-                    Text(CartoucheText.dailyIntro)
+                    CartoucheNightlyStateRow(state: nightly.state, detail: nightly.detail)
+                        .id(Self.stateRow)
+                }
+                // The automation as Shortcuts shows it once made: when, then
+                // its two actions.
+                Section {
+                    Label {
+                        Text(CartoucheText.dailyEveryDay(fourInTheMorning))
+                            .font(.headline)
+                    } icon: {
+                        CartoucheNightlyTile(symbol: "clock.fill", color: .orange)
+                    }
+                    Label {
+                        Text(verbatim: "Enable LocalDevVPN")
+                    } icon: {
+                        CartoucheNightlyTile(symbol: "network.badge.shield.half.filled", color: .blue)
+                    }
+                    Label {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(verbatim: "Refresh All Apps")
+                            Text(verbatim: "Cartouche")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    } icon: {
+                        CartoucheNightlyTile(symbol: "arrow.triangle.2.circlepath", color: CartoucheTheme.indigo)
+                    }
+                } header: {
+                    Text(CartoucheText.dailyWhatYouMake)
                 }
                 Section {
                     ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
@@ -920,6 +987,30 @@ struct CartoucheNightlyRenewalView: View {
                         .padding(.vertical, 2)
                     }
                 }
+                CartoucheSection {
+                    Link(destination: CartoucheRenewal.shortcutsURL) {
+                        Label(CartoucheText.openShortcuts, systemImage: "square.2.layers.3d")
+                    }
+                    if asksToMake {
+                        Button {
+                            nightly.made()
+                            // Back up to where the automation stands, which
+                            // now waits for its first night: the button, at
+                            // the bottom, only goes away.
+                            DispatchQueue.main.async {
+                                withAnimation { reader.scrollTo(Self.stateRow, anchor: .top) }
+                            }
+                        } label: {
+                            Label(CartoucheText.dailyMade, systemImage: "checkmark.circle")
+                        }
+                    }
+                } header: {
+                    EmptyView()
+                } footer: {
+                    if asksToMake {
+                        Text(CartoucheText.dailyMadeFooter)
+                    }
+                }
                 // iOS keeps one VPN at a time: LocalDevVPN turns Tailscale
                 // off, and Tailscale's own action turns it on again
                 // (CartoucheTailscale.swift).
@@ -929,11 +1020,6 @@ struct CartoucheNightlyRenewalView: View {
                         .id(Self.tailscaleRow)
                 } header: {
                     Text(verbatim: "Tailscale")
-                }
-                Section {
-                    Link(destination: CartoucheRenewal.shortcutsURL) {
-                        Label(CartoucheText.openShortcuts, systemImage: "square.2.layers.3d")
-                    }
                 }
             }
             .cartoucheStageBackground()
@@ -947,6 +1033,66 @@ struct CartoucheNightlyRenewalView: View {
         }
         .navigationTitle(CartoucheText.renewEveryNight)
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear { nightly.read() }
+        // Back from Shortcuts, as the automation may have run.
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            nightly.read()
+        }
+    }
+}
+
+/// Where the automation that renews Cartouche every night stands, in a
+/// colour and a symbol of its own, and in words.
+@available(iOS 17.0, *)
+struct CartoucheNightlyStateRow: View {
+    let state: CartoucheNightlyRenewal.State
+    let detail: String
+
+    var body: some View {
+        Label {
+            Text(detail)
+                .fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Image(systemName: Self.symbol(of: state))
+                .foregroundStyle(Self.color(of: state))
+        }
+    }
+
+    static func symbol(of state: CartoucheNightlyRenewal.State) -> String {
+        switch state {
+        case .toMake: return "plus.circle"
+        case .waiting, .running: return "clock.fill"
+        case .renewed: return "checkmark.circle.fill"
+        case .failed: return "exclamationmark.triangle.fill"
+        case .notRunning, .stopped: return "exclamationmark.circle.fill"
+        }
+    }
+
+    static func color(of state: CartoucheNightlyRenewal.State) -> Color {
+        switch state {
+        case .toMake: return .secondary
+        case .waiting, .running: return .blue
+        case .renewed: return .green
+        case .failed: return .red
+        case .notRunning, .stopped: return .orange
+        }
+    }
+}
+
+/// A trigger or an action of the automation, as Shortcuts draws them: a
+/// symbol on a tile of its colour.
+@available(iOS 17.0, *)
+private struct CartoucheNightlyTile: View {
+    let symbol: String
+    let color: Color
+
+    var body: some View {
+        Image(systemName: symbol)
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(.white)
+            .frame(width: 28, height: 28)
+            .background(color, in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+            .accessibilityHidden(true)
     }
 }
 #endif

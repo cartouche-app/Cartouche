@@ -11,7 +11,7 @@ a dump, an IPA, a catalog of games, keys or firmware, nor to another server of
 the project (docs/decisions.md, 40, amended by 129 and 138). It says what
 Cartouche Cloud does for a player with no Mac, never its price. Its only
 downloads are the project's own programs for a computer, the Cartouche
-Installer and Cartouche Builder, each a file of their releases marked for
+Installer and Cartouche for Mac, each a file of their releases marked for
 the publication to give its newest one (site/tools/downloads.py), as the
 download page, download/index.html, gives them too. Its only pictures are
 its own drawings, never a game's: the icon an iPhone puts on its Home
@@ -40,7 +40,7 @@ NOT_FOUND_PAGE = SITE / "404.html"
 CATALOG = SITE.parent / "catalog"
 
 # The files the site offers, straight from this repository's releases: the
-# Cartouche Installer for Mac and for Windows, and Cartouche Builder. A link
+# Cartouche Installer for Mac and for Windows, and Cartouche for Mac. A link
 # to one is marked data-download="<file>", for the publication to give it the
 # newest release (site/tools/downloads.py).
 REPOSITORY = "https://github.com/cartouche-app/Cartouche"
@@ -155,6 +155,18 @@ class Page(HTMLParser):
             self.styles[-1] += data
         else:
             self.words.append(data)
+
+
+# The Mac's app is Cartouche, as on the iPhone, called Cartouche for Mac where
+# the site tells it from the iPhone's; only its folder on the Mac keeps the
+# name it had until then (builder/tests/test_app_name.py).
+FORMER_NAME = re.compile(r"Cartouche Builder(?!/)")
+
+
+def check_the_mac_app_is_cartouche(test: unittest.TestCase, text: str) -> None:
+    test.assertEqual(FORMER_NAME.findall(text), [], "the Mac's app is Cartouche for Mac now")
+    test.assertIn("Cartouche for Mac", text)
+    test.assertIn("Cartouche pour Mac", text)
 
 
 def read_page(path: Path = PAGE) -> tuple[str, Page]:
@@ -344,6 +356,9 @@ class SiteTests(unittest.TestCase):
         self.assertEqual(sorted(versions), sorted(DOWNLOADS))
         buttons = [attrs["data-download"] for tag, attrs in self.page.tags if tag == "a" and "data-download" in attrs]
         self.assertEqual(buttons, ["builder", "installer-mac", "installer-windows", "builder"])
+
+    def test_the_mac_app_is_cartouche_for_mac(self) -> None:
+        check_the_mac_app_is_cartouche(self, self.text)
 
     def test_no_server_address_or_secret(self) -> None:
         for path in [PAGE, DOWNLOAD_PAGE, NOT_FOUND_PAGE, SITE / "favicon.svg", SITE / "tools" / "social.html"]:
@@ -544,6 +559,9 @@ class DownloadPageTests(unittest.TestCase):
 
     def test_a_shared_link_shows_the_sites_own_picture(self) -> None:
         check_shared(self, self.page, SITE_URL + "download/")
+
+    def test_the_mac_app_is_cartouche_for_mac(self) -> None:
+        check_the_mac_app_is_cartouche(self, self.text)
 
     def test_the_same_files_as_the_site(self) -> None:
         text, page = read_page()

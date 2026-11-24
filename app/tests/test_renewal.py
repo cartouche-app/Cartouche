@@ -12,6 +12,9 @@ LiveContainer and SideStore:
 - Refresh All Apps waits for LocalDevVPN's tunnel, which the automation of
   Shortcuts connects just before it (app/patches/livecontainer/0015), and
   reads it as the launcher does;
+- Refresh All Apps notes each of its runs, from the automation of every
+  night, where and as the launcher reads it (app/patches/livecontainer/0018,
+  CartoucheNightlyRenewal), and Renew now notes none;
 - the launcher looks for LiveProcess, without which it no longer renews
   itself, where LiveContainer's bridge does before it starts the built-in
   SideStore.
@@ -42,6 +45,8 @@ LC_PATCHES = ROOT / "app" / "patches" / "livecontainer"
 LC_INTENTS_PATH = "SideStoreSupport/SideStore.swift"
 LC_BOOTSTRAP = ROOT / "app" / "LiveContainer" / "LiveContainer" / "LCBootstrap.m"
 TUNNEL_WAIT = ROOT / "launcher" / "SideStoreSupport" / "CartoucheTunnelWait.swift"
+SHORTCUT_RUN = ROOT / "launcher" / "SideStoreSupport" / "CartoucheShortcutRun.swift"
+RENEWAL_RULES = ROOT / "launcher" / "Sources" / "CartoucheRenewalRules.swift"
 LAUNCHER_VPN = ROOT / "launcher" / "Sources" / "CartoucheVPN.swift"
 
 
@@ -185,6 +190,47 @@ class RenewalTest(unittest.TestCase):
         shared = braced(lc, lc.index("func performIntentRefresh("))
         self.assertNotIn("CartoucheTunnelWait", shared)
         self.assertNotIn("CartoucheTunnelWait", read(BRIDGE))
+
+    def test_refresh_all_apps_notes_each_of_its_runs(self):
+        # iOS lets no app see the player's automations: the setup's last
+        # step and the System page tell from these notes whether the
+        # automation of every night renews Cartouche, and why not.
+        lc = patched_lc_intents()
+        action = lc.find("struct RefreshAllAppsIntent")
+        self.assertGreaterEqual(action, 0, "RefreshAllAppsIntent is gone from SideStore.swift")
+        perform = braced(lc, lc.index("func perform()", action))
+        started = perform.find("CartoucheShortcutRun.started()")
+        wait = perform.find("await CartoucheTunnelWait.waitForLocalDevVPN()")
+        tunnel = perform.find("CartoucheShortcutRun.tunnel(CartoucheTunnelWait.isConnected)")
+        refresh = perform.find("performIntentRefresh(")
+        self.assertGreaterEqual(started, 0, "Refresh All Apps no longer notes that it started")
+        self.assertLess(started, wait, "it notes its start before it waits: iOS may end it meanwhile")
+        self.assertLess(wait, tunnel, "it notes the tunnel once it has waited for it")
+        self.assertLess(tunnel, refresh)
+        failed = re.search(r"\} catch \{\s*CartoucheShortcutRun\.ended\(error\)\s*throw error\s*\}", perform[refresh:])
+        self.assertIsNotNone(failed, "a run that fails no longer notes why, and fails as it did")
+        self.assertIn("CartoucheShortcutRun.ended(nil)", perform[failed.end() + refresh:])
+        # Renew now and Cartouche's own renewals are not the automation.
+        shared = braced(lc, lc.index("func performIntentRefresh("))
+        self.assertNotIn("CartoucheShortcutRun", shared)
+        self.assertNotIn("CartoucheShortcutRun", read(BRIDGE))
+        widget = braced(lc, lc.index("func perform()", lc.index("struct RefreshAllAppsWidgetIntent")))
+        self.assertNotIn("CartoucheShortcutRun", widget)
+
+    def test_the_launcher_reads_the_runs_where_refresh_all_apps_notes_them(self):
+        # SideStoreSupport cannot import the launcher: both say the key and
+        # the names of the run on their own.
+        noted, rules = read(SHORTCUT_RUN), read(RENEWAL_RULES)
+        key = re.search(r'static let key = "([^"]+)"', noted)
+        run_key = re.search(r'static let runKey = "([^"]+)"', rules)
+        self.assertIsNotNone(key)
+        self.assertIsNotNone(run_key)
+        self.assertEqual(key.group(1), run_key.group(1))
+        written = set(re.findall(r'\["(\w+)"\]', noted)) | set(re.findall(r'\["(\w+)": ', noted))
+        reader = rules[rules.index("init?(record: Any?)"):]
+        read_names = set(re.findall(r'record\["(\w+)"\] as\? (\w+)', braced(reader, 0)))
+        self.assertEqual(written, {name for name, _ in read_names})
+        self.assertEqual(dict(read_names), {"started": "Date", "tunnel": "Bool", "ended": "Date", "message": "String"})
 
     def test_refresh_all_apps_reads_the_tunnel_as_the_launcher_does(self):
         # SideStoreSupport cannot import the launcher: CartoucheTunnelWait

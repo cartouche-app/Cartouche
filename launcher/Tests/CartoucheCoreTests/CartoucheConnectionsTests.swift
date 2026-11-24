@@ -8,7 +8,7 @@
 //  secret the other side does not give kept, the same place added on both
 //  sides made one under the ID that sorts first, what stays on its device
 //  left out, and both sides ending with the same whichever asked; of the
-//  folders its iPhones chose, those a Mac keeps.
+//  folders its iPhones chose, those a Mac keeps, and gives back.
 //
 
 import Foundation
@@ -247,14 +247,56 @@ final class CartoucheConnectionsTests: XCTestCase {
         XCTAssertEqual(second.taking(CartoucheChosenFolders(saves: none)).saves, none)
     }
 
+    /// The other games folders an iPhone reads go with its games folder:
+    /// kept, or left, with it.
+    func testTheOtherGamesFoldersGoWithTheGamesFolder() {
+        let nas = CartoucheChosenFolders.Folder(connection: a, path: "Jeux", chosen: now)
+        let drive = CartoucheChosenFolders.Folder(connection: b, path: "Jeux", chosen: now)
+        let s3 = CartoucheChosenFolders.Folder(connection: c, path: "jeux", chosen: now)
+        let first = CartoucheChosenFolders().taking(CartoucheChosenFolders(games: nas, otherGames: [drive, s3]))
+        XCTAssertEqual(first.otherGames, [drive, s3])
+        // The saves chosen later on another iPhone: the games folders stay.
+        let saves = CartoucheChosenFolders.Folder(connection: a, path: "Saves", chosen: now + 60)
+        XCTAssertEqual(first.taking(CartoucheChosenFolders(saves: saves)).otherGames, [drive, s3])
+        // Told again at the same time, or an older choice: nothing changes.
+        XCTAssertEqual(first.taking(CartoucheChosenFolders(games: nas, otherGames: [s3])), first)
+        // A folder added on the iPhone, chosen later with its games folder.
+        var later = nas
+        later.chosen = now + 120
+        let added = first.taking(CartoucheChosenFolders(games: later, otherGames: [drive]))
+        XCTAssertEqual(added.games, later)
+        XCTAssertEqual(added.otherGames, [drive])
+        // An older iPhone, which tells none, with a games folder chosen
+        // later still: none besides it.
+        var older = nas
+        older.chosen = now + 180
+        XCTAssertNil(added.taking(CartoucheChosenFolders(games: older)).otherGames)
+    }
+
     func testTheFoldersChosenGoThereAndBack() throws {
         let told = CartoucheChosenFolders(games: .init(connection: nil, path: "", chosen: now),
-                                          saves: .init(connection: a, path: "Cartouche/Saves", chosen: now + 0.5))
+                                          saves: .init(connection: a, path: "Cartouche/Saves", chosen: now + 0.5),
+                                          otherGames: [.init(connection: b, path: "Jeux", chosen: now)])
         let request = CartoucheBridgeRequest(.connections, connections: [], places: told)
         let back = try JSONDecoder().decode(CartoucheBridgeRequest.self, from: JSONEncoder().encode(request))
         XCTAssertEqual(back.places, told)
         // From an iPhone a little older, which tells none.
         let older = try JSONDecoder().decode(CartoucheBridgeRequest.self, from: Data(#"{"op":"connections","connections":[]}"#.utf8))
+        XCTAssertNil(older.places)
+    }
+
+    /// The Mac answers with the folders it keeps, chosen last on its console
+    /// or on another iPhone; a Mac a little older says none.
+    func testTheFoldersTheMacKeepsComeBack() throws {
+        var response = CartoucheBridgeResponse()
+        response.connections = []
+        let kept = CartoucheChosenFolders(games: .init(connection: a, path: "Jeux", chosen: now + 60),
+                                          saves: .init(connection: b, path: "Saves", chosen: now),
+                                          otherGames: [.init(connection: c, path: "jeux", chosen: now + 60)])
+        response.places = kept
+        let back = try JSONDecoder().decode(CartoucheBridgeResponse.self, from: JSONEncoder().encode(response))
+        XCTAssertEqual(back.places, kept)
+        let older = try JSONDecoder().decode(CartoucheBridgeResponse.self, from: Data(#"{"connections":[]}"#.utf8))
         XCTAssertNil(older.places)
     }
 }

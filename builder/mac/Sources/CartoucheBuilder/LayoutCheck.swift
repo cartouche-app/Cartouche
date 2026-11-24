@@ -167,7 +167,7 @@ enum LayoutCheck {
         await step("nxnative checked") { model.preview(checking: true) }
         await step("nxnative checked, done") { model.preview(checking: false) }
         await step("a message above the page") {
-            model.banner = Banner(kind: .error, text: "La vérification de nxnative a échoué : fatal: unable to access 'https://github.com/seedds/nxnative/': Could not resolve host: github.com. Cartouche Builder réessaiera dans six heures.")
+            model.banner = Banner(kind: .error, text: "La vérification de nxnative a échoué : fatal: unable to access 'https://github.com/seedds/nxnative/': Could not resolve host: github.com. Cartouche réessaiera dans six heures.")
         }
         await step("the message closed") { model.banner = nil }
         // A build that did not start, as the app says it: the last lines of
@@ -185,7 +185,7 @@ enum LayoutCheck {
         await step("the sidebar shown") { splitController(window)?.toggleSidebar(nil) }
         await step("another game chosen") { model.selection = other }
         await step("a message above the narrow page") {
-            model.banner = Banner(kind: .info, text: "Déplacez d’abord Cartouche Builder dans le dossier Applications : il pourra alors se mettre à jour tout seul.")
+            model.banner = Banner(kind: .info, text: "Déplacez d’abord Cartouche dans le dossier Applications : il pourra alors se mettre à jour tout seul.")
         }
         await step("the message closed again") { model.banner = nil }
         for section in AppSection.allCases where section != .library {
@@ -394,7 +394,7 @@ enum LayoutCheck {
     /// The window the app opens, once it is on the screen.
     private static func mainWindow() async -> NSWindow? {
         for _ in 0..<150 {
-            if let window = NSApp.windows.first(where: { $0.isVisible && ($0.identifier?.rawValue.hasPrefix(AppModel.mainWindow) == true || $0.title == "Cartouche Builder") }) {
+            if let window = NSApp.windows.first(where: { $0.isVisible && ($0.identifier?.rawValue.hasPrefix(AppModel.mainWindow) == true || $0.title == AppName.name) }) {
                 try? await Task.sleep(for: .seconds(2))
                 return window
             }

@@ -222,7 +222,7 @@ struct SetupAssistant: View {
             AppIconView()
                 .frame(width: 112, height: 112)
                 .shadow(color: Theme.indigo.opacity(0.25), radius: 16, y: 6)
-            Text(tr("Welcome to Cartouche Builder", "Bienvenue dans Cartouche Builder"))
+            Text(tr("Welcome to Cartouche", "Bienvenue dans Cartouche"))
                 .font(.largeTitle.weight(.bold))
                 .multilineTextAlignment(.center)
             Text(tr("It builds your games for Cartouche on the iPhone, from your own files, and builds them again each time nxnative makes them better.",
@@ -271,8 +271,8 @@ struct SetupAssistant: View {
     private var sources: some View {
         VStack(alignment: .leading, spacing: 16) {
             StepHeader(step: .sources, title: tr("Where are your dumps?", "Où sont vos dumps ?"),
-                       text: tr("The folder your games are in: packages (.nsp, .xci, .nsz, .xcz), .nup files, dumps or zipped dumps, loose or in folders. Cartouche Builder only reads it.",
-                                "Le dossier où sont vos jeux : paquets (.nsp, .xci, .nsz, .xcz), fichiers .nup, dumps ou dumps zippés, en vrac ou rangés dans des dossiers. Cartouche Builder ne fait que le lire."))
+                       text: tr("The folder your games are in: packages (.nsp, .xci, .nsz, .xcz), .nup files, dumps or zipped dumps, loose or in folders. Cartouche only reads it.",
+                                "Le dossier où sont vos jeux : paquets (.nsp, .xci, .nsz, .xcz), fichiers .nup, dumps ou dumps zippés, en vrac ou rangés dans des dossiers. Cartouche ne fait que le lire."))
             PlaceChoice(place: place(.sources, path: config.sources),
                         mac: tr("A folder of this Mac, or of a disk plugged into it.", "Un dossier du Mac, ou d’un disque branché dessus."),
                         nas: tr("A shared folder on your network, connected again by itself.", "Un dossier partagé de votre réseau, reconnecté tout seul."))
@@ -301,8 +301,8 @@ struct SetupAssistant: View {
     private var games: some View {
         VStack(alignment: .leading, spacing: 16) {
             StepHeader(step: .games, title: tr("Where do your games go?", "Où vont vos jeux ?"),
-                       text: tr("The folder where Cartouche Builder puts each game’s IPA, and that Cartouche reads on the iPhone.",
-                                "Le dossier où Cartouche Builder dépose l’IPA de chaque jeu, et que Cartouche lit sur l’iPhone."))
+                       text: tr("The folder where Cartouche puts each game’s IPA, and that Cartouche reads on the iPhone too.",
+                                "Le dossier où Cartouche dépose l’IPA de chaque jeu, et que Cartouche lit aussi sur l’iPhone."))
             PlaceChoice(place: place(.games, path: config.games),
                         mac: tr("Cartouche installs them from this Mac, over the Wi-Fi.", "Cartouche les installe depuis ce Mac, par le Wi-Fi."),
                         nas: tr("Cartouche reads them on the NAS, even while this Mac sleeps.", "Cartouche les lit sur le NAS, même quand le Mac dort."))
@@ -378,8 +378,8 @@ struct SetupAssistant: View {
                     .controlSize(.large)
                 }
             }
-            Label(tr("They stay on this Mac: Cartouche Builder hands them to nxnative for your builds and sends them nowhere.",
-                     "Elles restent sur ce Mac : Cartouche Builder les donne à nxnative pour vos constructions et ne les envoie nulle part."),
+            Label(tr("They stay on this Mac: Cartouche hands them to nxnative for your builds and sends them nowhere.",
+                     "Elles restent sur ce Mac : Cartouche les donne à nxnative pour vos constructions et ne les envoie nulle part."),
                   systemImage: "lock.fill")
                 .font(.callout)
                 .foregroundStyle(.secondary)
@@ -390,8 +390,8 @@ struct SetupAssistant: View {
     private var builds: some View {
         VStack(alignment: .leading, spacing: 18) {
             StepHeader(step: .builds, title: tr("Build at night", "Construire la nuit"),
-                       text: tr("Cartouche Builder follows every game of your dumps folder and says when nxnative improves one. It can also build them at night, while you sleep.",
-                                "Cartouche Builder suit chaque jeu de votre dossier des dumps et vous dit quand nxnative en améliore un. Il peut aussi les construire la nuit, pendant que vous dormez."))
+                       text: tr("Cartouche follows every game of your dumps folder and says when nxnative improves one. It can also build them at night, while you sleep.",
+                                "Cartouche suit chaque jeu de votre dossier des dumps et vous dit quand nxnative en améliore un. Il peut aussi les construire la nuit, pendant que vous dormez."))
             Card(padding: 16) {
                 VStack(alignment: .leading, spacing: 12) {
                     SwitchRow(title: tr("Build what is due every night", "Construire chaque nuit ce qui est à reconstruire"), symbol: "moon.stars",
@@ -433,8 +433,8 @@ struct SetupAssistant: View {
                               isOn: Binding(get: { bridge.enabled }, set: { bridge.setEnabled($0) }))
                     if bridge.enabled {
                         Divider()
-                        HowTo(number: 1, text: tr("In Cartouche: System › Storage › Add your Mac (Cartouche Builder).",
-                                                  "Dans Cartouche : Système › Stockage › Ajouter votre Mac (Cartouche Builder)."))
+                        HowTo(number: 1, text: tr("On the iPhone, in Cartouche: System › Storage › Add your Mac.",
+                                                  "Sur l’iPhone, dans Cartouche : Système › Stockage › Ajouter votre Mac."))
                         HowTo(number: 2, text: tr("Choose “\(bridge.name)” under Macs nearby.", "Choisissez « \(bridge.name) » sous Macs à proximité."))
                         HowTo(number: 3, text: tr("Both screens show six digits: when they match, click Allow here.",
                                                   "Les deux écrans affichent six chiffres : s’ils sont les mêmes, cliquez sur Autoriser ici."))
@@ -443,7 +443,7 @@ struct SetupAssistant: View {
             }
             Card(padding: 16) {
                 VStack(alignment: .leading, spacing: 4) {
-                    SwitchRow(title: tr("Open Cartouche Builder at login", "Ouvrir Cartouche Builder à l’ouverture de session"), symbol: "power",
+                    SwitchRow(title: tr("Open Cartouche at login", "Ouvrir Cartouche à l’ouverture de session"), symbol: "power",
                               isOn: Binding(get: { model.opensAtLogin }, set: { model.setOpensAtLogin($0) }))
                     Text(tr("The iPhone finds this Mac while the app is open, in the menu bar too.",
                             "L’iPhone trouve ce Mac tant que l’app est ouverte, même dans la barre des menus seulement."))
@@ -572,7 +572,7 @@ struct StepRail: View {
                 AppIconView()
                     .frame(width: 34, height: 34)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Cartouche Builder")
+                    Text(AppName.name)
                         .font(.headline)
                     Text(tr("Setup", "Configuration"))
                         .font(.caption)
@@ -778,8 +778,8 @@ struct ShareConnect: View {
     var body: some View {
         Card(padding: 14) {
             VStack(alignment: .leading, spacing: 10) {
-                Text(tr("Connect your NAS’s share: macOS asks for its password once and keeps it in the keychain, and Cartouche Builder connects it again by itself, at night too.",
-                        "Connectez le partage de votre NAS : macOS demande son mot de passe une fois et le garde dans le trousseau, puis Cartouche Builder le reconnecte tout seul, la nuit aussi."))
+                Text(tr("Connect your NAS’s share: macOS asks for its password once and keeps it in the keychain, and Cartouche connects it again by itself, at night too.",
+                        "Connectez le partage de votre NAS : macOS demande son mot de passe une fois et le garde dans le trousseau, puis Cartouche le reconnecte tout seul, la nuit aussi."))
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)

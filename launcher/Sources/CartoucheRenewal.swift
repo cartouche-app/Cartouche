@@ -556,3 +556,101 @@ final class CartoucheRenewals: ObservableObject {
     }
     #endif
 }
+
+/// The automation of Shortcuts that renews Cartouche every night, as the
+/// setup's last step, its page and the System page show it
+/// (CartoucheNightlyRenewal): read again as each of them appears, and as
+/// Cartouche comes back to the front.
+@available(iOS 17.0, *)
+@MainActor
+final class CartoucheNightly: ObservableObject {
+    static let shared = CartoucheNightly()
+
+    @Published private(set) var state: CartoucheNightlyRenewal.State = .toMake
+
+    private init() {
+        read()
+    }
+
+    /// Reads again the last run of Refresh All Apps from Shortcuts, as the
+    /// built-in SideStore's support noted it (CartoucheShortcutRun).
+    func read(at now: Date = Date()) {
+        let defaults = UserDefaults.standard
+        let state = CartoucheNightlyRenewal.state(
+            run: CartoucheNightlyRenewal.Run(record: defaults.object(forKey: CartoucheNightlyRenewal.runKey)),
+            made: defaults.object(forKey: CartoucheNightlyRenewal.madeKey) as? Date,
+            expiration: CartoucheSignature.current().expirationDate, at: now)
+        if state != self.state { self.state = state }
+    }
+
+    /// The player says they made the automation, on its page.
+    func made() {
+        UserDefaults.standard.set(Date(), forKey: CartoucheNightlyRenewal.madeKey)
+        CartoucheReports.note("Renew every night: the player says they made the automation")
+        read()
+    }
+
+    /// What the setup's step and the automation's page say of it.
+    var detail: String {
+        switch state {
+        case .toMake: return CartoucheText.dailyToMake
+        case .waiting(let since): return CartoucheText.dailyWaiting(CartoucheText.dateAndTime(since))
+        case .notRunning(let since): return CartoucheText.dailyNotRunning(CartoucheText.dateAndTime(since))
+        case .running: return CartoucheText.dailyRunning
+        case .renewed(let at): return CartoucheText.dailyRenewed(CartoucheText.dateAndTime(at))
+        case .failed(let at, .vpn): return CartoucheText.dailyFailedVPN(CartoucheText.dateAndTime(at))
+        case .failed(let at, .interrupted): return CartoucheText.dailyInterrupted(CartoucheText.dateAndTime(at))
+        case .failed(let at, .sideStore(let message)):
+            // In Cartouche's words when it has its own, as for Renew now.
+            let failure = CartoucheFailure.sideStore(outcome: nil, message: message, fraction: nil, seconds: nil,
+                                                     vpn: true, pairing: CartouchePairing.exists)
+            return CartoucheText.dailyFailed(CartoucheText.dateAndTime(at), CartoucheRenewal.playerMessage(message, failure: failure))
+        case .stopped(let since): return CartoucheText.dailyStopped(CartoucheText.dateAndTime(since))
+        }
+    }
+
+    /// What the System page's row says of it, beside Renew every night.
+    var status: String {
+        switch state {
+        case .toMake: return CartoucheText.dailyStatusToMake
+        case .waiting, .running: return CartoucheText.dailyStatusWaiting
+        case .renewed: return CartoucheText.dailyStatusOn
+        case .failed: return CartoucheText.dailyStatusFailed
+        case .notRunning, .stopped: return CartoucheText.dailyStatusStopped
+        }
+    }
+
+    /// The button that opens the automation's page, from the setup.
+    var action: String {
+        switch state {
+        case .toMake: return CartoucheText.dailyMake
+        case .failed, .notRunning, .stopped: return CartoucheText.dailyFix
+        case .waiting, .running, .renewed: return CartoucheText.dailySee
+        }
+    }
+
+    #if CARTOUCHE_GALLERY
+    /// The automation as the gallery's WORK has it (launcher/Gallery): its
+    /// last run at 4:00 this night, which renewed Cartouche, or which ran
+    /// without LocalDevVPN; otherwise never made.
+    func showForGallery(_ work: String?) {
+        let defaults = UserDefaults.standard
+        defaults.removeObject(forKey: CartoucheNightlyRenewal.runKey)
+        defaults.removeObject(forKey: CartoucheNightlyRenewal.madeKey)
+        let calendar = Calendar.current
+        var started = calendar.date(bySettingHour: 4, minute: 0, second: 0, of: Date()) ?? Date()
+        if started > Date() { started = calendar.date(byAdding: .day, value: -1, to: started) ?? started }
+        switch work {
+        case "nightly-renewed":
+            defaults.set(["started": started, "tunnel": true, "ended": started.addingTimeInterval(38)],
+                         forKey: CartoucheNightlyRenewal.runKey)
+        case "nightly-no-vpn":
+            defaults.set(["started": started, "tunnel": false, "ended": started.addingTimeInterval(19),
+                          "message": "VPN Connection Error:\nNo device found."], forKey: CartoucheNightlyRenewal.runKey)
+        default:
+            break
+        }
+        read()
+    }
+    #endif
+}

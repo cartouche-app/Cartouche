@@ -1,6 +1,6 @@
 """cartouche-builder: the builder's commands in Terminal, under its Mac app.
 
-  cartouche-builder                    opens the app (Cartouche Builder.app)
+  cartouche-builder                    opens the app (Cartouche.app)
   cartouche-builder plan               nxnative moved forward, and what is due and why
   cartouche-builder build [ID ...]     build what is due (or those games: added to
                                        the batch running, if one runs)

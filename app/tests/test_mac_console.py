@@ -504,9 +504,13 @@ class MacConsoleStorage(unittest.TestCase):
     saves folder (CartoucheMacFoldersSection, Mac/ConsoleStorage.swift)."""
 
     def test_this_macs_folders_have_the_rows_of_the_sections_they_stand_for(self):
-        rows = rows_of(STORAGE_PAGE.read_text(), "CartoucheStorageView", "placeSection")
+        page = STORAGE_PAGE.read_text()
+        rows = rows_of(page, "CartoucheStorageView", "gamesSection") | rows_of(page, "CartoucheStorageView", "savesSection")
         # How to name the games, under the games folder: the check sees it.
         self.assertIn("namingRow", rows)
+        # Another games folder is added on the iPhone: the console shows
+        # the iPhone's, under its games folder (CartoucheMacIPhoneGamesSection).
+        rows.discard("addGamesRow")
         mac = type_body(MAC_STORAGE.read_text(), "CartoucheMacFoldersSection")
         for row in sorted(rows):
             self.assertTrue(f"CartoucheStorageView.{row}" in mac,
@@ -544,7 +548,7 @@ class MacConsoleSystem(unittest.TestCase):
 
     def test_the_version_shows_once_as_on_the_iphone(self):
         # The iPhone has its version in its Cartouche section, which the Mac
-        # shows as Cartouche Builder, and its updates say only what the
+        # shows as Cartouche for Mac, and its updates say only what the
         # updater found: a Version row in the Mac's updates showed it twice,
         # and empty in the gallery (17 November).
         page = "\n".join(line for _, line in outside_iphone_parts(SYSTEM_PAGE.read_text()))

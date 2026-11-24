@@ -25,8 +25,16 @@ the player that address when it says the version is out
 (launcher/Sources/CartoucheUpdates.swift). SideStore and the Cartouche
 Installer read neither.
 
+With --sidestore-ipa and --sidestore-url, the version also goes to the source
+a player adds to their own SideStore (app/sidestore-player-source.json,
+CARTOUCHE_PLAYER_SIDESTORE_SOURCE_URL), with the IPA for the player's
+SideStore (app/scripts/sidestore_ipa.py, docs/decisions/147.md): the player's
+SideStore installs that one, and Cartouche installed from it updates from
+that source. Each source names its own IPA, never the other's.
+
 usage: add_release.py --ipa Cartouche.ipa --url URL --notes FILE [--version X.Y.Z]
                       [--own-certificate-ipa FILE --own-certificate-url URL]
+                      [--sidestore-ipa FILE --sidestore-url URL [--player-source FILE]]
                       [--date 2026-11-07T08:00:00Z] [--source FILE] [--config FILE]
 """
 
@@ -63,6 +71,12 @@ APP_ENTRY = {
     "tintColor": "#4F46E5",
     "category": "games",
 }
+
+# The Info.plist keys of the IPA for the player's SideStore
+# (app/scripts/sidestore_ipa.py), and the app group it must begin with.
+SIDESTORE_MARKER = "CartoucheSideStoreInstall"
+SIDESTORE_GROUP_KEY = "CartoucheAppGroup"
+BUILT_IN_GROUP = "group.com.SideStore.SideStore"
 
 
 class ReleaseError(Exception):
@@ -138,6 +152,70 @@ def check_own_certificate_ipa(ipa: Path, bundle_id: str, version: str) -> None:
         raise ReleaseError(f"{ipa.name}: app extensions left: {', '.join(extensions)}")
 
 
+def check_sidestore_ipa(ipa: Path, bundle_id: str, version: str, source_url: str) -> None:
+    """That IPA is the one a player installs with their own SideStore, of
+    this very version: with an app group of its own, never the one the
+    player's SideStore keeps its apps in, and its updates from SOURCE_URL,
+    the source it is listed in (sidestore_ipa.py)."""
+    info = app_info(ipa)
+    check_build(ipa, info, bundle_id, version)
+    if info.get(SIDESTORE_MARKER) is not True:
+        raise ReleaseError(f"{ipa.name}: not the IPA for the player's SideStore ({SIDESTORE_MARKER})")
+    if info.get("CartoucheImportedSigning") or "CartoucheSigningHandoffKey" in info:
+        raise ReleaseError(f"{ipa.name}: in the mode of the player's own certificate")
+    group = info.get(SIDESTORE_GROUP_KEY)
+    if not isinstance(group, str) or not group.startswith(BUILT_IN_GROUP + "."):
+        raise ReleaseError(f"{ipa.name}: its app group {group!r} is not one of its own")
+    if info.get("ALTAppGroups") != [group]:
+        raise ReleaseError(f"{ipa.name}: ALTAppGroups {info.get('ALTAppGroups')!r}, not its own group alone")
+    if info.get("CartoucheSourceURL") != source_url:
+        raise ReleaseError(f"{ipa.name}: its updates come from {info.get('CartoucheSourceURL')!r}, "
+                           f"not from the source for SideStore {source_url!r}")
+
+
+def with_version(source: dict, entry: dict, bundle_id: str) -> dict:
+    """SOURCE with ENTRY first among Cartouche's versions, once it is
+    higher than each of them."""
+    new = parse_version(entry["version"])
+    apps = source.setdefault("apps", [])
+    others = [app for app in apps if app.get("bundleIdentifier") != bundle_id]
+    if others:
+        raise ReleaseError("the source must list Cartouche and nothing else: "
+                           + ", ".join(repr(app.get("bundleIdentifier")) for app in others))
+    previous = apps[0].get("versions", []) if apps else []
+    for release in previous:
+        if parse_version(release["version"]) >= new:
+            raise ReleaseError(f"the source already lists {release['version']}: a release must be higher")
+    source["apps"] = [{
+        **APP_ENTRY,
+        "bundleIdentifier": bundle_id,
+        "versions": [entry, *previous][:KEPT_VERSIONS],
+    }]
+    return source
+
+
+def add_sidestore_release(source: dict, *, ipa: Path, url: str, notes: str, date: str,
+                          bundle_id: str, version: str, source_url: str) -> dict:
+    """The source for the player's SideStore with this release first, its
+    IPA for the player's SideStore for an IPA."""
+    if not url.startswith("https://"):
+        raise ReleaseError(f"the address of the IPA for the player's SideStore must be https: {url!r}")
+    parse_version(version)
+    check_sidestore_ipa(ipa, bundle_id, version, source_url)
+    info = app_info(ipa)
+    entry = {
+        "version": version,
+        "date": date,
+        "localizedDescription": notes.strip(),
+        "downloadURL": url,
+        "size": ipa.stat().st_size,
+        "sha256": sha256(ipa),
+    }
+    if info.get("MinimumOSVersion"):
+        entry["minOSVersion"] = info["MinimumOSVersion"]
+    return with_version(source, entry, bundle_id)
+
+
 def add_release(source: dict, *, ipa: Path, url: str, notes: str, date: str,
                 bundle_id: str, version: str, own_certificate_ipa: Path | None = None,
                 own_certificate_url: str | None = None) -> dict:
@@ -148,24 +226,16 @@ def add_release(source: dict, *, ipa: Path, url: str, notes: str, date: str,
         raise ReleaseError("the IPA for the player's own certificate needs both its file and its address")
     if own_certificate_url is not None and not own_certificate_url.startswith("https://"):
         raise ReleaseError(f"the address of the IPA for the player's own certificate must be https: {own_certificate_url!r}")
-    new = parse_version(version)
+    parse_version(version)
 
     info = app_info(ipa)
     check_build(ipa, info, bundle_id, version)
     if info.get("CartoucheImportedSigning"):
         raise ReleaseError(f"{ipa.name}: the IPA for the player's own certificate, not the one SideStore installs")
+    if info.get(SIDESTORE_MARKER):
+        raise ReleaseError(f"{ipa.name}: the IPA for the player's SideStore, not the one the built-in SideStore installs")
     if own_certificate_ipa is not None:
         check_own_certificate_ipa(own_certificate_ipa, bundle_id, version)
-
-    apps = source.setdefault("apps", [])
-    others = [app for app in apps if app.get("bundleIdentifier") != bundle_id]
-    if others:
-        raise ReleaseError("the source must list Cartouche and nothing else: "
-                           + ", ".join(repr(app.get("bundleIdentifier")) for app in others))
-    previous = apps[0].get("versions", []) if apps else []
-    for release in previous:
-        if parse_version(release["version"]) >= new:
-            raise ReleaseError(f"the source already lists {release['version']}: a release must be higher")
 
     entry = {
         "version": version,
@@ -181,13 +251,7 @@ def add_release(source: dict, *, ipa: Path, url: str, notes: str, date: str,
         entry["ownCertificateDownloadURL"] = own_certificate_url
         entry["ownCertificateSize"] = own_certificate_ipa.stat().st_size
         entry["ownCertificateSHA256"] = sha256(own_certificate_ipa)
-
-    source["apps"] = [{
-        **APP_ENTRY,
-        "bundleIdentifier": bundle_id,
-        "versions": [entry, *previous][:KEPT_VERSIONS],
-    }]
-    return source
+    return with_version(source, entry, bundle_id)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -199,13 +263,21 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--own-certificate-ipa", type=Path,
                         help="the IPA of this version a player signs with their own certificate")
     parser.add_argument("--own-certificate-url", help="where the player downloads it")
+    parser.add_argument("--sidestore-ipa", type=Path,
+                        help="the IPA of this version a player installs with their own SideStore")
+    parser.add_argument("--sidestore-url", help="where the player's SideStore downloads it")
+    parser.add_argument("--player-source", type=Path, default=ROOT / "app" / "sidestore-player-source.json",
+                        help="the source the player adds to their own SideStore")
     parser.add_argument("--date", default=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
     parser.add_argument("--source", type=Path, default=ROOT / "app" / "sidestore-source.json")
     parser.add_argument("--config", type=Path, default=ROOT / "app" / "config.env")
     args = parser.parse_args(argv)
 
     settings = read_config(args.config)
+    player_source = None
     try:
+        if (args.sidestore_ipa is None) != (args.sidestore_url is None):
+            raise ReleaseError("the IPA for the player's SideStore needs both its file and its address")
         version = args.version or settings["CARTOUCHE_VERSION"]
         source = json.loads(args.source.read_text(encoding="utf-8"))
         add_release(
@@ -219,11 +291,27 @@ def main(argv: list[str] | None = None) -> int:
             own_certificate_ipa=args.own_certificate_ipa,
             own_certificate_url=args.own_certificate_url,
         )
+        if args.sidestore_ipa is not None:
+            player_source = json.loads(args.player_source.read_text(encoding="utf-8"))
+            add_sidestore_release(
+                player_source,
+                ipa=args.sidestore_ipa,
+                url=args.sidestore_url,
+                notes=args.notes.read_text(encoding="utf-8"),
+                date=args.date,
+                bundle_id=settings["CARTOUCHE_BUNDLE_ID"],
+                version=version,
+                source_url=settings["CARTOUCHE_PLAYER_SIDESTORE_SOURCE_URL"],
+            )
     except (ReleaseError, KeyError, zipfile.BadZipFile) as exc:
         print(f"add_release: {exc}", file=sys.stderr)
         return 1
+    # Both sources once both are made: never one without the other.
     args.source.write_text(json.dumps(source, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"{args.source.name}: Cartouche {version} added")
+    if player_source is not None:
+        args.player_source.write_text(json.dumps(player_source, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(f"{args.player_source.name}: Cartouche {version} added, with the IPA for the player's SideStore")
     return 0
 
 

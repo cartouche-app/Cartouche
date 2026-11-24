@@ -1,0 +1,178 @@
+From 1f99f909f00667d0df8623c259365d6385dea42e Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 24 Nov 2026 12:30:32 +0000
+Subject: [PATCH] Take the built-in SideStore's app group and source from the
+ Info.plist
+
+Cartouche's IPA for the player's own SideStore (app/scripts/sidestore_ipa.py)
+carries an app group of its own, group.com.SideStore.SideStore.cartouche,
+which its Info.plist names (CartoucheAppGroup), and its own source
+(CartoucheSourceURL): the player's SideStore keeps its apps in
+group.com.SideStore.SideStore.<team>, and the two must never share it.
+
+- LCSharedUtils.builtInSideStoreAppGroup is that group, or
+  LiveContainer+SideStore's without the key. It must begin with
+  LiveContainer+SideStore's, so that every test of the group by its
+  beginning still finds it. The app group candidates and
+  isBuiltInSideStoreAppGroup start from it, so that Cartouche installed
+  from that IPA never opens the player's SideStore's group.
+- LCSharedUtils.cartoucheAppInfo reads Cartouche's Info.plist, from the
+  app or from one of its extensions, such as LiveProcess, where the
+  built-in SideStore renews and updates the app.
+- SideStoreHooks gives the built-in SideStore that group for its base app
+  group, which it signs Cartouche again with, and the source the Info.plist
+  names, https only, before the one the app is built with.
+- LCTabView hands the pairing file the player's SideStore answers with
+  (sidestore://pairing) to Cartouche's setup.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01MzPJouBNse6nNy5526AYaf
+---
+ LiveContainer/LCSharedUtils.h               |  2 +
+ LiveContainer/LCSharedUtils.m               | 41 +++++++++++++++++++--
+ LiveContainerSwiftUI/Utilities/Shared.swift |  2 +-
+ LiveContainerSwiftUI/Views/LCTabView.swift  |  4 ++
+ SideStoreSupport/SideStoreHooks.m           | 17 ++++++++-
+ 5 files changed, 60 insertions(+), 6 deletions(-)
+
+diff --git a/LiveContainer/LCSharedUtils.h b/LiveContainer/LCSharedUtils.h
+index 8d4d6e2..6181cf0 100644
+--- a/LiveContainer/LCSharedUtils.h
++++ b/LiveContainer/LCSharedUtils.h
+@@ -5,6 +5,8 @@
+ + (NSDictionary *)cartoucheSigningMaterial;
+ + (void)setCartoucheSigningCandidate:(NSDictionary *)material;
+ + (NSString*) teamIdentifier;
+++ (NSDictionary *)cartoucheAppInfo;
+++ (NSString *)builtInSideStoreAppGroup;
+ + (BOOL)isBuiltInSideStoreAppGroup:(NSString *)group;
+ + (NSString *)appGroupID;
+ + (NSURL*) appGroupPath;
+diff --git a/LiveContainer/LCSharedUtils.m b/LiveContainer/LCSharedUtils.m
+index 9b3ed27..56f9d18 100644
+--- a/LiveContainer/LCSharedUtils.m
++++ b/LiveContainer/LCSharedUtils.m
+@@ -102,11 +102,46 @@ static NSDictionary *cartoucheCachedSigningMaterial;
+     return ans;
+ }
+ 
++// Cartouche's own Info.plist, read the same way in the app and in its
++// extensions, such as LiveProcess, where the built-in SideStore renews and
++// updates the app: an extension's is the app's, two folders up.
+++ (NSDictionary *)cartoucheAppInfo {
++    static NSDictionary *info = nil;
++    static dispatch_once_t once;
++    dispatch_once(&once, ^{
++        NSBundle *host = lcMainBundle ?: NSBundle.mainBundle;
++        NSURL *app = host.bundleURL;
++        if ([app.pathExtension isEqualToString:@"appex"]) {
++            app = app.URLByDeletingLastPathComponent.URLByDeletingLastPathComponent;
++        }
++        info = [NSDictionary dictionaryWithContentsOfURL:[app URLByAppendingPathComponent:@"Info.plist"]]
++            ?: host.infoDictionary ?: @{};
++    });
++    return info;
++}
++
++// The built-in SideStore's app group, without the team identifier signing
++// appends: LiveContainer+SideStore's, or the one of Cartouche's IPA for the
++// player's own SideStore, which its Info.plist names (CartoucheAppGroup,
++// app/scripts/sidestore_ipa.py). That group begins with the other, so that
++// every test of the group by its beginning still finds the built-in
++// SideStore's, and it never is the group the player's SideStore keeps its
++// own apps in.
+++ (NSString *)builtInSideStoreAppGroup {
++    NSString *base = @"group.com.SideStore.SideStore";
++    NSString *own = [self cartoucheAppInfo][@"CartoucheAppGroup"];
++    if ([own isKindOfClass:NSString.class] && [own hasPrefix:[base stringByAppendingString:@"."]]) {
++        return own;
++    }
++    return base;
++}
++
+ // The built-in SideStore's app group, alone or with the team identifier that
+ // signing appends. Any other group belongs to another app, such as a
+-// LiveContainer+SideStore on the same iPhone, and is never used.
++// LiveContainer+SideStore or the player's own SideStore on the same iPhone,
++// and is never used.
+ + (BOOL)isBuiltInSideStoreAppGroup:(NSString *)group {
+-    NSString *base = @"group.com.SideStore.SideStore";
++    NSString *base = [self builtInSideStoreAppGroup];
+     return [group isEqualToString:base] || [group hasPrefix:[base stringByAppendingString:@"."]];
+ }
+ 
+@@ -121,7 +156,7 @@ static NSDictionary *cartoucheCachedSigningMaterial;
+             return;
+         }
+         NSArray* possibleAppGroups = @[
+-            [@"group.com.SideStore.SideStore." stringByAppendingString:[self teamIdentifier]]
++            [[[self builtInSideStoreAppGroup] stringByAppendingString:@"."] stringByAppendingString:[self teamIdentifier]]
+         ];
+         
+         // we prefer app groups with "Apps" in it, which indicate this app group is actually used by the store.
+diff --git a/LiveContainerSwiftUI/Utilities/Shared.swift b/LiveContainerSwiftUI/Utilities/Shared.swift
+index 845799b..dc555e2 100644
+--- a/LiveContainerSwiftUI/Utilities/Shared.swift
++++ b/LiveContainerSwiftUI/Utilities/Shared.swift
+@@ -27,7 +27,7 @@ struct LCPath {
+         if let appGroupPathUrl = LCSharedUtils.appGroupPath() {
+             return appGroupPathUrl.appendingPathComponent("LiveContainer")
+         } else if let appGroupPathUrl =
+-                    FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.SideStore.SideStore") {
++                    FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: LCSharedUtils.builtInSideStoreAppGroup()) {
+             return appGroupPathUrl.appendingPathComponent("LiveContainer")
+         } else {
+             return docPath
+diff --git a/LiveContainerSwiftUI/Views/LCTabView.swift b/LiveContainerSwiftUI/Views/LCTabView.swift
+index 9473825..c1af8d0 100644
+--- a/LiveContainerSwiftUI/Views/LCTabView.swift
++++ b/LiveContainerSwiftUI/Views/LCTabView.swift
+@@ -108,6 +108,10 @@ struct LCTabView: View {
+         // built-in SideStore's certificate to LiveContainer on its own.
+         if url.isFileURL, CartouchePairing.openedFile(url) {
+             sharedModel.selectedTab = .initial
++        } else if CartoucheSideStoreInstall.opened(url) {
++            // The pairing file the player's own SideStore answers with, to
++            // the setup that asked for it.
++            sharedModel.selectedTab = .initial
+         } else if #available(iOS 17.0, *), CartoucheCloudLink.opened(url) {
+             // The link of a Cartouche Cloud account's page: the System page,
+             // on Cartouche Cloud, links this iPhone with its code.
+diff --git a/SideStoreSupport/SideStoreHooks.m b/SideStoreSupport/SideStoreHooks.m
+index f9932ae..ae98d5c 100644
+--- a/SideStoreSupport/SideStoreHooks.m
++++ b/SideStoreSupport/SideStoreHooks.m
+@@ -79,7 +79,10 @@ static id SSSceneObserver;
+ }
+ 
+ + (NSString*)hook_baseAltStoreAppGroupID {
+-    return @"group.com.SideStore.SideStore";
++    // Cartouche: the group of the IPA for the player's own SideStore, when
++    // it is that one, so that the built-in SideStore signs Cartouche again
++    // with it, never with the player's SideStore's.
++    return LCSharedUtils.builtInSideStoreAppGroup;
+ }
+ 
+ + (NSBundle*)hook_activeBundle {
+@@ -99,7 +102,17 @@ NSURL* SideStoreSource_hook_altStoreSourceURL(id self, SEL cmd) {
+     static NSURL* sourceURL = nil;
+     static dispatch_once_t onceToken;
+     dispatch_once(&onceToken, ^{
+-        sourceURL = [NSURL URLWithString:@"https://github.com/LiveContainer/LiveContainer/releases/download/1.0/apps_ss_lc.json"];
++        // Cartouche: the source its Info.plist names, which the IPA for the
++        // player's own SideStore changes for its own (CartoucheSourceURL,
++        // app/scripts/sidestore_ipa.py), https only, else the one the app is
++        // built with.
++        NSString *named = LCSharedUtils.cartoucheAppInfo[@"CartoucheSourceURL"];
++        if ([named isKindOfClass:NSString.class] && [named hasPrefix:@"https://"]) {
++            sourceURL = [NSURL URLWithString:named];
++        }
++        if (!sourceURL) {
++            sourceURL = [NSURL URLWithString:@"https://github.com/LiveContainer/LiveContainer/releases/download/1.0/apps_ss_lc.json"];
++        }
+     });
+     return sourceURL;
+ }
+-- 
+2.43.0
+

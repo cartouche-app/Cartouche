@@ -73,7 +73,7 @@ enum Words {
     static let openShortcuts = "Open Shortcuts"             // daily.openShortcuts
     static let storageIntro = "Your games and saves on your own storage" // storage.intro
     static let addFirst = "First add your Mac"              // storage.addFirst
-    static let addMac = "Add your Mac (Cartouche Builder)"  // storage.mac.add
+    static let addMac = "Add your Mac"  // storage.mac.add
     static let addS3 = "Add S3 storage"                     // storage.addS3
     static let addFTP = "Add an FTP server"                 // storage.addFTP
     static let addFolder = "Add a folder in Files"          // storage.addFolder
@@ -133,7 +133,7 @@ enum GalleryWords {
     static let wrongCode = "Incorrect verification code."
     static let signedInAs = "player@icloud.com"
     /// The folder in Files the saves are kept in (GallerySaves).
-    static let savesFolder = "Gallery saves"
+    static let savesFolder = "NAS"
     /// The stand-in start's alert, and what Siri would say, over the
     /// console (GalleryTesting.swift).
     static let play = "Gallery play"

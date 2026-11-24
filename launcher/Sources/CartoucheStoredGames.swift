@@ -22,6 +22,14 @@
 //  list stays: Cartouche finds the server offline within a few seconds
 //  (CartoucheStorageReach), and reads the folder again once it answers.
 //
+//  The player may keep games in several folders, on several servers
+//  (CartoucheStorageSettings.gamesFolders): Cartouche reads them all at
+//  once, and a game in more than one shows once in the library, from the
+//  copy it can reach (CartoucheGameCopies.swift): as the NAS goes offline
+//  away from home, its games install from the Drive, the Mac or the bucket
+//  that holds them too. Install tries the game's next copy when the server
+//  of the one offered does not answer.
+//
 
 import Combine
 import Foundation
@@ -51,8 +59,24 @@ struct CartoucheStoredGame: Codable, Hashable, Identifiable {
     /// Whether Cartouche looked for romfs.id in it, as an older Cartouche
     /// did not.
     var checkedGameFiles: Bool? = nil
+    /// The server of the games folder it is in, and that folder's path on
+    /// it; none from an older Cartouche, which had one games folder.
+    var server: UUID? = nil
+    var folder: String? = nil
+    /// Whether its server does not answer from here, and its folder's
+    /// place among the games folders, as the list says them now: not kept
+    /// (CodingKeys).
+    var isOffline = false
+    var folderRank = 0
 
-    var id: String { path }
+    enum CodingKeys: String, CodingKey {
+        case path, size, modified, bundleId, displayName, version, build, titleId, isGame, gameFiles, gameFilesPath,
+             checkedGameFiles, server, folder
+    }
+
+    /// Its path, on its server: the same path in two games folders is two
+    /// copies.
+    var id: String { (server.map { $0.uuidString + "|" } ?? "") + path }
     /// Whether it needs an image of its game files the games folder lacks.
     var lacksGameFiles: Bool { gameFiles != nil && gameFilesPath == nil }
     /// What it takes in the games folder, with the image of its game files.
@@ -104,6 +128,26 @@ struct CartoucheStoredGame: Codable, Hashable, Identifiable {
         }
         return (modified ?? .distantPast) > (other.modified ?? .distantPast)
     }
+
+    /// What tells it from the game's other copies (CartoucheGameCopies).
+    var rank: CartoucheCopyRank {
+        CartoucheCopyRank(offline: isOffline, folder: folderRank, build: build, modified: modified)
+    }
+
+    /// Whether the console offers this IPA rather than OTHER, of the same
+    /// game: one Cartouche can reach, then the newer copy, then the one of
+    /// the folder listed first.
+    func isPreferredCopy(over other: CartoucheStoredGame) -> Bool {
+        CartoucheGameCopies.prefers(rank, over: other.rank)
+    }
+
+    /// Whether OTHER is a copy of the same game, by its title ID or its
+    /// bundle ID.
+    func isSameGame(as other: CartoucheStoredGame) -> Bool {
+        if let titleId, titleId == other.titleId { return true }
+        if let bundleId, bundleId == other.bundleId { return true }
+        return false
+    }
 }
 
 /// The build of each game Cartouche installed, as the IPA it came from
@@ -154,7 +198,7 @@ final class CartoucheInstalledBuilds {
         return build
     }
 
-    /// Whether each installed game's executable converts its BC textures,
+    /// The APIs whose BC textures each installed game's executable converts,
     /// by the game's bundle, with what its Info.plist names and when the
     /// executable last changed, and its size: Cartouche signing the game
     /// again writes it again.
@@ -166,16 +210,17 @@ final class CartoucheInstalledBuilds {
         let executable: String
         let changed: Date?
         let size: Int?
-        let converts: Bool
+        let apis: CartoucheBCConversion.APIs
     }
 
-    /// Whether the installed game was built with an nxnative that converts
-    /// its BC-compressed textures for a GPU that reads none, as its
-    /// executable says (CartoucheBCConversion): read once for each build,
-    /// and only where the GPU reads none (CartoucheEntry.convertsBCTextures).
-    /// The iPhone's bundle, whose Info.plist and executable are at its top.
-    static func convertsBCTextures(of app: LCAppModel) -> Bool {
-        guard let path = app.appInfo.bundlePath() else { return false }
+    /// The graphics APIs whose BC-compressed textures the installed game's
+    /// build converts for a GPU that reads none, as its executable says
+    /// (CartoucheBCConversion), none for nxnative's own: read once for each
+    /// build, and only where the GPU reads none
+    /// (CartoucheEntry.convertsBCTextures). The iPhone's bundle, whose
+    /// Info.plist and executable are at its top.
+    static func bcConversion(of app: LCAppModel) -> CartoucheBCConversion.APIs {
+        guard let path = app.appInfo.bundlePath() else { return [] }
         let bundle = URL(fileURLWithPath: path, isDirectory: true)
         let info = bundle.appendingPathComponent("Info.plist")
         let infoChanged = (try? info.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
@@ -189,7 +234,7 @@ final class CartoucheInstalledBuilds {
                   let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
                   let name = plist["CFBundleExecutable"] as? String, !name.isEmpty, !name.contains("/") else {
                 readConversions[path] = nil
-                return false
+                return []
             }
             executable = name
         }
@@ -197,13 +242,13 @@ final class CartoucheInstalledBuilds {
         let values = try? file.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey])
         if let known = readConversions[path], known.infoChanged == infoChanged, known.executable == executable,
            known.changed == values?.contentModificationDate, known.size == values?.fileSize {
-            return known.converts
+            return known.apis
         }
-        let converts = CartoucheBCConversion.converts(executableAt: file)
+        let apis = CartoucheBCConversion.conversion(executableAt: file)
         readConversions[path] = Conversion(infoChanged: infoChanged, executable: executable,
                                            changed: values?.contentModificationDate, size: values?.fileSize,
-                                           converts: converts)
-        return converts
+                                           apis: apis)
+        return apis
     }
 
     /// The record of the game's install, when it is of the build installed
@@ -229,23 +274,43 @@ final class CartoucheInstalledBuilds {
 final class CartoucheStoredGames: ObservableObject {
     static let shared = CartoucheStoredGames()
 
+    /// The IPAs of every games folder, each copy of a game that is in
+    /// several: the library shows one of them (CartoucheCatalog.entries),
+    /// as isPreferredCopy(over:) chooses. Each says whether its server
+    /// answers from here, as CartoucheStorageReach last found.
     @Published private(set) var games: [CartoucheStoredGame] = []
     @Published private(set) var isScanning = false
-    /// Why the games folder could not be read, the last time, and the
-    /// report on it.
-    @Published private(set) var problemReport: CartoucheReport?
+    /// Why the first games folder that could not be read, the last time,
+    /// could not, and the report on it.
+    var problemReport: CartoucheReport? {
+        let folders = settings.gamesFolders.all
+        return folders.lazy.compactMap { self.problems[$0] }.first ?? problems.values.first
+    }
     var problem: String? { problemReport?.message }
-    /// The server the games are on, for the console to name.
+    /// Why each games folder could not be read, the last time, and the
+    /// report on it.
+    @Published private(set) var problems: [CartoucheStoragePlace: CartoucheReport] = [:]
+    /// The server the games are on, for the console to name: the games
+    /// folder's, the first.
     @Published private(set) var serverName: String?
-    /// The images of game files in the games folder that no IPA there
+    /// The images of game files in the games folders that no IPA there
     /// takes, by their paths (CartoucheRomfs): a romfs.img without the IPA
     /// nxnative built with it.
-    @Published private(set) var looseGameFiles: [String] = []
+    var looseGameFiles: [String] { settings.gamesFolders.all.flatMap { loose[$0] ?? [] } }
+    /// The same, by games folder.
+    @Published private(set) var loose: [CartoucheStoragePlace: [String]] = [:]
 
     private let settings: CartoucheStorageSettings
+    /// What each folder holds, as last read, without whether their servers
+    /// answer: games is made of it (publish).
+    private var found: [CartoucheStoredGame] = []
+    /// The servers that do not answer from here, as CartoucheStorageReach
+    /// last said.
+    private var offline: Set<UUID> = []
     private var known: [String: CartoucheStoredGame] = [:]
     private let cacheFile: URL
     private var scan: Task<Void, Never>?
+    private var watching: AnyCancellable?
     #if CARTOUCHE_GALLERY
     private var shownForGallery = false
     #endif
@@ -261,28 +326,120 @@ final class CartoucheStoredGames: ObservableObject {
            let saved = try? JSONDecoder().decode([String: CartoucheStoredGame].self, from: data) {
             known = saved
         }
-        if let location = settings.location(.games) {
-            serverName = location.server.name
-            // The last list, until the folder has been read again.
-            let prefix = location.server.id.uuidString + "|"
-            games = known.filter { $0.key.hasPrefix(prefix) }.map(\.value).sorted(by: Self.byName)
+        let locations = settings.gamesLocations
+        if let first = locations.first {
+            serverName = first.server.name
+            // The last list, until the folders have been read again.
+            var lastList: [CartoucheStoredGame] = []
+            for location in locations {
+                let prefix = location.server.id.uuidString + "|"
+                for (key, game) in known where key.hasPrefix(prefix) && Self.isIn(game.path, folder: location.path) {
+                    var game = game
+                    game.server = location.server.id
+                    game.folder = location.path
+                    lastList.append(game)
+                }
+            }
+            found = Self.once(lastList)
         }
+        // As each server goes offline, or answers again, the copy offered
+        // of a game in several folders changes: from the list as it is now.
+        watching = CartoucheStorageReach.shared.$absences
+            .map { Set($0.keys) }
+            .removeDuplicates()
+            .sink { [weak self] offline in
+                self?.offline = offline
+                self?.publish()
+            }
     }
 
     private static func byName(_ a: CartoucheStoredGame, _ b: CartoucheStoredGame) -> Bool {
         a.name.localizedStandardCompare(b.name) == .orderedAscending
     }
 
-    /// The stored game of a title ID, or of an installed app's bundle ID.
-    func game(titleId: String?, bundleId: String?) -> CartoucheStoredGame? {
-        games.first { stored in
-            (titleId != nil && stored.titleId == titleId) || (bundleId != nil && stored.bundleId == bundleId)
+    /// Whether PATH is in the folder at FOLDER, or one of its folders.
+    nonisolated static func isIn(_ path: String, folder: String) -> Bool {
+        let base = CartoucheStoragePath.join(folder)
+        let path = CartoucheStoragePath.join(path)
+        return base.isEmpty || path.hasPrefix(base + "/")
+    }
+
+    /// GAMES without the same file twice, as two games folders of the same
+    /// server, one in the other, both list it: the first folder's.
+    private static func once(_ games: [CartoucheStoredGame]) -> [CartoucheStoredGame] {
+        var seen = Set<String>()
+        return games.filter { game in
+            seen.insert((game.server?.uuidString ?? "") + "|" + CartoucheStoragePath.join(game.path)).inserted
         }
     }
 
-    /// Reads the games folder again, unless it is being read. As Cartouche
-    /// does by itself, it leaves a server it found offline a moment ago
-    /// alone; EVEN IF OFFLINE, as the player asks, it tries it again.
+    /// Makes games of what the folders hold: each copy saying whether its
+    /// server answers, and its folder's place among the games folders.
+    private func publish() {
+        let folders = settings.gamesFolders.all
+        let first = folders.first?.server
+        let published = found.map { found -> CartoucheStoredGame in
+            var game = found
+            let server = game.server ?? first
+            game.isOffline = server.map { offline.contains($0) } ?? false
+            game.folderRank = folders.firstIndex { $0.server == server && $0.path == (game.folder ?? $0.path) } ?? 0
+            return game
+        }
+        .filter(\.isGame)
+        .sorted(by: Self.byName)
+        if published != games { games = published }
+    }
+
+    /// The stored game of a title ID, or of an installed app's bundle ID:
+    /// the copy offered, of a game in several folders.
+    func game(titleId: String?, bundleId: String?) -> CartoucheStoredGame? {
+        games.filter { stored in
+            (titleId != nil && stored.titleId == titleId) || (bundleId != nil && stored.bundleId == bundleId)
+        }
+        .max { $1.isPreferredCopy(over: $0) }
+    }
+
+    /// GAME and its other copies, in the order to try them: GAME first,
+    /// then those whose servers answer, the newer copies first.
+    func copies(of game: CartoucheStoredGame) -> [CartoucheStoredGame] {
+        let others = games.filter { $0 != game && $0.isSameGame(as: game) }
+        return [game] + CartoucheGameCopies.ordered(others, by: \.rank)
+    }
+
+    /// The server of the games folder GAME is in.
+    func server(of game: CartoucheStoredGame) -> CartoucheStorageServer? {
+        if let server = game.server { return settings.server(server) }
+        return settings.location(.games)?.server
+    }
+
+    /// The name of where GAME is, for the console to say: its server's.
+    func place(of game: CartoucheStoredGame?) -> String {
+        if let game, let server = server(of: game) { return server.name }
+        return serverName ?? ""
+    }
+
+    /// Whether GAME's server is a Google Drive whose sign-in Google ended,
+    /// as Cartouche found it offline: the player signs in again, rather
+    /// than waits.
+    func isSignedOut(_ game: CartoucheStoredGame) -> Bool {
+        guard game.isOffline, let server = server(of: game) else { return false }
+        return CartoucheStorageOffline(server).isSignedOut
+    }
+
+    /// The games found in the games folder at PLACE.
+    func count(in place: CartoucheStoragePlace) -> Int {
+        let first = settings.place(.games)
+        return games.filter { game in
+            let server = game.server ?? first?.server
+            let folder = game.folder ?? first?.path
+            return server == place.server && folder == place.path
+        }.count
+    }
+
+    /// Reads the games folders again, unless they are being read. As
+    /// Cartouche does by itself, it leaves a server it found offline a
+    /// moment ago alone; EVEN IF OFFLINE, as the player asks, it tries it
+    /// again.
     func refresh(evenIfOffline: Bool = false) {
         guard scan == nil else { return }
         scan = Task {
@@ -291,7 +448,7 @@ final class CartoucheStoredGames: ObservableObject {
         }
     }
 
-    /// Reads the games folder again and waits for the list.
+    /// Reads the games folders again and waits for the list.
     func reload() async {
         if let scan { await scan.value }
         await read(evenIfOffline: true)
@@ -299,11 +456,13 @@ final class CartoucheStoredGames: ObservableObject {
 
     #if CARTOUCHE_GALLERY
     /// A games folder with these IPAs, for the launcher's gallery
-    /// (launcher/Gallery).
+    /// (launcher/Gallery): those of several folders say which, by their
+    /// servers and folders.
     func showForGallery(_ stored: [CartoucheStoredGame], server: String) {
-        games = stored
+        found = stored
         serverName = server
         shownForGallery = true
+        publish()
     }
     #endif
 
@@ -313,11 +472,22 @@ final class CartoucheStoredGames: ObservableObject {
     /// Cartouche's console on the Mac (builder/mac/Sources/CartoucheConsole):
     /// the Builder reads its games folder, never the console.
     func showForMac(_ stored: [CartoucheStoredGame], server: String) {
-        games = stored
+        found = stored
         serverName = server
         shownForMac = true
+        publish()
     }
     #endif
+
+    /// What the reading of one games folder found: its games and the
+    /// images no IPA takes; none when the last list stays, as when its
+    /// server is offline.
+    private struct FolderRead {
+        var place: CartoucheStoragePlace
+        var games: [CartoucheStoredGame]?
+        var loose: [String] = []
+        var problem: CartoucheReport?
+    }
 
     private func read(evenIfOffline: Bool) async {
         #if CARTOUCHE_GALLERY
@@ -326,79 +496,120 @@ final class CartoucheStoredGames: ObservableObject {
         #if os(macOS)
         if shownForMac { return }
         #endif
-        guard let location = settings.location(.games) else {
-            games = []
-            looseGameFiles = []
+        let locations = settings.gamesLocations
+        guard let first = locations.first else {
+            found = []
+            loose = [:]
             serverName = nil
-            problemReport = nil
+            problems = [:]
+            publish()
             return
         }
-        serverName = location.server.name
-        if !evenIfOffline && CartoucheStorageReach.shared.isSettledOffline(location.server.id) {
-            problemReport = nil
-            return
-        }
+        serverName = first.server.name
         isScanning = true
         defer { isScanning = false }
+        // All at once: a server that does not answer keeps the others
+        // waiting no longer than itself.
+        let reads = await withTaskGroup(of: FolderRead.self, returning: [FolderRead].self) { group in
+            for location in locations {
+                let server = location.server
+                let path = location.path
+                group.addTask {
+                    await self.readFolder(server, path: path, evenIfOffline: evenIfOffline)
+                }
+            }
+            var reads: [FolderRead] = []
+            for await read in group { reads.append(read) }
+            return reads
+        }
+        // The folders as they are now: one the player stopped using
+        // meanwhile is left out.
+        let folders = settings.gamesFolders.all
+        var list: [CartoucheStoredGame] = []
+        var problems: [CartoucheStoragePlace: CartoucheReport] = [:]
+        var loose: [CartoucheStoragePlace: [String]] = [:]
+        for place in folders {
+            guard let read = reads.first(where: { $0.place == place }) else {
+                list += found.filter { $0.server == place.server && $0.folder == place.path }
+                continue
+            }
+            list += read.games ?? found.filter { $0.server == place.server && $0.folder == place.path }
+            if read.games == nil { loose[place] = self.loose[place] } else { loose[place] = read.loose }
+            problems[place] = read.problem
+        }
+        found = Self.once(list)
+        self.problems = problems
+        self.loose = loose
+        publish()
+        save()
+    }
+
+    /// Reads the games folder at PATH on SERVER.
+    private func readFolder(_ server: CartoucheStorageServer, path: String, evenIfOffline: Bool) async -> FolderRead {
+        let place = CartoucheStoragePlace(server: server.id, path: path)
+        if !evenIfOffline && CartoucheStorageReach.shared.isSettledOffline(server.id) {
+            return FolderRead(place: place)
+        }
         let remote: CartoucheRemote
         do {
-            remote = try await CartoucheStorage.connect(location.server, settings: settings)
+            remote = try await CartoucheStorage.connect(server, settings: settings)
         } catch is CartoucheStorageOffline {
             // No problem: the last list stays until the server answers again.
-            problemReport = nil
-            return
+            return FolderRead(place: place)
         } catch {
-            problemReport = Self.readFailed(error, step: "Connecting to " + CartoucheReports.place(.games))
-            return
+            return FolderRead(place: place, problem: Self.readFailed(error, step: "Connecting to " + CartoucheReports.place(.games, on: server)))
         }
         var found: [CartoucheStoredGame] = []
         var images: [CartoucheRomfsImage] = []
+        var problem: CartoucheReport?
         do {
-            var folders = [location.path]
-            let top = try await remote.list(location.path)
+            var folders = [path]
+            let top = try await remote.list(path)
             // Whether Cartouche can copy a game there, for its Copy to.
-            await settings.checkAccess(remote, server: location.server.id, path: location.path)
-            folders += top.filter(\.isFolder).prefix(64).map { CartoucheStoragePath.join(location.path, $0.name) }
+            await settings.checkAccess(remote, server: server.id, path: path)
+            folders += top.filter(\.isFolder).prefix(64).map { CartoucheStoragePath.join(path, $0.name) }
             for folder in folders {
                 let items: [CartoucheRemoteItem]
-                if folder == location.path {
+                if folder == path {
                     items = top
                 } else {
                     items = (try? await remote.list(folder)) ?? []
                 }
                 for item in items where !item.isFolder && CartoucheRomfs.isImageName(item.name) {
-                    let path = CartoucheStoragePath.join(folder, item.name)
-                    images.append(CartoucheRomfsImage(path: path, folder: CartoucheStoragePath.parent(path), size: item.size))
+                    let itemPath = CartoucheStoragePath.join(folder, item.name)
+                    images.append(CartoucheRomfsImage(path: itemPath, folder: CartoucheStoragePath.parent(itemPath), size: item.size))
                 }
                 for item in items where !item.isFolder && CartoucheNaming.isIPA(item.name) {
-                    let path = CartoucheStoragePath.join(folder, item.name)
-                    let key = Self.key(location.server, path: path, size: item.size, modified: item.modified)
+                    let itemPath = CartoucheStoragePath.join(folder, item.name)
+                    let key = Self.key(server, path: itemPath, size: item.size, modified: item.modified)
                     // What a scan before 0.9.0 found says nothing of the
                     // build, and one by an older Cartouche nothing of the
                     // game files: read again.
-                    if let game = known[key], game.build != nil, game.checkedGameFiles == true {
+                    if var game = known[key], game.build != nil, game.checkedGameFiles == true {
+                        game.server = server.id
+                        game.folder = path
                         found.append(game)
                         continue
                     }
-                    let (game, settled) = await identify(path: path, item: item, in: remote, server: location.server)
-                    if settled { known[key] = game }
+                    let identified = await identify(path: itemPath, item: item, in: remote, server: server)
+                    var game = identified.0
+                    game.server = server.id
+                    game.folder = path
+                    if identified.settled { known[key] = game }
                     found.append(game)
                 }
             }
-            problemReport = nil
         } catch {
-            problemReport = Self.readFailed(error, step: "Listing " + CartoucheReports.place(.games),
-                                            facts: [.init("Games found", String(found.count))])
+            problem = Self.readFailed(error, step: "Listing " + CartoucheReports.place(.games, on: server),
+                                      facts: [.init("Games found", String(found.count))])
         }
         await remote.disconnect()
         let paired = Self.pairGameFiles(found, images: images)
         for game in paired.games {
-            let key = Self.key(location.server, path: game.path, size: game.size, modified: game.modified)
+            let key = Self.key(server, path: game.path, size: game.size, modified: game.modified)
             known[key]?.gameFilesPath = game.gameFilesPath
         }
-        games = paired.games.filter(\.isGame).sorted(by: Self.byName)
-        looseGameFiles = paired.loose
-        save()
+        return FolderRead(place: place, games: paired.games, loose: paired.loose, problem: problem)
     }
 
     /// GAMES, each IPA built without its game files with the image of the

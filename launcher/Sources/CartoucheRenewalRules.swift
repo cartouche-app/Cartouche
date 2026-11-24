@@ -270,3 +270,167 @@ enum CartoucheRenewalVia: String, Equatable {
         return reinstalled == false ? .outside : nil
     }
 }
+
+/// The automation of Shortcuts that renews Cartouche every night, as the
+/// setup's last step, its page and the System page show it. iOS lets no app
+/// create an automation, nor see the player's: Cartouche sees each run of
+/// the Refresh All Apps action it runs, which the built-in SideStore's
+/// support notes in Cartouche's defaults as it starts, once LocalDevVPN's
+/// tunnel is up or not, and as it ends
+/// (launcher/SideStoreSupport/CartoucheShortcutRun.swift), and whether the
+/// player said they made it, on its page. Up to 0.15.1, nothing said
+/// whether a player had one, nor whether it worked: a new player found its
+/// steps under System alone, and the measurements saw its renewals only
+/// once they had gone through (signature.renewed, via outside).
+enum CartoucheNightlyRenewal {
+    /// The run's key in Cartouche's defaults, CartoucheShortcutRun's too
+    /// (app/tests/test_renewal.py).
+    static let runKey = "Cartouche.nightly.run"
+    /// When the player said they made the automation, on its page.
+    static let madeKey = "Cartouche.nightly.made"
+
+    /// How long after its last run the automation counts as no longer
+    /// running: three nights, the iPhone off or out of power one night
+    /// being no reason to say so.
+    static let late: TimeInterval = 3 * 86_400
+    /// How long after the player said they made it an automation never
+    /// seen to run counts as not running: a night and a half.
+    static let firstNight: TimeInterval = 36 * 3_600
+    /// How long a run goes on at most: one started longer ago that never
+    /// ended was ended by iOS. The longest renewal the measurements saw in
+    /// the week of November 10 took 71 seconds.
+    static let longest: TimeInterval = 10 * 60
+    /// How much later than its start the signature expires, at least, after
+    /// a run that renewed it, whatever SideStore said as it ended, or when
+    /// iOS ended it first: a renewal gives seven days from the moment Apple
+    /// makes the profiles, a minute or so into the run, and SideStore may
+    /// quit on its way back (CartoucheFailure.renewalEnd). A signature
+    /// renewed before the run, by an update the day before, expires
+    /// earlier.
+    static let renewedSpan: TimeInterval = 7 * 86_400 - 10 * 60
+
+    /// One run of Refresh All Apps from Shortcuts, as CartoucheShortcutRun
+    /// notes it.
+    struct Run: Equatable {
+        var started: Date
+        /// Whether LocalDevVPN's tunnel was up once Refresh All Apps had
+        /// waited for it: nil until then.
+        var tunnel: Bool?
+        /// When it ended: nil while it runs, or when iOS ended Cartouche
+        /// first.
+        var ended: Date?
+        /// The built-in SideStore's words, when it failed.
+        var message: String?
+
+        init(started: Date, tunnel: Bool? = nil, ended: Date? = nil, message: String? = nil) {
+            self.started = started
+            self.tunnel = tunnel
+            self.ended = ended
+            self.message = message
+        }
+
+        /// The run in RECORD, as CartoucheShortcutRun writes it in
+        /// Cartouche's defaults: nil for anything else.
+        init?(record: Any?) {
+            guard let record = record as? [String: Any], let started = record["started"] as? Date else { return nil }
+            self.init(started: started, tunnel: record["tunnel"] as? Bool, ended: record["ended"] as? Date,
+                      message: record["message"] as? String)
+        }
+    }
+
+    /// Why the last run did not renew Cartouche.
+    enum Problem: Equatable {
+        /// LocalDevVPN's tunnel was not up once Refresh All Apps had waited
+        /// for it: the automation runs no Enable LocalDevVPN before it.
+        case vpn
+        /// iOS ended Cartouche before the run ended.
+        case interrupted
+        /// The built-in SideStore failed, with these words.
+        case sideStore(String)
+
+        /// Its name in the measurements (app.opened, nightlyProblem).
+        var name: String {
+            switch self {
+            case .vpn: return "vpn"
+            case .interrupted: return "interrupted"
+            case .sideStore: return "sideStore"
+            }
+        }
+    }
+
+    /// Where the automation stands.
+    enum State: Equatable {
+        /// No run seen, and the player has not said they made it.
+        case toMake
+        /// The player said they made it, then: no run seen since, its first
+        /// night yet to come.
+        case waiting(since: Date)
+        /// The player said they made it, then, and no run came for a night
+        /// and a half: its time, or Run Immediately, to check.
+        case notRunning(since: Date)
+        /// A run under way, since then.
+        case running(since: Date)
+        /// Its last run renewed Cartouche, then.
+        case renewed(at: Date)
+        /// Its last run, then, did not renew Cartouche.
+        case failed(at: Date, Problem)
+        /// Its last run was longer ago than `late`, then: the automation no
+        /// longer runs, removed or turned off.
+        case stopped(since: Date)
+
+        /// Whether the setup's step is done: the automation renews
+        /// Cartouche, or the player made it and its first night has not
+        /// come yet.
+        var isDone: Bool {
+            switch self {
+            case .waiting, .running, .renewed: return true
+            case .toMake, .notRunning, .failed, .stopped: return false
+            }
+        }
+
+        /// What its last run failed on, if it failed (app.opened,
+        /// nightlyProblem).
+        var problem: Problem? {
+            if case .failed(_, let problem) = self { return problem }
+            return nil
+        }
+
+        /// Its name in the measurements (app.opened, nightly).
+        var name: String {
+            switch self {
+            case .toMake: return "toMake"
+            case .waiting: return "waiting"
+            case .notRunning: return "notRunning"
+            case .running: return "running"
+            case .renewed: return "renewed"
+            case .failed: return "failed"
+            case .stopped: return "stopped"
+            }
+        }
+    }
+
+    /// Where the automation stands at NOW, after RUN, its last run, MADE,
+    /// when the player said they made it, the signature expiring at
+    /// EXPIRATION.
+    static func state(run: Run?, made: Date?, expiration: Date?, at now: Date) -> State {
+        // Said made after its last run, as after one that failed or
+        // stopped: its next night tells.
+        if let made, run.map({ $0.started < made }) ?? true {
+            return now.timeIntervalSince(made) > firstNight ? .notRunning(since: made) : .waiting(since: made)
+        }
+        guard let run else { return .toMake }
+        if now.timeIntervalSince(run.started) > late { return .stopped(since: run.started) }
+        // SideStore said it renewed Cartouche, whatever the tunnel read.
+        if let ended = run.ended, run.message == nil { return .renewed(at: ended) }
+        // Otherwise it reaches this iPhone through the tunnel alone.
+        if run.tunnel == false { return .failed(at: run.started, .vpn) }
+        if let expiration, expiration.timeIntervalSince(run.started) >= renewedSpan {
+            return .renewed(at: run.ended ?? run.started)
+        }
+        guard run.ended != nil else {
+            return now.timeIntervalSince(run.started) < longest ? .running(since: run.started)
+                : .failed(at: run.started, .interrupted)
+        }
+        return .failed(at: run.started, .sideStore(run.message ?? ""))
+    }
+}

@@ -79,7 +79,7 @@ struct StorageView: View {
     private var subtitle: String {
         guard let storage = model.storage else { return tr("Measuring…", "Mesure en cours…") }
         let kept = storage.buildFolders + storage.total("ipa_copies") + storage.total("logs") + storage.total("mac_apps")
-        return tr("Cartouche Builder keeps \(Format.size(kept)) on this Mac", "Cartouche Builder garde \(Format.size(kept)) sur ce Mac")
+        return tr("Cartouche keeps \(Format.size(kept)) on this Mac", "Cartouche garde \(Format.size(kept)) sur ce Mac")
     }
 
     private func disks(_ storage: StorageReport) -> some View {

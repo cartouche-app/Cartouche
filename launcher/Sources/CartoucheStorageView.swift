@@ -5,18 +5,23 @@
 //  The player's storage, on screen: the System page's Storage page, where
 //  the player signs in to a shared folder of their Mac, PC or NAS, a
 //  bucket, a server or their Google Drive (CartoucheStorageDriveView.swift),
-//  or picks a folder in Files, and chooses the games folder and the saves
-//  folder. A game's saves on its sheet, and their copies, which can be put
-//  back, are in CartoucheSavesView.swift.
+//  or picks a folder in Files, and chooses the games folders and the saves
+//  folder. The games may be in several folders, on several of these (Add
+//  another games folder): a game in more than one shows once, from a
+//  folder that answers (CartoucheGameCopies.swift). A game's saves on its
+//  sheet, and their copies, which can be put back, are in
+//  CartoucheSavesView.swift.
 //
 //  Cartouche's console on the Mac shows the same page, its connections the
 //  same as the paired iPhones' (CartoucheConnections.swift): this Mac's
 //  folders, the Builder's, stand in place of the games folder and the saves
 //  folder (builder/mac, ConsoleStorage.swift), and neither a Mac nor a
-//  folder of Files is added there. When the saves folder chosen on the
-//  iPhone is on one of the connections, the Builder keeps the saves of the
-//  Mac's games there too, and the page shows it as the iPhone does, the
-//  choice staying the iPhone's.
+//  folder of Files is added there. When the saves folder of the iPhones is
+//  on one of the connections, the Builder keeps the saves of the Mac's
+//  games there too, and the page shows it as the iPhone does. The player
+//  changes the iPhones' games folders and saves folder there too, on one
+//  of the connections: the app keeps the change, which the iPhones take
+//  (CartoucheChosenFolders.changing), the folder chosen last winning.
 //
 
 import Combine
@@ -35,11 +40,13 @@ struct CartoucheStorageView: View {
     @State private var browsing: Browsing?
     @State private var choosingFolder = false
 
-    /// A server whose folders the player is looking through, for a role.
+    /// A server whose folders the player is looking through, for a role:
+    /// ADDING, another games folder, beside those there are.
     struct Browsing: Identifiable {
         let server: CartoucheStorageServer
         let role: CartoucheStorageRole
-        var id: String { server.id.uuidString + "|" + role.rawValue }
+        var adding = false
+        var id: String { server.id.uuidString + "|" + role.rawValue + (adding ? "|adding" : "") }
     }
 
     // Written out: before Swift 6.4 (SE-0502), the private state above made
@@ -69,13 +76,15 @@ struct CartoucheStorageView: View {
                 // This Mac's folders, the Builder's (ConsoleStorage.swift),
                 // and the iPhone's saves folder, where the Builder keeps the
                 // saves of this Mac's games when it is on a connection.
-                CartoucheMacFoldersSection()
+                CartoucheMacFoldersSection { server, role, adding in
+                    browsing = Browsing(server: server, role: role, adding: adding)
+                }
                 if settings.keepsMacSavesOnConnection {
-                    placeSection(.saves)
+                    savesSection()
                 }
                 #else
-                placeSection(.games)
-                placeSection(.saves)
+                gamesSection
+                savesSection()
                 #endif
                 serversSection
                 #if os(iOS)
@@ -116,9 +125,23 @@ struct CartoucheStorageView: View {
         .sheet(item: $browsing) { browsing in
             NavigationStack {
                 CartoucheStorageFolderBrowser(server: browsing.server, path: "", role: browsing.role) { path in
-                    settings.setPlace(CartoucheStoragePlace(server: browsing.server.id, path: path), for: browsing.role)
+                    #if os(macOS)
+                    // The iPhones' folders, which the app keeps
+                    // (ConsoleStorage.swift).
+                    let connection = browsing.server.id
+                    CartoucheMacConsole.shared.changeFolders(browsing.role == .saves ? .saves(connection: connection, path: path)
+                        : browsing.adding ? .addGames(connection: connection, path: path) : .games(connection: connection, path: path))
+                    self.browsing = nil
+                    #else
+                    let place = CartoucheStoragePlace(server: browsing.server.id, path: path)
+                    if browsing.adding {
+                        settings.addGamesFolder(place)
+                    } else {
+                        settings.setPlace(place, for: browsing.role)
+                    }
                     self.browsing = nil
                     if browsing.role == .games { stored.refresh() }
+                    #endif
                 }
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
@@ -126,6 +149,9 @@ struct CartoucheStorageView: View {
                     }
                 }
             }
+            #if os(macOS)
+            .frame(minWidth: 480, idealWidth: 520, minHeight: 540, idealHeight: 640)
+            #endif
             .preferredColorScheme(.dark)
         }
         #if os(iOS)
@@ -153,63 +179,140 @@ struct CartoucheStorageView: View {
         }
     }
 
-    // MARK: The games folder and the saves folder
+    // MARK: The games folders and the saves folder
 
     /// The row that opens how to name the games, which the UI tests tap.
     static let namingRow = "storage.naming"
+    /// The menu that adds another games folder, which the UI tests tap.
+    static let addGamesRow = "storage.games.add"
 
-    private func placeSection(_ role: CartoucheStorageRole) -> some View {
+    /// The games folders: the first, which a game is copied to, then those
+    /// read besides, each with its games and whether its server answers;
+    /// then a way to add another.
+    private var gamesSection: some View {
+        let folders = settings.gamesFolders.all.filter { settings.server($0.server) != nil }
+        return CartoucheSection {
+            if folders.isEmpty {
+                if settings.servers.isEmpty {
+                    Text(CartoucheText.storageAddFirst)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Menu {
+                        serverChoices(.games)
+                    } label: {
+                        Label(CartoucheText.storageChooseFolder, systemImage: "folder.badge.plus")
+                    }
+                }
+                namingLink
+            } else {
+                ForEach(Array(folders.enumerated()), id: \.element) { index, place in
+                    if let server = settings.server(place.server) {
+                        gamesFolderRows(place, server: server, isFirst: index == 0, several: folders.count > 1)
+                    }
+                }
+                Button(folders.count > 1 ? CartoucheText.storageReadAllAgain : CartoucheText.storageReadAgain,
+                       systemImage: "arrow.clockwise") { stored.refresh(evenIfOffline: true) }
+                    .disabled(stored.isScanning)
+                Menu {
+                    serverChoices(.games, adding: true)
+                } label: {
+                    Label(CartoucheText.storageAddGamesFolder, systemImage: "folder.badge.plus")
+                }
+                .accessibilityIdentifier(Self.addGamesRow)
+                namingLink
+            }
+        } header: {
+            Text(folders.count > 1 ? CartoucheText.storageGamesFolders : Self.title(.games))
+        } footer: {
+            Text(folders.count > 1 ? CartoucheText.storageGamesFoldersFooter : CartoucheText.storageGamesFooter)
+        }
+    }
+
+    /// A games folder's rows: where it is, the games found there, what keeps
+    /// it from being read, and, for the first, Change folder; Stop using it,
+    /// the next one taking its place.
+    @ViewBuilder
+    private func gamesFolderRows(_ place: CartoucheStoragePlace, server: CartoucheStorageServer, isFirst: Bool,
+                                 several: Bool) -> some View {
+        LabeledContent {
+            Text(Self.placeName(server: server, path: place.path))
+                .lineLimit(2)
+                .multilineTextAlignment(.trailing)
+        } label: {
+            Label(isFirst ? CartoucheText.storageGamesFolder : CartoucheText.storageOtherGamesFolder,
+                  systemImage: isFirst ? Self.symbol(.games) : "square.stack.3d.up")
+        }
+        LabeledContent(CartoucheText.storageGamesFound) {
+            if stored.isScanning {
+                ProgressView()
+            } else {
+                Text(verbatim: "\(stored.count(in: place))")
+            }
+        }
+        // A game built without its game files, and an image of them, each
+        // without the other: neither installs a game.
+        ForEach(Self.gameFilesNotes(stored, place: place), id: \.self) { note in
+            Text(note)
+                .font(.footnote)
+                .foregroundStyle(Color.orange)
+        }
+        // A server that does not answer from here, as a NAS away from home:
+        // the folder keeps its last list until it answers again, and a game
+        // there too installs from another folder meanwhile.
+        if reach.isOffline(server.id) {
+            let away = CartoucheStorageOffline(server, tailscale: reach.tailscaleConnected)
+            Label(away.localizedDescription, systemImage: away.symbol)
+                .font(.footnote)
+                .foregroundStyle(Color.orange)
+            if several {
+                Text(CartoucheText.storageGamesElsewhere)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            if away.isSignedOut {
+                CartoucheDriveSignInAgainButton(server: server)
+            }
+        } else if let problem = stored.problems[place] {
+            Text(problem.message)
+                .font(.footnote)
+                .foregroundStyle(Color.orange)
+            CartoucheReportButton(report: problem)
+        } else if isFirst && settings.isReadOnly(.games) {
+            Text(CartoucheText.storageReadOnlyGames)
+                .font(.footnote)
+                .foregroundStyle(Color.orange)
+        }
+        if isFirst {
+            Menu {
+                serverChoices(.games)
+            } label: {
+                Label(CartoucheText.storageChangeFolder, systemImage: "folder")
+            }
+        }
+        Button(role: .destructive) {
+            settings.removeGamesFolder(place)
+            stored.refresh()
+        } label: {
+            Label(isFirst ? CartoucheText.storageStopUsing : CartoucheText.storageStopReading, systemImage: "xmark.circle")
+        }
+    }
+
+    /// The saves folder: where it is, and whether its server answers, with
+    /// the saves that wait for it (the games folders: gamesSection).
+    private func savesSection() -> some View {
         CartoucheSection {
-            if let place = settings.place(role), let server = settings.server(place.server) {
+            if let place = settings.place(.saves), let server = settings.server(place.server) {
                 LabeledContent {
                     Text(Self.placeName(server: server, path: place.path))
                         .lineLimit(2)
                         .multilineTextAlignment(.trailing)
                 } label: {
-                    Label(Self.title(role), systemImage: Self.symbol(role))
+                    Label(Self.title(.saves), systemImage: Self.symbol(.saves))
                 }
                 // A server that does not answer from here, as a NAS away
-                // from home: the games folder keeps its last list and the
-                // saves wait, until it answers again.
-                let offline = reach.isOffline(server.id)
-                if role == .games {
-                    LabeledContent(CartoucheText.storageGamesFound) {
-                        if stored.isScanning {
-                            ProgressView()
-                        } else {
-                            Text(verbatim: "\(stored.games.count)")
-                        }
-                    }
-                    // A game built without its game files, and an image of
-                    // them, each without the other: neither installs a game.
-                    ForEach(Self.gameFilesNotes(stored, folder: place.path), id: \.self) { note in
-                        Text(note)
-                            .font(.footnote)
-                            .foregroundStyle(Color.orange)
-                    }
-                    if offline {
-                        let away = CartoucheStorageOffline(server, tailscale: reach.tailscaleConnected)
-                        Label(away.localizedDescription, systemImage: away.symbol)
-                            .font(.footnote)
-                            .foregroundStyle(Color.orange)
-                        if away.isSignedOut {
-                            CartoucheDriveSignInAgainButton(server: server)
-                        }
-                    } else if let problem = stored.problemReport {
-                        Text(problem.message)
-                            .font(.footnote)
-                            .foregroundStyle(Color.orange)
-                        CartoucheReportButton(report: problem)
-                    } else if settings.isReadOnly(.games) {
-                        Text(CartoucheText.storageReadOnlyGames)
-                            .font(.footnote)
-                            .foregroundStyle(Color.orange)
-                    }
-                    Button(CartoucheText.storageReadAgain, systemImage: "arrow.clockwise") { stored.refresh(evenIfOffline: true) }
-                        .disabled(stored.isScanning)
-                    namingLink
-                } else if offline {
-                    // As the games folder's lines: what waits, and a way to
+                // from home: the saves wait, until it answers again.
+                if reach.isOffline(server.id) {
+                    // As the games folders' lines: what waits, and a way to
                     // try the server again, or to sign in to the Drive again.
                     let away = CartoucheStorageOffline(server, tailscale: reach.tailscaleConnected)
                     Label(away.localizedDescription, systemImage: away.symbol)
@@ -221,8 +324,9 @@ struct CartoucheStorageView: View {
                             .foregroundStyle(.secondary)
                     }
                     if away.isSignedOut {
-                        // Once for both folders, on the games folder's lines.
-                        if settings.place(.games)?.server != server.id {
+                        // Once for the folders of the same Drive, on the
+                        // games folders' lines.
+                        if !settings.gamesFolders.all.contains(where: { $0.server == server.id }) {
                             CartoucheDriveSignInAgainButton(server: server)
                         }
                     } else {
@@ -240,16 +344,22 @@ struct CartoucheStorageView: View {
                         .foregroundStyle(Color.orange)
                     CartoucheReportButton(report: problem)
                 }
-                #if os(iOS)
-                // On the Mac, the iPhone's: chosen there.
                 Menu {
-                    serverChoices(role)
+                    serverChoices(.saves)
                 } label: {
+                    #if os(macOS)
+                    // Its symbol apart from its words (ConsoleStorage.swift).
+                    CartoucheMacMenuLabel(CartoucheText.storageChangeFolder, symbol: "folder")
+                    #else
                     Label(CartoucheText.storageChangeFolder, systemImage: "folder")
+                    #endif
                 }
+                #if os(iOS)
+                // On the Mac, the iPhones' folder is changed, never stopped:
+                // the Builder's own setting keeps the Mac's saves in its
+                // folder.
                 Button(role: .destructive) {
-                    settings.setPlace(nil, for: role)
-                    if role == .games { stored.refresh() }
+                    settings.setPlace(nil, for: .saves)
                 } label: {
                     Label(CartoucheText.storageStopUsing, systemImage: "xmark.circle")
                 }
@@ -257,22 +367,20 @@ struct CartoucheStorageView: View {
             } else if settings.servers.isEmpty {
                 Text(CartoucheText.storageAddFirst)
                     .foregroundStyle(.secondary)
-                if role == .games { namingLink }
             } else {
                 Menu {
-                    serverChoices(role)
+                    serverChoices(.saves)
                 } label: {
                     Label(CartoucheText.storageChooseFolder, systemImage: "folder.badge.plus")
                 }
-                if role == .games { namingLink }
             }
         } header: {
-            Text(Self.title(role))
+            Text(Self.title(.saves))
         } footer: {
             #if os(macOS)
-            Text(role == .games ? CartoucheText.storageGamesFooter : CartoucheText.macStorageIPhoneSavesFooter(CartoucheSaveBackups.kept))
+            Text(CartoucheText.macStorageIPhoneSavesFooter(CartoucheSaveBackups.kept))
             #else
-            Text(role == .games ? CartoucheText.storageGamesFooter : CartoucheText.storageSavesFooter(CartoucheSaveBackups.kept))
+            Text(CartoucheText.storageSavesFooter(CartoucheSaveBackups.kept))
             #endif
         }
     }
@@ -291,14 +399,15 @@ struct CartoucheStorageView: View {
         .accessibilityIdentifier(Self.namingRow)
     }
 
-    /// The servers to look for ROLE's folder on. A shared folder that lets
-    /// the account read only shows, but cannot hold the saves.
+    /// The servers to look for ROLE's folder on, or, ADDING, for another
+    /// games folder. A shared folder that lets the account read only shows,
+    /// but cannot hold the saves.
     @ViewBuilder
-    private func serverChoices(_ role: CartoucheStorageRole) -> some View {
-        ForEach(settings.servers) { server in
+    private func serverChoices(_ role: CartoucheStorageRole, adding: Bool = false) -> some View {
+        ForEach(listed) { server in
             let readOnly = settings.readOnlyServers.contains(server.id)
             Button {
-                browsing = Browsing(server: server, role: role)
+                browsing = Browsing(server: server, role: role, adding: adding)
             } label: {
                 Label(readOnly ? CartoucheText.storageReadOnlyServer(server.name) : server.name,
                       systemImage: Self.symbol(server))
@@ -471,13 +580,16 @@ struct CartoucheStorageView: View {
         }
     }
 
-    /// What the games folder at FOLDER lacks for the games nxnative built
+    /// What the games folder at PLACE lacks for the games nxnative built
     /// without their game files, and its images of game files that no IPA
     /// needs (CartoucheRomfs).
-    @MainActor static func gameFilesNotes(_ stored: CartoucheStoredGames, folder: String) -> [String] {
-        let lacking = stored.games.filter(\.lacksGameFiles).map(\.name)
-        let base = CartoucheStoragePath.join(folder)
-        let loose = stored.looseGameFiles.map { path in
+    @MainActor static func gameFilesNotes(_ stored: CartoucheStoredGames, place: CartoucheStoragePlace) -> [String] {
+        let first = CartoucheStorageSettings.shared.place(.games)
+        let lacking = stored.games.filter { game in
+            game.lacksGameFiles && (game.server ?? first?.server) == place.server && (game.folder ?? first?.path) == place.path
+        }.map(\.name)
+        let base = CartoucheStoragePath.join(place.path)
+        let loose = (stored.loose[place] ?? []).map { path in
             base.isEmpty || !path.hasPrefix(base + "/") ? path : String(path.dropFirst(base.count + 1))
         }
         var notes: [String] = []
@@ -505,7 +617,7 @@ struct CartoucheStorageView: View {
             let port = server.port.map { ":\($0)" } ?? ""
             return "\(server.username)@\(server.host)\(port)"
         case .mac:
-            return server.host.isEmpty ? "Cartouche Builder" : "Cartouche Builder · " + server.host
+            return server.host.isEmpty ? CartoucheText.storageMacTitle : CartoucheText.storageMacTitle + " · " + server.host
         case .drive:
             return server.host.isEmpty ? CartoucheText.storageDriveTitle : CartoucheText.storageDriveTitle + " · " + server.host
         }

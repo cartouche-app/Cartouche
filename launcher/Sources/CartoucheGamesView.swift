@@ -445,6 +445,11 @@ struct CartoucheGamesView: View {
             storedGames.refresh()
             actions.copySaves(of: sharedModel.apps)
         }
+        // The games folders chosen later on the paired Mac's console, or on
+        // another iPhone, which the Mac gave: read at once.
+        .onReceive(CartoucheStorageSettings.shared.gamesFoldersTaken) { _ in
+            storedGames.refresh()
+        }
     }
 
     /// The home, and every game one step further.
@@ -821,7 +826,8 @@ struct CartoucheUninstallQuestion: ViewModifier {
         }
     }
 
-    /// The copy of the game in the games folder, if there is one.
+    /// The copy of the game in the games folders, if there is one: the one
+    /// offered, of a game in several.
     @MainActor
     static func storedCopy(of app: LCAppModel) -> CartoucheStoredGame? {
         let found = CartoucheCatalog.shared.gameTitle(of: app)
@@ -841,8 +847,8 @@ struct CartoucheUninstallQuestion: ViewModifier {
 
     @MainActor
     static func message(for app: LCAppModel) -> String {
-        if storedCopy(of: app) != nil, let server = CartoucheStoredGames.shared.serverName {
-            return CartoucheText.uninstallMessageStored(server)
+        if let copy = storedCopy(of: app) {
+            return CartoucheText.uninstallMessageStored(CartoucheStoredGames.shared.place(of: copy))
         }
         return CartoucheText.uninstallMessage
     }

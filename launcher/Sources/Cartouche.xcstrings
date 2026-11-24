@@ -732,6 +732,23 @@
         }
       }
     },
+    "cloud.game.onIPhone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On this iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sur cet iPhone"
+          }
+        }
+      }
+    },
     "cloud.game.open" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1204,6 +1221,176 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cartouche Cloud"
+          }
+        }
+      }
+    },
+    "cloud.phase.app" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Building the app"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Construction de l’app"
+          }
+        }
+      }
+    },
+    "cloud.phase.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Done: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fini : %@"
+          }
+        }
+      }
+    },
+    "cloud.phase.files" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing the game’s files"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Préparation des fichiers du jeu"
+          }
+        }
+      }
+    },
+    "cloud.phase.ipa" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Packing the IPA"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empaquetage de l’IPA"
+          }
+        }
+      }
+    },
+    "cloud.phase.left" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "about %@ left"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "encore environ %@"
+          }
+        }
+      }
+    },
+    "cloud.phase.next" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "À venir : %@"
+          }
+        }
+      }
+    },
+    "cloud.phase.now" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Under way: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En cours : %@"
+          }
+        }
+      }
+    },
+    "cloud.phase.quiet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Mac last said where it is %@ ago."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le Mac a dit où il en est pour la dernière fois il y a %@."
+          }
+        }
+      }
+    },
+    "cloud.phase.shaders" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compiling shaders for the iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compilation des shaders pour l’iPhone"
+          }
+        }
+      }
+    },
+    "cloud.phases.header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Where the build is"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Où en est la construction"
           }
         }
       }
@@ -1803,19 +1990,87 @@
         }
       }
     },
-    "daily.intro" : {
+    "daily.action.fix" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "An automation in Shortcuts can renew Cartouche every night, with no computer. It connects LocalDevVPN, then runs Cartouche’s Refresh All Apps action, which does what Renew now does."
+            "value" : "Fix the automation"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Une automatisation de Raccourcis peut renouveler Cartouche chaque nuit, sans ordinateur. Elle connecte LocalDevVPN, puis lance l’action Refresh All Apps de Cartouche, qui fait comme Renouveler maintenant."
+            "value" : "Corriger l’automatisation"
+          }
+        }
+      }
+    },
+    "daily.action.make" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Make the automation"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créer l’automatisation"
+          }
+        }
+      }
+    },
+    "daily.action.see" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "See the steps"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voir les étapes"
+          }
+        }
+      }
+    },
+    "daily.made" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "I made the automation"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "J’ai créé l’automatisation"
+          }
+        }
+      }
+    },
+    "daily.made.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche then checks after its first night that it renews it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche vérifie ensuite, après sa première nuit, qu’elle le renouvelle."
           }
         }
       }
@@ -1837,19 +2092,291 @@
         }
       }
     },
-    "daily.refreshAction" : {
+    "daily.refresh" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Then add the Refresh All Apps action of Cartouche, not LiveContainer’s: Cartouche waits for LocalDevVPN to connect before it renews."
+            "value" : "Then add Refresh All Apps, among Cartouche’s actions and not LiveContainer’s, and tap Done."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajoutez ensuite l’action Refresh All Apps de Cartouche, pas celle de LiveContainer : Cartouche attend que LocalDevVPN soit connecté avant de se renouveler."
+            "value" : "Ajoutez ensuite Refresh All Apps, parmi les actions de Cartouche et non de LiveContainer, puis touchez OK."
+          }
+        }
+      }
+    },
+    "daily.result" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What you make"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce que vous créez"
+          }
+        }
+      }
+    },
+    "daily.result.when" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every day at %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tous les jours à %@"
+          }
+        }
+      }
+    },
+    "daily.state.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On %@, it could not renew Cartouche: %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le %@, elle n’a pas pu renouveler Cartouche : %@"
+          }
+        }
+      }
+    },
+    "daily.state.interrupted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On %@, iOS stopped it before it had renewed Cartouche. It tries again the next night."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le %@, iOS l’a arrêtée avant qu’elle ait renouvelé Cartouche. Elle réessaie la nuit suivante."
+          }
+        }
+      }
+    },
+    "daily.state.notRunning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Made on %@, it has not run yet. Check in Shortcuts its time, and that it runs immediately."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créée le %@, elle n’a pas encore tourné. Vérifiez dans Raccourcis son heure, et qu’elle s’exécute immédiatement."
+          }
+        }
+      }
+    },
+    "daily.state.renewed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It renewed Cartouche on %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elle a renouvelé Cartouche le %@."
+          }
+        }
+      }
+    },
+    "daily.state.running" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It is renewing Cartouche now."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elle renouvelle Cartouche en ce moment."
+          }
+        }
+      }
+    },
+    "daily.state.stopped" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It has not run since %@. Check in Shortcuts that it is still there, on, and runs immediately."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elle n’a pas tourné depuis le %@. Vérifiez dans Raccourcis qu’elle est toujours là, activée, et qu’elle s’exécute immédiatement."
+          }
+        }
+      }
+    },
+    "daily.state.toMake" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "An automation in Shortcuts renews Cartouche every night, even while it stays closed. Without it, Cartouche renews itself only when you open it, and expires 7 days after its last renewal."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une automatisation de Raccourcis renouvelle Cartouche chaque nuit, même s’il reste fermé. Sans elle, Cartouche ne se renouvelle que quand vous l’ouvrez, et expire 7 jours après son dernier renouvellement."
+          }
+        }
+      }
+    },
+    "daily.state.vpn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On %@, it ran without LocalDevVPN connected, and could not renew Cartouche. Add the Enable LocalDevVPN action just before Refresh All Apps."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le %@, elle a tourné sans LocalDevVPN connecté, et n’a pas pu renouveler Cartouche. Ajoutez l’action Enable LocalDevVPN juste avant Refresh All Apps."
+          }
+        }
+      }
+    },
+    "daily.state.waiting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Made on %@: Cartouche checks after its first night that it renews it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créée le %@ : Cartouche vérifie après sa première nuit qu’elle le renouvelle."
+          }
+        }
+      }
+    },
+    "daily.status.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Échouée"
+          }
+        }
+      }
+    },
+    "daily.status.on" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active"
+          }
+        }
+      }
+    },
+    "daily.status.stopped" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not running"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrêtée"
+          }
+        }
+      }
+    },
+    "daily.status.toMake" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To make"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "À créer"
+          }
+        }
+      }
+    },
+    "daily.status.waiting" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Made"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Créée"
           }
         }
       }
@@ -1871,40 +2398,6 @@
         }
       }
     },
-    "daily.step3" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose Time of Day: a time when the iPhone charges and is online, such as 4 AM, every day. Then choose Run Immediately."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choisissez Heure de la journée : une heure où l’iPhone charge et a internet, par exemple 4 h, chaque jour. Puis choisissez Exécuter immédiatement."
-          }
-        }
-      }
-    },
-    "daily.step5" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Each renewal shows on the System page as the last renewal, and gives Cartouche seven more days."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chaque renouvellement s’affiche sur la page Système comme dernier renouvellement, et donne sept jours de plus à Cartouche."
-          }
-        }
-      }
-    },
     "daily.tailscale" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1922,19 +2415,36 @@
         }
       }
     },
-    "daily.vpnAction" : {
+    "daily.time" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap Next, choose New Blank Automation, then add the Enable LocalDevVPN action: it connects LocalDevVPN without opening it. An older LocalDevVPN calls it Start LocalDevVPN."
+            "value" : "Choose Time of Day: 4:00 AM for instance, a time when the iPhone charges and is online, every day. Choose Run Immediately, then tap Next."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Touchez Suivant, choisissez Nouvelle automatisation vide, puis ajoutez l’action Enable LocalDevVPN : elle connecte LocalDevVPN sans l’ouvrir. Un LocalDevVPN plus ancien l’appelle Start LocalDevVPN."
+            "value" : "Choisissez Heure de la journée : 4 h par exemple, une heure où l’iPhone charge et a internet, chaque jour. Choisissez Exécuter immédiatement, puis touchez Suivant."
+          }
+        }
+      }
+    },
+    "daily.vpn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap New Blank Automation, then add the Enable LocalDevVPN action: it connects LocalDevVPN without opening it. An older LocalDevVPN calls it Start LocalDevVPN."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez Nouvelle automatisation vide, puis ajoutez l’action Enable LocalDevVPN : elle connecte LocalDevVPN sans l’ouvrir. Un LocalDevVPN plus ancien l’appelle Start LocalDevVPN."
           }
         }
       }
@@ -3084,13 +3594,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "nxnative turns your own copy of a game into an app for the iPhone, and only a Mac can do it. Cartouche Builder does it for you, and builds your games again when nxnative improves them."
+            "value" : "nxnative turns your own copy of a game into an app for the iPhone, and only a Mac can do it. Cartouche on the Mac does it for you, and builds your games again when nxnative improves them."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "nxnative transforme votre propre copie d’un jeu en app pour l’iPhone, et seul un Mac sait le faire. Cartouche Builder s’en charge pour vous, et reconstruit vos jeux quand nxnative les améliore."
+            "value" : "nxnative transforme votre propre copie d’un jeu en app pour l’iPhone, et seul un Mac sait le faire. Cartouche sur le Mac s’en charge pour vous, et reconstruit vos jeux quand nxnative les améliore."
           }
         }
       }
@@ -3135,13 +3645,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "By AirDrop or Messages. On the Mac, the page gives Cartouche Builder: drag it into Applications, and it installs its tools itself."
+            "value" : "By AirDrop or Messages. On the Mac, the page gives Cartouche for Mac: drag it into Applications, and it installs its tools itself."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Par AirDrop ou Messages. Sur le Mac, la page donne Cartouche Builder : glissez-le dans Applications, il installe ses outils lui-même."
+            "value" : "Par AirDrop ou Messages. Sur le Mac, la page donne Cartouche pour Mac : glissez-le dans Applications, il installe ses outils lui-même."
           }
         }
       }
@@ -3152,13 +3662,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Install Cartouche Builder, then build your game with it."
+            "value" : "Install Cartouche on your Mac, then build your game with it."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Installez Cartouche Builder, puis construisez votre jeu avec."
+            "value" : "Installez Cartouche sur votre Mac, puis construisez votre jeu avec."
           }
         }
       }
@@ -3390,13 +3900,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche Builder puts your games in a folder, on the Mac or on your NAS. Add your Mac here once, with the code both screens show, or choose the folder on your NAS: Cartouche lists your games and offers their updates."
+            "value" : "Cartouche on the Mac puts your games in a folder, on the Mac or on your NAS. Add your Mac here once, with the code both screens show, or choose the folder on your NAS: Cartouche lists your games and offers their updates."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche Builder range vos jeux dans un dossier, sur le Mac ou sur votre NAS. Ajoutez votre Mac ici une fois, avec le code affiché sur les deux écrans, ou choisissez le dossier sur votre NAS : Cartouche liste vos jeux et propose leurs mises à jour."
+            "value" : "Cartouche sur le Mac range vos jeux dans un dossier, sur le Mac ou sur votre NAS. Ajoutez votre Mac ici une fois, avec le code affiché sur les deux écrans, ou choisissez le dossier sur votre NAS : Cartouche liste vos jeux et propose leurs mises à jour."
           }
         }
       }
@@ -3611,13 +4121,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No game in your games folder yet. Yours shows here as soon as Cartouche Builder has built it. You can also import an IPA."
+            "value" : "No game in your games folder yet. Yours shows here as soon as Cartouche on your Mac has built it. You can also import an IPA."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pas encore de jeu dans le dossier des jeux. Le vôtre apparaît ici dès que Cartouche Builder l’a construit. Vous pouvez aussi importer une IPA."
+            "value" : "Pas encore de jeu dans le dossier des jeux. Le vôtre apparaît ici dès que Cartouche sur votre Mac l’a construit. Vous pouvez aussi importer une IPA."
           }
         }
       }
@@ -5390,6 +5900,159 @@
         }
       }
     },
+    "memoryReinstall.done" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche installed itself again with it: iOS now gives Cartouche and its games more memory."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche s’est réinstallé avec elle : iOS donne désormais plus de mémoire à Cartouche et à ses jeux."
+          }
+        }
+      }
+    },
+    "memoryReinstall.done.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Increased Memory Limit is active"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La mémoire augmentée est active"
+          }
+        }
+      }
+    },
+    "memoryReinstall.failed.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The reinstall did not go through"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La réinstallation n’a pas abouti"
+          }
+        }
+      }
+    },
+    "memoryReinstall.installing.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche goes to the home screen for iOS to install it again. Open it again in a few seconds."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche passe à l’écran d’accueil pour qu’iOS l’installe à nouveau. Rouvrez-le dans quelques secondes."
+          }
+        }
+      }
+    },
+    "memoryReinstall.installing.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installing Cartouche again"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installation de Cartouche"
+          }
+        }
+      }
+    },
+    "memoryReinstall.preparing.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche downloads itself again and the built-in SideStore signs it, with Increased Memory Limit. Keep Cartouche open."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche se télécharge à nouveau et le SideStore intégré le signe, avec la mémoire augmentée. Gardez Cartouche ouvert."
+          }
+        }
+      }
+    },
+    "memoryReinstall.preparing.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reinstalling Cartouche"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinstallation de Cartouche"
+          }
+        }
+      }
+    },
+    "memoryReinstall.without" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche opened again without it. Try again from Setup, with LocalDevVPN on. If it stays this way, copy the report."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche s’est rouvert sans elle. Réessayez depuis la mise en route, avec LocalDevVPN allumé. Si rien ne change, copiez le rapport."
+          }
+        }
+      }
+    },
+    "memoryReinstall.without.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Still without Increased Memory Limit"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toujours sans mémoire augmentée"
+          }
+        }
+      }
+    },
     "naming.buildFolder" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5464,13 +6127,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dumps folder, for Cartouche Builder"
+            "value" : "Dumps folder, for the Mac"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dossier des dumps, pour Cartouche Builder"
+            "value" : "Dossier des dumps, pour le Mac"
           }
         }
       }
@@ -5481,13 +6144,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loose or each in its folder, up to %lld folders down. A name without its title ID works too: Cartouche Builder then reads it inside, which takes your prod.keys for a package."
+            "value" : "Loose or each in its folder, up to %lld folders down. A name without its title ID works too: Cartouche on the Mac then reads it inside, which takes your prod.keys for a package."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "En vrac ou chacun dans son dossier, jusqu’à %lld dossiers plus bas. Un nom sans ID du titre convient aussi : Cartouche Builder le lit alors à l’intérieur, ce qui demande vos prod.keys pour un paquet."
+            "value" : "En vrac ou chacun dans son dossier, jusqu’à %lld dossiers plus bas. Un nom sans ID du titre convient aussi : Cartouche sur le Mac le lit alors à l’intérieur, ce qui demande vos prod.keys pour un paquet."
           }
         }
       }
@@ -5549,13 +6212,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche Builder puts each game’s IPA here, named so; a game copied here from its sheet is named the same way."
+            "value" : "Cartouche on the Mac puts each game’s IPA here, named so; a game copied here from its sheet is named the same way."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche Builder dépose ici l’IPA de chaque jeu, nommée ainsi ; un jeu copié ici depuis sa fiche est nommé de la même façon."
+            "value" : "Cartouche sur le Mac dépose ici l’IPA de chaque jeu, nommée ainsi ; un jeu copié ici depuis sa fiche est nommé de la même façon."
           }
         }
       }
@@ -5566,13 +6229,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche and Cartouche Builder know a game by its title ID: the 16 letters and digits in square brackets in its name, as they name what they write. A game’s sheet shows its title ID."
+            "value" : "Cartouche, on the iPhone as on the Mac, knows a game by its title ID: the 16 letters and digits in square brackets in its name, as it names what it writes. A game’s sheet shows its title ID."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche et Cartouche Builder reconnaissent un jeu à son ID du titre : les 16 lettres et chiffres entre crochets dans son nom, comme ils nomment ce qu’ils écrivent. La fiche d’un jeu montre son ID du titre."
+            "value" : "Cartouche, sur l’iPhone comme sur le Mac, reconnaît un jeu à son ID du titre : les 16 lettres et chiffres entre crochets dans son nom, comme il nomme ce qu’il écrit. La fiche d’un jeu montre son ID du titre."
           }
         }
       }
@@ -5600,13 +6263,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "A game built for the Mac, which Cartouche Builder keeps beside its IPA on a NAS: leave it there."
+            "value" : "A game built for the Mac, which Cartouche on the Mac keeps beside its IPA on a NAS: leave it there."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Un jeu construit pour le Mac, que Cartouche Builder garde à côté de son IPA sur un NAS : laissez-le là."
+            "value" : "Un jeu construit pour le Mac, que Cartouche sur le Mac garde à côté de son IPA sur un NAS : laissez-le là."
           }
         }
       }
@@ -5617,13 +6280,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "An IPA, named as Cartouche and Cartouche Builder name it: the game, then its title ID."
+            "value" : "An IPA, named as Cartouche names it: the game, then its title ID."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Une IPA, nommée comme Cartouche et Cartouche Builder la nomment : le jeu, puis son ID du titre."
+            "value" : "Une IPA, nommée comme Cartouche la nomme : le jeu, puis son ID du titre."
           }
         }
       }
@@ -9674,6 +10337,23 @@
         }
       }
     },
+    "setup.done.nightly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche signs your games. One last step: the automation that renews it every night, even while it stays closed."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche signe vos jeux. Une dernière étape : l’automatisation qui le renouvelle chaque nuit, même s’il reste fermé."
+          }
+        }
+      }
+    },
     "setup.done.ownCertificate" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9714,13 +10394,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Three steps, once on this iPhone. Then Cartouche renews itself."
+            "value" : "Three steps, once on this iPhone, then an automation that renews Cartouche every night."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Trois étapes, une seule fois sur cet iPhone. Ensuite, Cartouche se renouvelle tout seul."
+            "value" : "Trois étapes, une seule fois sur cet iPhone, puis une automatisation qui renouvelle Cartouche chaque nuit."
           }
         }
       }
@@ -10156,13 +10836,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Textures converted to ASTC by this game’s build"
+            "value" : "Textures converted for this GPU by this game’s build"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Textures converties en ASTC par la construction de ce jeu"
+            "value" : "Textures converties pour ce GPU par la construction de ce jeu"
           }
         }
       }
@@ -10626,6 +11306,40 @@
         }
       }
     },
+    "sheet.storedAlsoIn" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Also in %@."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aussi dans %@."
+          }
+        }
+      }
+    },
+    "sheet.storedAlsoIn.offline" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (offline)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ (hors ligne)"
+          }
+        }
+      }
+    },
     "sheet.storedIn" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10894,6 +11608,261 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Siri et écran d’accueil"
+          }
+        }
+      }
+    },
+    "sideStore.appleID.how" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in once, with the Apple ID your SideStore uses: Cartouche takes the certificate SideStore signed it with, then renews itself every week."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connectez-vous une fois, avec l’identifiant Apple de votre SideStore : Cartouche reprend le certificat avec lequel SideStore l’a signé, puis se renouvelle chaque semaine."
+          }
+        }
+      }
+    },
+    "sideStore.intro" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Four steps, once on this iPhone, then an automation that renews Cartouche every night."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quatre étapes, une seule fois sur cet iPhone, puis une automatisation qui renouvelle Cartouche chaque nuit."
+          }
+        }
+      }
+    },
+    "sideStore.memory.afterSetup" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your SideStore leaves it out with a free Apple ID: without it, iOS gives Cartouche and its games about 3 GB. Once the steps above are done, Cartouche installs itself again, once, to get it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre SideStore la laisse de côté avec un identifiant Apple gratuit : sans elle, iOS donne environ 3 Go à Cartouche et à ses jeux. Une fois les étapes ci-dessus faites, Cartouche s’installe à nouveau, une fois, pour l’obtenir."
+          }
+        }
+      }
+    },
+    "sideStore.memory.banner.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche installs itself again, once"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche s’installe à nouveau, une fois"
+          }
+        }
+      }
+    },
+    "sideStore.memory.banner.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get Increased Memory Limit"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Obtenir la mémoire augmentée"
+          }
+        }
+      }
+    },
+    "sideStore.memory.button" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reinstall Cartouche"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réinstaller Cartouche"
+          }
+        }
+      }
+    },
+    "sideStore.memory.granted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active: iOS gives Cartouche and its games more memory."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Active : iOS donne plus de mémoire à Cartouche et à ses jeux."
+          }
+        }
+      }
+    },
+    "sideStore.memory.left" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Increased Memory Limit, which your games need: Cartouche installs itself again, once, to get it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La mémoire augmentée, dont vos jeux ont besoin : Cartouche s’installe à nouveau, une fois, pour l’obtenir."
+          }
+        }
+      }
+    },
+    "sideStore.memory.left.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One last step"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une dernière étape"
+          }
+        }
+      }
+    },
+    "sideStore.memory.reinstall" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your SideStore left it out with a free Apple ID: without it, iOS gives Cartouche and its games about 3 GB. Cartouche installs itself again, once, signed by itself, which gets it. It then goes to the home screen: open it again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre SideStore l’a laissée de côté avec un identifiant Apple gratuit : sans elle, iOS donne environ 3 Go à Cartouche et à ses jeux. Cartouche s’installe à nouveau, une fois, signé par lui-même, ce qui la lui donne. Il passe ensuite à l’écran d’accueil : rouvrez-le."
+          }
+        }
+      }
+    },
+    "sideStore.memory.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Increased Memory Limit"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mémoire augmentée"
+          }
+        }
+      }
+    },
+    "sideStore.pairing.ask" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask SideStore"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Demander à SideStore"
+          }
+        }
+      }
+    },
+    "sideStore.pairing.how" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your SideStore holds this iPhone’s pairing file: Cartouche asks it for it. SideStore opens for a moment, then brings you back here."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre SideStore a le fichier de jumelage de cet iPhone : Cartouche le lui demande. SideStore s’ouvre un instant, puis vous ramène ici."
+          }
+        }
+      }
+    },
+    "sideStore.pairing.noAnswer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche could not open your SideStore. Open SideStore once, then try again, or choose the pairing file here."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche n’a pas pu ouvrir votre SideStore. Ouvrez SideStore une fois, puis réessayez, ou choisissez le fichier de jumelage ici."
+          }
+        }
+      }
+    },
+    "sideStore.signIn.otherCertificate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This Apple ID has a certificate that Cartouche does not hold, and Cartouche never revokes it. Sign in with the Apple ID your SideStore uses: Cartouche takes the certificate SideStore signed it with. If it is this one, install Cartouche again from your SideStore, then sign in again."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cet identifiant Apple a un certificat que Cartouche n’a pas, et Cartouche ne le révoque jamais. Connectez-vous avec l’identifiant Apple de votre SideStore : Cartouche reprend le certificat avec lequel SideStore l’a signé. Si c’est celui-ci, réinstallez Cartouche depuis votre SideStore, puis reconnectez-vous."
           }
         }
       }
@@ -14134,13 +15103,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@: games’ files, but no IPA here was built to go with them. Put beside each the IPA nxnative built with it, or build the games with Cartouche Builder."
+            "value" : "%@: games’ files, but no IPA here was built to go with them. Put beside each the IPA nxnative built with it, or build the games with Cartouche on your Mac."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ : les fichiers de jeux, mais aucune IPA d’ici n’a été construite pour aller avec. Mettez à côté de chacun l’IPA que nxnative a construite avec, ou construisez les jeux avec Cartouche Builder."
+            "value" : "%@ : les fichiers de jeux, mais aucune IPA d’ici n’a été construite pour aller avec. Mettez à côté de chacun l’IPA que nxnative a construite avec, ou construisez les jeux avec Cartouche sur votre Mac."
           }
         }
       }
@@ -14151,13 +15120,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@: a game’s files, but no IPA here was built to go with them. Put beside them the IPA nxnative built with them, or build the game with Cartouche Builder."
+            "value" : "%@: a game’s files, but no IPA here was built to go with them. Put beside them the IPA nxnative built with them, or build the game with Cartouche on your Mac."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ : les fichiers d’un jeu, mais aucune IPA d’ici n’a été construite pour aller avec. Mettez à côté l’IPA que nxnative a construite avec, ou construisez le jeu avec Cartouche Builder."
+            "value" : "%@ : les fichiers d’un jeu, mais aucune IPA d’ici n’a été construite pour aller avec. Mettez à côté l’IPA que nxnative a construite avec, ou construisez le jeu avec Cartouche sur votre Mac."
           }
         }
       }
@@ -14213,6 +15182,40 @@
         }
       }
     },
+    "storage.games.add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add another games folder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un autre dossier de jeux"
+          }
+        }
+      }
+    },
+    "storage.games.elsewhere" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Its games that another folder holds too install from that folder meanwhile."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ses jeux présents aussi dans un autre dossier s’installent depuis cet autre dossier en attendant."
+          }
+        }
+      }
+    },
     "storage.games.footer" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14243,6 +15246,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Jeux trouvés"
+          }
+        }
+      }
+    },
+    "storage.games.other" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other folder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autre dossier"
+          }
+        }
+      }
+    },
+    "storage.games.several" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Games folders"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dossiers des jeux"
+          }
+        }
+      }
+    },
+    "storage.games.several.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your library shows the IPAs of these folders, ready to install: a game in more than one shows once, and installs from a folder that answers. Copy a game to the first one before you uninstall it."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre bibliothèque montre les IPA de ces dossiers, prêtes à installer : un jeu présent dans plusieurs n’y est qu’une fois, et s’installe depuis un dossier qui répond. Copiez un jeu dans le premier avant de le désinstaller."
           }
         }
       }
@@ -14287,13 +15341,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your games and saves on your own storage: your Mac with Cartouche Builder, a shared folder of your Mac, PC or NAS, an S3 bucket, an FTP or SFTP server, your Google Drive, or a folder in Files. Its games show in your library."
+            "value" : "Your games and saves on your own storage: your Mac with Cartouche, a shared folder of your Mac, PC or NAS, an S3 bucket, an FTP or SFTP server, your Google Drive, or a folder in Files. Its games show in your library."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vos jeux et sauvegardes sur votre propre stockage : votre Mac avec Cartouche Builder, dossier partagé de votre Mac, PC ou NAS, bucket S3, serveur FTP ou SFTP, votre Google Drive, ou dossier de Fichiers. Ses jeux apparaissent dans votre bibliothèque."
+            "value" : "Vos jeux et sauvegardes sur votre propre stockage : votre Mac avec Cartouche, dossier partagé de votre Mac, PC ou NAS, bucket S3, serveur FTP ou SFTP, votre Google Drive, ou dossier de Fichiers. Ses jeux apparaissent dans votre bibliothèque."
           }
         }
       }
@@ -14304,13 +15358,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add your Mac (Cartouche Builder)"
+            "value" : "Add your Mac"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajouter votre Mac (Cartouche Builder)"
+            "value" : "Ajouter votre Mac"
           }
         }
       }
@@ -14406,13 +15460,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ does not answer: check its address, that Share with Cartouche on the iPhone is on in Cartouche Builder, and that Tailscale is connected on this iPhone and on the Mac."
+            "value" : "%@ does not answer: check its address, that Share with Cartouche on the iPhone is on in Cartouche on the Mac, and that Tailscale is connected on this iPhone and on the Mac."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ ne répond pas : vérifiez son adresse, que Partager avec Cartouche sur l’iPhone est activé dans Cartouche Builder, et que Tailscale est connecté sur cet iPhone et sur le Mac."
+            "value" : "%@ ne répond pas : vérifiez son adresse, que Partager avec Cartouche sur l’iPhone est activé dans Cartouche sur le Mac, et que Tailscale est connecté sur cet iPhone et sur le Mac."
           }
         }
       }
@@ -14542,13 +15596,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "On your Mac, open Cartouche Builder and turn on Share with Cartouche on the iPhone, on its iPhone page. Then plug this iPhone into the Mac with a cable, or put both on the same Wi-Fi. Away from home, with Tailscale on both, pair it by its address, below."
+            "value" : "On your Mac, open Cartouche and turn on Share with Cartouche on the iPhone, on the Builder’s iPhone page. Then plug this iPhone into the Mac with a cable, or put both on the same Wi-Fi. Away from home, with Tailscale on both, pair it by its address, below."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sur votre Mac, ouvrez Cartouche Builder et activez Partager avec Cartouche sur l’iPhone, dans sa page iPhone. Branchez ensuite cet iPhone au Mac avec un câble, ou mettez-les sur le même Wi-Fi. Hors de chez vous, avec Tailscale sur les deux, associez-le par son adresse, plus bas."
+            "value" : "Sur votre Mac, ouvrez Cartouche et activez Partager avec Cartouche sur l’iPhone, dans la page iPhone du Builder. Branchez ensuite cet iPhone au Mac avec un câble, ou mettez-les sur le même Wi-Fi. Hors de chez vous, avec Tailscale sur les deux, associez-le par son adresse, plus bas."
           }
         }
       }
@@ -14593,13 +15647,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Looking for Cartouche Builder on this network…"
+            "value" : "Looking for Cartouche on a Mac of this network…"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Recherche de Cartouche Builder sur ce réseau…"
+            "value" : "Recherche de Cartouche sur un Mac de ce réseau…"
           }
         }
       }
@@ -14678,13 +15732,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ does not answer on this network. Open Cartouche Builder on it with Share with Cartouche on the iPhone turned on: Cartouche tries again as soon as the iPhone is back on its Wi-Fi or on your VPN, or plugged into it with a cable."
+            "value" : "%@ does not answer on this network. Open Cartouche on it with Share with Cartouche on the iPhone turned on: Cartouche tries again as soon as the iPhone is back on its Wi-Fi or on your VPN, or plugged into it with a cable."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ ne répond pas sur ce réseau. Ouvrez-y Cartouche Builder avec Partager avec Cartouche sur l’iPhone activé : Cartouche réessaie dès que l’iPhone retrouve son Wi-Fi ou votre VPN, ou y est branché avec un câble."
+            "value" : "%@ ne répond pas sur ce réseau. Ouvrez-y Cartouche avec Partager avec Cartouche sur l’iPhone activé : Cartouche réessaie dès que l’iPhone retrouve son Wi-Fi ou votre VPN, ou y est branché avec un câble."
           }
         }
       }
@@ -14695,13 +15749,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ answers neither on this network nor through Tailscale. Open Cartouche Builder on it with Share with Cartouche on the iPhone turned on, and check that Tailscale is connected on the Mac too."
+            "value" : "%@ answers neither on this network nor through Tailscale. Open Cartouche on it with Share with Cartouche on the iPhone turned on, and check that Tailscale is connected on the Mac too."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ ne répond ni sur ce réseau ni par Tailscale. Ouvrez-y Cartouche Builder avec Partager avec Cartouche sur l’iPhone activé, et vérifiez que Tailscale est connecté sur le Mac aussi."
+            "value" : "%@ ne répond ni sur ce réseau ni par Tailscale. Ouvrez-y Cartouche avec Partager avec Cartouche sur l’iPhone activé, et vérifiez que Tailscale est connecté sur le Mac aussi."
           }
         }
       }
@@ -14712,13 +15766,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ does not answer on this network. Away from home, turn on Tailscale on this iPhone for Cartouche to reach it. At home, open Cartouche Builder on it with Share with Cartouche on the iPhone turned on."
+            "value" : "%@ does not answer on this network. Away from home, turn on Tailscale on this iPhone for Cartouche to reach it. At home, open Cartouche on it with Share with Cartouche on the iPhone turned on."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ ne répond pas sur ce réseau. Hors de chez vous, allumez Tailscale sur cet iPhone pour que Cartouche le rejoigne. Chez vous, ouvrez-y Cartouche Builder avec Partager avec Cartouche sur l’iPhone activé."
+            "value" : "%@ ne répond pas sur ce réseau. Hors de chez vous, allumez Tailscale sur cet iPhone pour que Cartouche le rejoigne. Chez vous, ouvrez-y Cartouche avec Partager avec Cartouche sur l’iPhone activé."
           }
         }
       }
@@ -14848,13 +15902,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche and Cartouche Builder do not speak the same version of the bridge: update both."
+            "value" : "Cartouche on this iPhone and Cartouche on the Mac do not speak the same version of the bridge: update both."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche et Cartouche Builder ne parlent pas la même version du pont : mettez-les à jour tous les deux."
+            "value" : "Cartouche sur cet iPhone et Cartouche sur le Mac ne parlent pas la même version du pont : mettez-les à jour tous les deux."
           }
         }
       }
@@ -14865,13 +15919,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Its Games folder holds the games Cartouche Builder builds, on the Mac or on your NAS, and its Saves folder the copies of your saves. You can change both later in Storage."
+            "value" : "Its Games folder holds the games Cartouche builds there, on the Mac or on your NAS, and its Saves folder the copies of your saves. You can change both later in Storage."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Son dossier Games contient les jeux que Cartouche Builder construit, sur le Mac ou sur votre NAS, et son dossier Saves les copies de vos sauvegardes. Vous pourrez changer les deux plus tard dans Stockage."
+            "value" : "Son dossier Games contient les jeux que Cartouche y construit, sur le Mac ou sur votre NAS, et son dossier Saves les copies de vos sauvegardes. Vous pourrez changer les deux plus tard dans Stockage."
           }
         }
       }
@@ -15212,6 +16266,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Relire le dossier"
+          }
+        }
+      }
+    },
+    "storage.readAgain.all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Read the folders again"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relire les dossiers"
           }
         }
       }
@@ -15613,13 +16684,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Only storage of your own, with your own account: Cartouche keeps the password, the secret key or the Google sign-in in this iPhone’s keychain. The Mac you pair with Cartouche Builder keeps the same connections, passwords included, over the bridge’s encryption."
+            "value" : "Only storage of your own, with your own account: Cartouche keeps the password, the secret key or the Google sign-in in this iPhone’s keychain. The Mac you pair keeps the same connections, passwords included, over the bridge’s encryption."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uniquement votre propre stockage, avec votre propre compte : Cartouche garde le mot de passe, la clé secrète ou la connexion Google dans le trousseau de cet iPhone. Le Mac que vous associez avec Cartouche Builder garde les mêmes connexions, mots de passe compris, par le chiffrement du pont."
+            "value" : "Uniquement votre propre stockage, avec votre propre compte : Cartouche garde le mot de passe, la clé secrète ou la connexion Google dans le trousseau de cet iPhone. Le Mac que vous associez garde les mêmes connexions, mots de passe compris, par le chiffrement du pont."
           }
         }
       }
@@ -15892,6 +16963,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "le serveur a refusé le nom d’utilisateur ou le mot de passe."
+          }
+        }
+      }
+    },
+    "storage.stopReading" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop reading this folder"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne plus lire ce dossier"
           }
         }
       }

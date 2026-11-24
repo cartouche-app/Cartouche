@@ -8,7 +8,8 @@
 //  none says so in its info and refuses them, the session going on; one
 //  that does takes the iPhone's, with their secrets, and gives its own,
 //  each side then keeping the same, and hears of the folders the player
-//  chose on the iPhone. What Cartouche does with them is
+//  chose on the iPhone, giving back those it keeps, the ones chosen last.
+//  What Cartouche does with them is
 //  tested with Cartouche's storage (launcher/StorageTests, MacBridgeTests).
 //
 
@@ -24,13 +25,24 @@ private final class Connections: BridgeConnectionsSource {
     var kept: [CartoucheConnection] = []
     var given: [[CartoucheConnection]] = []
     var told: [CartoucheChosenFolders?] = []
+    /// The folders it keeps, as the app does: the ones chosen last.
+    var folders: CartoucheChosenFolders?
 
     func bridgeConnections(_ theirs: [CartoucheConnection], places: CartoucheChosenFolders?) -> [CartoucheConnection] {
         given.append(theirs)
         told.append(places)
         kept = CartoucheConnections.merged(kept, theirs)
+        if let places, let held = folders { folders = held.taking(places) }
         return kept
     }
+
+    func bridgeFolders() -> CartoucheChosenFolders? { folders }
+}
+
+/// An app older than the folders it gives back, which says none.
+@MainActor
+private final class OlderConnections: BridgeConnectionsSource {
+    func bridgeConnections(_ theirs: [CartoucheConnection], places: CartoucheChosenFolders?) -> [CartoucheConnection] { theirs }
 }
 
 final class BridgeConnectionsTests: XCTestCase {
@@ -133,7 +145,37 @@ final class BridgeConnectionsTests: XCTestCase {
         _ = try await client.connections([nas], places: places)
         let told = await MainActor.run { connections.told }
         XCTAssertEqual(told.last, places)
+        // Keeping none, the Mac gives none back.
+        let noneBack = try await client.exchange([nas], places: places)
+        XCTAssertNil(noneBack.places)
+
+        // The folders chosen later on the console come back, the iPhone's
+        // older ones leaving them.
+        let onConsole = CartoucheChosenFolders(games: .init(connection: nas.id, path: "Jeux", chosen: now + 60),
+                                               saves: .init(connection: bucket.id, path: "Saves", chosen: now + 60))
+        await MainActor.run { connections.folders = onConsole }
+        let back = try await client.exchange([nas], places: places)
+        XCTAssertEqual(back.places, onConsole)
+        XCTAssertEqual(Set(back.connections.map(\.id)), Set(theirs.map(\.id)))
+        // Chosen later on the iPhone: kept, and given back.
+        let later = CartoucheChosenFolders(saves: .init(connection: nas.id, path: "Autres", chosen: now + 120))
+        let laterBack = try await client.exchange([nas], places: later)
+        XCTAssertEqual(laterBack.places?.saves, later.saves)
+        XCTAssertEqual(laterBack.places?.games, onConsole.games)
         client.close()
         await serving.value
+    }
+
+    func testAnAppOlderThanTheFoldersGivenBackGivesNone() async throws {
+        let server = server()
+        let connections = await MainActor.run { OlderConnections() }
+        server.connections = connections
+        let (client, serving) = try await session(server)
+        let back = try await client.exchange([], places: CartoucheChosenFolders(saves: .init(connection: nil, path: "", chosen: now)))
+        XCTAssertNil(back.places)
+        client.close()
+        await serving.value
+        // The server holds it weakly, as the app.
+        withExtendedLifetime(connections) {}
     }
 }

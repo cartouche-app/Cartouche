@@ -71,7 +71,7 @@ struct MenuBarView: View {
             AppIconView()
                 .frame(width: 34, height: 34)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Cartouche Builder")
+                Text(AppName.name)
                     .font(.headline)
                 Text(summary)
                     .font(.caption)
@@ -236,7 +236,7 @@ struct MenuBarView: View {
             } label: {
                 Image(systemName: "power")
             }
-            .help(tr("Quit Cartouche Builder", "Quitter Cartouche Builder"))
+            .help(tr("Quit Cartouche", "Quitter Cartouche"))
         }
         .buttonStyle(.borderless)
     }

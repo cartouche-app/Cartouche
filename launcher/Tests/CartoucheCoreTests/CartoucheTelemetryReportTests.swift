@@ -85,7 +85,7 @@ final class CartoucheTelemetryReportTests: XCTestCase {
             process: process)
         let event = try XCTUnwrap(CartoucheEventReport(
             id: "3d9b2f5e-0000-4000-8000-000000000001", seq: 8, context: context, name: "game.installed", game: "0400C3F00006E000",
-            fields: ["version": .text("1.0.0"), "nxnative": .text("6c3aeb3d70a1"), "fromStorage": .flag(true), "sizeMiB": .number(19_456)]))
+            fields: ["version": .text("1.0.0"), "nxnative": .text("6c3aeb3d70a1"), "from": .text("mac"), "link": .text("cable")]))
         return (session, event)
     }
 
@@ -479,5 +479,54 @@ final class CartoucheTelemetryReportTests: XCTestCase {
         }
         XCTAssertEqual(logs.logs.count, CartoucheTelemetryLogs.capacity)
         XCTAssertNil(logs.session(of: key))
+    }
+
+    // MARK: What some events say
+
+    /// An error's event says what Cartouche was doing, why it failed, its
+    /// codes and what the step adds, such as where the game installed
+    /// came from: never its words.
+    func testAnErrorsEventHasItsOriginCauseCodesAndWhatTheStepAdds() {
+        let under = NSError(domain: NSPOSIXErrorDomain, code: 54, userInfo: [NSLocalizedDescriptionKey: "Connection reset on 192.168.1.20"])
+        let error = NSError(domain: "CartoucheBridgeError", code: 3,
+                            userInfo: [NSUnderlyingErrorKey: under, NSLocalizedDescriptionKey: "The Mac in the study stopped answering"])
+        let failure = CartoucheFailure(.storageOffline, stage: "unpacking", fraction: 0.42, seconds: 61.4)
+        let fields = CartoucheErrorEvent.fields(of: ["origin": "install", "background": false, "error": error, "failure": failure,
+                                                     "measures": ["from": CartoucheTelemetryValue.text("mac"), "link": .text("cable")]])
+        XCTAssertEqual(fields, [
+            "origin": .text("install"), "background": .flag(false), "cause": .text("storageOffline"), "stage": .text("unpacking"),
+            "percent": .number(42), "seconds": .number(61), "error": .text("CartoucheBridgeError 3 < NSPOSIXErrorDomain 54"),
+            "from": .text("mac"), "link": .text("cable"),
+        ])
+        // What the step adds never takes the place of what the failure says.
+        XCTAssertEqual(CartoucheErrorEvent.fields(origin: "install", failure: failure, error: nil, background: nil,
+                                                  measures: ["cause": .text("other"), "from": .text("cloud")])["cause"], .text("storageOffline"))
+        // A report without an error, a failure or anything added: its origin.
+        XCTAssertEqual(CartoucheErrorEvent.fields(of: ["origin": "saves", "background": true]),
+                       ["origin": .text("saves"), "background": .flag(true)])
+        XCTAssertEqual(CartoucheErrorEvent.fields(of: nil), [:])
+    }
+
+    /// A sync of a game's saves on the iPhone says what it did and when,
+    /// as builder.saves does on the Mac, and at the end of a game that
+    /// played behind the console how often its saves went while it did.
+    func testASyncOfTheSavesSaysWhatItDidAndWhen() {
+        XCTAssertEqual(CartoucheSavesSynced.step(CartoucheSaveStep.send.rawValue, moved: true, heldBack: false), "send")
+        XCTAssertEqual(CartoucheSavesSynced.step(CartoucheSaveStep.keepAndFetch.rawValue, moved: true, heldBack: false), "keepAndFetch")
+        XCTAssertEqual(CartoucheSavesSynced.step(CartoucheSaveStep.keep.rawValue, moved: true, heldBack: true), "heldBack")
+        // Nothing moved: nothing is told, as on the Mac.
+        XCTAssertNil(CartoucheSavesSynced.step(CartoucheSaveStep.same.rawValue, moved: false, heldBack: false))
+        XCTAssertNil(CartoucheSavesSynced.step(CartoucheSaveStep.none.rawValue, moved: false, heldBack: false))
+        XCTAssertEqual(CartoucheSavesSynced.fields(step: "fetch", when: .before), ["step": .text("fetch"), "when": .text("before")])
+        XCTAssertEqual(CartoucheSavesSynced.fields(step: "same", when: .after, during: 4, duringFailed: 1),
+                       ["step": .text("same"), "when": .text("after"), "during": .number(4), "duringFailed": .number(1)])
+        XCTAssertEqual(CartoucheSavesSynced.fields(step: "offline", when: .player, during: -1)["during"], .number(0))
+        // The names the dashboard reads (telemetry/dashboard/index.html's
+        // SAVE_MOMENTS), the Mac's beside them.
+        XCTAssertEqual([CartoucheSavesSynced.Moment.before, .after, .player].map(\.rawValue), ["before", "after", "player"])
+        let report = CartoucheEventReport(id: "3d9b2f5e-0000-4000-8000-000000000002", seq: 9, context: context, name: "saves.synced",
+                                          game: "0100152000022000", fields: CartoucheSavesSynced.fields(step: "send", when: .after))
+        XCTAssertNotNil(report)
+        XCTAssertEqual(report?.fields?["step"], .text("send"))
     }
 }

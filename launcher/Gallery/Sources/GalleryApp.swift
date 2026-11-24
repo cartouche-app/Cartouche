@@ -87,6 +87,11 @@
 //                                        which kept the profile's keychain
 //                                        pattern as it is
 //                                        (GalleryScenario.ownSignature)
+//        sidestore                       the IPA for the player's own
+//                                        SideStore, which signed it with
+//                                        the player's Apple ID and left
+//                                        Increased Memory Limit out
+//                                        (CartoucheSideStoreInstall)
 //      -GalleryWidth 402 -GalleryHeight 874     (none: the whole screen)
 //      -GalleryInsets 62,0,34,0          top, leading, bottom, trailing
 //      -GalleryWidthClass compact        the width class at a scenario's
@@ -149,6 +154,11 @@
 //                                        with two games' saves waiting for it
 //        erasing                         on Reset Cartouche's page, the reset
 //                                        under way
+//        games-folders                   two games folders, a NAS's, out of
+//                                        reach away from home, and a Google
+//                                        Drive's, the player's games in
+//                                        both, the sheet's game newer on the
+//                                        NAS (GalleryGamesFolders)
 //        game-mode-later                 Game Mode coming 1.5 s after
 //                                        Cartouche first measures its
 //                                        memory: its own limit 6,144 MiB
@@ -162,7 +172,11 @@
 //                                        (GalleryBCConversion)
 //        gpu-no-bc-converted             the same, the sheet's game built by
 //                                        a fork of nxnative that converts
-//                                        those textures for it
+//                                        those textures for it, a game drawn
+//                                        with NVN's, as on 18 November
+//        gpu-no-bc-converted-vulkan      the same, built by that fork as
+//                                        since 22 November, which converts
+//                                        a Vulkan game's too
 //        iml-left-out                    signed by a signing app on the
 //                                        iPhone (-GallerySigning iphone),
 //                                        without Increased Memory Limit,
@@ -221,6 +235,13 @@
 //        newer-build                     a newer build of the sheet's game,
 //                                        or of the first of the player's, in
 //                                        the games folder
+//        nightly-no-vpn                  the automation of Shortcuts that
+//                                        renews Cartouche every night,
+//                                        whose Refresh All Apps ran at 4:00
+//                                        this night without LocalDevVPN
+//                                        connected (CartoucheNightly)
+//        nightly-renewed                 the same, which renewed Cartouche
+//                                        at 4:00 this night
 //        no-app-group                    a sign-in whose built-in SideStore
 //                                        found no app group, as when a
 //                                        signing app signed the IPA for an
@@ -373,7 +394,10 @@
 //                                        the game's management
 //        nightly                         on the Mac's builds (screen
 //                                        mac-builds), down to the nightly
-//                                        build
+//                                        build; on the System page, the
+//                                        page scrolled down to Renew every
+//                                        night; on the setup, the page at
+//                                        its end, on that step
 //        requirements                    on a game's sheet, what the game
 //                                        needs, opened on each need
 //        reset                           on the System page, the page at its
@@ -559,7 +583,9 @@ struct GalleryScenario {
     /// Puts the files the stand-ins read where the launcher looks for them.
     func prepare() {
         GalleryState.setupDone = setupDone
-        GalleryState.signing = signing == "iphone" ? .iPhone : signing == "installer" ? .installer : .account
+        GalleryState.signing = signing == "iphone" ? .iPhone : signing == "installer" ? .installer
+            : signing == "sidestore" ? .sideStore : .account
+        GalleryState.sideStoreMemory = signing == "sidestore" ? (setupDone ? .reinstall : .afterSetup) : nil
         GalleryState.ownSignature = ownSignature
         GalleryState.ownProfile = signingTrial != nil && work != "signing-no-own-profile" ? Self.standInProfile : nil
         // errSecAuthFailed, as iOS answers a password that does not open a
@@ -617,6 +643,7 @@ struct GalleryScenario {
             CartoucheSystemView.openingSection = screen == "system" ? category : nil
             CartoucheStorageView.opensOnTailscale = screen == "storage" && category == "tailscale"
             CartoucheNightlyRenewalView.opensOnTailscale = screen == "nightly" && category == "tailscale"
+            CartoucheSetupView.opensAtEnd = screen == "setup" && category == "nightly"
             // Tailscale as the scenario has it, never as the Mac the
             // simulator runs on does.
             CartoucheStorageReach.shared.showTailscaleForGallery(["mac-tailscale", "tailscale"].contains(work))
@@ -640,6 +667,9 @@ struct GalleryScenario {
             if work == "renewal-session-expired" {
                 CartoucheRenewals.shared.showSessionExpiredForGallery()
             }
+            // The automation of every night as the work has it, never as a
+            // scenario before this one left it.
+            CartoucheNightly.shared.showForGallery(work)
             CartoucheSetup.shared.refresh()
             if let trial = signingTrial {
                 // The import the setup refused, as the player tried it.
@@ -820,6 +850,11 @@ struct GalleryScenario {
                 if work == "mac-too-old" {
                     CartoucheMacBuildsWatch.galleryTooOld = mac.name
                 }
+            }
+            if work == "games-folders" {
+                let catalog = CartoucheCatalog.shared
+                GalleryGamesFolders.prepare(owned: ownedTitles.compactMap { catalog.game(titleId: $0) },
+                                            sheet: sheet.flatMap { ownedTitles.contains($0) ? nil : catalog.game(titleId: $0) })
             }
             if work == "drive-signed-out" {
                 // The player's Google Drive, seven days after the sign-in:
@@ -1440,8 +1475,9 @@ enum GalleryMac {
 /// copies run on them, as on an iPhone, with nothing stood in for but the
 /// game's data folder, which LiveContainer gives a game.
 enum GallerySaves {
-    /// The folder's name, as the Storage page and the sheet show it.
-    static let folderName = "Gallery saves"
+    /// The folder's name, as the Storage page and the sheet show it: a
+    /// name a player gives theirs, rather than the gallery's own.
+    static let folderName = "NAS"
 
     /// Whether the sheet is on its way down to its saves, which the
     /// screenshot waits for (GalleryScenario.settle).

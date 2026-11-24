@@ -1,6 +1,6 @@
 //
 //  CartoucheBuilderApp.swift
-//  Cartouche Builder
+//  Cartouche on the Mac
 //
 //  The Mac app: one window, with Cartouche's console or the builder (the
 //  library, the builds, the storage, the iPhone bridge and the Mac's
@@ -11,11 +11,14 @@
 //  instead (Gallery.swift), for CI; with --layout-check, it takes its window
 //  through what a player does on sample games and checks that everything
 //  fits (LayoutCheck.swift), for CI; with --background, as after an update
-//  it installed by itself, it opens in the menu bar only.
+//  it installed by itself, it opens in the menu bar only. A copy still in
+//  Cartouche Builder.app, the app's folder before it was Cartouche, first
+//  moves to Cartouche.app beside it and opens from there (AppName.swift).
 //
 
 import AppKit
 import BuilderKit
+import ServiceManagement
 import SwiftUI
 import UserNotifications
 
@@ -28,8 +31,26 @@ enum Main {
             Gallery.run(into: URL(fileURLWithPath: arguments[index + 1]))
             return
         }
-        if LayoutCheck.requested { LayoutCheck.prepare() }
+        if LayoutCheck.requested { LayoutCheck.prepare() } else if moveToItsName(arguments) { return }
         CartoucheBuilderApp.main()
+    }
+
+    /// Moves a copy still called Cartouche Builder to Cartouche.app and
+    /// opens it from there, with what it was opened with; whether it moved.
+    /// Opening at login follows it: macOS knows the login item by the app's
+    /// place.
+    @MainActor
+    private static func moveToItsName(_ arguments: [String]) -> Bool {
+        let here = Bundle.main.bundleURL
+        guard AppName.destination(for: here) != nil else { return false }
+        let opensAtLogin = SMAppService.mainApp.status == .enabled
+        if opensAtLogin { try? SMAppService.mainApp.unregister() }
+        guard let moved = AppName.move(here) else {
+            if opensAtLogin { try? SMAppService.mainApp.register() }
+            return false
+        }
+        AppName.openAgain(moved, arguments: AppName.arguments(from: arguments, opensAtLogin: opensAtLogin))
+        return true
     }
 }
 
@@ -39,7 +60,7 @@ struct CartoucheBuilderApp: App {
     @AppStorage(AppSettings.menuBarKey) private var menuBar = true
 
     var body: some Scene {
-        Window("Cartouche Builder", id: AppModel.mainWindow) {
+        Window(AppName.name, id: AppModel.mainWindow) {
             MainView()
                 .environmentObject(model)
                 .environmentObject(model.setup)
@@ -83,6 +104,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCent
             return
         }
         UNUserNotificationCenter.current().delegate = self
+        // Opened at login before it moved to Cartouche.app: again from here.
+        if CommandLine.arguments.contains(AppName.openedAtLogin), SMAppService.mainApp.status != .enabled {
+            try? SMAppService.mainApp.register()
+        }
         Task { @MainActor in
             await AppModel.shared.start()
         }
@@ -152,7 +177,7 @@ struct AppCommands: Commands {
             .disabled(!model.isBuilding)
         }
         CommandGroup(replacing: .help) {
-            Link(tr("Cartouche Builder’s guide", "Guide de Cartouche Builder"), destination: AppModel.guide)
+            Link(tr("The Builder’s guide", "Guide du Builder"), destination: AppModel.guide)
             Link(tr("nxnative on GitHub", "nxnative sur GitHub"), destination: URL(string: "https://github.com/seedds/nxnative")!)
         }
     }
