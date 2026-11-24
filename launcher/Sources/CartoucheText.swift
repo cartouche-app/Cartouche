@@ -371,7 +371,7 @@ enum CartoucheText {
 
     static var dailyStepAutomation: String { s("daily.step2", "In Shortcuts, open Automation, then tap +.") }
     static var dailyStepTime: String { s("daily.time", "Choose Time of Day: 4:00 AM for instance, a time when the iPhone charges and is online, every day. Choose Run Immediately, then tap Next.") }
-    static var dailyStepVPN: String { s("daily.vpn", "Tap New Blank Automation, then add the Enable LocalDevVPN action: it connects LocalDevVPN without opening it.") }
+    static var dailyStepVPN: String { s("daily.vpn", "Tap New Blank Automation, then add the Enable LocalDevVPN action: it connects LocalDevVPN without opening it. An older LocalDevVPN calls it Start LocalDevVPN.") }
     static var dailyStepAction: String { s("daily.refresh", "Then add Refresh All Apps, among Cartouche’s actions and not LiveContainer’s, and tap Done.") }
     static var dailyTailscale: String { s("daily.tailscale", "With Tailscale, add its Connect action last, among those of the Tailscale app: LocalDevVPN turned Tailscale off, and the automation turns it on again.") }
     static var openShortcuts: String { s("daily.openShortcuts", "Open Shortcuts") }

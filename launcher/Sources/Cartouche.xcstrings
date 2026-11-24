@@ -2251,13 +2251,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tap New Blank Automation, then add the Enable LocalDevVPN action: it connects LocalDevVPN without opening it."
+            "value" : "Tap New Blank Automation, then add the Enable LocalDevVPN action: it connects LocalDevVPN without opening it. An older LocalDevVPN calls it Start LocalDevVPN."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Touchez Nouvelle automatisation vide, puis ajoutez l’action Enable LocalDevVPN : elle connecte LocalDevVPN sans l’ouvrir."
+            "value" : "Touchez Nouvelle automatisation vide, puis ajoutez l’action Enable LocalDevVPN : elle connecte LocalDevVPN sans l’ouvrir. Un LocalDevVPN plus ancien l’appelle Start LocalDevVPN."
           }
         }
       }
