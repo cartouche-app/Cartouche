@@ -10,6 +10,10 @@
       "why": "The console and a game's sheet side by side on an iPhone Duo unfolded: the Mac's window puts them side by side itself.",
       "mac": "CartoucheConsole/Mac/ConsoleView.swift"
     },
+    "CartoucheCableListener.swift": {
+      "kind": "iphone",
+      "why": "Cartouche listening on the iPhone's own loopback for Cartouche Builder, which reaches it through the cable once the iPhone is plugged into the Mac: the console runs on the Mac itself, which reaches its own folders."
+    },
     "CartoucheCloud.swift": {
       "kind": "iphone",
       "why": "Cartouche Cloud, which builds a player's game without a Mac, is the iPhone's alone (Ad, 18 November): what the app asks the service and reads of it, the account's games and a game built's IPA; a Mac builds its own games with Cartouche Builder."

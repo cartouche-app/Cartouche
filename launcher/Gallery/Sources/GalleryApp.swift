@@ -189,6 +189,10 @@
 //                                        games' sheets, System and the
 //                                        Mac's builds show them
 //                                        (GalleryMac.builds)
+//        mac-cable                       two Macs nearby: the MacBook Air
+//                                        through the cable this iPhone is
+//                                        plugged into it by, the Mac mini
+//                                        on the Wi-Fi
 //        mac-code                        two Macs nearby, pairing with the
 //                                        first, with the six digits on both
 //                                        screens
@@ -736,9 +740,10 @@ struct GalleryScenario {
                 // it the local network.
                 CartoucheMacBrowser.gallery = (found: [], refused: false)
             }
-            if ["mac-nearby", "mac-code", "mac-refused"].contains(work) {
+            if ["mac-nearby", "mac-code", "mac-refused", "mac-cable"].contains(work) {
                 let refused = work == "mac-refused"
-                CartoucheMacBrowser.gallery = (found: refused ? [] : GalleryMac.nearby, refused: refused)
+                CartoucheMacBrowser.gallery = (found: refused ? [] : work == "mac-cable" ? GalleryMac.cabled : GalleryMac.nearby,
+                                               refused: refused)
                 if work == "mac-code" {
                     CartoucheMacPairing.gallery = (mac: GalleryMac.nearby[0], code: "482915")
                 }
@@ -1315,6 +1320,13 @@ enum GalleryMac {
     static let nearby = [
         CartoucheNearbyMac(name: "MacBook Air", macID: id, endpoint: service("MacBook Air")),
         CartoucheNearbyMac(name: "Mac mini", macID: "c2e7a4d1-8b5f-4e3a-a6d9-1f4b7c0e9a28", endpoint: service("Mac mini")),
+    ]
+
+    /// The same Macs with this iPhone plugged into the MacBook Air by a
+    /// cable, which Bonjour does not find on this network (work: mac-cable).
+    static let cabled = [
+        CartoucheNearbyMac(name: "MacBook Air", macID: id, endpoint: nil, cabled: true),
+        nearby[1],
     ]
 
     /// The Mac's addresses in the player's tailnet, as its Cartouche Builder

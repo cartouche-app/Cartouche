@@ -37,6 +37,11 @@
 //  does not go (CartoucheTailscale.swift). The listener takes connections
 //  on every network of the Mac, Tailscale's among them.
 //
+//  An iPhone plugged into the Mac reaches it through the cable too, with no
+//  network at all (BridgeCable.swift): the server opens those connections
+//  through usbmuxd, and serves them as the network's, the same handshake,
+//  pairing and folders; the window tells which iPhones come that way.
+//
 
 import CartoucheCore
 import Foundation
@@ -123,7 +128,12 @@ public final class BridgeServer: @unchecked Sendable {
     private var _state: State = .stopped
     private var _roots = BridgeRoots()
     private var _name: String
-    private var sessions: [UUID: String] = [:]
+    /// The sessions now: the device of each, and whether it came through
+    /// the cable.
+    private var sessions: [UUID: (peer: String, cable: Bool)] = [:]
+    /// The iPhones plugged into this Mac, through usbmuxd: none for the
+    /// tests that have no usbmuxd.
+    private(set) var cable: BridgeCable?
     private var pairing = false
     private var pairingTimes: [Date] = []
     private var activity: NSObjectProtocol?
@@ -131,11 +141,22 @@ public final class BridgeServer: @unchecked Sendable {
     private weak var _builds: BridgeBuildsSource?
     private weak var _connections: BridgeConnectionsSource?
 
+    /// USBMUXD: where usbmuxd listens, for the iPhones plugged in; nil
+    /// for none. CABLE_PORT: where Cartouche listens on them.
     public init(devices: BridgeDevices, name: String,
-                tailnetAddresses: @escaping @Sendable () -> [String] = { CartoucheTailscale.ownAddresses() }) {
+                tailnetAddresses: @escaping @Sendable () -> [String] = { CartoucheTailscale.ownAddresses() },
+                usbmuxd: String? = Usbmux.socketPath, cablePort: UInt16 = CartoucheBridgeCable.port, cableRetry: TimeInterval = BridgeCable.retry) {
         self.devices = devices
         _name = name
         self.tailnetAddresses = tailnetAddresses
+        if let usbmuxd {
+            cable = BridgeCable(client: UsbmuxClient(path: usbmuxd), port: cablePort, retry: cableRetry,
+                                identity: { [weak self, devices] in (devices.macID, self?.name ?? "Mac") },
+                                open: { [weak self] transport in
+                                    guard let self else { return transport.close() }
+                                    await self.open(transport, cable: true)
+                                })
+        }
     }
 
     // MARK: State
@@ -199,7 +220,14 @@ public final class BridgeServer: @unchecked Sendable {
     public var connected: Set<String> {
         lock.lock()
         defer { lock.unlock() }
-        return Set(sessions.values)
+        return Set(sessions.values.map(\.peer))
+    }
+
+    /// The paired devices connected now through the cable, by ID.
+    public var connectedByCable: Set<String> {
+        lock.lock()
+        defer { lock.unlock() }
+        return Set(sessions.values.filter(\.cable).map(\.peer))
     }
 
     private func set(_ state: State) {
@@ -229,6 +257,7 @@ public final class BridgeServer: @unchecked Sendable {
         guard !running else { return }
         set(.starting)
         listen(on: NWEndpoint.Port(rawValue: CartoucheBridge.port), generation: current)
+        cable?.start()
     }
 
     private func listen(on port: NWEndpoint.Port?, generation current: Int) {
@@ -286,6 +315,7 @@ public final class BridgeServer: @unchecked Sendable {
         generation += 1
         lock.unlock()
         current?.cancel()
+        cable?.stop()
         set(.stopped)
     }
 
@@ -322,9 +352,9 @@ public final class BridgeServer: @unchecked Sendable {
         }
     }
 
-    /// A connection once open, the network's or one in memory for the
-    /// tests: a session of a paired iPhone, or a pairing.
-    func open(_ transport: any CartoucheBridgeTransport & Sendable) async {
+    /// A connection once open, the network's, the cable's (CABLE), or one
+    /// in memory for the tests: a session of a paired iPhone, or a pairing.
+    func open(_ transport: any CartoucheBridgeTransport & Sendable, cable: Bool = false) async {
         // A connection that does not finish its handshake in time is closed,
         // which ends the reads it waits on.
         let handshaking = Flag()
@@ -346,7 +376,7 @@ public final class BridgeServer: @unchecked Sendable {
             handshaking.clear()
             switch opening {
             case let .session(channel):
-                await serve(channel)
+                await serve(channel, cable: cable)
             case .paired:
                 changed()
                 transport.close()
@@ -375,11 +405,11 @@ public final class BridgeServer: @unchecked Sendable {
         return await delegate.bridgeServer(self, allowPairing: name, code: code)
     }
 
-    private func serve(_ channel: CartoucheBridgeSecureChannel) async {
+    private func serve(_ channel: CartoucheBridgeSecureChannel, cable: Bool) async {
         let id = UUID()
         devices.seen(channel.peer)
         lock.withLock {
-            sessions[id] = channel.peer
+            sessions[id] = (channel.peer, cable)
             if activity == nil {
                 activity = ProcessInfo.processInfo.beginActivity(options: [.idleSystemSleepDisabled, .userInitiated],
                                                                  reason: "Cartouche on an iPhone reads or writes its games")

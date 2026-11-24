@@ -37,6 +37,7 @@ on:
       - "launcher/Sources/CartoucheBCConversion.swift"
       - "launcher/Sources/CartoucheBridge.swift"
       - "launcher/Sources/CartoucheBridgeBuilds.swift"
+      - "launcher/Sources/CartoucheBridgeCable.swift"
       - "launcher/Sources/CartoucheCatalog.swift"
       - "launcher/Sources/CartoucheConnections.swift"
       - "launcher/Sources/CartoucheCoverList.swift"

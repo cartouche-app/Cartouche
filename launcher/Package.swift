@@ -31,6 +31,7 @@ let package = Package(
                 "CartoucheBCConversion.swift",
                 "CartoucheBridge.swift",
                 "CartoucheBridgeBuilds.swift",
+                "CartoucheBridgeCable.swift",
                 "CartoucheCloud.swift",
                 "CartoucheConnections.swift",
                 "CartoucheCoverList.swift",
