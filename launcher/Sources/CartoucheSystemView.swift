@@ -1017,7 +1017,7 @@ struct CartoucheNightlyStateRow: View {
 
     static func symbol(of state: CartoucheNightlyRenewal.State) -> String {
         switch state {
-        case .toMake: return "moon.zzz"
+        case .toMake: return "plus.circle"
         case .waiting, .running: return "clock.fill"
         case .renewed: return "checkmark.circle.fill"
         case .failed: return "exclamationmark.triangle.fill"
