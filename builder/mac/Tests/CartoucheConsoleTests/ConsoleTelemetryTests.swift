@@ -359,4 +359,31 @@ final class ConsoleTelemetryTests: XCTestCase {
         XCTAssertEqual(telemetry.lastSent, sent)
         XCTAssertEqual(telemetry.lastReport, "{}")
     }
+
+    /// An error the console shows, with its report, goes to the app's
+    /// telemetry as the iPhone's does (CartoucheErrorEvent): an error
+    /// event, with its origin, cause and codes, never its words; with
+    /// telemetry on only.
+    func testTheConsolesErrorsGoToTheAppsTelemetry() {
+        let console = CartoucheMacConsole.shared
+        var heard: [(String, String?, [String: CartoucheMacMeasure])] = []
+        console.onMeasuresEvent = { name, game, fields in heard.append((name, game, fields)) }
+        let full = NSError(domain: NSPOSIXErrorDomain, code: 28, userInfo: [NSLocalizedDescriptionKey: "No space left on the NAS"])
+        _ = CartoucheReports.make(.saves, "The saves were not sent", message: "No space left on the NAS", error: full,
+                                  stage: "savesSync", inBackground: true)
+        XCTAssertEqual(heard.count, 1)
+        XCTAssertEqual(heard.first?.0, "error")
+        XCTAssertNil(heard.first?.1)
+        let fields = heard.first?.2 ?? [:]
+        XCTAssertEqual(fields["origin"], .text("saves"))
+        XCTAssertEqual(fields["error"], .text("NSPOSIXErrorDomain 28"))
+        XCTAssertEqual(fields["stage"], .text("savesSync"))
+        XCTAssertEqual(fields["background"], .flag(true))
+        XCTAssertNotNil(fields["cause"])
+        XCTAssertFalse("\(fields)".contains("NAS"))
+        XCTAssertFalse("\(fields)".contains("saves were not sent"))
+        console.showMeasures(CartoucheMacMeasures(isOn: false))
+        _ = CartoucheReports.make(.storage, "Problem", message: "Nothing answers.", inBackground: true)
+        XCTAssertEqual(heard.count, 1)
+    }
 }

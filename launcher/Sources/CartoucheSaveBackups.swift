@@ -92,6 +92,10 @@ final class CartoucheSaveBackups: ObservableObject {
     /// The games whose sync while they played failed already, by target
     /// key: the next failures make no report of their own.
     private var playFailed: Set<String> = []
+    /// How often each game's saves went while it played, and how often
+    /// they failed to, by target key, which the telemetry hears of at the
+    /// game's end (CartoucheSavesSynced).
+    private var playTold: [String: (sent: Int, failed: Int)] = [:]
     /// The syncs after the games that ended, which a start waits for.
     private var ending: [String: Task<Void, Never>] = [:]
     private static let basesKey = "Cartouche.saves.bases"
@@ -132,7 +136,7 @@ final class CartoucheSaveBackups: ObservableObject {
     func copyChanged(_ targets: [CartoucheSaveTarget]) {
         guard run == nil, isOn, !targets.isEmpty else { return }
         run = Task {
-            _ = await syncRound(targets, fetching: false, onlyChanged: true, byPlayer: false)
+            _ = await syncRound(targets, fetching: false, onlyChanged: true, byPlayer: false, telling: .after)
             run = nil
         }
     }
@@ -143,13 +147,15 @@ final class CartoucheSaveBackups: ObservableObject {
     /// alone. What the sync did, unless it did not go through.
     @discardableResult
     func sync(_ target: CartoucheSaveTarget) async -> CartoucheSaveOutcome? {
-        await turn { await self.syncRound([target], fetching: true, onlyChanged: false, byPlayer: false).outcomes[target.key] }
+        await turn {
+            await self.syncRound([target], fetching: true, onlyChanged: false, byPlayer: false, telling: .before).outcomes[target.key]
+        }
     }
 
     /// Syncs TARGET's saves now, as the player asked: whether it went
     /// through.
     func syncNow(_ target: CartoucheSaveTarget) async -> Bool {
-        await turn { await self.syncRound([target], fetching: true, onlyChanged: false, byPlayer: true).failure == nil }
+        await turn { await self.syncRound([target], fetching: true, onlyChanged: false, byPlayer: true, telling: .player).failure == nil }
     }
 
     #if CARTOUCHE_GALLERY
@@ -226,9 +232,13 @@ final class CartoucheSaveBackups: ObservableObject {
     /// here. BYPLAYER: the player asked, and a server found offline is tried
     /// again. PLAYING: the games play, and their saves go from a copy of
     /// them made at one moment, never while a server is known to be offline;
-    /// REPORTING: a failure makes a report.
+    /// REPORTING: a failure makes a report. TELLING: when the round happens,
+    /// for the telemetry, which hears of what it did game by game; PLAYED,
+    /// at the end of a game that played behind the console, how often its
+    /// saves went while it did.
     private func syncRound(_ targets: [CartoucheSaveTarget], fetching: Bool, onlyChanged: Bool, byPlayer: Bool,
-                           playing: Bool = false, reporting: Bool = true) async -> Round {
+                           playing: Bool = false, reporting: Bool = true, telling moment: CartoucheSavesSynced.Moment? = nil,
+                           played: (sent: Int, failed: Int)? = nil) async -> Round {
         var result = Round()
         guard let location = settings.location(.saves) else {
             result.failure = CartoucheStorageError(.noSavesFolder, CartoucheText.savesNoFolder)
@@ -248,6 +258,9 @@ final class CartoucheSaveBackups: ObservableObject {
                 }
             }
             due.append((target, base))
+        }
+        defer {
+            if let moment { tell(result, of: played == nil ? due.map { $0.target } : targets, at: moment, played: played) }
         }
         guard !due.isEmpty else { return result }
         // The server was found offline from here: the saves to send wait for
@@ -305,6 +318,9 @@ final class CartoucheSaveBackups: ObservableObject {
                     if let snapshot { outcome.base = snapshot.forGame(outcome.base) }
                     record(outcome, of: target)
                     result.outcomes[target.key] = outcome
+                    if playing, outcome.sent != nil, playingGames[target.key] != nil {
+                        playTold[target.key, default: (0, 0)].sent += 1
+                    }
                     if let look = snapshot?.look ?? outcome.base?.look { result.inStep[target.key] = look }
                     // The next copy of the same game takes this one's place.
                     if let sent = outcome.sent, playingGames[target.key] != nil || ending[target.key] != nil {
@@ -340,6 +356,38 @@ final class CartoucheSaveBackups: ObservableObject {
         note(result.outcomes, of: due.map { $0.target })
         await remote?.disconnect()
         return result
+    }
+
+    /// Tells the telemetry what RESULT, a round at MOMENT, did with the
+    /// saves of each of the TARGETS (saves.synced): those that moved, that
+    /// a newer version of the game holds back, that wait for an offline
+    /// server or that failed; nothing of a sync that moved nothing. At the
+    /// end of a game that played behind the console, how often its saves
+    /// went while it did (PLAYED), whatever the round did.
+    private func tell(_ result: Round, of targets: [CartoucheSaveTarget], at moment: CartoucheSavesSynced.Moment,
+                      played: (sent: Int, failed: Int)?) {
+        // The telemetry, as the console, needs iOS 17.
+        guard #available(iOS 17.0, *) else { return }
+        for target in targets {
+            var step: String?
+            if let outcome = result.outcomes[target.key] {
+                step = CartoucheSavesSynced.step(outcome.step.rawValue,
+                                                 moved: outcome.sent != nil || outcome.fetched != nil || outcome.kept != nil,
+                                                 heldBack: outcome.newer != nil)
+            } else if result.failure is CartoucheStorageOffline {
+                step = "offline"
+            } else if result.failure != nil {
+                step = "failed"
+            }
+            if let played {
+                CartoucheTelemetry.shared.event("saves.synced", game: target.titleId,
+                                                fields: CartoucheSavesSynced.fields(step: step ?? "same", when: moment,
+                                                                                    during: played.sent, duringFailed: played.failed))
+            } else if let step {
+                CartoucheTelemetry.shared.event("saves.synced", game: target.titleId,
+                                                fields: CartoucheSavesSynced.fields(step: step, when: moment))
+            }
+        }
     }
 
     /// The base of TARGET's saves for the saves folder at PLACE: the one
@@ -483,6 +531,7 @@ final class CartoucheSaveBackups: ObservableObject {
         watches[target.key] = CartoucheSaveWatch(inStep: savedBase(of: target, place: Self.place(location))?.look)
         playCopies[target.key] = nil
         playFailed.remove(target.key)
+        playTold[target.key] = (0, 0)
         looking[target.key] = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: UInt64(CartoucheSaveWatch.interval * 1_000_000_000))
@@ -504,10 +553,13 @@ final class CartoucheSaveBackups: ObservableObject {
             playCopies[target.key] = nil
             return
         }
+        let played = playTold.removeValue(forKey: target.key)
         let previous = ending[target.key]
         let task = Task {
             await previous?.value
-            _ = await turn { await self.syncRound([target], fetching: false, onlyChanged: true, byPlayer: false) }
+            _ = await turn {
+                await self.syncRound([target], fetching: false, onlyChanged: true, byPlayer: false, telling: .after, played: played)
+            }
         }
         ending[target.key] = task
         Task {
@@ -569,7 +621,10 @@ final class CartoucheSaveBackups: ObservableObject {
             watches[target.key]?.moved()
         } else if round.failed {
             watches[target.key]?.failed()
-            if !round.offline { playFailed.insert(target.key) }
+            if !round.offline {
+                playFailed.insert(target.key)
+                playTold[target.key]?.failed += 1
+            }
         }
     }
 

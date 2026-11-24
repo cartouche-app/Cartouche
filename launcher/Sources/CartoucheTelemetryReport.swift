@@ -660,3 +660,91 @@ struct CartoucheLaunchMark {
         defaults.set(data, forKey: Self.key)
     }
 }
+
+// MARK: What some events say
+
+/// The error event of a report Cartouche made (CartoucheReports.reported),
+/// on the iPhone and in the Mac's console alike: what it was doing
+/// (ORIGIN), why it failed (CartoucheFailure: its cause, the step, how far
+/// it got and how long it took, the error's names and numbers), the
+/// error's domain and code with those under it, whether Cartouche did it
+/// by itself (BACKGROUND), and what the step adds of its own (MEASURES),
+/// such as where a game installed came from. Never its words.
+enum CartoucheErrorEvent {
+    static func fields(origin: String?, failure: CartoucheFailure?, error: Error?, background: Bool?,
+                       measures: [String: CartoucheTelemetryValue] = [:]) -> [String: CartoucheTelemetryValue] {
+        var fields = measures
+        if let failure {
+            fields.merge(failure.fields) { _, failed in failed }
+        }
+        if let origin {
+            fields["origin"] = .text(origin)
+        }
+        // The built-in SideStore's error comes back as its text alone: its
+        // codes come with the failure.
+        if let codes = failure?.codes {
+            fields["error"] = .text(codes)
+        } else if let error {
+            fields["error"] = .text(codes(of: error))
+        }
+        // What Cartouche checks by itself, such as the games folder at each
+        // return, fails whenever the player is away from home.
+        if let background {
+            fields["background"] = .flag(background)
+        }
+        return fields
+    }
+
+    /// Those of a report's notice: its user info, as CartoucheReports.make
+    /// posts it.
+    static func fields(of info: [AnyHashable: Any]?) -> [String: CartoucheTelemetryValue] {
+        fields(origin: info?["origin"] as? String, failure: info?["failure"] as? CartoucheFailure, error: info?["error"] as? Error,
+               background: info?["background"] as? Bool, measures: info?["measures"] as? [String: CartoucheTelemetryValue] ?? [:])
+    }
+
+    /// "NSCocoaErrorDomain 640 < NSPOSIXErrorDomain 28": an error and the
+    /// ones under it.
+    static func codes(of error: Error) -> String {
+        var parts: [String] = []
+        var current: NSError? = error as NSError
+        while let found = current, parts.count < 4 {
+            parts.append("\(found.domain) \(found.code)")
+            current = found.userInfo[NSUnderlyingErrorKey] as? NSError
+        }
+        return parts.joined(separator: " < ")
+    }
+}
+
+/// A sync of a game's saves on the iPhone, as saves.synced tells it, and
+/// builder.saves on the Mac (BuilderTelemetry.savesFields): what it did,
+/// when, and, at the end of a game that played behind the console, how
+/// often its saves went while it played. Never a name, a copy's or a
+/// folder's.
+enum CartoucheSavesSynced {
+    /// When the sync happened: before the game plays, as it is installed
+    /// or starts; after it played; or as the player asked.
+    enum Moment: String {
+        case before, after, player
+    }
+
+    /// What a sync that went through did, as it is told: STEP, its
+    /// CartoucheSaveStep, when saves moved (MOVED), "heldBack" for a newest
+    /// copy that waits for the game's update (HELD_BACK), "same" for saves
+    /// in step already; nil for a sync that moved nothing and that the
+    /// telemetry does not hear of, as on the Mac.
+    static func step(_ step: String, moved: Bool, heldBack: Bool) -> String? {
+        if heldBack { return "heldBack" }
+        return moved ? step : nil
+    }
+
+    /// The event's fields: STEP (send, fetch, keep, keepAndFetch, heldBack,
+    /// same, offline or failed), WHEN, and at the end of a game that played
+    /// behind the console, how many times its saves went while it played
+    /// (DURING) and how many of those tries failed (DURING_FAILED).
+    static func fields(step: String, when: Moment, during: Int? = nil, duringFailed: Int? = nil) -> [String: CartoucheTelemetryValue] {
+        var fields: [String: CartoucheTelemetryValue] = ["step": .text(step), "when": .text(when.rawValue)]
+        if let during { fields["during"] = .number(Double(max(0, during))) }
+        if let duringFailed { fields["duringFailed"] = .number(Double(max(0, duringFailed))) }
+        return fields
+    }
+}

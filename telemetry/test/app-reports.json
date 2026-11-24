@@ -118,6 +118,7 @@
       "device": "iPhone19,4",
       "fields": {
         "from": "mac",
+        "link": "cable",
         "nxnative": "6c3aeb3d70a1",
         "version": "1.0.0"
       },

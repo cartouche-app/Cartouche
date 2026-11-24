@@ -66,15 +66,17 @@ enum CartoucheReports {
     /// redacted, as its object. Its user info holds, under "origin", the
     /// report's origin as its raw value ("install"), under "error" the
     /// error behind it, if any, under "failure" why it failed, as names and
-    /// numbers (CartoucheFailure), and under "background" whether it came
-    /// of a check Cartouche made by itself.
+    /// numbers (CartoucheFailure), under "measures" what the step adds to
+    /// its error's event, and under "background" whether it came of a
+    /// check Cartouche made by itself.
     static let reported = Notification.Name("CartoucheErrorReported")
 
     /// A report on what just went wrong at ORIGIN, as the player reads it:
     /// TITLE and MESSAGE, the ERROR behind them, the STEP Cartouche was at
     /// and how far it had gone, and the FACTS of that step, such as its
     /// sizes. FAILURE says why, as the measurements send it; without one,
-    /// it is read off ERROR, with STAGE, the step as a key. It is noted in
+    /// it is read off ERROR, with STAGE, the step as a key; MEASURES, what
+    /// the step adds to them, names and numbers only. It is noted in
     /// the journal and posted as reported. Unless it came of a check
     /// Cartouche makes by itself, IN BACKGROUND, such as reading the games
     /// folder each time it comes back, which fails whenever the player is
@@ -82,7 +84,7 @@ enum CartoucheReports {
     static func make(_ origin: CartoucheReport.Origin, _ title: String, message: String, error: Error? = nil,
                      step: String? = nil, fraction: Double? = nil, stage: String? = nil, seconds: Double? = nil,
                      failure: CartoucheFailure? = nil, facts: [CartoucheReport.Fact] = [],
-                     inBackground: Bool = false) -> CartoucheReport {
+                     measures: [String: CartoucheTelemetryValue] = [:], inBackground: Bool = false) -> CartoucheReport {
         let failure = failure ?? error.map {
             CartoucheFailure.of($0, stage: stage, fraction: fraction, seconds: seconds, status: protocolStatus)
         }
@@ -101,6 +103,9 @@ enum CartoucheReports {
         }
         if let failure {
             info["failure"] = failure
+        }
+        if !measures.isEmpty {
+            info["measures"] = measures
         }
         NotificationCenter.default.post(name: reported, object: report.redacted(by: redaction), userInfo: info)
         return report
