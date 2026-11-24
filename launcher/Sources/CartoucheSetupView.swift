@@ -29,6 +29,14 @@ struct CartoucheSetupView: View {
     static let localDevVPN = URL(string: "localdevvpn://")!
     static let localDevVPNAppStore = URL(string: "https://apps.apple.com/app/localdevvpn/id6755608044")!
 
+    /// Whether the setup opens scrolled down to its end, on Renew every
+    /// night: the launcher's gallery (launcher/Gallery); never in Cartouche.
+    #if CARTOUCHE_GALLERY
+    static var opensAtEnd = false
+    #else
+    static let opensAtEnd = false
+    #endif
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
@@ -146,6 +154,7 @@ struct CartoucheSetupView: View {
             .frame(maxWidth: 640)
             .frame(maxWidth: .infinity)
         }
+        .defaultScrollAnchor(Self.opensAtEnd ? .bottom : nil)
         .background(CartoucheStage(key: nil))
         .navigationTitle(CartoucheText.setupTitle)
         .navigationBarTitleDisplayMode(.inline)

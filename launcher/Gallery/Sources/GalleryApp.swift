@@ -373,7 +373,8 @@
 //                                        mac-builds), down to the nightly
 //                                        build; on the System page, the
 //                                        page scrolled down to Renew every
-//                                        night
+//                                        night; on the setup, the page at
+//                                        its end, on that step
 //        requirements                    on a game's sheet, what the game
 //                                        needs, opened on each need
 //        reset                           on the System page, the page at its
@@ -613,6 +614,7 @@ struct GalleryScenario {
             CartoucheSystemView.openingSection = screen == "system" ? category : nil
             CartoucheStorageView.opensOnTailscale = screen == "storage" && category == "tailscale"
             CartoucheNightlyRenewalView.opensOnTailscale = screen == "nightly" && category == "tailscale"
+            CartoucheSetupView.opensAtEnd = screen == "setup" && category == "nightly"
             // Tailscale as the scenario has it, never as the Mac the
             // simulator runs on does.
             CartoucheStorageReach.shared.showTailscaleForGallery(["mac-tailscale", "tailscale"].contains(work))

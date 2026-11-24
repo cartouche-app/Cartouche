@@ -1414,7 +1414,7 @@
     },
     {
       "name": "iphone-setup-nightly-renewed",
-      "comment": "The same, the automation having renewed Cartouche at 4:00 this night (work: nightly-renewed), as the built-in SideStore's support noted its run of Refresh All Apps: every step done.",
+      "comment": "The same, the automation having renewed Cartouche at 4:00 this night (work: nightly-renewed), as the built-in SideStore's support noted its run of Refresh All Apps: the page at its end (category: nightly), every step done, the last one's button showing the steps again.",
       "screen": "setup",
       "owned": [
         "0400C3F00006E000",
@@ -1431,7 +1431,8 @@
         34,
         0
       ],
-      "work": "nightly-renewed"
+      "work": "nightly-renewed",
+      "category": "nightly"
     },
     {
       "name": "iphone-setup-iphone-step",
