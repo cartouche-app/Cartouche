@@ -926,29 +926,14 @@ class Runner:
 
     # ---- One game's shaders, split otherwise than its profile says ----------
 
-    def _split_back(self, entry: Entry, at: str, print_: str, identity: str, stop: "_Stop", mac: bool = False,
-                    walked: frozenset[str] = frozenset()) -> _Trial | None:
+    def _split_back(self, entry: Entry, at: str, older: str, print_: str, identity: str, stop: "_Stop", mac: bool = False) -> _Trial | None:
         """After ENTRY's shader split at AT made other tables than its
-        profile's: the trial of the newest commit before a change of
-        nxnative's splitter (fallback.split_back) that did not fail to build
-        these files already, nor in this batch (WALKED), once no other game
-        builds and the checkout went there. None when there is none left,
-        which is said unless this batch tried one, or while another game
-        builds alone. _Skipped when the game's IPA (its Mac app, for this Mac
+        profile's: the trial of OLDER, a commit before a change of
+        nxnative's splitter (fallback.split_order), once no other game
+        builds and the checkout went there; None while another game builds
+        alone. _Skipped when the game's IPA (its Mac app, for this Mac
         alone: MAC) is from there or newer."""
         ctx, title_id, name = self.ctx, entry.title_id, entry.game.display_name
-        try:
-            candidates = fallback.split_back(ctx.engine, title_id, at)
-        except (EngineError, OSError) as error:
-            self.log(str(error), title_id)
-            return None
-        failed = set(fallback.tried(fallback.splits(ctx.paths).get(title_id), print_)) | walked
-        left = [older for older in candidates if older not in failed]
-        if not left:
-            if candidates and not walked:
-                self.log(t("split.tried", name=name, old=", ".join(older[:12] for older in candidates)), title_id)
-            return None
-        older = left[0]
         built = self._built_from(entry, older, print_, identity, mac)
         if built:
             # The newest that builds it is what the player has: nothing to
@@ -976,6 +961,14 @@ class Runner:
                     self._split = None
                     self._turns.notify_all()
 
+    def _split_built_here(self, entry: Entry, print_: str) -> list[str]:
+        """The commits the game's IPA and Mac app were built from on this Mac,
+        with the files of PRINT_ and an nxnative of its own: their splits
+        made the profile's tables of these files."""
+        record = self.ctx.store.get(entry.title_id)
+        return [build.commit for build in (record.build, record.mac)
+                if build is not None and not build.dirty and (not build.fingerprint or build.fingerprint == print_)]
+
     def _built_from(self, entry: Entry, older: str, print_: str, identity: str, mac: bool) -> str | None:
         """The commit the game's IPA (its Mac app: MAC) was built from, its
         full SHA, when that is OLDER or a newer one, from the same files and
@@ -995,24 +988,35 @@ class Runner:
 
     def _split_walk(self, entry: Entry, at: str, nxnative, failed: builds.Result, print_: str, identity: str, stop: "_Stop",
                     mac: bool = False) -> tuple[builds.Result, str, _Trial | None]:
-        """ENTRY built again by NXNATIVE from the commit before each change of
-        nxnative's splitter, newest first (_split_back), after its split at
-        AT made other tables than its profile's (FAILED), until one builds
-        it, or one fails otherwise than by its split: the result that
-        counts, the commit it is recorded at, and the trial that built it,
-        which goes on for its Mac app (_split_over). FAILED, the newer
-        commit's result, counts when none builds it, unless it was stopped,
-        or failed for the Mac's sake (a full disk, its Xcode): that is said,
-        and the commit tried again at the next batch. A commit that did not
-        build these files is not tried again for them."""
-        title_id, name = entry.title_id, entry.game.display_name
+        """ENTRY built again by NXNATIVE from commits before changes of
+        nxnative's splitter, in the order fallback.split_order gives, after
+        its split at AT made other tables than its profile's (FAILED), until
+        one builds it: the result that counts, the commit it is recorded at,
+        and the trial that built it, which goes on for its Mac app
+        (_split_over). One that fails otherwise than by its split ends the
+        walk, but for the commit this Mac built these files from, whose IPA
+        stays. FAILED, the newer commit's result, counts when none builds
+        it, unless it was stopped, or failed for the Mac's sake (a full
+        disk): that is said, and the commit tried again at the next batch.
+        A commit that did not build these files is not tried again for
+        them."""
+        ctx, title_id, name = self.ctx, entry.title_id, entry.game.display_name
+        mark = fallback.splits(ctx.paths).get(title_id)
+        try:
+            candidates = fallback.split_back(ctx.engine, title_id, at)
+            order, built = fallback.split_order(ctx.engine, title_id, at, candidates, mark, print_, self._split_built_here(entry, print_))
+        except (EngineError, OSError) as error:
+            self.log(str(error), title_id)
+            return failed, at, None
+        if candidates and not order:
+            tried = set(fallback.tried(mark, print_))
+            said = [older for older in candidates if older in tried][: fallback.DEPTH] or candidates[: fallback.DEPTH]
+            self.log(t("split.tried", name=name, old=", ".join(older[:12] for older in said)), title_id)
         # Each commit once, even if nxnative.json could not keep it.
-        walked: frozenset[str] = frozenset()
-        while not stop.is_set():
-            trial = self._split_back(entry, at, print_, identity, stop, mac=mac, walked=walked)
+        while order and not stop.is_set():
+            trial = self._split_back(entry, at, order.pop(0), print_, identity, stop, mac=mac)
             if trial is None:
                 break
-            walked |= {trial.good}
             self.on_event("commit", title_id, {"commit": trial.good[:12], "fallback": True, "split": True})
             again: builds.Result | None = None
             try:
@@ -1020,20 +1024,24 @@ class Runner:
             finally:
                 if again is None or not again.ok:
                     stopped = stop.is_set() or (again is not None and again.stopped)
-                    # A full disk, the Mac's Xcode: not these files' failure.
-                    macs = again is not None and again.cause in ("no_space", "metal")
-                    if again is not None and not stopped and not macs:
-                        self._mark_split(title_id, at, trial.good, False, print_)
-                    self._split_over(trial, name, built=False, stopped=stopped or macs)
+                    # A full disk: not these files' failure.
+                    full = again is not None and again.cause == "no_space"
+                    if again is not None and not stopped and not full:
+                        self._mark_split(title_id, at, trial.good, False, print_, split=again.cause == "tables")
+                    self._split_over(trial, name, built=False, stopped=stopped or full)
                     self.on_event("commit", title_id, {"commit": at[:12], "fallback": self.fallback is not None})
             if again.ok:
                 return again, trial.good, trial
-            if again.stopped or again.cause in ("no_space", "metal"):
-                # Stopped, or the Mac's failure, not its files': said as it
-                # is, and tried again at the next batch.
+            if again.stopped or again.cause == "no_space":
+                # Stopped, or the Mac's disk, not its files': said as it is,
+                # and tried again at the next batch.
                 return again, at, None
             if again.cause != "tables":
-                break
+                # It failed otherwise than by its split (its app build, an
+                # Xcode it was not tested with): older commits are likelier
+                # to fail too. None is tried, but the one this Mac built
+                # these files from, whose IPA stays as it is.
+                order = [built] if built and built in order else []
         return failed, at, None
 
     def _split_built(self, trial: _Trial, name: str, print_: str) -> None:
@@ -1055,9 +1063,9 @@ class Runner:
                 self._split = None
                 self._turns.notify_all()
 
-    def _mark_split(self, title_id: str, newest: str, older: str, built: bool, print_: str) -> None:
+    def _mark_split(self, title_id: str, newest: str, older: str, built: bool, print_: str, split: bool = True) -> None:
         try:
-            fallback.mark_split(self.ctx.paths, title_id, newest, older, built, print_)
+            fallback.mark_split(self.ctx.paths, title_id, newest, older, built, print_, split=split)
         except OSError as error:
             self.log(f"{self.ctx.paths.engine_state.name}: {disks.describe(error, self.ctx.paths.root)}")
 
