@@ -29,9 +29,10 @@
 //  iOS reads an app's App Intents from the Metadata.appintents of the app
 //  itself. Xcode writes this file's into LiveContainerSwiftUI.framework,
 //  where the launcher is built, and app/scripts/app_intents.py merges them
-//  into the app's, beside the built-in SideStore's, with their French
-//  (launcher/AppIntents/fr.json) in the app's own strings, where iOS looks
-//  for the words of an app's intents (docs/decisions.md, 90).
+//  into the app's, beside the built-in SideStore's, with their French,
+//  Spanish and German (launcher/AppIntents/fr.json, es.json, de.json) in
+//  the app's own strings, where iOS looks for the words of an app's intents
+//  (docs/decisions.md, 90; docs/decisions/152.md).
 //
 
 import AppIntents

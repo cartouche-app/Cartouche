@@ -33,6 +33,10 @@ struct CartoucheRootView: View {
                 CartoucheConnectionsExchange.shared.cameForward()
                 // The player's Mac through the cable, once plugged into it.
                 CartoucheCableListener.shared.startWithApp()
+                // The games out of the iPhone's backups, those installed
+                // before Cartouche marked them too.
+                let model = sharedModel
+                Task { await CartoucheGameActions.leaveGamesOutOfBackups(of: model) }
             }
             .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
                 Self.clearBadge()

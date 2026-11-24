@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Download Cartouche</title>
-<meta name="description" content="Download Cartouche: the Cartouche Installer for Mac and Windows, and Cartouche for Mac." data-en="Download Cartouche: the Cartouche Installer for Mac and Windows, and Cartouche for Mac." data-fr="Téléchargez Cartouche : l’Installeur Cartouche pour Mac et Windows, et Cartouche pour Mac.">
+<meta name="description" content="Download Cartouche: the Cartouche Installer for Mac and Windows, and Cartouche for Mac." data-en="Download Cartouche: the Cartouche Installer for Mac and Windows, and Cartouche for Mac." data-fr="Téléchargez Cartouche : l’Installeur Cartouche pour Mac et Windows, et Cartouche pour Mac." data-es="Descarga Cartouche: el Instalador de Cartouche para Mac y Windows, y Cartouche para Mac." data-de="Lade Cartouche: den Cartouche-Installer für Mac und Windows und Cartouche für Mac.">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#090A11">
 <meta name="referrer" content="no-referrer">
@@ -29,9 +29,9 @@
     (function () {
         var lang;
         try { lang = localStorage.getItem("cartouche.site.lang"); } catch (e) {}
-        if (lang !== "fr" && lang !== "en") {
-            var wanted = (navigator.languages && navigator.languages[0]) || navigator.language || "en";
-            lang = wanted.toLowerCase().indexOf("fr") === 0 ? "fr" : "en";
+        if (["fr", "en", "es", "de"].indexOf(lang) < 0) {
+            var wanted = ((navigator.languages && navigator.languages[0]) || navigator.language || "en").toLowerCase().slice(0, 2);
+            lang = ["fr", "es", "de"].indexOf(wanted) >= 0 ? wanted : "en";
         }
         document.documentElement.setAttribute("data-lang", lang);
         document.documentElement.lang = lang;
@@ -74,7 +74,7 @@
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
-    html[data-lang="fr"] [lang="en"], html[data-lang="en"] [lang="fr"] { display: none !important; }
+    html:not([data-lang="fr"]) [lang="fr"], html:not([data-lang="en"]) [lang="en"], html:not([data-lang="es"]) [lang="es"], html:not([data-lang="de"]) [lang="de"] { display: none !important; }
     svg { display: block; max-width: 100%; }
     a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .2em; }
     button { font: inherit; color: inherit; }
@@ -217,64 +217,66 @@
 <header class="top wrap">
     <div class="top__bar">
         <a class="wordmark" href="../" aria-label="Cartouche"><svg aria-hidden="true"><use href="#i-cartridge"/></svg><b>Cartouche</b></a>
-        <div class="lang" role="group" data-label-fr="Langue" data-label-en="Language" aria-label="Language">
+        <div class="lang" role="group" data-label-fr="Langue" data-label-en="Language" data-label-es="Idioma" data-label-de="Sprache" aria-label="Language">
             <button type="button" data-set-lang="fr" aria-pressed="false">FR</button>
             <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
+            <button type="button" data-set-lang="es" aria-pressed="false">ES</button>
+            <button type="button" data-set-lang="de" aria-pressed="false">DE</button>
         </div>
     </div>
 </header>
 
 <main class="wrap">
-    <p class="label"><span lang="fr">Téléchargements</span><span lang="en">Downloads</span></p>
-    <h1><span lang="fr">Téléchargez Cartouche.</span><span lang="en">Download Cartouche.</span></h1>
-    <p class="lede"><span lang="fr">L’Installeur pose Cartouche sur votre iPhone ou votre iPad depuis un Mac ou un PC, puis Cartouche se met à jour tout seul. Cartouche pour Mac construit vos jeux sur votre Mac, et vous les y fait jouer aussi.</span><span lang="en">The Installer puts Cartouche on your iPhone or iPad from a Mac or a PC, then Cartouche updates itself. Cartouche for Mac builds your games on your Mac, and plays them there too.</span></p>
+    <p class="label"><span lang="fr">Téléchargements</span><span lang="en">Downloads</span><span lang="es">Descargas</span><span lang="de">Downloads</span></p>
+    <h1><span lang="fr">Téléchargez Cartouche.</span><span lang="en">Download Cartouche.</span><span lang="es">Descarga Cartouche.</span><span lang="de">Lade Cartouche.</span></h1>
+    <p class="lede"><span lang="fr">L’Installeur pose Cartouche sur votre iPhone ou votre iPad depuis un Mac ou un PC, puis Cartouche se met à jour tout seul. Cartouche pour Mac construit vos jeux sur votre Mac, et vous les y fait jouer aussi.</span><span lang="en">The Installer puts Cartouche on your iPhone or iPad from a Mac or a PC, then Cartouche updates itself. Cartouche for Mac builds your games on your Mac, and plays them there too.</span><span lang="es">El Instalador pone Cartouche en tu iPhone o iPad desde un Mac o un PC, y luego Cartouche se actualiza solo. Cartouche para Mac compila tus juegos en tu Mac, y también los juega allí.</span><span lang="de">Der Installer bringt Cartouche von einem Mac oder PC aus auf dein iPhone oder iPad, danach aktualisiert sich Cartouche selbst. Cartouche für Mac erstellt deine Spiele auf deinem Mac und spielt sie auch dort.</span></p>
 
     <ul class="files">
         <li class="file" id="installer-mac">
-            <p class="file__started" data-started hidden><svg aria-hidden="true"><use href="#i-check"/></svg><span lang="fr">Le téléchargement commence. S’il ne démarre pas, utilisez le bouton.</span><span lang="en">Your download is starting. If it does not, use the button.</span></p>
+            <p class="file__started" data-started hidden><svg aria-hidden="true"><use href="#i-check"/></svg><span lang="fr">Le téléchargement commence. S’il ne démarre pas, utilisez le bouton.</span><span lang="en">Your download is starting. If it does not, use the button.</span><span lang="es">Tu descarga está empezando. Si no empieza, usa el botón.</span><span lang="de">Dein Download beginnt. Falls nicht, verwende die Taste.</span></p>
             <span class="tag-icon"><svg aria-hidden="true"><use href="#i-laptop"/></svg></span>
-            <h2><span lang="fr">L’Installeur Cartouche pour Mac</span><span lang="en">The Cartouche Installer for Mac</span></h2>
-            <p class="file__what"><span lang="fr">Pose Cartouche sur votre iPhone ou votre iPad, une fois, depuis un Mac à puce Apple ou Intel avec macOS 11 ou ultérieur.</span><span lang="en">Puts Cartouche on your iPhone or iPad, once, from a Mac with Apple silicon or Intel and macOS 11 or later.</span></p>
-            <p class="file__first"><span lang="fr">La première fois, macOS ne peut pas le vérifier : Réglages Système › Confidentialité et sécurité › Ouvrir quand même.</span><span lang="en">The first time, macOS cannot check it: System Settings › Privacy &amp; Security › Open Anyway.</span></p>
+            <h2><span lang="fr">L’Installeur Cartouche pour Mac</span><span lang="en">The Cartouche Installer for Mac</span><span lang="es">El Instalador de Cartouche para Mac</span><span lang="de">Der Cartouche-Installer für Mac</span></h2>
+            <p class="file__what"><span lang="fr">Pose Cartouche sur votre iPhone ou votre iPad, une fois, depuis un Mac à puce Apple ou Intel avec macOS 11 ou ultérieur.</span><span lang="en">Puts Cartouche on your iPhone or iPad, once, from a Mac with Apple silicon or Intel and macOS 11 or later.</span><span lang="es">Pone Cartouche en tu iPhone o iPad, una vez, desde un Mac con Apple silicon o Intel y macOS 11 o posterior.</span><span lang="de">Bringt Cartouche einmal auf dein iPhone oder iPad, von einem Mac mit Apple silicon oder Intel und macOS 11 oder neuer.</span></p>
+            <p class="file__first"><span lang="fr">La première fois, macOS ne peut pas le vérifier : Réglages Système › Confidentialité et sécurité › Ouvrir quand même.</span><span lang="en">The first time, macOS cannot check it: System Settings › Privacy &amp; Security › Open Anyway.</span><span lang="es">La primera vez, macOS no puede comprobarlo: Ajustes del Sistema › Privacidad y seguridad › Abrir igualmente.</span><span lang="de">Beim ersten Mal kann macOS es nicht prüfen: Systemeinstellungen › Datenschutz &amp; Sicherheit › Dennoch öffnen.</span></p>
             <div class="file__get">
-                <a class="btn" data-download="installer-mac" data-label-fr="Télécharger l’Installeur Cartouche pour Mac" data-label-en="Download the Cartouche Installer for Mac" aria-label="Download the Cartouche Installer for Mac" href="https://github.com/cartouche-app/Cartouche/releases/download/installer-v0.1.0/Cartouche-Installer-0.1.0-Mac.dmg"><svg aria-hidden="true"><use href="#i-download"/></svg><span lang="fr">Télécharger</span><span lang="en">Download</span></a>
+                <a class="btn" data-download="installer-mac" data-label-fr="Télécharger l’Installeur Cartouche pour Mac" data-label-en="Download the Cartouche Installer for Mac" data-label-es="Descargar el Instalador de Cartouche para Mac" data-label-de="Den Cartouche-Installer für Mac laden" aria-label="Download the Cartouche Installer for Mac" href="https://github.com/cartouche-app/Cartouche/releases/download/installer-v0.1.0/Cartouche-Installer-0.1.0-Mac.dmg"><svg aria-hidden="true"><use href="#i-download"/></svg><span lang="fr">Télécharger</span><span lang="en">Download</span><span lang="es">Descargar</span><span lang="de">Laden</span></a>
             </div>
         </li>
         <li class="file" id="installer-windows">
-            <p class="file__started" data-started hidden><svg aria-hidden="true"><use href="#i-check"/></svg><span lang="fr">Le téléchargement commence. S’il ne démarre pas, utilisez le bouton.</span><span lang="en">Your download is starting. If it does not, use the button.</span></p>
+            <p class="file__started" data-started hidden><svg aria-hidden="true"><use href="#i-check"/></svg><span lang="fr">Le téléchargement commence. S’il ne démarre pas, utilisez le bouton.</span><span lang="en">Your download is starting. If it does not, use the button.</span><span lang="es">Tu descarga está empezando. Si no empieza, usa el botón.</span><span lang="de">Dein Download beginnt. Falls nicht, verwende die Taste.</span></p>
             <span class="tag-icon"><svg aria-hidden="true"><use href="#i-desktop"/></svg></span>
-            <h2><span lang="fr">L’Installeur Cartouche pour Windows</span><span lang="en">The Cartouche Installer for Windows</span></h2>
-            <p class="file__what"><span lang="fr">Pose Cartouche sur votre iPhone ou votre iPad, une fois, depuis un PC sous Windows 10 ou 11 avec Appareils Apple du Microsoft Store, ou iTunes.</span><span lang="en">Puts Cartouche on your iPhone or iPad, once, from a PC with Windows 10 or 11 and Apple Devices from the Microsoft Store, or iTunes.</span></p>
-            <p class="file__first"><span lang="fr">Si SmartScreen arrête l’installation, qui n’est pas signée : Informations complémentaires › Exécuter quand même.</span><span lang="en">If SmartScreen stops the setup, which is not signed: More info › Run anyway.</span></p>
+            <h2><span lang="fr">L’Installeur Cartouche pour Windows</span><span lang="en">The Cartouche Installer for Windows</span><span lang="es">El Instalador de Cartouche para Windows</span><span lang="de">Der Cartouche-Installer für Windows</span></h2>
+            <p class="file__what"><span lang="fr">Pose Cartouche sur votre iPhone ou votre iPad, une fois, depuis un PC sous Windows 10 ou 11 avec Appareils Apple du Microsoft Store, ou iTunes.</span><span lang="en">Puts Cartouche on your iPhone or iPad, once, from a PC with Windows 10 or 11 and Apple Devices from the Microsoft Store, or iTunes.</span><span lang="es">Pone Cartouche en tu iPhone o iPad, una vez, desde un PC con Windows 10 u 11 y Dispositivos Apple de Microsoft Store, o iTunes.</span><span lang="de">Bringt Cartouche einmal auf dein iPhone oder iPad, von einem PC mit Windows 10 oder 11 und Apple-Geräte aus dem Microsoft Store oder iTunes.</span></p>
+            <p class="file__first"><span lang="fr">Si SmartScreen arrête l’installation, qui n’est pas signée : Informations complémentaires › Exécuter quand même.</span><span lang="en">If SmartScreen stops the setup, which is not signed: More info › Run anyway.</span><span lang="es">Si SmartScreen detiene el instalador, que no está firmado: Más información › Ejecutar de todas formas.</span><span lang="de">Wenn SmartScreen das Setup stoppt, das nicht signiert ist: Weitere Informationen › Trotzdem ausführen.</span></p>
             <div class="file__get">
-                <a class="btn" data-download="installer-windows" data-label-fr="Télécharger l’Installeur Cartouche pour Windows" data-label-en="Download the Cartouche Installer for Windows" aria-label="Download the Cartouche Installer for Windows" href="https://github.com/cartouche-app/Cartouche/releases/download/installer-v0.1.0/Cartouche-Installer-0.1.0-Windows.exe"><svg aria-hidden="true"><use href="#i-download"/></svg><span lang="fr">Télécharger</span><span lang="en">Download</span></a>
+                <a class="btn" data-download="installer-windows" data-label-fr="Télécharger l’Installeur Cartouche pour Windows" data-label-en="Download the Cartouche Installer for Windows" data-label-es="Descargar el Instalador de Cartouche para Windows" data-label-de="Den Cartouche-Installer für Windows laden" aria-label="Download the Cartouche Installer for Windows" href="https://github.com/cartouche-app/Cartouche/releases/download/installer-v0.1.0/Cartouche-Installer-0.1.0-Windows.exe"><svg aria-hidden="true"><use href="#i-download"/></svg><span lang="fr">Télécharger</span><span lang="en">Download</span><span lang="es">Descargar</span><span lang="de">Laden</span></a>
             </div>
         </li>
         <li class="file" id="builder">
-            <p class="file__started" data-started hidden><svg aria-hidden="true"><use href="#i-check"/></svg><span lang="fr">Le téléchargement commence. S’il ne démarre pas, utilisez le bouton.</span><span lang="en">Your download is starting. If it does not, use the button.</span></p>
+            <p class="file__started" data-started hidden><svg aria-hidden="true"><use href="#i-check"/></svg><span lang="fr">Le téléchargement commence. S’il ne démarre pas, utilisez le bouton.</span><span lang="en">Your download is starting. If it does not, use the button.</span><span lang="es">Tu descarga está empezando. Si no empieza, usa el botón.</span><span lang="de">Dein Download beginnt. Falls nicht, verwende die Taste.</span></p>
             <span class="tag-icon"><svg aria-hidden="true"><use href="#i-hammer"/></svg></span>
-            <h2><span lang="fr">Cartouche pour Mac</span><span lang="en">Cartouche for Mac</span></h2>
-            <p class="file__what"><span lang="fr">Construit vos jeux à partir de vos propres copies, pour l’iPhone et l’iPad comme pour le Mac, où il les lance aussi, et les refait quand nxnative les améliore. Sur un Mac à puce Apple avec macOS 26.6 ou ultérieur : glissez-le dans Applications.</span><span lang="en">Builds your games from your own copies, for the iPhone and iPad and for the Mac, where it plays them too, and builds them again when nxnative improves them. On a Mac with Apple silicon and macOS 26.6 or later: drag it onto Applications.</span></p>
-            <p class="file__first"><span lang="fr">La première fois, macOS ne peut pas le vérifier : Réglages Système › Confidentialité et sécurité › Ouvrir quand même. Ensuite, il se met à jour tout seul.</span><span lang="en">The first time, macOS cannot check it: System Settings › Privacy &amp; Security › Open Anyway. Then it updates itself.</span></p>
+            <h2><span lang="fr">Cartouche pour Mac</span><span lang="en">Cartouche for Mac</span><span lang="es">Cartouche para Mac</span><span lang="de">Cartouche für Mac</span></h2>
+            <p class="file__what"><span lang="fr">Construit vos jeux à partir de vos propres copies, pour l’iPhone et l’iPad comme pour le Mac, où il les lance aussi, et les refait quand nxnative les améliore. Sur un Mac à puce Apple avec macOS 26.6 ou ultérieur : glissez-le dans Applications.</span><span lang="en">Builds your games from your own copies, for the iPhone and iPad and for the Mac, where it plays them too, and builds them again when nxnative improves them. On a Mac with Apple silicon and macOS 26.6 or later: drag it onto Applications.</span><span lang="es">Compila tus juegos a partir de tus propias copias, para el iPhone y el iPad y para el Mac, donde también los juega, y los vuelve a compilar cuando nxnative los mejora. En un Mac con Apple silicon y macOS 26.6 o posterior: arrástralo a Aplicaciones.</span><span lang="de">Erstellt deine Spiele aus deinen eigenen Kopien, für iPhone und iPad und für den Mac, wo es sie auch spielt, und erstellt sie neu, wenn nxnative sie verbessert. Auf einem Mac mit Apple silicon und macOS 26.6 oder neuer: Zieh es in „Programme“.</span></p>
+            <p class="file__first"><span lang="fr">La première fois, macOS ne peut pas le vérifier : Réglages Système › Confidentialité et sécurité › Ouvrir quand même. Ensuite, il se met à jour tout seul.</span><span lang="en">The first time, macOS cannot check it: System Settings › Privacy &amp; Security › Open Anyway. Then it updates itself.</span><span lang="es">La primera vez, macOS no puede comprobarlo: Ajustes del Sistema › Privacidad y seguridad › Abrir igualmente. Luego se actualiza solo.</span><span lang="de">Beim ersten Mal kann macOS es nicht prüfen: Systemeinstellungen › Datenschutz &amp; Sicherheit › Dennoch öffnen. Danach aktualisiert es sich selbst.</span></p>
             <div class="file__get">
-                <a class="btn" data-download="builder" data-label-fr="Télécharger Cartouche pour Mac" data-label-en="Download Cartouche for Mac" aria-label="Download Cartouche for Mac" href="https://github.com/cartouche-app/Cartouche/releases/download/builder-v0.2.0/Cartouche-Builder-0.2.0.dmg"><svg aria-hidden="true"><use href="#i-download"/></svg><span lang="fr">Télécharger</span><span lang="en">Download</span></a>
+                <a class="btn" data-download="builder" data-label-fr="Télécharger Cartouche pour Mac" data-label-en="Download Cartouche for Mac" data-label-es="Descargar Cartouche para Mac" data-label-de="Cartouche für Mac laden" aria-label="Download Cartouche for Mac" href="https://github.com/cartouche-app/Cartouche/releases/download/builder-v0.2.0/Cartouche-Builder-0.2.0.dmg"><svg aria-hidden="true"><use href="#i-download"/></svg><span lang="fr">Télécharger</span><span lang="en">Download</span><span lang="es">Descargar</span><span lang="de">Laden</span></a>
             </div>
         </li>
     </ul>
 
-    <p class="after"><span lang="fr">De rien à votre premier jeu : <a href="https://github.com/cartouche-app/Cartouche/blob/main/docs/getting-started.fr.md">le guide Premiers pas</a>. Cartouche ne contient et ne télécharge aucun jeu, aucune clé ni aucun firmware : vous construisez vos jeux à partir de vos propres copies.</span><span lang="en">From nothing to your first game: <a href="https://github.com/cartouche-app/Cartouche/blob/main/docs/getting-started.md">the Getting started guide</a>. Cartouche contains and downloads no games, no keys and no firmware: you build your games from your own copies.</span></p>
+    <p class="after"><span lang="fr">De rien à votre premier jeu : <a href="https://github.com/cartouche-app/Cartouche/blob/main/docs/getting-started.fr.md">le guide Premiers pas</a>. Cartouche ne contient et ne télécharge aucun jeu, aucune clé ni aucun firmware : vous construisez vos jeux à partir de vos propres copies.</span><span lang="en">From nothing to your first game: <a href="https://github.com/cartouche-app/Cartouche/blob/main/docs/getting-started.md">the Getting started guide</a>. Cartouche contains and downloads no games, no keys and no firmware: you build your games from your own copies.</span><span lang="es">De cero a tu primer juego: <a href="https://github.com/cartouche-app/Cartouche/blob/main/docs/getting-started.md">la guía de inicio</a> (en inglés). Cartouche no contiene ni descarga juegos, claves ni firmware: compilas tus juegos a partir de tus propias copias.</span><span lang="de">Vom Nichts bis zu deinem ersten Spiel: <a href="https://github.com/cartouche-app/Cartouche/blob/main/docs/getting-started.md">die Anleitung für den Einstieg</a> (auf Englisch). Cartouche enthält und lädt keine Spiele, keine Schlüssel und keine Firmware: Du erstellst deine Spiele aus deinen eigenen Kopien.</span></p>
 </main>
 
 <footer class="foot">
     <div class="wrap">
-        <nav data-label-fr="Liens" data-label-en="Links" aria-label="Links">
-            <a href="../"><span lang="fr">Le site de Cartouche</span><span lang="en">Cartouche’s site</span></a>
+        <nav data-label-fr="Liens" data-label-en="Links" data-label-es="Enlaces" data-label-de="Links" aria-label="Links">
+            <a href="../"><span lang="fr">Le site de Cartouche</span><span lang="en">Cartouche’s site</span><span lang="es">El sitio de Cartouche</span><span lang="de">Die Website von Cartouche</span></a>
             <a href="https://github.com/cartouche-app/Cartouche">GitHub</a>
             <a href="https://discord.gg/wG3DZjdAeF">Discord</a>
-            <a href="https://github.com/cartouche-app/Cartouche/blob/main/LEGAL.md"><span lang="fr">Mentions légales</span><span lang="en">Legal</span></a>
-            <a href="https://github.com/cartouche-app/Cartouche/blob/main/docs/privacy.md"><span lang="fr">Confidentialité</span><span lang="en">Privacy</span></a>
+            <a href="https://github.com/cartouche-app/Cartouche/blob/main/LEGAL.md"><span lang="fr">Mentions légales</span><span lang="en">Legal</span><span lang="es">Aviso legal</span><span lang="de">Rechtliches</span></a>
+            <a href="https://github.com/cartouche-app/Cartouche/blob/main/docs/privacy.md"><span lang="fr">Confidentialité</span><span lang="en">Privacy</span><span lang="es">Privacidad</span><span lang="de">Datenschutz</span></a>
         </nav>
-        <p><span lang="fr">Cartouche est un logiciel libre sous licence AGPL-3.0. Il n’est affilié ni à Nintendo, ni à Apple, ni au projet nxnative.</span><span lang="en">Cartouche is free software under the AGPL-3.0. It is affiliated with neither Nintendo, nor Apple, nor the nxnative project.</span></p>
+        <p><span lang="fr">Cartouche est un logiciel libre sous licence AGPL-3.0. Il n’est affilié ni à Nintendo, ni à Apple, ni au projet nxnative.</span><span lang="en">Cartouche is free software under the AGPL-3.0. It is affiliated with neither Nintendo, nor Apple, nor the nxnative project.</span><span lang="es">Cartouche es software libre bajo la AGPL-3.0. No está afiliado ni a Nintendo, ni a Apple, ni al proyecto nxnative.</span><span lang="de">Cartouche ist freie Software unter der AGPL-3.0. Es ist weder mit Nintendo noch mit Apple noch mit dem Projekt nxnative verbunden.</span></p>
     </div>
 </footer>
 
@@ -284,7 +286,7 @@
     var root = document.documentElement;
 
     // ---------- Language, as on the site ----------
-    var TITLES = { fr: "Télécharger Cartouche", en: "Download Cartouche" };
+    var TITLES = { fr: "Télécharger Cartouche", en: "Download Cartouche", es: "Descargar Cartouche", de: "Cartouche laden" };
     function applyLang(lang) {
         root.setAttribute("data-lang", lang);
         root.lang = lang;
@@ -301,7 +303,7 @@
             applyLang(lang);
         });
     });
-    applyLang(root.getAttribute("data-lang") === "fr" ? "fr" : "en");
+    applyLang(["fr", "es", "de"].indexOf(root.getAttribute("data-lang")) >= 0 ? root.getAttribute("data-lang") : "en");
 
     // ---------- The file a link names ----------
     // download/#builder, #installer-mac or #installer-windows: its download

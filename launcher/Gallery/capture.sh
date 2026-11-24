@@ -170,7 +170,8 @@ def arguments(scenario):
     """The gallery's launch arguments (Sources/GalleryApp.swift)."""
     # A scenario with a language of its own is shown in it, the gallery's otherwise.
     language = scenario.get("language", document["language"])
-    args = ["-AppleLanguages", f"({language})", "-AppleLocale", "fr_FR" if language == "fr" else "en_US",
+    locale = {"fr": "fr_FR", "es": "es_ES", "de": "de_DE"}.get(language, "en_US")
+    args = ["-AppleLanguages", f"({language})", "-AppleLocale", locale,
             "-GalleryScreen", scenario["screen"],
             "-GallerySetup", "1" if scenario["setup"] else "0",
             "-GalleryController", "1" if scenario["controller"] else "0",

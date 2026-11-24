@@ -7,12 +7,13 @@ docs/decisions.md, 90):
   writes into LiveContainerSwiftUI.framework, into the app's own
   Metadata.appintents, beside the built-in SideStore's: the launcher's App
   Shortcuts first and its provider, SideStore's intents kept, no flexible
-  matching assets trained on SideStore's name, and the French of every
-  title and phrase beside LiveContainer's strings; it stops the build when
-  the launcher's intents are missing, clash with SideStore's or lack their
-  French;
-- launcher/AppIntents/fr.json translates every title and phrase the Swift
-  file declares, each phrase with Cartouche's name and its game;
+  matching assets trained on SideStore's name, and the French, Spanish and
+  German of every title and phrase beside LiveContainer's strings; it stops
+  the build when the launcher's intents are missing, clash with SideStore's
+  or lack their words in one of these languages;
+- launcher/AppIntents/fr.json, es.json and de.json translate every title
+  and phrase the Swift file declares, each phrase with Cartouche's name and
+  its game;
 - package.sh runs the merge once SideStore's intents are in place, then
   checks the app as it will ship: SideStore's intents as package.sh put
   them, under the same identifiers and types, Refresh All Apps among them,
@@ -38,7 +39,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "app" / "scripts" / "app_intents.py"
 PACKAGE = ROOT / "app" / "scripts" / "package.sh"
-FRENCH = ROOT / "launcher" / "AppIntents" / "fr.json"
+TRANSLATIONS = ROOT / "launcher" / "AppIntents"
+FRENCH = TRANSLATIONS / "fr.json"
+LANGUAGES = ["de", "es", "fr"]
 SWIFT = ROOT / "launcher" / "Sources" / "CartoucheShortcuts.swift"
 
 spec = importlib.util.spec_from_file_location("app_intents", SCRIPT)
@@ -195,8 +198,14 @@ class MergeTest(unittest.TestCase):
             plistlib.dumps({"lc.common.ok": "OK", "lc.common.cancel": "Annuler"}, fmt=plistlib.FMT_BINARY))
         (self.app / "fr_CA.lproj").mkdir()
         (self.app / "fr_CA.lproj" / "InfoPlist.strings").write_bytes(plistlib.dumps({"CFBundleDisplayName": "Cartouche"}))
+        (self.app / "de.lproj").mkdir()
+        (self.app / "de.lproj" / "Localizable.strings").write_bytes(
+            plistlib.dumps({"lc.common.ok": "OK", "lc.common.cancel": "Abbrechen"}, fmt=plistlib.FMT_BINARY))
+        (self.app / "es_419.lproj").mkdir()
+        (self.app / "es_419.lproj" / "InfoPlist.strings").write_bytes(plistlib.dumps({"CFBundleDisplayName": "Cartouche"}))
         (self.app / "en.lproj").mkdir()
-        self.french = json.loads(FRENCH.read_text(encoding="utf-8"))
+        self.translations = app_intents.load_translations(TRANSLATIONS)
+        self.french = self.translations["fr"]
 
     @staticmethod
     def write_metadata(folder: Path, metadata: dict):
@@ -212,7 +221,7 @@ class MergeTest(unittest.TestCase):
 
     def merge(self):
         with redirect_stdout(StringIO()):
-            return app_intents.merge(self.app, FRENCH)
+            return app_intents.merge(self.app, self.translations)
 
     def merge_fails(self, *words):
         with self.assertRaises(app_intents.MergeError) as failure:
@@ -259,6 +268,26 @@ class MergeTest(unittest.TestCase):
         self.assertEqual(sorted(path.name for path in (self.app / "en.lproj").iterdir()), [],
                          "English is the intents' own")
 
+    def test_spanish_and_german_go_beside_them_too(self):
+        self.merge()
+        german = plistlib.loads((self.app / "de.lproj" / "Localizable.strings").read_bytes())
+        self.assertEqual(german["lc.common.cancel"], "Abbrechen", "LiveContainer's strings stay")
+        self.assertEqual(german["Play a Game"], "Spiel starten")
+        phrases = plistlib.loads((self.app / "de.lproj" / "AppShortcuts.strings").read_bytes())
+        self.assertEqual(phrases["Play ${game} in ${applicationName}"], "Spiele ${game} in ${applicationName}")
+        # Spanish, which the app had no folder of, gets one; Latin American
+        # Spanish, Siri's phrases only.
+        spanish = plistlib.loads((self.app / "es.lproj" / "Localizable.strings").read_bytes())
+        self.assertEqual(spanish["Which game?"], "¿Qué juego?")
+        self.assertTrue((self.app / "es_419.lproj" / "AppShortcuts.strings").exists())
+        self.assertFalse((self.app / "es_419.lproj" / "Localizable.strings").exists())
+
+    def test_a_language_is_the_lproj_of_its_code_not_of_another_one_that_starts_alike(self):
+        for name in ("de_CH.lproj", "de-AT.lproj", "dev.lproj"):
+            (self.app / name).mkdir()
+        self.assertEqual([path.name for path in app_intents.localizations(self.app, "de")],
+                         ["de-AT.lproj", "de.lproj", "de_CH.lproj"])
+
     def test_it_stops_without_the_launchers_intents(self):
         shutil.rmtree(self.app / "Frameworks" / "LiveContainerSwiftUI.framework" / "Metadata.appintents")
         self.merge_fails("Xcode wrote no intents")
@@ -298,13 +327,23 @@ class MergeTest(unittest.TestCase):
     def test_it_stops_on_a_phrase_without_cartouches_name_or_its_game(self):
         self.french["phrases"]["Play ${game} in ${applicationName}"] = "Lance ${game}"
         with self.assertRaises(app_intents.MergeError) as failure:
-            app_intents.check_french(launcher_metadata(), self.french)
+            app_intents.check_translation(launcher_metadata(), self.french, "fr")
         self.assertIn("${applicationName}", str(failure.exception))
         self.french = json.loads(FRENCH.read_text(encoding="utf-8"))
         self.french["phrases"]["Play ${game} in ${applicationName}"] = "Lance un jeu dans ${applicationName}"
         with self.assertRaises(app_intents.MergeError) as failure:
-            app_intents.check_french(launcher_metadata(), self.french)
+            app_intents.check_translation(launcher_metadata(), self.french, "fr")
         self.assertIn("other parameters", str(failure.exception))
+
+    def test_it_stops_on_a_language_without_a_phrase_or_with_two_alike(self):
+        german = self.translations["de"]
+        german["phrases"]["Launch ${game} in ${applicationName}"] = german["phrases"]["Start ${game} in ${applicationName}"]
+        with self.assertRaises(app_intents.MergeError) as failure:
+            app_intents.check_translation(launcher_metadata(), german, "de")
+        self.assertIn("German", str(failure.exception))
+        self.translations = app_intents.load_translations(TRANSLATIONS)
+        del self.translations["es"]["phrases"]["Play a game in ${applicationName}"]
+        self.merge_fails("no Spanish in launcher/AppIntents/es.json", "'Play a game in ${applicationName}'")
 
     def test_it_never_changes_a_string_of_livecontainers(self):
         (self.app / "fr.lproj" / "Localizable.strings").write_bytes(
@@ -324,7 +363,7 @@ class MergeTest(unittest.TestCase):
 
     def check(self):
         with redirect_stdout(StringIO()):
-            return app_intents.check_package(self.app, FRENCH)
+            return app_intents.check_package(self.app, self.translations)
 
     def check_fails(self, *words):
         with self.assertRaises(app_intents.MergeError) as failure:
@@ -340,7 +379,10 @@ class MergeTest(unittest.TestCase):
         self.assertEqual(checked["sidestoreShortcuts"], 1)
         # The action the nightly renewal's automation runs.
         self.assertEqual(checked["refreshAllApps"], ["RefreshAllIntent"])
-        self.assertEqual(checked["strings"], ["fr.lproj/Localizable.strings", "fr.lproj/AppShortcuts.strings",
+        self.assertEqual(checked["strings"], ["de.lproj/Localizable.strings", "de.lproj/AppShortcuts.strings",
+                                              "es.lproj/Localizable.strings", "es.lproj/AppShortcuts.strings",
+                                              "es_419.lproj/AppShortcuts.strings",
+                                              "fr.lproj/Localizable.strings", "fr.lproj/AppShortcuts.strings",
                                               "fr_CA.lproj/AppShortcuts.strings"])
 
     def test_the_check_fails_without_refresh_all_apps(self):
@@ -376,22 +418,27 @@ class MergeTest(unittest.TestCase):
             plistlib.dumps({"lc.common.ok": "OK"}, fmt=plistlib.FMT_BINARY))
         self.check_fails("lacks the French", "'Play a Game'")
 
+    def test_the_check_fails_on_phrases_without_the_spanish(self):
+        self.merge()
+        (self.app / "es.lproj" / "AppShortcuts.strings").write_bytes(plistlib.dumps({}, fmt=plistlib.FMT_BINARY))
+        self.check_fails("lacks the Spanish", "'Play ${game} in ${applicationName}'")
+
     def test_the_command_checks_the_app(self):
         self.merge()
         with redirect_stdout(StringIO()) as said:
-            self.assertEqual(app_intents.main([str(self.app), "--french", str(FRENCH), "--check"]), 0)
+            self.assertEqual(app_intents.main([str(self.app), "--translations", str(TRANSLATIONS), "--check"]), 0)
         self.assertIn("Refresh All Apps, which the nightly renewal runs: RefreshAllIntent", said.getvalue())
         self.change_merged(lambda merged: merged["actions"].pop("InstallIPAIntent"))
         error = StringIO()
         with redirect_stderr(error):
-            self.assertEqual(app_intents.main([str(self.app), "--french", str(FRENCH), "--check"]), 1)
+            self.assertEqual(app_intents.main([str(self.app), "--translations", str(TRANSLATIONS), "--check"]), 1)
         self.assertIn("InstallIPAIntent", error.getvalue())
 
     def test_the_command_says_why_it_stopped(self):
         shutil.rmtree(self.app / "Metadata.appintents")
         error = StringIO()
         with redirect_stderr(error):
-            code = app_intents.main([str(self.app), "--french", str(FRENCH)])
+            code = app_intents.main([str(self.app), "--translations", str(TRANSLATIONS)])
         self.assertEqual(code, 1)
         self.assertIn("SideStore's intents", error.getvalue())
 
@@ -404,12 +451,16 @@ def swift_template(literal: str) -> str:
 
 
 class SourcesTest(unittest.TestCase):
-    """The Swift file, its French, and the build."""
+    """The Swift file, its French, Spanish and German, and the build."""
 
     @classmethod
     def setUpClass(cls):
         cls.swift = SWIFT.read_text(encoding="utf-8")
-        cls.french = json.loads(FRENCH.read_text(encoding="utf-8"))
+        cls.translations = app_intents.load_translations(TRANSLATIONS)
+        cls.french = cls.translations["fr"]
+
+    def test_the_languages_are_french_spanish_and_german(self):
+        self.assertEqual(sorted(self.translations), LANGUAGES)
 
     def declared_phrases(self):
         block = re.search(r"phrases: \[(.*?)\]", self.swift, re.DOTALL)
@@ -433,23 +484,27 @@ class SourcesTest(unittest.TestCase):
             words += [swift_template(word) for word in found]
         return words
 
-    def test_every_phrase_has_cartouches_name_and_its_french(self):
+    def test_every_phrase_has_cartouches_name_and_its_translations(self):
         phrases = self.declared_phrases()
         self.assertGreaterEqual(len(phrases), 2)
-        for phrase in phrases:
-            with self.subTest(phrase=phrase):
-                self.assertIn("${applicationName}", phrase, "Siri takes no phrase without the app's name")
-                self.assertIn(phrase, self.french["phrases"])
-        self.assertEqual(sorted(self.french["phrases"]), sorted(phrases), "French of phrases the file no longer has")
+        for language, words in self.translations.items():
+            for phrase in phrases:
+                with self.subTest(language=language, phrase=phrase):
+                    self.assertIn("${applicationName}", phrase, "Siri takes no phrase without the app's name")
+                    self.assertIn(phrase, words["phrases"])
+            self.assertEqual(sorted(words["phrases"]), sorted(phrases), f"{language} of phrases the file no longer has")
+            self.assertEqual(len(set(words["phrases"].values())), len(phrases), f"two {language} phrases alike")
         # Siri can ask which game, from a phrase without one.
         self.assertTrue(any("${game}" not in phrase for phrase in phrases))
 
-    def test_every_title_has_its_french(self):
+    def test_every_title_has_its_translations(self):
         words = self.declared_words()
-        for word in words:
-            with self.subTest(word=word):
-                self.assertIn(word, self.french["strings"])
-        self.assertEqual(sorted(self.french["strings"]), sorted(set(words)), "French of words the file no longer has")
+        for language, translation in self.translations.items():
+            for word in words:
+                with self.subTest(language=language, word=word):
+                    self.assertIn(word, translation["strings"])
+                    self.assertTrue(translation["strings"][word].strip())
+            self.assertEqual(sorted(translation["strings"]), sorted(set(words)), f"{language} of words the file no longer has")
 
     def test_french_typography(self):
         for english, french in list(self.french["strings"].items()) + list(self.french["phrases"].items()):
@@ -458,10 +513,11 @@ class SourcesTest(unittest.TestCase):
                 # A no-break space before the French ? ! : ;
                 self.assertIsNone(re.search(r"[^  ][?!:;](?:\s|$)", french), french)
 
-    def test_the_merge_of_the_real_french_passes(self):
+    def test_the_merge_of_the_real_translations_passes(self):
         said = StringIO()
         with redirect_stdout(said):
-            app_intents.check_french(launcher_metadata(), self.french)
+            for language, words in self.translations.items():
+                app_intents.check_translation(launcher_metadata(), words, language)
         # The question Siri asks without a game, which the intent asks as
         # it runs.
         self.assertIn("'Which game?'", said.getvalue())
@@ -469,8 +525,8 @@ class SourcesTest(unittest.TestCase):
     def test_package_merges_them_once_sidestores_are_in_place_then_checks_the_app(self):
         package = PACKAGE.read_text(encoding="utf-8")
         copy = package.index('cp -R "$SS/Metadata.appintents" "$APP/Metadata.appintents"')
-        merge = package.index('python3 "$HERE/app_intents.py" "$APP" --french "$HERE/../../launcher/AppIntents/fr.json"\n')
-        check = package.index('python3 "$HERE/app_intents.py" "$APP" --french "$HERE/../../launcher/AppIntents/fr.json" --check\n')
+        merge = package.index('python3 "$HERE/app_intents.py" "$APP" --translations "$HERE/../../launcher/AppIntents"\n')
+        check = package.index('python3 "$HERE/app_intents.py" "$APP" --translations "$HERE/../../launcher/AppIntents" --check\n')
         archive = package.index('zip -qr "$OUT_IPA" Payload')
         self.assertLess(copy, merge)
         self.assertLess(merge, check)

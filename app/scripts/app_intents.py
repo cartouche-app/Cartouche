@@ -19,14 +19,16 @@ the launcher's into it:
   name, bundle identifier and phrases, and none on the launcher's, so Siri
   takes each phrase as it is written, as an app built with
   APP_SHORTCUTS_ENABLE_FLEXIBLE_MATCHING = NO;
-- the French of every title and phrase (launcher/AppIntents/fr.json): the
-  titles in each French localization's Localizable.strings, beside
+- the words of every title and phrase in each language of
+  launcher/AppIntents (fr.json, es.json, de.json): the titles in each of
+  that language's localizations' Localizable.strings, beside
   LiveContainer's own, where iOS looks for the words of an app's intents,
   and Siri's phrases in its AppShortcuts.strings.
 
 It stops the build when the framework holds no intents of the launcher's,
 when one of its names is already SideStore's, when the metadata holds what
-this merge does not know, or when a title or a phrase has no French.
+this merge does not know, or when a title or a phrase has no words in one
+of these languages.
 
 With --check, run by package.sh once the merge is done, it checks the app as
 it will ship, and stops the build unless the built-in SideStore's intents
@@ -35,9 +37,9 @@ queries and App Shortcuts under the same identifier and the same types,
 SideStoreSupport's as package.sh renames them, Refresh All Apps among them,
 which the nightly renewal of Cartouche runs from the Shortcuts app; and
 unless the strings the merge wrote pass plutil -lint, where there is one,
-and hold the French of every title and phrase.
+and hold the words of every title and phrase in each language.
 
-usage: app_intents.py APP.app --french launcher/AppIntents/fr.json [--check]
+usage: app_intents.py APP.app --translations launcher/AppIntents [--check]
 """
 
 import argparse
@@ -84,8 +86,10 @@ RENAMES = (
 )
 # Refresh All Apps, which the nightly renewal's automation runs.
 REFRESH_ALL_APPS = "16SideStoreSupport20RefreshAllAppsIntentV"
-# The strings the merge writes in each French localization.
+# The strings the merge writes in each localization of a language.
 STRINGS = ("Localizable.strings", "AppShortcuts.strings")
+# The languages' names, in the build's messages.
+NAMES = {"fr": "French", "es": "Spanish", "de": "German"}
 
 
 class MergeError(Exception):
@@ -159,24 +163,49 @@ def merge_metadata(app_metadata: dict, launcher: dict) -> dict:
     return merged
 
 
-def check_french(launcher: dict, french: dict) -> None:
-    """Fails unless FRENCH translates every title and phrase of LAUNCHER's
-    intents, each phrase with Cartouche's name and the same parameters."""
+def language_name(language: str) -> str:
+    """LANGUAGE, such as "fr", by its name in English."""
+    return NAMES.get(language, language)
+
+
+def load_translations(folder: Path) -> dict:
+    """The words of the intents in each language of FOLDER, by language:
+    fr.json as "fr"."""
+    translations = {path.stem: json.loads(path.read_text(encoding="utf-8")) for path in sorted(folder.glob("*.json"))}
+    if not translations:
+        raise MergeError(f"{folder} holds no language's words of the intents")
+    return translations
+
+
+def check_translation(launcher: dict, words: dict, language: str) -> None:
+    """Fails unless WORDS, in LANGUAGE, translate every title and phrase of
+    LAUNCHER's intents, each phrase with Cartouche's name and the same
+    parameters."""
     phrases = phrase_keys(launcher.get("autoShortcuts", []))
-    words = localizable_keys({part: launcher.get(part) for part in BY_NAME + ("autoShortcuts",)}) - phrases
-    missing = sorted(words - set(french["strings"])) + sorted(phrases - set(french["phrases"]))
+    titles = localizable_keys({part: launcher.get(part) for part in BY_NAME + ("autoShortcuts",)}) - phrases
+    missing = sorted(titles - set(words["strings"])) + sorted(phrases - set(words["phrases"]))
     if missing:
-        raise MergeError("no French in launcher/AppIntents/fr.json for: " + "; ".join(repr(key) for key in missing))
-    for english, translated in french["phrases"].items():
+        raise MergeError(f"no {language_name(language)} in launcher/AppIntents/{language}.json for: "
+                         + "; ".join(repr(key) for key in missing))
+    for english, translated in words["phrases"].items():
         if APPLICATION_NAME not in english or APPLICATION_NAME not in translated:
             raise MergeError(f"a phrase without {APPLICATION_NAME}, which Siri needs: {english!r} = {translated!r}")
         if sorted(PLACEHOLDER.findall(english)) != sorted(PLACEHOLDER.findall(translated)):
-            raise MergeError(f"the French of {english!r} has other parameters: {translated!r}")
-    unused = sorted(set(french["strings"]) - words) + sorted(set(french["phrases"]) - phrases)
+            raise MergeError(f"the {language_name(language)} of {english!r} has other parameters: {translated!r}")
+    if len(set(words["phrases"].values())) != len(words["phrases"]):
+        raise MergeError(f"two phrases have the same {language_name(language)}, which Siri cannot tell apart")
+    unused = sorted(set(words["strings"]) - titles) + sorted(set(words["phrases"]) - phrases)
     if unused:
         # Words the intents give only as they run, such as a dialog, are
         # not in the metadata.
-        print("app_intents: French for words the metadata does not hold: " + "; ".join(repr(key) for key in unused))
+        print(f"app_intents: {language_name(language)} for words the metadata does not hold: "
+              + "; ".join(repr(key) for key in unused))
+
+
+def localizations(app: Path, language: str) -> list:
+    """APP's localizations of LANGUAGE: fr.lproj, fr_CA.lproj, fr-CA.lproj."""
+    return sorted(path for path in app.glob("*.lproj") if path.is_dir()
+                  and (path.stem == language or path.stem.startswith((language + "_", language + "-"))))
 
 
 def read_strings(path: Path):
@@ -191,34 +220,35 @@ def read_strings(path: Path):
     return strings, plistlib.FMT_BINARY if data.startswith(b"bplist") else plistlib.FMT_XML
 
 
-def write_french(app: Path, french: dict) -> list:
-    """The French of the intents in each French localization of APP: their
-    titles beside LiveContainer's in Localizable.strings, without changing
-    any of LiveContainer's, and Siri's phrases in AppShortcuts.strings.
-    The localizations written."""
-    folders = sorted(path for path in app.glob("fr*.lproj") if path.is_dir())
-    if not any(folder.name == "fr.lproj" for folder in folders):
-        folder = app / "fr.lproj"
+def write_translation(app: Path, language: str, words: dict) -> list:
+    """WORDS, the intents' in LANGUAGE, in each of its localizations of APP:
+    their titles beside LiveContainer's in Localizable.strings, without
+    changing any of LiveContainer's, and Siri's phrases in
+    AppShortcuts.strings. The localizations written."""
+    main = f"{language}.lproj"
+    folders = localizations(app, language)
+    if not any(folder.name == main for folder in folders):
+        folder = app / main
         folder.mkdir()
         folders.insert(0, folder)
     for folder in folders:
         localizable = folder / "Localizable.strings"
         # A regional localization without strings of its own falls back on
-        # French's: a table of the intents' alone would hide them.
-        if localizable.exists() or folder.name == "fr.lproj":
+        # its language's: a table of the intents' alone would hide them.
+        if localizable.exists() or folder.name == main:
             strings, form = read_strings(localizable) if localizable.exists() else ({}, plistlib.FMT_BINARY)
-            for key, value in french["strings"].items():
+            for key, value in words["strings"].items():
                 if key in strings and strings[key] != value:
                     raise MergeError(f"{localizable} has {key!r} as {strings[key]!r} already")
                 strings[key] = value
             localizable.write_bytes(plistlib.dumps(strings, fmt=form, sort_keys=True))
-        (folder / "AppShortcuts.strings").write_bytes(plistlib.dumps(french["phrases"], fmt=plistlib.FMT_BINARY, sort_keys=True))
+        (folder / "AppShortcuts.strings").write_bytes(plistlib.dumps(words["phrases"], fmt=plistlib.FMT_BINARY, sort_keys=True))
     return [folder.name for folder in folders]
 
 
-def merge(app: Path, french_path: Path) -> dict:
-    """Merges the launcher's intents into APP, with their French: the
-    merged metadata."""
+def merge(app: Path, translations: dict) -> dict:
+    """Merges the launcher's intents into APP, with their TRANSLATIONS, by
+    language: the merged metadata."""
     own = app / METADATA / ACTIONS
     framework = app / FRAMEWORK / METADATA
     if not own.is_file():
@@ -227,21 +257,21 @@ def merge(app: Path, french_path: Path) -> dict:
         raise MergeError(f"{framework / ACTIONS} is missing: Xcode wrote no intents for the launcher")
     app_metadata = json.loads(own.read_text(encoding="utf-8"))
     launcher = json.loads((framework / ACTIONS).read_text(encoding="utf-8"))
-    french = json.loads(french_path.read_text(encoding="utf-8"))
     print("== the launcher's App Intents, as Xcode wrote them")
     print(json.dumps(launcher, indent=1, ensure_ascii=False, sort_keys=True))
     merged = merge_metadata(app_metadata, launcher)
-    check_french(launcher, french)
+    for language, words in translations.items():
+        check_translation(launcher, words, language)
     others = sorted(path.name for path in framework.iterdir() if path.name not in (ACTIONS, "version.json"))
     if others:
         print("app_intents: left in the framework's metadata: " + ", ".join(others))
     own.write_text(json.dumps(merged, indent=2, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
     shutil.rmtree(app / METADATA / "nlu", ignore_errors=True)
-    localizations = write_french(app, french)
+    written = [folder for language, words in translations.items() for folder in write_translation(app, language, words)]
     shortcuts = [shortcut.get("shortTitle", {}).get("key", "?") for shortcut in merged["autoShortcuts"]]
     print(f"app_intents: {', '.join(sorted(launcher.get('actions', {})))} beside {len(app_metadata.get('actions', {}))} "
           f"of the built-in SideStore's; App Shortcuts: {', '.join(shortcuts)}; "
-          f"{len(phrase_keys(launcher['autoShortcuts']))} phrases of Siri's; French in {', '.join(localizations)}")
+          f"{len(phrase_keys(launcher['autoShortcuts']))} phrases of Siri's; translated in {', '.join(written)}")
     return merged
 
 
@@ -276,11 +306,11 @@ def lint_strings(path: Path) -> list:
     return problems
 
 
-def check_package(app: Path, french_path: Path) -> dict:
+def check_package(app: Path, translations: dict) -> dict:
     """Fails unless APP holds the built-in SideStore's intents as package.sh
     put them before the merge, and the strings the merge wrote read and
-    hold the French of every title and phrase. What was checked."""
-    french = json.loads(french_path.read_text(encoding="utf-8"))
+    hold the words of every title and phrase in each language of
+    TRANSLATIONS. What was checked."""
     before_text = sidestore_as_packaged(app)
     before = json.loads(before_text)
     # As package.sh's sed sees it: a type's name wherever it is written.
@@ -311,26 +341,28 @@ def check_package(app: Path, french_path: Path) -> dict:
         problems.append(f"no action runs {REFRESH_ALL_APPS}: the nightly renewal's Refresh All Apps would fail")
 
     linted = []
-    folders = sorted(path for path in app.glob("fr*.lproj") if path.is_dir())
-    if not any(folder.name == "fr.lproj" for folder in folders):
-        problems.append(f"{app / 'fr.lproj'} is missing")
-    for folder in folders:
-        for name in STRINGS:
-            path = folder / name
-            if not path.exists():
-                if name == "AppShortcuts.strings" or folder.name == "fr.lproj":
-                    problems.append(f"{path} is missing")
-                continue
-            found = lint_strings(path)
-            problems += found
-            linted.append(f"{folder.name}/{name}")
-            if found:
-                continue
-            strings = plistlib.loads(path.read_bytes())
-            wanted = french["phrases"] if name == "AppShortcuts.strings" else french["strings"]
-            wrong = sorted(key for key, value in wanted.items() if strings.get(key) != value)
-            if wrong:
-                problems.append(f"{path} lacks the French of: " + "; ".join(repr(key) for key in wrong))
+    for language, words in translations.items():
+        main = f"{language}.lproj"
+        folders = localizations(app, language)
+        if not any(folder.name == main for folder in folders):
+            problems.append(f"{app / main} is missing")
+        for folder in folders:
+            for table in STRINGS:
+                path = folder / table
+                if not path.exists():
+                    if table == "AppShortcuts.strings" or folder.name == main:
+                        problems.append(f"{path} is missing")
+                    continue
+                found = lint_strings(path)
+                problems += found
+                linted.append(f"{folder.name}/{table}")
+                if found:
+                    continue
+                strings = plistlib.loads(path.read_bytes())
+                wanted = words["phrases"] if table == "AppShortcuts.strings" else words["strings"]
+                wrong = sorted(key for key, value in wanted.items() if strings.get(key) != value)
+                if wrong:
+                    problems.append(f"{path} lacks the {language_name(language)} of: " + "; ".join(repr(key) for key in wrong))
     if problems:
         raise MergeError("the app's intents as they ship: " + "; ".join(problems))
     checked = {
@@ -348,15 +380,17 @@ def check_package(app: Path, french_path: Path) -> dict:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("app", type=Path)
-    parser.add_argument("--french", type=Path, required=True)
+    parser.add_argument("--translations", type=Path, required=True,
+                        help="the folder of each language's words of the intents, such as fr.json")
     parser.add_argument("--check", action="store_true",
                         help="check the app as it will ship, once merged: SideStore's intents as they were, the strings readable")
     arguments = parser.parse_args(argv)
     try:
+        translations = load_translations(arguments.translations)
         if arguments.check:
-            check_package(arguments.app, arguments.french)
+            check_package(arguments.app, translations)
         else:
-            merge(arguments.app, arguments.french)
+            merge(arguments.app, translations)
     except MergeError as error:
         print(f"app_intents: {error}", file=sys.stderr)
         return 1

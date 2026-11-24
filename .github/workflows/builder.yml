@@ -3,11 +3,12 @@ name: Builder
 # Tests and builds Cartouche's Mac app, Cartouche.app (builder/mac): its tests, the
 # app with the builder's engine inside, its disk image, and a screenshot of
 # each page of the app on sample games (the --gallery the app takes), in
-# French and English, light and dark. The disk image stays with the run, and
-# the screenshots with it and, for a branch of this repository, on the branch
-# builder-screens/<branch>, one commit that each run replaces. The engine's
-# own tests run in CI (Cartouche Builder), and here on a Mac, as the app runs
-# it, with the end-to-end tests of both (builder/README.md, Development).
+# French, light and dark, and in English, Spanish and German. The disk image
+# stays with the run, and the screenshots with it and, for a branch of this
+# repository, on the branch builder-screens/<branch>, one commit that each run
+# replaces. The engine's own tests run in CI (Cartouche Builder), and here on
+# a Mac, as the app runs it, with the end-to-end tests of both
+# (builder/README.md, Development).
 #
 # A pull request's app is built once for what it changes in the files below:
 # a rebase or a merge of main that leaves those changes as they were keeps
@@ -116,6 +117,7 @@ on:
       - "launcher/Sources/CartoucheTextSwitchSave.swift"
       - "launcher/Sources/CartoucheTheme.swift"
       - "launcher/Sources/CartoucheTiles.swift"
+      - "launcher/Sources/CartoucheTransferSpeed.swift"
       - "launcher/Sources/CartoucheTranslations.swift"
       - "launcher/Sources/CartoucheZip.swift"
       - "launcher/Sources/Cartouche.xcstrings"
@@ -306,10 +308,17 @@ jobs:
         id: layout
         timeout-minutes: 5
         run: '"build/builder/Cartouche.app/Contents/MacOS/Cartouche" --layout-check'
+      # Again in German, whose words are the longest of the app's four.
+      - name: Check the window's layout in German
+        id: layout_de
+        timeout-minutes: 5
+        env:
+          CARTOUCHE_BUILDER_LANG: de
+        run: '"build/builder/Cartouche.app/Contents/MacOS/Cartouche" --layout-check'
       # The exception that ended it: what AppKit logged, and the crash
       # report macOS writes, when it has written one.
       - name: Say how it ended
-        if: ${{ failure() && steps.layout.outcome == 'failure' }}
+        if: ${{ failure() && (steps.layout.outcome == 'failure' || steps.layout_de.outcome == 'failure') }}
         run: |
           log show --last 10m --style compact --predicate 'process == "Cartouche"' 2>/dev/null \
             | grep -iE "exception|constraint|terminat|assert" | tail -n 40 || true

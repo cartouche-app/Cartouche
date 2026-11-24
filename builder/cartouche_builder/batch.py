@@ -866,6 +866,8 @@ class Runner:
             return None
         self.on_event("message", title_id, t("mac.delivering", name=copy.name, folder=place.installs))
         target = macapps.deliver(app, place.installs, copy.name, stop=stop)
+        # Out of Time Machine, as the copy the player installed was.
+        macapps.leave_out_of_backups(target)
         return MacCopy(app=target.name, folder=str(place.installs), built_at=built_at, installed_at=now_iso(), size=macapps.size(target), commit=commit)
 
     # ---- nxnative's newest commit, when it does not build (fallback.py) ----

@@ -23,6 +23,7 @@ import UniformTypeIdentifiers
 struct CartoucheSetupView: View {
     @ObservedObject private var setup = CartoucheSetup.shared
     @ObservedObject private var account = CartoucheAccount.shared
+    @ObservedObject private var renewals = CartoucheRenewals.shared
     @ObservedObject private var updates = CartoucheUpdates.shared
     /// The automation of Shortcuts that renews Cartouche every night: the
     /// last step, which Cartouche plays without (needsSetup).
@@ -82,11 +83,16 @@ struct CartoucheSetupView: View {
                     }
                     step(
                         number: 2,
-                        done: setup.signInStep == .done && !setup.needsDevice,
+                        done: setup.signInStep == .done && !setup.needsDevice && !renewals.sessionExpired,
                         title: CartoucheText.setupAppleIDTitle,
                         detail: appleIDDetail
                     ) {
-                        if setup.appleID == nil || !setup.hasCertificate || setup.certificateRefused || setup.needsDevice {
+                        // Once set up, only while Apple says that the session
+                        // SideStore renews with has expired, which a sign-in
+                        // mends: any other sign-in counts against Apple's
+                        // limit on them, and may cost the player a code.
+                        if setup.appleID == nil || !setup.hasCertificate || setup.certificateRefused || setup.needsDevice
+                            || renewals.sessionExpired {
                             // SideStore registers this iPhone at sign-in, through
                             // the pairing file.
                             Button {
@@ -286,6 +292,10 @@ struct CartoucheSetupView: View {
             let working = account.phase == .signingIn || account.needsCode
             return working ? CartoucheText.signInWorking : CartoucheText.setupAppleIDUnfinished(appleID)
         }
+        if renewals.sessionExpired, !setup.needsDevice {
+            let working = account.phase == .signingIn || account.needsCode
+            return working ? CartoucheText.signInWorking : CartoucheText.setupAppleIDSessionExpired(appleID)
+        }
         guard setup.needsDevice else { return CartoucheText.setupAppleIDDone(appleID) }
         return account.phase == .registeringDevice ? CartoucheText.setupBannerDeviceWorking : CartoucheText.setupAppleIDDevice(appleID)
     }
@@ -321,7 +331,8 @@ struct CartoucheSetupView: View {
 
     private var headerTitle: String {
         if setup.needsSetup { return CartoucheText.setupIntroTitle }
-        return setup.memoryLeft ? CartoucheText.sideStoreMemoryLeftTitle : CartoucheText.setupAllDone
+        if setup.memoryLeft { return CartoucheText.sideStoreMemoryLeftTitle }
+        return sessionExpired ? CartoucheText.setupSessionExpiredTitle : CartoucheText.setupAllDone
     }
 
     /// With the player's own certificate, Cartouche renews nothing: the
@@ -337,6 +348,7 @@ struct CartoucheSetupView: View {
             return setup.needsSetup ? CartoucheText.setupIntroOwnCertificate : CartoucheText.setupAllDoneOwnCertificate
         }
         if setup.needsSetup { return CartoucheText.setupIntro }
+        if sessionExpired { return CartoucheText.setupSessionExpiredDetail }
         return nightly.state.isDone ? CartoucheText.setupAllDoneDetail : CartoucheText.setupAllDoneButNightly
     }
 
@@ -345,6 +357,13 @@ struct CartoucheSetupView: View {
     /// alone. A certificate of the player's own is never renewed here.
     private var renewsItself: Bool {
         !setup.usesImportedSigning && !CartoucheImportedSigning.isSignedElsewhere
+    }
+
+    /// Set up, once Apple has said that the session SideStore renews with
+    /// has expired: the Apple ID's step is to do again, and nothing is all
+    /// set until it is.
+    private var sessionExpired: Bool {
+        renewals.sessionExpired && renewsItself
     }
 
     private func step<Actions: View>(

@@ -755,6 +755,12 @@ extension CartoucheFailure {
         let pageStatus = CartoucheSignInMessage.pageStatus(in: text)
         if let outcome, !outcome.ok {
             details.merge(outcome.details) { _, new in new }
+            // Developer Services can return its generic -1 for an expired
+            // session. Keep the distinction without storing Apple's message.
+            if outcome.stage == "VerifyCertificate", outcome.apple == -1,
+               text.localizedCaseInsensitiveContains("your session has expired") {
+                details["sessionExpired"] = .flag(true)
+            }
             var cause = outcome.cause
             if let pageStatus, outcome.http == nil {
                 details["http"] = .number(Double(pageStatus))

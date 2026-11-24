@@ -27,33 +27,35 @@ struct ActivityView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                PageHeader(title: tr("Builds", "Constructions"), subtitle: subtitle) {
+                PageHeader(title: tr("Builds", "Constructions", "Compilaciones", "Builds"), subtitle: subtitle) {
                     if model.isBuilding {
                         HStack(spacing: 10) {
                             if model.status?.running == true, !model.dueOutsideBatch.isEmpty {
                                 Button {
                                     model.build()
                                 } label: {
-                                    Label(tr("Add what is due", "Ajouter ce qui est dû"), systemImage: "text.badge.plus")
+                                    Label(tr("Add what is due", "Ajouter ce qui est dû", "Añadir lo pendiente", "Fälliges hinzufügen"), systemImage: "text.badge.plus")
                                 }
                                 .controlSize(.large)
                                 .disabled(!model.canBuild)
                                 .help(tr("The games nxnative improved that this batch does not have, built after the games waiting.",
-                                         "Les jeux que nxnative a améliorés et que cette série n’a pas, construits après les jeux en attente."))
+                                         "Les jeux que nxnative a améliorés et que cette série n’a pas, construits après les jeux en attente.",
+                                         "Los juegos que nxnative mejoró y que esta tanda no tiene, compilados después de los juegos en espera.",
+                                         "Die Spiele, die nxnative verbessert hat und die dieser Durchlauf nicht enthält, erstellt nach den wartenden Spielen."))
                             }
                             Button(role: .destructive) {
                                 model.stop()
                             } label: {
-                                Label(model.stopsSeveral ? tr("Stop all", "Tout arrêter") : tr("Stop", "Arrêter"), systemImage: "stop.fill")
+                                Label(model.stopsSeveral ? tr("Stop all", "Tout arrêter", "Detener todo", "Alle stoppen") : tr("Stop", "Arrêter", "Detener", "Stoppen"), systemImage: "stop.fill")
                             }
                             .controlSize(.large)
-                            .help(tr("Stops the game building and every game waiting.", "Arrête le jeu en construction et tous les jeux en attente."))
+                            .help(tr("Stops the game building and every game waiting.", "Arrête le jeu en construction et tous les jeux en attente.", "Detiene el juego que se está compilando y todos los juegos en espera.", "Stoppt das Spiel, das gerade erstellt wird, und alle wartenden Spiele."))
                         }
                     } else {
                         Button {
                             model.build()
                         } label: {
-                            Label(tr("Build what is due", "Construire ce qui est dû"), systemImage: "sparkles")
+                            Label(tr("Build what is due", "Construire ce qui est dû", "Compilar lo pendiente", "Fälliges erstellen"), systemImage: "sparkles")
                         }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.large)
@@ -69,7 +71,7 @@ struct ActivityView: View {
                             Card {
                                 HStack(spacing: 12) {
                                     ProgressView().controlSize(.small)
-                                    Text(status.message ?? tr("Getting ready: checking nxnative and the games…", "Préparation : vérification de nxnative et des jeux…"))
+                                    Text(status.message ?? tr("Getting ready: checking nxnative and the games…", "Préparation : vérification de nxnative et des jeux…", "Preparando: comprobando nxnative y los juegos…", "Vorbereitung: nxnative und die Spiele werden geprüft …"))
                                         .foregroundStyle(.secondary)
                                 }
                             }
@@ -81,17 +83,17 @@ struct ActivityView: View {
                     }
                     if status.running == true {
                         if !model.waiting.isEmpty {
-                            GameList(title: tr("Queue", "File d’attente"), games: model.waiting) { model.takeOut($0) }
+                            GameList(title: tr("Queue", "File d’attente", "Cola", "Warteschlange"), games: model.waiting) { model.takeOut($0) }
                         }
                     } else if model.starting != nil {
                         if !model.waiting.isEmpty {
-                            GameList(title: tr("Queue", "File d’attente"), games: model.waiting)
+                            GameList(title: tr("Queue", "File d’attente", "Cola", "Warteschlange"), games: model.waiting)
                         }
                     } else if !status.queued.isEmpty {
-                        GameList(title: tr("Waiting their turn", "En attente"), games: status.queued)
+                        GameList(title: tr("Waiting their turn", "En attente", "Esperando su turno", "Warten, bis sie dran sind"), games: status.queued)
                     }
                     if !status.finished.isEmpty {
-                        GameList(title: status.running == true ? tr("Done in this batch", "Faits dans cette série") : tr("Last batch", "Dernière série"),
+                        GameList(title: status.running == true ? tr("Done in this batch", "Faits dans cette série", "Hechos en esta tanda", "In diesem Durchlauf erledigt") : tr("Last batch", "Dernière série", "Última tanda", "Letzter Durchlauf"),
                                  games: status.finished)
                     }
                     if !status.lines.isEmpty {
@@ -106,19 +108,21 @@ struct ActivityView: View {
                             .frame(maxHeight: 260)
                             .background(RoundedRectangle(cornerRadius: 10).fill(Color(nsColor: .textBackgroundColor)))
                         } label: {
-                            Text(tr("Details", "Détails"))
+                            Text(tr("Details", "Détails", "Detalles", "Details"))
                                 .font(.callout.weight(.medium))
                         }
                     }
                 } else if model.starting != nil {
                     StartingCard()
                     if !model.waiting.isEmpty {
-                        GameList(title: tr("Queue", "File d’attente"), games: model.waiting)
+                        GameList(title: tr("Queue", "File d’attente", "Cola", "Warteschlange"), games: model.waiting)
                     }
                 } else {
-                    ContentUnavailableView(tr("No build yet", "Pas encore de construction"), systemImage: "hammer",
+                    ContentUnavailableView(tr("No build yet", "Pas encore de construction", "Aún no hay compilaciones", "Noch kein Build"), systemImage: "hammer",
                                            description: Text(tr("Builds show here while they run, and what they did after.",
-                                                                "Les constructions s’affichent ici pendant qu’elles tournent, et ce qu’elles ont fait ensuite.")))
+                                                                "Les constructions s’affichent ici pendant qu’elles tournent, et ce qu’elles ont fait ensuite.",
+                                                                "Las compilaciones aparecen aquí mientras se ejecutan, y lo que hicieron después.",
+                                                                "Builds erscheinen hier, während sie laufen, und danach, was sie getan haben.")))
                         .frame(minHeight: 300)
                 }
                 NightlyCard()
@@ -128,14 +132,14 @@ struct ActivityView: View {
     }
 
     private var subtitle: String {
-        guard let status = model.status else { return tr("Nothing running", "Rien en cours") }
+        guard let status = model.status else { return tr("Nothing running", "Rien en cours", "Nada en curso", "Nichts läuft") }
         if status.running == true {
             let left = model.waiting.count + status.current.count
-            return tr("\(left) game\(left == 1 ? "" : "s") to go", "\(left) jeu\(left == 1 ? "" : "x") à faire")
-                + tr(" · the Mac stays awake", " · le Mac reste éveillé")
+            return tr("\(left) game\(left == 1 ? "" : "s") to go", "\(left) jeu\(left == 1 ? "" : "x") à faire", "Quedan \(left) juego\(left == 1 ? "" : "s")", "Noch \(left) Spiel\(left == 1 ? "" : "e")")
+                + tr(" · the Mac stays awake", " · le Mac reste éveillé", " · el Mac se mantiene activo", " · der Mac bleibt wach")
         }
-        if let ended = status.endedDate { return tr("Last batch ", "Dernière série ") + Format.relative(ended) }
-        return tr("Nothing running", "Rien en cours")
+        if let ended = status.endedDate { return tr("Last batch ", "Dernière série ", "Última tanda ", "Letzter Durchlauf ") + Format.relative(ended) }
+        return tr("Nothing running", "Rien en cours", "Nada en curso", "Nichts läuft")
     }
 }
 
@@ -166,12 +170,14 @@ struct CurrentCard: View {
                             Button {
                                 model.takeOut(progress.titleID)
                             } label: {
-                                Label(stopping ? tr("Stopping…", "Arrêt…") : tr("Stop this game", "Arrêter ce jeu"), systemImage: "stop.circle")
+                                Label(stopping ? tr("Stopping…", "Arrêt…", "Deteniendo…", "Wird gestoppt …") : tr("Stop this game", "Arrêter ce jeu", "Detener este juego", "Dieses Spiel stoppen"), systemImage: "stop.circle")
                             }
                             .buttonStyle(.borderless)
                             .disabled(stopping)
                             .help(tr("Stops this game’s build: the games waiting are built after it.",
-                                     "Arrête la construction de ce jeu : les jeux en attente se construisent ensuite."))
+                                     "Arrête la construction de ce jeu : les jeux en attente se construisent ensuite.",
+                                     "Detiene la compilación de este juego: los juegos en espera se compilan después.",
+                                     "Stoppt den Build dieses Spiels: Die wartenden Spiele werden danach erstellt."))
                         }
                     }
                     // What it makes, and the part it makes now.
@@ -191,11 +197,11 @@ struct CurrentCard: View {
                             .font(.callout.monospacedDigit().weight(.semibold))
                         Spacer()
                         if let eta = progress.eta, eta > 0 {
-                            Text(tr("about \(Format.duration(eta)) left", "encore \(Format.duration(eta)) environ"))
+                            Text(tr("about \(Format.duration(eta)) left", "encore \(Format.duration(eta)) environ", "quedan unos \(Format.duration(eta))", "noch etwa \(Format.duration(eta))"))
                                 .font(.callout)
                                 .foregroundStyle(.secondary)
                         } else if let started = progress.startedDate {
-                            Text(tr("started ", "commencé ") + Format.relative(started))
+                            Text(tr("started ", "commencé ", "iniciada ", "gestartet ") + Format.relative(started))
                                 .font(.callout)
                                 .foregroundStyle(.secondary)
                         }
@@ -237,13 +243,17 @@ struct StartingCard: View {
     private var text: String {
         if model.checking {
             return tr("Checking nxnative and your games first: the batch starts as soon as that is done…",
-                      "Vérification de nxnative et de vos jeux d’abord : la série démarre dès qu’elle est finie…")
+                      "Vérification de nxnative et de vos jeux d’abord : la série démarre dès qu’elle est finie…",
+                      "Primero se comprueban nxnative y tus juegos: la tanda empieza en cuanto termine…",
+                      "Zuerst werden nxnative und deine Spiele geprüft: Der Durchlauf beginnt, sobald das erledigt ist …")
         }
         if model.cleaning {
             return tr("Freeing space first: the batch starts as soon as that is done…",
-                      "Libération d’espace d’abord : la série démarre dès qu’elle est finie…")
+                      "Libération d’espace d’abord : la série démarre dès qu’elle est finie…",
+                      "Primero se libera espacio: la tanda empieza en cuanto termine…",
+                      "Zuerst wird Platz freigegeben: Der Durchlauf beginnt, sobald das erledigt ist …")
         }
-        return tr("Starting…", "Démarrage…")
+        return tr("Starting…", "Démarrage…", "Iniciando…", "Wird gestartet …")
     }
 }
 
@@ -280,12 +290,12 @@ struct LastBatchCard: View {
     }
 
     private func headline(built: Int, failed: Int, stopped: Bool) -> String {
-        if status.state == "failed" { return tr("The batch could not run", "La série n’a pas pu tourner") }
-        if stopped { return tr("Stopped", "Arrêtée") + (built > 0 ? tr(" after \(built) game\(built == 1 ? "" : "s")", " après \(built) jeu\(built == 1 ? "" : "x")") : "") }
-        if built == 0 && failed == 0 { return tr("Nothing was due", "Rien n’était à faire") }
+        if status.state == "failed" { return tr("The batch could not run", "La série n’a pas pu tourner", "No se pudo ejecutar la tanda", "Der Durchlauf konnte nicht laufen") }
+        if stopped { return tr("Stopped", "Arrêtée", "Detenida", "Gestoppt") + (built > 0 ? tr(" after \(built) game\(built == 1 ? "" : "s")", " après \(built) jeu\(built == 1 ? "" : "x")", " tras \(built) juego\(built == 1 ? "" : "s")", " nach \(built) Spiel\(built == 1 ? "" : "en")") : "") }
+        if built == 0 && failed == 0 { return tr("Nothing was due", "Rien n’était à faire", "No había nada pendiente", "Nichts war fällig") }
         var parts: [String] = []
-        if built > 0 { parts.append(tr("\(built) built", "\(built) construit\(built == 1 ? "" : "s")")) }
-        if failed > 0 { parts.append(tr("\(failed) failed", "\(failed) échec\(failed == 1 ? "" : "s")")) }
+        if built > 0 { parts.append(tr("\(built) built", "\(built) construit\(built == 1 ? "" : "s")", "\(built) compilado\(built == 1 ? "" : "s")", "\(built) erstellt")) }
+        if failed > 0 { parts.append(tr("\(failed) failed", "\(failed) échec\(failed == 1 ? "" : "s")", "\(failed) fallido\(failed == 1 ? "" : "s")", "\(failed) fehlgeschlagen")) }
         return parts.joined(separator: ", ")
     }
 }
@@ -341,7 +351,7 @@ struct GameList: View {
                 }
                 // Its IPA built, its app for this Mac not.
                 if let error = game.shownMacError {
-                    Text(tr("Mac app: ", "App Mac : ") + error)
+                    Text(tr("Mac app: ", "App Mac : ", "App de Mac: ", "Mac-App: ") + error)
                         .font(.caption)
                         .foregroundStyle(.orange)
                         .lineLimit(3)
@@ -349,13 +359,17 @@ struct GameList: View {
                 if let commit = game.splitCommit {
                     // This game alone, the others from the newest (decision 133).
                     Text(tr("From nxnative \(commit.prefix(8)), from before nxnative changed how it reads shaders: the newest reads this game’s otherwise than its profile for now",
-                            "Avec nxnative \(commit.prefix(8)), d’avant le changement de sa lecture des shaders : le plus récent lit ceux de ce jeu autrement que son profil pour l’instant"))
+                            "Avec nxnative \(commit.prefix(8)), d’avant le changement de sa lecture des shaders : le plus récent lit ceux de ce jeu autrement que son profil pour l’instant",
+                            "Con nxnative \(commit.prefix(8)), de antes de que nxnative cambiara su lectura de los shaders: la más reciente lee los de este juego de otra forma que su perfil por ahora",
+                            "Mit nxnative \(commit.prefix(8)), von bevor nxnative änderte, wie es Shader liest: Die neueste liest die dieses Spiels vorerst anders als sein Profil"))
                         .font(.caption)
                         .foregroundStyle(.orange)
                         .lineLimit(2)
                 } else if let commit = game.fallbackCommit {
                     Text(tr("From nxnative \(commit.prefix(8)), the last commit that built: the newest does not build for now",
-                            "Avec nxnative \(commit.prefix(8)), le dernier commit qui a construit : le plus récent ne construit pas pour l’instant"))
+                            "Avec nxnative \(commit.prefix(8)), le dernier commit qui a construit : le plus récent ne construit pas pour l’instant",
+                            "Con nxnative \(commit.prefix(8)), el último commit que compiló: el más reciente no compila por ahora",
+                            "Mit nxnative \(commit.prefix(8)), dem letzten Commit, der erstellt hat: Der neueste erstellt vorerst nicht"))
                         .font(.caption)
                         .foregroundStyle(.orange)
                         .lineLimit(2)
@@ -372,7 +386,7 @@ struct GameList: View {
                     Image(systemName: "doc.text.magnifyingglass")
                 }
                 .buttonStyle(.borderless)
-                .help(tr("Open its log", "Ouvrir son journal"))
+                .help(tr("Open its log", "Ouvrir son journal", "Abrir su registro", "Sein Protokoll öffnen"))
             } else if let log = game.macLog, !log.isEmpty, game.mac == "failed" {
                 Button {
                     model.open(log)
@@ -380,7 +394,7 @@ struct GameList: View {
                     Image(systemName: "doc.text.magnifyingglass")
                 }
                 .buttonStyle(.borderless)
-                .help(tr("Open the log of its Mac app", "Ouvrir le journal de son app Mac"))
+                .help(tr("Open the log of its Mac app", "Ouvrir le journal de son app Mac", "Abrir el registro de su app de Mac", "Das Protokoll seiner Mac-App öffnen"))
             }
             if let remove, game.state == "queued" {
                 Button {
@@ -390,7 +404,7 @@ struct GameList: View {
                 }
                 .buttonStyle(.borderless)
                 .disabled(!model.canTakeOut(game.titleID))
-                .help(tr("Remove from the queue", "Retirer de la file"))
+                .help(tr("Remove from the queue", "Retirer de la file", "Quitar de la cola", "Aus der Warteschlange entfernen"))
             }
         }
         .padding(.horizontal, 10)
@@ -405,17 +419,17 @@ struct GameList: View {
         case "built" where game.mac == "built":
             // Its IPA and its Mac app, or its Mac app alone.
             let seconds = (game.macOnly == true ? 0 : game.duration ?? 0) + (game.macDuration ?? 0)
-            return (game.macOnly == true ? tr("Built for this Mac", "Construit pour ce Mac")
-                : tr("Built for the iPhone and this Mac", "Construit pour l’iPhone et ce Mac"))
+            return (game.macOnly == true ? tr("Built for this Mac", "Construit pour ce Mac", "Compilado para este Mac", "Für diesen Mac erstellt")
+                : tr("Built for the iPhone and this Mac", "Construit pour l’iPhone et ce Mac", "Compilado para el iPhone y este Mac", "Für das iPhone und diesen Mac erstellt"))
                 + (seconds > 0 ? " · " + Format.duration(seconds) : "")
-        case "built": return tr("Built for the iPhone", "Construit pour l’iPhone") + (game.duration.map { " · " + Format.duration($0) } ?? "")
+        case "built": return tr("Built for the iPhone", "Construit pour l’iPhone", "Compilado para el iPhone", "Für das iPhone erstellt") + (game.duration.map { " · " + Format.duration($0) } ?? "")
         // Its IPA, or its app for this Mac alone: its Mac app is built after
         // its IPA, never without it.
-        case "failed": return game.macOnly == true ? tr("Failed for this Mac", "Échec pour ce Mac") : tr("Failed for the iPhone", "Échec pour l’iPhone")
-        case "stopped": return tr("Stopped", "Arrêté")
-        case "skipped": return tr("Skipped", "Passé")
-        case "queued": return tr("Waiting", "En attente")
-        case "building": return tr("Building", "Construction")
+        case "failed": return game.macOnly == true ? tr("Failed for this Mac", "Échec pour ce Mac", "Falló para este Mac", "Für diesen Mac fehlgeschlagen") : tr("Failed for the iPhone", "Échec pour l’iPhone", "Falló para el iPhone", "Für das iPhone fehlgeschlagen")
+        case "stopped": return tr("Stopped", "Arrêté", "Detenido", "Gestoppt")
+        case "skipped": return tr("Skipped", "Passé", "Omitido", "Übersprungen")
+        case "queued": return tr("Waiting", "En attente", "En espera", "Wartet")
+        case "building": return tr("Building", "Construction", "Compilando", "Wird erstellt")
         default: return game.state
         }
     }
@@ -441,12 +455,14 @@ struct NightlyCard: View {
                         .font(.title2)
                         .foregroundStyle(Theme.gradient)
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(tr("Build at night", "Construire la nuit"))
+                        Text(tr("Build at night", "Construire la nuit", "Compilar por la noche", "Nachts erstellen"))
                             .font(.headline)
                         Text(config.schedule
                              ? tr("Every night at \(Format.time(hour: config.scheduleHour, minute: config.scheduleMinute)), what is due is built, even with the app closed.",
-                                  "Chaque nuit à \(Format.time(hour: config.scheduleHour, minute: config.scheduleMinute)), ce qui est dû se construit, même app fermée.")
-                             : tr("Off: games are built when you ask.", "Désactivé : les jeux se construisent quand vous le demandez."))
+                                  "Chaque nuit à \(Format.time(hour: config.scheduleHour, minute: config.scheduleMinute)), ce qui est dû se construit, même app fermée.",
+                                  "Cada noche a las \(Format.time(hour: config.scheduleHour, minute: config.scheduleMinute)), se compila lo pendiente, incluso con la app cerrada.",
+                                  "Jede Nacht um \(Format.time(hour: config.scheduleHour, minute: config.scheduleMinute)) wird Fälliges erstellt, auch bei geschlossener App.")
+                             : tr("Off: games are built when you ask.", "Désactivé : les jeux se construisent quand vous le demandez.", "Desactivado: los juegos se compilan cuando lo pides.", "Aus: Spiele werden erstellt, wenn du es verlangst."))
                             .font(.callout)
                             .foregroundStyle(.secondary)
                     }

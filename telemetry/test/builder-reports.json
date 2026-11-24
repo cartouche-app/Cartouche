@@ -3,6 +3,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "atLogin": true,
         "automaticUpdates": true,
@@ -41,6 +42,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "item": "metal",
         "result": "ready",
@@ -58,6 +60,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "fallback": true,
         "ipaMB": 1830,
@@ -79,6 +82,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "cause": "app_build",
         "exit": 1,
@@ -101,6 +105,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "built": 1,
         "failed": 1,
@@ -126,6 +131,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "background": true,
         "kind": "engine",
@@ -143,6 +149,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "background": false,
         "error": "NSCocoaErrorDomain 640 < NSPOSIXErrorDomain 28",
@@ -160,6 +167,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "from": "0.2.0",
         "to": "0.2.1"
@@ -176,6 +184,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "allowed": true
       },
@@ -191,6 +200,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "freedMB": 4210,
         "items": 3,
@@ -208,6 +218,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "forced": true,
         "games": 2
@@ -224,6 +235,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "building": false
       },
@@ -239,6 +251,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "background": false,
         "exception": "ModuleNotFoundError",
@@ -258,6 +271,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "exception": "PermissionError",
         "exit": 1,
@@ -278,6 +292,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "built": 0,
         "errno": 28,
@@ -305,6 +320,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "ipaMB": 5120,
         "nxnative": "6c3aeb3d70a1",
@@ -324,6 +340,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "cause": "no_space",
         "exit": 1,
@@ -346,6 +363,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "cause": "builder",
         "errno": 13,
@@ -370,6 +388,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "alone": false,
         "appMB": 1904,
@@ -391,6 +410,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "alone": true,
         "cause": "nxnative",
@@ -414,6 +434,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "alone": false,
         "cause": "no_space",
@@ -438,6 +459,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "built": 1,
         "failed": 0,
@@ -466,6 +488,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "ended": "quit",
         "exit": 0,
@@ -486,6 +509,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "place": "share",
         "step": "keepAndFetch",
@@ -504,6 +528,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "again": false,
         "appMB": 1904,
@@ -522,6 +547,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "cause": "no_room",
         "freeGB": 13,
@@ -544,6 +570,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "fileMB": 2915,
         "kind": "mac",
@@ -564,6 +591,7 @@
     {
       "cartouche": "0.2.1",
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "fields": {
         "again": true,
         "appMB": 1904,
@@ -590,6 +618,7 @@
         "watts": 9.8
       },
       "device": "Mac16,12",
+      "deviceLanguage": "fr",
       "dlc": false,
       "droppedPercent": 0.33,
       "end": {

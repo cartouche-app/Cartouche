@@ -191,6 +191,11 @@
 //                                        What's new has no notes to show
 //        installing                      a game being installed, over the
 //                                        console
+//        installing-cable                the same from the MacBook Air, by
+//                                        cable, at 31 MB/s
+//        installing-mac                  the same on the Wi-Fi, the MacBook
+//                                        Air on its 2.4 GHz band, at 3.1 MB/s,
+//                                        with what would go faster
 //        iphone-step                     a sign-in Apple accepted that
 //                                        stopped at the step that registers
 //                                        this iPhone, LocalDevVPN being off
@@ -274,6 +279,11 @@
 //        renewal-revoked                 Cartouche's renewal in its last 3
 //                                        days, which failed as Apple had
 //                                        revoked its certificate
+//        renewal-session-expired         Cartouche's renewal in its last 3
+//                                        days, which failed as Apple said
+//                                        that the session SideStore renews
+//                                        with had expired: the System page
+//                                        and the setup ask to sign in again
 //        renewal-unanswered              Cartouche's renewal in its last 3
 //                                        days, which failed as this iPhone
 //                                        did not answer through LocalDevVPN
@@ -351,6 +361,10 @@
 //        update-revoked                  the update of Cartouche to 0.4.0,
 //                                        failed as Apple had revoked the
 //                                        certificate of its signature
+//        update-session-expired          the update of Cartouche to 0.4.0,
+//                                        failed as Apple said that the
+//                                        session SideStore asks it with had
+//                                        expired
 //        updated                         Cartouche opening after an update
 //                                        started from it, from 0.2.0 to the
 //                                        gallery's own version (project.yml),
@@ -610,12 +624,16 @@ struct GalleryScenario {
         // The built-in SideStore's record of its last renewal: six days left,
         // or, as Cartouche renews itself, two and a bit.
         if work == "renewing" || work == "renewal-failed" || work == "renewal-revoked"
-            || work == "renewal-unanswered" || work == "renewal-no-liveprocess" {
+            || work == "renewal-unanswered" || work == "renewal-no-liveprocess" || work == "renewal-session-expired" {
             GalleryState.recordSignature(expiringIn: 2 * 86_400 + 5 * 3_600, renewedAgo: 4 * 86_400 + 19 * 3_600)
         } else {
             GalleryState.recordSignature(expiringIn: 6 * 86_400 + 3_600, renewedAgo: 86_400)
         }
         MainActor.assumeIsolated {
+            // What an earlier scenario noted of Apple's session stays out of
+            // this one.
+            UserDefaults.standard.removeObject(forKey: CartoucheRenewals.sessionExpiredKey)
+            UserDefaults.standard.removeObject(forKey: CartoucheRenewals.sessionSignInKey)
             showTranslations()
             if work == "updated" {
                 // What an update started from Cartouche leaves as it opens
@@ -653,6 +671,9 @@ struct GalleryScenario {
             if work == "renewal-unanswered" {
                 CartoucheRenewals.shared.showUnansweredForGallery()
             }
+            if work == "renewal-session-expired" {
+                CartoucheRenewals.shared.showSessionExpiredForGallery()
+            }
             // The automation of every night as the work has it, never as a
             // scenario before this one left it.
             CartoucheNightly.shared.showForGallery(work)
@@ -675,6 +696,22 @@ struct GalleryScenario {
                 CartoucheGameActions.shared.work = CartoucheGameWork(kind: .installing, name: name,
                                                                      step: CartoucheText.installUnpacking, fraction: 0.42,
                                                                      outside: true)
+            }
+            if work == "installing-cable" || work == "installing-mac" {
+                // From the player's Mac, how it comes and how fast
+                // (CartoucheTransferSpeed.swift), as from iOS 26.
+                let name = sheet.flatMap { CartoucheCatalog.shared.game(titleId: $0)?.name } ?? "Game"
+                var shown = CartoucheGameWork(kind: .installing, name: name, step: CartoucheText.installFromStorageStep("MacBook Air"),
+                                              fraction: 0.42, stage: "unpacking", place: "MacBook Air", outside: true)
+                if work == "installing-cable" {
+                    shown.way = .cable
+                    shown.speed = 31_400_000
+                } else {
+                    shown.way = .network(mac: CartoucheMacNetwork(medium: CartoucheMacNetwork.wifi, band: "2.4"))
+                    shown.speed = 3_140_000
+                    shown.slow = true
+                }
+                CartoucheGameActions.shared.work = shown
             }
             if work == "install-failed" {
                 // An install the network dropped halfway, with its report.
@@ -718,6 +755,9 @@ struct GalleryScenario {
             }
             if work == "update-no-liveprocess" {
                 CartoucheUpdates.shared.showNoLiveProcessForGallery("0.4.0")
+            }
+            if work == "update-session-expired" {
+                CartoucheUpdates.shared.showSessionExpiredForGallery("0.4.0")
             }
             if work == "code" {
                 CartoucheAccount.shared.requestCodeForGallery(.init(
@@ -1412,11 +1452,15 @@ enum GalleryMac {
     /// that language says them (stageText in the Mac's Theme.swift).
     static func builds(now: Date = Date()) -> CartoucheBridgeBuilds {
         let hour: TimeInterval = 3_600
-        let french = CartoucheText.bundle.preferredLocalizations.first == "fr"
+        let language = CartoucheText.bundle.preferredLocalizations.first
+        let said = { (en: String, fr: String, es: String, de: String) in
+            ["fr": fr, "es": es, "de": de][language ?? "en"] ?? en
+        }
         let both = ["ios", "mac"]
         return CartoucheBridgeBuilds(running: true, games: [
             .init(id: "0400C3F00006E000", name: "Mario Kart World", state: "building", reasons: ["changes"],
-                  progress: 0.42, step: french ? "Compilation des shaders pour l’iPhone" : "Compiling shaders for the iPhone",
+                  progress: 0.42, step: said("Compiling shaders for the iPhone", "Compilation des shaders pour l’iPhone",
+                                                 "Compilando los shaders para el iPhone", "Shader für das iPhone werden kompiliert"),
                   left: 21 * 60, built: now.addingTimeInterval(-3 * 24 * hour), followed: true, stoppable: true, stopping: false,
                   platforms: both, makes: both, now: "ios",
                   mac: CartoucheBridgeBuilds.MacApp(built: now.addingTimeInterval(-3 * 24 * hour + 1_800))),
@@ -1427,8 +1471,10 @@ enum GalleryMac {
                   built: now.addingTimeInterval(-9 * hour), followed: true, platforms: ["ios"]),
             .init(id: "01003FC01670C000", name: "13 Sentinels: Aegis Rim", state: "failed",
                   failed: now.addingTimeInterval(-26 * hour),
-                  error: french ? "La construction de l’app s’est arrêtée\u{00A0}: Xcode n’a trouvé aucun SDK iOS."
-                                : "Building the app stopped: Xcode found no iOS SDK.",
+                  error: said("Building the app stopped: Xcode found no iOS SDK.",
+                              "La construction de l’app s’est arrêtée\u{00A0}: Xcode n’a trouvé aucun SDK iOS.",
+                              "La compilación de la app se detuvo: Xcode no encontró ningún SDK de iOS.",
+                              "Das Erstellen der App wurde abgebrochen: Xcode hat kein iOS-SDK gefunden."),
                   followed: true, platforms: ["ios"]),
             .init(id: "0100B7C00933A000", name: "Pikmin 4", state: "due", reasons: ["changes"],
                   built: now.addingTimeInterval(-12 * 24 * hour), followed: true,
@@ -1438,8 +1484,10 @@ enum GalleryMac {
             .init(id: "01004D300C5AE000", name: "Kirby and the Forgotten Land", state: "up_to_date",
                   built: now.addingTimeInterval(-20 * hour), followed: true, platforms: both,
                   mac: CartoucheBridgeBuilds.MacApp(built: now.addingTimeInterval(-8 * 24 * hour), failed: now.addingTimeInterval(-19 * hour),
-                             error: french ? "Les shaders pour le Mac n’ont pas pu être compilés\u{00A0}: Metal a refusé un pipeline."
-                                           : "The shaders for the Mac could not be compiled: Metal refused a pipeline.")),
+                             error: said("The shaders for the Mac could not be compiled: Metal refused a pipeline.",
+                                         "Les shaders pour le Mac n’ont pas pu être compilés\u{00A0}: Metal a refusé un pipeline.",
+                                         "No se pudieron compilar los shaders para el Mac: Metal rechazó un pipeline.",
+                                         "Die Shader für den Mac konnten nicht kompiliert werden: Metal hat eine Pipeline abgelehnt."))),
             .init(id: "010093801237C000", name: "Metroid Dread", state: "up_to_date",
                   built: now.addingTimeInterval(-2 * 24 * hour), followed: true, platforms: both, mac: CartoucheBridgeBuilds.MacApp(due: true)),
             .init(id: "0400380020056000", name: "Splatoon Raiders", state: "up_to_date",

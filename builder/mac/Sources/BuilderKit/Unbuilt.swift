@@ -80,20 +80,24 @@ public enum UnbuiltGames {
     /// it failed at as NAMED says it.
     public static func words(_ game: UnbuiltGame, named: (String) -> String = { $0 }) -> String {
         var failed = tr("In the last 4 weeks, \(game.macs) Macs tried it with Cartouche and all \(game.failures) of their builds failed",
-                        "Ces 4 dernières semaines, \(game.macs) Mac l’ont essayé avec Cartouche et leurs \(game.failures) constructions ont toutes échoué")
+                        "Ces 4 dernières semaines, \(game.macs) Mac l’ont essayé avec Cartouche et leurs \(game.failures) constructions ont toutes échoué",
+                        "En las últimas 4 semanas, \(game.macs) Mac lo probaron con Cartouche y sus \(game.failures) compilaciones fallaron todas",
+                        "In den letzten 4 Wochen haben \(game.macs) Macs es mit Cartouche versucht, und alle \(game.failures) Builds sind fehlgeschlagen")
         if let stage = game.stage, !stage.isEmpty {
-            failed += tr(", most often at the step “\(named(stage))”", ", le plus souvent à l’étape « \(named(stage)) »")
+            failed += tr(", most often at the step “\(named(stage))”", ", le plus souvent à l’étape « \(named(stage)) »", ", casi siempre en el paso “\(named(stage))”", ", meist beim Schritt „\(named(stage))“")
         }
         if let hours = game.hours, hours > 0 {
-            failed += tr(", after about \(hoursText(hours)) hours", ", après \(hoursText(hours)) h environ")
+            failed += tr(", after about \(hoursText(hours)) hours", ", après \(hoursText(hours)) h environ", ", tras unas \(hoursText(hours)) horas", ", nach etwa \(hoursText(hours)) Stunden")
         }
         return failed + tr(". Building it may keep this Mac busy for hours for nothing: better wait until nxnative improves it. The nightly builds leave it aside.",
-                           ". Sa construction peut occuper ce Mac des heures pour rien : mieux vaut attendre que nxnative l’améliore. Les constructions de la nuit le laissent de côté.")
+                           ". Sa construction peut occuper ce Mac des heures pour rien : mieux vaut attendre que nxnative l’améliore. Les constructions de la nuit le laissent de côté.",
+                           ". Compilarlo puede tener ocupado este Mac durante horas para nada: mejor esperar a que nxnative lo mejore. Las compilaciones nocturnas lo dejan de lado.",
+                           ". Es zu erstellen kann diesen Mac stundenlang umsonst beschäftigen: Besser warten, bis nxnative es verbessert. Die nächtlichen Builds lassen es aus.")
     }
 
-    /// "4.7", "4,7" in French.
+    /// "4.7", "4,7" in French, Spanish and German.
     public static func hoursText(_ hours: Double) -> String {
         let text = String(format: "%.1f", hours)
-        return L10n.code == "fr" ? text.replacingOccurrences(of: ".", with: ",") : text
+        return L10n.decimalComma ? text.replacingOccurrences(of: ".", with: ",") : text
     }
 }

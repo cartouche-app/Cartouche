@@ -5,12 +5,17 @@
 //  Sizes, durations and dates, as the app shows them, in its language.
 //
 
+import CartoucheCore
 import Foundation
 
 public enum Format {
     /// "15,8 Go", in units of 1000 bytes, as the Finder counts.
     public static func size(_ bytes: UInt64) -> String {
-        let units = L10n.french ? ["o", "Ko", "Mo", "Go", "To"] : ["bytes", "KB", "MB", "GB", "TB"]
+        let units = switch L10n.code {
+        case "fr": ["o", "Ko", "Mo", "Go", "To"]
+        case "de": ["Byte", "KB", "MB", "GB", "TB"]
+        default: ["bytes", "KB", "MB", "GB", "TB"]
+        }
         var value = Double(bytes)
         var unit = 0
         while value >= 1000, unit < units.count - 1 {
@@ -30,9 +35,23 @@ public enum Format {
         return formatter.string(from: NSNumber(value: value)) ?? String(value)
     }
 
+    /// "3,1 Mo/s", "31 MB/s": a transfer's speed, BYTES a second, with one
+    /// decimal below 10 (CartoucheTransferMeter.megabytes).
+    public static func speed(_ bytes: Double) -> String {
+        let (value, decimals) = CartoucheTransferMeter.megabytes(bytes)
+        let formatter = NumberFormatter()
+        formatter.locale = L10n.locale
+        formatter.numberStyle = .decimal
+        formatter.minimumFractionDigits = decimals
+        formatter.maximumFractionDigits = decimals
+        let text = formatter.string(from: NSNumber(value: value)) ?? String(value)
+        return text + (L10n.french ? "\u{00A0}Mo/s" : "\u{00A0}MB/s")
+    }
+
     public static func percent(_ fraction: Double) -> String {
         let value = Int((max(0, min(1, fraction)) * 100).rounded(.down))
-        return L10n.french ? "\(value) %" : "\(value)%"
+        // A space before the sign in French, Spanish and German.
+        return L10n.decimalComma ? "\(value) %" : "\(value)%"
     }
 
     /// "1 h 16 min", "4 min 32 s", "45 s".
@@ -48,7 +67,7 @@ public enum Format {
 
     /// "il y a 2 heures", "yesterday".
     public static func relative(_ date: Date, now: Date = Date()) -> String {
-        if abs(now.timeIntervalSince(date)) < 60 { return tr("just now", "à l’instant") }
+        if abs(now.timeIntervalSince(date)) < 60 { return tr("just now", "à l’instant", "ahora mismo", "gerade eben") }
         let formatter = RelativeDateTimeFormatter()
         formatter.locale = L10n.locale
         formatter.unitsStyle = .full

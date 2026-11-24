@@ -18,10 +18,10 @@ enum LibraryFilter: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .all: return tr("All", "Tous")
-        case .due: return tr("To rebuild", "À reconstruire")
-        case .upToDate: return tr("Up to date", "À jour")
-        case .problems: return tr("To look at", "À regarder")
+        case .all: return tr("All", "Tous", "Todos", "Alle")
+        case .due: return tr("To rebuild", "À reconstruire", "Por recompilar", "Neu zu erstellen")
+        case .upToDate: return tr("Up to date", "À jour", "Al día", "Aktuell")
+        case .problems: return tr("To look at", "À regarder", "Por revisar", "Anzusehen")
         }
     }
 
@@ -53,7 +53,7 @@ struct LibraryView: View {
         HStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
-                    PageHeader(title: tr("Library", "Bibliothèque"), subtitle: subtitle) {
+                    PageHeader(title: tr("Library", "Bibliothèque", "Biblioteca", "Bibliothek"), subtitle: subtitle) {
                         FilterPicker(filter: $filter)
                     }
                     if let problems = model.library?.problems, !problems.isEmpty {
@@ -95,49 +95,49 @@ struct LibraryView: View {
             }
         }
         .animation(.snappy(duration: 0.25), value: model.selection != nil)
-        .searchable(text: $search, placement: .toolbar, prompt: tr("Search a game", "Chercher un jeu"))
+        .searchable(text: $search, placement: .toolbar, prompt: tr("Search a game", "Chercher un jeu", "Buscar un juego", "Spiel suchen"))
         .sheet(isPresented: $showBundleIPA) { BundleIPAView() }
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 Button {
                     showBundleIPA = true
                 } label: {
-                    Label(tr("Import IPA + ROMFS…", "Importer IPA + ROMFS…"), systemImage: "square.and.arrow.down")
+                    Label(tr("Import IPA + ROMFS…", "Importer IPA + ROMFS…", "Importar IPA + ROMFS…", "IPA + ROMFS importieren …"), systemImage: "square.and.arrow.down")
                 }
                 .disabled(model.engine == nil || model.isBuilding || model.bundling || (model.config?.games.isEmpty ?? true))
                 if model.isBuilding {
                     Button {
                         model.section = .activity
                     } label: {
-                        Label(tr("Builds", "Constructions"), systemImage: "hammer.fill")
+                        Label(tr("Builds", "Constructions", "Compilaciones", "Builds"), systemImage: "hammer.fill")
                     }
                 } else {
                     Button {
                         model.build()
                     } label: {
-                        Label(tr("Rebuild what is due", "Reconstruire ce qui est dû"), systemImage: "sparkles")
+                        Label(tr("Rebuild what is due", "Reconstruire ce qui est dû", "Recompilar lo pendiente", "Fälliges neu erstellen"), systemImage: "sparkles")
                     }
                     .disabled(!model.canBuild || model.dueOutsideBatch.isEmpty)
-                    .help(tr("Builds every game nxnative improved", "Construit chaque jeu que nxnative a amélioré"))
+                    .help(tr("Builds every game nxnative improved", "Construit chaque jeu que nxnative a amélioré", "Compila cada juego que nxnative mejoró", "Erstellt jedes Spiel, das nxnative verbessert hat"))
                 }
             }
         }
     }
 
     private var subtitle: String {
-        guard let library = model.library else { return tr("Reading your games…", "Lecture de vos jeux…") }
+        guard let library = model.library else { return tr("Reading your games…", "Lecture de vos jeux…", "Leyendo tus juegos…", "Deine Spiele werden gelesen …") }
         let count = library.games.count
-        let gamesText = tr("\(count) game\(count == 1 ? "" : "s")", "\(count) jeu\(count == 1 ? "" : "x")")
+        let gamesText = tr("\(count) game\(count == 1 ? "" : "s")", "\(count) jeu\(count == 1 ? "" : "x")", "\(count) juego\(count == 1 ? "" : "s")", "\(count) Spiel\(count == 1 ? "" : "e")")
         var parts = [gamesText]
         // While a batch builds: its games, and those still to rebuild.
         let states = library.games.compactMap { model.progress($0.titleID)?.state }
         let building = states.filter { $0 == "building" }.count
         let waiting = states.filter { $0 == "queued" }.count
-        if building > 0 { parts.append(tr("\(building) building", "\(building) en construction")) }
-        if waiting > 0 { parts.append(tr("\(waiting) waiting", "\(waiting) en attente")) }
+        if building > 0 { parts.append(tr("\(building) building", "\(building) en construction", "\(building) compilándose", "\(building) im Build")) }
+        if waiting > 0 { parts.append(tr("\(waiting) waiting", "\(waiting) en attente", "\(waiting) en espera", "\(waiting) wartend")) }
         let due = model.dueOutsideBatch.count
-        if due > 0 { parts.append(tr("\(due) to rebuild", "\(due) à reconstruire")) }
-        guard parts.count > 1 else { return gamesText + tr(", all up to date", ", tous à jour") }
+        if due > 0 { parts.append(tr("\(due) to rebuild", "\(due) à reconstruire", "\(due) por recompilar", "\(due) neu zu erstellen")) }
+        guard parts.count > 1 else { return gamesText + tr(", all up to date", ", tous à jour", ", todos al día", ", alle aktuell") }
         return parts.joined(separator: " · ")
     }
 }
@@ -159,7 +159,7 @@ struct FilterPicker: View {
     }
 
     private var picker: some View {
-        Picker(tr("Show", "Afficher"), selection: $filter) {
+        Picker(tr("Show", "Afficher", "Mostrar", "Zeigen"), selection: $filter) {
             ForEach(LibraryFilter.allCases) { Text($0.title).tag($0) }
         }
         .labelsHidden()
@@ -332,10 +332,10 @@ struct DueCard: View {
         } label: {
             Group {
                 if model.isBuilding {
-                    Label(due.count == 1 ? tr("Add it to the queue", "L’ajouter à la file") : tr("Add them to the queue", "Les ajouter à la file"),
+                    Label(due.count == 1 ? tr("Add it to the queue", "L’ajouter à la file", "Añadirlo a la cola", "Zur Warteschlange hinzufügen") : tr("Add them to the queue", "Les ajouter à la file", "Añadirlos a la cola", "Zur Warteschlange hinzufügen"),
                           systemImage: "text.badge.plus")
                 } else {
-                    Label(tr("Rebuild all", "Tout reconstruire"), systemImage: "sparkles")
+                    Label(tr("Rebuild all", "Tout reconstruire", "Recompilar todo", "Alle neu erstellen"), systemImage: "sparkles")
                 }
             }
             .padding(.horizontal, 6)
@@ -344,16 +344,18 @@ struct DueCard: View {
         .controlSize(.large)
         .disabled(!model.canBuild)
         .help(model.isBuilding ? tr("A build is running: these games are built after it, and after the games waiting.",
-                                    "Une construction est en cours : ces jeux se construiront après elle, et après les jeux en attente.") : "")
+                                    "Une construction est en cours : ces jeux se construiront après elle, et après les jeux en attente.",
+                                    "Hay una compilación en curso: estos juegos se compilan después de ella y de los juegos en espera.",
+                                    "Ein Build läuft: Diese Spiele werden danach erstellt, und nach den wartenden Spielen.") : "")
     }
 
     private var title: String {
         let improved = due.filter { $0.reasons != ["new"] }.count
         if improved == 0 {
-            return due.count == 1 ? tr("1 game to build", "1 jeu à construire") : tr("\(due.count) games to build", "\(due.count) jeux à construire")
+            return due.count == 1 ? tr("1 game to build", "1 jeu à construire", "1 juego por compilar", "1 Spiel zu erstellen") : tr("\(due.count) games to build", "\(due.count) jeux à construire", "\(due.count) juegos por compilar", "\(due.count) Spiele zu erstellen")
         }
-        return improved == 1 ? tr("nxnative improved 1 of your games", "nxnative a amélioré 1 de vos jeux")
-            : tr("nxnative improved \(improved) of your games", "nxnative a amélioré \(improved) de vos jeux")
+        return improved == 1 ? tr("nxnative improved 1 of your games", "nxnative a amélioré 1 de vos jeux", "nxnative mejoró 1 de tus juegos", "nxnative hat 1 deiner Spiele verbessert")
+            : tr("nxnative improved \(improved) of your games", "nxnative a amélioré \(improved) de vos jeux", "nxnative mejoró \(improved) de tus juegos", "nxnative hat \(improved) deiner Spiele verbessert")
     }
 
     private var names: String {
@@ -373,7 +375,7 @@ struct ProblemsCard: View {
                     .font(.title)
                     .foregroundStyle(.orange)
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(tr("Cartouche needs your folders", "Cartouche a besoin de vos dossiers"))
+                    Text(tr("Cartouche needs your folders", "Cartouche a besoin de vos dossiers", "Cartouche necesita tus carpetas", "Cartouche braucht deine Ordner"))
                         .font(.headline)
                     ForEach(problems, id: \.self) { problem in
                         Text(problem)
@@ -392,10 +394,10 @@ struct ProblemsCard: View {
 
     @ViewBuilder private var buttons: some View {
         SettingsLink {
-            Text(tr("Choose the folders…", "Choisir les dossiers…"))
+            Text(tr("Choose the folders…", "Choisir les dossiers…", "Elegir las carpetas…", "Ordner auswählen …"))
         }
         if model.library?.folders?.remote == true {
-            Button(tr("Connect the NAS again", "Reconnecter le NAS")) { model.mountShares() }
+            Button(tr("Connect the NAS again", "Reconnecter le NAS", "Volver a conectar el NAS", "NAS erneut verbinden")) { model.mountShares() }
         }
     }
 }
@@ -432,9 +434,9 @@ struct RoomCard: View {
     }
 
     @ViewBuilder private var buttons: some View {
-        Button(tr("Open Storage", "Ouvrir Stockage")) { model.section = .storage }
+        Button(tr("Open Storage", "Ouvrir Stockage", "Abrir Almacenamiento", "„Speicher“ öffnen")) { model.section = .storage }
         SettingsLink {
-            Text(tr("Settings…", "Réglages…"))
+            Text(tr("Settings…", "Réglages…", "Ajustes…", "Einstellungen …"))
         }
     }
 }
@@ -480,7 +482,7 @@ struct IssuesCard: View {
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         if !all && issues.count > IssuesCard.shown {
-                            Button(tr("Show the \(issues.count - IssuesCard.shown) others", "Afficher les \(issues.count - IssuesCard.shown) autres")) { all = true }
+                            Button(tr("Show the \(issues.count - IssuesCard.shown) others", "Afficher les \(issues.count - IssuesCard.shown) autres", "Mostrar los otros \(issues.count - IssuesCard.shown)", "Die anderen \(issues.count - IssuesCard.shown) zeigen")) { all = true }
                                 .buttonStyle(.link)
                         }
                         ViewThatFits(in: .horizontal) {
@@ -495,26 +497,26 @@ struct IssuesCard: View {
     }
 
     private var heading: some View {
-        Text(issues.count == 1 ? tr("1 file or folder left aside in your dumps", "1 fichier ou dossier laissé de côté dans vos dumps")
-             : tr("\(issues.count) files or folders left aside in your dumps", "\(issues.count) fichiers ou dossiers laissés de côté dans vos dumps"))
+        Text(issues.count == 1 ? tr("1 file or folder left aside in your dumps", "1 fichier ou dossier laissé de côté dans vos dumps", "1 archivo o carpeta dejado de lado en tus dumps", "1 Datei oder Ordner in deinen Dumps ausgelassen")
+             : tr("\(issues.count) files or folders left aside in your dumps", "\(issues.count) fichiers ou dossiers laissés de côté dans vos dumps", "\(issues.count) archivos o carpetas dejados de lado en tus dumps", "\(issues.count) Dateien oder Ordner in deinen Dumps ausgelassen"))
             .font(.headline)
             .fixedSize(horizontal: false, vertical: true)
     }
 
     @ViewBuilder private var toggle: some View {
         if !open {
-            Button(expanded ? tr("Hide", "Masquer") : tr("See why", "Voir pourquoi")) { expanded.toggle() }
+            Button(expanded ? tr("Hide", "Masquer", "Ocultar", "Ausblenden") : tr("See why", "Voir pourquoi", "Ver por qué", "Warum?")) { expanded.toggle() }
                 .buttonStyle(.link)
         }
     }
 
     @ViewBuilder private var buttons: some View {
         if let sources = model.config?.sources, !sources.isEmpty {
-            Button(tr("Show the dumps folder", "Afficher le dossier des dumps")) { model.open(sources) }
+            Button(tr("Show the dumps folder", "Afficher le dossier des dumps", "Mostrar la carpeta de dumps", "Dump-Ordner zeigen")) { model.open(sources) }
         }
         NamingHelpButton(title: NamingHelpButton.dumps, onDumps: true)
         SettingsLink {
-            Text(tr("Settings…", "Réglages…"))
+            Text(tr("Settings…", "Réglages…", "Ajustes…", "Einstellungen …"))
         }
     }
 }
@@ -524,7 +526,7 @@ struct LoadingCard: View {
         HStack(spacing: 12) {
             ProgressView()
                 .controlSize(.small)
-            Text(tr("Reading your games…", "Lecture de vos jeux…"))
+            Text(tr("Reading your games…", "Lecture de vos jeux…", "Leyendo tus juegos…", "Deine Spiele werden gelesen …"))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, minHeight: 200)
@@ -543,7 +545,7 @@ struct EmptyLibrary: View {
             Text(text)
         } actions: {
             if !searching && filter == .all && model.foldersMissing {
-                Button(tr("Choose my folders", "Choisir mes dossiers")) {
+                Button(tr("Choose my folders", "Choisir mes dossiers", "Elegir mis carpetas", "Meine Ordner auswählen")) {
                     model.openSetup(at: (model.config?.sources ?? "").isEmpty ? .sources : .games)
                 }
                 .buttonStyle(.borderedProminent)
@@ -557,25 +559,27 @@ struct EmptyLibrary: View {
     }
 
     private var title: String {
-        if searching { return tr("No game by that name", "Aucun jeu de ce nom") }
+        if searching { return tr("No game by that name", "Aucun jeu de ce nom", "Ningún juego con ese nombre", "Kein Spiel mit diesem Namen") }
         switch filter {
-        case .due: return tr("Nothing to rebuild", "Rien à reconstruire")
-        case .upToDate: return tr("No game up to date yet", "Aucun jeu à jour pour l’instant")
-        case .problems: return tr("Nothing to look at", "Rien à regarder")
-        case .all: return tr("No game yet", "Pas encore de jeu")
+        case .due: return tr("Nothing to rebuild", "Rien à reconstruire", "Nada que recompilar", "Nichts neu zu erstellen")
+        case .upToDate: return tr("No game up to date yet", "Aucun jeu à jour pour l’instant", "Aún no hay ningún juego al día", "Noch kein Spiel aktuell")
+        case .problems: return tr("Nothing to look at", "Rien à regarder", "Nada que revisar", "Nichts anzusehen")
+        case .all: return tr("No game yet", "Pas encore de jeu", "Aún no hay juegos", "Noch kein Spiel")
         }
     }
 
     private var text: String {
         if searching { return "" }
         switch filter {
-        case .due: return tr("Every game is built from nxnative’s latest improvements.", "Chaque jeu est construit avec les dernières améliorations de nxnative.")
+        case .due: return tr("Every game is built from nxnative’s latest improvements.", "Chaque jeu est construit avec les dernières améliorations de nxnative.", "Cada juego está compilado con las últimas mejoras de nxnative.", "Jedes Spiel ist mit den neuesten Verbesserungen von nxnative erstellt.")
         case .all:
             if !(model.library?.issues.isEmpty ?? true) {
                 return tr("Above, what Cartouche left aside in your dumps folder, and why.",
-                          "Ci-dessus, ce que Cartouche a laissé de côté dans votre dossier des dumps, et pourquoi.")
+                          "Ci-dessus, ce que Cartouche a laissé de côté dans votre dossier des dumps, et pourquoi.",
+                          "Arriba, lo que Cartouche dejó de lado en tu carpeta de dumps, y por qué.",
+                          "Oben, was Cartouche in deinem Dump-Ordner ausgelassen hat, und warum.")
             }
-            return tr("Put your dumps in your dumps folder: loose, or each in a folder.", "Mettez vos dumps dans votre dossier des dumps : en vrac, ou chacun dans un dossier.")
+            return tr("Put your dumps in your dumps folder: loose, or each in a folder.", "Mettez vos dumps dans votre dossier des dumps : en vrac, ou chacun dans un dossier.", "Pon tus dumps en tu carpeta de dumps: sueltos, o cada uno en una carpeta.", "Lege deine Dumps in deinen Dump-Ordner: lose oder jeden in einem Ordner.")
         default: return ""
         }
     }
@@ -595,36 +599,36 @@ struct GameMenu: View {
             if let progress = model.progress(game.titleID) {
                 // In the build running: this game alone, the others go on.
                 if progress.state == "building" {
-                    Button(tr("Stop its build", "Arrêter sa construction")) { model.stopBuild(game.titleID) }
+                    Button(tr("Stop its build", "Arrêter sa construction", "Detener su compilación", "Seinen Build stoppen")) { model.stopBuild(game.titleID) }
                         .disabled(model.stopping(game.titleID))
                 } else {
-                    Button(tr("Remove from the queue", "Retirer de la file")) { model.takeOut(game.titleID) }
+                    Button(tr("Remove from the queue", "Retirer de la file", "Quitar de la cola", "Aus der Warteschlange entfernen")) { model.takeOut(game.titleID) }
                         .disabled(!model.canTakeOut(game.titleID))
                 }
             } else if model.isBuilding {
-                Button(tr("Add to the queue", "Ajouter à la file")) {
+                Button(tr("Add to the queue", "Ajouter à la file", "Añadir a la cola", "Zur Warteschlange hinzufügen")) {
                     model.build([game.titleID], force: game.state != .due)
                 }
                 .disabled(!model.canBuild)
             } else {
-                Button(game.state == .due ? tr("Rebuild now", "Reconstruire maintenant") : tr("Build again", "Construire à nouveau")) {
+                Button(game.state == .due ? tr("Rebuild now", "Reconstruire maintenant", "Recompilar ahora", "Jetzt neu erstellen") : tr("Build again", "Construire à nouveau", "Compilar de nuevo", "Erneut erstellen")) {
                     model.build([game.titleID], force: game.state != .due)
                 }
                 .disabled(!model.canBuild)
             }
-            Button(game.followed ? tr("Stop following", "Ne plus suivre") : tr("Follow", "Suivre")) {
+            Button(game.followed ? tr("Stop following", "Ne plus suivre", "Dejar de seguir", "Nicht mehr folgen") : tr("Follow", "Suivre", "Seguir", "Folgen")) {
                 model.follow(game, !game.followed)
             }
         }
         if let ipa = game.ipa, ipa.present {
             Divider()
-            Button(tr("Show the IPA in the Finder", "Afficher l’IPA dans le Finder")) { model.reveal(ipa.path) }
+            Button(tr("Show the IPA in the Finder", "Afficher l’IPA dans le Finder", "Mostrar la IPA en el Finder", "IPA im Finder zeigen")) { model.reveal(ipa.path) }
         }
         if let app = game.mac?.app, app.present {
-            Button(tr("Show its Mac app in the Finder", "Afficher son app Mac dans le Finder")) { model.reveal(app.path) }
+            Button(tr("Show its Mac app in the Finder", "Afficher son app Mac dans le Finder", "Mostrar su app de Mac en el Finder", "Seine Mac-App im Finder zeigen")) { model.reveal(app.path) }
         }
         if let source = game.source, !source.isEmpty {
-            Button(tr("Show its sources in the Finder", "Afficher ses sources dans le Finder")) { model.reveal(source) }
+            Button(tr("Show its sources in the Finder", "Afficher ses sources dans le Finder", "Mostrar sus fuentes en el Finder", "Seine Quellen im Finder zeigen")) { model.reveal(source) }
         }
     }
 }
@@ -639,11 +643,11 @@ struct MacPlayItems: View {
     var body: some View {
         let playing = games.isPlaying(game.titleID)
         let installing = model.installing == game.titleID
-        Button(playing ? tr("Show the game", "Afficher le jeu") : installing ? tr("Installing…", "Installation…") : tr("Play on this Mac", "Jouer sur ce Mac")) {
+        Button(playing ? tr("Show the game", "Afficher le jeu", "Mostrar el juego", "Spiel zeigen") : installing ? tr("Installing…", "Installation…", "Instalando…", "Wird installiert …") : tr("Play on this Mac", "Jouer sur ce Mac", "Jugar en este Mac", "Auf diesem Mac spielen")) {
             model.play(game)
         }
         .disabled(installing)
-        Button(tr("Game settings", "Réglages du jeu")) { model.play(game, settings: true) }
+        Button(tr("Game settings", "Réglages du jeu", "Ajustes del juego", "Einstellungen des Spiels")) { model.play(game, settings: true) }
             .disabled(playing || installing || games.preparing.contains(game.titleID))
     }
 }

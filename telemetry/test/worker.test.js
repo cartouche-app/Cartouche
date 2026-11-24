@@ -288,6 +288,14 @@ test("fields it does not know, or with values it does not expect, are left out",
   assert.equal({}.polluted, undefined);
 });
 
+test("the device's language comes without its region", () => {
+  assert.equal(clean(sessionReport({ deviceLanguage: "es" })).deviceLanguage, "es");
+  assert.equal(clean(sessionReport({ deviceLanguage: "zh-Hant" })).deviceLanguage, "zh-Hant");
+  for (const tag of ["es-ES", "es-419", "en_US", "zh-Hant-TW", "zh-hant", "Français", ""]) {
+    assert.equal(clean(sessionReport({ deviceLanguage: tag })).deviceLanguage, undefined, tag);
+  }
+});
+
 test("what a game's own process wrote behind the console keeps its valid sizes, ten at most", () => {
   const screen = (minute) => ({ minute, width: 874, height: 402, footprintMiB: 1830 });
   const kept = clean(

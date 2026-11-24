@@ -6,7 +6,10 @@
 //  console: installing the player's copy, from Files or from the player's
 //  games folder, starting a game, uninstalling one or copying it to the
 //  games folder, how far it has gone, and whether the player can leave
-//  Cartouche meanwhile; and an install it asks about first.
+//  Cartouche meanwhile; and an install it asks about first. A game that
+//  comes from a server shows how fast, and, from the Mac, how: by cable,
+//  through Tailscale or on the local network, with the band of the Mac's
+//  Wi-Fi, and what would go faster when it is slow (decision 151).
 //
 
 import SwiftUI
@@ -36,6 +39,18 @@ struct CartoucheGameWork: Equatable {
     var outside = false
     /// When it started.
     var started = Date()
+    /// How the game comes, from the player's Mac (CartoucheTransferWay);
+    /// nil from another place.
+    var way: CartoucheTransferWay? = nil
+    /// Whether it comes from a server of the local network, a NAS, whose
+    /// Wi-Fi may be the slow one; not a bucket nor Cartouche Cloud, which
+    /// the internet brings.
+    var local = false
+    /// The bytes a second it comes at now (CartoucheTransferMeter); nil
+    /// while nothing is measured.
+    var speed: Double? = nil
+    /// Whether it comes slowly (CartoucheTransferMeter.isSlow).
+    var slow = false
 
     /// "Installing Mario Kart World".
     var title: String {
@@ -45,6 +60,46 @@ struct CartoucheGameWork: Equatable {
         case .uninstalling: return CartoucheText.uninstallTitle(name)
         case .exporting: return CartoucheText.exportTitle(name)
         }
+    }
+
+    /// Whether the game is on its way from its server: not once it is in
+    /// place, being signed, nor while the connection is made again.
+    var isComing: Bool {
+        kind == .installing && ["reading", "unpacking", "gameFiles"].contains(stage)
+    }
+
+    /// How the game comes, and how fast: "By cable · 31 MB/s"; nil for
+    /// nothing to say.
+    var transferLine: String? {
+        guard isComing else { return nil }
+        let how = way.map(CartoucheText.transferWay)
+        let fast = speed.map(CartoucheText.transferSpeed)
+        switch (how, fast) {
+        case let (how?, fast?): return CartoucheText.transferLine(how, fast)
+        case let (how?, nil): return how
+        case let (nil, fast?): return fast
+        case (nil, nil): return nil
+        }
+    }
+
+    /// The symbol beside it: the cable, Tailscale's network, the Wi-Fi, a
+    /// Wi-Fi with a warning for a Mac on its 2.4 GHz band.
+    var transferSymbol: String {
+        switch way {
+        case .cable: return "cable.connector"
+        case .tailnet: return "point.3.connected.trianglepath.dotted"
+        case .network(let mac):
+            if mac?.isSlowBand == true { return "wifi.exclamationmark" }
+            return mac?.medium == CartoucheMacNetwork.ethernet ? "network" : "wifi"
+        case nil: return "speedometer"
+        }
+    }
+
+    /// What would go faster: the cable, the 5 GHz Wi-Fi
+    /// (CartoucheTransferAdvice); nil for nothing to say.
+    var transferAdvice: String? {
+        guard isComing else { return nil }
+        return CartoucheTransferAdvice.of(way: way, local: local, slow: slow).map(CartoucheText.transferAdvice)
     }
 
     /// What the player may do meanwhile, for a step that takes minutes:
@@ -136,6 +191,22 @@ struct CartoucheGameWorkView: View {
                         .foregroundStyle(CartoucheTheme.secondaryText)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
+                    if let line = work.transferLine {
+                        Label(line, systemImage: work.transferSymbol)
+                            .font(.footnote.weight(.semibold).monospacedDigit())
+                            .foregroundStyle(Color.white)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, 2)
+                    }
+                    if let advice = work.transferAdvice {
+                        Label(advice, systemImage: "exclamationmark.triangle.fill")
+                            .font(.footnote)
+                            .foregroundStyle(Color.orange)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, 2)
+                    }
                     if let advice = work.advice {
                         Label(advice, systemImage: work.outside ? "lock.iphone" : "iphone")
                             .font(.footnote)

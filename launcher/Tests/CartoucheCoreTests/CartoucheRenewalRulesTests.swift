@@ -18,11 +18,13 @@ final class CartoucheRenewalRulesTests: XCTestCase {
     private func situation(daysLeft: Int? = 2, canRenew: Bool = true, isSetUp: Bool = true, vpn: Bool = true,
                            busy: Bool = false, paused: Bool = false, playing: Bool = false,
                            lastTry: Date? = nil, revoked: Bool = false,
-                           noLiveProcess: Bool = false, tailscale: Bool = false) -> CartoucheAutomaticRenewal.Situation {
+                           noLiveProcess: Bool = false, sessionExpired: Bool = false,
+                           tailscale: Bool = false) -> CartoucheAutomaticRenewal.Situation {
         CartoucheAutomaticRenewal.Situation(daysLeft: daysLeft, canRenew: canRenew, isSetUp: isSetUp, vpnConnected: vpn,
                                             sideStoreBusy: busy, signInsPaused: paused, gameRunning: playing,
                                             lastTry: lastTry, certificateRevoked: revoked,
-                                            liveProcessMissing: noLiveProcess, tailscaleConnected: tailscale)
+                                            liveProcessMissing: noLiveProcess, sessionExpired: sessionExpired,
+                                            tailscaleConnected: tailscale)
     }
 
     /// Why a renewal failed, as Cartouche reads what the built-in SideStore
@@ -227,6 +229,68 @@ final class CartoucheRenewalRulesTests: XCTestCase {
         XCTAssertFalse(CartoucheAutomaticRenewal.isRevoked(current: nil, revoked: revoked))
     }
 
+    /// From November 19 to 24, 54 renewals and updates of 7 copies failed
+    /// as Apple said that the session the built-in SideStore renews with had
+    /// expired: up to 0.15.1, Cartouche tried again every six hours in the
+    /// last three days, LocalDevVPN opened for each try, and each failed the
+    /// same way until the player signed in again.
+    func testNeverRenewsItselfOnAnExpiredSession() {
+        XCTAssertEqual(wait(situation(sessionExpired: true)), .sessionExpired)
+        XCTAssertFalse(CartoucheAutomaticRenewal.isDue(situation(sessionExpired: true), at: now))
+        // Six hours or three days after the last try alike.
+        XCTAssertEqual(wait(situation(lastTry: now.addingTimeInterval(-6 * 3_600), sessionExpired: true)), .sessionExpired)
+        XCTAssertEqual(wait(situation(lastTry: now.addingTimeInterval(-3 * 86_400), sessionExpired: true)), .sessionExpired)
+        // Nor does Cartouche open LocalDevVPN for it, on its last day as on
+        // the others.
+        XCTAssertEqual(wait(situation(vpn: false, sessionExpired: true)), .sessionExpired)
+        XCTAssertEqual(wait(situation(daysLeft: 0, sessionExpired: true)), .sessionExpired)
+        // A certificate Apple revoked, or LiveProcess missing, asks for an
+        // install over Cartouche, which a sign-in does not do.
+        XCTAssertEqual(wait(situation(revoked: true, sessionExpired: true)), .certificateRevoked)
+        XCTAssertEqual(wait(situation(noLiveProcess: true, sessionExpired: true)), .liveProcessMissing)
+        // A signature with more days left waits as any other, and the
+        // player's own certificate is never renewed here.
+        XCTAssertEqual(wait(situation(daysLeft: 5, sessionExpired: true)), .notDue)
+        XCTAssertEqual(wait(situation(canRenew: false, sessionExpired: true)), .cannotRenew)
+        // Signed in again: Cartouche renews itself as before.
+        XCTAssertNil(wait(situation(sessionExpired: false)))
+    }
+
+    /// The session Apple said expired is the one of the signature Cartouche
+    /// noted: a renewal, an update or an install over Cartouche that went
+    /// through came with a session that worked.
+    func testOnlyTheSignatureTheSessionExpiredWithIsHeld() {
+        let noted = now.addingTimeInterval(2 * 86_400 + 5 * 3_600)
+        XCTAssertTrue(CartoucheExpiredSession.holds(current: noted, noted: noted))
+        // Read again from the profile or from SideStore's record.
+        XCTAssertTrue(CartoucheExpiredSession.holds(current: noted.addingTimeInterval(0.4), noted: noted))
+        // Renewed or installed again: a new signature, for seven days.
+        XCTAssertFalse(CartoucheExpiredSession.holds(current: now.addingTimeInterval(7 * 86_400), noted: noted))
+        XCTAssertFalse(CartoucheExpiredSession.holds(current: noted.addingTimeInterval(60), noted: noted))
+        // Nothing noted, or a signature Cartouche could not read.
+        XCTAssertFalse(CartoucheExpiredSession.holds(current: noted, noted: nil))
+        XCTAssertFalse(CartoucheExpiredSession.holds(current: nil, noted: noted))
+    }
+
+    /// The one copy whose player signed in again went past the step where
+    /// the session had expired on its next renewal: Cartouche
+    /// signs in again by itself, with the Apple ID and password SideStore
+    /// keeps, once for a signature, as Apple limits sign-ins and may ask for
+    /// a code each time.
+    func testSignsInAgainByItselfOnceForASignature() {
+        let noted = now.addingTimeInterval(2 * 86_400)
+        XCTAssertTrue(CartoucheExpiredSession.signsInAgain(current: noted, noted: noted, tried: nil))
+        // Done once for this signature: the player signs in again.
+        XCTAssertFalse(CartoucheExpiredSession.signsInAgain(current: noted, noted: noted, tried: noted))
+        // Done for the signature before: once more for this one.
+        XCTAssertTrue(CartoucheExpiredSession.signsInAgain(current: noted, noted: noted,
+                                                           tried: noted.addingTimeInterval(-7 * 86_400)))
+        // No session noted expired with the signature Cartouche has.
+        XCTAssertFalse(CartoucheExpiredSession.signsInAgain(current: noted, noted: nil, tried: nil))
+        XCTAssertFalse(CartoucheExpiredSession.signsInAgain(current: noted.addingTimeInterval(7 * 86_400), noted: noted,
+                                                            tried: nil))
+    }
+
     // MARK: What to tell of a renewal or an update that failed
 
     /// SideStore no longer finds the certificate among the account's, and
@@ -241,6 +305,21 @@ final class CartoucheRenewalRulesTests: XCTestCase {
         let offline = try renewalFailure(["stage": "VerifyCertificate", "family": "operation", "kind": "certificateRevoked"],
                                          vpn: false)
         XCTAssertEqual(CartoucheRenewalTrouble.of(offline), .certificateRevoked)
+    }
+
+    /// SideStore first asks Apple for the account's certificates, with the
+    /// session of its last sign-in, and Apple answers -1 and "Your session
+    /// has expired" (or 1100): up to 0.15.1, the System page and the update's
+    /// notice showed it in SideStore's words. Any other -1 stays in them.
+    func testExpiredSessionAtCertificateVerification() throws {
+        let fields: [String: Any] = ["stage": "VerifyCertificate", "family": "server", "apple": -1,
+                                     "codes": "SideSign.ServerError 3"]
+        let expired = try renewalFailure(fields, message: "Apple error -1: Your session has expired.")
+        XCTAssertEqual(CartoucheRenewalTrouble.of(expired), .sessionExpired)
+        let other = try renewalFailure(fields, message: "Apple error -1: Service unavailable.")
+        XCTAssertNil(CartoucheRenewalTrouble.of(other))
+        let knownCode = try renewalFailure(["stage": "VerifyCertificate", "family": "server", "apple": 1100])
+        XCTAssertEqual(CartoucheRenewalTrouble.of(knownCode), .sessionExpired)
     }
 
     /// SideStore did not reach this iPhone through LocalDevVPN, as a renewal

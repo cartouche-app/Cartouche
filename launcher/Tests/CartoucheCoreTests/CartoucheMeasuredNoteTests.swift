@@ -142,6 +142,35 @@ final class CartoucheMeasuredNoteTests: XCTestCase {
         }
     }
 
+    /// Spanish and German, as French: the catalog has each word of a note,
+    /// and none of the sheet's English shows.
+    func testInSpanishAndGermanEveryWordIsTheirs() throws {
+        for (language, locale, expected) in [
+            ("es", Locale(identifier: "es_ES"),
+             "Medido por Cartouche en 4 iPhone, 9 sesiones (%@): 32,2 fps de 60 (mediana), "
+             + "83 tirones por minuto. 3 sesiones terminaron mal: 3 cierres inesperados."),
+            ("de", Locale(identifier: "de_DE"),
+             "Von Cartouche auf 4 iPhones gemessen, 9 Sitzungen (%@): 32,2 von 60 fps (Median), "
+             + "83 Ruckler pro Minute. 3 Sitzungen endeten schlecht: 3 Abstürze."),
+        ] {
+            let words = try catalogWords(language, locale: locale)
+            let period = CartoucheMeasuredNote.period(from: "2026-11-11", to: "2026-11-12", locale: locale)
+            XCTAssertFalse(period.contains("2026-11"), period)
+            let figures = try measured(Self.firstOnIPhone19_4)
+            let note = CartoucheMeasuredNote.note(figures, device: "iPhone19,4", words: words)
+            XCTAssertEqual(note, String(format: expected, period), language)
+            let noFigures = CartoucheMeasuredNote.note(try measured(Self.firstOnIPhone18_2), device: "iPhone18,2", words: words)
+            let engine = try XCTUnwrap(CartoucheMeasuredNote.engine(figures, written: "nxnative, its build not reported",
+                                                                    words: words))
+            for text in [note, noFigures, engine] {
+                XCTAssertFalse(text.contains("<no "), text)
+                for word in ["Measured", "stutters", "ended badly", "crashes", "its build"] {
+                    XCTAssertFalse(text.contains(word), "\(language): \(text)")
+                }
+            }
+        }
+    }
+
     func testTheResultOfAnIPadCountsIPads() throws {
         let measured = try measured("""
         {"iPhones": 3, "sessions": 5, "from": "2026-11-10", "to": "2026-11-10", "endedBadlyPercent": 0}

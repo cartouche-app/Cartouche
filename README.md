@@ -123,7 +123,7 @@ Cartouche ships no games, no keys and no firmware, and never downloads them: it 
 | [`guard/`](guard/) | The publish guard, which refuses to publish anything that looks like game content |
 | [`telemetry/`](telemetry/) | The server Cartouche and Cartouche for Mac send their measurements and problem reports to, a Cloudflare Worker, and the project's dashboard beside it |
 | [`domain/`](domain/) | The DNS records of cartouche.cloud, Cartouche's domain, which the Domain workflow keeps at Cloudflare |
-| [`site/`](site/) | The showcase page, at [cartouche.cloud](https://cartouche.cloud/) on GitHub Pages: Cartouche's screens rebuilt in HTML around games of nxnative's list, their covers loaded from IGDB, in French and English |
+| [`site/`](site/) | The showcase page, at [cartouche.cloud](https://cartouche.cloud/) on GitHub Pages: Cartouche's screens rebuilt in HTML around games of nxnative's list, their covers loaded from IGDB, in French, English, Spanish and German |
 | [`docs/`](docs/) | Getting started, architecture, roadmap, decisions, privacy, and this page's pictures ([docs/images](docs/images/README.md)) |
 
 ## Building

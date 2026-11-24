@@ -90,7 +90,8 @@ class UpdateTest(unittest.TestCase):
         found(r"if !setup\.isComplete \{\s*Text\(CartoucheText\.updateNeedsSetup\)", system,
               "the System page's words for an update that waits for the setup")
         words = json.loads(STRINGS.read_text(encoding="utf-8"))["strings"]["system.updates.needsSetup"]["localizations"]
-        installer = {"en": "Cartouche Installer", "fr": "Installeur Cartouche"}
+        installer = {"en": "Cartouche Installer", "fr": "Installeur Cartouche", "es": "Instalador de Cartouche",
+                     "de": "Cartouche-Installer"}
         self.assertEqual(set(words), set(installer))
         for language, name in installer.items():
             self.assertIn(name, words[language]["stringUnit"]["value"], language)

@@ -67,7 +67,9 @@ extension MacPlayError: LocalizedError {
         switch self {
         case .noApp:
             return tr("This game’s app is no longer on this Mac: build it for this Mac again.",
-                      "L’app de ce jeu n’est plus sur ce Mac : construisez-le à nouveau pour ce Mac.")
+                      "L’app de ce jeu n’est plus sur ce Mac : construisez-le à nouveau pour ce Mac.",
+                      "La app de este juego ya no está en este Mac: vuelve a compilarlo para este Mac.",
+                      "Die App dieses Spiels ist nicht mehr auf diesem Mac: Erstelle es erneut für diesen Mac.")
         }
     }
 }
@@ -102,7 +104,8 @@ public final class MacGames: ObservableObject {
     /// The games' apps on this Mac, by title ID.
     public private(set) var apps: [String: MacGameApp] = [:]
     public var news: ((MacGamesNews) -> Void)?
-    /// The language of the prompts the games show: "fr", or English.
+    /// The language of the prompts the games show: "fr", "es", "de", or
+    /// English.
     public var language = "en"
     /// More environment for each start: the tests' own.
     public var environment: [String: String] = [:]
