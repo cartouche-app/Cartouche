@@ -9929,6 +9929,23 @@
         }
       }
     },
+    "setup.appleID.sessionExpired" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple says the session of %@ has expired: Cartouche can no longer renew itself. Sign in again with this Apple ID."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple dit que la session de %@ a expiré : Cartouche ne peut plus se renouveler. Reconnectez-vous avec cet identifiant Apple."
+          }
+        }
+      }
+    },
     "setup.appleID.signIn" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10554,6 +10571,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fichier de jumelage"
+          }
+        }
+      }
+    },
+    "setup.sessionExpired.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple asks for a new sign-in with your Apple ID. Cartouche renews itself again as soon as it has gone through; your games and saves stay."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple demande une nouvelle connexion avec votre identifiant Apple. Cartouche se renouvelle de nouveau dès qu’elle est passée ; vos jeux et vos sauvegardes restent."
+          }
+        }
+      }
+    },
+    "setup.sessionExpired.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "One step to do again"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une étape à refaire"
           }
         }
       }
@@ -18697,6 +18748,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apple a révoqué le certificat qui signe Cartouche, sans doute parce qu’une autre app ou un autre ordinateur en a pris un nouveau avec le même identifiant Apple. Cartouche ne peut plus se renouveler ni se mettre à jour avec ce certificat : réinstallez Cartouche par-dessus cette copie avec l’Installeur Cartouche, sur votre ordinateur, avec le même identifiant Apple. Vos jeux et vos sauvegardes restent."
+          }
+        }
+      }
+    },
+    "system.signature.renew.sessionExpired" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple says the session of your Apple ID has expired: Cartouche can no longer renew or update itself until you sign in again. Choose Sign in again, on the System page, with the same Apple ID: Cartouche then renews itself. Your games and saves stay."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple dit que la session de votre identifiant Apple a expiré : Cartouche ne peut plus se renouveler ni se mettre à jour tant que vous ne vous reconnectez pas. Choisissez Se reconnecter, sur la page Système, avec le même identifiant Apple : Cartouche se renouvelle ensuite. Vos jeux et vos sauvegardes restent."
           }
         }
       }

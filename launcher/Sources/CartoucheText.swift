@@ -209,6 +209,8 @@ enum CartoucheText {
     static var setupIntro: String { s("setup.intro", "Three steps, once on this iPhone, then an automation that renews Cartouche every night.") }
     static var setupAllDone: String { s("setup.done.title", "All set") }
     static var setupAllDoneDetail: String { s("setup.done.detail", "Cartouche signs your games and renews itself. There is nothing more to do here.") }
+    static var setupSessionExpiredTitle: String { s("setup.sessionExpired.title", "One step to do again") }
+    static var setupSessionExpiredDetail: String { s("setup.sessionExpired.detail", "Apple asks for a new sign-in with your Apple ID. Cartouche renews itself again as soon as it has gone through; your games and saves stay.") }
     static var setupAllDoneButNightly: String { s("setup.done.nightly", "Cartouche signs your games. One last step: the automation that renews it every night, even while it stays closed.") }
     static func setupStepDone(_ step: String) -> String { f("setup.step.done", "%@, done", step) }
     static var setupPairingTitle: String { s("setup.pairing.title", "Pairing file") }
@@ -222,6 +224,7 @@ enum CartoucheText {
     static var setupAppleIDHow: String { s("setup.appleID.how", "Sign in once, here in Cartouche: Cartouche then takes its certificate and renews itself every week.") }
     static func setupAppleIDDone(_ appleID: String) -> String { f("setup.appleID.done", "Signed in: %@", appleID) }
     static func setupAppleIDUnfinished(_ appleID: String) -> String { f("setup.appleID.unfinished", "The sign-in with %@ stopped before Cartouche got its certificate. Sign in again.", appleID) }
+    static func setupAppleIDSessionExpired(_ appleID: String) -> String { f("setup.appleID.sessionExpired", "Apple says the session of %@ has expired: Cartouche can no longer renew itself. Sign in again with this Apple ID.", appleID) }
     static var setupSignIn: String { s("setup.appleID.signIn", "Sign In") }
     static func setupAppleIDDevice(_ appleID: String) -> String { f("setup.appleID.device", "Signed in: %@. This iPhone is left to register, which Cartouche does by itself once LocalDevVPN is connected.", appleID) }
     static var setupCertificateTitle: String { s("setup.certificate.title", "Certificate") }
@@ -312,6 +315,7 @@ enum CartoucheText {
     static var renewingByItself: String { s("system.signature.renewing.auto", "Cartouche renews itself…") }
     static var renewUnavailable: String { s("system.signature.renew.unavailable", "The built-in SideStore did not load. Close Cartouche, open it again, then renew.") }
     static var renewFailed: String { s("system.signature.renew.failed", "The renewal did not go through") }
+    static var renewSessionExpired: String { s("system.signature.renew.sessionExpired", "Apple says the session of your Apple ID has expired: Cartouche can no longer renew or update itself until you sign in again. Choose Sign in again, on the System page, with the same Apple ID: Cartouche then renews itself. Your games and saves stay.") }
     static var renewRevoked: String { s("system.signature.renew.revoked", "Apple revoked the certificate Cartouche is signed with, most likely because another app or computer took a new one with the same Apple ID. Cartouche can no longer renew or update itself with this certificate: install Cartouche again over this copy with the Cartouche Installer, on your computer, with the same Apple ID. Your games and saves stay.") }
     static var automaticRenewal: String { s("system.auto", "Automatic renewal") }
     static var renewEveryNight: String { s("system.auto.daily", "Renew every night") }

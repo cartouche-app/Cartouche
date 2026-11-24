@@ -22,9 +22,93 @@ extension Words {
     static let provisioningRefused = "Apple is refusing, for now, to set up a new sign-in on this iPhone" // signIn.provisioningRefused
     static let sessionExpired = "Apple says this iPhone’s sign-in has expired" // signIn.sessionExpired
     static let cannotComplete = "Apple refused this sign-in without saying why" // signIn.cannotComplete
+    static let signInAgain = "Sign in again"                // signIn.again
+    static let renewSessionExpired = "Apple says the session of your Apple ID has expired" // system.signature.renew.sessionExpired
+    static let setupSessionExpired = "Apple says the session of " // setup.appleID.sessionExpired
+    static let setupStepAgain = "One step to do again"      // setup.sessionExpired.title
+    static let setupAllSet = "All set"                      // setup.done.title
 }
 
 final class SignInUITests: ConsoleTestCase {
+    /// A copy set up offers no other sign-in: each counts against Apple's
+    /// limit on them and may cost a code, and Cartouche needs none until
+    /// Apple says that the session the built-in SideStore renews with has
+    /// expired.
+    @MainActor
+    func testASetUpCopyOffersNoSignInAgain() {
+        let app = openConsole(Launch())
+        tap(app.buttons[Words.system], "System in the dock", in: app)
+        tap(element(in: app.buttons, beginningWith: Words.setup), "Setup on the System page", in: app)
+        let signedIn = element(in: app.staticTexts, beginningWith: Words.signedIn)
+        expect(signedIn.waitForExistence(timeout: 15), "The setup does not say the Apple ID is signed in", in: app)
+        expect(!app.buttons[Words.signInAgain].exists, "The setup done offers Sign in again", in: app)
+        expect(app.staticTexts[Words.setupAllSet].exists, "The setup done does not say that all is set", in: app)
+        closeSetup(in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// Apple said that the session the built-in SideStore renews with has
+    /// expired, as 54 renewals and updates of 7 copies found it from
+    /// November 19 to 24: the System page says so in Cartouche's words, with
+    /// Sign in again under it, as the setup does; signed in again with the
+    /// same Apple ID, Cartouche renews itself at once, and neither asks
+    /// any more.
+    @MainActor
+    func testAnExpiredSessionSignsInAgainFromTheSystemPageThenRenews() {
+        let app = openConsole(Launch(work: "renewal-session-expired", typing: true))
+        tap(app.buttons[Words.system], "System in the dock", in: app)
+        let said = element(in: app.staticTexts, beginningWith: Words.renewSessionExpired)
+        scrollTo(said, "What to do about the expired session on the System page", in: app)
+        let again = app.buttons[Words.signInAgain]
+        scrollAndTap(again, "Sign in again on the System page", in: app)
+        expect(app.staticTexts[Words.signInTitle].waitForExistence(timeout: 15), "The sign-in did not open", in: app)
+        let appleID = app.textFields[Words.appleID]
+        expect(appleID.waitForExistence(timeout: 15), "The sign-in has no Apple ID field", in: app)
+        expect(appleID.value as? String == GalleryWords.signedInAs,
+               "The sign-in does not hold the Apple ID signed in: \(String(describing: appleID.value))", in: app)
+        type("not-a-password\n", into: app.secureTextFields[Words.password], "the password field", in: app)
+        turnDownSavingThePassword(in: app)
+        expect(waitForGone(app.staticTexts[Words.signInTitle], timeout: 30), "The sign-in stayed open once signed in", in: app)
+        // The renewal Cartouche starts at once takes two seconds in the
+        // gallery (GalleryRefresh).
+        expect(waitForGone(again, timeout: 30), "Sign in again stayed once signed in", in: app)
+        expect(waitForGone(said, timeout: 30), "The System page still says that the session has expired", in: app)
+
+        // Back up the page, scrolled down to the signature.
+        let setupRow = element(in: app.buttons, beginningWith: Words.setup)
+        scrollBackTo(setupRow, "Setup on the System page", in: app)
+        tap(setupRow, "Setup on the System page", in: app)
+        let signedIn = element(in: app.staticTexts, beginningWith: Words.signedIn)
+        expect(signedIn.waitForExistence(timeout: 15), "The setup does not say the Apple ID is signed in", in: app)
+        expect(!app.buttons[Words.signInAgain].exists, "The setup still offers Sign in again", in: app)
+        closeSetup(in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// The same, from the setup, which says why its Apple ID's step is to do
+    /// again.
+    @MainActor
+    func testAnExpiredSessionAsksTheSetupToSignInAgain() {
+        let app = openConsole(Launch(work: "renewal-session-expired"))
+        tap(app.buttons[Words.system], "System in the dock", in: app)
+        tap(element(in: app.buttons, beginningWith: Words.setup), "Setup on the System page", in: app)
+        let said = element(in: app.staticTexts, beginningWith: Words.setupSessionExpired)
+        expect(said.waitForExistence(timeout: 15), "The setup does not say that the session has expired", in: app)
+        // Nor does its title say that all is set.
+        expect(app.staticTexts[Words.setupStepAgain].exists, "The setup's title does not say a step is to do again", in: app)
+        expect(!app.staticTexts[Words.setupAllSet].exists, "The setup's title says all is set", in: app)
+        tap(app.buttons[Words.signInAgain], "Sign in again of the setup's Apple ID step", in: app)
+        let appleID = app.textFields[Words.appleID]
+        expect(appleID.waitForExistence(timeout: 15), "The sign-in did not open", in: app)
+        expect(appleID.value as? String == GalleryWords.signedInAs,
+               "The sign-in does not hold the Apple ID signed in: \(String(describing: appleID.value))", in: app)
+        tap(app.buttons[Words.cancel], "Cancel of the sign-in", in: app)
+        expect(waitForGone(app.staticTexts[Words.signInTitle]), "Cancel did not close the sign-in", in: app)
+        expect(app.buttons[Words.signInAgain].exists, "Sign in again went once the sign-in was cancelled", in: app)
+        closeSetup(in: app)
+        expectMainThreadAnswered(app)
+    }
+
     /// A wrong code gets a new request that says so; the right one signs the
     /// player in, and the setup shows the Apple ID.
     @MainActor
