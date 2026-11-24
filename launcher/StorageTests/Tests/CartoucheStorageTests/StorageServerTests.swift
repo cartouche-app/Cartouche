@@ -531,6 +531,79 @@ class StorageServerTests: XCTestCase {
         XCTAssertEqual(try party(in: second.documents), "partie 11")
     }
 
+    /// While a game plays behind the console, its saves go a few seconds
+    /// after it saves, from a copy of them made at one moment; each copy
+    /// that goes in the same game takes the place of the one that went
+    /// before it, for one copy in the folder for each game, not one for
+    /// each save; once another iPhone sent a copy meanwhile, none is.
+    func testSavesThatGoWhileTheGamePlaysTakeThePlaceOfTheirOwnCopy() async throws {
+        let remote = try await signIn()
+        let folder = try await scratchFolder(remote)
+        let scratchHere = try localFolder()
+        func round() -> CartoucheSavesFolder {
+            CartoucheSavesFolder(remote: remote, path: folder, place: "test|" + folder, scratch: scratchHere)
+        }
+        let gameFolder = CartoucheStoragePath.join(folder, "Essai de stockage [0100CA27C0DE0000]")
+        func copies() async throws -> [String] {
+            try await remote.list(gameFolder).map(\.name).filter { !$0.hasSuffix(".partial") }.sorted()
+        }
+        let morning = Date(timeIntervalSince1970: 1_794_292_800)
+        let game = CartoucheSaveTarget(key: "game", name: "Essai de stockage", titleId: "0100ca27c0de0000",
+                                       documents: try play("partie 1", written: morning))
+        // The game before: its saves went after it.
+        let before = try await round().sync(game, base: nil, fetching: false)
+        var base = try XCTUnwrap(before.base)
+
+        // The game saves now and then while it plays: each time, a copy of
+        // its saves goes, as Cartouche sends them while it plays.
+        var playCopy: String?
+        func playing(_ party: String, written: Date) async throws -> CartoucheSaveOutcome {
+            _ = try play(party, written: written, in: game.documents)
+            let place = scratchHere.appendingPathComponent("playing", isDirectory: true)
+            let snapshot = try XCTUnwrap(try CartoucheSaveSync.snapshot(ofSavesIn: game.documents, into: place))
+            defer { try? FileManager.default.removeItem(at: place) }
+            let source = CartoucheSaveTarget(key: game.key, name: game.name, titleId: game.titleId,
+                                             documents: snapshot.documents)
+            let went = try await round().sync(source, base: snapshot.forCopy(base), fetching: false, replacing: playCopy)
+            base = try XCTUnwrap(snapshot.forGame(went.base))
+            if let sent = went.sent { playCopy = sent }
+            return went
+        }
+        for (step, party) in ["partie 2", "partie 3", "partie 4"].enumerated() {
+            let went = try await playing(party, written: morning + 600 * Double(step + 1))
+            XCTAssertEqual(went.step, .send)
+            let now = try await copies()
+            XCTAssertEqual(now, [morning, morning + 600 * Double(step + 1)].map(CartoucheSaveSync.fileName),
+                           "the game before's copy, and this game's newest saves alone")
+        }
+        XCTAssertEqual(base.look, CartoucheSaveSync.saves(in: game.documents)?.look,
+                       "the base holds for the saves in the game's Documents")
+        // The game ends: its saves went already.
+        let ended = try await round().sync(game, base: base, fetching: false, replacing: playCopy)
+        XCTAssertEqual(ended.step, .none)
+        let afterGame = try await copies()
+        XCTAssertEqual(afterGame, [morning, morning + 1_800].map(CartoucheSaveSync.fileName))
+
+        // They are the saves as they were last, whole.
+        let other = CartoucheSaveTarget(key: "other", name: "Essai de stockage", titleId: "0100CA27C0DE0000",
+                                        documents: try localFolder())
+        let fetched = try await round().sync(other, base: nil, fetching: true)
+        XCTAssertEqual(fetched.fetched, CartoucheSaveSync.fileName(morning + 1_800))
+        XCTAssertEqual(try party(in: other.documents), "partie 4")
+
+        // Another iPhone sends its saves while the game still plays here:
+        // the copies stay as they are, the one it started from too, and the
+        // next one of this game goes beside them.
+        playCopy = CartoucheSaveSync.fileName(morning + 1_800)
+        _ = try play("partie 5", written: morning + 2_400, in: other.documents)
+        let otherSent = try await round().sync(other, base: fetched.base, fetching: false)
+        XCTAssertEqual(otherSent.step, .send)
+        let went = try await playing("partie 6", written: morning + 3_000)
+        XCTAssertEqual(went.step, .send)
+        let both = try await copies()
+        XCTAssertEqual(both, [morning, morning + 1_800, morning + 2_400, morning + 3_000].map(CartoucheSaveSync.fileName))
+    }
+
     func testFindsAGamesSavesByItsTitleIDWhateverItsFolderIsNamed() async throws {
         let remote = try await signIn()
         let folder = try await scratchFolder(remote)

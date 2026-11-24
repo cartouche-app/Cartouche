@@ -149,6 +149,12 @@
 //                                        with two games' saves waiting for it
 //        erasing                         on Reset Cartouche's page, the reset
 //                                        under way
+//        game-mode-later                 Game Mode coming 1.5 s after
+//                                        Cartouche first measures its
+//                                        memory: its own limit 6,144 MiB
+//                                        until then, 8,192 after, as on an
+//                                        iPhone with 12 GB
+//                                        (GalleryState.ownLimitMiB)
 //        gpu-no-bc                       an iPhone whose GPU reads no
 //                                        BC-compressed texture, an A16's,
 //                                        the sheet's game built by nxnative,
@@ -184,6 +190,10 @@
 //                                        games' sheets, System and the
 //                                        Mac's builds show them
 //                                        (GalleryMac.builds)
+//        mac-cable                       two Macs nearby: the MacBook Air
+//                                        through the cable this iPhone is
+//                                        plugged into it by, the Mac mini
+//                                        on the Wi-Fi
 //        mac-code                        two Macs nearby, pairing with the
 //                                        first, with the six digits on both
 //                                        screens
@@ -550,6 +560,13 @@ struct GalleryScenario {
         GalleryState.appGroupMissing = work == "signed-elsewhere"
         GalleryState.liveProcessMissing = work?.hasSuffix("-no-liveprocess") == true
         GalleryState.readsBCTextures = !GalleryBCConversion.isWithoutBC(work)
+        GalleryState.gameModeLater = work == "game-mode-later"
+        // Cartouche's first launch on this iPhone and this iOS: no limit of
+        // its own measured before Game Mode comes (CartoucheOwnLimitRecord).
+        if GalleryState.gameModeLater {
+            UserDefaults.standard.removeObject(forKey: CartoucheOwnLimitRecord.key)
+            UserDefaults.standard.removeObject(forKey: CartoucheOwnLimitRecord.systemKey)
+        }
         GalleryState.signInUnfinished = work == "sign-in-unfinished"
         GalleryState.sheetSection = screen == "sheet" ? category : nil
         GalleryState.vpnConnected = work.map {
@@ -731,9 +748,10 @@ struct GalleryScenario {
                 // it the local network.
                 CartoucheMacBrowser.gallery = (found: [], refused: false)
             }
-            if ["mac-nearby", "mac-code", "mac-refused"].contains(work) {
+            if ["mac-nearby", "mac-code", "mac-refused", "mac-cable"].contains(work) {
                 let refused = work == "mac-refused"
-                CartoucheMacBrowser.gallery = (found: refused ? [] : GalleryMac.nearby, refused: refused)
+                CartoucheMacBrowser.gallery = (found: refused ? [] : work == "mac-cable" ? GalleryMac.cabled : GalleryMac.nearby,
+                                               refused: refused)
                 if work == "mac-code" {
                     CartoucheMacPairing.gallery = (mac: GalleryMac.nearby[0], code: "482915")
                 }
@@ -994,6 +1012,12 @@ struct GalleryScenario {
                 }
             }
             try? await Task.sleep(for: .seconds(3))
+            // Game Mode, which comes 1.5 s after Cartouche first measured its
+            // memory, and the next measurement after, 2 s later at most
+            // (work: game-mode-later), for up to 10 s more.
+            for _ in 0..<40 where !GalleryState.gameModeSettled {
+                try? await Task.sleep(for: .milliseconds(250))
+            }
             // The sheet on its way down to its saves, for up to 15 s more.
             for _ in 0..<60 where GallerySaves.bringingDown {
                 try? await Task.sleep(for: .milliseconds(250))
@@ -1117,16 +1141,7 @@ struct CartoucheGalleryApp: App {
             CartoucheGamesView(showingLibrary: true)
         case "sheet", "sheet-mac", "sheet-saves":
             if let entry = entries.all.first(where: { $0.titleId == scenario.sheet }) {
-                NavigationStack {
-                    CartoucheGameSheetView(entry: entry, memory: CartoucheMemoryReading.now(), onPlay: { _ in },
-                                           onSettings: { _ in }, onImport: {}, onUninstall: { _ in },
-                                           opensOnManagement: scenario.category == "manage")
-                        .toolbar {
-                            ToolbarItem(placement: .confirmationAction) {
-                                Button(CartoucheText.done) {}
-                            }
-                        }
-                }
+                GallerySheetScreen(entry: entry, opensOnManagement: scenario.category == "manage")
             }
         case "gameinfo":
             if let entry = entries.owned.first(where: { $0.titleId == scenario.sheet }) {
@@ -1296,6 +1311,29 @@ struct CartoucheGalleryApp: App {
     }
 }
 
+/// A game's sheet, with Cartouche's own memory as the console has it
+/// (CartoucheGamesView): measured as it opens, and again for a while
+/// after (CartoucheOwnMemoryWatch).
+struct GallerySheetScreen: View {
+    let entry: CartoucheEntry
+    let opensOnManagement: Bool
+    @State private var memory = CartoucheMemoryReading.now()
+
+    var body: some View {
+        NavigationStack {
+            CartoucheGameSheetView(entry: entry, memory: memory, onPlay: { _ in },
+                                   onSettings: { _ in }, onImport: {}, onUninstall: { _ in },
+                                   opensOnManagement: opensOnManagement)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(CartoucheText.done) {}
+                    }
+                }
+        }
+        .modifier(CartoucheOwnMemoryWatch(memory: $memory))
+    }
+}
+
 /// The player's Mac with Cartouche Builder, as the gallery shows it: found
 /// by Bonjour beside another Mac of the house, then paired. Made-up names,
 /// ID and address.
@@ -1305,6 +1343,13 @@ enum GalleryMac {
     static let nearby = [
         CartoucheNearbyMac(name: "MacBook Air", macID: id, endpoint: service("MacBook Air")),
         CartoucheNearbyMac(name: "Mac mini", macID: "c2e7a4d1-8b5f-4e3a-a6d9-1f4b7c0e9a28", endpoint: service("Mac mini")),
+    ]
+
+    /// The same Macs with this iPhone plugged into the MacBook Air by a
+    /// cable, which Bonjour does not find on this network (work: mac-cable).
+    static let cabled = [
+        CartoucheNearbyMac(name: "MacBook Air", macID: id, endpoint: nil, cabled: true),
+        nearby[1],
     ]
 
     /// The Mac's addresses in the player's tailnet, as its Cartouche Builder

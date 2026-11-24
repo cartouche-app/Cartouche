@@ -60,9 +60,11 @@ public protocol MacConnectionSavesDriver: AnyObject, Sendable {
     /// copies, from BASE, as JSON: a base of another saves folder makes the
     /// saves unchanged since no news (LEAVING says whether their copy is
     /// still in the folder left). QUIET, just before a copy takes the place
-    /// of the saves.
+    /// of the saves. REPLACING: the copy they went to earlier in the same
+    /// game, which the one that goes now takes the place of when it is
+    /// still the newest there.
     func sync(_ game: MacSaveGame, documents: URL, base: Data?, fetching: Bool, leaving: @escaping @Sendable () -> Bool,
-              quiet: @Sendable () -> Bool) async throws -> MacConnectionOutcome
+              quiet: @Sendable () -> Bool, replacing: String?) async throws -> MacConnectionOutcome
     /// Puts the copy NAME back as GAME's saves in DOCUMENTS.
     func putBack(_ name: String, of game: MacSaveGame, documents: URL, base: Data?,
                  quiet: @Sendable () -> Bool) async throws -> MacConnectionOutcome
@@ -95,8 +97,12 @@ public final class MacConnectionSaves: MacSavesPlace {
         games.appendingPathComponent(titleID.uppercased(), isDirectory: true)
     }
 
+    public func reading(games: URL) -> any MacSavesPlace {
+        MacConnectionSaves(driver: driver, games: games, scratch: scratch)
+    }
+
     public func sync(_ game: MacSaveGame, base given: CartoucheSaveBase?, fetching: Bool,
-                     quiet: @Sendable () -> Bool) async throws -> MacSaveOutcome {
+                     quiet: @Sendable () -> Bool, replacing: String? = nil) async throws -> MacSaveOutcome {
         let games = self.games
         let scratch = self.scratch
         let left = given.flatMap { $0.place == place ? nil : Self.encode($0) }
@@ -107,7 +113,7 @@ public final class MacConnectionSaves: MacSavesPlace {
             return MacSavesFolder.copyIsThere(base, of: game, games: games, scratch: scratch)
         }
         let outcome = try await driver.sync(game, documents: documents(of: game.titleID), base: given.flatMap(Self.encode),
-                                            fetching: fetching, leaving: leaving, quiet: quiet)
+                                            fetching: fetching, leaving: leaving, quiet: quiet, replacing: replacing)
         return try Self.outcome(outcome)
     }
 

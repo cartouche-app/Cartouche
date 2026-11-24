@@ -7895,13 +7895,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche keeps these saves in step with your saves folder: the newest come when the game is installed and before it starts, and go there after each game. When both changed, the newest win and the others stay as a copy. The %lld newest copies are kept."
+            "value" : "Cartouche keeps these saves in step with your saves folder: the newest come when the game is installed and before it starts, and go there a few seconds after each save of the game, after the game at the latest. When both changed, the newest win and the others stay as a copy. The %lld newest copies are kept, one for each game played."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche synchronise ces sauvegardes avec votre dossier des sauvegardes : les plus récentes arrivent à l’installation du jeu et avant chaque lancement, et y repartent après chaque partie. Si les deux ont changé, les plus récentes l’emportent et les autres restent en copie. Les %lld copies les plus récentes sont gardées."
+            "value" : "Cartouche synchronise ces sauvegardes avec votre dossier des sauvegardes : les plus récentes arrivent à l’installation du jeu et avant chaque lancement, et y repartent quelques secondes après chaque sauvegarde du jeu, au plus tard après la partie. Si les deux ont changé, les plus récentes l’emportent et les autres restent en copie. Les %lld copies les plus récentes sont gardées, une par partie."
           }
         }
       }
@@ -8133,13 +8133,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Quit the game to sync its saves or put back a copy."
+            "value" : "While the game plays, its saves go a few seconds after each save. Quit it to sync now or put back a copy."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Quittez le jeu pour synchroniser ses sauvegardes ou remettre une copie."
+            "value" : "Pendant la partie, ses sauvegardes partent quelques secondes après chaque sauvegarde. Quittez le jeu pour synchroniser maintenant ou remettre une copie."
           }
         }
       }
@@ -14587,6 +14587,23 @@
         }
       }
     },
+    "storage.mac.byCable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By cable"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Par câble"
+          }
+        }
+      }
+    },
     "storage.mac.checkCode" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14661,13 +14678,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "On your Mac, open Cartouche Builder and turn on Share with Cartouche on the iPhone, on its iPhone page. This iPhone and the Mac must be on the same Wi-Fi, or both on Tailscale: then pair it by its address, below."
+            "value" : "On your Mac, open Cartouche Builder and turn on Share with Cartouche on the iPhone, on its iPhone page. Then plug this iPhone into the Mac with a cable, or put both on the same Wi-Fi. Away from home, with Tailscale on both, pair it by its address, below."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sur votre Mac, ouvrez Cartouche Builder et activez Partager avec Cartouche sur l’iPhone, dans sa page iPhone. Cet iPhone et le Mac doivent être sur le même Wi-Fi, ou tous deux sur Tailscale : associez-le alors par son adresse, plus bas."
+            "value" : "Sur votre Mac, ouvrez Cartouche Builder et activez Partager avec Cartouche sur l’iPhone, dans sa page iPhone. Branchez ensuite cet iPhone au Mac avec un câble, ou mettez-les sur le même Wi-Fi. Hors de chez vous, avec Tailscale sur les deux, associez-le par son adresse, plus bas."
           }
         }
       }
@@ -14797,13 +14814,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ does not answer on this network. Open Cartouche Builder on it with Share with Cartouche on the iPhone turned on: Cartouche tries again as soon as the iPhone is back on its Wi-Fi or on your VPN."
+            "value" : "%@ does not answer on this network. Open Cartouche Builder on it with Share with Cartouche on the iPhone turned on: Cartouche tries again as soon as the iPhone is back on its Wi-Fi or on your VPN, or plugged into it with a cable."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ ne répond pas sur ce réseau. Ouvrez-y Cartouche Builder avec Partager avec Cartouche sur l’iPhone activé : Cartouche réessaie dès que l’iPhone retrouve son Wi-Fi ou votre VPN."
+            "value" : "%@ ne répond pas sur ce réseau. Ouvrez-y Cartouche Builder avec Partager avec Cartouche sur l’iPhone activé : Cartouche réessaie dès que l’iPhone retrouve son Wi-Fi ou votre VPN, ou y est branché avec un câble."
           }
         }
       }
@@ -15698,13 +15715,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche keeps your games’ saves in step with this folder, a folder per game: they come when a game is installed and before it starts, as after another iPhone played it or Cartouche was installed again, and go after each game. The %lld newest copies are kept."
+            "value" : "Cartouche keeps your games’ saves in step with this folder, a folder per game: they come when a game is installed and before it starts, as after another iPhone played it or Cartouche was installed again, and go a few seconds after each save of the game, after the game at the latest. The %lld newest copies are kept, one for each game played."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche synchronise les sauvegardes de vos jeux avec ce dossier, un dossier par jeu : elles arrivent à l’installation d’un jeu et avant chaque lancement, comme après une partie sur un autre iPhone ou une réinstallation de Cartouche, et y repartent après chaque partie. Les %lld copies les plus récentes sont gardées."
+            "value" : "Cartouche synchronise les sauvegardes de vos jeux avec ce dossier, un dossier par jeu : elles arrivent à l’installation d’un jeu et avant chaque lancement, comme après une partie sur un autre iPhone ou une réinstallation de Cartouche, et y repartent quelques secondes après chaque sauvegarde du jeu, au plus tard après la partie. Les %lld copies les plus récentes sont gardées, une par partie."
           }
         }
       }

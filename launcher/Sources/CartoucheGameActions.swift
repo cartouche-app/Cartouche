@@ -1317,6 +1317,11 @@ final class CartoucheGameActions: ObservableObject {
             return false
         }
         app.appInfo.lastLaunched = Date()
+        // Cartouche runs beside the game: the saves it makes go as it makes
+        // them.
+        if let target = saves(of: app) {
+            CartoucheSaveBackups.shared.watch(target)
+        }
         return true
     }
 
@@ -1328,7 +1333,7 @@ final class CartoucheGameActions: ObservableObject {
               // LiveContainer runs these only in its own place.
               info.defaultClassicMode == 0, !info.isJITNeeded, !info.is32bit,
               !keeping.startsInPlace(bundleId: info.bundleIdentifier(),
-                                     ownLimitMiB: CartoucheMemoryReading.now()?.limitMiB) else { return false }
+                                     ownLimitMiB: keeping.measuredOwn(CartoucheMemoryReading.now())) else { return false }
         return fitsBehindConsole(app, limitMiB: nil)
     }
 
@@ -1337,8 +1342,9 @@ final class CartoucheGameActions: ObservableObject {
     /// has more.
     private func fitsBehindConsole(_ app: LCAppModel, limitMiB: Int?) -> Bool {
         let needs = sheetNeeds(of: app)
-        return CartoucheGameKeeping.shared.fitsBehind(needsIML: needs.iml, peakMiB: needs.peakMiB, limitMiB: limitMiB,
-                                                      ownLimitMiB: CartoucheMemoryReading.now()?.limitMiB)
+        let keeping = CartoucheGameKeeping.shared
+        return keeping.fitsBehind(needsIML: needs.iml, peakMiB: needs.peakMiB, limitMiB: limitMiB,
+                                  ownLimitMiB: keeping.measuredOwn(CartoucheMemoryReading.now()))
     }
 
     /// What the game's sheet says it needs: Increased Memory Limit, and its
@@ -1409,7 +1415,7 @@ final class CartoucheGameActions: ObservableObject {
         let needs = sheetNeeds(of: app)
         let after = CartoucheGamePlace.afterMeasure(limitMiB: reading.limitMiB, needsIML: needs.iml, peakMiB: needs.peakMiB,
                                                     behindLacksIML: keeping.behindLacksIML,
-                                                    ownMiB: CartoucheMemoryReading.now()?.limitMiB)
+                                                    ownMiB: keeping.measuredOwn(CartoucheMemoryReading.now()))
         guard case .startsAgainInPlace(let fromNowOn) = after else { return }
         NSLog("[Cartouche] %@ needs more memory than the %lld MiB it has behind the console%@: it starts in Cartouche's place",
               app.displayName, reading.limitMiB, keeping.behindLacksIML ? ", without Increased Memory Limit" : "")
@@ -1449,7 +1455,7 @@ final class CartoucheGameActions: ObservableObject {
                                                      wasInFront: wasInFront, startPending: pendingStart != nil,
                                                      needsIML: needs.iml, peakMiB: needs.peakMiB,
                                                      behindLacksIML: keeping.behindLacksIML,
-                                                     ownMiB: CartoucheMemoryReading.now()?.limitMiB)
+                                                     ownMiB: keeping.measuredOwn(CartoucheMemoryReading.now()))
             let limit = CartoucheText.memoryAmount(mebibytes: reading?.limitMiB ?? 0)
             let stopped = CartoucheGameNotice(title: title,
                                               message: wasInFront ? CartoucheText.gameStopped : CartoucheText.gameStoppedPaused)
@@ -1471,7 +1477,11 @@ final class CartoucheGameActions: ObservableObject {
                 notice = stopped
             }
         }
-        copySaves(of: [app])
+        // The saves it made since they last went go now, in place of the
+        // copy they went to while it played.
+        if let target = saves(of: app) {
+            CartoucheSaveBackups.shared.gameEnded(target)
+        }
         if let next = pendingStart {
             pendingStart = nil
             // Once LiveContainer has let go of the game's data folder.
@@ -1619,8 +1629,10 @@ final class CartoucheGameActions: ObservableObject {
     func copySaves(of apps: [LCAppModel]) {
         let backups = CartoucheSaveBackups.shared
         guard backups.isOn, work == nil else { return }
-        // The game behind the console may be writing its saves: they go
-        // once it has ended.
+        // The game behind the console may be writing its saves: they go as
+        // it makes them, from a copy made at one moment (watch), and what
+        // did not go yet is tried again now.
+        backups.retryPlaying()
         backups.copyChanged(apps.filter { $0 !== running?.app }.compactMap { saves(of: $0) })
     }
 

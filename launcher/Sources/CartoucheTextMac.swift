@@ -18,7 +18,8 @@ extension CartoucheText {
     static var storageMacTitle: String { s("storage.mac.title", "Your Mac") }
     static var storageMacNearby: String { s("storage.mac.nearby", "Macs nearby") }
     static var storageMacLooking: String { s("storage.mac.looking", "Looking for Cartouche Builder on this network…") }
-    static var storageMacHow: String { s("storage.mac.how", "On your Mac, open Cartouche Builder and turn on Share with Cartouche on the iPhone, on its iPhone page. This iPhone and the Mac must be on the same Wi-Fi, or both on Tailscale: then pair it by its address, below.") }
+    static var storageMacHow: String { s("storage.mac.how", "On your Mac, open Cartouche Builder and turn on Share with Cartouche on the iPhone, on its iPhone page. Then plug this iPhone into the Mac with a cable, or put both on the same Wi-Fi. Away from home, with Tailscale on both, pair it by its address, below.") }
+    static var storageMacByCable: String { s("storage.mac.byCable", "By cable") }
     static var storageMacPairAgain: String { s("storage.mac.pairAgain", "Choose your Mac again to pair once more, when it no longer knows this iPhone.") }
     static var storageMacPaired: String { s("storage.mac.paired", "Paired") }
     static var storageMacAdded: String { s("storage.mac.added", "Added") }
@@ -37,7 +38,7 @@ extension CartoucheText {
     static func storageMacAddressUnanswered(_ address: String) -> String { f("storage.mac.address.unanswered", "%@ does not answer: check its address, that Share with Cartouche on the iPhone is on in Cartouche Builder, and that Tailscale is connected on this iPhone and on the Mac.", address) }
     static var storageMacAddressInvalid: String { s("storage.mac.address.invalid", "This is neither a name nor an address: type the Mac’s name in Tailscale, or its address there, without anything before or after it.") }
     static var storageMacAddressFooter: String { s("storage.mac.address.footer", "Away from home, or on a network where Bonjour does not find it: with Tailscale on this iPhone and on the Mac, type the Mac’s name in Tailscale, such as macbook-air, or its address there, which starts with 100.") }
-    static func storageMacOffline(_ mac: String) -> String { f("storage.mac.offline", "%@ does not answer on this network. Open Cartouche Builder on it with Share with Cartouche on the iPhone turned on: Cartouche tries again as soon as the iPhone is back on its Wi-Fi or on your VPN.", mac) }
+    static func storageMacOffline(_ mac: String) -> String { f("storage.mac.offline", "%@ does not answer on this network. Open Cartouche Builder on it with Share with Cartouche on the iPhone turned on: Cartouche tries again as soon as the iPhone is back on its Wi-Fi or on your VPN, or plugged into it with a cable.", mac) }
     static func storageMacOfflineTailscaleOff(_ mac: String) -> String { f("storage.mac.offline.tailscaleOff", "%@ does not answer on this network. Away from home, turn on Tailscale on this iPhone for Cartouche to reach it. At home, open Cartouche Builder on it with Share with Cartouche on the iPhone turned on.", mac) }
     static func storageMacOfflineTailscale(_ mac: String) -> String { f("storage.mac.offline.tailscale", "%@ answers neither on this network nor through Tailscale. Open Cartouche Builder on it with Share with Cartouche on the iPhone turned on, and check that Tailscale is connected on the Mac too.", mac) }
     static func storageMacNotFound(_ item: String) -> String { f("storage.mac.notFound", "%@ is not on the Mac.", item) }
