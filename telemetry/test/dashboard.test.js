@@ -366,7 +366,7 @@ test("the database out of reach, the page is told to try again", async () => {
 
 // MARK: Problems on GitHub
 
-const REPOSITORY = "clabeuhtegrite/cartouche-reports";
+const REPOSITORY = "cartouche-app/cartouche-reports";
 const GITHUB_TOKEN = "github_pat_for_the_tests";
 
 test("the problems' issues come from GitHub without their bodies", async () => {
@@ -395,7 +395,7 @@ test("the problems' issues come from GitHub without their bodies", async () => {
   assert.equal(asked[0].init.headers.authorization, `Bearer ${GITHUB_TOKEN}`);
   const query = JSON.parse(asked[0].init.body);
   assert.doesNotMatch(query.query, /\bbody\b/);
-  assert.deepEqual(query.variables, { owner: "clabeuhtegrite", name: "cartouche-reports", count: LIMITS.issues });
+  assert.deepEqual(query.variables, { owner: "cartouche-app", name: "cartouche-reports", count: LIMITS.issues });
 });
 
 test("without the token, or GitHub away, the page says so and the token never shows", async () => {

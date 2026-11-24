@@ -8,8 +8,9 @@
 - a database of that name in another jurisdiction stops the deploy;
 - without the secrets, the deploy does nothing;
 - with the problems' token, the Worker has it and the private repository
-  to file problems in, never one GitHub says is public, and the token is
-  never printed;
+  to file problems in, by the name GitHub gives it now when it moved to
+  another owner, never one GitHub says is public, and the token is never
+  printed; the workflow names the organization's repository;
 - with a Twitch application's ID and secret, the server has them to find on
   IGDB the covers of the games Cartouche does not know, never the dashboard,
   and neither is printed; without them, the deploy says so;
@@ -113,7 +114,7 @@ class DeployTest(unittest.TestCase):
         self.assertIn("10000: Authentication error", result.stderr)
         self.assertEqual(self.cloudflare.databases, [])
 
-    def deploy_with_problems(self, repository="clabeuhtegrite/cartouche-reports", token=GITHUB_TOKEN):
+    def deploy_with_problems(self, repository="cartouche-app/cartouche-reports", token=GITHUB_TOKEN):
         github = f"http://127.0.0.1:{self.server.server_port}/github"
         return self.deploy(CLOUDFLARE_API_TOKEN=TOKEN, CLOUDFLARE_ACCOUNT_ID=ACCOUNT, GITHUB_API_URL=github,
                            CARTOUCHE_REPORTS_TOKEN=token, CARTOUCHE_REPORTS_REPOSITORY=repository)
@@ -122,22 +123,44 @@ class DeployTest(unittest.TestCase):
         return self.cloudflare.scripts["cartouche-telemetry"]["metadata"]["bindings"]
 
     def test_the_worker_files_problems_in_the_private_repository(self):
-        self.cloudflare.repositories["clabeuhtegrite/cartouche-reports"] = True
+        self.cloudflare.repositories["cartouche-app/cartouche-reports"] = True
         result = self.deploy_with_problems()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.bindings()[1:], [
-            {"type": "plain_text", "name": "PROBLEMS_REPOSITORY", "text": "clabeuhtegrite/cartouche-reports"},
+            {"type": "plain_text", "name": "PROBLEMS_REPOSITORY", "text": "cartouche-app/cartouche-reports"},
             {"type": "secret_text", "name": "PROBLEMS_TOKEN", "text": GITHUB_TOKEN},
         ])
-        self.assertIn("go to clabeuhtegrite/cartouche-reports, a private repository", result.stdout)
+        self.assertIn("Problems: players' problems go to cartouche-app/cartouche-reports, a private repository\n", result.stdout)
         self.assertNotIn(GITHUB_TOKEN, result.stdout + result.stderr)
         self.assertEqual(self.cloudflare.scripts["cartouche-dashboard"]["metadata"]["bindings"], self.bindings())
+
+    def test_a_repository_moved_to_the_organization_is_bound_at_its_new_name(self):
+        # Ad's account gave cartouche-reports to the organization: a variable
+        # left at the old name still files the problems where they are.
+        self.cloudflare.repositories["cartouche-app/cartouche-reports"] = True
+        self.cloudflare.moved["clabeuhtegrite/cartouche-reports"] = "cartouche-app/cartouche-reports"
+        result = self.deploy_with_problems(repository="clabeuhtegrite/cartouche-reports")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.bindings()[1:], [
+            {"type": "plain_text", "name": "PROBLEMS_REPOSITORY", "text": "cartouche-app/cartouche-reports"},
+            {"type": "secret_text", "name": "PROBLEMS_TOKEN", "text": GITHUB_TOKEN},
+        ])
+        self.assertIn("go to cartouche-app/cartouche-reports, a private repository "
+                      "(GitHub moved it from clabeuhtegrite/cartouche-reports)", result.stdout)
+        self.assertEqual(self.dashboard()["metadata"]["bindings"], self.bindings())
+        self.assertNotIn(GITHUB_TOKEN, result.stdout + result.stderr)
+
+    def test_the_workflow_files_problems_in_the_organizations_repository(self):
+        workflow = (HERE.parents[1] / ".github/workflows/telemetry.yml").read_text()
+        self.assertIn("CARTOUCHE_REPORTS_REPOSITORY: ${{ vars.CARTOUCHE_REPORTS_REPOSITORY || 'cartouche-app/cartouche-reports' }}",
+                      workflow)
+        self.assertNotIn("clabeuhtegrite/cartouche-reports", workflow)
 
     def test_a_token_github_refuses_still_goes_to_the_worker(self):
         result = self.deploy_with_problems(token="github_pat_expired")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual([binding["name"] for binding in self.bindings()], ["DB", "PROBLEMS_REPOSITORY", "PROBLEMS_TOKEN"])
-        self.assertIn("::warning::Problems: the token cannot read clabeuhtegrite/cartouche-reports", result.stdout)
+        self.assertIn("::warning::Problems: the token cannot read cartouche-app/cartouche-reports", result.stdout)
         self.assertNotIn("github_pat_expired", result.stdout + result.stderr)
 
     def test_a_public_repository_gets_no_problem(self):

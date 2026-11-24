@@ -436,7 +436,7 @@ class FakeGitHub {
   }
 }
 
-const REPOSITORY = "clabeuhtegrite/cartouche-reports";
+const REPOSITORY = "cartouche-app/cartouche-reports";
 const TOKEN = "github_pat_for_the_tests";
 
 // The problem as Cartouche sends it: the launcher's tests check that
