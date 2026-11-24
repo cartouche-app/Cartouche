@@ -24,7 +24,7 @@ BUNDLE_ID = "io.github.clabeuhtegrite.cartouche"
 URL = "https://github.com/clabeuhtegrite/Cartouche/releases/download/v{0}/Cartouche-{0}.ipa"
 SOURCE = ROOT / "app" / "sidestore-source.json"
 PLAYER_SOURCE = ROOT / "app" / "sidestore-player-source.json"
-PLAYER_SOURCE_URL = "https://raw.githubusercontent.com/clabeuhtegrite/Cartouche/main/app/sidestore-player-source.json"
+PLAYER_SOURCE_URL = "https://cartouche.cloud/sidestore.json"
 
 
 def listed(source):

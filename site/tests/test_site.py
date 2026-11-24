@@ -662,6 +662,29 @@ class Publication(unittest.TestCase):
         for name in ["index.html", "404.html", "favicon.svg", "CNAME", *PICTURES]:
             self.assertTrue((SITE / name).is_file(), name)
 
+    def test_it_serves_the_source_for_the_players_sidestore(self) -> None:
+        # The address a player adds to their own SideStore, which app/
+        # config.env writes into the IPA for that SideStore, is at the site's
+        # domain: site.yml publishes the source there, and again each time it
+        # changes on main, as the Release workflow's "Source" pull request
+        # changes it (docs/decisions/155.md).
+        root = SITE.parent
+        settings = dict(line.split("=", 1) for line in (root / "app" / "config.env").read_text(encoding="utf-8").splitlines()
+                        if "=" in line and not line.startswith("#"))
+        self.assertEqual(settings["CARTOUCHE_PLAYER_SIDESTORE_SOURCE_URL"], SITE_URL + "sidestore.json")
+        workflow = (root / ".github" / "workflows" / "site.yml").read_text(encoding="utf-8")
+        self.assertRegex(workflow, r"\n\s+cp app/sidestore-player-source\.json build/site/sidestore\.json\n")
+        paths = re.search(r"\n\s+paths: \[([^\]\n]*)\]\n", workflow)
+        self.assertIsNotNone(paths, "site.yml runs on main for some paths")
+        self.assertIn('"app/sidestore-player-source.json"', paths.group(1))
+        # Cartouche alone, and its IPA for the player's SideStore from this
+        # repository's releases: never a game on the domain.
+        source = json.loads((root / "app" / "sidestore-player-source.json").read_text(encoding="utf-8"))
+        for app in source["apps"]:
+            self.assertEqual(app["bundleIdentifier"], settings["CARTOUCHE_BUNDLE_ID"])
+            for version in app["versions"]:
+                self.assertRegex(version["downloadURL"], r"^https://github\.com/[^/]+/Cartouche/releases/download/v[0-9.]+/Cartouche-[0-9.]+-SideStore\.ipa$")
+
 
 class Domain(unittest.TestCase):
     """site/CNAME, the site's domain, which GitHub Pages reads on gh-pages to

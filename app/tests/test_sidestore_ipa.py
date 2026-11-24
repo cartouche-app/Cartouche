@@ -28,7 +28,7 @@ APP = "Payload/LiveContainer.app"
 DATE = (2026, 11, 24, 12, 0, 0)
 EXECUTABLE = 0o100755 << 16
 LINK = (stat.S_IFLNK | 0o755) << 16
-SOURCE = "https://raw.githubusercontent.com/clabeuhtegrite/Cartouche/main/app/sidestore-player-source.json"
+SOURCE = "https://cartouche.cloud/sidestore.json"
 HEADER = b"\xcf\xfa\xed\xfe signed with:"
 
 # An ldid that keeps the entitlements an executable is signed with after its
@@ -233,8 +233,10 @@ class SideStoreIPATest(unittest.TestCase):
     def test_the_config_names_the_source_it_writes(self):
         settings = sidestore_ipa.read_config(ROOT / "app" / "config.env")
         url = settings[sidestore_ipa.PLAYER_SOURCE_SETTING]
-        self.assertTrue(url.startswith("https://"))
-        self.assertTrue(url.endswith("/app/sidestore-player-source.json"))
+        # At the project's domain, where the Showcase site workflow publishes
+        # app/sidestore-player-source.json (site/tests check how).
+        domain = (ROOT / "site" / "CNAME").read_text(encoding="utf-8").strip()
+        self.assertEqual(url, f"https://{domain}/sidestore.json")
         self.assertNotEqual(url, settings["CARTOUCHE_SIDESTORE_SOURCE_URL"])
         self.assertTrue((ROOT / "app" / "sidestore-player-source.json").is_file())
 

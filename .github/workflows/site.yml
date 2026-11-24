@@ -9,7 +9,12 @@ name: Showcase site
 # gh-pages, / (root). CNAME names the domain, which Pages serves the site at
 # and sends its old address, cartouche-app.github.io/Cartouche, on to: a
 # publication without it would drop the domain (domain/README.md). Nothing
-# else of the repository is published (site/README.md). Each download link
+# else of the repository is published (site/README.md) but Cartouche's source
+# for the player's own SideStore, app/sidestore-player-source.json, served as
+# https://cartouche.cloud/sidestore.json, the address a player adds to their
+# SideStore and that app/config.env gives Cartouche (docs/decisions/155.md):
+# merging the Release workflow's "Source" pull request publishes it again.
+# Each download link
 # gets the newest file of its releases on the way: the Builder and Installer
 # workflows run this one again once they have published a release.
 # The Full test pass checks the page and its links, and publishes nothing
@@ -18,7 +23,7 @@ name: Showcase site
 on:
   push:
     branches: [main]
-    paths: ["site/**", ".github/workflows/site.yml"]
+    paths: ["site/**", ".github/workflows/site.yml", "app/sidestore-player-source.json"]
   # From the Actions tab, and by the Builder and Installer workflows.
   workflow_dispatch:
   # The Full test pass (full-pass.yml): the page checked, never published.
@@ -67,6 +72,9 @@ jobs:
           mkdir -p build/site/download
           cp site/index.html site/404.html site/favicon.svg site/apple-touch-icon.png site/social.png site/CNAME build/site/
           cp site/download/index.html build/site/download/
+          # The source for the player's own SideStore, as main has it.
+          python3 -m json.tool app/sidestore-player-source.json > /dev/null
+          cp app/sidestore-player-source.json build/site/sidestore.json
           python3 site/tools/downloads.py --repository "$GITHUB_REPOSITORY" \
             build/releases.json build/site/index.html build/site/download/index.html > build/downloads.md
           cat build/downloads.md
