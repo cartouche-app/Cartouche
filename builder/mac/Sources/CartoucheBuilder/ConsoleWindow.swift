@@ -350,7 +350,8 @@ enum ConsoleLink {
         console.onMeasuresReport = { [weak telemetry] make in
             telemetry?.report { context, seq in
                 make(CartoucheMacTelemetryContext(install: context.install, version: context.cartouche, device: context.device,
-                                                  system: context.ios, language: context.language), seq)
+                                                  system: context.ios, language: context.language,
+                                                  deviceLanguage: context.deviceLanguage), seq)
                     .map { (id: $0.id, body: $0.body) }
             }
         }

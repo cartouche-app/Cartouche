@@ -178,6 +178,8 @@ const common = {
   device: text(/^[A-Za-z]{2,16}\d{1,4},\d{1,4}$/),
   ios: text(/^\d{1,3}(\.\d{1,3}){0,2}$/),
   language: text(/^[a-z]{2,3}([-_][A-Za-z0-9]{2,8}){0,2}$/),
+  // The device's own language: its language and script, never its region.
+  deviceLanguage: text(/^[a-z]{2,3}(-[A-Z][a-z]{3})?$/),
   memoryLimitMiB: mebibytes,
   increasedMemoryLimit: flag,
 };

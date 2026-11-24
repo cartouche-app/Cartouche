@@ -1012,6 +1012,7 @@
             ios: countBy(iphones, (report) => report.ios),
             versions: countBy(iphones, (report) => report.cartouche),
             languages: countBy(iphones, (report) => report.language),
+            deviceLanguages: countBy(iphones, (report) => report.deviceLanguage),
             storage: countBy(opened, (event) => text(event.fields.storage)),
             saves: countBy(opened, (event) => text(event.fields.saves)),
             games: histogram(
@@ -1229,6 +1230,8 @@
             events: macEvents.length,
             versions: countBy(macs, (event) => event.cartouche),
             macos: countBy(macs, (event) => event.ios),
+            languages: countBy(macs, (event) => event.language),
+            deviceLanguages: countBy(macs, (event) => event.deviceLanguage),
             xcode: countBy(builderOpened, (event) => text(event.fields.xcode)),
             hardware: countBy(builderOpened, (event) => (num(event.fields.memoryGB) ? event.fields.memoryGB + " Go" + (num(event.fields.cores) ? ", " + event.fields.cores + " cœurs" : "") : null)),
             // The games of the Macs that have some: a Mac that has not found its
@@ -1709,7 +1712,7 @@
     // shows something. Never mistaken for real ones: the page says so.
 
     const DEMO_COLUMNS = {
-        report: ["kind", "day", "install", "seq", "device", "ios", "cartouche", "language", "memoryLimitMiB", "increasedMemoryLimit", "game", "name", "data"],
+        report: ["kind", "day", "install", "seq", "device", "ios", "cartouche", "language", "deviceLanguage", "memoryLimitMiB", "increasedMemoryLimit", "game", "name", "data"],
         session: SHOWN,
     };
     const DEMO_GAMES = [
@@ -1770,7 +1773,8 @@
             install: hex(8),
             device,
             ios: index % 5 === 3 ? "27.2" : index % 7 === 6 ? "27.4" : "27.3",
-            language: index % 4 === 3 ? "en" : index === 10 ? "de" : "fr",
+            language: index % 4 === 3 ? "en" : index === 10 ? "de" : index === 5 ? "es" : "fr",
+            deviceLanguage: index % 4 === 3 ? "en" : index === 10 ? "de" : index === 5 ? "es" : index === 2 ? "pt" : "fr",
             increased: index !== 4 && index !== 9,
             seq: 1,
             favourites: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => rand() - 0.5).slice(0, 3 + (index % 3)),
@@ -1796,6 +1800,7 @@
                 ios: phone.ios,
                 cartouche: phone.version,
                 language: phone.language,
+                deviceLanguage: phone.deviceLanguage,
                 memoryLimitMiB: phone.increased ? 6143 : 3376,
                 increasedMemoryLimit: phone.increased,
                 day,
@@ -1942,7 +1947,7 @@
             { install: hex(8), device: "Mac15,9", ios: "26.5", seq: 1, memoryGB: 24, cores: 12 },
         ];
         const addMac = (macItem, day, name, fields, game = null) => {
-            reports.push({ kind: "event", install: macItem.install, seq: macItem.seq++, device: macItem.device, ios: macItem.ios, cartouche: "0.2.1", language: "fr", memoryLimitMiB: null, increasedMemoryLimit: null, day, game, name, fields });
+            reports.push({ kind: "event", install: macItem.install, seq: macItem.seq++, device: macItem.device, ios: macItem.ios, cartouche: "0.2.1", language: "fr", deviceLanguage: "fr", memoryLimitMiB: null, increasedMemoryLimit: null, day, game, name, fields });
         };
         dayIndex.forEach((day, d) => {
             macs.forEach((macItem, m) => {
@@ -1978,7 +1983,7 @@
                 const roll = macRand();
                 const end = roll < 0.03 ? { kind: "crash", signal: 11 } : roll < 0.05 ? { kind: "crash", cause: "gpuLost" } : roll < 0.08 ? { kind: "unknown" } : { kind: "quit" };
                 reports.push({
-                    kind: "session", install: macItem.install, seq: macItem.seq++, device: macItem.device, ios: macItem.ios, cartouche: "0.2.1", language: "fr",
+                    kind: "session", install: macItem.install, seq: macItem.seq++, device: macItem.device, ios: macItem.ios, cartouche: "0.2.1", language: "fr", deviceLanguage: "fr",
                     memoryLimitMiB: null, increasedMemoryLimit: null, day, game: profile.id, name: null,
                     session: macHex(8), gameVersion: profile.version, nxnative: builds[0], nxnativeChanged: false,
                     settings: { DM_FPS_TARGET: String(profile.target), DM_FULLSCREEN: "1" }, minutes, reader: GPU_LOST_READER,
@@ -2001,7 +2006,7 @@
             { device: "iPhone19,1", steps: ["opened", "device", "opened", "device"] },
             { device: "iPhone19,4", steps: ["opened", "signedIn"] },
             { device: "iPhone18,1", steps: ["opened", "signedIn", "setUp", "installed"] },
-        ].map((newcomer, index) => ({ ...newcomer, install: hex(8), ios: "27.3", language: index % 2 ? "en" : "fr", increased: true, seq: 1, version: "0.10.0" }));
+        ].map((newcomer, index) => ({ ...newcomer, install: hex(8), ios: "27.3", language: index % 2 ? "en" : "fr", deviceLanguage: index % 2 ? "en" : "fr", increased: true, seq: 1, version: "0.10.0" }));
         newcomers.forEach((phone, index) => {
             const day = dayIndex[Math.max(0, dayIndex.length - 1 - (index % 3))];
             const setUp = phone.steps.includes("setUp");
@@ -3229,6 +3234,7 @@
             card("Versions de Cartouche", null, ranked(d.versions),
                 d.updates.length ? h("p", { class: "foot", text: "Mises à jour : " + d.updates.map((item) => item.key + " (" + count(item.count) + ")").join(", ") }) : null),
             card("Langue de Cartouche", null, ranked(d.languages, language)),
+            card("Langue de l'iPhone", "La première de ses langues, sans sa région. Les iPhones la disent à partir de la version qui suit la 0.15.1.", ranked(d.deviceLanguages, language)),
             card("Jeux installés par iPhone", null,
                 columns(d.games.map((bin) => ({ label: bin.label, title: bin.label, value: bin.count, figure: plural(bin.count, "iPhone", "iPhones") })), { height: 110, bins: true, allLabels: true, label: "iPhones par nombre de jeux" }),
                 facts([["Ouvertures de l'app", count(d.opens)]])),
@@ -3413,7 +3419,8 @@
                 ]),
                 ranked(b.hardware.slice(0, 6)),
                 has(b.followed) ? h("p", { class: "foot", text: "Jeux suivis : médiane des " + plural(b.withGames, "Mac", "Macs") + " qui ont des jeux. Builder : " + b.versions.slice(0, 4).map((item) => item.key + " (" + count(item.count) + ")").join(", ") + "." }) : null,
-                h("p", { class: "foot", text: b.switches.filter((item) => item.value).map((item) => SWITCHES[item.key] + " " + percent(item.value.share)).join(" · ") })),
+                h("p", { class: "foot", text: b.switches.filter((item) => item.value).map((item) => SWITCHES[item.key] + " " + percent(item.value.share)).join(" · ") }),
+                b.languages.length ? h("p", { class: "foot", text: "Langue de Cartouche : " + b.languages.slice(0, 4).map((item) => language(item.key) + " (" + count(item.count) + ")").join(", ") + (b.deviceLanguages.some((item) => has(item.key)) ? ". Du Mac : " + b.deviceLanguages.filter((item) => has(item.key)).slice(0, 4).map((item) => language(item.key) + " (" + count(item.count) + ")").join(", ") : "") + "." }) : null),
             card("Constructions par jour", plural(b.built.count, "jeu construit", "jeux construits") + ", " + plural(b.failed.count, "échec", "échecs") + ".",
                 columns(b.daily.map((day) => ({ label: dayText(day.day), title: long.format(new Date(day.day + "T00:00:00Z")) + (day.failed ? " · " + plural(day.failed, "échec", "échecs") : ""), value: day.built + day.failed, figure: plural(day.built, "construit", "construits") + (day.failed ? ", " + plural(day.failed, "échec", "échecs") : ""), tone: day.failed && !day.built ? "var(--critical)" : "var(--s1)" })), { height: 120, label: "Constructions par jour" }),
                 facts([["Durée médiane", duration(has(b.built.seconds) ? b.built.seconds / 60 : null)], ["IPA médiane", has(b.built.ipaMB) ? n0.format(b.built.ipaMB) : DASH, "Mo"], ["Lots", count(b.batches.count)], ["Lot médian", duration(b.batches.minutes)]])),

@@ -496,6 +496,7 @@ test("the page sums up the reports Cartouche makes", () => {
   assert.deepEqual(model.installs.from.map((item) => [item.key, item.count]), [["mac", 1]]);
   assert.deepEqual(model.devices.models.map((item) => item.key), ["iPhone19,4"]);
   assert.deepEqual(model.devices.languages.map((item) => item.key), ["fr"]);
+  assert.deepEqual(model.devices.deviceLanguages.map((item) => item.key), ["fr"]);
   assert.deepEqual(model.eventNames.map((item) => item.key), ["game.installed"]);
   const day = model.daily.find((item) => item.day === TODAY);
   assert.deepEqual([day.iphones, day.sessions, day.bad], [1, 1, 1]);
@@ -1177,6 +1178,8 @@ test("the sample data fills every section, and is the same each time", () => {
   assert.equal(model.days.length, 28);
   assert.equal(model.totals.iphones, 16);
   assert.equal(model.builder.macs, 2);
+  assert.deepEqual(model.builder.deviceLanguages.map((item) => item.key), ["fr"]);
+  assert.ok(model.devices.deviceLanguages.length >= 4, "the iPhones' own languages");
   assert.ok(model.games.length >= 6);
   assert.ok(model.games.some((game) => game.name === "Super Mario Odyssey" && game.cover === "co1mxf"));
   assert.ok(model.games.every((game) => !game.tightest || game.tightest.ratio < 1), "no game past its iPhone's limit");
