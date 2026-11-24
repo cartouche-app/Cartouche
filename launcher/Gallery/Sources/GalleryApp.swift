@@ -149,6 +149,12 @@
 //                                        with two games' saves waiting for it
 //        erasing                         on Reset Cartouche's page, the reset
 //                                        under way
+//        game-mode-later                 Game Mode coming 1.5 s after
+//                                        Cartouche first measures its
+//                                        memory: its own limit 6,144 MiB
+//                                        until then, 8,192 after, as on an
+//                                        iPhone with 12 GB
+//                                        (GalleryState.ownLimitMiB)
 //        gpu-no-bc                       an iPhone whose GPU reads no
 //                                        BC-compressed texture, an A16's,
 //                                        the sheet's game built by nxnative,
@@ -558,6 +564,13 @@ struct GalleryScenario {
         GalleryState.appGroupMissing = work == "signed-elsewhere"
         GalleryState.liveProcessMissing = work?.hasSuffix("-no-liveprocess") == true
         GalleryState.readsBCTextures = !GalleryBCConversion.isWithoutBC(work)
+        GalleryState.gameModeLater = work == "game-mode-later"
+        // Cartouche's first launch on this iPhone and this iOS: no limit of
+        // its own measured before Game Mode comes (CartoucheOwnLimitRecord).
+        if GalleryState.gameModeLater {
+            UserDefaults.standard.removeObject(forKey: CartoucheOwnLimitRecord.key)
+            UserDefaults.standard.removeObject(forKey: CartoucheOwnLimitRecord.systemKey)
+        }
         GalleryState.signInUnfinished = work == "sign-in-unfinished"
         GalleryState.sheetSection = screen == "sheet" ? category : nil
         GalleryState.vpnConnected = work.map {
@@ -1003,6 +1016,12 @@ struct GalleryScenario {
                 }
             }
             try? await Task.sleep(for: .seconds(3))
+            // Game Mode, which comes 1.5 s after Cartouche first measured its
+            // memory, and the next measurement after, 2 s later at most
+            // (work: game-mode-later), for up to 10 s more.
+            for _ in 0..<40 where !GalleryState.gameModeSettled {
+                try? await Task.sleep(for: .milliseconds(250))
+            }
             // The sheet on its way down to its saves, for up to 15 s more.
             for _ in 0..<60 where GallerySaves.bringingDown {
                 try? await Task.sleep(for: .milliseconds(250))
@@ -1126,16 +1145,7 @@ struct CartoucheGalleryApp: App {
             CartoucheGamesView(showingLibrary: true)
         case "sheet", "sheet-mac", "sheet-saves":
             if let entry = entries.all.first(where: { $0.titleId == scenario.sheet }) {
-                NavigationStack {
-                    CartoucheGameSheetView(entry: entry, memory: CartoucheMemoryReading.now(), onPlay: { _ in },
-                                           onSettings: { _ in }, onImport: {}, onUninstall: { _ in },
-                                           opensOnManagement: scenario.category == "manage")
-                        .toolbar {
-                            ToolbarItem(placement: .confirmationAction) {
-                                Button(CartoucheText.done) {}
-                            }
-                        }
-                }
+                GallerySheetScreen(entry: entry, opensOnManagement: scenario.category == "manage")
             }
         case "gameinfo":
             if let entry = entries.owned.first(where: { $0.titleId == scenario.sheet }) {
@@ -1302,6 +1312,29 @@ struct CartoucheGalleryApp: App {
         let settings = CartoucheGameActions.shared.settings(for: app, tileKey: entry.tileKey)
         settings.category = scenario.category
         return settings
+    }
+}
+
+/// A game's sheet, with Cartouche's own memory as the console has it
+/// (CartoucheGamesView): measured as it opens, and again for a while
+/// after (CartoucheOwnMemoryWatch).
+struct GallerySheetScreen: View {
+    let entry: CartoucheEntry
+    let opensOnManagement: Bool
+    @State private var memory = CartoucheMemoryReading.now()
+
+    var body: some View {
+        NavigationStack {
+            CartoucheGameSheetView(entry: entry, memory: memory, onPlay: { _ in },
+                                   onSettings: { _ in }, onImport: {}, onUninstall: { _ in },
+                                   opensOnManagement: opensOnManagement)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(CartoucheText.done) {}
+                    }
+                }
+        }
+        .modifier(CartoucheOwnMemoryWatch(memory: $memory))
     }
 }
 
