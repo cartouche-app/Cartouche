@@ -431,6 +431,9 @@ struct CartoucheGamesView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
             CartoucheStorageReach.shared.setInFront(false)
+            // The saves the game behind the console made go before iOS stops
+            // Cartouche.
+            CartoucheSaveBackups.shared.sendWaitingNow()
         }
         // A server of the player's that was offline answers again, as when
         // the iPhone is back home or on the VPN: the games folder is read

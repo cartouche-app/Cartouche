@@ -610,6 +610,103 @@ final class MacSavesTests: XCTestCase {
         XCTAssertEqual(sentSaves, ["save/slot0.bin": "switch 2"])
     }
 
+    // MARK: While the game plays
+
+    /// The saves a game makes while it plays go a few seconds after it
+    /// saved (MacGames.lookAtPlaying), from a copy of them made at one
+    /// moment; each copy of the same game takes the place of the one before
+    /// it, the one after the game too, for one copy for each game.
+    func testSavesThatChangeWhileTheGamePlaysGoAsOneCopyOfTheGame() async throws {
+        let folder = try makeFolder()
+        let store = MacSaveStore(url: root.appendingPathComponent("saves.json"))
+        let keeper = MacSaveKeeper(store: store)
+        let scratch = root.appendingPathComponent("scratch", isDirectory: true)
+        try write(["slot0.bin": "mac 1"], in: mac, at: t0)
+        _ = await keeper.sync(game, in: folder, when: .after, now: t0)
+        let before = CartoucheSaveSync.fileName(t0)
+        // The game starts: nothing new to take.
+        let start = await keeper.sync(game, in: folder, when: .before, now: t0.addingTimeInterval(60))
+        XCTAssertNil(start)
+        // It saves twice while it plays: each time, its saves go.
+        for (step, text) in ["mac 2", "mac 3"].enumerated() {
+            let written = t0.addingTimeInterval(600 * Double(step + 1))
+            try write(["slot0.bin": text, "save_device/device.bin": "device"], in: mac, at: written)
+            let played = await keeper.sendPlaying(game, from: mac, in: folder, scratch: scratch, now: written.addingTimeInterval(5))
+            XCTAssertEqual(played.event?.step, "send")
+            XCTAssertEqual(played.event?.when, .during)
+            XCTAssertEqual(played.event?.sent, CartoucheSaveSync.fileName(written))
+            XCTAssertEqual(played.inStep, CartoucheSaveSync.saves(in: mac)?.look)
+            XCTAssertFalse(played.failed)
+            XCTAssertEqual(names(in: gameFolder), [before, CartoucheSaveSync.fileName(written)],
+                           "the game before's copy, and this game's newest saves alone")
+        }
+        let newest = try XCTUnwrap(names(in: gameFolder).last)
+        let sentSaves = try await unpack(gameFolder.appendingPathComponent(newest))
+        XCTAssertEqual(sentSaves, ["save/slot0.bin": "mac 3", "save_device/device.bin": "device"])
+        XCTAssertEqual(try read(mac), ["save/slot0.bin": "mac 3", "save_device/device.bin": "device"], "the game's saves as they were")
+        // The base holds for the saves in nxnative's folder, and nothing is
+        // left of their copy.
+        XCTAssertEqual(store.record(game.titleID).base?.look, CartoucheSaveSync.saves(in: mac)?.look)
+        XCTAssertEqual(store.record(game.titleID).base?.copy, newest)
+        XCTAssertEqual(names(in: scratch.appendingPathComponent("playing")), [])
+        // Nothing changed since: nothing goes.
+        let same = await keeper.sendPlaying(game, from: mac, in: folder, scratch: scratch, now: t0.addingTimeInterval(1_300))
+        XCTAssertEqual(same, MacSavePlayed(inStep: CartoucheSaveSync.saves(in: mac)?.look))
+        // It saves once more, and the player quits: the copy after the
+        // game takes the place of the last one too.
+        try write(["slot0.bin": "mac 4"], in: mac, at: t0.addingTimeInterval(1_800))
+        let after = await keeper.sync(game, in: folder, when: .after, now: t0.addingTimeInterval(1_860))
+        XCTAssertEqual(after?.step, "send")
+        XCTAssertEqual(names(in: gameFolder), [before, CartoucheSaveSync.fileName(t0.addingTimeInterval(1_800))])
+        // The next game makes a copy of its own.
+        _ = await keeper.sync(game, in: folder, when: .before, now: t0.addingTimeInterval(2_000))
+        try write(["slot0.bin": "mac 5"], in: mac, at: t0.addingTimeInterval(2_400))
+        let next = await keeper.sendPlaying(game, from: mac, in: folder, scratch: scratch, now: t0.addingTimeInterval(2_405))
+        XCTAssertEqual(next.event?.step, "send")
+        XCTAssertEqual(names(in: gameFolder), [before, CartoucheSaveSync.fileName(t0.addingTimeInterval(1_800)),
+                                               CartoucheSaveSync.fileName(t0.addingTimeInterval(2_400))])
+    }
+
+    /// While the saves folder is away, the saves a game makes while it
+    /// plays stay where they are, said once; they go after the game, or as
+    /// soon as the folder is back.
+    func testSavesThatChangeWhileTheGamePlaysWaitForTheFolderAway() async throws {
+        let share = root.appendingPathComponent("Volumes/NAS/Saves", isDirectory: true)
+        let folder = MacSavesFolder(root: share, games: root.appendingPathComponent("nxnative", isDirectory: true),
+                                    scratch: root.appendingPathComponent("scratch", isDirectory: true))
+        let store = MacSaveStore(url: root.appendingPathComponent("saves.json"))
+        let keeper = MacSaveKeeper(store: store)
+        let scratch = root.appendingPathComponent("scratch", isDirectory: true)
+        try write(["slot0.bin": "mac 1"], in: mac, at: t0)
+        let played = await keeper.sendPlaying(game, from: mac, in: folder, scratch: scratch, now: t0.addingTimeInterval(5))
+        XCTAssertTrue(played.failed)
+        XCTAssertNil(played.inStep)
+        XCTAssertEqual(played.event?.step, "offline")
+        XCTAssertEqual(played.event?.when, .during)
+        let again = await keeper.sendPlaying(game, from: mac, in: folder, scratch: scratch, now: t0.addingTimeInterval(65))
+        XCTAssertEqual(again, MacSavePlayed(failed: true), "said once")
+        XCTAssertEqual(try read(mac), ["save/slot0.bin": "mac 1"])
+        // Back: they go.
+        try FileManager.default.createDirectory(at: share, withIntermediateDirectories: true)
+        let back = await keeper.sendPlaying(game, from: mac, in: folder, scratch: scratch, now: t0.addingTimeInterval(125))
+        XCTAssertEqual(back.event?.step, "send")
+        XCTAssertEqual(back.event?.sent, CartoucheSaveSync.fileName(t0))
+        // Away again as the game ends: the next game's saves never take the
+        // place of this one's.
+        let away = root.appendingPathComponent("Volumes/NAS/Away", isDirectory: true)
+        try FileManager.default.moveItem(at: share, to: away)
+        let ended = await keeper.sync(game, in: folder, when: .after, now: t0.addingTimeInterval(180))
+        XCTAssertEqual(ended?.step, "offline")
+        try FileManager.default.moveItem(at: away, to: share)
+        let start = await keeper.sync(game, in: folder, when: .before, now: t0.addingTimeInterval(240))
+        XCTAssertNil(start)
+        try write(["slot0.bin": "mac 2"], in: mac, at: t0.addingTimeInterval(600))
+        let next = await keeper.sendPlaying(game, from: mac, in: folder, scratch: scratch, now: t0.addingTimeInterval(605))
+        XCTAssertEqual(next.event?.step, "send")
+        XCTAssertEqual(names(in: share.appendingPathComponent(MacSavesFolder.folderName(game), isDirectory: true)),
+                       [t0, t0.addingTimeInterval(600)].map(CartoucheSaveSync.fileName))
+    }
+
     func testAnEventSaysWhenTheSavesThatCameAndThoseKeptWereWritten() {
         let event = MacSaveEvent(at: t0, when: .round, step: "keepAndFetch", fetched: CartoucheSaveSync.fileName(t0.addingTimeInterval(-600)),
                                  kept: CartoucheSaveSync.fileName(t0.addingTimeInterval(-1200)))

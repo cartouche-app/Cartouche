@@ -376,6 +376,63 @@ final class StorageTests: HarnessCase {
         XCTAssertEqual(copies(of: game, in: saves).count, 1)
     }
 
+    /// While a game plays behind the console, its saves go a few seconds
+    /// after it saved, the game still running; each copy of the same game
+    /// takes the place of the one before it, the one after the game too.
+    func testAGamesSavesGoAsItSavesWhileItPlaysOneCopyForTheGame() async throws {
+        let (_, saves) = try await HarnessStorage.folder("Sauvegardes", for: [.saves])
+        let game = HarnessGame.plain(5)
+        let app = try await installed(game)
+        actions.play(app)
+        try await waitUntil("the game runs") { actions.running != nil && actions.work == nil }
+        let documents = try dataFolder(of: app).appendingPathComponent("Documents", isDirectory: true)
+        let progress = documents.appendingPathComponent("save/0000000000000001/progress.bin")
+        try FileManager.default.createDirectory(at: progress.deletingLastPathComponent(), withIntermediateDirectories: true)
+        /// What the only copy in the saves folder holds, nil while there is
+        /// none, or more than one.
+        func sent() async throws -> Data? {
+            let found = copies(of: game, in: saves)
+            guard found.count == 1, let copy = found.first else { return nil }
+            let source = try CartoucheFileSource(copy)
+            let entries = try await CartoucheZip.entries(of: source)
+            guard let saved = entries.first(where: { $0.name == "save/0000000000000001/progress.bin" }) else { return nil }
+            return try await CartoucheZip.data(of: saved, in: source)
+        }
+
+        // The game saves: its saves go while it still plays.
+        let first = Data((0..<4096).map { UInt8(truncatingIfNeeded: $0 &* 7) })
+        try first.write(to: progress)
+        try await waitUntil("the saves went while the game plays", timeout: 30) { !self.copies(of: game, in: saves).isEmpty }
+        XCTAssertNotNil(actions.running, "the game still plays")
+        let firstSent = try await sent()
+        XCTAssertTrue(firstSent == first)
+
+        // It saves again: the new copy takes the place of the first one.
+        let firstName = try XCTUnwrap(copies(of: game, in: saves).first?.lastPathComponent)
+        try await pause(1.1)
+        let second = Data((0..<4096).map { UInt8(truncatingIfNeeded: $0 &* 11) })
+        try second.write(to: progress)
+        try await waitUntil("the second saves went", timeout: 30) {
+            self.copies(of: game, in: saves).map(\.lastPathComponent) != [firstName]
+                && self.copies(of: game, in: saves).count == 1
+        }
+        XCTAssertNotNil(actions.running, "the game still plays")
+        let secondSent = try await sent()
+        XCTAssertTrue(secondSent == second, "one copy for the game, of its newest saves")
+
+        // Saved once more just before the player quits: the copy after the
+        // game takes the place of the last one.
+        try await pause(1.1)
+        let third = Data((0..<4096).map { UInt8(truncatingIfNeeded: $0 &* 13) })
+        try third.write(to: progress)
+        actions.quitRunningGame()
+        try await waitUntil("the game has ended") { actions.running == nil }
+        await CartoucheSaveBackups.shared.finish()
+        let thirdSent = try await sent()
+        XCTAssertTrue(thirdSent == third, "one copy for the game, of its last saves")
+        XCTAssertNil(CartoucheSaveBackups.shared.problemReport)
+    }
+
     func testWithoutASavesFolderNoSaveGoesAnywhere() async throws {
         let game = HarnessGame.plain(6)
         let app = try await installed(game)
