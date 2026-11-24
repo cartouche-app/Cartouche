@@ -43,6 +43,48 @@
       ]
     },
     {
+      "name": "iphone-home-spanish",
+      "comment": "The home in Spanish, as an iPhone set to Spanish shows it (decision 152).",
+      "language": "es",
+      "screen": "games",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-home-german",
+      "comment": "The home in German, as an iPhone set to German shows it (decision 152).",
+      "language": "de",
+      "screen": "games",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-home-certificate-refused",
       "screen": "games",
       "owned": [
@@ -124,6 +166,28 @@
     },
     {
       "name": "iphone-sheet-mine",
+      "screen": "sheet",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-sheet-mine-german",
+      "comment": "A game's sheet in German, whose words are the longest of Cartouche's languages (decision 152).",
+      "language": "de",
       "screen": "sheet",
       "sheet": "0400C3F00006E000",
       "owned": [
@@ -866,6 +930,28 @@
       ]
     },
     {
+      "name": "iphone-game-settings-spanish",
+      "comment": "A game's settings in Spanish (decision 152).",
+      "language": "es",
+      "screen": "settings",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-game-settings-controls",
       "screen": "settings",
       "sheet": "0400C3F00006E000",
@@ -1501,6 +1587,23 @@
       ]
     },
     {
+      "name": "iphone-setup-spanish",
+      "comment": "The setup in Spanish (decision 152).",
+      "language": "es",
+      "screen": "setup",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-setup-nightly-to-make",
       "comment": "The setup of a Cartouche whose first three steps are done, the automation of Shortcuts that renews it every night still to make: its last step, which opens Renew every night.",
       "screen": "setup",
@@ -2044,6 +2147,27 @@
     },
     {
       "name": "iphone-system",
+      "screen": "system",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-system-german",
+      "comment": "The System page in German (decision 152).",
+      "language": "de",
       "screen": "system",
       "owned": [
         "0400C3F00006E000",
@@ -3324,6 +3448,21 @@
     },
     {
       "name": "ipad-home",
+      "model": "iPad15,3",
+      "device": "iPad Pro 13-inch (M5)",
+      "screen": "games",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true
+    },
+    {
+      "name": "ipad-home-german",
+      "comment": "The iPad's console in German: an iPad says iPad in German too (decision 152).",
+      "language": "de",
       "model": "iPad15,3",
       "device": "iPad Pro 13-inch (M5)",
       "screen": "games",
