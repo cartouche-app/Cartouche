@@ -188,8 +188,8 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
             let asked = PairingRequest(name: name, code: code, continuation: continuation)
             request = asked
             showPanel(asked)
-            model?.notify(title: tr("“\(name)” asks to connect", "« \(name) » demande à se connecter"),
-                          body: tr("Check that it shows \(CartoucheBridge.spaced(code)).", "Vérifiez qu’il affiche \(CartoucheBridge.spaced(code))."),
+            model?.notify(title: tr("“\(name)” asks to connect", "« \(name) » demande à se connecter", "“\(name)” pide conectarse", "„\(name)“ möchte sich verbinden"),
+                          body: tr("Check that it shows \(CartoucheBridge.spaced(code)).", "Vérifiez qu’il affiche \(CartoucheBridge.spaced(code)).", "Comprueba que muestra \(CartoucheBridge.spaced(code)).", "Prüfe, ob es \(CartoucheBridge.spaced(code)) anzeigt."),
                           section: .iphone)
             Task { @MainActor [weak self] in
                 try? await Task.sleep(nanoseconds: UInt64(CartoucheBridge.pairingTimeout * 1_000_000_000))
@@ -278,11 +278,13 @@ struct PairingPrompt: View {
             Image(systemName: "iphone.radiowaves.left.and.right")
                 .font(.system(size: 40, weight: .light))
                 .foregroundStyle(Theme.gradient)
-            Text(tr("Allow “\(request.name)”?", "Autoriser « \(request.name) » ?"))
+            Text(tr("Allow “\(request.name)”?", "Autoriser « \(request.name) » ?", "¿Permitir “\(request.name)”?", "„\(request.name)“ erlauben?"))
                 .font(.title2.weight(.semibold))
                 .multilineTextAlignment(.center)
             Text(tr("Cartouche on this iPhone asks to read and add games and saves on this Mac. Allow it only if the iPhone shows the same code:",
-                    "Cartouche sur cet iPhone demande à lire et ajouter des jeux et des sauvegardes sur ce Mac. Autorisez-le seulement si l’iPhone affiche le même code :"))
+                    "Cartouche sur cet iPhone demande à lire et ajouter des jeux et des sauvegardes sur ce Mac. Autorisez-le seulement si l’iPhone affiche le même code :",
+                    "Cartouche en este iPhone pide leer y añadir juegos y partidas guardadas en este Mac. Permítelo solo si el iPhone muestra el mismo código:",
+                    "Cartouche auf diesem iPhone möchte Spiele und Spielstände auf diesem Mac lesen und hinzufügen. Erlaube es nur, wenn das iPhone denselben Code zeigt:"))
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -292,10 +294,10 @@ struct PairingPrompt: View {
                 .tracking(4)
                 .textSelection(.enabled)
             HStack(spacing: 12) {
-                Button(tr("Refuse", "Refuser"), role: .cancel) { answer(false) }
+                Button(tr("Refuse", "Refuser", "Rechazar", "Ablehnen"), role: .cancel) { answer(false) }
                     .keyboardShortcut(.cancelAction)
                     .controlSize(.large)
-                Button(tr("Allow", "Autoriser")) { answer(true) }
+                Button(tr("Allow", "Autoriser", "Permitir", "Erlauben")) { answer(true) }
                     .keyboardShortcut(.defaultAction)
                     .controlSize(.large)
                     .buttonStyle(.borderedProminent)

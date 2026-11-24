@@ -229,9 +229,9 @@ final class IPhoneGames: ObservableObject {
                   !connections.contains(connection) else { continue }
             connections.append(connection)
         }
-        if connections.count > 1 { return tr("your games folders", "vos dossiers de jeux") }
+        if connections.count > 1 { return tr("your games folders", "vos dossiers de jeux", "tus carpetas de juegos", "deine Spieleordner") }
         return (connections.first ?? folder?.connection).flatMap { ConsoleLink.connectionName($0) }
-            ?? tr("the iPhone’s games folder", "le dossier des jeux de l’iPhone")
+            ?? tr("the iPhone’s games folder", "le dossier des jeux de l’iPhone", "la carpeta de juegos del iPhone", "der Spieleordner des iPhones")
     }
 
     /// The Mac apps offered from the iPhone's games folder, the first.
@@ -368,13 +368,15 @@ final class IPhoneGames: ObservableObject {
             var installed: (app: ConnectionMacApp, folder: ConnectionGamesSender)?
             for (index, copy) in copies.enumerated() {
                 let connection = copy.folder.driver.connection
-                let place = ConsoleLink.connectionName(connection) ?? tr("the iPhone’s games folder", "le dossier des jeux de l’iPhone")
+                let place = ConsoleLink.connectionName(connection) ?? tr("the iPhone’s games folder", "le dossier des jeux de l’iPhone", "la carpeta de juegos del iPhone", "der Spieleordner des iPhones")
                 let total = copy.app.file.size
-                say(tr("Fetching from \(place)…", "Téléchargement depuis \(place)…"))
+                say(tr("Fetching from \(place)…", "Téléchargement depuis \(place)…", "Descargando desde \(place)…", "Wird von \(place) geladen …"))
                 do {
                     fetched = try await copy.folder.fetch(copy.app, into: scratch) { done in
                         say(tr("Fetching from \(place): \(Format.size(done)) of \(Format.size(total))",
-                               "Téléchargement depuis \(place) : \(Format.size(done)) sur \(Format.size(total))"))
+                               "Téléchargement depuis \(place) : \(Format.size(done)) sur \(Format.size(total))",
+                               "Descargando desde \(place): \(Format.size(done)) de \(Format.size(total))",
+                               "Wird von \(place) geladen: \(Format.size(done)) von \(Format.size(total))"))
                     }
                 } catch ConnectionGamesError.offline where index < copies.count - 1 {
                     // Its server does not answer from here: the next

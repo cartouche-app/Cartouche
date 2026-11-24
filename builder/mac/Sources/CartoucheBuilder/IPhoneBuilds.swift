@@ -123,17 +123,23 @@ extension BridgeController: BridgeBuildsSource {
 enum IPhoneBuilds {
     static var starting: String {
         tr("The app is starting on the Mac: try again in a moment.",
-           "L’app démarre sur le Mac : réessayez dans un instant.")
+           "L’app démarre sur le Mac : réessayez dans un instant.",
+           "La app se está iniciando en el Mac: vuelve a intentarlo en un momento.",
+           "Die App startet gerade auf dem Mac: Versuche es gleich noch einmal.")
     }
 
     static var ipaOnly: String {
         tr("Only its IPA is on the Mac: put its dump in the sources folder to build it again.",
-           "Seule son IPA est sur le Mac : mettez son dump dans le dossier des sources pour le reconstruire.")
+           "Seule son IPA est sur le Mac : mettez son dump dans le dossier des sources pour le reconstruire.",
+           "Solo su IPA está en el Mac: pon su dump en la carpeta de fuentes para recompilarlo.",
+           "Nur seine IPA ist auf dem Mac: Lege seinen Dump in den Quellordner, um es erneut zu erstellen.")
     }
 
     static var notAlone: String {
         tr("The Mac cannot take this game out of the queue yet: try again in a moment, or stop every game.",
-           "Le Mac ne peut pas encore retirer ce jeu de la file : réessayez dans un instant, ou arrêtez tous les jeux.")
+           "Le Mac ne peut pas encore retirer ce jeu de la file : réessayez dans un instant, ou arrêtez tous les jeux.",
+           "El Mac aún no puede quitar este juego de la cola: vuelve a intentarlo en un momento, o detén todos los juegos.",
+           "Der Mac kann dieses Spiel noch nicht aus der Warteschlange nehmen: Versuche es gleich noch einmal oder stoppe alle Spiele.")
     }
 
     /// Why the Mac builds none of NEVER, games no Mac built, for an iPhone:
@@ -143,8 +149,8 @@ enum IPhoneBuilds {
     static func unbuilt(_ never: [Game], _ model: AppModel) -> String {
         let ask = AppModel.UnbuiltAsk(games: never.map(\.titleID), force: false, never: never, others: [])
         return model.unbuiltMessage(ask) + " "
-            + (never.count == 1 ? tr("To try it anyway, build it on the Mac.", "Pour l’essayer malgré tout, construisez-le sur le Mac.")
-                : tr("To try them anyway, build them on the Mac.", "Pour les essayer malgré tout, construisez-les sur le Mac."))
+            + (never.count == 1 ? tr("To try it anyway, build it on the Mac.", "Pour l’essayer malgré tout, construisez-le sur le Mac.", "Para probarlo de todos modos, compílalo en el Mac.", "Um es trotzdem zu versuchen, erstelle es auf dem Mac.")
+                : tr("To try them anyway, build them on the Mac.", "Pour les essayer malgré tout, construisez-les sur le Mac.", "Para probarlos de todos modos, compílalos en el Mac.", "Um sie trotzdem zu versuchen, erstelle sie auf dem Mac."))
     }
 
     /// Whether the iPhone can stop the build of TITLE_ID, the batch going on
@@ -163,9 +169,13 @@ enum IPhoneBuilds {
     static func why(_ model: AppModel) -> String {
         if model.bundling {
             return tr("The Mac is importing an IPA: try again once it is done.",
-                      "Le Mac importe une IPA : réessayez une fois l’import fini.")
+                      "Le Mac importe une IPA : réessayez une fois l’import fini.",
+                      "El Mac está importando una IPA: vuelve a intentarlo cuando termine.",
+                      "Der Mac importiert gerade eine IPA: Versuche es erneut, wenn er fertig ist.")
         }
         return tr("The Mac’s tools are not ready: open the app on the Mac to finish installing them.",
-                  "Les outils du Mac ne sont pas prêts : ouvrez l’app sur le Mac pour finir de les installer.")
+                  "Les outils du Mac ne sont pas prêts : ouvrez l’app sur le Mac pour finir de les installer.",
+                  "Las herramientas del Mac no están listas: abre la app en el Mac para terminar de instalarlas.",
+                  "Die Werkzeuge des Mac sind nicht bereit: Öffne die App auf dem Mac, um ihre Installation abzuschließen.")
     }
 }

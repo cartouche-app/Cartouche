@@ -4,7 +4,8 @@
 //
 //  Pictures of the app's pages with sample games, for the Builder workflow
 //  and the docs: `Cartouche Builder --gallery FOLDER` saves each page as a
-//  PNG, in French in light and dark and in English in light, then ends.
+//  PNG, in French in light and dark, and in English, Spanish and German in
+//  light, then ends.
 //  Nothing runs: no engine, no check of the Mac, no server, and nothing of
 //  the player's is read or kept. The games are real ones nxnative builds,
 //  with their covers from IGDB as the app shows them; their folders, sizes
@@ -206,7 +207,7 @@ enum Gallery {
         }
         loadCovers(samples.library.games.map(\.titleID) + [Gallery.unbuilt.titleID, Gallery.splitTitleID])
         var saved = 0
-        for language in ["fr", "en"] {
+        for language in ["fr", "en", "es", "de"] {
             L10n.use(language)
             // The console speaks it too, as once the app read its settings
             // (AppModel): its words show in the builder's, as the help on
@@ -563,9 +564,9 @@ enum Gallery {
                     .xcode: .ready("Xcode 27.2"),
                     .xcodeReady: .ready(""),
                     .iosPlatform: .ready("iOS 27.2"),
-                    .metal: .working(tr("Downloading the Metal toolchain…", "Téléchargement de la Metal toolchain…"), 0.42),
+                    .metal: .working(tr("Downloading the Metal toolchain…", "Téléchargement de la Metal toolchain…", "Descargando la Metal toolchain…", "Metal-Toolchain wird geladen …"), 0.42),
                     .homebrew: .ready("Homebrew 5.0.4"),
-                    .tools: .missing(tr("Missing: zstd, glslang.", "Manque : zstd, glslang.")),
+                    .tools: .missing(tr("Missing: zstd, glslang.", "Manque : zstd, glslang.", "Faltan: zstd, glslang.", "Fehlt: zstd, glslang.")),
                     .nxnative: .blocked,
                 ], xcode: "/Applications/Xcode-27.2.app")
             } else if page == .setupXcode {
@@ -574,7 +575,9 @@ enum Gallery {
                 model.setup.preview([
                     .mac: .ready("macOS 26.1"),
                     .xcode: .missing(tr("Xcode 27.1: nxnative builds the games’ shaders with the Metal compiler of Xcode 27.2, which it tested them with. Update Xcode in the App Store.",
-                                        "Xcode 27.1 : nxnative construit les shaders des jeux avec le compilateur Metal de Xcode 27.2, avec lequel il les a testés. Mettez Xcode à jour dans l’App Store.")),
+                                        "Xcode 27.1 : nxnative construit les shaders des jeux avec le compilateur Metal de Xcode 27.2, avec lequel il les a testés. Mettez Xcode à jour dans l’App Store.",
+                                        "Xcode 27.1: nxnative compila los shaders de los juegos con el compilador Metal de Xcode 27.2, con el que los probó. Actualiza Xcode en el App Store.",
+                                        "Xcode 27.1: nxnative kompiliert die Shader der Spiele mit dem Metal-Compiler von Xcode 27.2, mit dem es sie getestet hat. Aktualisiere Xcode im App Store.")),
                     .iosPlatform: .ready("iOS 27.1"),
                     .homebrew: .ready("Homebrew 5.0.4"),
                     .tools: .ready("Python 3.13, XcodeGen, zstd, glslang"),
@@ -622,7 +625,7 @@ enum Gallery {
                 // Animal Crossing's, another Mac's, waits to be installed.
                 ConsoleGallery.showConnections(language: L10n.code)
                 let name = "Animal Crossing New Horizons [01006F8002326000].app.zip"
-                model.iPhoneGames.preview(folder: IPhoneGames.Folder(connection: ConsoleGallery.nas, path: "Cartouche/" + tr("Games", "Jeux")),
+                model.iPhoneGames.preview(folder: IPhoneGames.Folder(connection: ConsoleGallery.nas, path: "Cartouche/" + tr("Games", "Jeux", "Juegos", "Spiele")),
                                           progress: ConnectionGamesProgress(game: "Mario Kart World", kind: .macFile, done: 1_288_490_188,
                                                                             total: 2_915_000_000, index: 1, count: 2),
                                           sent: 4, total: 6,
@@ -669,9 +672,11 @@ enum Gallery {
     /// The room on the build folders' disk, short of what the settings keep
     /// free, as the engine says it (disks.py, room).
     static var room: LibraryRoom {
-        LibraryRoom(freeGB: 13, keepGB: 20, folders: 2, title: tr("7 GB missing to build", "Il manque 7 Go pour construire"),
+        LibraryRoom(freeGB: 13, keepGB: 20, folders: 2, title: tr("7 GB missing to build", "Il manque 7 Go pour construire", "Faltan 7 GB para compilar", "Zum Erstellen fehlen 7 GB"),
                     text: tr("Cartouche starts a build only with 20 GB free on your Mac's disk, and only 13 GB are free there. It first removes the build folders of the games built longest ago (2), which may be enough. Free some room there (Storage shows what the build folders take), choose build folders on another disk, or lower “Keep at least 20 GB free”.",
-                             "Cartouche ne commence une construction qu'avec 20 Go libres sur le disque du Mac, et il n'y en a que 13. Il supprime d'abord les dossiers de construction des jeux construits il y a le plus longtemps (2), ce qui peut suffire. Libérez-y de la place (Stockage montre ce que prennent les dossiers de construction), choisissez des dossiers de construction sur un autre disque ou baissez « Garder au moins 20 Go libres »."))
+                             "Cartouche ne commence une construction qu'avec 20 Go libres sur le disque du Mac, et il n'y en a que 13. Il supprime d'abord les dossiers de construction des jeux construits il y a le plus longtemps (2), ce qui peut suffire. Libérez-y de la place (Stockage montre ce que prennent les dossiers de construction), choisissez des dossiers de construction sur un autre disque ou baissez « Garder au moins 20 Go libres ».",
+                             "Cartouche solo empieza una compilación con 20 GB libres en el disco del Mac, y solo quedan 13 GB libres. Primero borra las carpetas de compilación de los juegos compilados hace más tiempo (2), lo que puede bastar. Libera espacio allí (Almacenamiento muestra lo que ocupan las carpetas de compilación), elige carpetas de compilación en otro disco o baja “Mantener al menos 20 GB libres”.",
+                             "Cartouche beginnt einen Build nur mit 20 GB freiem Platz auf der Festplatte des Mac, und dort sind nur 13 GB frei. Zuerst entfernt es die Build-Ordner der am längsten zurückliegend erstellten Spiele (2), was reichen kann. Gib dort Platz frei („Speicher“ zeigt, was die Build-Ordner belegen), wähle Build-Ordner auf einer anderen Festplatte oder senke „Mindestens 20 GB frei lassen“."))
     }
 
     /// A game skipped for the Mac's Xcode, as the engine records it
@@ -680,7 +685,9 @@ enum Gallery {
         let attempt: [String: Any] = [
             "commit": String(head.prefix(12)), "at": ISO8601DateFormatter().string(from: Date().addingTimeInterval(-7200)), "result": "skipped",
             "error": tr("nxnative builds this game's shaders only with the Metal compiler of Xcode 27.2, which it tested them with, and this Mac has Xcode 27.1. Update Xcode in the App Store (the page “This Mac's tools” does it with you), then build the game again.",
-                        "nxnative ne construit les shaders de ce jeu qu'avec le compilateur Metal de Xcode 27.2, avec lequel il les a testés, et ce Mac a Xcode 27.1. Mettez Xcode à jour dans l'App Store (la page « Outils du Mac » le fait avec vous), puis relancez la construction."),
+                        "nxnative ne construit les shaders de ce jeu qu'avec le compilateur Metal de Xcode 27.2, avec lequel il les a testés, et ce Mac a Xcode 27.1. Mettez Xcode à jour dans l'App Store (la page « Outils du Mac » le fait avec vous), puis relancez la construction.",
+                        "nxnative solo compila los shaders de este juego con el compilador Metal de Xcode 27.2, con el que los probó, y este Mac tiene Xcode 27.1. Actualiza Xcode en el App Store (la página “Herramientas de este Mac” lo hace contigo) y vuelve a compilar el juego.",
+                        "nxnative kompiliert die Shader dieses Spiels nur mit dem Metal-Compiler von Xcode 27.2, mit dem es sie getestet hat, und dieser Mac hat Xcode 27.1. Aktualisiere Xcode im App Store (die Seite „Werkzeuge dieses Mac“ hilft dir dabei) und erstelle das Spiel dann erneut."),
             "log": "/tmp/kirby.log",
         ]
         return (try? JSONSerialization.data(withJSONObject: attempt)).flatMap { try? JSONDecoder().decode(GameAttempt.self, from: $0) }
@@ -690,7 +697,7 @@ enum Gallery {
     /// of it (Unbuilt.swift).
     static var unbuilt: Game {
         Game(titleID: "0400A3A01EE4C000", name: "Pokémon Pokopia", kind: "nup", source: "/Volumes/Jeux/Switch/Pokopia", sourceSize: 9_870_000_000,
-             state: .due, reasons: ["new"], detail: tr("Never built", "Jamais construit"))
+             state: .due, reasons: ["new"], detail: tr("Never built", "Jamais construit", "Nunca compilado", "Nie erstellt"))
     }
 
     static let unbuiltFigures = UnbuiltGame(titleID: "0400A3A01EE4C000", macs: 4, failures: 8, hours: 4.7, stage: "iOS shaders")
@@ -707,7 +714,9 @@ enum Gallery {
     static var splitGame: Game {
         let newest = String(head.prefix(12))
         let held = tr("Up to date (built from nxnative \(beforeSplitter): nxnative \(newest), its newest commit, reads its shaders otherwise than its profile for now)",
-                      "À jour (construit avec nxnative \(beforeSplitter) : nxnative \(newest), son dernier commit, lit ses shaders autrement que son profil pour l'instant)")
+                      "À jour (construit avec nxnative \(beforeSplitter) : nxnative \(newest), son dernier commit, lit ses shaders autrement que son profil pour l'instant)",
+                      "Al día (compilado con nxnative \(beforeSplitter): nxnative \(newest), su commit más reciente, lee sus shaders de otra forma que su perfil por ahora)",
+                      "Aktuell (erstellt mit nxnative \(beforeSplitter): nxnative \(newest), sein neuester Commit, liest seine Shader vorerst anders als sein Profil)")
         let game: [String: Any] = [
             "title_id": splitTitleID, "name": "Mario Kart World", "kind": "nup", "source": "/Volumes/Jeux/Switch/Mario Kart World",
             "source_size": 21_474_836_480, "followed": true, "profile": true, "state": "up_to_date", "reasons": ["up_to_date"], "detail": held,
@@ -734,14 +743,20 @@ enum Gallery {
         let name = "Mario Kart World"
         let lines = [
             "\(name): " + tr("nxnative \(newest) reads its shaders otherwise than its profile says (shader split): trying again from \(beforeSplitter), from before nxnative changed how it reads them…",
-                             "nxnative \(newest) lit ses shaders autrement que ne le dit son profil (« shader split ») : nouvel essai avec \(beforeSplitter), d'avant le changement de sa lecture des shaders…"),
+                             "nxnative \(newest) lit ses shaders autrement que ne le dit son profil (« shader split ») : nouvel essai avec \(beforeSplitter), d'avant le changement de sa lecture des shaders…",
+                             "nxnative \(newest) lee sus shaders de otra forma que la que dice su perfil (“shader split”): nuevo intento con \(beforeSplitter), de antes de que nxnative cambiara su lectura…",
+                             "nxnative \(newest) liest seine Shader anders, als sein Profil sagt („shader split“): Neuer Versuch mit \(beforeSplitter), von bevor nxnative änderte, wie es sie liest …"),
             tr("\(name): going to nxnative \(beforeSplitter), from before nxnative changed how it reads shaders…",
-               "\(name) : passage à nxnative \(beforeSplitter), d'avant le changement de sa lecture des shaders…"),
-            "\(name): " + tr("IPA copied to the games folder (18.4 GB)", "IPA copiée dans le dossier des jeux (18,4 Go)"),
+               "\(name) : passage à nxnative \(beforeSplitter), d'avant le changement de sa lecture des shaders…",
+               "\(name): pasando a nxnative \(beforeSplitter), de antes de que nxnative cambiara su lectura de los shaders…",
+               "\(name): Wechsel zu nxnative \(beforeSplitter), von bevor nxnative änderte, wie es Shader liest …"),
+            "\(name): " + tr("IPA copied to the games folder (18.4 GB)", "IPA copiée dans le dossier des jeux (18,4 Go)", "IPA copiada en la carpeta de juegos (18,4 GB)", "IPA in den Spieleordner kopiert (18,4 GB)"),
             tr("\(name) built from nxnative \(beforeSplitter): nxnative \(newest) reads its shaders otherwise than its profile for now. It is built from \(beforeSplitter) until nxnative has a newer commit; the other games are built from \(newest).",
-               "\(name) construit avec nxnative \(beforeSplitter) : nxnative \(newest) lit ses shaders autrement que son profil pour l'instant. Il se construit avec \(beforeSplitter) jusqu'à un commit plus récent de nxnative ; les autres jeux se construisent avec \(newest)."),
-            tr("Back to nxnative \(newest)…", "Retour à nxnative \(newest)…"),
-            "Kirby and the Forgotten Land: " + tr("extracted", "extrait"),
+               "\(name) construit avec nxnative \(beforeSplitter) : nxnative \(newest) lit ses shaders autrement que son profil pour l'instant. Il se construit avec \(beforeSplitter) jusqu'à un commit plus récent de nxnative ; les autres jeux se construisent avec \(newest).",
+               "\(name) compilado con nxnative \(beforeSplitter): nxnative \(newest) lee sus shaders de otra forma que su perfil por ahora. Se compila con \(beforeSplitter) hasta que nxnative tenga un commit más reciente; los demás juegos se compilan con \(newest).",
+               "\(name) mit nxnative \(beforeSplitter) erstellt: nxnative \(newest) liest seine Shader vorerst anders als sein Profil. Es wird mit \(beforeSplitter) erstellt, bis nxnative einen neueren Commit hat; die anderen Spiele werden mit \(newest) erstellt."),
+            tr("Back to nxnative \(newest)…", "Retour à nxnative \(newest)…", "Volviendo a nxnative \(newest)…", "Zurück zu nxnative \(newest) …"),
+            "Kirby and the Forgotten Land: " + tr("extracted", "extrait", "extraído", "extrahiert"),
             "Kirby and the Forgotten Land: shaders 1088/2410",
         ]
         let status: [String: Any] = [
@@ -751,7 +766,7 @@ enum Gallery {
                  "duration": 4200, "ipa": "/Volumes/Jeux/iPhone/Mario Kart World.ipa", "commit": beforeSplitter, "fallback": true, "split": true,
                  "makes": ["ios", "mac"], "platform": "mac", "mac": "built", "mac_only": false, "mac_duration": 900],
                 ["title_id": "01004D300C5AE000", "name": "Kirby and the Forgotten Land", "reasons": ["named"], "state": "building", "stage": "shaders",
-                 "step": tr("Pipelines 1,088 / 2,410", "Pipelines 1 088 / 2 410"), "k": 1088, "n": 2410, "frac": 0.45, "overall": 0.52, "eta": 520,
+                 "step": tr("Pipelines 1,088 / 2,410", "Pipelines 1 088 / 2 410", "Pipelines 1088 / 2410", "Pipelines 1.088 / 2.410"), "k": 1088, "n": 2410, "frac": 0.45, "overall": 0.52, "eta": 520,
                  "started": "@-640", "commit": newest, "fallback": false, "split": false, "makes": ["ios", "mac"], "platform": "ios", "mac": "waiting",
                  "mac_only": false],
             ] as [[String: Any]],
@@ -776,9 +791,13 @@ enum Gallery {
     /// language of the page, as the engine says it (texts.py).
     static var issues: [String] {
         [tr("Splatoon 3 (copy): the same game (0100C2500FC20000) as Splatoon 3; only Splatoon 3 is built.",
-            "Splatoon 3 (copie) : le même jeu (0100C2500FC20000) que Splatoon 3 ; seul Splatoon 3 est construit."),
+            "Splatoon 3 (copie) : le même jeu (0100C2500FC20000) que Splatoon 3 ; seul Splatoon 3 est construit.",
+            "Splatoon 3 (copia): el mismo juego (0100C2500FC20000) que Splatoon 3; solo se compila Splatoon 3.",
+            "Splatoon 3 (Kopie): dasselbe Spiel (0100C2500FC20000) wie Splatoon 3; nur Splatoon 3 wird erstellt."),
          tr("Downloads/Pikmin 4.nsp: not a game Cartouche can read (the file is incomplete: copied or downloaded in part?).",
-            "Téléchargements/Pikmin 4.nsp : pas un jeu que Cartouche sait lire (le fichier est incomplet : copié ou téléchargé en partie ?).")]
+            "Téléchargements/Pikmin 4.nsp : pas un jeu que Cartouche sait lire (le fichier est incomplet : copié ou téléchargé en partie ?).",
+            "Descargas/Pikmin 4.nsp: no es un juego que Cartouche pueda leer (el archivo está incompleto: ¿copiado o descargado a medias?).",
+            "Downloads/Pikmin 4.nsp: kein Spiel, das Cartouche lesen kann (die Datei ist unvollständig: nur teilweise kopiert oder geladen?).")]
     }
 
     static let libraryJSON = """

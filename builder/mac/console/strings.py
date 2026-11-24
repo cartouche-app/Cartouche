@@ -2,7 +2,7 @@
 
 The console's screens are the iPhone's (Sources/CartoucheConsole/Shared),
 whose words are the launcher's: launcher/Sources/Cartouche.xcstrings, in
-English and French. The Mac's own go over them (strings.json, next to this
+English, French, Spanish and German. The Mac's own go over them (strings.json, next to this
 file): "overrides" says on the Mac what the iPhone says of itself, such as
 On this Mac for On this iPhone, and "strings" holds words only the Mac's
 parts use.
@@ -27,7 +27,7 @@ import plistlib
 import sys
 from pathlib import Path
 
-LANGUAGES = ("en", "fr")
+LANGUAGES = ("en", "fr", "es", "de")
 TABLE = "Cartouche.strings"
 
 

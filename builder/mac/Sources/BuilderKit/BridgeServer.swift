@@ -680,7 +680,7 @@ final class Session {
             let folder = place.url.deletingLastPathComponent()
             try manager.createDirectory(at: folder, withIntermediateDirectories: true)
             if let size = request.size, let free = Session.free(folder), free < size + (64 << 20) {
-                throw CartoucheBridgeError(.failed, tr("Not enough space on the Mac for this file.", "Pas assez de place sur le Mac pour ce fichier."))
+                throw CartoucheBridgeError(.failed, tr("Not enough space on the Mac for this file.", "Pas assez de place sur le Mac pour ce fichier.", "No hay espacio suficiente en el Mac para este archivo.", "Nicht genug Platz auf dem Mac für diese Datei."))
             }
             let upload = UUID().uuidString
             let partial = folder.appendingPathComponent(".\(place.url.lastPathComponent).\(upload.prefix(8)).cartouche-upload")

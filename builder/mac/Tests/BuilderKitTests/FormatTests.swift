@@ -2,8 +2,8 @@
 //  FormatTests.swift
 //  BuilderKitTests
 //
-//  Sizes, durations and percentages as the app writes them, in French and
-//  in English (Format.swift, L10n.swift).
+//  Sizes, durations and percentages as the app writes them, in English,
+//  French, Spanish and German (Format.swift, L10n.swift).
 //
 
 import Foundation
@@ -17,7 +17,7 @@ final class FormatTests: XCTestCase {
 
     func testInEnglish() {
         L10n.use("en")
-        XCTAssertEqual(tr("Library", "Bibliothèque"), "Library")
+        XCTAssertEqual(tr("Library", "Bibliothèque", "Biblioteca", "Bibliothek"), "Library")
         XCTAssertEqual(L10n.code, "en")
         XCTAssertEqual(Format.size(999), "999 bytes")
         XCTAssertEqual(Format.size(1_234_567), "1.23 MB")
@@ -29,7 +29,7 @@ final class FormatTests: XCTestCase {
 
     func testInFrench() {
         L10n.use("fr")
-        XCTAssertEqual(tr("Library", "Bibliothèque"), "Bibliothèque")
+        XCTAssertEqual(tr("Library", "Bibliothèque", "Biblioteca", "Bibliothek"), "Bibliothèque")
         XCTAssertEqual(L10n.code, "fr")
         XCTAssertEqual(Format.size(15_800_000_000), "15,8 Go")
         XCTAssertEqual(Format.size(999), "999 o")
@@ -37,6 +37,36 @@ final class FormatTests: XCTestCase {
         // The time a game started, on this Mac's clock.
         let started = Calendar.current.date(bySettingHour: 18, minute: 2, second: 0, of: Date())!
         XCTAssertEqual(Format.clock(started), "18:02")
+    }
+
+    func testInSpanishAndGerman() {
+        L10n.use("es")
+        XCTAssertEqual(tr("Library", "Bibliothèque", "Biblioteca", "Bibliothek"), "Biblioteca")
+        XCTAssertEqual(L10n.code, "es")
+        XCTAssertEqual(Format.size(15_800_000_000), "15,8 GB")
+        XCTAssertEqual(Format.size(999), "999 bytes")
+        XCTAssertEqual(Format.percent(0.684), "68 %")
+        XCTAssertEqual(DiskSpace.amount(400_000_000), "0,4 GB")
+        L10n.use("de")
+        XCTAssertEqual(tr("Library", "Bibliothèque", "Biblioteca", "Bibliothek"), "Bibliothek")
+        XCTAssertEqual(Format.size(15_800_000_000), "15,8 GB")
+        XCTAssertEqual(Format.size(999), "999 Byte")
+        XCTAssertEqual(Format.percent(0.684), "68 %")
+        XCTAssertEqual(UnbuiltGames.hoursText(4.7), "4,7")
+    }
+
+    /// The Mac's language, as the app speaks it: English for any other.
+    func testTheMacsLanguage() {
+        XCTAssertEqual(L10n.language(of: "fr-CA"), "fr")
+        XCTAssertEqual(L10n.language(of: "es-419"), "es")
+        XCTAssertEqual(L10n.language(of: "de-CH"), "de")
+        XCTAssertEqual(L10n.language(of: "en-GB"), "en")
+        XCTAssertEqual(L10n.language(of: "it-IT"), "en")
+        XCTAssertEqual(L10n.language(of: "zh-Hans"), "en")
+        // A language the settings do not offer is the Mac's.
+        L10n.use("it")
+        XCTAssertEqual(L10n.chosen, "")
+        XCTAssertEqual(L10n.code, L10n.systemLanguage)
     }
 
     func testDurationsAndTimes() {

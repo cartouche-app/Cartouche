@@ -29,11 +29,11 @@ struct StorageView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                PageHeader(title: tr("Storage", "Stockage"), subtitle: subtitle) {
+                PageHeader(title: tr("Storage", "Stockage", "Almacenamiento", "Speicher"), subtitle: subtitle) {
                     Button {
                         Task { await model.loadStorage() }
                     } label: {
-                        Label(tr("Measure again", "Mesurer à nouveau"), systemImage: "arrow.clockwise")
+                        Label(tr("Measure again", "Mesurer à nouveau", "Medir de nuevo", "Erneut messen"), systemImage: "arrow.clockwise")
                     }
                     .disabled(model.loadingStorage)
                 }
@@ -57,7 +57,7 @@ struct StorageView: View {
             if model.storage == nil { await model.loadStorage() }
         }
         .confirmationDialog(confirm?.title ?? "", isPresented: Binding(get: { confirm != nil }, set: { if !$0 { confirm = nil } }), presenting: confirm) { asked in
-            Button(tr("Free", "Libérer"), role: .destructive) { model.clean(asked.what, paths: asked.paths) }
+            Button(tr("Free", "Libérer", "Liberar", "Freigeben"), role: .destructive) { model.clean(asked.what, paths: asked.paths) }
         } message: { asked in
             Text(asked.message)
         }
@@ -66,32 +66,34 @@ struct StorageView: View {
     private func trashMessage(_ app: MacAppCopy) -> String {
         if app.isInstalledCopy {
             return (model.gamesOnShare
-                ? tr("Its app stays on the NAS: it is installed again when you play the game. ", "Son app reste sur le NAS : elle se réinstalle quand vous jouez au jeu. ")
-                : tr("Its app stays in the games folder: it is installed again when you play the game. ", "Son app reste dans le dossier des jeux : elle se réinstalle quand vous jouez au jeu. "))
-                + tr("Its saves stay on this Mac.", "Ses sauvegardes restent sur ce Mac.")
+                ? tr("Its app stays on the NAS: it is installed again when you play the game. ", "Son app reste sur le NAS : elle se réinstalle quand vous jouez au jeu. ", "Su app se queda en el NAS: se vuelve a instalar cuando juegues al juego. ", "Seine App bleibt auf dem NAS: Sie wird wieder installiert, wenn du das Spiel spielst. ")
+                : tr("Its app stays in the games folder: it is installed again when you play the game. ", "Son app reste dans le dossier des jeux : elle se réinstalle quand vous jouez au jeu. ", "Su app se queda en la carpeta de juegos: se vuelve a instalar cuando juegues al juego. ", "Seine App bleibt im Spieleordner: Sie wird wieder installiert, wenn du das Spiel spielst. "))
+                + tr("Its saves stay on this Mac.", "Ses sauvegardes restent sur ce Mac.", "Sus partidas guardadas se quedan en este Mac.", "Seine Spielstände bleiben auf diesem Mac.")
         }
         let alone = !(model.config?.onIOS(app.titleID) ?? true)
-        return (alone ? tr("The game is then no longer built: it was built for this Mac alone. ", "Le jeu n’est alors plus construit : il l’était pour ce Mac seul. ")
-                      : tr("The game is then no longer built for this Mac; its IPA still is. ", "Le jeu n’est alors plus construit pour ce Mac ; son IPA l’est toujours. "))
-            + tr("Its saves stay on this Mac.", "Ses sauvegardes restent sur ce Mac.")
+        return (alone ? tr("The game is then no longer built: it was built for this Mac alone. ", "Le jeu n’est alors plus construit : il l’était pour ce Mac seul. ", "El juego deja entonces de compilarse: se compilaba solo para este Mac. ", "Das Spiel wird dann nicht mehr erstellt: Es wurde nur für diesen Mac erstellt. ")
+                      : tr("The game is then no longer built for this Mac; its IPA still is. ", "Le jeu n’est alors plus construit pour ce Mac ; son IPA l’est toujours. ", "El juego deja entonces de compilarse para este Mac; su IPA sigue compilándose. ", "Das Spiel wird dann nicht mehr für diesen Mac erstellt; seine IPA schon. "))
+            + tr("Its saves stay on this Mac.", "Ses sauvegardes restent sur ce Mac.", "Sus partidas guardadas se quedan en este Mac.", "Seine Spielstände bleiben auf diesem Mac.")
     }
 
     private var subtitle: String {
-        guard let storage = model.storage else { return tr("Measuring…", "Mesure en cours…") }
+        guard let storage = model.storage else { return tr("Measuring…", "Mesure en cours…", "Midiendo…", "Wird gemessen …") }
         let kept = storage.buildFolders + storage.total("ipa_copies") + storage.total("logs") + storage.total("mac_apps")
-        return tr("Cartouche keeps \(Format.size(kept)) on this Mac", "Cartouche garde \(Format.size(kept)) sur ce Mac")
+        return tr("Cartouche keeps \(Format.size(kept)) on this Mac", "Cartouche garde \(Format.size(kept)) sur ce Mac", "Cartouche ocupa \(Format.size(kept)) en este Mac", "Cartouche belegt \(Format.size(kept)) auf diesem Mac")
     }
 
     private func disks(_ storage: StorageReport) -> some View {
         HStack(alignment: .top, spacing: 16) {
             if let disk = storage.workspaceDisk {
-                DiskCard(title: tr("Build disk", "Disque des constructions"), symbol: "internaldrive", disk: disk,
+                DiskCard(title: tr("Build disk", "Disque des constructions", "Disco de compilación", "Build-Festplatte"), symbol: "internaldrive", disk: disk,
                          note: tr("Keeps \(model.config?.minFreeGB ?? 20) GB free: the oldest build folders go first.",
-                                  "Garde \(model.config?.minFreeGB ?? 20) Go libres : les plus vieux dossiers partent d’abord."))
+                                  "Garde \(model.config?.minFreeGB ?? 20) Go libres : les plus vieux dossiers partent d’abord.",
+                                  "Mantiene \(model.config?.minFreeGB ?? 20) GB libres: las carpetas de compilación más antiguas se van primero.",
+                                  "Lässt \(model.config?.minFreeGB ?? 20) GB frei: Die ältesten Build-Ordner gehen zuerst."))
             }
             if let disk = storage.gamesDisk {
-                DiskCard(title: tr("Games folder", "Dossier des jeux"), symbol: model.library?.folders?.games?.isShare == true ? "externaldrive.connected.to.line.below" : "folder",
-                         disk: disk, note: model.library?.folders?.games?.isShare == true ? tr("On your NAS", "Sur votre NAS") : tr("On this Mac", "Sur ce Mac"))
+                DiskCard(title: tr("Games folder", "Dossier des jeux", "Carpeta de juegos", "Spieleordner"), symbol: model.library?.folders?.games?.isShare == true ? "externaldrive.connected.to.line.below" : "folder",
+                         disk: disk, note: model.library?.folders?.games?.isShare == true ? tr("On your NAS", "Sur votre NAS", "En tu NAS", "Auf deinem NAS") : tr("On this Mac", "Sur ce Mac", "En este Mac", "Auf diesem Mac"))
             }
         }
     }
@@ -99,37 +101,37 @@ struct StorageView: View {
     private func freeable(_ storage: StorageReport) -> some View {
         Card(padding: 6) {
             VStack(spacing: 0) {
-                StorageRow(symbol: "doc.zipper", title: tr("Extracted game files", "Fichiers extraits des jeux"),
-                           detail: tr("As big as the games; only a faster next build needs them.", "Aussi gros que les jeux ; seule une reconstruction plus rapide en a besoin."),
-                           size: storage.total("extracted"), action: storage.total("extracted") > 0 ? tr("Free", "Libérer") : nil) {
-                    confirm = Confirmation(title: tr("Free the extracted files?", "Libérer les fichiers extraits ?"),
-                                           message: tr("The next build of each game extracts it again.", "La prochaine construction de chaque jeu les extraira à nouveau."),
+                StorageRow(symbol: "doc.zipper", title: tr("Extracted game files", "Fichiers extraits des jeux", "Archivos extraídos de los juegos", "Extrahierte Spieldateien"),
+                           detail: tr("As big as the games; only a faster next build needs them.", "Aussi gros que les jeux ; seule une reconstruction plus rapide en a besoin.", "Tan grandes como los juegos; solo los necesita una próxima compilación más rápida.", "So groß wie die Spiele; nur ein schnellerer nächster Build braucht sie."),
+                           size: storage.total("extracted"), action: storage.total("extracted") > 0 ? tr("Free", "Libérer", "Liberar", "Freigeben") : nil) {
+                    confirm = Confirmation(title: tr("Free the extracted files?", "Libérer les fichiers extraits ?", "¿Liberar los archivos extraídos?", "Extrahierte Dateien freigeben?"),
+                                           message: tr("The next build of each game extracts it again.", "La prochaine construction de chaque jeu les extraira à nouveau.", "La próxima compilación de cada juego los vuelve a extraer.", "Der nächste Build jedes Spiels extrahiert sie erneut."),
                                            what: "extracted", paths: [])
                 }
                 Divider().padding(.leading, 48)
                 let copies = storage.ipaCopies.filter { !$0.sameDisk }
-                StorageRow(symbol: "shippingbox", title: tr("IPA copies", "Copies d’IPA"),
+                StorageRow(symbol: "shippingbox", title: tr("IPA copies", "Copies d’IPA", "Copias de IPA", "IPA-Kopien"),
                            detail: copies.isEmpty
-                               ? tr("Those beside the games folder, on the same disk, take no room (APFS clones).", "Celles à côté du dossier des jeux, sur le même disque, ne prennent pas de place (clones APFS).")
-                               : tr("\(copies.count) copies on another disk than the games folder.", "\(copies.count) copies sur un autre disque que le dossier des jeux."),
-                           size: storage.total("ipa_copies_freeable"), action: copies.isEmpty ? nil : tr("Free", "Libérer")) {
-                    confirm = Confirmation(title: tr("Free the IPA copies?", "Libérer les copies d’IPA ?"),
-                                           message: tr("Your games folder keeps its IPAs.", "Votre dossier des jeux garde ses IPA."),
+                               ? tr("Those beside the games folder, on the same disk, take no room (APFS clones).", "Celles à côté du dossier des jeux, sur le même disque, ne prennent pas de place (clones APFS).", "Las que están junto a la carpeta de juegos, en el mismo disco, no ocupan espacio (clones APFS).", "Die neben dem Spieleordner, auf derselben Festplatte, belegen keinen Platz (APFS-Klone).")
+                               : tr("\(copies.count) copies on another disk than the games folder.", "\(copies.count) copies sur un autre disque que le dossier des jeux.", "\(copies.count) copias en otro disco que el de la carpeta de juegos.", "\(copies.count) Kopien auf einer anderen Festplatte als der Spieleordner."),
+                           size: storage.total("ipa_copies_freeable"), action: copies.isEmpty ? nil : tr("Free", "Libérer", "Liberar", "Freigeben")) {
+                    confirm = Confirmation(title: tr("Free the IPA copies?", "Libérer les copies d’IPA ?", "¿Liberar las copias de IPA?", "IPA-Kopien freigeben?"),
+                                           message: tr("Your games folder keeps its IPAs.", "Votre dossier des jeux garde ses IPA.", "Tu carpeta de juegos conserva sus IPA.", "Dein Spieleordner behält seine IPAs."),
                                            what: "ipa_copies", paths: copies.map(\.path))
                 }
                 Divider().padding(.leading, 48)
-                StorageRow(symbol: "sparkles.rectangle.stack", title: tr("Shaders and apps of the builds", "Shaders et apps des constructions"),
-                           detail: tr("Make the next builds faster.", "Accélèrent les prochaines constructions."),
+                StorageRow(symbol: "sparkles.rectangle.stack", title: tr("Shaders and apps of the builds", "Shaders et apps des constructions", "Shaders y apps de las compilaciones", "Shader und Apps der Builds"),
+                           detail: tr("Make the next builds faster.", "Accélèrent les prochaines constructions.", "Aceleran las próximas compilaciones.", "Beschleunigen die nächsten Builds."),
                            size: storage.total("shaders") + storage.total("app") + storage.total("packages") + storage.total("other"), action: nil) {}
                 Divider().padding(.leading, 48)
-                StorageRow(symbol: "doc.text", title: tr("Logs", "Journaux"),
-                           detail: tr("Those older than a week can go.", "Ceux de plus d’une semaine peuvent partir."),
-                           size: storage.total("logs"), action: storage.total("logs") > 0 ? tr("Clean", "Nettoyer") : nil) {
+                StorageRow(symbol: "doc.text", title: tr("Logs", "Journaux", "Registros", "Protokolle"),
+                           detail: tr("Those older than a week can go.", "Ceux de plus d’une semaine peuvent partir.", "Los de más de una semana se pueden borrar.", "Die älter als eine Woche können weg."),
+                           size: storage.total("logs"), action: storage.total("logs") > 0 ? tr("Clean", "Nettoyer", "Limpiar", "Aufräumen") : nil) {
                     model.clean("logs")
                 }
                 Divider().padding(.leading, 48)
-                StorageRow(symbol: "shippingbox.circle", title: tr("nxnative and its Python", "nxnative et son Python"),
-                           detail: tr("Needed for every build.", "Nécessaires à chaque construction."),
+                StorageRow(symbol: "shippingbox.circle", title: tr("nxnative and its Python", "nxnative et son Python", "nxnative y su Python", "nxnative und sein Python"),
+                           detail: tr("Needed for every build.", "Nécessaires à chaque construction.", "Necesarios para cada compilación.", "Für jeden Build nötig."),
                            size: storage.total("engine") + storage.total("python"), action: nil) {}
             }
         }
@@ -137,7 +139,7 @@ struct StorageView: View {
 
     private func folders(_ storage: StorageReport) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(tr("Build folders", "Dossiers de construction").uppercased())
+            Text(tr("Build folders", "Dossiers de construction", "Carpetas de compilación", "Build-Ordner").uppercased())
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
             Card(padding: 6) {
@@ -156,9 +158,11 @@ struct StorageView: View {
                             Text(Format.size(folder.size))
                                 .font(.callout.monospacedDigit())
                             Button {
-                                confirm = Confirmation(title: tr("Delete this build folder?", "Supprimer ce dossier de construction ?"),
+                                confirm = Confirmation(title: tr("Delete this build folder?", "Supprimer ce dossier de construction ?", "¿Borrar esta carpeta de compilación?", "Diesen Build-Ordner löschen?"),
                                                        message: tr("The next build of \(folder.name) starts from scratch, and takes longer.",
-                                                                   "La prochaine construction de \(folder.name) repart de zéro, et prend plus de temps."),
+                                                                   "La prochaine construction de \(folder.name) repart de zéro, et prend plus de temps.",
+                                                                   "La próxima compilación de \(folder.name) empieza desde cero y tarda más.",
+                                                                   "Der nächste Build von \(folder.name) beginnt von vorn und dauert länger."),
                                                        what: "folders", paths: [folder.path])
                             } label: {
                                 Image(systemName: "trash")
@@ -177,7 +181,7 @@ struct StorageView: View {
     /// The games' apps the builder put on this Mac, still where it put them.
     private func macApps(_ storage: StorageReport) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(tr("Games on this Mac", "Jeux sur ce Mac").uppercased())
+            Text(tr("Games on this Mac", "Jeux sur ce Mac", "Juegos en este Mac", "Spiele auf diesem Mac").uppercased())
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
             Card(padding: 6) {
@@ -202,7 +206,7 @@ struct StorageView: View {
                                 Image(systemName: "folder")
                             }
                             .buttonStyle(.borderless)
-                            .help(tr("Show in the Finder", "Afficher dans le Finder"))
+                            .help(tr("Show in the Finder", "Afficher dans le Finder", "Mostrar en el Finder", "Im Finder zeigen"))
                             Button {
                                 trash = app
                             } label: {
@@ -210,7 +214,7 @@ struct StorageView: View {
                             }
                             .buttonStyle(.borderless)
                             .disabled(model.isBuilding)
-                            .help(tr("Move to the Trash", "Mettre à la Corbeille"))
+                            .help(tr("Move to the Trash", "Mettre à la Corbeille", "Mover a la Papelera", "In den Papierkorb legen"))
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 8)
@@ -219,9 +223,9 @@ struct StorageView: View {
             }
         }
         // Its own dialog: the page's frees the builder's folders.
-        .confirmationDialog(tr("Move \(trash?.name ?? "") to the Trash?", "Mettre \(trash?.name ?? "") à la Corbeille ?"),
+        .confirmationDialog(tr("Move \(trash?.name ?? "") to the Trash?", "Mettre \(trash?.name ?? "") à la Corbeille ?", "¿Mover \(trash?.name ?? "") a la Papelera?", "\(trash?.name ?? "") in den Papierkorb legen?"),
                             isPresented: Binding(get: { trash != nil }, set: { if !$0 { trash = nil } }), presenting: trash) { app in
-            Button(tr("Move to the Trash", "Mettre à la Corbeille"), role: .destructive) { model.removeMacApp(app) }
+            Button(tr("Move to the Trash", "Mettre à la Corbeille", "Mover a la Papelera", "In den Papierkorb legen"), role: .destructive) { model.removeMacApp(app) }
         } message: { app in
             Text(trashMessage(app))
         }
@@ -230,21 +234,21 @@ struct StorageView: View {
     private func appDetail(_ app: MacAppCopy) -> String {
         var parts: [String] = []
         if app.isInstalledCopy {
-            parts.append(model.gamesOnShare ? tr("installed from the NAS", "installée depuis le NAS") : tr("installed from the games folder", "installée depuis le dossier des jeux"))
+            parts.append(model.gamesOnShare ? tr("installed from the NAS", "installée depuis le NAS", "instalada desde el NAS", "vom NAS installiert") : tr("installed from the games folder", "installée depuis le dossier des jeux", "instalada desde la carpeta de juegos", "aus dem Spieleordner installiert"))
         }
-        if let date = app.date { parts.append(tr("built ", "construite ") + Format.relative(date)) }
-        if !app.on { parts.append(tr("no longer built", "plus construite")) }
+        if let date = app.date { parts.append(tr("built ", "construite ", "compilada ", "erstellt ") + Format.relative(date)) }
+        if !app.on { parts.append(tr("no longer built", "plus construite", "ya no se compila", "nicht mehr erstellt")) }
         if app.sharesBuild == true {
-            parts.append(tr("its game files share their room with its build folder’s extracted files", "ses fichiers de jeu partagent leur place avec les fichiers extraits de son dossier de construction"))
+            parts.append(tr("its game files share their room with its build folder’s extracted files", "ses fichiers de jeu partagent leur place avec les fichiers extraits de son dossier de construction", "sus archivos de juego comparten espacio con los archivos extraídos de su carpeta de compilación", "seine Spieldateien teilen sich den Platz mit den extrahierten Dateien seines Build-Ordners"))
         }
         return parts.joined(separator: " · ")
     }
 
     private func folderDetail(_ folder: BuildFolder) -> String {
         var parts: [String] = []
-        if folder.extracted > 0 { parts.append(tr("extracted ", "extraits ") + Format.size(folder.extracted)) }
+        if folder.extracted > 0 { parts.append(tr("extracted ", "extraits ", "extraídos ", "extrahiert ") + Format.size(folder.extracted)) }
         if folder.shaders > 0 { parts.append("shaders " + Format.size(folder.shaders)) }
-        if let used = folder.used, used > 0 { parts.append(tr("used ", "utilisé ") + Format.relative(Date(timeIntervalSince1970: used))) }
+        if let used = folder.used, used > 0 { parts.append(tr("used ", "utilisé ", "usado ", "genutzt ") + Format.relative(Date(timeIntervalSince1970: used))) }
         return parts.joined(separator: " · ")
     }
 }
@@ -263,7 +267,7 @@ struct DiskCard: View {
                 let used = disk.total > disk.free ? disk.total - disk.free : 0
                 ProgressView(value: disk.total > 0 ? Double(used) / Double(disk.total) : 0)
                     .tint(Double(disk.free) < Double(disk.total) * 0.1 ? .orange : Theme.indigo)
-                Text(tr("\(Format.size(disk.free)) free of \(Format.size(disk.total))", "\(Format.size(disk.free)) libres sur \(Format.size(disk.total))"))
+                Text(tr("\(Format.size(disk.free)) free of \(Format.size(disk.total))", "\(Format.size(disk.free)) libres sur \(Format.size(disk.total))", "\(Format.size(disk.free)) libres de \(Format.size(disk.total))", "\(Format.size(disk.free)) frei von \(Format.size(disk.total))"))
                     .font(.callout.monospacedDigit())
                 Text(note)
                     .font(.caption)
@@ -320,15 +324,15 @@ struct StorageSettingsCard: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Toggle(isOn: Binding(get: { config.keepExtracted }, set: { on in model.update { $0.keepExtracted = on } })) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(tr("Keep the extracted files", "Garder les fichiers extraits"))
-                            Text(tr("Faster rebuilds, as much room as the games.", "Reconstructions plus rapides, autant de place que les jeux."))
+                            Text(tr("Keep the extracted files", "Garder les fichiers extraits", "Conservar los archivos extraídos", "Extrahierte Dateien behalten"))
+                            Text(tr("Faster rebuilds, as much room as the games.", "Reconstructions plus rapides, autant de place que les jeux.", "Recompilaciones más rápidas, tanto espacio como los juegos.", "Schnellere Neu-Builds, so viel Platz wie die Spiele."))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
                     }
                     Divider()
                     Stepper(value: Binding(get: { config.minFreeGB }, set: { value in model.update { $0.minFreeGB = value } }), in: 5...500, step: 5) {
-                        Text(tr("Keep at least \(config.minFreeGB) GB free", "Garder au moins \(config.minFreeGB) Go libres"))
+                        Text(tr("Keep at least \(config.minFreeGB) GB free", "Garder au moins \(config.minFreeGB) Go libres", "Mantener al menos \(config.minFreeGB) GB libres", "Mindestens \(config.minFreeGB) GB frei lassen"))
                     }
                 }
             }

@@ -134,6 +134,17 @@ final class MacPlayTests: XCTestCase {
         XCTAssertTrue(players[0].contains("{min}"))
         XCTAssertTrue(players[2].contains("{joined}") && players[2].contains("{min}"))
         XCTAssertFalse(players.contains(""))
+        // In Spanish and German too, five lines each with their placeholders.
+        for (language, title) in [("es", "¿Salir de Mario Kart 8 Deluxe?"), ("de", "Mario Kart 8 Deluxe beenden?")] {
+            let made = MacPlayEnvironment.make(app: app, keepsSaves: true, language: language)
+            let quit = try XCTUnwrap(made["DM_HOME_QUIT_TEXT"]).components(separatedBy: "\n")
+            XCTAssertEqual(quit.count, 5, language)
+            XCTAssertEqual(quit[1], title)
+            let players = try XCTUnwrap(made["DM_CTRL_PROMPT_TEXT"]).components(separatedBy: "\n")
+            XCTAssertEqual(players.count, 5, language)
+            XCTAssertTrue(players[0].contains("{min}"), language)
+            XCTAssertTrue(players[2].contains("{joined}") && players[2].contains("{min}"), language)
+        }
         // In English, nxnative's own texts; its saves left to its cloud saves.
         let english = MacPlayEnvironment.make(app: app, keepsSaves: false, language: "en")
         XCTAssertEqual(english, [:])

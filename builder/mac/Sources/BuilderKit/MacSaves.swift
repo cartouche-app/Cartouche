@@ -996,7 +996,9 @@ public actor MacSaveKeeper {
         } catch MacSavesError.unreadable(let name) {
             event = MacSaveEvent(at: now, when: when, step: "failed",
                                  failure: tr("The copy \(name) does not read as a copy of saves: the saves of this Mac stay as they are.",
-                                             "La copie \(name) ne se lit pas comme une copie de sauvegardes : celles de ce Mac restent telles quelles."))
+                                             "La copie \(name) ne se lit pas comme une copie de sauvegardes : celles de ce Mac restent telles quelles.",
+                                             "La copia \(name) no se puede leer como copia de partidas guardadas: las de este Mac se quedan como están.",
+                                             "Die Kopie \(name) lässt sich nicht als Kopie von Spielständen lesen: Die Spielstände dieses Mac bleiben, wie sie sind."))
         } catch {
             event = MacSaveEvent(at: now, when: when, step: "failed", failure: error.localizedDescription)
         }

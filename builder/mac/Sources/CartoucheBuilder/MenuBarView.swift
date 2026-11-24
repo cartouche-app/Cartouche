@@ -89,19 +89,19 @@ struct MenuBarView: View {
     private var summary: String {
         if model.isBuilding {
             let left = model.waiting.count + (model.status?.current.count ?? 0)
-            return left > 1 ? tr("Building: \(left) games to go", "Construction : encore \(left) jeux") : tr("Building a game", "Construction d’un jeu")
+            return left > 1 ? tr("Building: \(left) games to go", "Construction : encore \(left) jeux", "Compilando: quedan \(left) juegos", "Erstellen: noch \(left) Spiele") : tr("Building a game", "Construction d’un jeu", "Compilando un juego", "Ein Spiel wird erstellt")
         }
         if model.engine == nil || !model.setup.ready {
-            return tr("This Mac’s tools are not all there yet", "Les outils du Mac ne sont pas encore tous là")
+            return tr("This Mac’s tools are not all there yet", "Les outils du Mac ne sont pas encore tous là", "Aún no están todas las herramientas de este Mac", "Noch sind nicht alle Werkzeuge dieses Mac da")
         }
         let due = model.library?.due.count ?? 0
         if due > 0 {
-            return due == 1 ? tr("1 game to rebuild", "1 jeu à reconstruire") : tr("\(due) games to rebuild", "\(due) jeux à reconstruire")
+            return due == 1 ? tr("1 game to rebuild", "1 jeu à reconstruire", "1 juego por recompilar", "1 Spiel neu zu erstellen") : tr("\(due) games to rebuild", "\(due) jeux à reconstruire", "\(due) juegos por recompilar", "\(due) Spiele neu zu erstellen")
         }
         if let checked = model.library?.checked.flatMap(ISODate.parse) {
-            return tr("Everything is up to date, checked ", "Tout est à jour, vérifié ") + Format.relative(checked)
+            return tr("Everything is up to date, checked ", "Tout est à jour, vérifié ", "Todo está al día, comprobado ", "Alles ist aktuell, geprüft ") + Format.relative(checked)
         }
-        return tr("Everything is up to date", "Tout est à jour")
+        return tr("Everything is up to date", "Tout est à jour", "Todo está al día", "Alles ist aktuell")
     }
 
     @ViewBuilder private var building: some View {
@@ -110,7 +110,7 @@ struct MenuBarView: View {
             HStack(spacing: 8) {
                 ProgressView()
                     .controlSize(.small)
-                Text(model.checking ? tr("Checking nxnative first…", "Vérification de nxnative d’abord…") : tr("Starting…", "Démarrage…"))
+                Text(model.checking ? tr("Checking nxnative first…", "Vérification de nxnative d’abord…", "Primero se comprueba nxnative…", "Zuerst wird nxnative geprüft …") : tr("Starting…", "Démarrage…", "Iniciando…", "Wird gestartet …"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -141,12 +141,12 @@ struct MenuBarView: View {
         }
         HStack {
             if let eta = model.status?.current.first?.eta, eta > 0 {
-                Text(tr("about \(Format.duration(eta)) left", "encore \(Format.duration(eta)) environ"))
+                Text(tr("about \(Format.duration(eta)) left", "encore \(Format.duration(eta)) environ", "quedan unos \(Format.duration(eta))", "noch etwa \(Format.duration(eta))"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Button(model.stopsSeveral ? tr("Stop all", "Tout arrêter") : tr("Stop", "Arrêter")) { model.stop() }
+            Button(model.stopsSeveral ? tr("Stop all", "Tout arrêter", "Detener todo", "Alle stoppen") : tr("Stop", "Arrêter", "Detener", "Stoppen")) { model.stop() }
                 .controlSize(.small)
         }
     }
@@ -176,7 +176,7 @@ struct MenuBarView: View {
                 .buttonStyle(.plain)
             }
             if due.count > 3 {
-                Text(tr("and \(due.count - 3) more", "et \(due.count - 3) autres"))
+                Text(tr("and \(due.count - 3) more", "et \(due.count - 3) autres", "y \(due.count - 3) más", "und \(due.count - 3) weitere"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -184,11 +184,11 @@ struct MenuBarView: View {
                 model.build()
             } label: {
                 if model.isBuilding {
-                    Label(due.count == 1 ? tr("Add it to the queue", "L’ajouter à la file") : tr("Add them to the queue (\(due.count))", "Les ajouter à la file (\(due.count))"),
+                    Label(due.count == 1 ? tr("Add it to the queue", "L’ajouter à la file", "Añadirlo a la cola", "Zur Warteschlange hinzufügen") : tr("Add them to the queue (\(due.count))", "Les ajouter à la file (\(due.count))", "Añadirlos a la cola (\(due.count))", "Zur Warteschlange hinzufügen (\(due.count))"),
                           systemImage: "text.badge.plus")
                         .frame(maxWidth: .infinity)
                 } else {
-                    Label(due.count == 1 ? tr("Rebuild it", "Le reconstruire") : tr("Rebuild them (\(due.count))", "Les reconstruire (\(due.count))"),
+                    Label(due.count == 1 ? tr("Rebuild it", "Le reconstruire", "Recompilarlo", "Neu erstellen") : tr("Rebuild them (\(due.count))", "Les reconstruire (\(due.count))", "Recompilarlos (\(due.count))", "Neu erstellen (\(due.count))"),
                           systemImage: "sparkles")
                         .frame(maxWidth: .infinity)
                 }
@@ -203,10 +203,10 @@ struct MenuBarView: View {
             Image(systemName: "arrow.down.circle.fill")
                 .font(.title3)
                 .foregroundStyle(Theme.indigo)
-            Text(tr("Version \(release.version) is ready", "La version \(release.version) est prête"))
+            Text(tr("Version \(release.version) is ready", "La version \(release.version) est prête", "La versión \(release.version) está lista", "Version \(release.version) ist bereit"))
                 .font(.callout)
             Spacer(minLength: 0)
-            Button(tr("Restart", "Redémarrer")) {
+            Button(tr("Restart", "Redémarrer", "Reiniciar", "Neu starten")) {
                 Task { await updater.install(relaunch: true) }
             }
             .controlSize(.small)
@@ -216,7 +216,7 @@ struct MenuBarView: View {
 
     private var footer: some View {
         HStack(spacing: 8) {
-            Button(tr("Open the console", "Ouvrir la console")) { show(.console) }
+            Button(tr("Open the console", "Ouvrir la console", "Abrir la consola", "Konsole öffnen")) { show(.console) }
                 .keyboardShortcut("o")
             Button(AppInterface.builder.title) { show(.builder) }
             Spacer()
@@ -225,18 +225,18 @@ struct MenuBarView: View {
             } label: {
                 Image(systemName: "arrow.clockwise")
             }
-            .help(tr("Check nxnative now", "Vérifier nxnative maintenant"))
+            .help(tr("Check nxnative now", "Vérifier nxnative maintenant", "Comprobar nxnative ahora", "nxnative jetzt prüfen"))
             .disabled(model.engine == nil || model.checking)
             SettingsLink {
                 Image(systemName: "gearshape")
             }
-            .help(tr("Settings", "Réglages"))
+            .help(tr("Settings", "Réglages", "Ajustes", "Einstellungen"))
             Button {
                 NSApp.terminate(nil)
             } label: {
                 Image(systemName: "power")
             }
-            .help(tr("Quit Cartouche", "Quitter Cartouche"))
+            .help(tr("Quit Cartouche", "Quitter Cartouche", "Salir de Cartouche", "Cartouche beenden"))
         }
         .buttonStyle(.borderless)
     }
@@ -275,14 +275,14 @@ struct MacPlayMenu: View {
             if let playing = games.playing.values.sorted(by: { $0.started < $1.started }).first {
                 Image(systemName: "gamecontroller.fill")
                     .foregroundStyle(Theme.indigo)
-                Text(tr("Playing \(playing.app.name)", "En jeu : \(playing.app.name)"))
+                Text(tr("Playing \(playing.app.name)", "En jeu : \(playing.app.name)", "Jugando a \(playing.app.name)", "Im Spiel: \(playing.app.name)"))
                     .font(.caption)
                     .lineLimit(1)
                     .truncationMode(.tail)
             } else {
                 Image(systemName: "macbook")
                     .foregroundStyle(.secondary)
-                Text(tr("Play on this Mac", "Jouer sur ce Mac"))
+                Text(tr("Play on this Mac", "Jouer sur ce Mac", "Jugar en este Mac", "Auf diesem Mac spielen"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -292,7 +292,7 @@ struct MacPlayMenu: View {
                     Button(game.name) { model.play(game) }
                 }
             } label: {
-                Label(tr("Play", "Jouer"), systemImage: "play.fill")
+                Label(tr("Play", "Jouer", "Jugar", "Spielen"), systemImage: "play.fill")
             }
             .menuStyle(.button)
             .controlSize(.small)
