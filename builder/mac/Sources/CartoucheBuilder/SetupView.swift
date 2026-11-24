@@ -241,6 +241,11 @@ struct BuildSourceChoice: View {
                     VStack(alignment: .leading, spacing: 12) {
                         BuildForPicker()
                         Divider()
+                        Text(tr("Or another repository, as under Advanced: one other than nxnative’s wins over Build for.",
+                                "Ou un autre dépôt, comme dans Avancé : un autre que celui de nxnative passe avant Construire pour."))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                         EngineRepositoryFields(labeled: true)
                         Text(tr("Chosen before nxnative is downloaded, it is what this step downloads. Changed after, the next build fetches it.",
                                 "Choisi avant que nxnative soit téléchargé, c’est lui que cette étape télécharge. Changé après, la prochaine construction va le chercher."))
