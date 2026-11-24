@@ -21,7 +21,7 @@ extension CartoucheText {
     static func guideStepDone(_ title: String) -> String { f("guide.step.done", "%@, done", title) }
     static func guideStepSkipped(_ title: String) -> String { f("guide.step.skipped", "%@, skipped", title) }
     static var guideDone: String { s("guide.done", "Done.") }
-    static var guideNoDownloads: String { s("guide.noDownloads", "Cartouche never downloads a game: you build yours from your own console.") }
+    static var guideNoDownloads: String { s("guide.noDownloads", "Cartouche provides no game: yours are built from your own copy, on your Mac or by Cartouche Cloud.") }
     static var guideOpenSetup: String { s("guide.openSetup", "Open the setup") }
     /// The × of the home's card.
     static var guideHide: String { s("guide.hide", "Hide the guide") }
@@ -41,13 +41,18 @@ extension CartoucheText {
     static var guideAccountCertificate: String { s("guide.account.certificate", "Signed in. Cartouche is fetching its certificate…") }
     static func guideAccountDone(_ appleID: String) -> String { f("guide.account.done", "Signed in as %@.", appleID) }
 
-    static var guideBuildTitle: String { s("guide.build.title", "Build your game on a Mac") }
-    static var guideBuildHow: String { s("guide.build.how", "nxnative turns your own copy of a game into an app for the iPhone, and only a Mac can do it. Cartouche on the Mac does it for you, and builds your games again when nxnative improves them.") }
+    static var guideBuildTitle: String { s("guide.build.title", "Build your game") }
+    static var guideBuildHow: String { s("guide.build.how", "nxnative turns your own copy of a game into an app for the iPhone, on a Mac. Cartouche for Mac does it on yours, and builds your games again when nxnative improves them. With no Mac, Cartouche Cloud builds it for you, from the copy you send it.") }
     static var guideBuildMac: String { s("guide.build.mac", "A Mac with Apple silicon (M1 or later), on macOS 26.6 or later") }
     static var guideBuildXcode: String { s("guide.build.xcode", "Xcode 27.2, free from Apple") }
     static var guideBuildGame: String { s("guide.build.game", "Your game, copied from your own console, with your console’s keys (prod.keys) for a Switch game") }
     static var guideBuildSend: String { s("guide.build.send", "Send the steps to my Mac") }
     static var guideBuildSendNote: String { s("guide.build.sendNote", "By AirDrop or Messages. On the Mac, the page gives Cartouche for Mac: drag it into Applications, and it installs its tools itself.") }
+    /// Cartouche Cloud's page, for a player with no Mac.
+    static var guideBuildCloud: String { s("guide.build.cloud", "No Mac: Cartouche Cloud") }
+    /// The Mac's step, this iPhone linked to Cartouche Cloud.
+    static var guideBuildCloudLinked: String { s("guide.build.cloudLinked", "This iPhone is linked to Cartouche Cloud. From a computer, send your own copy of a game on its site: your game shows here once it is built.") }
+    static var guideBuildCloudOpen: String { s("guide.build.cloudOpen", "Open Cartouche Cloud") }
     static var guideBuildSkip: String { s("guide.build.skip", "No thanks") }
     static var guideBuildSkipped: String { s("guide.build.skipped", "Skipped: your games will come from your games folder, or from an IPA you import.") }
     static var guideBuildShareSubject: String { s("guide.build.share.subject", "Cartouche on your Mac") }
@@ -58,6 +63,8 @@ extension CartoucheText {
     static var guideFolderHow: String { s("guide.folder.how", "Cartouche on the Mac puts your games in a folder, on the Mac or on your NAS. Add your Mac here once, with the code both screens show, or choose the folder on your NAS: Cartouche lists your games and offers their updates.") }
     /// The same, for a player who said No thanks to the Mac's step.
     static var guideFolderHowNoMac: String { s("guide.folder.howNoMac", "Choose the folder that holds your games, on your NAS, another server of yours or in Files: Cartouche lists them and offers their updates.") }
+    /// The games folder's step, passed over: Cartouche Cloud brings the games.
+    static var guideFolderSkippedCloud: String { s("guide.folder.skippedCloud", "Skipped: your games come from Cartouche Cloud.") }
     static var guideFolderChoose: String { s("guide.folder.choose", "Choose the games folder") }
     static var guideFolderImport: String { s("guide.folder.import", "Import an IPA instead") }
     static func guideFolderDone(_ server: String) -> String { f("guide.folder.done", "Your games folder is on %@.", server) }
@@ -67,6 +74,9 @@ extension CartoucheText {
     static var guidePlayWaiting: String { s("guide.play.waiting", "No game in your games folder yet. Yours shows here as soon as Cartouche on your Mac has built it. You can also import an IPA.") }
     /// The same, for a player who said No thanks to the Mac's step.
     static var guidePlayWaitingNoMac: String { s("guide.play.waitingNoMac", "No game in your games folder yet. Yours shows here as soon as it is there. You can also import an IPA.") }
+    /// The same, for a game Cartouche Cloud built, or one it builds.
+    static var guidePlayReadyCloud: String { s("guide.play.readyCloud", "Cartouche Cloud built your game. Cartouche installs it on this iPhone, then shows Play.") }
+    static var guidePlayWaitingCloud: String { s("guide.play.waitingCloud", "No game built yet. Yours shows here as soon as Cartouche Cloud has built it. You can also import an IPA.") }
     static func guidePlayInstall(_ game: String) -> String { f("guide.play.install", "Install %@", game) }
     static func guidePlayDone(_ game: String) -> String { f("guide.play.done", "%@ is on this iPhone.", game) }
 }

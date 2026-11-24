@@ -6062,6 +6062,93 @@
         }
       }
     },
+    "guide.build.cloud" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Mac: Cartouche Cloud"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Mac: Cartouche Cloud"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin Mac: Cartouche Cloud"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sans Mac : Cartouche Cloud"
+          }
+        }
+      }
+    },
+    "guide.build.cloudLinked" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses iPhone ist mit Cartouche Cloud verbunden. Sende von einem Computer aus deine eigene Kopie eines Spiels auf seiner Website: Dein Spiel erscheint hier, sobald es erstellt ist."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This iPhone is linked to Cartouche Cloud. From a computer, send your own copy of a game on its site: your game shows here once it is built."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Este iPhone está vinculado a Cartouche Cloud. Desde un ordenador, envía tu propia copia de un juego en su sitio: tu juego aparece aquí una vez compilado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cet iPhone est lié à Cartouche Cloud. Depuis un ordinateur, envoyez votre propre copie d’un jeu sur son site : votre jeu apparaît ici une fois construit."
+          }
+        }
+      }
+    },
+    "guide.build.cloudOpen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud öffnen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Cartouche Cloud"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir Cartouche Cloud"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir Cartouche Cloud"
+          }
+        }
+      }
+    },
     "guide.build.done" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6126,25 +6213,25 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "nxnative macht aus deiner eigenen Kopie eines Spiels eine App für das iPhone, und nur ein Mac kann das. Cartouche auf dem Mac erledigt das für dich und erstellt deine Spiele erneut, wenn nxnative sie verbessert."
+            "value" : "nxnative macht aus deiner eigenen Kopie eines Spiels eine App für das iPhone, auf einem Mac. Cartouche für Mac erledigt das auf deinem und erstellt deine Spiele erneut, wenn nxnative sie verbessert. Ohne Mac erstellt Cartouche Cloud es für dich, aus der Kopie, die du ihm sendest."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "nxnative turns your own copy of a game into an app for the iPhone, and only a Mac can do it. Cartouche on the Mac does it for you, and builds your games again when nxnative improves them."
+            "value" : "nxnative turns your own copy of a game into an app for the iPhone, on a Mac. Cartouche for Mac does it on yours, and builds your games again when nxnative improves them. With no Mac, Cartouche Cloud builds it for you, from the copy you send it."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "nxnative convierte tu propia copia de un juego en una app para el iPhone, y solo un Mac puede hacerlo. Cartouche en el Mac lo hace por ti, y vuelve a compilar tus juegos cuando nxnative los mejora."
+            "value" : "nxnative convierte tu propia copia de un juego en una app para el iPhone, en un Mac. Cartouche para Mac lo hace en el tuyo, y vuelve a compilar tus juegos cuando nxnative los mejora. Sin Mac, Cartouche Cloud lo compila por ti, a partir de la copia que le envías."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "nxnative transforme votre propre copie d’un jeu en app pour l’iPhone, et seul un Mac sait le faire. Cartouche sur le Mac s’en charge pour vous, et reconstruit vos jeux quand nxnative les améliore."
+            "value" : "nxnative transforme votre propre copie d’un jeu en app pour l’iPhone, sur un Mac. Cartouche pour Mac s’en charge sur le vôtre, et reconstruit vos jeux quand nxnative les améliore. Sans Mac, Cartouche Cloud le construit pour vous, à partir de la copie que vous lui envoyez."
           }
         }
       }
@@ -6358,25 +6445,25 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Erstelle dein Spiel auf einem Mac"
+            "value" : "Erstelle dein Spiel"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Build your game on a Mac"
+            "value" : "Build your game"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Compila tu juego en un Mac"
+            "value" : "Compila tu juego"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Construisez votre jeu sur un Mac"
+            "value" : "Construisez votre jeu"
           }
         }
       }
@@ -6729,6 +6816,35 @@
         }
       }
     },
+    "guide.folder.skippedCloud" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Übersprungen: Deine Spiele kommen von Cartouche Cloud."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skipped: your games come from Cartouche Cloud."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Omitido: tus juegos vienen de Cartouche Cloud."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Étape passée : vos jeux viennent de Cartouche Cloud."
+          }
+        }
+      }
+    },
     "guide.folder.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6851,25 +6967,25 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche lädt nie ein Spiel herunter: Du erstellst deine aus deiner eigenen Konsole."
+            "value" : "Cartouche stellt kein Spiel bereit: Deine werden aus deiner eigenen Kopie erstellt, auf deinem Mac oder von Cartouche Cloud."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche never downloads a game: you build yours from your own console."
+            "value" : "Cartouche provides no game: yours are built from your own copy, on your Mac or by Cartouche Cloud."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche nunca descarga un juego: compilas los tuyos a partir de tu propia consola."
+            "value" : "Cartouche no proporciona ningún juego: los tuyos se compilan a partir de tu propia copia, en tu Mac o con Cartouche Cloud."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cartouche ne télécharge jamais de jeu : vous construisez les vôtres depuis votre propre console."
+            "value" : "Cartouche ne fournit aucun jeu : les vôtres sont construits à partir de votre propre copie, sur votre Mac ou par Cartouche Cloud."
           }
         }
       }
@@ -6990,6 +7106,35 @@
         }
       }
     },
+    "guide.play.readyCloud" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud hat dein Spiel erstellt. Cartouche installiert es auf diesem iPhone und zeigt dann „Spielen“."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud built your game. Cartouche installs it on this iPhone, then shows Play."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud ha compilado tu juego. Cartouche lo instala en este iPhone y luego muestra Jugar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cartouche Cloud a construit votre jeu. Cartouche l’installe sur cet iPhone, puis affiche Jouer."
+          }
+        }
+      }
+    },
     "guide.play.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7044,6 +7189,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pas encore de jeu dans le dossier des jeux. Le vôtre apparaît ici dès que Cartouche sur votre Mac l’a construit. Vous pouvez aussi importer une IPA."
+          }
+        }
+      }
+    },
+    "guide.play.waitingCloud" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Noch kein Spiel erstellt. Deines erscheint hier, sobald Cartouche Cloud es erstellt hat. Du kannst auch eine IPA importieren."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No game built yet. Yours shows here as soon as Cartouche Cloud has built it. You can also import an IPA."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún no hay ningún juego compilado. El tuyo aparece aquí en cuanto Cartouche Cloud lo haya compilado. También puedes importar una IPA."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pas encore de jeu construit. Le vôtre apparaît ici dès que Cartouche Cloud l’a construit. Vous pouvez aussi importer une IPA."
           }
         }
       }

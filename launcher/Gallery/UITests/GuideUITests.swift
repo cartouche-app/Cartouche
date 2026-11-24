@@ -7,9 +7,11 @@
 //  on its first step, LocalDevVPN; the account's step sends a player
 //  without the pairing file to the setup; once signed in, No thanks skips
 //  the Mac's step, and the games folder's step opens the Storage page, or
-//  the Files picker, whose IPA closes the guide for the install. The card
-//  at the top of the home says the step left and opens the guide again;
-//  its × leaves the guide to the System page.
+//  the Files picker, whose IPA closes the guide for the install. A player
+//  with no Mac goes from the Mac's step to Cartouche Cloud; linked to it,
+//  the guide passes over the games folder and installs the game Cartouche
+//  Cloud built. The card at the top of the home says the step left and
+//  opens the guide again; its × leaves the guide to the System page.
 //
 
 import XCTest
@@ -104,6 +106,54 @@ final class GuideUITests: ConsoleTestCase {
         expectInstall(of: GalleryWords.ipa, in: app)
         expect(!guideBar(in: app).exists, "The guide stayed over the install", in: app)
         expect(waitUntil(10) { isOnConsole(app) }, "The console did not come back after the install", in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// A player with no Mac: the Mac's step opens the page of Cartouche
+    /// Cloud, which builds their game for them, and comes back to the guide.
+    @MainActor
+    func testTheMacsStepOpensCartoucheCloudForAPlayerWithNoMac() {
+        var launch = signedIn
+        launch.work = "cloud-service"
+        let app = openConsole(launch)
+        let card = guideCard(in: app)
+        expect(card.waitForExistence(timeout: 15), "No guide's card on the home", in: app)
+        tap(card, "the guide's card", in: app)
+        expect(guideBar(in: app).waitForExistence(timeout: 15), "The guide's card did not open the guide", in: app)
+        tap(app.buttons[Words.noMacCloud], "No Mac: Cartouche Cloud, in the Mac's step", in: app)
+        expect(app.navigationBars[Words.cloud].waitForExistence(timeout: 15),
+               "No Mac: Cartouche Cloud did not open the page of Cartouche Cloud", in: app)
+        back(from: Words.cloud, in: app)
+        expect(guideBar(in: app).waitForExistence(timeout: 10), "Back from Cartouche Cloud did not come back to the guide",
+               in: app)
+        closeGuide(in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// Linked to Cartouche Cloud, which built a game: the Mac's step is
+    /// done, the games folder's passed over, and the last step installs the
+    /// game built, closing the guide for the install.
+    @MainActor
+    func testLinkedToCartoucheCloudTheGuideInstallsTheGameItBuilt() {
+        var launch = signedIn
+        launch.work = "cloud-games"
+        let app = openConsole(launch)
+        let card = guideCard(in: app)
+        expect(card.waitForExistence(timeout: 15), "No guide's card on the home", in: app)
+        let step = String(format: Words.guideCard, 5, 5, Words.playStep)
+        expect(card.label.contains(step), "The guide's card does not say \(step): \(card.label)", in: app)
+        tap(card, "the guide's card", in: app)
+        expect(guideBar(in: app).waitForExistence(timeout: 15), "The guide's card did not open the guide", in: app)
+        let built = String(format: Words.stepDone, Words.buildStep)
+        expect(element(labelled: built, in: app).exists, "The guide does not say \(built)", in: app)
+        let skipped = String(format: Words.stepSkipped, Words.folderStep)
+        expect(element(labelled: skipped, in: app).exists, "The guide does not say \(skipped)", in: app)
+        let install = app.buttons[String(format: Words.installGame, Games.other)]
+        expect(install.waitForExistence(timeout: 10), "The guide offers no install of the game Cartouche Cloud built",
+               in: app)
+        tap(install, "Install, in the guide's last step", in: app)
+        expect(waitForGone(guideBar(in: app)), "The guide stayed over the install", in: app)
+        expect(waitUntil(10) { isOnConsole(app) }, "The console did not come back for the install", in: app)
         expectMainThreadAnswered(app)
     }
 

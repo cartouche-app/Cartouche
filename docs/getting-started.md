@@ -2,13 +2,13 @@
 
 *Français : [getting-started.fr.md](getting-started.fr.md)*
 
-From nothing to your first game on your iPhone or iPad, in four steps. Cartouche never downloads a game: you build each of yours on your Mac, from your own copy, dumped from your own console. In Cartouche, the guide **Your first game** takes you through the same steps, and ticks each one by itself once it is done.
+From nothing to your first game on your iPhone or iPad, in four steps. Cartouche provides no game: you build each of yours on your Mac, or Cartouche Cloud builds it for you, from your own copy, dumped from your own console. In Cartouche, the guide **Your first game** takes you through the same steps, and ticks each one by itself once it is done.
 
 ## What you need
 
 - **An iPhone or an iPad:** an iPhone 15 Pro or newer, or an iPad with an M1 chip or newer, on iOS or iPadOS 26 or later. The bigger games need a 12 GB iPhone.
 - **A Mac or a Windows PC, once,** with a cable for the iPhone or iPad, to install Cartouche.
-- **A Mac with Apple silicon** (M1 or later) on macOS 26.6 or later, to build your games and to play them on the Mac too, with Xcode 27.2, free from Apple, and room for the builds. Only a Mac can build them: without one, Cartouche has nothing to play, since nobody may send you their games.
+- **A Mac with Apple silicon** (M1 or later) on macOS 26.6 or later, to build your games and to play them on the Mac too, with Xcode 27.2, free from Apple, and room for the builds. With no Mac, [Cartouche Cloud](https://build.cartouche.cloud/) builds them for you, from the copy you send it from a computer; a build that works is paid for in credits, one that fails costs nothing.
 - **An Apple account** (Apple ID): a free one is enough.
 - **Your games,** copied from your own console, and for a Switch game your console's keys (`prod.keys`).
 
@@ -24,7 +24,7 @@ On an iPad, every step is the same, with the iPad in place of the iPhone.
 
 ## 2. Build your game on your Mac
 
-The guide's **Send the steps to my Mac** sends the Mac [the page of Cartouche for Mac](https://cartouche.cloud/#builder) of Cartouche's site, by AirDrop or Messages: its **Download Cartouche for Mac** gives the disk image, and the steps below take it from there. Your games are built already, on your NAS for instance, or you have no Mac? **No thanks** skips this step, and the guide goes on to your games folder.
+The guide's **Send the steps to my Mac** sends the Mac [the page of Cartouche for Mac](https://cartouche.cloud/#builder) of Cartouche's site, by AirDrop or Messages: its **Download Cartouche for Mac** gives the disk image, and the steps below take it from there. No Mac? **No Mac: Cartouche Cloud** opens the page of Cartouche Cloud, which builds your game for you ([below](#no-mac-cartouche-cloud-builds-it-for-you)). Your games are built already, on your NAS for instance? **No thanks** skips this step, and the guide goes on to your games folder.
 
 1. On a Mac with Apple silicon and macOS 26.6 or later, [download Cartouche for Mac](https://cartouche.cloud/download/#builder), open the disk image and drag **Cartouche** onto **Applications**.
 2. Open Cartouche from Applications. The first time, macOS says it cannot check it, as it is not signed by Apple: in **System Settings › Privacy & Security**, click **Open Anyway** beside Cartouche, once.
@@ -34,6 +34,15 @@ The guide's **Send the steps to my Mac** sends the Mac [the page of Cartouche fo
    - **iPhone:** turn on **Share with Cartouche on the iPhone**, for Cartouche to install your games from the Mac.
 4. Choose **Builder** at the top of the window, which opens on Cartouche's console the first time, then in **Library**, open your game and choose **Build**. A large game's first build takes hours; the next ones reuse its build folder. A game you follow is built again when nxnative improves it: **Rebuild what is due** builds them, and with **Build what is due every night**, in the settings, the Mac does it at night. Cartouche then offers you the update.
 5. Each game is built for the iPhone and iPad, and for this Mac too, unless you turn one of the two off under **Built for**. On its sheet, **Play on this Mac** starts it on the Mac, with your newest saves ([builder/README.md](../builder/README.md#playing-on-this-mac)). **Console**, at the top of the window or ⌘1, shows them in Cartouche's console, as on the iPhone, with **Play** too ([builder/README.md](../builder/README.md#cartouches-console)).
+
+### No Mac? Cartouche Cloud builds it for you
+
+[Cartouche Cloud](https://build.cartouche.cloud/) builds your game with nxnative on a Mac in the cloud, for you alone, from the copy you send it, then installs it on your iPhone. It provides no game.
+
+1. On a computer, open [Cartouche Cloud's site](https://build.cartouche.cloud/), make your account and buy credits there: a build that works is paid for, one that fails costs nothing.
+2. Send your own copy of the game: a package (`.nsp`, `.xci`, `.nsz`, `.xcz`, a Switch 2 game's `.nup`) with your console's keys (`prod.keys`), or a ZIP. Your browser opens the game on the computer and sends it alone: your keys never leave the computer. Your copy is deleted as soon as the game is built.
+3. On your account's page, **Link Cartouche** gives a code valid ten minutes. In Cartouche, the guide's **No Mac: Cartouche Cloud**, or **System › Cartouche Cloud**, takes it under **Link this iPhone**; opened on the iPhone, that page fills it in for you with **Open in Cartouche**.
+4. Cartouche follows the build, step by step, and an email tells you when it is done. The game built stays two days on Cartouche Cloud, for your account alone: the guide's last step and your library install it. Linked to Cartouche Cloud, the guide passes over the games folder.
 
 ## 3. Choose your games folder in Cartouche
 
@@ -47,11 +56,11 @@ Cartouche lists your games from there and offers their updates. A game nxnative 
 
 Not sure what to call the files? **How to name your games**, under the games folder on the storage page, shows with made-up examples which names Cartouche finds in your games folder and your saves folder, and which Cartouche for Mac finds in your dumps folder; on the Mac, the builder's settings open the same page, under **Folders**.
 
-No games folder? Put the IPA in Files on the iPhone, by AirDrop for instance, and choose **Import an IPA instead**.
+No games folder? Put the IPA in Files on the iPhone, by AirDrop for instance, and choose **Import an IPA instead**. With Cartouche Cloud, you need none: it installs the games it built for you.
 
 ## 4. Install your game and play
 
-Your game shows in the guide's last step and in your library: **Install** installs it from your games folder, then its sheet opens with **Play**. Your first game is on your iPhone or iPad; the next ones go the same way, built on the Mac, then installed.
+Your game shows in the guide's last step and in your library: **Install** installs it from your games folder, or from Cartouche Cloud, then its sheet opens with **Play**. Your first game is on your iPhone or iPad; the next ones go the same way, built on the Mac or by Cartouche Cloud, then installed.
 
 ## Afterwards
 
