@@ -251,7 +251,7 @@ final class CartoucheBCConversionTests: XCTestCase {
         let words = try JSONDecoder().decode(Catalog.self, from: data).strings["sheet.gpu.converted"]?.localizations
         XCTAssertEqual(words?["en"]?.stringUnit?.value, "Textures converted for this GPU by this game’s build")
         XCTAssertEqual(words?["fr"]?.stringUnit?.value, "Textures converties pour ce GPU par la construction de ce jeu")
-        for language in ["en", "fr"] {
+        for language in ["en", "fr", "es", "de"] {
             XCTAssertFalse(words?[language]?.stringUnit?.value.contains("ASTC") ?? true, language)
         }
     }

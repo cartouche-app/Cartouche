@@ -35,6 +35,21 @@ final class CartoucheDeviceWordsTests: XCTestCase {
         XCTAssertEqual(onIPad("Les testeurs n’ont pas pu le lancer sur ce modèle d’iPhone."),
                        "Les testeurs n’ont pas pu le lancer sur ce modèle d’iPad.")
         XCTAssertEqual(onIPad("Ce modèle d’iPhone"), "Ce modèle d’iPad")
+
+        XCTAssertEqual(onIPad("En este iPhone: %@"), "En este iPad: %@")
+        XCTAssertEqual(onIPad("Este iPhone tiene lo que necesita"), "Este iPad tiene lo que necesita")
+        XCTAssertEqual(onIPad("el nombre de tu iPhone"), "el nombre de tu iPad")
+        XCTAssertEqual(onIPad("Idioma del iPhone"), "Idioma del iPad")
+        XCTAssertEqual(onIPad("Para jugar en el iPhone, desconecta la tele."), "Para jugar en el iPad, desconecta la tele.")
+        XCTAssertEqual(onIPad("Este modelo de iPhone"), "Este modelo de iPad")
+
+        XCTAssertEqual(onIPad("Auf diesem iPhone: %@"), "Auf diesem iPad: %@")
+        XCTAssertEqual(onIPad("Dieses iPhone hat, was es braucht"), "Dieses iPad hat, was es braucht")
+        XCTAssertEqual(onIPad("den Namen deines iPhones"), "den Namen deines iPads")
+        XCTAssertEqual(onIPad("Sprache des iPhones"), "Sprache des iPads")
+        XCTAssertEqual(onIPad("Um auf dem iPhone zu spielen, zieh den Fernseher ab."),
+                       "Um auf dem iPad zu spielen, zieh den Fernseher ab.")
+        XCTAssertEqual(onIPad("eine Kopie des iPhone-Bildschirms"), "eine Kopie des iPad-Bildschirms")
     }
 
     func testAnyOtherIPhoneStays() {
@@ -45,6 +60,10 @@ final class CartoucheDeviceWordsTests: XCTestCase {
             "which your other iPhones take too", "que vos autres iPhone prennent aussi",
             "On iPhone", "Sur iPhone", "nxnative plays it on the iPhone and the Mac.",
             "nobody has reported it on an iPhone yet", "sur quel iPhone",
+            "Pantalla del iPhone Duo (1,43:1)", "un iPhone de 12\u{00A0}GB", "tus otros iPhone", "en qué iPhone",
+            "nxnative lo ejecuta en iPhone y en Mac.", "En iPhone",
+            "Bildschirm des iPhone Duo (1,43:1)", "ein iPhone mit 12\u{00A0}GB", "deine anderen iPhones",
+            "auf welchem iPhone", "nxnative spielt es auf iPhone und Mac.", "Auf iPhone", "auf der iPhone-Seite",
         ] {
             XCTAssertEqual(onIPad(text), text)
         }
@@ -58,9 +77,17 @@ final class CartoucheDeviceWordsTests: XCTestCase {
         XCTAssertEqual(
             onIPad("Ouvrez-y Cartouche avec Partager avec Cartouche sur l’iPhone activé\u{00A0}: Cartouche réessaie dès que l’iPhone retrouve son Wi-Fi."),
             "Ouvrez-y Cartouche avec Partager avec Cartouche sur l’iPhone activé\u{00A0}: Cartouche réessaie dès que l’iPad retrouve son Wi-Fi.")
+        XCTAssertEqual(
+            onIPad("Abre Cartouche en él con Compartir con Cartouche en el iPhone activado: Cartouche vuelve a intentarlo en cuanto el iPhone vuelva a su red Wi-Fi."),
+            "Abre Cartouche en él con Compartir con Cartouche en el iPhone activado: Cartouche vuelve a intentarlo en cuanto el iPad vuelva a su red Wi-Fi.")
+        XCTAssertEqual(
+            onIPad("Öffne dort Cartouche mit eingeschaltetem „Mit Cartouche auf dem iPhone teilen“: Cartouche versucht es erneut, sobald das iPhone wieder in seinem WLAN ist."),
+            "Öffne dort Cartouche mit eingeschaltetem „Mit Cartouche auf dem iPhone teilen“: Cartouche versucht es erneut, sobald das iPad wieder in seinem WLAN ist.")
+        XCTAssertEqual(onIPad("die App, die Cartouche auf deinem iPhone installiert"),
+                       "die App, die Cartouche auf deinem iPad installiert")
     }
 
-    /// Every text of Cartouche.xcstrings, in English and in French, as an
+    /// Every text of Cartouche.xcstrings, in each of its languages, as an
     /// iPad shows it: none calls the iPad an iPhone, and those that still
     /// say iPhone are these, of another iPhone. A new text that says iPhone
     /// another way joins them, or is worded so that the iPad calls itself
@@ -90,7 +117,10 @@ final class CartoucheDeviceWordsTests: XCTestCase {
                 let shown = onIPad(text)
                 if shown != text { turned += 1 }
                 for device in ["this iPhone", "This iPhone", "your iPhone", "Your iPhone",
-                               "cet iPhone", "Cet iPhone", "votre iPhone", "Votre iPhone"] {
+                               "cet iPhone", "Cet iPhone", "votre iPhone", "Votre iPhone",
+                               "este iPhone", "Este iPhone", "tu iPhone", "Tu iPhone",
+                               "dieses iPhone", "Dieses iPhone", "diesem iPhone", "Diesem iPhone",
+                               "dein iPhone", "Dein iPhone", "deinem iPhone", "Deinem iPhone", "deines iPhone"] {
                     XCTAssertFalse(shown.contains(device), "\(key) (\(language)) on an iPad: \(shown)")
                 }
                 if shown.contains("iPhone") { stillIPhone[key, default: []].insert(language) }
@@ -98,8 +128,8 @@ final class CartoucheDeviceWordsTests: XCTestCase {
         }
         XCTAssertEqual(Set(stillIPhone.keys), keeps, "texts that still say iPhone on an iPad")
         for (key, languages) in stillIPhone {
-            XCTAssertEqual(languages, ["en", "fr"], "\(key) says iPhone on an iPad in one language only")
+            XCTAssertEqual(languages, ["en", "fr", "es", "de"], "\(key) says iPhone on an iPad in some languages only")
         }
-        XCTAssertGreaterThan(turned, 150, "the texts an iPad turns, in English and in French")
+        XCTAssertGreaterThan(turned, 300, "the texts an iPad turns, in each language")
     }
 }

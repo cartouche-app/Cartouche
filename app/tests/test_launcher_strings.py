@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES = ROOT / "launcher" / "Sources"
-LANGUAGES = ("en", "fr")
+LANGUAGES = ("en", "fr", "es", "de")
 
 # s("key", "English") and f("key", "English", arguments...) in CartoucheText*.swift.
 CALL = re.compile(r'\b([sf])\("([^"]+)", "((?:[^"\\]|\\.)*)"((?:, [^)]*)?)\)')
