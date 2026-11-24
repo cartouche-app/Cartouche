@@ -137,7 +137,7 @@ class SideStoreIPATest(unittest.TestCase):
                                      ["com.apple.security.application-groups"], [group])
 
     def test_the_group_is_one_livecontainer_takes_for_the_built_in_sidestores(self):
-        # LiveContainer's patches 0002 and 0018 take a group that begins
+        # LiveContainer's patches 0002 and 0019 take a group that begins
         # with the built-in SideStore's, and the player's SideStore adds the
         # team after it.
         self.assertTrue(sidestore_ipa.GROUP.startswith("group.com.SideStore.SideStore."))
@@ -242,12 +242,12 @@ class SideStoreIPATest(unittest.TestCase):
 
 class TheAppReadsWhatTheIPAWritesTest(unittest.TestCase):
     """The keys this IPA adds, against the code that reads them: LiveContainer
-    (patch 0018), the launcher, and the built-in SideStore's reinstall
+    (patch 0019), the launcher, and the built-in SideStore's reinstall
     (patch 0025), which no test on a computer runs."""
 
     @classmethod
     def setUpClass(cls):
-        cls.livecontainer = next((ROOT / "app" / "patches" / "livecontainer").glob("0018-*.patch")).read_text(encoding="utf-8")
+        cls.livecontainer = next((ROOT / "app" / "patches" / "livecontainer").glob("0019-*.patch")).read_text(encoding="utf-8")
         cls.sidestore = next((ROOT / "app" / "patches" / "sidestore").glob("0025-*.patch")).read_text(encoding="utf-8")
         sources = ROOT / "launcher" / "Sources"
         cls.signature = (sources / "CartoucheOwnSignature.swift").read_text(encoding="utf-8")

@@ -20,7 +20,7 @@ So this IPA is the release's with its own app group and its own source:
   built-in SideStore does when it renews Cartouche. The AltStore group,
   which Cartouche never uses, goes too. The group still begins with the
   built-in SideStore's, so that LiveContainer takes it for that SideStore's
-  (app/patches/livecontainer/0018);
+  (app/patches/livecontainer/0019);
 - in its Info.plist, CartoucheSideStoreInstall, which tells Cartouche it was
   installed this way (launcher/Sources/CartoucheOwnSignature.swift),
   CartoucheAppGroup, the group above, which LiveContainer and the built-in
@@ -60,7 +60,7 @@ GROUP = BASE_GROUP + ".cartouche"
 GROUPS_ENTITLEMENT = "com.apple.security.application-groups"
 
 # The Info.plist keys this IPA adds (CartoucheOwnSignature.swift and
-# LiveContainer's patch 0018 read them), and those it must not carry.
+# LiveContainer's patch 0019 read them), and those it must not carry.
 MARKER = "CartoucheSideStoreInstall"
 GROUP_KEY = "CartoucheAppGroup"
 SOURCE_KEY = "CartoucheSourceURL"

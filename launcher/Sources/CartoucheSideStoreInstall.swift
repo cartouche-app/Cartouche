@@ -74,7 +74,7 @@ enum CartoucheSideStoreInstall {
     }
 
     /// The pairing file the player's SideStore answered with
-    /// (app/patches/livecontainer/0018): whether URL was that answer.
+    /// (app/patches/livecontainer/0019): whether URL was that answer.
     @MainActor static func opened(_ url: URL) -> Bool {
         guard let scheme = ownScheme, let data = CartoucheSideStoreLink.pairingFile(in: url, scheme: scheme) else { return false }
         let defaults = UserDefaults.standard
