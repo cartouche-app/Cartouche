@@ -129,6 +129,28 @@ extension CartoucheText {
         }
     }
 
+    /// The phases of the build of the game itself, under the track, as the
+    /// site's list names them.
+    static var cloudPhasesHeader: String { s("cloud.phases.header", "Where the build is") }
+    static func cloudPhaseName(_ phase: CartoucheCloudPhase) -> String {
+        switch phase {
+        case .files: return s("cloud.phase.files", "Preparing the game’s files")
+        case .shaders: return s("cloud.phase.shaders", "Compiling shaders for the iPhone")
+        case .app: return s("cloud.phase.app", "Building the app")
+        case .ipa: return s("cloud.phase.ipa", "Packing the IPA")
+        }
+    }
+    static func cloudPhaseLeft(_ time: String) -> String { f("cloud.phase.left", "about %@ left", time) }
+    static func cloudPhaseQuiet(_ time: String) -> String { f("cloud.phase.quiet", "The Mac last said where it is %@ ago.", time) }
+    /// What a phase is, for who listens to the page.
+    static func cloudPhaseSaid(_ at: CartoucheCloudPhaseMark.At, _ name: String) -> String {
+        switch at {
+        case .done: return f("cloud.phase.done", "Done: %@", name)
+        case .now: return f("cloud.phase.now", "Under way: %@", name)
+        case .next: return f("cloud.phase.next", "Next: %@", name)
+        }
+    }
+
     /// Why a game was not built, by the platform's code: a code this
     /// Cartouche does not know reads as the Mac's, as on the site.
     static func cloudCause(_ cause: String?) -> String {

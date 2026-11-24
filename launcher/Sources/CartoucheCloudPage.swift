@@ -8,15 +8,16 @@
 //  to; then the code of the account's page, typed here, or filled in by the
 //  link that page opens Cartouche with, which links this iPhone at once
 //  (CartoucheCloudLink). Linked: the account's credits, and its games as the
-//  site's games page shows them, in the queue with their place, being built
-//  on the track of six steps with the time left, built with the day the
-//  service deletes them and Install, which brings the game here as a game
-//  of the games folder comes (CartoucheGameActions.install(cloud:)), or On
-//  this iPhone for a game installed already, or not built, and why. While
-//  the page shows, the account is read every few seconds
-//  (CartoucheCloud.pause). Sending a game, the credits and the account stay
-//  on the site, which the page opens in Safari; Unlink, last, undoes the
-//  link, here and on the site.
+//  site's games page shows them, each with its cover, in the queue with
+//  their place, being built on the track of six steps with the time left,
+//  and at the Mac's build step the phases of the build of the game itself
+//  (CartoucheCloudPhases), built with the day the service deletes them and
+//  Install, which brings the game here as a game of the games folder comes
+//  (CartoucheGameActions.install(cloud:)), or On this iPhone for a game
+//  installed already, or not built, and why. While the page shows, the
+//  account is read every few seconds (CartoucheCloud.pause). Sending a
+//  game, the credits and the account stay on the site, which the page opens
+//  in Safari; Unlink, last, undoes the link, here and on the site.
 //
 //  The iPhone's alone: a Mac builds its own games with Cartouche Builder.
 //
@@ -209,24 +210,30 @@ struct CartoucheCloudPage: View {
         }
     }
 
-    /// A game: its name and state, its build's track while it is on its
-    /// way, what there is to know of it now, and Install once built, or
-    /// On this iPhone when its title is one of INSTALLED, the games on this
-    /// iPhone.
+    /// A game: its cover, its name and state, its build's track while it is
+    /// on its way, with the phases of the build of the game itself at the
+    /// Mac's build step, what there is to know of it now, and Install once
+    /// built, or On this iPhone when its title is one of INSTALLED, the
+    /// games on this iPhone.
     @ViewBuilder
     private func gameRows(_ game: CartoucheCloudGame, installed: Set<String>) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(game.name)
-                    .font(.headline)
-                    .lineLimit(2)
-                Spacer(minLength: 8)
-                Text(CartoucheText.cloudGameState(game.state))
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(Self.color(of: game.state))
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .center, spacing: 12) {
+                CartoucheCloudCover(game: game)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(game.name)
+                        .font(.headline)
+                        .lineLimit(2)
+                    Text(CartoucheText.cloudGameState(game.state))
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Self.color(of: game.state))
+                }
             }
             if let stage = game.stage, game.state == .queued || game.state == .building {
                 CartoucheCloudTrack(stage: stage)
+            }
+            if !game.phaseMarks.isEmpty {
+                CartoucheCloudPhases(game: game)
             }
             ForEach(Array(Self.lines(of: game).enumerated()), id: \.offset) { _, line in
                 Text(line)
@@ -280,6 +287,9 @@ struct CartoucheCloudPage: View {
             }
             return lines
         case .building:
+            // Once the Mac says the phase of the build of the game itself,
+            // its phases say what is left.
+            if game.currentPhase != nil { return [] }
             // A minute at the least, until the usual time has passed.
             if let left = game.timeLeft(at: now) {
                 return [CartoucheText.cloudGameLeft(CartoucheText.duration(seconds: max(60, left)))]
@@ -388,5 +398,119 @@ struct CartoucheCloudTrack: View {
         if step < at { return AnyShapeStyle(CartoucheTheme.indigo) }
         if step == at { return AnyShapeStyle(CartoucheTheme.brand) }
         return AnyShapeStyle(Color.white.opacity(0.15))
+    }
+}
+
+/// The cover of a game of the account, as the library shows it, or the
+/// first letter of its name where Cartouche has none.
+@available(iOS 17.0, *)
+struct CartoucheCloudCover: View {
+    let game: CartoucheCloudGame
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 8, style: .continuous)
+        CartoucheCoverImage(art: CartoucheCatalog.shared.cover(titleId: game.titleId).map { CartoucheArt.igdb($0.cover, .cover) }) {
+            ZStack {
+                LinearGradient(colors: [CartoucheTheme.indigo.opacity(0.75), CartoucheTheme.pink.opacity(0.55)],
+                               startPoint: .topLeading, endPoint: .bottomTrailing)
+                Text(String(game.name.trimmingCharacters(in: .whitespacesAndNewlines).prefix(1)))
+                    .font(.title3.weight(.heavy))
+                    .foregroundStyle(.white.opacity(0.9))
+            }
+        }
+        .frame(width: 46, height: 65)
+        .clipShape(shape)
+        .overlay(shape.strokeBorder(.white.opacity(0.14)))
+        .accessibilityHidden(true)
+    }
+}
+
+/// The phases of the build of the game itself, under the track while the
+/// Mac is at its build step, as the site's list draws them: a dot each,
+/// green once done with how long it took, lit while under way with how much
+/// of it is done and what the builder says is left of it, dim until then;
+/// and since when a Mac that went quiet said nothing.
+@available(iOS 17.0, *)
+struct CartoucheCloudPhases: View {
+    let game: CartoucheCloudGame
+    var now = Date()
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: 12, style: .continuous)
+        VStack(alignment: .leading, spacing: 10) {
+            Text(CartoucheText.cloudPhasesHeader)
+                .font(.caption2.weight(.bold))
+                .textCase(.uppercase)
+                .foregroundStyle(.secondary)
+                .accessibilityAddTraits(.isHeader)
+            ForEach(game.phaseMarks, id: \.phase) { mark in
+                row(mark)
+            }
+            if let quiet = game.quiet(at: now) {
+                Text(CartoucheText.cloudPhaseQuiet(CartoucheText.duration(seconds: quiet)))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.white.opacity(0.05), in: shape)
+        .overlay(shape.strokeBorder(Color.white.opacity(0.08)))
+    }
+
+    private func row(_ mark: CartoucheCloudPhaseMark) -> some View {
+        let name = CartoucheText.cloudPhaseName(mark.phase)
+        let facts = Self.facts(of: mark, game: game, at: now)
+        return HStack(alignment: .top, spacing: 10) {
+            Circle()
+                .fill(Self.dot(mark.at))
+                .frame(width: 8, height: 8)
+                .padding(.top, 6)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(name)
+                    .font(.subheadline.weight(mark.at == .now ? .semibold : .regular))
+                    .foregroundStyle(mark.at == .next ? .secondary : .primary)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let facts {
+                    Text(facts)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+                if mark.at == .now, let share = game.phaseShare {
+                    ProgressView(value: share)
+                        .tint(CartoucheTheme.pink)
+                }
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel([CartoucheText.cloudPhaseSaid(mark.at, name), facts].compactMap { $0 }.joined(separator: ", "))
+    }
+
+    /// What the page says of a phase besides its name, as the site's list
+    /// says it: how long it took, once done; how much of it is done and
+    /// what is left of it, under way.
+    static func facts(of mark: CartoucheCloudPhaseMark, game: CartoucheCloudGame, at now: Date) -> String? {
+        switch mark.at {
+        case .done:
+            return mark.seconds.map { CartoucheText.duration(seconds: Double($0)) }
+        case .now:
+            let parts = [
+                game.phaseShare.map { CartoucheText.percent(($0 * 100).rounded(.down) / 100) },
+                game.phaseTimeLeft(at: now).map { CartoucheText.cloudPhaseLeft(CartoucheText.duration(seconds: $0)) },
+            ].compactMap { $0 }
+            return parts.isEmpty ? nil : parts.joined(separator: " · ")
+        case .next:
+            return nil
+        }
+    }
+
+    private static func dot(_ at: CartoucheCloudPhaseMark.At) -> AnyShapeStyle {
+        switch at {
+        case .done: return AnyShapeStyle(CartouchePlayStatus.ready.color)
+        case .now: return AnyShapeStyle(CartoucheTheme.brand)
+        case .next: return AnyShapeStyle(Color.white.opacity(0.18))
+        }
     }
 }
