@@ -559,8 +559,8 @@ struct BuildForPicker: View {
                 let name = choice.model.flatMap(BuildFor.name(of:)) ?? choice.model ?? "iPhone"
                 who = tr("The \(name) reads no BC texture", "L’\(name) ne lit pas les textures BC")
             }
-            text = tr("\(who), which nxnative refuses: the games are built from nxnative’s no-bc variant, by mianmuhammadse, which converts them for its GPU. On an iPhone that reads them, and on this Mac, it does as nxnative does.",
-                      "\(who), que nxnative refuse : les jeux se construisent avec la variante no-bc de nxnative, par mianmuhammadse, qui les convertit pour son GPU. Sur un iPhone qui les lit, et sur ce Mac, elle fait comme nxnative.")
+            text = tr("\(who), so nxnative refuses it: the games are built from nxnative’s no-bc variant, by mianmuhammadse, which converts those textures for its GPU. On an iPhone that reads them, and on this Mac, it does as nxnative does.",
+                      "\(who) et nxnative le refuse : les jeux se construisent avec la variante no-bc de nxnative, par mianmuhammadse, qui convertit ces textures pour son GPU. Sur un iPhone qui les lit, et sur ce Mac, elle fait comme nxnative.")
         }
         if let unknown {
             text += " " + tr("“\(unknown)” has not said its model yet: open Cartouche on it with this Mac on.",
