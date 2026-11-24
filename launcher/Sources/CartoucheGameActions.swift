@@ -654,6 +654,22 @@ final class CartoucheGameActions: ObservableObject {
         return CartoucheRomfs.pair([need], with: images).taken[path]?.path
     }
 
+    /// Leaves MODEL's games out of the iPhone's backups, as each install
+    /// does, as Cartouche starts: those a Cartouche installed before it
+    /// marked them, and any folder made again since (CartoucheBackup).
+    /// Cartouche's own folder of games whole; in the app group's, which
+    /// another LiveContainer of the player's may share, only the games
+    /// Cartouche lists. Off the main thread; returns what it could not mark.
+    @discardableResult
+    static func leaveGamesOutOfBackups(of model: SharedModel) async -> [URL] {
+        let bundles = (model.apps + model.hiddenApps).compactMap { $0.appInfo.bundlePath() }
+            .map { URL(fileURLWithPath: $0, isDirectory: true) }
+        let folder = LCPath.bundlePath
+        return await Task.detached(priority: .utility) {
+            CartoucheBackup.leaveOut([folder] + bundles)
+        }.value
+    }
+
     // MARK: Game files apart
 
     /// What an IPA built without its game files needs of them, and where
@@ -966,6 +982,10 @@ final class CartoucheGameActions: ObservableObject {
             destination = LCPath.bundlePath.appendingPathComponent(relativePath)
         }
         try fileManager.moveItem(at: unpacked, to: destination)
+        // Out of the iPhone's backups, iCloud's among them: it installs
+        // again from the player's storage (CartoucheBackup). Its saves, in
+        // its data folder, stay in them.
+        CartoucheBackup.leaveOut([LCPath.bundlePath, destination])
         guard let info = LCAppInfo(bundlePath: destination.path) else {
             throw CartoucheInstallError(.appUnreadable)
         }
