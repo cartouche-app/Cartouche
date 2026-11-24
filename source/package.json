@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "description": "The Worker that serves Cartouche's source for the player's own SideStore at https://source.cartouche.cloud/ (README.md). No dependency: worker.js runs as it is.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/worker.test.js"
+  }
+}

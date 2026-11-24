@@ -104,6 +104,15 @@ SITE_NAMES = {"CNAME", *PICTURES}
 SITE_URL = "https://" + (SITE / "CNAME").read_text(encoding="utf-8").strip() + "/"
 
 
+def job_text(workflow: Path, key: str) -> str:
+    """The lines of the job KEY of WORKFLOW, up to the next job: the tests
+    read the workflows as text, with nothing to install."""
+    text = workflow.read_text(encoding="utf-8")
+    start = text.index(f"\n  {key}:\n")
+    following = re.search(r"\n  [A-Za-z0-9_-]+:\n", text[start + 1:])
+    return text[start:start + 1 + following.start()] + "\n" if following else text[start:]
+
+
 def png_size(path: Path) -> tuple[int, int]:
     """A PNG's width and height, from its header."""
     data = path.read_bytes()[:24]
@@ -684,6 +693,28 @@ class Publication(unittest.TestCase):
             self.assertEqual(app["bundleIdentifier"], settings["CARTOUCHE_BUNDLE_ID"])
             for version in app["versions"]:
                 self.assertRegex(version["downloadURL"], r"^https://github\.com/[^/]+/Cartouche/releases/download/v[0-9.]+/Cartouche-[0-9.]+-SideStore\.ipa$")
+
+    def test_the_worker_at_source_cartouche_cloud_gives_what_the_site_publishes(self) -> None:
+        # The address a player adds to their SideStore, source.<domain>: a
+        # Worker that reads the file the site publishes (source/README.md),
+        # which the workflow deploys after each publication, never in the
+        # Full test pass, and whose tests CI runs with the site's.
+        root = SITE.parent
+        worker = (root / "source" / "worker.js").read_text(encoding="utf-8")
+        domain = (SITE / "CNAME").read_text(encoding="utf-8").strip()
+        self.assertIn(f'export const SOURCE = "{SITE_URL}sidestore.json";', worker)
+        self.assertIn(f'export const HOST = "source.{domain}";', worker)
+        deploy = job_text(root / ".github" / "workflows" / "site.yml", "source")
+        self.assertRegex(deploy, r"\n    needs: publish\n")
+        self.assertRegex(deploy, r"\n    if: \$\{\{ !inputs\.full \}\}\n")
+        self.assertRegex(deploy, r"\n    environment: cloudflare\n")
+        self.assertRegex(deploy, r"\n        run: source/deploy\.sh\n")
+        for workflow, job in (("site.yml", "page"), ("ci.yml", "site")):
+            runs = job_text(root / ".github" / "workflows" / workflow, job)
+            self.assertIn("node --test source/test/worker.test.js", runs, workflow)
+            self.assertIn("python3 -m unittest discover -s source/test", runs, workflow)
+        workflow = (root / ".github" / "workflows" / "site.yml").read_text(encoding="utf-8")
+        self.assertIn('"source/**"', re.search(r"\n\s+paths: \[([^\]\n]*)\]\n", workflow).group(1))
 
 
 class Domain(unittest.TestCase):
