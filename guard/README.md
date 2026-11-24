@@ -1,6 +1,6 @@
 # Publish guard
 
-`cartouche-guard` is the last check before Cartouche publishes anything: the IPAs of each release, the one for an Apple account and the one for the player's own certificate, the catalog the app carries, and the covers Cartouche reads every day. It refuses a file, or any file inside an archive, that looks like game content, a console key or firmware, so that a mistake in a build script can never publish one. It fails closed: a file it cannot read is refused too.
+`cartouche-guard` is the last check before Cartouche publishes anything: the IPAs of each release, the one for an Apple account, the one for the player's own certificate and the one for the player's SideStore, the catalog the app carries, and the covers Cartouche reads every day. It refuses a file, or any file inside an archive, that looks like game content, a console key or firmware, so that a mistake in a build script can never publish one. It fails closed: a file it cannot read is refused too.
 
 ```
 python3 -m venv .venv && .venv/bin/pip install -e "guard[dev]"

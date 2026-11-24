@@ -358,7 +358,17 @@ struct CartoucheGuideView: View {
 
     @ViewBuilder
     private func accountContent(_ progress: CartoucheGuide.Progress) -> some View {
-        if !progress.signedIn && !progress.hasPairingFile {
+        if !progress.signedIn && !progress.hasPairingFile && CartoucheSideStoreInstall.isSideStoreInstall {
+            // Installed by the player's own SideStore, which has this
+            // iPhone's pairing file and hands it over.
+            detail(CartoucheText.sideStorePairingHow)
+            action(CartoucheText.sideStorePairingAsk, systemImage: "arrow.up.forward.app", primary: true) {
+                CartoucheSideStoreInstall.askForPairingFile()
+            }
+            action(CartoucheText.guideOpenSetup, systemImage: "checklist", primary: false) {
+                showingSetup = true
+            }
+        } else if !progress.signedIn && !progress.hasPairingFile {
             // Only a computer makes the pairing file, and the installer puts it
             // in place: without it, SideStore cannot register this iPhone.
             detail(CartoucheText.guideAccountNoPairing)

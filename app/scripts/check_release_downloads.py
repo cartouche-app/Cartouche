@@ -7,6 +7,10 @@ and, when the version names it, the one for the player's own certificate
 (ownCertificateDownloadURL): its size and SHA-256 must be the source's, and
 those GitHub gives for the release's asset of that name.
 
+With --player, the source is the one a player adds to their own SideStore
+(app/sidestore-player-source.json), and its IPA the one for the player's
+SideStore (app/scripts/sidestore_ipa.py).
+
 The Release workflow runs it once the release is published, before it pushes
 the branch release/v<version> (.github/workflows/release.yml). The pull
 request "Source: Cartouche X" is then checked already, and can be opened as
@@ -14,7 +18,7 @@ soon as the run ends. The lines it writes with --summary say what it checked,
 for that pull request's "How it was tested".
 
 usage: check_release_downloads.py --version X.Y.Z --release RELEASE.json
-                                  [--source FILE] [--summary FILE]
+                                  [--source FILE] [--summary FILE] [--player]
 
 RELEASE.json is GitHub's release, as `gh api repos/OWNER/REPO/releases/tags/TAG`
 gives it.
@@ -53,9 +57,10 @@ def entry(source: dict, version: str) -> dict:
     raise CheckError(f"the source lists no version {version}")
 
 
-def ipas(release: dict) -> list[tuple[str, str, str, int, str]]:
+def ipas(release: dict, player: bool = False) -> list[tuple[str, str, str, int, str]]:
     """Each IPA the entry names: (what, its address's key, address, size, SHA-256)."""
-    found = [("the IPA", "downloadURL", release["downloadURL"], release["size"], release["sha256"])]
+    what = "the IPA for the player's SideStore" if player else "the IPA"
+    found = [(what, "downloadURL", release["downloadURL"], release["size"], release["sha256"])]
     if "ownCertificateDownloadURL" in release:
         found.append(("the IPA for the player's own certificate", "ownCertificateDownloadURL",
                       release["ownCertificateDownloadURL"], release["ownCertificateSize"],
@@ -91,12 +96,14 @@ def short(sha256: str) -> str:
     return f"{sha256[:8]}…{sha256[-8:]}"
 
 
-def check(source: dict, version: str, release: dict, fetch=download, sleep=time.sleep) -> list[str]:
+def check(source: dict, version: str, release: dict, fetch=download, sleep=time.sleep,
+          player: bool = False) -> list[str]:
     """Checks each IPA of VERSION, and gives a line for each, in the words of
-    the pull request that adds it to the source."""
+    the pull request that adds it to the source. PLAYER: the source for the
+    player's SideStore."""
     assets = {asset.get("name"): asset for asset in release.get("assets", [])}
     lines = []
-    for what, key, url, size, sha256 in ipas(entry(source, version)):
+    for what, key, url, size, sha256 in ipas(entry(source, version), player):
         name = PurePosixPath(urlsplit(url).path).name
         got_size, got_sha256 = downloaded(url, fetch, sleep)
         if got_size != size:
@@ -111,7 +118,10 @@ def check(source: dict, version: str, release: dict, fetch=download, sleep=time.
         if (asset.get("digest") or "").lower() != f"sha256:{sha256.lower()}":
             raise CheckError(f"{what}, {name}: GitHub gives {asset.get('digest')!r} for the asset, "
                              f"where the source says SHA-256 {sha256}")
-        whose = "The entry's" if key == "downloadURL" else "Its own-certificate"
+        if key != "downloadURL":
+            whose = "Its own-certificate"
+        else:
+            whose = "The SideStore source's" if player else "The entry's"
         lines.append(f"- {whose} size ({size:,} bytes) and SHA-256 (`{short(sha256)}`) are those of `{name}` "
                      f"downloaded again from the release by its `{key}`, and those GitHub gives for the asset.")
         print(f"{name}: {size} bytes, SHA-256 {sha256}, from {url}: as the source and GitHub say")
@@ -124,10 +134,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--release", type=Path, required=True, help="GitHub's release, as JSON")
     parser.add_argument("--source", type=Path, default=ROOT / "app" / "sidestore-source.json")
     parser.add_argument("--summary", type=Path, help="where to write the lines for the pull request")
+    parser.add_argument("--player", action="store_true", help="the source is the one for the player's SideStore")
     args = parser.parse_args(argv)
     try:
         lines = check(json.loads(args.source.read_text(encoding="utf-8")), args.version,
-                      json.loads(args.release.read_text(encoding="utf-8")))
+                      json.loads(args.release.read_text(encoding="utf-8")), player=args.player)
     except CheckError as error:
         print(f"check_release_downloads.py: {error}", file=sys.stderr)
         return 1
