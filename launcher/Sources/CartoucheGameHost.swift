@@ -30,7 +30,8 @@
 //  it (CartoucheGuestControllers.m). It notes the last press that reached
 //  it, which the journal says once, as the game pauses or ends, and, while
 //  a scene of the game's is on a TV, whether the game's picture is there,
-//  which the journal says too (CartoucheTV.swift).
+//  which the journal says too, then and a few seconds after that scene
+//  opens and as the TV goes (CartoucheTV.swift).
 //
 
 import AVFAudio
@@ -425,7 +426,8 @@ final class CartoucheGameHost {
         CartoucheReports.note(app.displayName + ": the controller's presses reach the game")
     }
 
-    /// Says in the journal, as the game pauses or ends, whether the game's
+    /// Says in the journal, as the game pauses or ends, a few seconds after
+    /// its scene opens on the TV and as the TV goes, whether the game's
     /// picture is on its scene on the TV, when READING, its process's last,
     /// says, and it changed since the journal last said it, with the
     /// nxnative commit the game was built from: a report from a player
@@ -504,7 +506,21 @@ final class CartoucheGameHost {
         pictureMoved(toTV: true)
         CartoucheTV.note(String(format: "TV: the game's own scene is on the TV (%.0fx%.0f points)",
                                 display.bounds.width, display.bounds.height))
+        // Whether the game put its picture there, a few of its process's
+        // readings later: said even when the game neither pauses nor ends
+        // before Cartouche closes.
+        let pid = Int(scene.pid)
+        Task { [weak self] in
+            try? await Task.sleep(for: Self.pictureOnTVCheck)
+            guard let self, self.gameOnTV === made else { return }
+            self.notePictureOnTV(in: CartoucheGameMemoryReading.last(pid: pid))
+        }
     }
+
+    /// How long after the game's scene opens on the TV the journal says
+    /// whether the game's picture is there: three readings of the game's
+    /// process, which writes one every 2 seconds (CartoucheGuest.m).
+    static let pictureOnTVCheck: Duration = .seconds(6)
 
     private func closeGameOnTV() {
         guard let gameOnTV else { return }
@@ -652,6 +668,11 @@ extension CartoucheGameHost: CartoucheTVHost {
     /// scene there closes, and nxnative puts its picture back on the
     /// iPhone.
     func tvWillDisconnect(_ tv: CartoucheTV) {
+        // Whether the game's picture was there, which the game's process
+        // stops saying once its scene there closes.
+        if gameOnTV != nil, let scene {
+            notePictureOnTV(in: CartoucheGameMemoryReading.last(pid: Int(scene.pid)))
+        }
         closeGameOnTV()
         Task { @MainActor [weak self] in self?.guardTheTV() }
     }
