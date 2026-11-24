@@ -5,7 +5,7 @@
 //  How fast a game comes as it installs from the player's storage, and how
 //  it comes: the install's screen says so, from the Mac the way the iPhone
 //  reaches it, the cable, Tailscale or the local network, with the band of
-//  the Mac's Wi-Fi as its Cartouche Builder tells it (CartoucheMacNetwork),
+//  the Mac's Wi-Fi as Cartouche on the Mac tells it (CartoucheMacNetwork),
 //  and what to do when it is slow: plug the iPhone into the Mac, or put
 //  them on a 5 GHz Wi-Fi. A game of 20 GB takes over an hour on a 2.4 GHz
 //  Wi-Fi, a quarter of an hour on 5 GHz or through the cable (decision
@@ -19,7 +19,7 @@
 
 import Foundation
 
-/// How a connection reaches the Mac, as Cartouche Builder sees it on its
+/// How a connection reaches the Mac, as the Builder sees it on its
 /// side, which its info tells the iPhone (CartoucheBridgeResponse.network):
 /// the Mac's Wi-Fi, with its band; its Ethernet; the cable; or another way,
 /// Tailscale's or a VPN's. Text, not a closed list, so that a newer Mac's
@@ -58,7 +58,7 @@ public struct CartoucheMacNetwork: Codable, Equatable, Hashable, Sendable {
 
 /// The way a game comes as it installs: from the Mac through the cable,
 /// through Tailscale, or on the local network, with what the Mac said of
-/// its side (nil from a Cartouche Builder older than this).
+/// its side (nil from a Cartouche for Mac older than this).
 public enum CartoucheTransferWay: Equatable, Sendable {
     case cable
     case tailnet

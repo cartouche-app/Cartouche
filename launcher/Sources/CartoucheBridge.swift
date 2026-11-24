@@ -422,7 +422,7 @@ public struct CartoucheBridgeResponse: Codable, Equatable {
     /// info: how this connection reaches the Mac, as the Mac sees it: its
     /// Wi-Fi and its band, its Ethernet, the cable, or another way
     /// (CartoucheTransferSpeed.swift). The install's screen says so, and
-    /// warns of a Mac on its 2.4 GHz Wi-Fi. A Cartouche Builder older than
+    /// warns of a Mac on its 2.4 GHz Wi-Fi. A Cartouche for Mac older than
     /// this one says nothing.
     public var network: CartoucheMacNetwork?
     /// builds, build and the rest: the Mac's builds, after what was asked.

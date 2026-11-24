@@ -218,9 +218,9 @@ enum CartoucheMacStorage {
     /// link). Never an address.
     @MainActor static private(set) var links: [UUID: CartoucheMacLink] = [:]
     /// How the connection an install made last reached each Mac, on the
-    /// Mac's side, as its Cartouche Builder told (CartoucheMacNetwork): the
+    /// Mac's side, as Cartouche on the Mac told (CartoucheMacNetwork): the
     /// install's screen says so, and warns of a Mac on its 2.4 GHz Wi-Fi.
-    /// None from a Cartouche Builder older than this.
+    /// None from a Cartouche for Mac older than this.
     @MainActor static private(set) var networks: [UUID: CartoucheMacNetwork] = [:]
 
     /// What the Mac of SERVER told of its side of the connection, NETWORK.
@@ -635,7 +635,7 @@ final class CartoucheMacRemote: CartoucheRemote {
     var isReadOnly: Bool { false }
 
     /// How this connection reaches the Mac, on its side, as its info says
-    /// (CartoucheMacNetwork): nil from a Cartouche Builder older than this,
+    /// (CartoucheMacNetwork): nil from a Cartouche for Mac older than this,
     /// or when it does not answer.
     func network() async -> CartoucheMacNetwork? {
         try? await client.info().network

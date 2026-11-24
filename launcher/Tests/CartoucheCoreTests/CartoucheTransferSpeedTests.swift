@@ -104,7 +104,7 @@ final class CartoucheTransferSpeedTests: XCTestCase {
         XCTAssertEqual(CartoucheTransferWay.toMac(link: "cable", network: slowBand), .cable, "the cable, whatever the Mac's Wi-Fi")
         XCTAssertEqual(CartoucheTransferWay.toMac(link: "tailnet", network: slowBand), .tailnet)
         XCTAssertEqual(CartoucheTransferWay.toMac(link: "network", network: slowBand), .network(mac: slowBand))
-        XCTAssertEqual(CartoucheTransferWay.toMac(link: "network", network: nil), .network(mac: nil), "an older Cartouche Builder")
+        XCTAssertEqual(CartoucheTransferWay.toMac(link: "network", network: nil), .network(mac: nil), "an older Cartouche for Mac")
         XCTAssertNil(CartoucheTransferWay.toMac(link: nil, network: nil))
     }
 
