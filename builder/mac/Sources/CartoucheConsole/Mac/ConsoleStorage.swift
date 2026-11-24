@@ -211,11 +211,8 @@ struct CartoucheMacFoldersSection: View {
             Menu {
                 CartoucheMacFolderChoices(choices: choices, role: role, browse: browse)
             } label: {
-                Label(CartoucheText.storageChooseFolder, systemImage: "folder.badge.plus")
+                CartoucheMacMenuLabel(CartoucheText.storageChooseFolder, symbol: "folder.badge.plus")
             }
-            // As a button, its symbol apart from its words, as the menu
-            // bar's Play (MenuBarView).
-            .menuStyle(.button)
         } header: {
             Text(header)
         } footer: {
@@ -316,9 +313,8 @@ struct CartoucheMacIPhoneGamesSection: View {
             Menu {
                 CartoucheMacFolderChoices(choices: choices, role: .games, browse: browse)
             } label: {
-                Label(CartoucheText.storageChangeFolder, systemImage: "folder")
+                CartoucheMacMenuLabel(CartoucheText.storageChangeFolder, symbol: "folder")
             }
-            .menuStyle(.button)
             Button(CartoucheText.macIPhoneGamesSendNow, systemImage: "arrow.up.circle", action: send)
                 .disabled(sending)
             ForEach(Array(folder.others.enumerated()), id: \.offset) { _, other in
@@ -329,9 +325,8 @@ struct CartoucheMacIPhoneGamesSection: View {
             Menu {
                 CartoucheMacFolderChoices(choices: choices, role: .games, adding: true, browse: browse)
             } label: {
-                Label(CartoucheText.storageAddGamesFolder, systemImage: "folder.badge.plus")
+                CartoucheMacMenuLabel(CartoucheText.storageAddGamesFolder, symbol: "folder.badge.plus")
             }
-            .menuStyle(.button)
             .accessibilityIdentifier(CartoucheStorageView.addGamesRow)
         } header: {
             Text(folder.others.isEmpty ? CartoucheText.macIPhoneGamesHeader : CartoucheText.macIPhoneGamesSeveralHeader)
@@ -416,6 +411,23 @@ struct CartoucheMacIPhoneGamesSection: View {
         Label(text, systemImage: symbol)
             .font(.footnote)
             .foregroundStyle(Color.orange)
+    }
+}
+
+/// A menu's label on the Storage page. In a form, macOS draws a menu's
+/// symbol right against its words, where it keeps a button's apart: an en
+/// space keeps them as far apart as on the page's buttons.
+struct CartoucheMacMenuLabel: View {
+    let title: String
+    let symbol: String
+
+    init(_ title: String, symbol: String) {
+        self.title = title
+        self.symbol = symbol
+    }
+
+    var body: some View {
+        Label("\u{2002}" + title, systemImage: symbol)
     }
 }
 

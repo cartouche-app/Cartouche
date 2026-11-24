@@ -347,13 +347,13 @@ struct CartoucheStorageView: View {
                 Menu {
                     serverChoices(.saves)
                 } label: {
+                    #if os(macOS)
+                    // Its symbol apart from its words (ConsoleStorage.swift).
+                    CartoucheMacMenuLabel(CartoucheText.storageChangeFolder, symbol: "folder")
+                    #else
                     Label(CartoucheText.storageChangeFolder, systemImage: "folder")
+                    #endif
                 }
-                #if os(macOS)
-                // As a button, its symbol apart from its words, as on the
-                // rest of the console's Storage page (ConsoleStorage.swift).
-                .menuStyle(.button)
-                #endif
                 #if os(iOS)
                 // On the Mac, the iPhones' folder is changed, never stopped:
                 // the Builder's own setting keeps the Mac's saves in its
