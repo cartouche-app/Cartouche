@@ -76,10 +76,14 @@ ADD_TO_SIDESTORE = "sidestore://source?url=" + SIDESTORE_SOURCE
 # its repository (decision 160).
 NOBC = "https://github.com/mianmuhammadse/nxnative-nobc"
 
+# The documentation for players, at docs.cartouche.cloud (decision 161): the
+# site stays short and links to its pages, in the reader's language.
+DOCS = "https://docs.cartouche.cloud/"
+
 # Every absolute link the page may hold, whole: the repository and its pages,
 # the files above, the Discord server, nxnative, IGDB, which the page credits,
-# Cartouche Cloud's site, nxnative-nobc and the link that adds Cartouche's
-# source to SideStore.
+# Cartouche Cloud's site, nxnative-nobc, the link that adds Cartouche's
+# source to SideStore and the documentation's pages.
 ALLOWED_LINKS = [
     re.compile(re.escape(REPOSITORY)),
     re.compile(re.escape(REPOSITORY) + r"/blob/main/[\w/.-]+\.md(?:#[\w-]+)?"),
@@ -91,6 +95,7 @@ ALLOWED_LINKS = [
     re.compile(re.escape(CLOUD) + r"(?:privacy)?"),
     re.compile(re.escape(NOBC)),
     re.compile(re.escape(ADD_TO_SIDESTORE)),
+    re.compile(re.escape(DOCS) + r"(?:(?:fr|es|de)/)?(?:[a-z-]+/)*"),
 ]
 
 # A price, in any currency the page could name: Cartouche Cloud's stays on its
@@ -484,7 +489,7 @@ class SiteTests(unittest.TestCase):
             self.assertIn(SIDESTORE_SOURCE, said.group(0), f"the step gives the source's address in {language}")
             self.assertIn("Keep App Extensions (Use Main Profile)", said.group(0), f"the step says which choice to make in SideStore, in {language}")
         self.assertIn(ADD_TO_SIDESTORE, step)
-        self.assertGreaterEqual(self.links().count("#sidestore"), 4 * 3, "what one needs and two answers of the FAQ lead to it, in each language")
+        self.assertGreaterEqual(self.links().count("#sidestore"), 4 * 2, "what one needs and the FAQ lead to it, in each language")
 
     def test_nxnative_nobc_as_a_separate_fork(self) -> None:
         # Its author's condition: named as a separate fork of nxnative, by
@@ -498,6 +503,24 @@ class SiteTests(unittest.TestCase):
             "einem separaten Fork von nxnative von mianmuhammadse",
         ):
             self.assertIn(f'<a href="{NOBC}">nxnative-nobc</a>, {sentence}', self.text)
+
+    def test_the_documentation_in_the_readers_language(self) -> None:
+        # The header, the first screen, the footer and the sections lead to
+        # the documentation, each link in the language of the text around
+        # it, to a page docs-site/ has.
+        pages = SITE.parent / "docs-site" / "src" / "content" / "docs"
+        found = [(attrs.get("lang"), attrs["href"]) for tag, attrs in self.page.tags if tag == "a" and attrs.get("href", "").startswith(DOCS)]
+        self.assertGreaterEqual(len(found), 4 * 10)
+        for language in LANGUAGES:
+            home = DOCS + ("" if language == "en" else language + "/")
+            self.assertGreaterEqual([href for lang, href in found if lang == language].count(home), 3, f"the header, the first screen and the footer, in {language}")
+        for lang, href in found:
+            self.assertIn(lang, LANGUAGES, href)
+            path = href[len(DOCS):]
+            prefix = "" if lang == "en" else lang + "/"
+            self.assertTrue(path.startswith(prefix) and not re.match(r"(?:fr|es|de)/", path[len(prefix):]), f"{href} is not in {lang}")
+            page = path[len(prefix):].rstrip("/") or "index"
+            self.assertTrue(any((pages / prefix / (page + ext)).is_file() for ext in (".md", ".mdx")), f"docs-site has no page for {href}")
 
     def test_the_filters_count_the_catalog(self) -> None:
         # All games, On iPhone and On Mac count as the app's filters do
