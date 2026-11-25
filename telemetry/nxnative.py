@@ -86,7 +86,11 @@ GPU_LOST_READER = 4
 # screen: Super Mario Galaxy, 15 sessions and 11 hours on 7 installs, none
 # with a summary line (17 November). Its sessions are not said to have drawn
 # no frame. The dashboard's rule (UNCOUNTED_MINUTES, telemetry/dashboard).
+# Super Mario Galaxy is drawn with Vulkan, which writes no [nvn] line, as
+# nxnative told us (seedds/nxnative#2998): from Cartouche's fifth reading of
+# the log on, its [vk] frame lines count its frames (VULKAN_READER).
 UNCOUNTED_MINUTES = 30
+VULKAN_READER = 5
 
 # The sessions one day received, a page at a time, with D1's parameters as
 # text. A session sent again because its log grew is the same session with
@@ -490,15 +494,17 @@ def page(catalog: Catalog, sessions: list[dict], events: list[dict], first: dt.d
         "- The figures come from the lines nxnative writes in `log.txt`, which Cartouche reads after each session "
         "([CartoucheGameLog.swift](https://github.com/cartouche-app/Cartouche/blob/main/launcher/Sources/"
         "CartoucheGameLog.swift)): the `[nvn]` timing, on-screen and power lines, `[longframe]`, `pipeline prepare`, "
-        "the memory and thermal lines, `CRASH sig=`, `GPU access revoked` and `[RED] boot:`. "
+        "the memory and thermal lines, `CRASH sig=`, `GPU access revoked` and `[RED] boot:`; for a game drawn with "
+        f"Vulkan, which writes no `[nvn]` line, its `[vk] frame` lines that drew, from Cartouche's reading {VULKAN_READER} "
+        "of the log on, which tell how far it drew and time nothing: its frame figures and stutters show –. "
         "A session's commit is the first 12 digits of `DMCommit` in the game's `Info.plist`; Cartouche 0.11.2 and "
         "before did not send it. Its shader chain is the first 12 digits of `DMChain` beside it; Cartouche 0.16.0 "
         "and before did not send it. Target fps is the rate most of the line's sessions asked for.",
         "- Reached serious heat: the sessions iOS put in its serious thermal state. Drew no frame: the session ended "
-        "before nxnative's first summary line, whatever its end. A line none of whose sessions wrote one, though they "
-        f"lasted {UNCOUNTED_MINUTES} minutes or more in all, says no summary line instead: the game may run while "
-        "nxnative writes no `[nvn]` timing, on-screen or power line for it, as much as stay on a black screen, and "
-        "its frame figures show –.",
+        "before nxnative's first summary line, or `[vk] frame` line that drew, whatever its end. A line none of whose "
+        f"sessions wrote one, though they lasted {UNCOUNTED_MINUTES} minutes or more in all, says no summary line "
+        "instead: the game may run while Cartouche reads none of these lines for it, as a game drawn with Vulkan "
+        f"before its reading {VULKAN_READER}, as much as stay on a black screen, and its frame figures show –.",
         "- GPU lost: the crashes nxnative ended once the system took the GPU away from the game for the GPU errors it "
         "caused (`[RED] GPU access revoked`), as the crashes' cause says too. Cartouche tells them from its reading "
         f"{GPU_LOST_READER} of the log on: before it, such a session is a crash like any other abort, and a line "

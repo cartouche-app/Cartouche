@@ -263,6 +263,37 @@ final class CartoucheGameLogTests: XCTestCase {
         XCTAssertEqual(measures(warned).end?.kind, "unknown")
     }
 
+    /// A game nxnative draws with Vulkan writes no [nvn] line, but a [vk]
+    /// frame line for its first three frames and every 300, with the draws
+    /// since the line before (frame_end in hle_vk.m at nxnative 2dacca8):
+    /// Super Mario Galaxy's sessions drew no frame for Cartouche until it
+    /// read them, as nxnative told us to (seedds/nxnative#2998). They time
+    /// nothing, so the frame figures and the stutters stay out.
+    func testAGameDrawnWithVulkanCountsItsFramesFromItsFrameLines() {
+        func line(_ frame: Int, draws: Int, frames: Int) -> String {
+            "[dm] [vk] frame \(frame): draws \(draws) (skipped 0), dispatches 0 (skipped 0), passes 2, submits 1, copies 3 (since the last record, \(frames) frames); pipelines so far 41, buffer memory 96.0 MB"
+        }
+        let galaxy = measures("""
+        [dm] [vk] CreateDevice: 1 queues; extensions VK_KHR_swapchain
+        \(line(1, draws: 0, frames: 1))
+        \(line(2, draws: 14, frames: 1))
+        \(line(3, draws: 14, frames: 1))
+        \(line(300, draws: 251_220, frames: 300))
+        \(line(600, draws: 248_013, frames: 300))
+        """)
+        XCTAssertEqual(galaxy.frames, 600)
+        XCTAssertNil(galaxy.fps)
+        XCTAssertNil(galaxy.frameMs)
+        XCTAssertNil(galaxy.stutters)
+        XCTAssertEqual(galaxy.end?.kind, "unknown")
+        // Lines without a draw say nothing was drawn: a boot that failed
+        // stays one.
+        let black = measures("[RED] boot: no RomFS for this game\n" + line(1, draws: 0, frames: 1) + "\n" + line(2, draws: 0, frames: 1))
+        XCTAssertNil(black.frames)
+        XCTAssertEqual(black.end?.kind, "boot-failed")
+        XCTAssertEqual(measures(line(300, draws: 9, frames: 300) + "\n[RED] boot: no RomFS for this game").end?.kind, "unknown")
+    }
+
     func testTheGuestFileGivesTheExactPeak() {
         let line = "[dm] [mem] guest file: 2.10 GB allocated on disk, 1.50 GB dirty in memory (12 ms to count, every 10 s), 0.20 GB given back as holes; process read 3.00 GB, 1200 page-ins, logical writes 2.50 GB; footprint 4.20 GB (internal 3.90, compressed 0.30, peak so far 4.75), file pages mapped (external) 1.10 GB; 40.0 GB free on its disk (42.0 with what the system can purge)"
         let measures = measures(line)

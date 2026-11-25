@@ -13,7 +13,10 @@
 //  the first frame and memory readings (nvn_mtl.m); the iPhone's thermal
 //  state and Low Power Mode as they change, and the layout of the picture
 //  and the controls (front_ios.m); audio underruns (hle_audio.c); and the
-//  crash line of a game that crashed (crash.c).
+//  crash line of a game that crashed (crash.c). A game nxnative draws with
+//  Vulkan, such as Super Mario Galaxy, writes none of the [nvn] lines, but
+//  a [vk] frame line for its first three frames and every 300 (hle_vk.m):
+//  it says how far the game drew, and times nothing.
 //
 //  Only numbers come out of it, never a line: the log holds paths, and
 //  lines that may look like keys. A line it does not know, or whose numbers
@@ -127,7 +130,8 @@ struct CartoucheGameMeasures: Codable, Equatable {
         var cause: String?
     }
 
-    /// The last frame a 300-frame summary counted.
+    /// The last frame a 300-frame summary counted: an [nvn] line's, or,
+    /// for a game nxnative draws with Vulkan, a [vk] frame line's that drew.
     var frames: Int?
     var fps: Rate?
     /// The frame rate the game asked for: 60, or 30.
@@ -171,8 +175,11 @@ struct CartoucheGameLogReader {
     /// nxnative stopped when the system took the GPU away from it
     /// (End.cause gpuLost): before it, that was a crash like any other
     /// abort, or, on a Mac, an end the log did not tell
-    /// (telemetry/dashboard, GPU_LOST_READER).
-    static let version = 4
+    /// (telemetry/dashboard, GPU_LOST_READER). 5 counts the frames of a
+    /// game nxnative draws with Vulkan from its [vk] frame lines: before
+    /// it, such a session drew no frame, as Super Mario Galaxy's 15 did in
+    /// November, which nxnative told us to read so (seedds/nxnative#2998).
+    static let version = 5
     /// A frame this long is a pause, not a slow frame: the game left behind
     /// the console, Cartouche in the background, or a freeze. nxnative
     /// times each stretch of 300 frames by the clock (power_line,
@@ -205,6 +212,8 @@ struct CartoucheGameLogReader {
     }
 
     private var lastFrame: Int?
+    /// The last frame of a [vk] frame line that drew.
+    private var vulkanFrame: Int?
     private var frameP50: [Double] = []
     private var frameP95: [Double] = []
     private var gpuP50: [Double] = []
@@ -311,6 +320,8 @@ struct CartoucheGameLogReader {
         if layout != nil, readDivision(line) { return }
         if line.contains("[nvn] ") {
             readSummary(line)
+        } else if line.contains("[vk] frame ") {
+            readVulkanFrame(line)
         } else if line.contains("[longframe] ") {
             readLongFrame(line)
         } else if line.contains("front end: ") {
@@ -391,6 +402,15 @@ struct CartoucheGameLogReader {
             sawPipelines = true
             stallMs += pipelines + libraries
         }
+    }
+
+    /// A [vk] frame line: the frame it is at, and the draws since the
+    /// line before, the frame before or the 300 before. One without a draw
+    /// says nothing of what the game showed.
+    private mutating func readVulkanFrame(_ line: String) {
+        guard let groups = Self.groups(Self.vulkanFrameLine, line), let frame = Int(groups[0]), let draws = Int(groups[1]),
+              frame > 0, draws > 0 else { return }
+        vulkanFrame = max(vulkanFrame ?? 0, frame)
     }
 
     private mutating func readLongFrame(_ line: String) {
@@ -557,7 +577,7 @@ struct CartoucheGameLogReader {
             return Self.rounded(count / minutes, 2)
         }
 
-        measures.frames = lastFrame
+        measures.frames = [lastFrame, vulkanFrame].compactMap { $0 }.max()
 
         // The rate of each stretch, weighted by how long it lasted: 300
         // frames at 30 fps last twice as long as at 60.
@@ -643,7 +663,7 @@ struct CartoucheGameLogReader {
             return end
         }
         if let crash { return crash }
-        if bootProblem && lastFrame == nil {
+        if bootProblem && lastFrame == nil && vulkanFrame == nil {
             return CartoucheGameMeasures.End(kind: "boot-failed")
         }
         if let lastHeadroom, lastHeadroom <= Self.memoryMarginMiB {
@@ -765,6 +785,7 @@ struct CartoucheGameLogReader {
         #"\[nvn\] on-screen up to frame ([0-9]+): ([0-9]+) frames, dropped ([0-9]+) \(discarded ([0-9]+)\), p99 ([0-9.]+) ms; footprint (-?[0-9.]+) MiB; brightness (-?[0-9.]+); thermal (-?[0-9]+)"#)
     private static let power = expression(
         #"\[nvn\] power up to frame ([0-9]+): CPU energy (-?[0-9.]+) W, (-?[0-9.]+) mJ per frame \(([0-9.]+) fps\); CPU ([0-9.]+)% \(100 = one core\), ([0-9.]+)% of it on performance cores; wakeups [0-9.]+/s \(out of platform idle [0-9.]+\); GPU ([0-9.]+) ms/s"#)
+    private static let vulkanFrameLine = expression(#"\[vk\] frame ([0-9]+): draws ([0-9]+) \(skipped [0-9]+\)"#)
     private static let pipelines = expression(
         #"\[nvn\] pipelines up to frame ([0-9]+): on the submit thread pipelines ([0-9.]+) ms, shader libraries ([0-9.]+) ms"#)
     private static let longFrame = expression(
