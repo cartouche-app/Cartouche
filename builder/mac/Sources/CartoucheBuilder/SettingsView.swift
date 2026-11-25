@@ -231,7 +231,10 @@ struct FolderSettings: View {
             }
             Section(tr("Builds", "Constructions", "Compilaciones", "Builds")) {
                 FolderField(title: tr("Build folders", "Dossiers de construction", "Carpetas de compilación", "Build-Ordner"),
-                            help: tr("Where games are built; empty for Cartouche’s own folder.", "Où les jeux se construisent ; vide pour le dossier de Cartouche.", "Donde se compilan los juegos; vacío para la carpeta propia de Cartouche.", "Wo die Spiele erstellt werden; leer für den eigenen Ordner von Cartouche."),
+                            help: tr("Where games are built; empty for Cartouche’s own folder. On a NAS, it keeps their build folders between two builds: the games are built on this Mac.",
+                                     "Où les jeux se construisent ; vide pour le dossier de Cartouche. Sur un NAS, il garde leurs dossiers de construction entre deux constructions : les jeux se construisent sur ce Mac.",
+                                     "Donde se compilan los juegos; vacío para la carpeta propia de Cartouche. En un NAS, guarda sus carpetas de compilación entre dos compilaciones: los juegos se compilan en este Mac.",
+                                     "Wo die Spiele erstellt werden; leer für den eigenen Ordner von Cartouche. Auf einem NAS bewahrt er ihre Build-Ordner zwischen zwei Builds auf: Die Spiele werden auf diesem Mac erstellt."),
                             path: model.config?.workspace ?? "", clearable: true) { path in model.update { $0.workspace = path } }
             }
         }

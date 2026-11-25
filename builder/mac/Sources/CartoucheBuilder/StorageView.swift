@@ -40,8 +40,14 @@ struct StorageView: View {
                 if let storage = model.storage {
                     disks(storage)
                     freeable(storage)
-                    if !storage.folders.isEmpty {
-                        folders(storage)
+                    let onMac = storage.folders.filter { !$0.onNAS }
+                    if !onMac.isEmpty {
+                        folders(tr("Build folders", "Dossiers de construction", "Carpetas de compilación", "Build-Ordner"), onMac)
+                    }
+                    // Those the NAS keeps between two builds (decision 163).
+                    let onNAS = storage.folders.filter(\.onNAS)
+                    if !onNAS.isEmpty {
+                        folders(tr("Build folders on your NAS", "Dossiers de construction sur votre NAS", "Carpetas de compilación en tu NAS", "Build-Ordner auf deinem NAS"), onNAS)
                     }
                     if !storage.apps.isEmpty {
                         macApps(storage)
@@ -79,6 +85,13 @@ struct StorageView: View {
     private var subtitle: String {
         guard let storage = model.storage else { return tr("Measuring…", "Mesure en cours…", "Midiendo…", "Wird gemessen …") }
         let kept = storage.buildFolders + storage.total("ipa_copies") + storage.total("logs") + storage.total("mac_apps")
+        if storage.onNAS > 0 {
+            let nas = Format.size(storage.onNAS)
+            return tr("Cartouche keeps \(Format.size(kept)) on this Mac, and \(nas) of build folders on your NAS",
+                      "Cartouche garde \(Format.size(kept)) sur ce Mac, et \(nas) de dossiers de construction sur votre NAS",
+                      "Cartouche ocupa \(Format.size(kept)) en este Mac, y \(nas) de carpetas de compilación en tu NAS",
+                      "Cartouche belegt \(Format.size(kept)) auf diesem Mac und \(nas) mit Build-Ordnern auf deinem NAS")
+        }
         return tr("Cartouche keeps \(Format.size(kept)) on this Mac", "Cartouche garde \(Format.size(kept)) sur ce Mac", "Cartouche ocupa \(Format.size(kept)) en este Mac", "Cartouche belegt \(Format.size(kept)) auf diesem Mac")
     }
 
@@ -90,6 +103,13 @@ struct StorageView: View {
                                   "Garde \(model.config?.minFreeGB ?? 20) Go libres : les plus vieux dossiers partent d’abord.",
                                   "Mantiene \(model.config?.minFreeGB ?? 20) GB libres: las carpetas de compilación más antiguas se van primero.",
                                   "Lässt \(model.config?.minFreeGB ?? 20) GB frei: Die ältesten Build-Ordner gehen zuerst."))
+            }
+            if let disk = storage.shelfDisk {
+                DiskCard(title: tr("Build folders", "Dossiers de construction", "Carpetas de compilación", "Build-Ordner"), symbol: "externaldrive.connected.to.line.below", disk: disk,
+                         note: tr("On your NAS: they wait there between two builds, which are made on this Mac.",
+                                  "Sur votre NAS : ils y attendent entre deux constructions, qui se font sur ce Mac.",
+                                  "En tu NAS: esperan allí entre dos compilaciones, que se hacen en este Mac.",
+                                  "Auf deinem NAS: Sie warten dort zwischen zwei Builds, die auf diesem Mac laufen."))
             }
             if let disk = storage.gamesDisk {
                 DiskCard(title: tr("Games folder", "Dossier des jeux", "Carpeta de juegos", "Spieleordner"), symbol: model.library?.folders?.games?.isShare == true ? "externaldrive.connected.to.line.below" : "folder",
@@ -137,14 +157,14 @@ struct StorageView: View {
         }
     }
 
-    private func folders(_ storage: StorageReport) -> some View {
+    private func folders(_ title: String, _ list: [BuildFolder]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(tr("Build folders", "Dossiers de construction", "Carpetas de compilación", "Build-Ordner").uppercased())
+            Text(title.uppercased())
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
             Card(padding: 6) {
                 VStack(spacing: 0) {
-                    ForEach(Array(storage.folders.sorted { $0.size > $1.size }.enumerated()), id: \.element.id) { index, folder in
+                    ForEach(Array(list.sorted { $0.size > $1.size }.enumerated()), id: \.element.id) { index, folder in
                         if index > 0 { Divider().padding(.leading, 12) }
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {

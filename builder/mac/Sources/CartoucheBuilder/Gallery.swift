@@ -64,6 +64,11 @@ enum Gallery {
         // the iPhone Duo: its GPU reads no BC texture, and the games are
         // built from nxnative-nobc, a separate fork (BuildFor).
         case settingsBuilds = "settings-builds", settingsBuildsNoBC = "settings-builds-no-bc", storageMac = "storage-mac"
+        // The whole storage page of a player whose build folders are on
+        // their NAS, which keeps them between two builds made on this Mac
+        // (decision 163): one game building on this Mac, three waiting on
+        // the NAS.
+        case storageNAS = "storage-nas"
         // The iPhone page with Tailscale on this Mac, and its address there
         // (BridgeView.swift); the iPhone page above has it off.
         case iphoneTailscale = "iphone-tailscale"
@@ -108,7 +113,7 @@ enum Gallery {
         /// Whether the page is in a window taller than the screen, as tall
         /// as the page, which AppKit would fit to the screen.
         var isTall: Bool {
-            isWholeSheet || [.storageMac, .iphoneGames, .iphoneCable, .iphoneSending, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport,
+            isWholeSheet || [.storageMac, .storageNAS, .iphoneGames, .iphoneCable, .iphoneSending, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport,
                              .activitySplit, .gameSplit].contains(self)
         }
 
@@ -142,7 +147,7 @@ enum Gallery {
             switch self {
             case .names, .namesDumps: return NamingHelp.size
             case .settings, .settingsBuilds, .settingsBuildsNoBC, .settingsFolders: return SettingsTab.size
-            case .storageMac: return CGSize(width: 1024, height: 1440)
+            case .storageMac, .storageNAS: return CGSize(width: 1024, height: 1440)
             case .iphoneGames: return CGSize(width: 1024, height: 1500)
             // Down to the iPhone sending a game, and what would go faster.
             case .iphoneSending: return CGSize(width: 1024, height: 1000)
@@ -497,6 +502,7 @@ enum Gallery {
         let library: Library
         let building: BatchStatus
         let storage: StorageReport
+        let nasStorage: StorageReport
         let config: BuilderConfig
         let info: BuilderInfo
 
@@ -505,6 +511,7 @@ enum Gallery {
             library = try decoder.decode(Library.self, from: Gallery.dated(Gallery.libraryJSON))
             building = try decoder.decode(BatchStatus.self, from: Gallery.dated(Gallery.buildingJSON))
             storage = try decoder.decode(StorageReport.self, from: Gallery.dated(Gallery.storageJSON))
+            nasStorage = try decoder.decode(StorageReport.self, from: Gallery.dated(Gallery.storageNASJSON))
             config = try decoder.decode(BuilderConfig.self, from: Data(Gallery.configJSON.utf8))
             info = try decoder.decode(BuilderInfo.self, from: Data(Gallery.infoJSON.utf8))
         }
@@ -551,8 +558,9 @@ enum Gallery {
             }
             var config = self.config
             if page == .assistantToolsSource { config.buildFor = "iPhone15,4" }
+            if page == .storageNAS { config.workspace = "/Volumes/Jeux/Builds" }
             let model = AppModel.sampled(library: library, status: building ? self.building : split ? Gallery.splitBatch : nil,
-                                         storage: storage, config: config, info: info,
+                                         storage: page == .storageNAS ? nasStorage : storage, config: config, info: info,
                                          unbuilt: page == .gameUnbuilt ? [Gallery.unbuilt.titleID: Gallery.unbuiltFigures] : [:])
             if building {
                 model.preview(queue: BuildQueue(games: [.init(titleID: "0100000000010000", force: true, batch: 4242, added: ""),
@@ -560,7 +568,7 @@ enum Gallery {
             }
             switch page {
             case .library, .activity, .storage, .iphone: model.section = AppSection(rawValue: page.rawValue) ?? .library
-            case .storageMac: model.section = .storage
+            case .storageMac, .storageNAS: model.section = .storage
             case .activitySplit: model.section = .activity
             case .iphoneTailscale, .iphoneGames, .iphoneCable, .iphoneSending: model.section = .iphone
             case .libraryRoom, .game, .gameNarrow, .gameNewer, .gameQueue, .gameXcode, .gameUnbuilt, .gameAfterConsole, .gameSplit:
@@ -958,6 +966,42 @@ enum Gallery {
          "on": true, "built_at": "@-6500", "shares_build": false, "packed": true}
       ],
       "totals": {"extracted": 13900000000, "shaders": 4070000000, "app": 2690000000, "packages": 0, "temporary": 0, "other": 120000000,
+                 "logs": 48000000, "ipa_copies": 0, "ipa_copies_freeable": 0, "engine": 410000000, "python": 260000000, "mac_apps": 12130000000},
+      "settings": {"keep_extracted": false, "keep_ipa": false, "min_free_gb": 20, "workspace_limit_gb": 0}
+    }
+    """
+
+    /// The storage of a player whose build folders are on their NAS: Breath
+    /// of the Wild building on this Mac, three games' folders on the NAS.
+    static let storageNASJSON = """
+    {
+      "workspace": "/Volumes/Jeux/Builds",
+      "disks": {
+        "workspace": {"path": "/Users/player/Library/Application Support/Cartouche Builder/Builds", "free": 182000000000, "total": 994000000000, "present": true},
+        "shelf": {"path": "/Volumes/Jeux/Builds", "free": 2310000000000, "total": 7990000000000, "present": true},
+        "games": {"path": "/Volumes/Jeux", "free": 2310000000000, "total": 7990000000000, "present": true},
+        "mac_apps": {"path": "/Users/player/Applications", "free": 182000000000, "total": 994000000000, "present": true}
+      },
+      "folders": [
+        {"path": "/Users/player/Library/Application Support/Cartouche Builder/Builds/01007EF00011E000_build",
+         "workspace": "/Users/player/Library/Application Support/Cartouche Builder/Builds", "title_id": "01007EF00011E000",
+         "name": "The Legend of Zelda: Breath of the Wild", "kind": "build",
+         "size": 15600000000, "parts": {"extracted": 13900000000, "shaders": 1100000000, "app": 600000000}, "used": "#-600", "shelf": false},
+        {"path": "/Volumes/Jeux/Builds/0100152000022000_build", "workspace": "/Volumes/Jeux/Builds", "title_id": "0100152000022000", "name": "Mario Kart 8 Deluxe",
+         "kind": "build", "size": 2140000000, "parts": {"shaders": 1310000000, "app": 830000000}, "used": "#-777600", "shelf": true},
+        {"path": "/Volumes/Jeux/Builds/0100000000010000_build", "workspace": "/Volumes/Jeux/Builds", "title_id": "0100000000010000", "name": "Super Mario Odyssey",
+         "kind": "build", "size": 1650000000, "parts": {"shaders": 1020000000, "app": 630000000}, "used": "#-7000", "shelf": true},
+        {"path": "/Volumes/Jeux/Builds/01006A800016E000_build", "workspace": "/Volumes/Jeux/Builds", "title_id": "01006A800016E000",
+         "name": "Super Smash Bros. Ultimate", "kind": "build", "size": 1270000000, "parts": {"shaders": 640000000, "app": 630000000}, "used": "#-95000", "shelf": true}
+      ],
+      "ipa_copies": [],
+      "mac_apps": [
+        {"path": "/Users/player/Applications/Mario Kart 8 Deluxe.app", "title_id": "0100152000022000", "name": "Mario Kart 8 Deluxe", "size": 6620000000,
+         "on": true, "built_at": "@-1900000", "shares_build": false, "packed": true},
+        {"path": "/Users/player/Applications/Super Mario Odyssey.app", "title_id": "0100000000010000", "name": "Super Mario Odyssey", "size": 5510000000,
+         "on": true, "built_at": "@-6500", "shares_build": false, "packed": true}
+      ],
+      "totals": {"extracted": 13900000000, "shaders": 1100000000, "app": 600000000, "packages": 0, "temporary": 0, "other": 0, "shelf": 5060000000,
                  "logs": 48000000, "ipa_copies": 0, "ipa_copies_freeable": 0, "engine": 410000000, "python": 260000000, "mac_apps": 12130000000},
       "settings": {"keep_extracted": false, "keep_ipa": false, "min_free_gb": 20, "workspace_limit_gb": 0}
     }

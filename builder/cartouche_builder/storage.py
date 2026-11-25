@@ -29,6 +29,7 @@ from pathlib import Path
 
 from . import config as configs
 from . import macapps
+from . import shelf as shelves
 from .library import walk_size
 from .paths import Paths
 from .workspace import NOTES, Workspace, drop_extracted, same_volume
@@ -111,7 +112,7 @@ def mac_apps(config: configs.Config, paths: Paths, records: dict | None, names: 
     folder's own, or the copies this Mac plays (PACKED) of those a NAS keeps
     in one file, which stay there when a copy goes."""
     found = []
-    workspace = config.workspace_path(paths)
+    workspace = shelves.build_root(config, paths, shelves.of(config, paths))
     for title_id, record in sorted((records or {}).items()):
         built, copied = record.mac, record.mac_copy
         if built is not None and not built.packed:
@@ -152,13 +153,22 @@ def survey(config: configs.Config, paths: Paths, names: dict[str, str] | None = 
     games = config.path("games")
     folders, copies = [], []
     totals = dict.fromkeys(CATEGORIES, 0)
+    # The build folders a NAS keeps between two builds (shelf.py): their
+    # sizes from their notes, measured once, never the NAS's files at each
+    # look; counted apart from this Mac's.
+    shelf = shelves.of(config, paths)
+    kept = 0
     for root in workspaces(config, paths):
         workspace = Workspace(root)
+        on_shelf = shelf is not None and root == shelf.root
         for folder in workspace.own_folders():
             title_id, _, kind = folder.name.partition("_")
-            sizes = parts(folder)
-            for category, size in sizes.items():
-                totals[category] += size
+            sizes = _shelf_parts(shelf, folder) if on_shelf else parts(folder)
+            if on_shelf:
+                kept += sum(sizes.values())
+            else:
+                for category, size in sizes.items():
+                    totals[category] += size
             folders.append({
                 "path": str(folder),
                 "workspace": str(root),
@@ -168,6 +178,7 @@ def survey(config: configs.Config, paths: Paths, names: dict[str, str] | None = 
                 "size": sum(sizes.values()),
                 "parts": sizes,
                 "used": workspace.used(folder) or _mtime(folder),
+                "shelf": on_shelf,
             })
         for ipa in kept_ipas(root):
             title_id = ipa.name[: -len(".ipa")]
@@ -197,7 +208,10 @@ def survey(config: configs.Config, paths: Paths, names: dict[str, str] | None = 
     return {
         "workspace": str(workspace),
         "disks": {
-            "workspace": disk(workspace),
+            # Where the games are built: this Mac's, when the NAS keeps them.
+            "workspace": disk(shelves.build_root(config, paths, shelf)),
+            # Where the NAS keeps them between two builds.
+            "shelf": disk(shelf.root) if shelf is not None else None,
             "games": disk(games),
             "sources": disk(config.path("sources")),
             "mac_apps": disk(place.installs if place.packed else place.library) if apps or config.mac else None,
@@ -210,6 +224,7 @@ def survey(config: configs.Config, paths: Paths, names: dict[str, str] | None = 
             "ipa_copies": sum(c["size"] for c in copies),
             "ipa_copies_freeable": sum(c["size"] for c in copies if not c["same_disk"]),
             "mac_apps": sum(a["size"] for a in apps),
+            "shelf": kept,
             **builder,
         },
         "settings": {
@@ -219,6 +234,21 @@ def survey(config: configs.Config, paths: Paths, names: dict[str, str] | None = 
             "workspace_limit_gb": config.workspace_limit_gb,
         },
     }
+
+
+def _shelf_parts(shelf: shelves.Shelf, folder: Path) -> dict[str, int]:
+    """The parts' sizes of FOLDER, a build folder the NAS keeps: from its
+    note, else measured once and noted."""
+    note = shelf.note(folder.name) or {}
+    noted = note.get("parts")
+    if isinstance(noted, dict) and all(isinstance(v, int) and not isinstance(v, bool) for v in noted.values()):
+        sizes = dict.fromkeys(CATEGORIES, 0)
+        for category, size in noted.items():
+            sizes[category if category in sizes else "other"] += size
+        return sizes
+    sizes = parts(folder)
+    shelf.note_sizes(folder, sizes)
+    return sizes
 
 
 # ---- Freeing ------------------------------------------------------------------
@@ -250,12 +280,18 @@ def clean(config: configs.Config, paths: Paths, what: str, targets: list[str]) -
     roots = workspaces(config, paths)
     removed: list[str] = []
     freed = 0
+    # The build folders a NAS keeps (shelf.py): their notes say their sizes,
+    # and are kept right as they go.
+    shelf = shelves.of(config, paths)
+    on_shelf = lambda folder: shelf is not None and folder.parent == shelf.root
     if what == "extracted":
         folders = [_own_folder(Path(t), roots) for t in targets] if targets else [f for r in roots for f in Workspace(r).own_folders()]
         for folder in folders:
             for part, size in drop_extracted(folder):
                 freed += size
                 removed.append(str(part))
+            if on_shelf(folder):
+                shelf.dropped(folder, ("extracted", "temporary"))
     elif what == "ipa_copies":
         copies = [_own_copy(Path(t), roots) for t in targets] if targets else [c for r in roots for c in kept_ipas(r)]
         for ipa in copies:
@@ -271,7 +307,13 @@ def clean(config: configs.Config, paths: Paths, what: str, targets: list[str]) -
         for target in targets:
             folder = _own_folder(Path(target), roots)
             workspace = Workspace(folder.parent)
-            freed += workspace.forget_sized(folder)
+            noted = shelf.noted_size(folder.name) if on_shelf(folder) else None
+            if noted is not None:
+                # Not measured again over the network: minutes for a large game.
+                workspace.forget(folder)
+                freed += noted
+            else:
+                freed += workspace.forget_sized(folder)
             removed.append(str(folder))
     elif what == "logs":
         limit = time.time() - 7 * 86400

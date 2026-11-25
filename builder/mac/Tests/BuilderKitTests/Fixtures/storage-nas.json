@@ -14,6 +14,7 @@
         "present": true,
         "total": 270553174016
       },
+      "shelf": null,
       "sources": {
         "free": 27741069312,
         "path": "/Users/player/Builder/sources",
@@ -40,6 +41,7 @@
           "temporary": 0
         },
         "path": "/Users/player/Builder/home/workspace/0100000000010000_build",
+        "shelf": false,
         "size": 863,
         "title_id": "0100000000010000",
         "used": 1794606548.7363508,
@@ -57,6 +59,7 @@
           "temporary": 0
         },
         "path": "/Users/player/Builder/home/workspace/0400C3F00006E000_build",
+        "shelf": false,
         "size": 857,
         "title_id": "0400C3F00006E000",
         "used": 1794606551.8852541,
@@ -124,6 +127,7 @@
       "packages": 0,
       "python": 0,
       "shaders": 600,
+      "shelf": 0,
       "temporary": 0
     },
     "workspace": "/Users/player/Builder/home/workspace"

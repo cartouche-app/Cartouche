@@ -35,12 +35,15 @@ from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from functools import cached_property
 from pathlib import Path
 
 from . import build as builds
 from . import config as configs
 from . import ipa as ipas
 from . import causes, disks, failure, fallback, library, macapps, notify, report, schedule, shares, build_for, toolchain
+from . import shelf as shelves
+from . import storage
 from . import queue as queues
 from . import status as statuses
 from .engine import Engine, EngineError
@@ -159,9 +162,17 @@ class Context:
     def source_key(self) -> str:
         return self.source.key if self.source else build_for.key(self.config.engine_url, self.config.engine_branch)
 
+    @cached_property
+    def shelf(self) -> shelves.Shelf | None:
+        """Where the build folders are kept between two builds, when the
+        folder chosen for them is on a NAS (shelf.py): never built in."""
+        return shelves.of(self.config, self.paths)
+
     @property
     def workspace(self) -> Workspace:
-        return Workspace(self.config.workspace_path(self.paths))
+        """Where the games are built: on this Mac when the build folders'
+        is on a NAS."""
+        return Workspace(shelves.build_root(self.config, self.paths, self.shelf))
 
 
 def context(paths: Paths | None = None) -> Context:
@@ -201,7 +212,7 @@ def survey(ctx: Context, update: bool = True, force: set[str] | None = None, log
     """Moves nxnative forward (UPDATE), finds the games and plans them (ONLY
     those, when it names some)."""
     log = log or (lambda message: None)
-    folders = [p for p in (ctx.config.path("sources"), ctx.config.path("games")) if p]
+    folders = [p for p in (ctx.config.path("sources"), ctx.config.path("games"), ctx.config.path("workspace")) if p]
     shares.reconnect(folders, ctx.config.shares, log=lambda address: log(t("batch.mounting", share=address)))
     known = shares.remember(folders, ctx.config.shares)
     if known != ctx.config.shares:
@@ -550,6 +561,8 @@ class Runner:
             else:
                 source = game.folder
             work = writing = workspace.build_folder(title_id)
+            if ctx.shelf is not None:
+                self._fetch(ctx.shelf, work, workspace.used(work), title_id, stop)
             workspace.use(work)
             if not entry.mac_only:
                 out = workspace.root / NOTES / "out" / f"{title_id}.ipa"
@@ -673,10 +686,54 @@ class Runner:
                 # as the settings ask (on the app's disk, its files keep the
                 # blocks they share with them).
                 drop_extracted(work)
+            if work is not None and ctx.shelf is not None and not stop.is_set():
+                # Back to the NAS, which keeps it until the game's next build:
+                # stopped, it waits on this Mac for that build, never holding
+                # the Stop up.
+                self._keep(ctx.shelf, workspace, work, title_id, stop)
             limit = ctx.config.workspace_limit_gb
             if limit:
                 with self._lock:
                     workspace.trim(limit * 2**30, keep=self._batch_folders(workspace), log=lambda folder, size: self.log(t("batch.trimmed", folder=folder.name, gb=f"{size / 2**30:.1f}")))
+
+    def _fetch(self, shelf: shelves.Shelf, work: Path, used: float | None, title_id: str, stop) -> None:
+        """Brings the game's build folder back from the NAS that keeps it,
+        when it keeps a newer one than this Mac's: without it, the game
+        builds all the same, from nothing."""
+        if not shelf.folder(work.name).is_dir():
+            return
+        self.on_event("message", title_id, t("shelf.fetching"))
+        try:
+            if shelf.fetch(work, used, stopped=stop.is_set):
+                self.log(t("shelf.fetched"), title_id)
+        except shelves.Stopped:
+            pass
+        except OSError as error:
+            self.log(t("shelf.fetch_failed", error=f"{type(error).__name__}: {error}"), title_id)
+
+    def _keep(self, shelf: shelves.Shelf, workspace: Workspace, work: Path, title_id: str, stop) -> None:
+        """Sends the game's build folder to the NAS, which keeps it until its
+        next build, then frees this Mac of it, unless the settings keep the
+        extracted files. A NAS that does not take it, or a Stop as it goes,
+        leaves it on this Mac, where the next build finds it."""
+        if not work.is_dir():
+            return
+        self.on_event("message", title_id, t("shelf.keeping"))
+        try:
+            size = shelf.keep(work, storage.parts(work), stopped=stop.is_set)
+        except shelves.Stopped:
+            return
+        except OSError as error:
+            self.log(t("shelf.keep_failed", error=f"{type(error).__name__}: {error}"), title_id)
+            return
+        self.log(t("shelf.kept", gb=f"{size / 2**30:.1f}"), title_id)
+        if self.ctx.config.keep_extracted:
+            # This Mac's, with its extracted files, is the newest: the next
+            # build takes it, not the NAS's, which has none.
+            workspace.use(work)
+        else:
+            with self._lock:
+                workspace.forget(work)
 
     def _failure(self, entry: Entry, error: BaseException, stop: "_Stop", result: builds.Result | None, began: float, commit: str,
                  print_: str, identity: str, log_path: Path, writing: Path | None, mac: bool = False) -> bool:

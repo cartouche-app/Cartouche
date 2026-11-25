@@ -18,14 +18,21 @@ from pathlib import Path
 MOUNT_LINE = re.compile(r"^//(?:(?P<user>[^@/]+)@)?(?P<host>[^/]+)/(?P<share>.+?) on (?P<point>/.+?) \(smbfs\b")
 
 
+def mount_text() -> str | None:
+    """What `mount` says of the disks and shares mounted now, on a Mac."""
+    if sys.platform != "darwin":
+        return None
+    try:
+        return subprocess.run(["mount"], capture_output=True, text=True, timeout=10).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
 def mounts(text: str | None = None) -> dict[str, str]:
     """Mount point -> smb:// address of each SMB share mounted now."""
     if text is None:
-        if sys.platform != "darwin":
-            return {}
-        try:
-            text = subprocess.run(["mount"], capture_output=True, text=True, timeout=10).stdout
-        except (OSError, subprocess.SubprocessError):
+        text = mount_text()
+        if text is None:
             return {}
     found = {}
     for line in text.splitlines():
