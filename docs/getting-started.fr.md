@@ -2,6 +2,8 @@
 
 *English: [getting-started.md](getting-started.md)*
 
+La documentation pour les joueurs donne les mêmes étapes avec chaque écran, en français, anglais, espagnol et allemand : <https://docs.cartouche.cloud/fr/start/install/>.
+
 De rien à votre premier jeu sur votre iPhone ou votre iPad, en quatre étapes. Cartouche ne fournit aucun jeu : vous construisez chacun des vôtres sur votre Mac, ou Cartouche Cloud le construit pour vous, à partir de votre propre copie, extraite de votre propre console. Dans Cartouche, le guide **Votre premier jeu** reprend ces étapes, et coche chacune toute seule une fois faite.
 
 ## Ce qu’il vous faut
