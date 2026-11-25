@@ -492,6 +492,10 @@ final class CartoucheTelemetry: ObservableObject {
         ]
         // What it is made of: never the Apple ID, only whether there is one.
         fields.merge(setup.facts.fields) { _, made in made }
+        // For the IPAs that sign in with an Apple ID, whether the app group
+        // the built-in SideStore keeps its database in is there, and for the
+        // one for SideStore, which store installed it: never a group's name.
+        fields.merge(Self.appGroupFacts().fields(for: CartoucheImportedSigning.mode).mapValues { .text($0) }) { _, group in group }
         // With the player's own certificate, what its signature gives:
         // never the team nor the profile.
         if let signature = CartoucheOwnSignature.current {
@@ -521,6 +525,22 @@ final class CartoucheTelemetry: ObservableObject {
             noted.checked = true
             noted.ended = .opened
         }
+    }
+
+    /// Cartouche's app group as it runs: the groups its signature carries
+    /// and those its profile allows, against the built-in SideStore's
+    /// (LCSharedUtils builtInSideStoreAppGroup), and the store that last
+    /// signed it, from its Info.plist.
+    private static func appGroupFacts() -> CartoucheAppGroupFacts {
+        let task = SecTaskCreateFromSelf(nil)
+        var signed: [String] = []
+        if let value = SecTaskCopyValueForEntitlement(task, CartoucheAppGroupFacts.groupsEntitlement as CFString, nil) {
+            signed = value.takeRetainedValue() as? [String] ?? []
+        }
+        let profile = CartoucheImportedSigning.ownProfile.flatMap { try? CartoucheSigningMaterial.profileContents($0) }
+        let allowed = (profile?["Entitlements"] as? [String: Any])?[CartoucheAppGroupFacts.groupsEntitlement] as? [String] ?? []
+        return CartoucheAppGroupFacts(reachable: LCSharedUtils.appGroupPath() != nil, own: LCSharedUtils.builtInSideStoreAppGroup(),
+                                      signed: signed, allowed: allowed, info: Bundle.main.infoDictionary ?? [:])
     }
 
     /// A new version of Cartouche, or a renewed signature, since last time,

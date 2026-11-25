@@ -49,15 +49,99 @@ enum CartoucheSigningMode: String, Equatable, Sendable {
 }
 
 extension CartoucheSigningMode {
-    /// Whether this copy is Cartouche's IPA for an Apple ID that another app
-    /// signed, a signing app on the iPhone: only the built-in SideStore and
-    /// the Cartouche Installer give Cartouche the built-in SideStore's app
-    /// group (LiveContainer's patches 0001 and 0002), without which the
-    /// Apple ID's sign-in stops at once (SideStore's missingAppGroup). The
-    /// IPA for the player's own certificate needs no app group: it is the
-    /// one to sign there.
+    /// Whether this copy is one of Cartouche's IPAs for an Apple ID without
+    /// its app group, which another app installed: only the built-in
+    /// SideStore and the Cartouche Installer give the IPA for an Apple ID
+    /// the built-in SideStore's app group (LiveContainer's patches 0001 and
+    /// 0002), and only the player's own SideStore gives the IPA for it its
+    /// own group (0019); without it, the Apple ID's sign-in stops at once
+    /// (SideStore's missingAppGroup). On 25 November 2026, both copies of
+    /// 0.16.0 installed from the IPA for SideStore had none, one of them
+    /// signed for a year, by a signing app. The IPA for the player's own
+    /// certificate needs no app group: it is the one to sign there.
     func isSignedElsewhere(hasAppGroup: Bool) -> Bool {
-        self == .account && !hasAppGroup
+        (self == .account || self == .sideStore) && !hasAppGroup
+    }
+
+    /// Whether this copy signs in with an Apple ID, and so needs its app
+    /// group: what app.opened measures of it (CartoucheAppGroupFacts).
+    var needsAppGroup: Bool { self == .account || self == .sideStore }
+}
+
+/// Whether Cartouche has the app group its built-in SideStore keeps its
+/// database in, and, without it, where it went; and which store installed
+/// Cartouche: what app.opened sends, never a group's name, a team nor a
+/// profile.
+struct CartoucheAppGroupFacts: Equatable, Sendable {
+    /// Where the app group stands.
+    enum State: String, Equatable, Sendable, CaseIterable {
+        /// iOS opens its container.
+        case works
+        /// The profile allows it, and the signature does not carry it.
+        case leftOut
+        /// Neither has it, and one of them has another SideStore's, such
+        /// as the group the player's own SideStore keeps its apps in.
+        case another
+        /// Neither has any SideStore's group.
+        case missing
+    }
+
+    /// The store whose installed-app type Cartouche's Info.plist declares,
+    /// as SideStore and AltStore add one to each app they sign
+    /// (InstalledApp.installedAppUTI): the last that signed it, the built-in
+    /// SideStore included.
+    enum Installer: String, Equatable, Sendable {
+        case sideStore = "sidestore"
+        case altStore = "altstore"
+        case other
+    }
+
+    /// LiveContainer+SideStore's app group, which every other SideStore's
+    /// begins with.
+    static let sideStoreGroup = "group.com.SideStore.SideStore"
+    static let groupsEntitlement = "com.apple.security.application-groups"
+
+    let state: State
+    let installer: Installer
+
+    /// REACHABLE: iOS opens the group's container (LCSharedUtils
+    /// appGroupPath). OWN: the built-in SideStore's group, without the
+    /// team (LCSharedUtils builtInSideStoreAppGroup). SIGNED and ALLOWED:
+    /// the groups of the signature and of the profile. INFO: Cartouche's
+    /// Info.plist.
+    init(reachable: Bool, own: String, signed: [String], allowed: [String], info: [String: Any]) {
+        let isOwn = { (group: String) in group == own || group.hasPrefix(own + ".") }
+        let isSideStores = { (group: String) in
+            group == Self.sideStoreGroup || group.hasPrefix(Self.sideStoreGroup + ".")
+        }
+        if reachable {
+            state = .works
+        } else if allowed.contains(where: isOwn) {
+            state = .leftOut
+        } else if (signed + allowed).contains(where: { isSideStores($0) && !isOwn($0) }) {
+            state = .another
+        } else {
+            state = .missing
+        }
+        let types = (info["UTExportedTypeDeclarations"] as? [[String: Any]] ?? [])
+            .compactMap { $0["UTTypeIdentifier"] as? String }
+        if types.contains(where: { $0.hasPrefix("io.sidestore.Installed.") }) {
+            installer = .sideStore
+        } else if types.contains(where: { $0.hasPrefix("io.altstore.Installed.") }) {
+            installer = .altStore
+        } else {
+            installer = .other
+        }
+    }
+
+    /// What app.opened sends for MODE: the group's state for a copy that
+    /// signs in with an Apple ID, and the installer for the IPA for the
+    /// player's own SideStore, which another store or app installed.
+    func fields(for mode: CartoucheSigningMode) -> [String: String] {
+        guard mode.needsAppGroup else { return [:] }
+        var fields = ["appGroup": state.rawValue]
+        if mode == .sideStore { fields["installedBy"] = installer.rawValue }
+        return fields
     }
 }
 
