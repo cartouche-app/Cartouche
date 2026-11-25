@@ -264,6 +264,22 @@ class NxnativePageTest(unittest.TestCase):
         line = rows(self.page(), "By game")[0]
         self.assertEqual((line["Sessions"], line["Drew no frame"]), ("3", "3"))
 
+    def test_a_game_drawn_with_vulkan_draws_from_its_frame_lines_and_times_nothing(self):
+        """From Cartouche's fifth reading of the log, a game drawn with
+        Vulkan counts its frames from its [vk] frame lines, which time
+        nothing (seedds/nxnative#2998): it drew, its frame figures show –."""
+        for phone in self.phones[:3]:
+            self.session(phone, game=SENTINELS, frames=9000, fps=None, targetFps=None, frameMs=None, gpuMs=None,
+                         stutters=None, shaderStallMsPerMinute=None, minutes=40.0, reader=5, end={"kind": "quit"})
+        self.run_page()
+        page = self.page()
+        line = rows(page, "By game")[0]
+        self.assertEqual((line["Sessions"], line["FPS median"], line["Frame p99 ms"], line["Stutters a minute"],
+                          line["Drew no frame"]), ("3", "–", "–", "–", "0"))
+        self.assertIn("its `[vk] frame` lines that drew, from Cartouche's reading 5 of the log on", page)
+        summary = (self.work / "summary.md").read_text(encoding="utf-8")
+        self.assertNotIn("Played long without a summary line", summary)
+
     def test_sessions_that_are_not_nxnatives_doing_are_set_apart(self):
         for phone in self.phones[:3]:
             self.session(phone)

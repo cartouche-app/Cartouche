@@ -92,7 +92,10 @@ SLOWEST_READER = 2
 # black screen: Super Mario Galaxy, 11 hours on 7 installs in November, none
 # with a summary line. It makes no result, rather than one that says the
 # game does not run, as the nxnative page and the dashboard say it
-# (UNCOUNTED_MINUTES in nxnative.py and telemetry/dashboard).
+# (UNCOUNTED_MINUTES in nxnative.py and telemetry/dashboard). Super Mario
+# Galaxy is drawn with Vulkan, which writes no [nvn] line: from Cartouche's
+# fifth reading of the log on, its [vk] frame lines count its frames
+# (CartoucheGameLog.swift), and its frame rate stays unknown.
 UNCOUNTED_MINUTES = 30
 
 # The status of a model's result:
