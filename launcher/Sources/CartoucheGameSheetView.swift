@@ -423,7 +423,10 @@ struct CartoucheGameSheetView: View {
             } else {
                 primaryButton(CartoucheText.importCopy, systemImage: "square.and.arrow.down", action: onImport)
                 if let onGuide {
-                    secondaryButton(CartoucheText.howToGetGame, systemImage: "questionmark.circle", action: onGuide)
+                    secondaryButton(CartoucheText.howToGetGame, systemImage: "questionmark.circle") {
+                        CartoucheOffer.howToGetGame.tapped(at: .sheet)
+                        onGuide()
+                    }
                 }
             }
         }

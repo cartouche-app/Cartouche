@@ -72,6 +72,7 @@ on:
       - "launcher/Sources/CartoucheMeasuredNote.swift"
       - "launcher/Sources/CartoucheNaming.swift"
       - "launcher/Sources/CartoucheNamingView.swift"
+      - "launcher/Sources/CartoucheOffers.swift"
       - "launcher/Sources/CartouchePlayTime.swift"
       - "launcher/Sources/CartouchePlayerInfo.swift"
       - "launcher/Sources/CartoucheProblemReport.swift"

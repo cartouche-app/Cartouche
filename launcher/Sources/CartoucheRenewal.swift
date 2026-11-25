@@ -195,10 +195,15 @@ enum CartoucheRenewal {
         await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
     }
 
-    /// Asks for the permission to warn, then schedules the warnings.
-    static func allowAlerts() async {
-        _ = try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
+    /// Asks for the permission to warn, then schedules the warnings; the
+    /// game measurements are told what the player answered, asked from
+    /// PLACE (CartoucheAlertsAsk).
+    static func allowAlerts(from place: CartoucheAlertsAsk) async {
+        let granted = (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])) ?? false
         scheduleWarnings()
+        await MainActor.run {
+            CartoucheTelemetry.shared.event(CartoucheAlertsAsk.event, fields: place.fields(granted: granted))
+        }
     }
 
     /// Asks for it once the player's first game is installed, when nothing
@@ -212,7 +217,7 @@ enum CartoucheRenewal {
         return
         #else
         guard await alertStatus() == .notDetermined else { return }
-        await allowAlerts()
+        await allowAlerts(from: .firstGame)
         #endif
     }
 

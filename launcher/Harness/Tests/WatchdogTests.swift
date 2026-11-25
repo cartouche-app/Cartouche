@@ -86,6 +86,23 @@ final class WatchdogTests: XCTestCase {
         #endif
     }
 
+    /// Its thread runs as urgently as the main thread it watches: at the
+    /// default urgency, a busy Mac of the CI's let it look once, then not
+    /// at all, while testTheMainThreadHeldCounts held the main thread
+    /// (run 45684262541).
+    func testTheWatchdogRunsAsUrgentlyAsTheMainThread() async throws {
+        XCTAssertEqual(HarnessWatchdog.urgency, .userInteractive)
+        let watchdog = HarnessWatchdog()
+        watchdog.start()
+        var waited = 0
+        while watchdog.urgencyItRanAs == nil, waited < 50 {
+            try await Task.sleep(for: .milliseconds(100))
+            waited += 1
+        }
+        _ = watchdog.stop()
+        XCTAssertEqual(watchdog.urgencyItRanAs, HarnessWatchdog.urgency)
+    }
+
     /// Once the main queue has answered, the time the watchdog spends
     /// reading the current step belongs to the harness.
     func testTheWatchdogsOwnStepReadDoesNotCount() async {

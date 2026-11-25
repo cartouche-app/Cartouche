@@ -610,7 +610,7 @@ struct CartoucheSystemView: View {
         case .notDetermined?:
             Button(CartoucheText.alertsTurnOn) {
                 Task {
-                    await CartoucheRenewal.allowAlerts()
+                    await CartoucheRenewal.allowAlerts(from: .system)
                     alertStatus = await CartoucheRenewal.alertStatus()
                 }
             }

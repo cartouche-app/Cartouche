@@ -439,9 +439,20 @@ struct HarnessTimings {
 /// waits, what the launcher was doing as the wait began and as it ended,
 /// and, from a fifth of a second into the wait, where the main thread is,
 /// ten times a second (HarnessWait).
+///
+/// Its thread runs as urgently as the main thread it watches. At the
+/// default urgency, a busy Mac of the CI's left it waiting through most of
+/// the second WatchdogTests holds the main thread: one look, at 0.37 s,
+/// then on the second try no question sent during the hold at all, which
+/// failed it twice in a row (run 45684262541, 25 November).
 final class HarnessWatchdog: @unchecked Sendable {
+    /// How urgently its thread runs.
+    static let urgency: QualityOfService = .userInteractive
+
     private let lock = NSLock()
     private var watching = false
+    /// How urgently its thread ran, once it began.
+    private var ranAs: QualityOfService?
     /// The wait that counted the most, and the one that waited the most for
     /// RunningBoard.
     private var longest = HarnessWait()
@@ -461,6 +472,9 @@ final class HarnessWatchdog: @unchecked Sendable {
         watching = true
         lock.unlock()
         let thread = Thread { [self] in
+            lock.lock()
+            ranAs = Thread.current.qualityOfService
+            lock.unlock()
             var last = "no step under way"
             while true {
                 lock.lock()
@@ -501,7 +515,15 @@ final class HarnessWatchdog: @unchecked Sendable {
             }
         }
         thread.name = "Harness watchdog"
+        thread.qualityOfService = Self.urgency
         thread.start()
+    }
+
+    /// How urgently its thread ran, once it began: nil before.
+    var urgencyItRanAs: QualityOfService? {
+        lock.lock()
+        defer { lock.unlock() }
+        return ranAs
     }
 
     /// The wait that counted the most, and the one that waited the most for
