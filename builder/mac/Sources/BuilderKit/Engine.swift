@@ -246,9 +246,14 @@ public final class Engine: @unchecked Sendable {
     }
 
     /// The answer of RESULT: the last line of its output that is a JSON object.
+    /// A command stopped without an answer, because the task that ran it was
+    /// cancelled, throws a CancellationError: its SIGTERM is no error of the
+    /// engine's, whose words the player would read ("exit 15", the Storage
+    /// page's measurement stopped as the page went away, 25 November).
     static func decode<T: Decodable>(_ type: T.Type, from result: RunResult) throws -> T {
         let lines = result.output.split(separator: 10)
         guard let last = lines.last(where: { $0.first == UInt8(ascii: "{") }) else {
+            if result.stopped { throw CancellationError() }
             let tail = result.tail()
             let exception = FailureDetails.exception(in: result.errorText) ?? FailureDetails.exception(in: result.text)
             throw EngineFailure(kind: result.timedOut ? "timeout" : "crashed", message: tail.isEmpty ? "exit \(result.status)" : tail,

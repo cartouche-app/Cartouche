@@ -24,6 +24,7 @@ final class RunTests: XCTestCase {
         XCTAssertEqual(result.text, "out")
         XCTAssertEqual(result.errorText, "err")
         XCTAssertFalse(result.timedOut)
+        XCTAssertFalse(result.stopped)
         XCTAssertFalse(result.succeeded)
         // Its input is empty: it never waits for what nobody will type.
         let reader = try await Run.program("/bin/cat")
@@ -56,6 +57,7 @@ final class RunTests: XCTestCase {
         let asked = Date()
         let result = try await Run.program("/bin/sleep", ["30"], timeout: 1)
         XCTAssertTrue(result.timedOut)
+        XCTAssertFalse(result.stopped)
         XCTAssertEqual(result.status, SIGTERM)
         XCTAssertLessThan(Date().timeIntervalSince(asked), 15)
     }
@@ -66,6 +68,22 @@ final class RunTests: XCTestCase {
         let asked = Date()
         running.cancel()
         let result = try await running.value
+        XCTAssertFalse(result.timedOut)
+        // Stopped by its task's cancellation, as a page's that went away.
+        XCTAssertTrue(result.stopped)
+        XCTAssertEqual(result.status, SIGTERM)
+        XCTAssertLessThan(Date().timeIntervalSince(asked), 15)
+    }
+
+    func testAProgramAskedForByACancelledTaskEndsAtOnce() async throws {
+        let running = Task { () -> RunResult in
+            while !Task.isCancelled { await Task.yield() }
+            return try await Run.program("/bin/sleep", ["30"])
+        }
+        let asked = Date()
+        running.cancel()
+        let result = try await running.value
+        XCTAssertTrue(result.stopped)
         XCTAssertFalse(result.timedOut)
         XCTAssertEqual(result.status, SIGTERM)
         XCTAssertLessThan(Date().timeIntervalSince(asked), 15)

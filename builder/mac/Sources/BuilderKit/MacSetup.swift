@@ -267,6 +267,10 @@ public final class MacSetup: ObservableObject {
                     return .failed("\(blocking.label) : \(blocking.fix)")
                 }
                 return .ready(tr("Downloaded, environment ready", "Téléchargé, environnement prêt", "Descargado, entorno listo", "Heruntergeladen, Umgebung bereit"))
+            } catch is CancellationError {
+                // Its page went away as it checked (SwiftUI cancels its
+                // .task): nxnative is as it was, and checked again next time.
+                return state(item)
             } catch {
                 return .failed(error.localizedDescription)
             }
