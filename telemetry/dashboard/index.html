@@ -1055,6 +1055,9 @@
             from: countBy(installed, originOf),
             fromKnown: installed.filter((event) => originOf(event) !== null).length,
             link: countBy(installed.filter((event) => originOf(event) === "mac"), (event) => text(event.fields.link)),
+            // A game of a NAS that the player's Mac read on its Ethernet and
+            // passed on through the cable (link relay, decision 162).
+            relayed: installed.filter((event) => originOf(event) !== "mac" && event.fields.link === "relay").length,
             // A copy from another games folder than the first, offered as the
             // first did not answer (folder, from the version that brings
             // several games folders).
@@ -1853,7 +1856,7 @@
                     const build = d < dayIndex.length * 0.4 ? builds[2] : d < dayIndex.length * 0.75 ? builds[1] : builds[0];
                     if (!phone.builds.includes(profile.id + build)) {
                         phone.builds.push(profile.id + build);
-                        add(phone, day, { kind: "event", name: "game.installed", game: profile.id, fields: { version: profile.version, nxnative: build, from: phone.storage === "folder" ? "file" : phone.builds.length % 4 === 3 ? "mac" : phone.cloud && phone.builds.length % 5 === 1 ? "cloud" : phone.storage, link: phone.builds.length % 4 === 3 ? (phone.builds.length % 8 === 3 ? "cable" : "network") : undefined, sizeMiB: Math.round(profile.peak * 3.4 + between(-400, 400)) } });
+                        add(phone, day, { kind: "event", name: "game.installed", game: profile.id, fields: { version: profile.version, nxnative: build, from: phone.storage === "folder" ? "file" : phone.builds.length % 4 === 3 ? "mac" : phone.cloud && phone.builds.length % 5 === 1 ? "cloud" : phone.storage, link: phone.builds.length % 4 === 3 ? (phone.builds.length % 8 === 3 ? "cable" : "network") : phone.storage === "smb" && phone.builds.length % 6 === 1 ? "relay" : undefined, sizeMiB: Math.round(profile.peak * 3.4 + between(-400, 400)) } });
                     }
                     const minutes = round(between(4, 70) * (rand() < 0.15 ? 2 : 1));
                     const strain = phone.device.startsWith("iPhone18") ? 0.96 : 1;
@@ -3251,6 +3254,7 @@
             card("D'où ils viennent", i.fromKnown ? "Ce que " + plural(i.fromKnown, "installation dit", "installations disent") + " de leur provenance, depuis la 0.15.0." : "Les versions de cette période ne le disent pas encore.",
                 bars(i.from.map((row) => ({ label: SOURCES[row.key] || row.key, value: row.count, figure: count(row.count), note: plural(row.installs, "iPhone", "iPhones"), tone: row.key === "cloud" ? "var(--s2)" : row.key === "mac" ? "var(--s3)" : "var(--s1)" })), { empty: "Aucune installation ne dit d'où elle vient." }),
                 i.link.length ? h("p", { class: "foot", text: "Depuis le Mac : " + i.link.map((row) => (LINKS[row.key] || row.key) + " " + count(row.count)).join(", ") + "." }) : null,
+                i.relayed ? h("p", { class: "foot", text: "Depuis le NAS par le Mac, sur son Ethernet puis par le câble : " + count(i.relayed) + "." }) : null,
                 i.otherFolder ? h("p", { class: "foot", text: "Copie d'un autre dossier de jeux que le premier : " + percent(i.otherFolder.share) + "." }) : null),
             i.versions.length ? card("Versions installées", null, bars(i.versions.map((row) => ({ label: row.key, value: row.count, figure: count(row.count) })))) : null,
             i.builds.length ? card("Builds nxnative installés", null, bars(i.builds.map((row) => ({ label: row.key, value: row.count, figure: count(row.count) })))) : null,

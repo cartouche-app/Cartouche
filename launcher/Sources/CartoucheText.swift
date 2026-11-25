@@ -522,11 +522,14 @@ enum CartoucheText {
 
     // MARK: How a game comes, and how fast
 
-    /// "By cable", "On the Wi-Fi, the Mac on 2.4\u{00A0}GHz".
+    /// "By cable", "By cable, through the Mac", "On the Wi-Fi, the Mac on
+    /// 2.4\u{00A0}GHz".
     static func transferWay(_ way: CartoucheTransferWay) -> String {
         switch way {
         case .cable:
             return s("work.transfer.cable", "By cable")
+        case .relayed:
+            return s("work.transfer.relayed", "By cable, through the Mac")
         case .tailnet:
             return s("work.transfer.tailnet", "Through Tailscale")
         case .network(let mac):

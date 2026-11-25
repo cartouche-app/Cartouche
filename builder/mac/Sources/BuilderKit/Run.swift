@@ -25,12 +25,16 @@ public struct RunResult: Sendable {
     public var output: Data
     public var errors: Data
     public var timedOut: Bool
+    /// It was stopped because the task that ran it was cancelled, a page's
+    /// that went away: what it said is not how it ends by itself.
+    public var stopped: Bool
 
-    public init(status: Int32, output: Data = Data(), errors: Data = Data(), timedOut: Bool = false) {
+    public init(status: Int32, output: Data = Data(), errors: Data = Data(), timedOut: Bool = false, stopped: Bool = false) {
         self.status = status
         self.output = output
         self.errors = errors
         self.timedOut = timedOut
+        self.stopped = stopped
     }
 
     public var succeeded: Bool { status == 0 && !timedOut }
@@ -286,6 +290,7 @@ private final class Collected: @unchecked Sendable {
     private var status: Int32 = 0
     private var reaped = false
     private var timedOut = false
+    private var stopped = false
     private var stopAsked = false
 
     func appendOutput(_ data: Data) {
@@ -304,7 +309,10 @@ private final class Collected: @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         self.pid = pid
-        if stopAsked { kill(pid, SIGTERM) }
+        if stopAsked {
+            stopped = true
+            kill(pid, SIGTERM)
+        }
     }
 
     /// The program ended with STATUS, and waitpid reaped it: its number is
@@ -323,13 +331,13 @@ private final class Collected: @unchecked Sendable {
         defer { lock.unlock() }
         stopAsked = true
         guard let pid, !reaped else { return }
-        if timedOut { self.timedOut = true }
+        if timedOut { self.timedOut = true } else { stopped = true }
         kill(pid, SIGTERM)
     }
 
     func result() -> RunResult {
         lock.lock()
         defer { lock.unlock() }
-        return RunResult(status: status, output: output, errors: errors, timedOut: timedOut)
+        return RunResult(status: status, output: output, errors: errors, timedOut: timedOut, stopped: stopped && !timedOut)
     }
 }

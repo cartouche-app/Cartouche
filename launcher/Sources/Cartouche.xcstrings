@@ -36976,6 +36976,35 @@
         }
       }
     },
+    "work.transfer.relayed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Per Kabel, über den Mac"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "By cable, through the Mac"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Por cable, a través del Mac"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Par câble, via le Mac"
+          }
+        }
+      }
+    },
     "work.transfer.tailnet" : {
       "extractionState" : "manual",
       "localizations" : {

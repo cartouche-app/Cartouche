@@ -39,8 +39,8 @@ struct CartoucheGameWork: Equatable {
     var outside = false
     /// When it started.
     var started = Date()
-    /// How the game comes, from the player's Mac (CartoucheTransferWay);
-    /// nil from another place.
+    /// How the game comes, from the player's Mac, or from a NAS through it
+    /// (CartoucheTransferWay); nil from another place.
     var way: CartoucheTransferWay? = nil
     /// Whether it comes from a server of the local network, a NAS, whose
     /// Wi-Fi may be the slow one; not a bucket nor Cartouche Cloud, which
@@ -86,7 +86,7 @@ struct CartoucheGameWork: Equatable {
     /// Wi-Fi with a warning for a Mac on its 2.4 GHz band.
     var transferSymbol: String {
         switch way {
-        case .cable: return "cable.connector"
+        case .cable, .relayed: return "cable.connector"
         case .tailnet: return "point.3.connected.trianglepath.dotted"
         case .network(let mac):
             if mac?.isSlowBand == true { return "wifi.exclamationmark" }

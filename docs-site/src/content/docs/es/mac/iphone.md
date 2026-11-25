@@ -26,6 +26,7 @@ El Mac comparte dos carpetas, y nada más de él es accesible: **Juegos**, tu ca
 ## Por Wi-Fi, por cable o fuera de casa
 
 - **Por cable:** conecta el iPhone al Mac, y llega al Mac a través del cable, sin Wi-Fi. **Añadir tu Mac** lista ese Mac primero, **Por cable**. El iPhone debe confiar en el Mac, como pide el Finder una vez.
+- **Un juego de tu NAS, a través del Mac:** mientras el iPhone está conectado a un Mac que llega a tu NAS, tu servidor FTP o SFTP por Ethernet, un juego de tus carpetas de juegos que están allí pasa por el Mac y el cable, sin nada que configurar. La pantalla de la instalación dice entonces **Por cable, a través del Mac**. Por Wi-Fi, el Mac deja que el iPhone lea el NAS por sí mismo.
 - **En tu Wi-Fi:** el iPhone encuentra el Mac solo, o en la dirección en la que lo alcanzó por última vez, también a través de tu VPN. El Mac se mantiene activo mientras hay un iPhone conectado.
 - **Fuera de casa:** con Tailscale en el Mac y en el iPhone, con la misma cuenta, el iPhone llega al Mac a través de Tailscale. Un Mac nunca visto en tu Wi-Fi se empareja por su nombre o su dirección en Tailscale, en **Añadir tu Mac › Por su dirección**.
 

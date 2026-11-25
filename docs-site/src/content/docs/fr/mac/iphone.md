@@ -26,6 +26,7 @@ Le Mac partage deux dossiers, et rien d'autre de lui n'est accessible : **Jeux**
 ## En Wi-Fi, par câble, ou hors de chez vous
 
 - **Par câble :** branchez l'iPhone au Mac, et il atteint le Mac par le câble, sans Wi-Fi. **Ajouter votre Mac** montre ce Mac en premier, **Par câble**. L'iPhone doit faire confiance au Mac, comme le Finder le demande une fois.
+- **Un jeu de votre NAS, via le Mac :** tant que l'iPhone est branché à un Mac qui atteint votre NAS, votre serveur FTP ou SFTP en Ethernet, un jeu de vos dossiers des jeux qui s'y trouvent passe par le Mac et le câble, sans rien à régler. L'écran de l'installation dit alors **Par câble, via le Mac**. En Wi-Fi, le Mac laisse l'iPhone lire le NAS lui-même.
 - **Sur votre Wi-Fi :** l'iPhone trouve le Mac tout seul, ou à l'adresse où il l'a joint la dernière fois, par votre VPN aussi. Le Mac reste éveillé tant qu'un iPhone est connecté.
 - **Hors de chez vous :** avec Tailscale sur le Mac et sur l'iPhone, connectés au même compte, l'iPhone atteint le Mac par Tailscale. Un Mac jamais croisé sur votre Wi-Fi s'associe par son nom ou son adresse Tailscale, sous **Ajouter votre Mac › Par son adresse**.
 

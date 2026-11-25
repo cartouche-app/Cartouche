@@ -9,7 +9,9 @@
 //  and what to do when it is slow: plug the iPhone into the Mac, or put
 //  them on a 5 GHz Wi-Fi. A game of 20 GB takes over an hour on a 2.4 GHz
 //  Wi-Fi, a quarter of an hour on 5 GHz or through the cable (decision
-//  151). The Builder's iPhone page says the same of what it sends.
+//  151). The Builder's iPhone page says the same of what it sends. A game
+//  of a NAS the Mac passes on through the cable, read on its Ethernet,
+//  says so too (relayed, decision 162).
 //
 //  The speed is measured on the bytes read, over the last seconds
 //  (CartoucheTransferMeter): what the network gives, whatever the archive.
@@ -58,11 +60,13 @@ public struct CartoucheMacNetwork: Codable, Equatable, Hashable, Sendable {
 
 /// The way a game comes as it installs: from the Mac through the cable,
 /// through Tailscale, or on the local network, with what the Mac said of
-/// its side (nil from a Cartouche for Mac older than this).
+/// its side (nil from a Cartouche for Mac older than this); or from a NAS,
+/// which the Mac reads on its Ethernet and passes on through the cable.
 public enum CartoucheTransferWay: Equatable, Sendable {
     case cable
     case tailnet
     case network(mac: CartoucheMacNetwork?)
+    case relayed
 
     /// The way to a Mac CARTOUCHE reached through the cable, at an address
     /// of the tailnet or on the network ("cable", "tailnet", "network", as
@@ -92,11 +96,12 @@ public enum CartoucheTransferAdvice: Equatable, Sendable {
 
     /// The advice for a game coming WAY, from a server of the local network
     /// when LOCAL, SLOW as CartoucheTransferMeter says: none through the
-    /// cable, the fastest; the Mac on its 2.4 GHz band at once, before any
-    /// speed is measured; else only once it is slow. Nil for nothing to say.
+    /// cable, the fastest, the Mac's own or a NAS's it passes on; the Mac on
+    /// its 2.4 GHz band at once, before any speed is measured; else only
+    /// once it is slow. Nil for nothing to say.
     public static func of(way: CartoucheTransferWay?, local: Bool, slow: Bool) -> CartoucheTransferAdvice? {
         switch way {
-        case .cable:
+        case .cable, .relayed:
             return nil
         case .tailnet:
             return slow ? .slowTailnet : nil

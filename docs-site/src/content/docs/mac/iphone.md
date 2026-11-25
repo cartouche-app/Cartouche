@@ -26,6 +26,7 @@ The Mac shares two folders, and nothing else of it can be reached: **Games**, yo
 ## On Wi-Fi, by cable, or away from home
 
 - **By cable:** plug the iPhone into the Mac, and it reaches the Mac through the cable, with no Wi-Fi. **Add your Mac** lists that Mac first, **By cable**. The iPhone must trust the Mac, as the Finder asks once.
+- **A game of your NAS, through the Mac:** while the iPhone is plugged into a Mac that reaches your NAS, FTP or SFTP server on its Ethernet, a game of your games folders there comes through the Mac and the cable, with nothing to set. The install's screen then says **By cable, through the Mac**. On its Wi-Fi, the Mac lets the iPhone read the NAS itself.
 - **On your Wi-Fi:** the iPhone finds the Mac by itself, or at the address it last reached it at, through your VPN too. The Mac stays awake while an iPhone is connected.
 - **Away from home:** with Tailscale on the Mac and on the iPhone, signed in to the same account, the iPhone reaches the Mac through Tailscale. A Mac never met on your Wi-Fi pairs by its Tailscale name or address, under **Add your Mac › By its address**.
 

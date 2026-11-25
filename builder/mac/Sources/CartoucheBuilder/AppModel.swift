@@ -145,6 +145,7 @@ final class AppModel: ObservableObject {
     /// player's answer (ContentView).
     @Published var askUnbuilt: UnbuiltAsk?
     @Published private(set) var loadingStorage = false
+    private let storageRun = SharedRun<Void>()
     @Published private(set) var cleaning = false
     @Published private(set) var bundling = false
     @Published private(set) var bundleMessage = ""
@@ -435,14 +436,22 @@ final class AppModel: ObservableObject {
         Task { await refreshLibrary(update: false, quietly: true) }
     }
 
+    /// Measures what the builder keeps, once at a time: a call while it
+    /// measures waits for that measurement. The Storage page asks from its
+    /// .task, which SwiftUI cancels when the page goes away or is made anew:
+    /// the measurement goes on all the same (SharedRun.swift), never stopped
+    /// half-way by the page, and its result shows when the page comes back.
     func loadStorage() async {
-        guard !sample, let engine, !loadingStorage else { return }
-        loadingStorage = true
-        defer { loadingStorage = false }
-        do {
-            storage = try await engine.storage()
-        } catch {
-            show(error, origin: "storage")
+        guard !sample, let engine else { return }
+        await storageRun.run { [weak self] in
+            guard let self else { return }
+            self.loadingStorage = true
+            defer { self.loadingStorage = false }
+            do {
+                self.storage = try await engine.storage()
+            } catch {
+                self.show(error, origin: "storage")
+            }
         }
     }
 
@@ -1478,6 +1487,8 @@ final class AppModel: ObservableObject {
     /// Shows ERROR above the page, and counts it by ORIGIN, what the app
     /// was doing, with its codes but never its words.
     func show(_ error: Error, origin: String, background: Bool = false) {
+        // A command stopped because what asked for it was cancelled: no error.
+        if error is CancellationError { return }
         // A full disk says which, and what is left on it, not Cocoa's words.
         banner = Banner(kind: .error, text: DiskSpace.words(for: error))
         telemetry.error(error, origin: origin, background: background)

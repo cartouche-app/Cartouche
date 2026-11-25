@@ -26,6 +26,7 @@ Der Mac teilt zwei Ordner, und nichts anderes von ihm ist erreichbar: **Spiele**
 ## Im WLAN, per Kabel oder unterwegs
 
 - **Per Kabel:** Schließ das iPhone an den Mac an, und es erreicht den Mac über das Kabel, ohne WLAN. **Deinen Mac hinzufügen** listet diesen Mac zuerst, **Per Kabel**. Das iPhone muss dem Mac vertrauen, wie es der Finder einmal fragt.
+- **Ein Spiel deines NAS, über den Mac:** Solange das iPhone an einem Mac hängt, der dein NAS, deinen FTP- oder SFTP-Server per Ethernet erreicht, kommt ein Spiel deiner Spieleordner dort über den Mac und das Kabel, ohne etwas einzustellen. Der Bildschirm der Installation zeigt dann **Per Kabel, über den Mac**. Im WLAN lässt der Mac das iPhone das NAS selbst lesen.
 - **In deinem WLAN:** Das iPhone findet den Mac von selbst oder unter der Adresse, unter der es ihn zuletzt erreicht hat, auch über dein VPN. Der Mac bleibt wach, solange ein iPhone verbunden ist.
 - **Unterwegs:** Mit Tailscale auf dem Mac und auf dem iPhone, mit demselben Konto angemeldet, erreicht das iPhone den Mac über Tailscale. Ein Mac, der nie in deinem WLAN war, wird über seinen Namen oder seine Adresse in Tailscale gekoppelt, unter **Deinen Mac hinzufügen › Über seine Adresse**.
 
