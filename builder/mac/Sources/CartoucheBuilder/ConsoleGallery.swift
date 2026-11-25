@@ -128,16 +128,20 @@ enum ConsoleGallery {
         return formatter.string(from: date) + ".zip"
     }
 
-    /// The console with the gallery's games, speaking LANGUAGE ("fr" or "en"),
+    /// The console with the gallery's games, speaking LANGUAGE (en, fr, es or de),
     /// the saves of the sheet's game kept in step with a NAS's share: the
     /// newest copy came, or, NEWER, it waits for the game's update, version
     /// 1.2.0 of the game having written it and this Mac's app being 1.0.0.
+    /// The covers of the console's games are in memory before each page:
+    /// every game's, which the French gallery's console library shows,
+    /// leave the home's out of the cover store's memory, and the next
+    /// language's home showed Cartouche's own drawings, or its covers half
+    /// faded in, as its first page did (English, 25 November).
     static func prepare(language: String, newer: Bool = false, firstGame: Bool = false) {
-        if let covers = makeGames() {
-            let deadline = Date().addingTimeInterval(60)
-            while !covers.loaded && Date() < deadline {
-                RunLoop.main.run(until: Date().addingTimeInterval(0.05))
-            }
+        let covers = makeGames() ?? loadCovers()
+        let deadline = Date().addingTimeInterval(60)
+        while !covers.loaded && Date() < deadline {
+            RunLoop.main.run(until: Date().addingTimeInterval(0.05))
         }
         show(language: language, newer: newer, firstGame: firstGame)
     }
@@ -163,7 +167,7 @@ enum ConsoleGallery {
     /// them yet when FIRSTGAME, its card on the home, and done otherwise.
     private static func show(language: String, newer: Bool, firstGame: Bool) {
         let console = CartoucheMacConsole.shared
-        let nas = language == "fr" ? "le NAS" : "the NAS"
+        let nas = named(language, "the NAS", "le NAS", "el NAS", "dem NAS")
         console.show(games: apps, kept: kept, keptIn: nas)
         let saves = newer ? CartoucheMacGameSaves(lastSync: copies[0].date, newer: "1.2.0", game: "1.0.0")
                           : CartoucheMacGameSaves(lastSync: copies[0].date, fetched: copies[1].date)
@@ -179,12 +183,13 @@ enum ConsoleGallery {
         // to install; and the other one the iPhone reads, on the Google
         // Drive, with another Mac's app too.
         console.showIPhoneGames(CartoucheMacGamesFolder(connection: CartoucheMacConsole.galleryNAS,
-                                                        path: language == "fr" ? "Cartouche/Jeux" : "Cartouche/Games",
+                                                        path: "Cartouche/" + named(language, "Games", "Jeux", "Juegos", "Spiele"),
                                                         state: .sending(game: "Mario Kart World", packing: false, done: 1_288_490_188,
                                                                         total: 2_915_000_000, index: 1, count: 2),
                                                         offers: 1,
                                                         others: [.init(connection: CartoucheMacConsole.galleryDrive,
-                                                                       path: language == "fr" ? "Jeux" : "Games", offers: 1)]))
+                                                                       path: named(language, "Games", "Jeux", "Juegos", "Spiele"),
+                                                                       offers: 1)]))
         // System › Game measurements: on, reports sent, the last one a
         // session of the sheet's game; a server, which the console never
         // reaches itself.
@@ -212,9 +217,26 @@ enum ConsoleGallery {
         + #""stutters":{"count":3,"perMinute":0.07,"shaders":2,"textures":0,"other":1},"memory":{"peakMiB":5210,"exactPeak":false},"#
         + #""end":{"kind":"quit"}}"#
 
+    /// WORDS in LANGUAGE: English, French, Spanish or German.
+    private static func named(_ language: String, _ english: String, _ french: String, _ spanish: String,
+                              _ german: String) -> String {
+        ["fr": french, "es": spanish, "de": german][language] ?? english
+    }
+
     /// Whether the covers are loaded, as the task loading them says.
     private final class Covers {
         var loaded = false
+    }
+
+    /// The covers and backdrops of the console's games, loading into the
+    /// cover store's memory again, from its folder on disk.
+    private static func loadCovers() -> Covers {
+        let covers = Covers()
+        Task { @MainActor in
+            await CartoucheMacConsole.shared.loadCovers(everyGame: false)
+            covers.loaded = true
+        }
+        return covers
     }
 
     /// The games' apps, made once, shown by the console, their covers
