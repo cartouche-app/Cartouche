@@ -142,11 +142,16 @@ final class ConsoleSettingsTests: XCTestCase {
         XCTAssertEqual(kept.string(forKey: "cartouche.languageSource"), "iPhone")
     }
 
-    func testTheConsoleNamesLanguagesAndWritesNumbersInTheLanguageItSpeaks() {
+    func testTheConsoleNamesLanguagesAndWritesNumbersInTheLanguageItSpeaks() throws {
         let console = CartoucheMacConsole.shared
         let spoken = console.language
         defer { console.speak(spoken, from: nil) }
-        let yesterday = Date().addingTimeInterval(-26 * 3_600)
+        // The start of yesterday, on the Mac's calendar as lastPlayed reads
+        // it: at least 24 hours ago, and on the day before, whatever the
+        // hour. Twenty-six hours ago was the day before that from midnight
+        // to 2 a.m., "avant-hier" in the full pass of 25 November at 00:02.
+        let calendar = Calendar.autoupdatingCurrent
+        let yesterday = try XCTUnwrap(calendar.date(byAdding: .day, value: -1, to: calendar.startOfDay(for: Date())))
         // In French, whatever the Mac's language: the words of the tests'
         // bundle are English, the numbers and the names French.
         console.speak("fr", from: nil)
