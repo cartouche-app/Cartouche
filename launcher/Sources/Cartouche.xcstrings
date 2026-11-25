@@ -17488,6 +17488,64 @@
         }
       }
     },
+    "setup.banner.nightly.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Damit sich Cartouche erneuert, auch wenn du es eine Woche geschlossen lässt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "So that Cartouche renews itself, even if you leave it closed for a week."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Para que Cartouche se renueve aunque lo dejes cerrado una semana."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pour que Cartouche se renouvelle même si vous le laissez fermé une semaine."
+          }
+        }
+      }
+    },
+    "setup.banner.nightly.hide" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Erinnerung ausblenden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide this reminder"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar este recordatorio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masquer ce rappel"
+          }
+        }
+      }
+    },
     "setup.banner.renewal" : {
       "extractionState" : "manual",
       "localizations" : {
