@@ -7,7 +7,7 @@ sidebar:
 
 **Console**, arriba en la ventana o <kbd>⌘</kbd><kbd>1</kbd>, muestra la consola de Cartouche, como en el iPhone: tus juegos compilados para este Mac, con sus portadas, el juego seleccionado con **Jugar**, y su ficha al lado.
 
-![La consola de Cartouche en el Mac](../../../../assets/screens/mac-console.webp)
+![La consola de Cartouche en el Mac](../../../../assets/screens/es-mac-console.webp)
 
 ## Jugar en el Mac
 
@@ -41,6 +41,6 @@ La copia en este Mac de un juego que guarda tu NAS queda fuera de Time Machine: 
 
 Tus iPhone emparejados y el Mac mantienen las mismas conexiones a tu almacenamiento, contraseñas incluidas: una carpeta compartida, un bucket S3, un servidor FTP o SFTP o tu Google Drive añadidos en uno llegan al otro. La carpeta de juegos y la carpeta de partidas guardadas que eliges en cualquiera de ellos las conservan los dos.
 
-![La página Almacenamiento de la consola en el Mac](../../../../assets/screens/mac-console-storage.webp)
+![La página Almacenamiento de la consola en el Mac](../../../../assets/screens/es-mac-console-storage.webp)
 
 Cuando la carpeta de juegos elegida en el iPhone está en una de tus conexiones, el Builder le envía cada juego que compila, uno a uno, para que tu iPhone los encuentre aunque el Mac esté en reposo.

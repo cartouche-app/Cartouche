@@ -7,7 +7,7 @@ sidebar:
 
 **Console**, en haut de la fenêtre ou <kbd>⌘</kbd><kbd>1</kbd>, affiche la console de Cartouche, comme sur l'iPhone : vos jeux construits pour ce Mac, avec leurs jaquettes, le jeu en focus avec **Jouer**, et sa fiche à côté.
 
-![La console de Cartouche sur le Mac](../../../../assets/screens/mac-console.webp)
+![La console de Cartouche sur le Mac](../../../../assets/screens/fr-mac-console.webp)
 
 ## Jouer sur le Mac
 
@@ -41,6 +41,6 @@ La copie, sur ce Mac, d'un jeu que garde votre NAS reste hors de Time Machine : 
 
 Vos iPhone associés et le Mac gardent les mêmes connexions à votre stockage, mots de passe compris : un dossier partagé, un bucket S3, un serveur FTP ou SFTP ou votre Google Drive ajouté sur l'un arrive sur l'autre. Le dossier des jeux et le dossier des sauvegardes choisis sur l'un sont gardés par les deux.
 
-![La page Stockage de la console sur le Mac](../../../../assets/screens/mac-console-storage.webp)
+![La page Stockage de la console sur le Mac](../../../../assets/screens/fr-mac-console-storage.webp)
 
 Quand le dossier des jeux choisi sur l'iPhone est sur l'une de vos connexions, le Builder y envoie chaque jeu qu'il construit, un à la fois, pour que votre iPhone les trouve même quand le Mac dort.

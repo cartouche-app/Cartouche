@@ -50,7 +50,7 @@
 
 /* Screens of the app, found by their file's name: an iPhone's with the
    round corners of its screen, an iPad's, a Mac's window as macOS draws it
-   (an iPhone's and an iPad's whatever their language's prefix).
+   (whatever their language's prefix).
    Never wider than the column, and an iPhone's never taller than a screen. */
 .sl-markdown-content p:has(> img:only-child) {
 	text-align: center;
@@ -58,6 +58,9 @@
 .sl-markdown-content img[src*='iphone-'],
 .sl-markdown-content img[src*='ipad-'],
 .sl-markdown-content img[src*='/mac-'],
+.sl-markdown-content img[src*='/fr-mac-'],
+.sl-markdown-content img[src*='/es-mac-'],
+.sl-markdown-content img[src*='/de-mac-'],
 .sl-markdown-content img[src*='/installer-'] {
 	display: inline-block;
 	height: auto;
@@ -72,6 +75,9 @@
 	border-radius: 1rem;
 }
 .sl-markdown-content img[src*='/mac-'],
+.sl-markdown-content img[src*='/fr-mac-'],
+.sl-markdown-content img[src*='/es-mac-'],
+.sl-markdown-content img[src*='/de-mac-'],
 .sl-markdown-content img[src*='/installer-'] {
 	border-radius: 0.7rem;
 }
