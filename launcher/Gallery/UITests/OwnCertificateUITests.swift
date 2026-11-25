@@ -35,6 +35,7 @@ extension Words {
     static let offerOnComputer = "You have version %@. Install the new one from the Cartouche Installer" // updates.offer.onComputer
     static let signedElsewhereStep = "Sign the IPA for your own certificate" // signing.elsewhere.title
     static let signedElsewhere = "A signing app signed the IPA of Cartouche made for an Apple ID" // signing.elsewhere
+    static let signedElsewhereSideStore = "The IPA of Cartouche made for SideStore was installed without the app group" // signing.elsewhere.sideStore
     static let downloadVersion = "Download Cartouche %@"    // system.updates.download
     static let profileFile = "This file is a profile (.mobileprovision), not the certificate" // signing.profileFile
     static let wrongPasswordOnIPhone = "This password does not open this certificate. Type the one that came with the .p12, which your signing app asked for too" // signing.wrongPasswordOnIPhone
@@ -191,6 +192,49 @@ final class OwnCertificateUITests: ConsoleTestCase {
                "The setup does not offer the IPA for the player's own certificate", in: app)
         expect(!app.buttons[Words.signIn].exists, "The setup asks for an Apple ID this IPA cannot sign in with", in: app)
         expect(!app.buttons[Words.importCertificate].exists, "The setup asks for a certificate this IPA cannot use", in: app)
+        back(from: Words.setup, in: app)
+        tap(app.buttons[Words.done], "Done of the System page", in: app)
+        expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// The IPA for the player's own SideStore, installed without its app
+    /// group, as both copies of 0.16.0 installed from it were on 25
+    /// November 2026: it cannot sign in either, and its setup asked for the
+    /// Apple ID all the same. The guide and the setup offer the IPA for the
+    /// player's own certificate, in words of the IPA for SideStore, and ask
+    /// for no Apple ID.
+    @MainActor
+    func testTheIPAForSideStoreWithoutItsAppGroupOffersTheIPAForTheOwnCertificate() {
+        var launch = Launch(setupDone: false, owned: [], work: "signed-elsewhere")
+        launch.signing = "sidestore"
+        let app = launchGallery(launch)
+        let guide = app.navigationBars[Words.guide]
+        expect(guide.waitForExistence(timeout: Self.firstLaunch), "The guide did not open by itself on the first launch", in: app)
+        // The gallery's version is 0.3.0 (project.yml).
+        let download = String(format: Words.downloadVersion, "0.3.0")
+        expect(app.buttons[download].waitForExistence(timeout: 10),
+               "The guide's first step does not offer the IPA for the player's own certificate", in: app)
+        expect(element(beginningWith: Words.signedElsewhereSideStore, in: app).exists,
+               "The guide's first step does not say why the IPA for SideStore cannot sign in", in: app)
+        expect(!element(beginningWith: Words.signedElsewhere, in: app).exists,
+               "The guide speaks of the IPA for an Apple ID to the IPA for SideStore", in: app)
+        for step in [Words.vpnStep, Words.accountStep, Words.certificateStep] {
+            expect(!element(labelled: step, in: app).exists, "The guide shows \(step), which this IPA cannot take", in: app)
+        }
+
+        tap(guide.buttons[Words.done], "Done of the guide", in: app)
+        expect(waitForGone(guide), "Done did not close the guide", in: app)
+        expect(waitUntil(10) { isOnConsole(app) }, "The console did not come back once the guide closed", in: app)
+        tap(app.buttons[Words.system], "System in the dock", in: app)
+        expect(app.navigationBars[Words.system].waitForExistence(timeout: 15), "The System page did not open", in: app)
+        let row = element(in: app.buttons, beginningWith: Words.setup)
+        scrollTo(row, "Setup on the System page", in: app)
+        tap(row, "Setup on the System page", in: app)
+        expect(app.navigationBars[Words.setup].waitForExistence(timeout: 15), "Setup did not open", in: app)
+        expect(app.buttons[download].waitForExistence(timeout: 10),
+               "The setup does not offer the IPA for the player's own certificate", in: app)
+        expect(!app.buttons[Words.signIn].exists, "The setup asks for an Apple ID this IPA cannot sign in with", in: app)
         back(from: Words.setup, in: app)
         tap(app.buttons[Words.done], "Done of the System page", in: app)
         expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)

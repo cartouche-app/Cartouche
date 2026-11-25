@@ -204,6 +204,31 @@ class BrandTreeTest(unittest.TestCase):
         self.brand()
         self.assertEqual((self.root / "LiveContainer/New.swift").read_text(), 'let s = "cartouche"\n')
 
+    def test_cartouches_own_sources_are_left_alone(self):
+        # prepare.sh puts them in LiveContainer's folders before branding.
+        # In 0.16.0 the scheme of the player's own SideStore became the
+        # built-in SideStore's, and Cartouche asked itself for the pairing
+        # file; the signing mode sent "sidestore.cartouche".
+        own = {
+            "LiveContainerSwiftUI/Cartouche/CartoucheSideStoreLink.swift": 'static let storeScheme = "sidestore"\n',
+            "LiveContainerSwiftUI/Cartouche/CartoucheOwnSignature.swift": 'case sideStore = "sidestore"\n',
+            "SideStoreSupport/Cartouche/Bridge.m": 'NSString *s = @"livecontainer://";\n',
+            "LiveProcess/Cartouche/Support.swift": 'let id = "com.kdt.livecontainer"\n',
+            "LiveContainer/Tweaks/Cartouche/PlayTime.m": 'NSString *s = @"sidestore://";\n',
+        }
+        for relative, text in own.items():
+            path = self.root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text)
+        # A file of LiveContainer's own whose name only begins the same is
+        # LiveContainer's, and branded.
+        (self.root / "LiveContainerSwiftUI/CartoucheLike.swift").write_text('let s = "livecontainer"\n')
+        self.brand()
+        for relative, text in own.items():
+            with self.subTest(relative=relative):
+                self.assertEqual((self.root / relative).read_text(), text)
+        self.assertEqual((self.root / "LiveContainerSwiftUI/CartoucheLike.swift").read_text(), 'let s = "cartouche"\n')
+
     def test_release_tooling_and_other_files_are_left_alone(self):
         (self.root / ".github").mkdir()
         (self.root / ".github/build_github.sh").write_text("sidestore-com.kdt.livecontainer\n")
