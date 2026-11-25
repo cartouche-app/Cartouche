@@ -43,6 +43,19 @@ SOURCE_SUFFIXES = frozenset({
 })
 # LiveContainer's own release tooling, not part of the app.
 SKIPPED_DIRS = frozenset({".git", ".github"})
+# Cartouche's own sources, which app/scripts/prepare.sh puts in LiveContainer's
+# folders before it brands them: they are Cartouche's already, and name the
+# other apps on purpose. The scheme of the player's own SideStore,
+# "sidestore", which Cartouche installed from its source for SideStore asks
+# for its pairing file (CartoucheSideStoreLink.swift), became Cartouche's
+# built-in SideStore's, "sidestore.cartouche", in 0.16.0: the link came back
+# to Cartouche itself.
+CARTOUCHE_DIRS = (
+    "LiveContainerSwiftUI/Cartouche/",
+    "SideStoreSupport/Cartouche/",
+    "LiveProcess/Cartouche/",
+    "LiveContainer/Tweaks/Cartouche/",
+)
 # Written at the root of a tree once it is branded, so that a second run only checks.
 MARKER = ".cartouche-branded"
 
@@ -277,6 +290,8 @@ def source_files(root: Path) -> Iterable[tuple[str, Path]]:
     for path in sorted(root.rglob("*")):
         relative = path.relative_to(root)
         if relative.parts and relative.parts[0] in SKIPPED_DIRS:
+            continue
+        if relative.as_posix().startswith(CARTOUCHE_DIRS):
             continue
         if path.is_file() and not path.is_symlink() and path.suffix in SOURCE_SUFFIXES:
             yield relative.as_posix(), path

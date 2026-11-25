@@ -301,6 +301,8 @@ final class CartoucheTelemetry: ObservableObject {
         let gameVersion: String?
         let nxnative: String?
         let nxnativeChanged: Bool?
+        /// The shader chain of its commit.
+        let chain: String?
         /// On a GPU without BC textures, whether the build converts them.
         let bcTextures: String?
         let settings: [String: String]
@@ -347,7 +349,8 @@ final class CartoucheTelemetry: ObservableObject {
                 let report = CartoucheSessionReport(
                     id: Self.newNumber(), session: job.session, seq: nextSeq(), context: context(limitMiB: sessionLimit),
                     game: job.game, gameVersion: job.gameVersion, nxnative: job.nxnative, nxnativeChanged: job.nxnativeChanged,
-                    bcTextures: job.bcTextures, settings: job.settings, minutes: CartoucheGameLogReader.rounded(job.seconds / 60, 1), measures: measures,
+                    chain: job.chain, bcTextures: job.bcTextures, settings: job.settings,
+                    minutes: CartoucheGameLogReader.rounded(job.seconds / 60, 1), measures: measures,
                     process: job.process)
                 enqueue(report, id: report.id)
             }
@@ -406,6 +409,7 @@ final class CartoucheTelemetry: ObservableObject {
                                     seconds: max(modified.timeIntervalSince(created), 0), game: titleId,
                                     gameVersion: build?.version, nxnative: build?.shortCommit,
                                     nxnativeChanged: build?.commit == nil ? nil : build?.isDirty,
+                                    chain: build?.shortChain,
                                     bcTextures: details?.bcTextures,
                                     settings: details?.settings ?? [:], process: process?.process,
                                     nearLimit: process?.nearLimit ?? false))
@@ -492,6 +496,10 @@ final class CartoucheTelemetry: ObservableObject {
         ]
         // What it is made of: never the Apple ID, only whether there is one.
         fields.merge(setup.facts.fields) { _, made in made }
+        // For the IPAs that sign in with an Apple ID, whether the app group
+        // the built-in SideStore keeps its database in is there, and for the
+        // one for SideStore, which store installed it: never a group's name.
+        fields.merge(Self.appGroupFacts().fields(for: CartoucheImportedSigning.mode).mapValues { .text($0) }) { _, group in group }
         // With the player's own certificate, what its signature gives:
         // never the team nor the profile.
         if let signature = CartoucheOwnSignature.current {
@@ -521,6 +529,22 @@ final class CartoucheTelemetry: ObservableObject {
             noted.checked = true
             noted.ended = .opened
         }
+    }
+
+    /// Cartouche's app group as it runs: the groups its signature carries
+    /// and those its profile allows, against the built-in SideStore's
+    /// (LCSharedUtils builtInSideStoreAppGroup), and the store that last
+    /// signed it, from its Info.plist.
+    private static func appGroupFacts() -> CartoucheAppGroupFacts {
+        let task = SecTaskCreateFromSelf(nil)
+        var signed: [String] = []
+        if let value = SecTaskCopyValueForEntitlement(task, CartoucheAppGroupFacts.groupsEntitlement as CFString, nil) {
+            signed = value.takeRetainedValue() as? [String] ?? []
+        }
+        let profile = CartoucheImportedSigning.ownProfile.flatMap { try? CartoucheSigningMaterial.profileContents($0) }
+        let allowed = (profile?["Entitlements"] as? [String: Any])?[CartoucheAppGroupFacts.groupsEntitlement] as? [String] ?? []
+        return CartoucheAppGroupFacts(reachable: LCSharedUtils.appGroupPath() != nil, own: LCSharedUtils.builtInSideStoreAppGroup(),
+                                      signed: signed, allowed: allowed, info: Bundle.main.infoDictionary ?? [:])
     }
 
     /// A new version of Cartouche, or a renewed signature, since last time,

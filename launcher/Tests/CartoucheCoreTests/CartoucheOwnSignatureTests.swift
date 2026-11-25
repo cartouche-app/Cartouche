@@ -69,6 +69,67 @@ final class CartoucheOwnSignatureTests: XCTestCase {
         }
     }
 
+    /// The IPA for the player's own SideStore signs in with an Apple ID too:
+    /// installed without its own group, as both copies of 0.16.0 installed
+    /// from it were on 25 November 2026, one by a signing app, its sign-in
+    /// stopped at once, after the setup had asked for the Apple ID.
+    func testTheIPAForSideStoreWithoutItsAppGroupIsSignedElsewhere() {
+        XCTAssertTrue(CartoucheSigningMode.sideStore.isSignedElsewhere(hasAppGroup: false))
+        XCTAssertFalse(CartoucheSigningMode.sideStore.isSignedElsewhere(hasAppGroup: true))
+        XCTAssertEqual([CartoucheSigningMode.account, .sideStore, .installer, .iPhone].map(\.needsAppGroup),
+                       [true, true, false, false])
+    }
+
+    // MARK: The app group, as app.opened measures it
+
+    private let ownGroup = "group.com.SideStore.SideStore.cartouche"
+    private let groups = CartoucheAppGroupFacts.groupsEntitlement
+
+    private func facts(reachable: Bool = false, own: String? = nil, signed: [String] = [], allowed: [String] = [],
+                       types: [String] = []) -> CartoucheAppGroupFacts {
+        let info: [String: Any] = ["UTExportedTypeDeclarations": types.map { ["UTTypeIdentifier": $0] }]
+        return CartoucheAppGroupFacts(reachable: reachable, own: own ?? ownGroup, signed: signed, allowed: allowed, info: info)
+    }
+
+    /// Where the group went when iOS does not open it: the profile has it,
+    /// another SideStore's took its place, as the player's own SideStore's
+    /// group would, or none at all, as a signing app's certificate gives.
+    func testWhereTheAppGroupStands() {
+        XCTAssertEqual(facts(reachable: true).state, .works)
+        XCTAssertEqual(facts(allowed: [ownGroup + "." + team]).state, .leftOut)
+        XCTAssertEqual(facts(signed: ["group.com.SideStore.SideStore." + team]).state, .another)
+        XCTAssertEqual(facts(allowed: ["group.com.SideStore.SideStore." + team]).state, .another)
+        XCTAssertEqual(facts(signed: ["group.com.example.other"]).state, .missing)
+        XCTAssertEqual(facts().state, .missing)
+        // For the IPA for an Apple ID, the built-in SideStore's group is
+        // LiveContainer+SideStore's, with the team that signing appends.
+        let base = CartoucheAppGroupFacts.sideStoreGroup
+        XCTAssertEqual(facts(own: base, allowed: [base + "." + team]).state, .leftOut)
+        XCTAssertEqual(facts(own: base, signed: ["group.com.example.other"]).state, .missing)
+    }
+
+    /// SideStore and AltStore declare a type of their own in each app they
+    /// install (InstalledApp.installedAppUTI); a signing app does not.
+    func testWhichStoreInstalledCartouche() {
+        XCTAssertEqual(facts(types: ["io.sidestore.Installed.io.github.example.cartouche." + team]).installer, .sideStore)
+        XCTAssertEqual(facts(types: ["io.altstore.Installed.io.github.example.cartouche"]).installer, .altStore)
+        XCTAssertEqual(facts(types: ["com.example.document"]).installer, .other)
+        XCTAssertEqual(facts().installer, .other)
+    }
+
+    /// app.opened sends the group's state for both IPAs for an Apple ID,
+    /// and the installer for the one for SideStore alone; nothing for the
+    /// player's own certificate. The names are the measurements', which no
+    /// build renames (app/scripts/brand.py).
+    func testWhatAppOpenedSendsOfTheAppGroup() {
+        let missing = facts(types: ["io.sidestore.Installed.io.github.example.cartouche"])
+        XCTAssertEqual(missing.fields(for: .sideStore), ["appGroup": "missing", "installedBy": "sidestore"])
+        XCTAssertEqual(facts(reachable: true).fields(for: .account), ["appGroup": "works"])
+        XCTAssertEqual(missing.fields(for: .installer), [:])
+        XCTAssertEqual(missing.fields(for: .iPhone), [:])
+        XCTAssertEqual(CartoucheAppGroupFacts.State.allCases.map(\.rawValue), ["works", "leftOut", "another", "missing"])
+    }
+
     func testIncreasedMemoryLimitCarriedLeftOutOrNotAllowed() {
         let all = CartoucheOwnSignature(signed: [memory: true], profile: [memory: true], team: team)
         XCTAssertEqual(all.increasedMemoryLimit, .granted)

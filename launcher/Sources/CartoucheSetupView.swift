@@ -152,7 +152,9 @@ struct CartoucheSetupView: View {
                         }
                     }
                 }
-                if sideStoreInstall { memoryStep }
+                // Not for the IPA for SideStore installed without its app
+                // group: never set up, the player installs another IPA.
+                if sideStoreInstall && !CartoucheImportedSigning.isSignedElsewhere { memoryStep }
                 if setup.usesImportedSigning, let signature = CartoucheOwnSignature.current {
                     CartoucheOwnSignatureBox(signature: signature)
                 }

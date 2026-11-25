@@ -733,6 +733,16 @@ enum LCSharedUtils {
         HarnessLC.appGroup
     }
 
+    /// The built-in SideStore's app group (patch livecontainer/0019): the
+    /// one the IPA for SideStore names in its Info.plist, else SideStore's.
+    static func builtInSideStoreAppGroup() -> String! {
+        let base = "group.com.SideStore.SideStore"
+        if let own = Bundle.main.object(forInfoDictionaryKey: "CartoucheAppGroup") as? String, own.hasPrefix(base + ".") {
+            return own
+        }
+        return base
+    }
+
     static func certificatePassword() -> String! {
         if let candidate = cartoucheSigningMaterial() { return candidate["password"] as? String }
         return UserDefaults.lcShared().object(forKey: "LCCertificatePassword") as? String

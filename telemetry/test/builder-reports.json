@@ -612,6 +612,7 @@
     {
       "audioUnderrunsPerMinute": 0,
       "cartouche": "0.2.1",
+      "chain": "844bf1a5ea8f",
       "cpu": {
         "percent": 310,
         "performanceCoresPercent": 70,

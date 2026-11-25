@@ -281,6 +281,8 @@ final class CartoucheMacSessions {
         let gameVersion: String?
         let nxnative: String?
         let nxnativeChanged: Bool?
+        /// The shader chain of its commit.
+        let chain: String?
         /// On a GPU without BC textures, whether the build converts them, as
         /// on the iPhone: a Mac's reads them, and says nothing of it.
         let bcTextures: String?
@@ -362,7 +364,8 @@ final class CartoucheMacSessions {
                     CartoucheSessionReport(
                         id: UUID().uuidString.lowercased(), session: job.session, seq: seq, context: context,
                         game: job.game, gameVersion: job.gameVersion, nxnative: job.nxnative, nxnativeChanged: job.nxnativeChanged,
-                        bcTextures: job.bcTextures, settings: job.settings, minutes: CartoucheGameLogReader.rounded(job.seconds / 60, 1), measures: measures)
+                        chain: job.chain, bcTextures: job.bcTextures, settings: job.settings,
+                        minutes: CartoucheGameLogReader.rounded(job.seconds / 60, 1), measures: measures)
                 }
             }
             save()
@@ -410,6 +413,7 @@ final class CartoucheMacSessions {
                                 seconds: max(modified.timeIntervalSince(created), 0), game: titleID,
                                 gameVersion: build?.version, nxnative: build?.shortCommit,
                                 nxnativeChanged: build?.commit == nil ? nil : build?.isDirty,
+                                chain: build?.shortChain,
                                 bcTextures: details?.bcTextures,
                                 settings: details?.settings ?? [:]))
             }

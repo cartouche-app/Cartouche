@@ -4,6 +4,7 @@
       "audioUnderrunsPerMinute": 0.2,
       "bcTextures": "converted",
       "cartouche": "0.10.0",
+      "chain": "844bf1a5ea8f",
       "cpu": {
         "percent": 230,
         "performanceCoresPercent": 85,
