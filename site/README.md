@@ -8,8 +8,8 @@
 | All games, with a controller connected | The console |
 | A game's sheet and its settings | A game's sheet |
 | The game behind the console, paused or resumed | During a game |
-| The System page | Behind the scenes |
-| Cartouche Cloud's page, on an iPhone linked to an account, past its credits | No Mac |
+| The System page, with the automation that renews Cartouche every night | Behind the scenes |
+| Cartouche Cloud's page, on an iPhone linked to an account, past its credits: each game's cover, and the phases of a build under way | No Mac |
 
 ## What it may show
 
