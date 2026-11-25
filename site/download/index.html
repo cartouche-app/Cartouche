@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Download Cartouche</title>
-<meta name="description" content="Download Cartouche: the Cartouche Installer for Mac and Windows, and Cartouche for Mac." data-en="Download Cartouche: the Cartouche Installer for Mac and Windows, and Cartouche for Mac." data-fr="Téléchargez Cartouche : l’Installeur Cartouche pour Mac et Windows, et Cartouche pour Mac." data-es="Descarga Cartouche: el Instalador de Cartouche para Mac y Windows, y Cartouche para Mac." data-de="Lade Cartouche: den Cartouche-Installer für Mac und Windows und Cartouche für Mac.">
+<meta name="description" content="Download Cartouche: the Cartouche Installer for Mac and Windows, Cartouche for Mac, and Cartouche’s source for your SideStore." data-en="Download Cartouche: the Cartouche Installer for Mac and Windows, Cartouche for Mac, and Cartouche’s source for your SideStore." data-fr="Téléchargez Cartouche : l’Installeur Cartouche pour Mac et Windows, Cartouche pour Mac, et la source de Cartouche pour votre SideStore." data-es="Descarga Cartouche: el Instalador de Cartouche para Mac y Windows, Cartouche para Mac, y la fuente de Cartouche para tu SideStore." data-de="Lade Cartouche: den Cartouche-Installer für Mac und Windows, Cartouche für Mac und die Quelle von Cartouche für deinen SideStore.">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#090A11">
 <meta name="referrer" content="no-referrer">
@@ -15,7 +15,7 @@
 <meta property="og:site_name" content="Cartouche">
 <meta property="og:url" content="https://cartouche.cloud/download/">
 <meta property="og:title" content="Download Cartouche">
-<meta property="og:description" content="The Cartouche Installer for Mac and Windows, and Cartouche for Mac.">
+<meta property="og:description" content="The Cartouche Installer for Mac and Windows, Cartouche for Mac, and Cartouche’s source for your SideStore.">
 <meta property="og:image" content="https://cartouche.cloud/social.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -39,7 +39,8 @@
 </script>
 <style>
     /* The site's look (../index.html), for one page: the newest file of each
-       of Cartouche's programs for a computer. A link to this page that names
+       of Cartouche's programs for a computer, and the source a player adds to
+       their own SideStore to install Cartouche with no computer (#sidestore). A link to this page that names
        one, #installer-mac, #installer-windows or #builder, downloads it at
        once; the publication gives every button its newest release
        (../tools/downloads.py). */
@@ -141,7 +142,7 @@
     .lede { margin-top: 22px; max-width: 38em; color: var(--ink-2); font-size: 1.08rem; }
 
     .files { list-style: none; display: grid; gap: 16px; margin: clamp(32px, 5vw, 52px) 0 0; padding: 0; }
-    @media (min-width: 900px) { .files { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    @media (min-width: 760px) { .files { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     .file {
         display: flex;
         flex-direction: column;
@@ -189,6 +190,7 @@
     .file__started[hidden] { display: none; }
     .file__started svg { width: 20px; height: 20px; flex: none; margin-top: 1px; color: var(--ready); }
     .file__first { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: .9rem; }
+    .file__source { display: block; margin-top: 14px; padding: 10px 14px; border-radius: 14px; background: rgba(255, 255, 255, .07); box-shadow: inset 0 0 0 1px var(--line); font: 600 .95rem/1.3 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: var(--ink); overflow-wrap: anywhere; user-select: all; }
 
     .after { margin-top: 30px; max-width: 46em; color: var(--ink-3); font-size: .95rem; }
     .after a, .foot a { color: var(--ink-2); }
@@ -210,6 +212,7 @@
         <symbol id="i-laptop" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="4.5" y="5" width="15" height="10.5" rx="1.6"/><path stroke-linecap="round" d="M2.5 19h19"/></g></symbol>
         <symbol id="i-desktop" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12.5" rx="1.8"/><path stroke-linecap="round" d="M9 20.5h6M12 16.5v4"/></g></symbol>
         <symbol id="i-hammer" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M4.6 19.4 12.4 11.6"/><rect x="9" y="6.4" width="12" height="5.2" rx="1.4" fill="currentColor" transform="rotate(45 15 9)"/></symbol>
+        <symbol id="i-import" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5M4.5 13.5v4A2.5 2.5 0 0 0 7 20h10a2.5 2.5 0 0 0 2.5-2.5v-4"/></symbol>
         <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path fill="none" stroke="#0B0C12" stroke-opacity=".85" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="m7.4 12.3 3.1 3.1 6.1-6.6"/></symbol>
     </defs>
 </svg>
@@ -229,7 +232,7 @@
 <main class="wrap">
     <p class="label"><span lang="fr">Téléchargements</span><span lang="en">Downloads</span><span lang="es">Descargas</span><span lang="de">Downloads</span></p>
     <h1><span lang="fr">Téléchargez Cartouche.</span><span lang="en">Download Cartouche.</span><span lang="es">Descarga Cartouche.</span><span lang="de">Lade Cartouche.</span></h1>
-    <p class="lede"><span lang="fr">L’Installeur pose Cartouche sur votre iPhone ou votre iPad depuis un Mac ou un PC, puis Cartouche se met à jour tout seul. Cartouche pour Mac construit vos jeux sur votre Mac, et vous les y fait jouer aussi.</span><span lang="en">The Installer puts Cartouche on your iPhone or iPad from a Mac or a PC, then Cartouche updates itself. Cartouche for Mac builds your games on your Mac, and plays them there too.</span><span lang="es">El Instalador pone Cartouche en tu iPhone o iPad desde un Mac o un PC, y luego Cartouche se actualiza solo. Cartouche para Mac compila tus juegos en tu Mac, y también los juega allí.</span><span lang="de">Der Installer bringt Cartouche von einem Mac oder PC aus auf dein iPhone oder iPad, danach aktualisiert sich Cartouche selbst. Cartouche für Mac erstellt deine Spiele auf deinem Mac und spielt sie auch dort.</span></p>
+    <p class="lede"><span lang="fr">L’Installeur pose Cartouche sur votre iPhone ou votre iPad depuis un Mac ou un PC, ou votre SideStore sans ordinateur, puis Cartouche se met à jour tout seul. Cartouche pour Mac construit vos jeux sur votre Mac, et vous les y fait jouer aussi.</span><span lang="en">The Installer puts Cartouche on your iPhone or iPad from a Mac or a PC, or your SideStore does with no computer, then Cartouche updates itself. Cartouche for Mac builds your games on your Mac, and plays them there too.</span><span lang="es">El Instalador pone Cartouche en tu iPhone o iPad desde un Mac o un PC, o tu SideStore sin ordenador, y luego Cartouche se actualiza solo. Cartouche para Mac compila tus juegos en tu Mac, y también los juega allí.</span><span lang="de">Der Installer bringt Cartouche von einem Mac oder PC aus auf dein iPhone oder iPad, oder dein SideStore ohne Computer, danach aktualisiert sich Cartouche selbst. Cartouche für Mac erstellt deine Spiele auf deinem Mac und spielt sie auch dort.</span></p>
 
     <ul class="files">
         <li class="file" id="installer-mac">
@@ -260,6 +263,16 @@
             <p class="file__first"><span lang="fr">La première fois, macOS ne peut pas le vérifier : Réglages Système › Confidentialité et sécurité › Ouvrir quand même. Ensuite, il se met à jour tout seul.</span><span lang="en">The first time, macOS cannot check it: System Settings › Privacy &amp; Security › Open Anyway. Then it updates itself.</span><span lang="es">La primera vez, macOS no puede comprobarlo: Ajustes del Sistema › Privacidad y seguridad › Abrir igualmente. Luego se actualiza solo.</span><span lang="de">Beim ersten Mal kann macOS es nicht prüfen: Systemeinstellungen › Datenschutz &amp; Sicherheit › Dennoch öffnen. Danach aktualisiert es sich selbst.</span></p>
             <div class="file__get">
                 <a class="btn" data-download="builder" data-label-fr="Télécharger Cartouche pour Mac" data-label-en="Download Cartouche for Mac" data-label-es="Descargar Cartouche para Mac" data-label-de="Cartouche für Mac laden" aria-label="Download Cartouche for Mac" href="https://github.com/cartouche-app/Cartouche/releases/download/builder-v0.2.0/Cartouche-Builder-0.2.0.dmg"><svg aria-hidden="true"><use href="#i-download"/></svg><span lang="fr">Télécharger</span><span lang="en">Download</span><span lang="es">Descargar</span><span lang="de">Laden</span></a>
+            </div>
+        </li>
+        <li class="file" id="sidestore">
+            <span class="tag-icon"><svg aria-hidden="true"><use href="#i-import"/></svg></span>
+            <h2><span lang="fr">Cartouche pour votre SideStore</span><span lang="en">Cartouche for your SideStore</span><span lang="es">Cartouche para tu SideStore</span><span lang="de">Cartouche für deinen SideStore</span></h2>
+            <p class="file__what"><span lang="fr">Déjà SideStore sur votre iPhone ou votre iPad ? Ajoutez-lui la source de Cartouche, puis installez Cartouche depuis elle, sans ordinateur, en choisissant Keep App Extensions (Use Main Profile). Il se met ensuite à jour tout seul.</span><span lang="en">Already have SideStore on your iPhone or iPad? Add Cartouche’s source to it, then install Cartouche from it, with no computer, choosing Keep App Extensions (Use Main Profile). It then updates itself.</span><span lang="es">¿Ya tienes SideStore en tu iPhone o iPad? Añádele la fuente de Cartouche, e instala Cartouche desde ella, sin ordenador, eligiendo Keep App Extensions (Use Main Profile). Luego se actualiza solo.</span><span lang="de">Du hast schon SideStore auf deinem iPhone oder iPad? Füge ihm die Quelle von Cartouche hinzu und installiere Cartouche daraus, ohne Computer, mit Keep App Extensions (Use Main Profile). Danach aktualisiert es sich selbst.</span></p>
+            <code class="file__source">https://source.cartouche.cloud</code>
+            <p class="file__first"><span lang="fr">Sa Mise en route demande le fichier de jumelage à SideStore et reprend son certificat quand vous vous connectez avec le même identifiant Apple, puis Cartouche se réinstalle une fois pour la mémoire augmentée.</span><span lang="en">Its setup asks SideStore for the pairing file and takes its certificate when you sign in with the same Apple ID, then Cartouche installs itself again, once, for Increased Memory Limit.</span><span lang="es">Su puesta a punto pide a SideStore el archivo de emparejamiento y toma su certificado cuando inicias sesión con el mismo ID de Apple, y luego Cartouche se vuelve a instalar una vez para la memoria ampliada.</span><span lang="de">Die Einrichtung holt sich bei SideStore die Kopplungsdatei und übernimmt sein Zertifikat, wenn du dich mit derselben Apple-ID anmeldest, dann installiert sich Cartouche einmal neu, für das erhöhte Speicherlimit.</span></p>
+            <div class="file__get">
+                <a class="btn" href="sidestore://source?url=https://source.cartouche.cloud" data-label-fr="Ajouter la source de Cartouche à SideStore" data-label-en="Add Cartouche’s source to SideStore" data-label-es="Añadir la fuente de Cartouche a SideStore" data-label-de="Die Quelle von Cartouche zu SideStore hinzufügen" aria-label="Add Cartouche’s source to SideStore"><svg aria-hidden="true"><use href="#i-import"/></svg><span lang="fr">Ajouter à SideStore</span><span lang="en">Add to SideStore</span><span lang="es">Añadir a SideStore</span><span lang="de">Zu SideStore hinzufügen</span></a>
             </div>
         </li>
     </ul>
@@ -308,11 +321,13 @@
     // ---------- The file a link names ----------
     // download/#builder, #installer-mac or #installer-windows: its download
     // starts at once, and the page stays, with its card and what to do next.
+    // download/#sidestore lights the card of the source for the player's own
+    // SideStore, whose button adds it there.
     var name = location.hash.slice(1);
     var card = /^[a-z-]+$/.test(name) ? document.getElementById(name) : null;
     var link = card && card.querySelector("a[data-download]");
+    if (card) card.classList.add("is-chosen");
     if (link) {
-        card.classList.add("is-chosen");
         var started = card.querySelector("[data-started]");
         if (started) started.hidden = false;
         location.href = link.href;

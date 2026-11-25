@@ -6,9 +6,12 @@ The page shows Cartouche with games of nxnative's list, their covers and
 artworks loaded from IGDB by the IDs of catalog/covers.json, as the app loads
 them; it carries no image of a game. Besides those images it loads nothing
 from another site, and it links only to Cartouche's repository, nxnative's,
-IGDB, Cartouche's Discord server and Cartouche Cloud's site: never to a game,
-a dump, an IPA, a catalog of games, keys or firmware, nor to another server of
-the project (docs/decisions.md, 40, amended by 129 and 138). It says what
+IGDB, Cartouche's Discord server, Cartouche Cloud's site, nxnative-nobc, the
+separate fork of nxnative that Cartouche for Mac builds from for an iPhone
+whose GPU reads no BC textures, and Cartouche's source for the player's own
+SideStore, which SideStore adds by its link: never to a game, a dump, an IPA,
+a catalog of games, keys or firmware, nor to another server of the project
+(docs/decisions.md, 40, amended by 129, 138 and 160). It says what
 Cartouche Cloud does for a player with no Mac, never its price. Its only
 downloads are the project's own programs for a computer, the Cartouche
 Installer and Cartouche for Mac, each a file of their releases marked for
@@ -60,9 +63,23 @@ DISCORD = "https://discord.gg/wG3DZjdAeF"
 # it.
 CLOUD = "https://build.cartouche.cloud/"
 
+# The source a player adds to their own SideStore to install Cartouche with
+# no computer (decisions 147 and 155), at the project's domain: the page
+# shows its address, and a button adds it to SideStore by SideStore's own link
+# (decision 160).
+SIDESTORE_SOURCE = "https://source.cartouche.cloud"
+ADD_TO_SIDESTORE = "sidestore://source?url=" + SIDESTORE_SOURCE
+
+# nxnative-nobc, the separate fork of nxnative by mianmuhammadse that Cartouche
+# for Mac builds from for an iPhone whose GPU reads no BC textures (decision
+# 150): its author asked that it be named as a separate fork, with a link to
+# its repository (decision 160).
+NOBC = "https://github.com/mianmuhammadse/nxnative-nobc"
+
 # Every absolute link the page may hold, whole: the repository and its pages,
 # the files above, the Discord server, nxnative, IGDB, which the page credits,
-# and Cartouche Cloud's site.
+# Cartouche Cloud's site, nxnative-nobc and the link that adds Cartouche's
+# source to SideStore.
 ALLOWED_LINKS = [
     re.compile(re.escape(REPOSITORY)),
     re.compile(re.escape(REPOSITORY) + r"/blob/main/[\w/.-]+\.md(?:#[\w-]+)?"),
@@ -72,6 +89,8 @@ ALLOWED_LINKS = [
     re.compile(r"https://github\.com/seedds/nxnative"),
     re.compile(r"https://www\.igdb\.com"),
     re.compile(re.escape(CLOUD) + r"(?:privacy)?"),
+    re.compile(re.escape(NOBC)),
+    re.compile(re.escape(ADD_TO_SIDESTORE)),
 ]
 
 # A price, in any currency the page could name: Cartouche Cloud's stays on its
@@ -450,6 +469,57 @@ class SiteTests(unittest.TestCase):
                 found = PRICE.search(words)
                 self.assertIsNone(found, f"{path.name} says a price: {found and words[max(0, found.start() - 40):found.end() + 40]!r}")
 
+    def test_the_source_for_the_players_own_sidestore(self) -> None:
+        # The install's second step says it to a player who has SideStore,
+        # with its address in the four languages and a button that adds it;
+        # what one needs and the FAQ lead there.
+        self.assertIn("sidestore", self.page.ids)
+        self.assertEqual(SIDESTORE_SOURCE, "https://source." + SITE_URL.split("//", 1)[1].rstrip("/"))
+        self.assertEqual([href for href in self.links() if href.startswith("sidestore:")], [ADD_TO_SIDESTORE])
+        step = self.text[self.text.index('id="sidestore"'):]
+        step = step[:step.index("</li>")]
+        for language in LANGUAGES:
+            said = re.search(rf'<span lang="{language}">(.*?)</span><span lang="|<span lang="{language}">(.*?)</span></p>', step, re.S)
+            self.assertIsNotNone(said, language)
+            self.assertIn(SIDESTORE_SOURCE, said.group(0), f"the step gives the source's address in {language}")
+            self.assertIn("Keep App Extensions (Use Main Profile)", said.group(0), f"the step says which choice to make in SideStore, in {language}")
+        self.assertIn(ADD_TO_SIDESTORE, step)
+        self.assertGreaterEqual(self.links().count("#sidestore"), 4 * 3, "what one needs and two answers of the FAQ lead to it, in each language")
+
+    def test_nxnative_nobc_as_a_separate_fork(self) -> None:
+        # Its author's condition: named as a separate fork of nxnative, by
+        # them, with a link to its repository, wherever the page links to it.
+        links = [href for href in self.links() if href.startswith(NOBC)]
+        self.assertEqual(links, [NOBC] * 4)
+        for sentence in (
+            "une fourche distincte de nxnative par mianmuhammadse",
+            "a separate fork of nxnative by mianmuhammadse",
+            "una bifurcación distinta de nxnative de mianmuhammadse",
+            "einem separaten Fork von nxnative von mianmuhammadse",
+        ):
+            self.assertIn(f'<a href="{NOBC}">nxnative-nobc</a>, {sentence}', self.text)
+
+    def test_the_filters_count_the_catalog(self) -> None:
+        # All games, On iPhone and On Mac count as the app's filters do
+        # (CartoucheLibraryView.Filter): On iPhone has the games nxnative
+        # plays there and those a sheet's result says play there; On Mac,
+        # those it plays on the Mac or on the iPhone.
+        games = json.loads((CATALOG / "nxnative.json").read_text(encoding="utf-8"))["games"]
+        playable = set()
+        for path in (CATALOG / "games").glob("*.json"):
+            sheet = json.loads(path.read_text(encoding="utf-8"))
+            if any(r.get("status") in ("playable", "playable-with-issues") for r in sheet.get("results", [])):
+                playable.add(sheet["titleId"])
+        expected = {
+            "Tous": len(games),
+            "Sur iPhone": sum(1 for g in games if g.get("status") == "iphone" or g["titleId"] in playable),
+            "Sur Mac": sum(1 for g in games if g.get("status") in ("mac", "iphone")),
+        }
+        for name, count in expected.items():
+            found = re.search(r't\("' + name + r'", [^)]*\) \+ " <b>(\d+)</b>', self.code)
+            self.assertIsNotNone(found, f"the filter {name}")
+            self.assertEqual(int(found.group(1)), count, f"{name}: the catalog has {count}")
+
     def test_the_page_credits_igdb_and_provides_no_game(self) -> None:
         for sentence in (
             "Les noms, les jaquettes et les illustrations des jeux appartiennent à leurs éditeurs ; ils viennent d’<a href=\"https://www.igdb.com\">IGDB</a>",
@@ -574,9 +644,17 @@ class DownloadPageTests(unittest.TestCase):
 
     def test_each_file_has_its_card_and_its_button(self) -> None:
         # The address names the card; the card's one button gives its file.
+        # Beside them, the card of the source for the player's own SideStore,
+        # whose button adds it there.
         cards = [attrs["id"] for tag, attrs in self.page.tags if tag == "li" and "file" in attrs.get("class", "").split()]
-        self.assertEqual(sorted(cards), sorted(DOWNLOADS))
-        for key in cards:
+        self.assertEqual(sorted(cards), sorted([*DOWNLOADS, "sidestore"]))
+        source = self.text[self.text.index('id="sidestore"'):]
+        source = source[:source.index("</li>")]
+        self.assertEqual(re.findall(r'\shref="([^"]*)"', source), ["#i-import", ADD_TO_SIDESTORE, "#i-import"])
+        self.assertIn(f'<code class="file__source">{SIDESTORE_SOURCE}</code>', source)
+        self.assertNotIn("data-download", source)
+        self.assertEqual(source.count("Keep App Extensions (Use Main Profile)"), 4)
+        for key in DOWNLOADS:
             card = self.text[self.text.index(f'id="{key}"'):]
             card = card[:card.index("</li>")]
             self.assertEqual(re.findall(r'\sdata-download="([^"]*)"', card), [key])
