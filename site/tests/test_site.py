@@ -520,7 +520,8 @@ class SiteTests(unittest.TestCase):
             prefix = "" if lang == "en" else lang + "/"
             self.assertTrue(path.startswith(prefix) and not re.match(r"(?:fr|es|de)/", path[len(prefix):]), f"{href} is not in {lang}")
             page = path[len(prefix):].rstrip("/") or "index"
-            self.assertTrue(any((pages / prefix / (page + ext)).is_file() for ext in (".md", ".mdx")), f"docs-site has no page for {href}")
+            files = [pages / prefix / (page + ext) for ext in (".md", ".mdx")] + [pages / prefix / page / ("index" + ext) for ext in (".md", ".mdx")]
+            self.assertTrue(any(path.is_file() for path in files), f"docs-site has no page for {href}")
 
     def test_the_filters_count_the_catalog(self) -> None:
         # All games, On iPhone and On Mac count as the app's filters do
