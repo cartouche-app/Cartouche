@@ -11,6 +11,10 @@
 //  times slower than on 5 GHz: the install's screen on the iPhone and the
 //  iPhone page here say so (decision 151).
 //
+//  The way this Mac reaches a server of the player's, a NAS, tells too
+//  whether it reads a game there for an iPhone plugged into it (route,
+//  BridgeRelay.swift): on its Ethernet only.
+//
 //  Never the network's name nor an address.
 //
 
@@ -30,6 +34,37 @@ enum BridgeNetwork {
         guard let path = connection.currentPath else { return nil }
         let interface = path.availableInterfaces.first
         return network(type: interface?.type, name: interface?.name, band: band)
+    }
+
+    /// How this Mac reaches HOST at PORT now, as a connection to it goes:
+    /// its Ethernet, its Wi-Fi with the band, or another way; nil when
+    /// nothing answers there within PATIENCE, in seconds. The connection
+    /// closes as soon as it is open, before a word is said on it.
+    static func route(to host: String, port: Int, patience: TimeInterval) async -> CartoucheMacNetwork? {
+        let host = host.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !host.isEmpty, (1 ... 65535).contains(port), let port = NWEndpoint.Port(rawValue: UInt16(port)) else { return nil }
+        let connection = NWConnection(host: NWEndpoint.Host(host), port: port, using: .tcp)
+        let queue = DispatchQueue(label: "io.github.clabeuhtegrite.cartouche-builder.route")
+        let once = Flag()
+        return await withCheckedContinuation { (continuation: CheckedContinuation<CartoucheMacNetwork?, Never>) in
+            // Answers once, whichever comes first, then closes the
+            // connection: on QUEUE alone, the connection's and the timer's.
+            let end: @Sendable (CartoucheMacNetwork?) -> Void = { network in
+                guard !once.isSet else { return }
+                once.set()
+                connection.cancel()
+                continuation.resume(returning: network)
+            }
+            connection.stateUpdateHandler = { state in
+                switch state {
+                case .ready: end(BridgeNetwork.of(connection))
+                case .failed, .waiting, .cancelled: end(nil)
+                default: break
+                }
+            }
+            connection.start(queue: queue)
+            queue.asyncAfter(deadline: .now() + patience) { end(nil) }
+        }
     }
 
     /// The network of a connection through an interface of TYPE named

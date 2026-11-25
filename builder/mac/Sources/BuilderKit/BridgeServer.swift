@@ -50,6 +50,12 @@
 //  the speed at which each iPhone reads a game, and how (sending), with
 //  the same advice when it is slow (decision 151).
 //
+//  To an iPhone plugged into it, the Mac also passes on a game of the
+//  iPhone's games folders on a NAS, which it reads there through the
+//  player's connection, while it reaches that NAS on its Ethernet
+//  (BridgeRelay.swift, decision 162); its info says so to a session of the
+//  cable (relays).
+//
 
 import CartoucheCore
 import Foundation
@@ -171,6 +177,13 @@ public final class BridgeServer: @unchecked Sendable {
     private var generation = 0
     private weak var _builds: BridgeBuildsSource?
     private weak var _connections: BridgeConnectionsSource?
+    private weak var _relay: BridgeRelaySource?
+    /// How this Mac reaches a server's host and port now, which decides
+    /// whether it passes on a game of the NAS there (BridgeRelay): a
+    /// connection to it, by default. The tests give their own.
+    var route: @Sendable (String, Int) async -> CartoucheMacNetwork? = { host, port in
+        await BridgeNetwork.route(to: host, port: port, patience: BridgeRelay.routePatience)
+    }
 
     /// USBMUXD: where usbmuxd listens, for the iPhones plugged in; nil
     /// for none. CABLE_PORT: where Cartouche listens on them.
@@ -245,6 +258,28 @@ public final class BridgeServer: @unchecked Sendable {
             _connections = newValue
             lock.unlock()
         }
+    }
+
+    /// What reads the player's connections for an iPhone plugged in, the
+    /// console: none, and the Mac's info says it passes nothing on.
+    public var relay: BridgeRelaySource? {
+        get {
+            lock.lock()
+            defer { lock.unlock() }
+            return _relay
+        }
+        set {
+            lock.lock()
+            _relay = newValue
+            lock.unlock()
+        }
+    }
+
+    /// The games folders the Mac keeps, as the app answers them
+    /// (BridgeConnectionsSource.bridgeFolders): none without it.
+    func keptFolders() async -> CartoucheChosenFolders? {
+        guard let source = connections else { return nil }
+        return await MainActor.run { source.bridgeFolders() }
     }
 
     /// The paired devices connected now, by ID.
@@ -493,10 +528,13 @@ public final class BridgeServer: @unchecked Sendable {
             }
         }
         changed()
-        let session = Session(server: self, peer: channel.peer, reads: reads)
+        let session = Session(server: self, peer: channel.peer, reads: reads, cable: cable)
+        // The files of a NAS it passes on to the iPhone, open until it ends.
+        let relayed = BridgeRelayFiles()
         let idle = Flag()
         watchIdle(idle, channel: channel)
         defer {
+            Task { await relayed.closeAll() }
             session.discardUploads()
             channel.close()
             idle.clear()
@@ -528,6 +566,10 @@ public final class BridgeServer: @unchecked Sendable {
             } else if request.op == .connections {
                 response = await answerConnections(request)
                 data = Data()
+            } else if request.op.isRelay {
+                (response, data) = await BridgeRelay.answer(request, cable: cable, source: relay,
+                                                            folders: { [weak self] in await self?.keptFolders() },
+                                                            route: route, files: relayed, reads: reads)
             } else {
                 (response, data) = session.handle(request, body: body)
             }
@@ -694,12 +736,16 @@ final class Session {
     let peer: String
     /// What it reads of the games folder, and how it reaches the Mac.
     let reads: BridgeReads
+    /// Whether it came through the cable: the Mac passes it on a game of a
+    /// NAS (BridgeRelay).
+    let cable: Bool
     private var uploads: [String: Upload] = [:]
 
-    init(server: BridgeServer, peer: String, reads: BridgeReads = BridgeReads()) {
+    init(server: BridgeServer, peer: String, reads: BridgeReads = BridgeReads(), cable: Bool = false) {
         self.server = server
         self.peer = peer
         self.reads = reads
+        self.cable = cable
     }
 
     func handle(_ request: CartoucheBridgeRequest, body: Data) -> (CartoucheBridgeResponse, Data) {
@@ -737,6 +783,9 @@ final class Session {
             let tailnet = server?.tailnetAddresses() ?? []
             response.tailscale = tailnet.isEmpty ? nil : tailnet
             response.network = reads.network()
+            // Through the cable alone, the games of a NAS: on the network,
+            // the iPhone reads the NAS itself.
+            response.relays = cable && server?.relay != nil ? true : nil
         case .list:
             let place = try resolve(request.path)
             guard let place else {
@@ -836,6 +885,9 @@ final class Session {
         case .connections:
             // The server asks the app (BridgeServer.answerConnections).
             throw CartoucheBridgeError(.notFound, "connections")
+        case .relayStat, .relayRead:
+            // The server reads the NAS (BridgeRelay.answer).
+            throw CartoucheBridgeError(.notFound, "relay")
         }
         return (response, Data())
     }

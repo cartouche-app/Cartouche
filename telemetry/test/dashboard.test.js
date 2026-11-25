@@ -1101,6 +1101,9 @@ test("each game installed says where it came from, and how its Mac was reached",
     eventOf(2, "game.installed", { from: "mac", link: "network" }, game),
     eventOf(3, "game.installed", { from: "cloud" }, game),
     eventOf(4, "game.installed", { from: "smb", folder: "other" }, game),
+    // A game of the NAS, which the Mac read on its Ethernet and passed on
+    // through the cable (decision 162): from the NAS, not the Mac.
+    eventOf(9, "game.installed", { from: "smb", link: "relay" }, game),
     // Before 0.15.0, whether it came from the games folder, or nothing.
     eventOf(5, "game.installed", { fromStorage: true }, game),
     eventOf(6, "game.installed", { fromStorage: false }, game),
@@ -1110,10 +1113,11 @@ test("each game installed says where it came from, and how its Mac was reached",
     eventOf(3, "error", { origin: "install", from: "cloud", cause: "network", stage: "download" }),
     eventOf(4, "error", { origin: "install", from: "smb", cause: "network", stage: "download" }),
   ]);
-  assert.equal(model.installs.count, 7);
-  assert.deepEqual(Object.fromEntries(model.installs.from.map((row) => [row.key, row.count])), { mac: 2, cloud: 1, smb: 1, storage: 1, file: 1 });
-  assert.equal(model.installs.fromKnown, 6);
+  assert.equal(model.installs.count, 8);
+  assert.deepEqual(Object.fromEntries(model.installs.from.map((row) => [row.key, row.count])), { mac: 2, cloud: 1, smb: 2, storage: 1, file: 1 });
+  assert.equal(model.installs.fromKnown, 7);
   assert.deepEqual(model.installs.link.map((row) => [row.key, row.count]), [["cable", 1], ["network", 1]]);
+  assert.equal(model.installs.relayed, 1);
   assert.deepEqual([model.installs.otherFolder.yes, model.installs.otherFolder.known], [1, 1]);
   const iphone = model.cloud.iphone;
   assert.deepEqual([iphone.installs, iphone.copies, iphone.linked.yes, iphone.linked.known, iphone.failed], [1, 1, 1, 2, 1]);
@@ -1217,6 +1221,7 @@ test("the sample data fills every section, and is the same each time", () => {
     macSaves: model.storage.saves.macs,
     installFrom: model.installs.from.length,
     installLink: model.installs.link.length,
+    installRelayed: model.installs.relayed,
     cloudBuilt: model.cloud.built,
     cloudFailed: model.cloud.why.length,
     cloudRefused: model.cloud.refusedCount,

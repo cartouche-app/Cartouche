@@ -45,6 +45,13 @@
 //  way, for the install's screen to say how the game comes, and to warn of
 //  a Mac on its 2.4 GHz Wi-Fi (CartoucheTransferSpeed.swift).
 //
+//  A Mac whose info says relays, to an iPhone plugged into it, reads for
+//  it a game of its games folders on a NAS, through the player's
+//  connection, and passes it on through the cable (relayStat, relayRead):
+//  when it reaches that NAS on its Ethernet, else it refuses, and the
+//  iPhone reads the NAS itself (CartoucheCableRelay,
+//  CartoucheBridgeCable.swift, decision 162).
+//
 //  This file is shared: Cartouche compiles it with the launcher, Cartouche
 //  Builder through the CartoucheCore package (launcher/Package.swift). It
 //  needs only Foundation, CryptoKit and Network.
@@ -326,6 +333,11 @@ public struct CartoucheBridgeRequest: Codable, Equatable {
         /// which it keeps the same from then on: only of a Mac whose info
         /// says it takes them (hasConnections).
         case connections
+        /// A file of the iPhone's games folders on one of the player's
+        /// connections, a NAS's, which the Mac reads there for the iPhone
+        /// plugged into it: its size, then its bytes. Only of a Mac whose
+        /// info says it does (relays).
+        case relayStat, relayRead
 
         /// Whether the Mac's app answers it, with its builds.
         public var isBuilds: Bool {
@@ -334,6 +346,9 @@ public struct CartoucheBridgeRequest: Codable, Equatable {
             default: return false
             }
         }
+
+        /// Whether the Mac reads it on one of the player's connections.
+        public var isRelay: Bool { self == .relayStat || self == .relayRead }
     }
 
     public var op: Operation
@@ -362,10 +377,15 @@ public struct CartoucheBridgeRequest: Codable, Equatable {
     /// Cartouche Builder, which builds the games of an iPhone that reads
     /// none from nxnative-nobc, a separate fork. An older Mac leaves it aside.
     public var device: CartoucheBridgeDevice?
+    /// relayStat, relayRead: the connection the file is on, by its ID, the
+    /// same on the iPhone and the Mac; its path is from the connection's
+    /// root.
+    public var connection: UUID?
 
     public init(_ op: Operation, path: String? = nil, offset: UInt64? = nil, count: Int? = nil, size: UInt64? = nil, upload: String? = nil,
                 game: String? = nil, followed: Bool? = nil, nightly: CartoucheBridgeBuilds.Nightly? = nil, due: Bool? = nil,
-                connections: [CartoucheConnection]? = nil, places: CartoucheChosenFolders? = nil, device: CartoucheBridgeDevice? = nil) {
+                connections: [CartoucheConnection]? = nil, places: CartoucheChosenFolders? = nil, device: CartoucheBridgeDevice? = nil,
+                connection: UUID? = nil) {
         self.op = op
         self.path = path
         self.offset = offset
@@ -379,6 +399,7 @@ public struct CartoucheBridgeRequest: Codable, Equatable {
         self.connections = connections
         self.places = places
         self.device = device
+        self.connection = connection
     }
 }
 
@@ -444,6 +465,11 @@ public struct CartoucheBridgeResponse: Codable, Equatable {
     /// warns of a Mac on its 2.4 GHz Wi-Fi. A Cartouche for Mac older than
     /// this one says nothing.
     public var network: CartoucheMacNetwork?
+    /// info: whether the Mac reads for this iPhone a game of its games
+    /// folders on a NAS, and passes it on (relayStat, relayRead): only on a
+    /// session through the cable. A Cartouche for Mac older than this one
+    /// says nothing.
+    public var relays: Bool?
     /// builds, build and the rest: the Mac's builds, after what was asked.
     public var builds: CartoucheBridgeBuilds?
     /// connections: the Mac's, once it took the iPhone's, with those
@@ -1002,6 +1028,33 @@ public final class CartoucheBridgeClient {
 
     public func canWrite(_ path: String) async throws -> Bool {
         try await call(CartoucheBridgeRequest(.canWrite, path: path)).0.writable ?? false
+    }
+
+    /// The size of the file at PATH on the player's connection CONNECTION,
+    /// which the Mac opens there to pass it on; ask only a Mac whose info
+    /// says it relays. It refuses one it reaches on its Wi-Fi.
+    public func relayStat(connection: UUID, path: String) async throws -> UInt64 {
+        let response = try await call(CartoucheBridgeRequest(.relayStat, path: path, connection: connection)).0
+        guard let size = response.size, response.folder != true else { throw CartoucheBridgeError(.notFound, "relay") }
+        return size
+    }
+
+    /// COUNT bytes at OFFSET of the file at PATH on CONNECTION, as the Mac
+    /// reads them there, all of them unless the file ends first.
+    public func relayRead(connection: UUID, path: String, at offset: UInt64, count: Int) async throws -> Data {
+        var data = Data()
+        var position = offset
+        var left = count
+        while left > 0 {
+            let asked = min(left, CartoucheBridge.maxRead)
+            let (_, body) = try await call(CartoucheBridgeRequest(.relayRead, path: path, offset: position, count: asked,
+                                                                  connection: connection))
+            data.append(body)
+            if body.count < asked { break }
+            position += UInt64(body.count)
+            left -= body.count
+        }
+        return data
     }
 
     /// Cartouche Builder's builds; ask only a Mac whose info says it has
