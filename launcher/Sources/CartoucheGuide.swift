@@ -212,11 +212,15 @@ final class CartoucheGuide: ObservableObject {
     }
 
     /// Keeps that the player has had their first game installed, once they
-    /// have: from then on, the setup banner says what may be missing.
-    func note(_ progress: Progress) {
-        guard progress.hasInstalledGame, !isFinishedOnce else { return }
+    /// have: from then on, the setup banner says what may be missing, the
+    /// automation of every night among it (CartoucheSetup.nightlyLeft).
+    /// Whether this was that moment.
+    @discardableResult
+    func note(_ progress: Progress) -> Bool {
+        guard progress.hasInstalledGame, !isFinishedOnce else { return false }
         isFinishedOnce = true
         defaults.set(true, forKey: Self.finishedKey)
+        return true
     }
 
     #if CARTOUCHE_GALLERY

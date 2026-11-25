@@ -38,6 +38,7 @@ extension Words {
     static let madeTheAutomation = "I made the automation"  // daily.made
     static let madeOn = "Made on "                          // daily.state.waiting
     static let setupStepDone = "%@, done"                   // setup.step.done
+    static let hideNightlyReminder = "Hide this reminder"   // setup.banner.nightly.hide
 }
 
 /// The apps installed that are not nxnative games, near the end of the
@@ -132,6 +133,30 @@ final class SystemUITests: ConsoleTestCase {
         back(from: Words.setup, in: app)
         tap(app.buttons[Words.done], "Done of the System page", in: app)
         expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// Once the first game is installed, the home's banner says Renew every
+    /// night is left while the automation is still to make: a tap opens the
+    /// setup on that step, and its × takes the banner off the home for good
+    /// (decision 159). Up to 0.15.1, nothing on the home said it, and a
+    /// player who left Cartouche closed for a week lost it.
+    @MainActor
+    func testWithAGameTheHomeSaysTheAutomationIsLeftUntilTakenOff() {
+        let app = openConsole()
+        let banner = element(in: app.buttons, beginningWith: Words.renewEveryNight)
+        expect(banner.waitForExistence(timeout: 15), "The home does not say Renew every night is left", in: app)
+        tap(banner, "Renew every night, on the home", in: app)
+        expect(app.navigationBars[Words.setup].waitForExistence(timeout: 15),
+               "Renew every night, on the home, did not open the setup", in: app)
+        let make = element(in: app.buttons, beginningWith: Words.makeTheAutomation)
+        expect(make.waitForExistence(timeout: 10) && waitUntil(5) { make.isHittable },
+               "The setup did not open on its last step, Make the automation out of sight", in: app)
+        tap(app.navigationBars[Words.setup].buttons[Words.done], "Done of the setup", in: app)
+        expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)
+
+        tap(app.buttons[Words.hideNightlyReminder], "the × of Renew every night, on the home", in: app)
+        expect(waitForGone(banner), "Renew every night stayed on the home once taken off", in: app)
         expectMainThreadAnswered(app)
     }
 

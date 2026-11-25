@@ -44,6 +44,7 @@
 //    iPhone's own services when it signs in and renews Cartouche.
 //
 
+import Combine
 import Foundation
 import Security
 import SwiftUI
@@ -339,8 +340,24 @@ final class CartoucheSetup: ObservableObject {
     private var replacing: Set<Data> = []
     private var tookSigningHandoff = false
 
+    /// What the home's banner reads besides the setup (nightlyLeft): the
+    /// automation of every night and the guide's first game.
+    private var bannerSources: [AnyCancellable] = []
+
     private init() {
         refresh()
+    }
+
+    /// Makes their changes the setup's, so that the banner follows them.
+    @available(iOS 17.0, *)
+    func watchBannerSources() {
+        guard bannerSources.isEmpty else { return }
+        let nightly = CartoucheNightly.shared
+        bannerSources = [
+            nightly.$state.dropFirst().sink { [weak self] _ in self?.objectWillChange.send() },
+            nightly.$isBannerHidden.dropFirst().sink { [weak self] _ in self?.objectWillChange.send() },
+            CartoucheGuide.shared.$isFinishedOnce.dropFirst().sink { [weak self] _ in self?.objectWillChange.send() },
+        ]
     }
 
     /// Reads everything again, after handing SideStore's certificate to
@@ -549,6 +566,7 @@ struct CartoucheSetupRefresh: ViewModifier {
     func body(content: Content) -> some View {
         content
             .onAppear {
+                setup.watchBannerSources()
                 setup.refresh()
                 CartoucheAccount.shared.resumeDeviceStep()
                 CartoucheAccount.shared.resumeSignIn()

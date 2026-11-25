@@ -1045,7 +1045,10 @@ struct CartoucheHint: View {
     }
 }
 
-/// The banner over the home while Cartouche is not set up.
+/// The banner over the home while Cartouche is not set up, or, once the
+/// first game is installed, while the automation of every night is still
+/// to make: that one has a ×, as the guide's card has, which takes it off
+/// the home for good (CartoucheSetup.bannerHides).
 @available(iOS 17.0, *)
 struct CartoucheHomeSetupBanner: View {
     let action: () -> Void
@@ -1053,32 +1056,52 @@ struct CartoucheHomeSetupBanner: View {
     @ObservedObject private var account = CartoucheAccount.shared
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 14) {
-                Image(systemName: setup.bannerIcon)
-                    .font(.title3.weight(.semibold))
-                    .frame(width: 42, height: 42)
-                    .background(Color.white.opacity(0.2), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(setup.bannerTitle)
-                        .font(.headline)
-                    Text(setup.bannerDetail(signingInAgain: account.isAutomatic,
-                                            registeringDevice: account.phase == .registeringDevice))
-                        .font(.subheadline)
-                        .opacity(0.85)
+        HStack(spacing: 10) {
+            Button(action: action) {
+                HStack(spacing: 14) {
+                    Image(systemName: setup.bannerIcon)
+                        .font(.title3.weight(.semibold))
+                        .frame(width: 42, height: 42)
+                        .background(Color.white.opacity(0.2), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(setup.bannerTitle)
+                            .font(.headline)
+                        Text(setup.bannerDetail(signingInAgain: account.isAutomatic,
+                                                registeringDevice: account.phase == .registeringDevice))
+                            .font(.subheadline)
+                            .opacity(0.85)
+                    }
+                    Spacer(minLength: 0)
+                    if !setup.bannerHides {
+                        Image(systemName: "chevron.right")
+                            .font(.headline)
+                            .opacity(0.7)
+                    }
                 }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right")
-                    .font(.headline)
-                    .opacity(0.7)
+                .contentShape(Rectangle())
             }
-            .foregroundStyle(Color.white)
-            .padding(14)
-            .background(
-                LinearGradient(colors: [CartoucheTheme.indigo, CartoucheTheme.pink.opacity(0.85)],
-                               startPoint: .topLeading, endPoint: .bottomTrailing),
-                in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .buttonStyle(.plain)
+            if setup.bannerHides {
+                Button {
+                    withAnimation(.easeInOut(duration: 0.25)) { setup.hideBanner() }
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.subheadline.weight(.bold))
+                        .frame(width: 30, height: 30)
+                        .background(Color.white.opacity(0.2), in: Circle())
+                        // As tall as the icon, so that the banner keeps its height.
+                        .frame(width: 42, height: 42)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(CartoucheText.setupBannerNightlyHide)
+            }
         }
-        .buttonStyle(.plain)
+        .foregroundStyle(Color.white)
+        .padding(14)
+        .background(
+            LinearGradient(colors: [CartoucheTheme.indigo, CartoucheTheme.pink.opacity(0.85)],
+                           startPoint: .topLeading, endPoint: .bottomTrailing),
+            in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 }

@@ -201,6 +201,21 @@ enum CartoucheRenewal {
         scheduleWarnings()
     }
 
+    /// Asks for it once the player's first game is installed, when nothing
+    /// asked yet: a Cartouche no one opens for a week expires, and the
+    /// warnings are what tells the player in time, even without the
+    /// automation of every night. Asked or answered before, iOS shows
+    /// nothing, and System's button stays the way to them.
+    static func allowAlertsAfterFirstGame() async {
+        #if CARTOUCHE_GALLERY
+        // iOS's question would stand over the gallery's screens and tests.
+        return
+        #else
+        guard await alertStatus() == .notDetermined else { return }
+        await allowAlerts()
+        #endif
+    }
+
     @MainActor
     static var notificationSettingsURL: URL? {
         URL(string: UIApplication.openNotificationSettingsURLString)
@@ -567,9 +582,22 @@ final class CartoucheNightly: ObservableObject {
     static let shared = CartoucheNightly()
 
     @Published private(set) var state: CartoucheNightlyRenewal.State = .toMake
+    /// Whether the player took the home's banner on the automation off
+    /// (CartoucheSetup.nightlyLeft): the setup's step and the System page
+    /// still offer it.
+    @Published private(set) var isBannerHidden = UserDefaults.standard.bool(forKey: CartoucheNightly.bannerHiddenKey)
+
+    private static let bannerHiddenKey = "Cartouche.nightly.bannerHidden"
 
     private init() {
         read()
+    }
+
+    /// Takes the home's banner on the automation off, for good.
+    func hideBanner() {
+        guard !isBannerHidden else { return }
+        isBannerHidden = true
+        UserDefaults.standard.set(true, forKey: Self.bannerHiddenKey)
     }
 
     /// Reads again the last run of Refresh All Apps from Shortcuts, as the
@@ -637,6 +665,8 @@ final class CartoucheNightly: ObservableObject {
         let defaults = UserDefaults.standard
         defaults.removeObject(forKey: CartoucheNightlyRenewal.runKey)
         defaults.removeObject(forKey: CartoucheNightlyRenewal.madeKey)
+        defaults.removeObject(forKey: Self.bannerHiddenKey)
+        isBannerHidden = false
         let calendar = Calendar.current
         var started = calendar.date(bySettingHour: 4, minute: 0, second: 0, of: Date()) ?? Date()
         if started > Date() { started = calendar.date(byAdding: .day, value: -1, to: started) ?? started }
