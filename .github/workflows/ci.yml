@@ -61,7 +61,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - run: shellcheck -x app/scripts/*.sh catalog/tools/*.sh launcher/Gallery/*.sh launcher/Harness/*.sh launcher/StorageTests/*.sh telemetry/*.sh source/*.sh builder/mac/*.sh
+      - run: shellcheck -x app/scripts/*.sh catalog/tools/*.sh launcher/Gallery/*.sh launcher/Harness/*.sh launcher/StorageTests/*.sh telemetry/*.sh source/*.sh docs-site/*.sh builder/mac/*.sh
       # When capture.sh keeps the screen of a scenario: drawn and still, not
       # iOS still opening the gallery (launcher/Gallery/settled.py). And the
       # line a minute of the builds that say nothing, the gallery's
@@ -135,6 +135,32 @@ jobs:
         run: |
           node --test source/test/worker.test.js
           python3 -m unittest discover -s source/test -v
+
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs-site
+    env:
+      ASTRO_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+      # The documentation at docs.cartouche.cloud, built as the Documentation
+      # workflow builds it (docs.yml): every link and heading, the links out,
+      # nothing from another site, no price, every page in each language,
+      # and its deploy against stand-ins (docs-site/README.md).
+      - name: Install
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Build
+        run: npm run build
+      - name: Tests
+        run: npm test
 
   domain:
     name: Domain

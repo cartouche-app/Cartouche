@@ -2,6 +2,8 @@
 
 *Français : [getting-started.fr.md](getting-started.fr.md)*
 
+The documentation for players gives the same steps with every screen, in English, French, Spanish and German: <https://docs.cartouche.cloud/start/install/>.
+
 From nothing to your first game on your iPhone or iPad, in four steps. Cartouche provides no game: you build each of yours on your Mac, or Cartouche Cloud builds it for you, from your own copy, dumped from your own console. In Cartouche, the guide **Your first game** takes you through the same steps, and ticks each one by itself once it is done.
 
 ## What you need

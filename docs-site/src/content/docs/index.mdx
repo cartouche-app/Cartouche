@@ -1,0 +1,35 @@
+---
+title: Cartouche documentation
+description: How to install Cartouche, build your games and play them on iPhone, iPad and Mac.
+template: splash
+hero:
+  title: Everything Cartouche does, step by step.
+  tagline: Install Cartouche, build your games from your own copies, and play them on iPhone, iPad and Mac. Free, with a free Apple account.
+  image:
+    file: ../../assets/cartouche.svg
+  actions:
+    - text: Get started
+      link: /start/requirements/
+      icon: right-arrow
+    - text: Back to cartouche.cloud
+      link: https://cartouche.cloud/
+      icon: external
+      variant: minimal
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+## Where to begin
+
+<CardGrid>
+	<LinkCard title="Start here" description="What you need, how to install Cartouche, and the way to your first game." href="/start/requirements/" />
+	<LinkCard title="On iPhone and iPad" description="The console, a game's sheet and settings, your storage, your saves and the System page." href="/iphone/console/" />
+	<LinkCard title="Cartouche for Mac" description="Build your games, rebuild them when nxnative improves them, and play them on the Mac." href="/mac/install/" />
+	<LinkCard title="Cartouche Installer" description="Put Cartouche on your iPhone or iPad from a Mac or a Windows PC, once." href="/installer/" />
+	<LinkCard title="Cartouche Cloud" description="No Mac? Send your own copy from a computer, and Cartouche installs the game built for you." href="/cloud/" />
+	<LinkCard title="Help" description="When something goes wrong, the questions people ask, and where to get help." href="/help/troubleshooting/" />
+</CardGrid>
+
+:::note[No games included]
+Cartouche provides no game, no key and no firmware. You play your own copies, dumped from your own console, built on your Mac or by Cartouche Cloud. [Read why](/about/legal/).
+:::
