@@ -193,6 +193,9 @@ const session = object(
     gameVersion: text(/^[0-9A-Za-z._+-]{1,32}$/),
     nxnative: text(/^[0-9a-f]{7,40}$/),
     nxnativeChanged: flag,
+    // The shader chain of that commit, which nxnative writes beside it
+    // (DMChain).
+    chain: text(/^[0-9a-f]{7,40}$/),
     // On a GPU that reads no BC texture, whether the game's build converts
     // them for it (launcher/Sources/CartoucheBCConversion.swift).
     bcTextures: oneOf("converted", "unconverted"),

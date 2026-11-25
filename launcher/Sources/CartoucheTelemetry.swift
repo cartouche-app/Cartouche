@@ -301,6 +301,8 @@ final class CartoucheTelemetry: ObservableObject {
         let gameVersion: String?
         let nxnative: String?
         let nxnativeChanged: Bool?
+        /// The shader chain of its commit.
+        let chain: String?
         /// On a GPU without BC textures, whether the build converts them.
         let bcTextures: String?
         let settings: [String: String]
@@ -347,7 +349,8 @@ final class CartoucheTelemetry: ObservableObject {
                 let report = CartoucheSessionReport(
                     id: Self.newNumber(), session: job.session, seq: nextSeq(), context: context(limitMiB: sessionLimit),
                     game: job.game, gameVersion: job.gameVersion, nxnative: job.nxnative, nxnativeChanged: job.nxnativeChanged,
-                    bcTextures: job.bcTextures, settings: job.settings, minutes: CartoucheGameLogReader.rounded(job.seconds / 60, 1), measures: measures,
+                    chain: job.chain, bcTextures: job.bcTextures, settings: job.settings,
+                    minutes: CartoucheGameLogReader.rounded(job.seconds / 60, 1), measures: measures,
                     process: job.process)
                 enqueue(report, id: report.id)
             }
@@ -406,6 +409,7 @@ final class CartoucheTelemetry: ObservableObject {
                                     seconds: max(modified.timeIntervalSince(created), 0), game: titleId,
                                     gameVersion: build?.version, nxnative: build?.shortCommit,
                                     nxnativeChanged: build?.commit == nil ? nil : build?.isDirty,
+                                    chain: build?.shortChain,
                                     bcTextures: details?.bcTextures,
                                     settings: details?.settings ?? [:], process: process?.process,
                                     nearLimit: process?.nearLimit ?? false))

@@ -75,6 +75,9 @@ struct CartoucheSessionReport: Codable, Equatable {
     var nxnative: String?
     /// Built from changed files of nxnative.
     var nxnativeChanged: Bool?
+    /// The shader chain of that commit, its first 12 digits, which
+    /// nxnative writes beside it (DMChain).
+    var chain: String?
     /// On a GPU that reads no BC-compressed texture, an A16's or older,
     /// whether the game's build converts them for it, converted, or not,
     /// unconverted, which nxnative then refuses (CartoucheBCConversion);
@@ -91,7 +94,7 @@ struct CartoucheSessionReport: Codable, Equatable {
     var process: CartoucheGameProcess?
 
     init(id: String, session: String, seq: Int, context: CartoucheTelemetryContext, game: String?, gameVersion: String?,
-         nxnative: String?, nxnativeChanged: Bool?, bcTextures: String? = nil, settings: [String: String]?, minutes: Double,
+         nxnative: String?, nxnativeChanged: Bool?, chain: String? = nil, bcTextures: String? = nil, settings: [String: String]?, minutes: Double,
          measures: CartoucheGameMeasures, process: CartoucheGameProcess? = nil) {
         self.id = id
         self.session = session
@@ -101,6 +104,7 @@ struct CartoucheSessionReport: Codable, Equatable {
         self.gameVersion = gameVersion
         self.nxnative = nxnative
         self.nxnativeChanged = nxnativeChanged
+        self.chain = chain
         self.bcTextures = bcTextures
         self.settings = settings.flatMap { CartoucheTelemetrySettings.cleaned($0) }
         self.minutes = minutes
@@ -133,7 +137,8 @@ struct CartoucheSessionReport: Codable, Equatable {
 
     // The context and the measures sit beside the report's own keys.
     private enum CodingKeys: String, CodingKey {
-        case schema, kind, id, session, seq, game, gameVersion, nxnative, nxnativeChanged, bcTextures, settings, minutes, reader, process
+        case schema, kind, id, session, seq, game, gameVersion, nxnative, nxnativeChanged, chain, bcTextures, settings, minutes, reader,
+             process
     }
 
     init(from decoder: Decoder) throws {
@@ -147,6 +152,7 @@ struct CartoucheSessionReport: Codable, Equatable {
         gameVersion = try container.decodeIfPresent(String.self, forKey: .gameVersion)
         nxnative = try container.decodeIfPresent(String.self, forKey: .nxnative)
         nxnativeChanged = try container.decodeIfPresent(Bool.self, forKey: .nxnativeChanged)
+        chain = try container.decodeIfPresent(String.self, forKey: .chain)
         bcTextures = try container.decodeIfPresent(String.self, forKey: .bcTextures)
         settings = try container.decodeIfPresent([String: String].self, forKey: .settings)
         minutes = try container.decode(Double.self, forKey: .minutes)
@@ -167,6 +173,7 @@ struct CartoucheSessionReport: Codable, Equatable {
         try container.encodeIfPresent(gameVersion, forKey: .gameVersion)
         try container.encodeIfPresent(nxnative, forKey: .nxnative)
         try container.encodeIfPresent(nxnativeChanged, forKey: .nxnativeChanged)
+        try container.encodeIfPresent(chain, forKey: .chain)
         try container.encodeIfPresent(bcTextures, forKey: .bcTextures)
         try container.encodeIfPresent(settings, forKey: .settings)
         try container.encode(minutes, forKey: .minutes)
