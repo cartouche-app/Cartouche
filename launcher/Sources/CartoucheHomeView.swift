@@ -1119,6 +1119,8 @@ extension CartoucheOffer {
     /// guide each have it, on the iPhone and on the Mac's console.
     @MainActor
     func tapped(at place: Place) {
-        CartoucheTelemetry.shared.event(Self.event, fields: fields(at: place))
+        if #available(iOS 17.0, *) {
+            CartoucheTelemetry.shared.event(Self.event, fields: fields(at: place))
+        }
     }
 }
