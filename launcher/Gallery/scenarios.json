@@ -6,86 +6,10 @@
     "A scenario with a device takes the whole screen of that simulator, with its own safe area, size classes and system bars, as on the iPhone Duo and the 13-inch iPad Pro; a landscape one turns the gallery sideways, as a game does, while the simulator stays upright.",
     "An alert, such as a game's notice, stands in the middle of the simulator's whole screen, which a scenario drawn at a size on the iPad cuts off: a scenario that shows one takes a device, the iPhone Duo, folded."
   ],
-  "language": "fr",
+  "language": "en",
   "scenarios": [
     {
-      "name": "iphone-home-first-launch",
-      "screen": "games",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-home",
-      "screen": "games",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-home-spanish",
-      "comment": "The home in Spanish, as an iPhone set to Spanish shows it (decision 152).",
-      "language": "es",
-      "screen": "games",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-home-german",
-      "comment": "The home in German, as an iPhone set to German shows it (decision 152).",
-      "language": "de",
-      "screen": "games",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-home-certificate-refused",
+      "name": "fr-iphone-home",
       "screen": "games",
       "owned": [
         "0400C3F00006E000",
@@ -102,31 +26,10 @@
         34,
         0
       ],
-      "work": "certificate"
+      "language": "fr"
     },
     {
-      "name": "iphone-home-sidestore-memory",
-      "comment": "The home of a Cartouche the player's own SideStore installed, once set up (signing: sidestore): the banner for Increased Memory Limit, which that SideStore left out on a free team.",
-      "screen": "games",
-      "signing": "sidestore",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-home-landscape",
+      "name": "fr-iphone-home-landscape",
       "screen": "games",
       "owned": [
         "0400C3F00006E000",
@@ -143,10 +46,11 @@
         62,
         21,
         62
-      ]
+      ],
+      "language": "fr"
     },
     {
-      "name": "iphone-library",
+      "name": "fr-iphone-library",
       "screen": "library",
       "owned": [
         "0400C3F00006E000",
@@ -162,52 +66,11 @@
         0,
         34,
         0
-      ]
-    },
-    {
-      "name": "iphone-sheet-mine",
-      "screen": "sheet",
-      "sheet": "0400C3F00006E000",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
       ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
+      "language": "fr"
     },
     {
-      "name": "iphone-sheet-mine-german",
-      "comment": "A game's sheet in German, whose words are the longest of Cartouche's languages (decision 152).",
-      "language": "de",
-      "screen": "sheet",
-      "sheet": "0400C3F00006E000",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sheet-newer-build",
+      "name": "fr-iphone-sheet-mine",
       "screen": "sheet",
       "sheet": "0400C3F00006E000",
       "owned": [
@@ -225,32 +88,10 @@
         34,
         0
       ],
-      "work": "newer-build"
+      "language": "fr"
     },
     {
-      "name": "iphone-sheet-results",
-      "comment": "Mario Kart World's sheet on its testers' results, with what testers wrote in French as the iPhone translates it (GalleryTranslations.swift).",
-      "screen": "sheet",
-      "sheet": "0400C3F00006E000",
-      "category": "results",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sheet-mac-building",
+      "name": "fr-iphone-sheet-mac-building",
       "comment": "The sheet, scrolled to the game's build on the player's Mac: that Mac building this game and another waiting its turn, with Stop its build and All the Mac's builds.",
       "screen": "sheet-mac",
       "sheet": "0400C3F00006E000",
@@ -269,31 +110,11 @@
         34,
         0
       ],
-      "work": "mac-builds"
+      "work": "mac-builds",
+      "language": "fr"
     },
     {
-      "name": "iphone-system-mac",
-      "comment": "The System page with the row of the player's Mac's builds, which shows that Mac building one game and another waiting its turn.",
-      "screen": "system",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "mac-builds"
-    },
-    {
-      "name": "iphone-mac-builds",
+      "name": "fr-iphone-mac-builds",
       "comment": "All the Mac's builds, as System opens them: Build what is due and Stop all, the game building with Stop its build, the one waiting its turn with Remove, the build that failed and why, and every game of the Mac.",
       "screen": "mac-builds",
       "owned": [
@@ -311,95 +132,11 @@
         34,
         0
       ],
-      "work": "mac-builds"
-    },
-    {
-      "name": "iphone-mac-builds-nightly",
-      "comment": "The same, down to the Mac's nightly build, on, and its time.",
-      "screen": "mac-builds",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
       "work": "mac-builds",
-      "category": "nightly"
+      "language": "fr"
     },
     {
-      "name": "iphone-sheet-mac-too-old",
-      "comment": "The sheet, scrolled to the game's build on the player's Mac, whose app is 0.5.0 or older: too old to share its builds, and no longer finding its updates by itself.",
-      "screen": "sheet-mac",
-      "sheet": "0400C3F00006E000",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "mac-too-old"
-    },
-    {
-      "name": "iphone-mac-builds-too-old",
-      "comment": "The Mac's builds, as System opens them, when the Mac's app is 0.5.0 or older: too old to share its builds, and no longer finding its updates by itself.",
-      "screen": "mac-builds",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "mac-too-old"
-    },
-    {
-      "name": "iphone-cloud",
-      "comment": "Cartouche Cloud, as System opens it, for an iPhone not linked yet: what it is, the price of a build as the service gives it, the trial by invitation, the site's sign-in, and the code of the account's page that links this iPhone (GalleryCloud).",
-      "screen": "cloud",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-cloud-linking",
+      "name": "fr-iphone-cloud-linking",
       "comment": "The same, as the link of the account's page opened Cartouche: its code in the field, linking this iPhone.",
       "screen": "cloud",
       "owned": [
@@ -417,31 +154,11 @@
         34,
         0
       ],
-      "work": "cloud-linking"
+      "work": "cloud-linking",
+      "language": "fr"
     },
     {
-      "name": "iphone-cloud-refused",
-      "comment": "The same code, which the service refused, and why.",
-      "screen": "cloud",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "cloud-refused"
-    },
-    {
-      "name": "iphone-cloud-games",
+      "name": "fr-iphone-cloud-games",
       "comment": "This iPhone linked: the account's credits, those held for the game being built, and its games, each with its cover, in the site's words: being built, at its fifth step of six, with the phases of the build of the game itself, its shaders under way with how much of them is done and the time left; waiting for it; built, with Install and when it is deleted; built and installed on this iPhone since, On this iPhone in place of Install; and not built, with why and until when the site builds it again.",
       "screen": "cloud",
       "owned": [
@@ -459,74 +176,11 @@
         34,
         0
       ],
-      "work": "cloud-games"
-    },
-    {
-      "name": "iphone-cloud-games-whole",
-      "comment": "The same page whole, down to the games built: 13 Sentinels with Install, and Mario Kart World, installed on this iPhone since, with On this iPhone in its place; then Balatro, not built.",
-      "screen": "cloud",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 1366,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "cloud-games"
-    },
-    {
-      "name": "iphone-system-cloud",
-      "comment": "The System page down to Cartouche Cloud's row, linked, with the game built to install: 1, not counting the one built that this iPhone has installed already.",
-      "screen": "system",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
       "work": "cloud-games",
-      "category": "cloud"
+      "language": "fr"
     },
     {
-      "name": "iphone-home-cloud",
-      "comment": "The home with the game Cartouche Cloud built in focus, beside the player's games: In Cartouche Cloud, and Install from Cartouche Cloud.",
-      "screen": "games",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "cloud-games"
-    },
-    {
-      "name": "iphone-sheet-cloud",
+      "name": "fr-iphone-sheet-cloud",
       "comment": "That game's sheet: Install from Cartouche Cloud, its size, and when Cartouche Cloud deletes it.",
       "screen": "sheet",
       "sheet": "01003FC01670C000",
@@ -545,434 +199,11 @@
         34,
         0
       ],
-      "work": "cloud-games"
+      "work": "cloud-games",
+      "language": "fr"
     },
     {
-      "name": "iphone-cloud-installing",
-      "comment": "That game being installed from Cartouche Cloud, over the console.",
-      "screen": "games",
-      "sheet": "01003FC01670C000",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "cloud-installing"
-    },
-    {
-      "name": "iphone-sheet-other",
-      "screen": "sheet",
-      "sheet": "01003FC01670C000",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sheet-other-no-game",
-      "comment": "The sheet of a game the player does not have, for a player with no game yet: How to get a game, the guide, beside Import my copy.",
-      "screen": "sheet",
-      "sheet": "01003FC01670C000",
-      "owned": [],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sheet-games-folders",
-      "comment": "A game the player does not have yet, in both games folders, newer on the NAS, which does not answer: Install from Google Drive, also in the NAS, offline.",
-      "screen": "sheet",
-      "sheet": "01003FC01670C000",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "games-folders"
-    },
-    {
-      "name": "iphone-sheet-new-release",
-      "screen": "sheet",
-      "sheet": "0400486024DEC000",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "0400486024DEC000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sheet-new-release-whole",
-      "comment": "Ocarina of Time's sheet down to what the game needs, as the game measurements made it: its long title on two lines above its fit badge, its fit and its requirements.",
-      "screen": "sheet",
-      "sheet": "0400486024DEC000",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "0400486024DEC000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 1366,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sheet-new-release-results",
-      "comment": "Ocarina of Time's sheet on its results, which the game measurements wrote, as Cartouche says them in French.",
-      "screen": "sheet",
-      "sheet": "0400486024DEC000",
-      "category": "results",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "0400486024DEC000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sheet-measured-whole",
-      "comment": "Pokopia's whole sheet, a game the player does not have: nxnative's list plays it on the Mac, and a result of the game measurements says it plays on this iPhone, with its fit, what it needs and its results.",
-      "screen": "sheet",
-      "sheet": "0400A3A01EE4C000",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 1366,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-home-unknown-games",
-      "screen": "games",
-      "owned": [
-        "0100C0FFEE0A0000:Celeste",
-        "0100F00D0BAD0000:Pixel Quest",
-        "0400C3F00006E000"
-      ],
-      "setup": true,
-      "controller": true,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sheet-unknown-game",
-      "screen": "sheet",
-      "sheet": "0100F00D0BAD0000",
-      "owned": [
-        "0100C0FFEE0A0000:Celeste",
-        "0100F00D0BAD0000:Pixel Quest",
-        "0400C3F00006E000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sheet-unknown-game-whole",
-      "screen": "sheet",
-      "sheet": "0100F00D0BAD0000",
-      "owned": [
-        "0100C0FFEE0A0000:Celeste",
-        "0100F00D0BAD0000:Pixel Quest",
-        "0400C3F00006E000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 1366,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sheet-gpu-no-bc",
-      "comment": "Breath of the Wild's sheet on an iPhone whose GPU reads no BC-compressed texture, an A16's, the game built by nxnative, which refuses that GPU: not supported, as before the conversion of the textures was read.",
-      "screen": "sheet",
-      "sheet": "01007EF00011E000",
-      "work": "gpu-no-bc",
-      "owned": [
-        "01007EF00011E000",
-        "0400C3F00006E000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 1366,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sheet-gpu-no-bc-converted",
-      "comment": "The same sheet, the game built by a fork of nxnative that converts its BC textures to ASTC for that GPU (mianmuhammadse/nxnative's no-bc branch): no warning, and what the game needs opened on each need, the BC line green.",
-      "screen": "sheet",
-      "sheet": "01007EF00011E000",
-      "work": "gpu-no-bc-converted",
-      "category": "requirements",
-      "owned": [
-        "01007EF00011E000",
-        "0400C3F00006E000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 1366,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sheet-gpu-no-bc-converted-no-sheet",
-      "comment": "Metroid Dread, which has no sheet, built by that fork on the same iPhone: no warning that nxnative refuses the GPU.",
-      "screen": "sheet",
-      "sheet": "010093801237C000",
-      "work": "gpu-no-bc-converted",
-      "owned": [
-        "010093801237C000",
-        "0400C3F00006E000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-system-gpu-no-bc",
-      "comment": "System on the same iPhone, whose GPU reads no BC-compressed texture: this iPhone's section says that nxnative refuses it, and that Cartouche on a Mac builds its games from nxnative-nobc, a separate fork of nxnative, once it is paired with it.",
-      "screen": "system",
-      "work": "gpu-no-bc",
-      "category": "device",
-      "owned": [
-        "01007EF00011E000",
-        "0400C3F00006E000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sheet-game-mode-later",
-      "comment": "Mario Kart World's sheet on what the game needs, opened on each need, as the console opens before Game Mode came: Cartouche's own limit 6,144 MiB as it first measures it, 8,192 a moment later, which a game has in Cartouche's place (work: game-mode-later). The sheet says 8,192 MiB, and the game, up to 8,183, fits.",
-      "screen": "sheet",
-      "sheet": "0400C3F00006E000",
-      "work": "game-mode-later",
-      "category": "requirements",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 1366,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sheet-gpu-no-bc-vulkan-nvn-build",
-      "comment": "Hades, a game drawn with Vulkan, built by that fork as on 18 November, which converted NVN's textures alone, on the same iPhone: the warning stays, Until Then stopped at its first image so.",
-      "screen": "sheet",
-      "sheet": "0100535012974000",
-      "work": "gpu-no-bc-converted",
-      "owned": [
-        "0100535012974000",
-        "0400C3F00006E000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 1366,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sheet-gpu-no-bc-converted-vulkan",
-      "comment": "Hades built by that fork as since 22 November, which converts a Vulkan game's BC textures too: no warning that nxnative refuses the GPU.",
-      "screen": "sheet",
-      "sheet": "0100535012974000",
-      "work": "gpu-no-bc-converted-vulkan",
-      "owned": [
-        "0100535012974000",
-        "0400C3F00006E000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 1366,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sheet-mac-gpu-no-bc",
-      "comment": "Breath of the Wild's sheet on an iPhone whose GPU reads no BC-compressed texture, the game on the paired Mac and not installed, built by nxnative: not supported, as every game not installed was before Cartouche read the build where its IPA sits.",
-      "screen": "sheet",
-      "sheet": "01007EF00011E000",
-      "work": "mac-gpu-no-bc",
-      "category": "requirements",
-      "owned": [
-        "0400C3F00006E000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 1366,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sheet-mac-gpu-no-bc-converted",
-      "comment": "The same sheet, the game on the Mac built by a fork of nxnative that converts its BC textures, which Cartouche read from the IPA on the Mac: the BC line green, as for an installed game built so.",
-      "screen": "sheet",
-      "sheet": "01007EF00011E000",
-      "work": "mac-gpu-no-bc-converted",
-      "category": "requirements",
-      "owned": [
-        "0400C3F00006E000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 1366,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-game-info",
+      "name": "fr-iphone-game-info",
       "screen": "gameinfo",
       "sheet": "0100C0FFEE0A0000",
       "owned": [
@@ -990,10 +221,11 @@
         34,
         0
       ],
-      "work": "own-cover"
+      "work": "own-cover",
+      "language": "fr"
     },
     {
-      "name": "iphone-game-settings",
+      "name": "fr-iphone-game-settings",
       "screen": "settings",
       "sheet": "0400C3F00006E000",
       "owned": [
@@ -1010,32 +242,11 @@
         0,
         34,
         0
-      ]
-    },
-    {
-      "name": "iphone-game-settings-spanish",
-      "comment": "A game's settings in Spanish (decision 152).",
-      "language": "es",
-      "screen": "settings",
-      "sheet": "0400C3F00006E000",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
       ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
+      "language": "fr"
     },
     {
-      "name": "iphone-game-settings-controls",
+      "name": "fr-iphone-game-settings-controls",
       "screen": "settings",
       "sheet": "0400C3F00006E000",
       "category": "Controls",
@@ -1053,31 +264,11 @@
         0,
         34,
         0
-      ]
-    },
-    {
-      "name": "iphone-game-settings-saves",
-      "screen": "settings",
-      "sheet": "0400C3F00006E000",
-      "category": "cartouche.saves",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
       ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
+      "language": "fr"
     },
     {
-      "name": "iphone-sheet-saves",
+      "name": "fr-iphone-sheet-saves",
       "comment": "The sheet of the player's game brought down to its saves, with its copies in the saves folder, and Switch saves.",
       "screen": "sheet-saves",
       "sheet": "0400C3F00006E000",
@@ -1096,32 +287,11 @@
         0,
         34,
         0
-      ]
-    },
-    {
-      "name": "iphone-sheet-saves-newer",
-      "comment": "The sheet of the player's game brought down to its saves, whose newest copy version 1.2.0 of the game wrote, newer than this iPhone's: it waits for the game's update.",
-      "screen": "sheet-saves",
-      "sheet": "0400C3F00006E000",
-      "work": "saves-newer",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
       ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
+      "language": "fr"
     },
     {
-      "name": "iphone-switch-save",
+      "name": "fr-iphone-switch-save",
       "comment": "A game's saves between the Switch and this iPhone, the sheet's game's, with the save JKSV exported for it read: what it holds, Continue this game here, and Make the ZIP for JKSV.",
       "screen": "switch-save",
       "sheet": "01006BB00C6F0000",
@@ -1140,10 +310,11 @@
         0,
         34,
         0
-      ]
+      ],
+      "language": "fr"
     },
     {
-      "name": "iphone-game-shortcuts",
+      "name": "fr-iphone-game-shortcuts",
       "screen": "shortcuts",
       "sheet": "0400C3F00006E000",
       "owned": [
@@ -1160,10 +331,11 @@
         0,
         34,
         0
-      ]
+      ],
+      "language": "fr"
     },
     {
-      "name": "iphone-installing",
+      "name": "fr-iphone-installing",
       "screen": "games",
       "sheet": "0400C3F00006E000",
       "work": "installing",
@@ -1180,220 +352,11 @@
         0,
         34,
         0
-      ]
-    },
-    {
-      "name": "iphone-installing-mac",
-      "comment": "A game being installed from the player's Mac on the Wi-Fi, the Mac on its 2.4 GHz band as Cartouche on the Mac tells, at 3.1 MB/s: how it comes, how fast, and what would go faster, the cable or the 5 GHz Wi-Fi (decision 151).",
-      "screen": "games",
-      "sheet": "0400C3F00006E000",
-      "work": "installing-mac",
-      "owned": [
-        "040074A01BF12000",
-        "01006BB00C6F0000"
       ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
+      "language": "fr"
     },
     {
-      "name": "iphone-installing-cable",
-      "comment": "The same game from the same Mac, this iPhone plugged into it: by cable, at 31 MB/s, and nothing to advise.",
-      "screen": "games",
-      "sheet": "0400C3F00006E000",
-      "work": "installing-cable",
-      "owned": [
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-install-failed",
-      "screen": "games",
-      "sheet": "0400C3F00006E000",
-      "work": "install-failed",
-      "owned": [
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-update-offer",
-      "screen": "games",
-      "work": "update",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-update-offer-own-certificate",
-      "comment": "Cartouche signed with the player's own certificate by a signing app on the iPhone, from the IPA for the player's own certificate (signing: iphone), with a new version on offer: to download, then sign again in that app.",
-      "screen": "games",
-      "work": "update",
-      "signing": "iphone",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-update-offer-installer",
-      "comment": "Cartouche installed with the player's own certificate by the Cartouche Installer (signing: installer), with a new version on offer: to install from the Installer.",
-      "screen": "games",
-      "work": "update",
-      "signing": "installer",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-update-installed",
-      "comment": "Before What's new: the word an update leaves as Cartouche opens again, Cartouche 0.3.0 is installed (work: installed).",
-      "screen": "games",
-      "work": "installed",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-update-revoked",
-      "comment": "The update of Cartouche to 0.4.0, failed as Apple had revoked the certificate of its signature: what to do, in Cartouche's words, alone on the notice (work: update-revoked).",
-      "screen": "games",
-      "work": "update-revoked",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-update-session-expired",
-      "comment": "The update of Cartouche to 0.4.0, failed as Apple said that the session the built-in SideStore asks it with had expired: what to do, in Cartouche's words, alone on the notice (work: update-session-expired), where up to 0.15.1 the notice said to check LocalDevVPN and try again, then SideStore's words.",
-      "screen": "games",
-      "work": "update-session-expired",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-update-no-liveprocess",
-      "comment": "The update of Cartouche to 0.4.0, failed as LiveProcess, which the built-in SideStore runs in, is missing from the app: what to do, in Cartouche's words, alone on the notice, where LiveContainer's English words showed up to 0.13.1, after the notice's own, which said to check LocalDevVPN and try again (work: update-no-liveprocess).",
-      "screen": "games",
-      "work": "update-no-liveprocess",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-whats-new",
+      "name": "fr-iphone-whats-new",
       "comment": "What's new over the console, as after an update to the newest version the gallery carries notes for (app/releases), in the gallery's French: notes written in English only show in English.",
       "screen": "games",
       "work": "whats-new",
@@ -1411,95 +374,11 @@
         0,
         34,
         0
-      ]
-    },
-    {
-      "name": "iphone-whats-new-english",
-      "comment": "The same in English: a scenario with a language is shown in that language rather than the gallery's.",
-      "language": "en",
-      "screen": "games",
-      "work": "whats-new",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
       ],
-      "setup": true,
-      "controller": true,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
+      "language": "fr"
     },
     {
-      "name": "iphone-whats-new-several",
-      "comment": "What's new after an update over two versions: the newest two, the older under its name, scrolled to where the newer one's notes end (work: whats-new-several).",
-      "screen": "games",
-      "work": "whats-new-several",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-whats-new-landscape",
-      "comment": "What's new on an iPhone held sideways: the title on the left, the notes beside it.",
-      "screen": "games",
-      "work": "whats-new",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true,
-      "width": 874,
-      "height": 402,
-      "widthClass": "compact",
-      "insets": [
-        0,
-        62,
-        21,
-        62
-      ]
-    },
-    {
-      "name": "iphone-release-notes",
-      "comment": "The System page's What's new: the notes of the last versions the gallery carries (screen: release-notes).",
-      "screen": "release-notes",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-home-newer-build",
+      "name": "fr-iphone-home-offline",
       "screen": "games",
       "owned": [
         "040074A01BF12000",
@@ -1516,30 +395,11 @@
         34,
         0
       ],
-      "work": "newer-build"
+      "work": "offline",
+      "language": "fr"
     },
     {
-      "name": "iphone-home-offline",
-      "screen": "games",
-      "owned": [
-        "040074A01BF12000",
-        "0400C3F00006E000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "offline"
-    },
-    {
-      "name": "iphone-home-paused",
+      "name": "fr-iphone-home-paused",
       "screen": "games",
       "owned": [
         "0400C3F00006E000",
@@ -1556,76 +416,11 @@
         34,
         0
       ],
-      "work": "paused"
+      "work": "paused",
+      "language": "fr"
     },
     {
-      "name": "iphone-sheet-paused",
-      "screen": "sheet",
-      "sheet": "0400C3F00006E000",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "paused"
-    },
-    {
-      "name": "iphone-sheet-manage",
-      "comment": "A game's sheet opened on its management (category: manage), as a game that has not written a log yet shows it: without Share the log.",
-      "screen": "sheet",
-      "sheet": "0400C3F00006E000",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "category": "manage"
-    },
-    {
-      "name": "iphone-sheet-manage-log",
-      "comment": "The same sheet once the game wrote the logs of its last two sessions (work: log), the last ended in a crash: Share the log, above Uninstall.",
-      "screen": "sheet",
-      "sheet": "0400C3F00006E000",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "log",
-      "category": "manage"
-    },
-    {
-      "name": "iphone-gamelog",
+      "name": "fr-iphone-gamelog",
       "comment": "The page that shares those logs (screen: gamelog): the last session and the one before, Send the log… as the game wrote them, and Send to Cartouche, cleaned.",
       "screen": "gamelog",
       "sheet": "0400C3F00006E000",
@@ -1644,81 +439,11 @@
         34,
         0
       ],
-      "work": "log"
+      "work": "log",
+      "language": "fr"
     },
     {
-      "name": "iphone-gamelog-sent",
-      "comment": "What Send to Cartouche sends of those logs, cleaned (screen: gamelog-sent): without the paths of the player's folders, addresses, names or identifiers.",
-      "screen": "gamelog-sent",
-      "sheet": "0400C3F00006E000",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "log"
-    },
-    {
-      "name": "tv-playing",
-      "screen": "tv",
-      "sheet": "0400C3F00006E000",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true,
-      "width": 960,
-      "height": 540
-    },
-    {
-      "name": "tv-paused",
-      "screen": "tv",
-      "sheet": "0400C3F00006E000",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true,
-      "width": 960,
-      "height": 540,
-      "work": "paused"
-    },
-    {
-      "name": "duo-folded-update-offer",
-      "screen": "games",
-      "work": "update",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 466,
-      "height": 678,
-      "insets": [
-        32,
-        0,
-        20,
-        0
-      ]
-    },
-    {
-      "name": "iphone-setup",
+      "name": "fr-iphone-setup",
       "screen": "setup",
       "owned": [],
       "setup": false,
@@ -1730,135 +455,11 @@
         0,
         34,
         0
-      ]
-    },
-    {
-      "name": "iphone-setup-spanish",
-      "comment": "The setup in Spanish (decision 152).",
-      "language": "es",
-      "screen": "setup",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-setup-nightly-to-make",
-      "comment": "The setup of a Cartouche whose first three steps are done, the automation of Shortcuts that renews it every night still to make: its last step, which opens Renew every night.",
-      "screen": "setup",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
       ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
+      "language": "fr"
     },
     {
-      "name": "iphone-setup-nightly-renewed",
-      "comment": "The same, the automation having renewed Cartouche at 4:00 this night (work: nightly-renewed), as the built-in SideStore's support noted its run of Refresh All Apps: the page at its end (category: nightly), every step done, the last one's button showing the steps again.",
-      "screen": "setup",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "nightly-renewed",
-      "category": "nightly"
-    },
-    {
-      "name": "iphone-setup-iphone-step",
-      "screen": "setup",
-      "work": "iphone-step",
-      "owned": [],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-setup-sign-in-unfinished",
-      "comment": "The setup after a sign-in that stopped before the certificate, the Apple ID having a certificate made elsewhere: why, in Cartouche's words, and its report to copy.",
-      "screen": "setup",
-      "work": "sign-in-unfinished",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-setup-done",
-      "comment": "The setup once set up: each step done, and no Sign in again, which only an expired Apple session brings back.",
-      "screen": "setup",
-      "owned": [],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-setup-session-expired",
-      "comment": "The setup once set up, after a renewal that failed as Apple said that the session the built-in SideStore renews with had expired: the Apple ID's step to do again, with Sign in again, which a setup done shows no more otherwise.",
-      "screen": "setup",
-      "work": "renewal-session-expired",
-      "owned": [],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-setup-own-certificate",
+      "name": "fr-iphone-setup-own-certificate",
       "comment": "The setup of a Cartouche signed by a signing app on the iPhone (signing: iphone), the signing app having left Increased Memory Limit out (work: iml-left-out).",
       "screen": "setup",
       "signing": "iphone",
@@ -1873,98 +474,11 @@
         0,
         34,
         0
-      ]
+      ],
+      "language": "fr"
     },
     {
-      "name": "iphone-signing-own-certificate",
-      "comment": "The import of the certificate a signing app on the iPhone signed Cartouche with (screen: signing, signing: iphone).",
-      "screen": "signing",
-      "signing": "iphone",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-signing-wrong-password",
-      "comment": "The same, after an import whose password does not open the .p12 the player chose (work: signing-wrong-password).",
-      "screen": "signing",
-      "work": "signing-wrong-password",
-      "signing": "iphone",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-signing-profile-file",
-      "comment": "The same, after an import of the profile (.mobileprovision) the player chose in the certificate's place (work: signing-profile-file).",
-      "screen": "signing",
-      "work": "signing-profile-file",
-      "signing": "iphone",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-signing-no-own-profile",
-      "comment": "The same, in a Cartouche its signing app put no profile in (embedded.mobileprovision), after an import of the certificate (work: signing-no-own-profile).",
-      "screen": "signing",
-      "work": "signing-no-own-profile",
-      "signing": "iphone",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-setup-installer",
-      "comment": "The setup of a Cartouche installed by the Cartouche Installer with the player's own certificate (signing: installer).",
-      "screen": "setup",
-      "signing": "installer",
-      "owned": [],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-setup-sidestore",
+      "name": "fr-iphone-setup-sidestore",
       "comment": "The setup of a Cartouche the player's own SideStore installed, from Cartouche's source for SideStore (signing: sidestore): the pairing file asked of that SideStore, the sign-in with its Apple ID, and Increased Memory Limit, left for after the setup.",
       "screen": "setup",
       "signing": "sidestore",
@@ -1978,257 +492,11 @@
         0,
         34,
         0
-      ]
+      ],
+      "language": "fr"
     },
     {
-      "name": "iphone-setup-sidestore-memory",
-      "comment": "The same once set up: Increased Memory Limit, which the player's SideStore left out on a free team, and the reinstall that gets it.",
-      "screen": "setup",
-      "signing": "sidestore",
-      "owned": [],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-setup-signed-elsewhere",
-      "comment": "The IPA for an Apple ID, signed by a signing app without its app group, which cannot sign in (work: signed-elsewhere): the setup offers the IPA for the player's own certificate.",
-      "screen": "setup",
-      "work": "signed-elsewhere",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sign-in",
-      "screen": "signin",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sign-in-too-many",
-      "screen": "signin",
-      "work": "too-many",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sign-in-vpn-wait",
-      "screen": "signin",
-      "work": "vpn-wait",
-      "owned": [],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sign-in-iphone-step",
-      "screen": "signin",
-      "work": "iphone-step",
-      "owned": [],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sign-in-device-no-ipsec",
-      "screen": "signin",
-      "work": "device-no-ipsec",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sign-in-device-handshake",
-      "screen": "signin",
-      "work": "device-handshake",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sign-in-device-port-closed",
-      "screen": "signin",
-      "work": "device-port-closed",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sign-in-sidestore-quit",
-      "comment": "A sign-in whose built-in SideStore closed as it launched, LocalDevVPN connected: what to do, in Cartouche's words.",
-      "screen": "signin",
-      "work": "sidestore-quit",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sign-in-no-app-group",
-      "comment": "A sign-in whose built-in SideStore found no app group, as when a signing app signed the IPA for an Apple ID, LocalDevVPN connected: the setup's words for that IPA, and the IPA for the player's own certificate to download.",
-      "screen": "signin",
-      "work": "no-app-group",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sign-in-no-liveprocess",
-      "comment": "A sign-in whose built-in SideStore could not start, LiveProcess missing from the app, LocalDevVPN connected: what to do, in Cartouche's words, where LiveContainer's English words showed up to 0.13.1.",
-      "screen": "signin",
-      "work": "sign-in-no-liveprocess",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sign-in-provisioning-refused",
-      "comment": "A sign-in for which Apple refused a new machine for now, before the Apple ID went to it, LocalDevVPN connected: why, in Cartouche's words, where AnisetteKit's English words showed up to 0.14.0, with the wait under way.",
-      "screen": "signin",
-      "work": "provisioning-refused",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sign-in-session-expired",
-      "comment": "A sign-in whose session Apple says has expired, before any code, LocalDevVPN connected: what to do, in Cartouche's words, where Apple's English words showed up to 0.14.0.",
-      "screen": "signin",
-      "work": "session-expired",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-sign-in-cannot-complete",
-      "comment": "A sign-in Apple refused without saying why, before any code, LocalDevVPN connected: what to do, in Cartouche's words, where Apple's English words showed up to 0.14.0.",
-      "screen": "signin",
-      "work": "cannot-complete",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-guide-first-launch",
+      "name": "fr-iphone-guide-first-launch",
       "screen": "guide",
       "owned": [],
       "setup": false,
@@ -2240,25 +508,11 @@
         0,
         34,
         0
-      ]
+      ],
+      "language": "fr"
     },
     {
-      "name": "iphone-guide-build",
-      "screen": "guide",
-      "owned": [],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-guide-build-skipped",
+      "name": "fr-iphone-guide-build",
       "screen": "guide",
       "owned": [],
       "setup": true,
@@ -2271,10 +525,10 @@
         34,
         0
       ],
-      "work": "build-skipped"
+      "language": "fr"
     },
     {
-      "name": "iphone-guide-cloud",
+      "name": "fr-iphone-guide-cloud",
       "comment": "Your first game, this iPhone linked to Cartouche Cloud, which built games of the player (work: cloud-games): the Mac's step done, the games folder's passed over, and the last step installing the games Cartouche Cloud built.",
       "screen": "guide",
       "owned": [],
@@ -2288,101 +542,11 @@
         34,
         0
       ],
-      "work": "cloud-games"
+      "work": "cloud-games",
+      "language": "fr"
     },
     {
-      "name": "iphone-guide-own-certificate",
-      "comment": "Your first game, in a Cartouche signed by a signing app on the iPhone (signing: iphone).",
-      "screen": "guide",
-      "signing": "iphone",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-guide-installer",
-      "comment": "Your first game, in a Cartouche installed by the Cartouche Installer with the player's own certificate (signing: installer).",
-      "screen": "guide",
-      "signing": "installer",
-      "owned": [],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-guide-signed-elsewhere",
-      "comment": "The same IPA (work: signed-elsewhere): Your first game offers the IPA for the player's own certificate as its first step.",
-      "screen": "guide",
-      "work": "signed-elsewhere",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-system",
-      "screen": "system",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-system-german",
-      "comment": "The System page in German (decision 152).",
-      "language": "de",
-      "screen": "system",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-system-signature",
+      "name": "fr-iphone-system",
       "screen": "system",
       "owned": [
         "0400C3F00006E000",
@@ -2399,10 +563,10 @@
         34,
         0
       ],
-      "category": "signature"
+      "language": "fr"
     },
     {
-      "name": "iphone-system-renewing",
+      "name": "fr-iphone-system-signature",
       "screen": "system",
       "owned": [
         "0400C3F00006E000",
@@ -2420,10 +584,10 @@
         0
       ],
       "category": "signature",
-      "work": "renewing"
+      "language": "fr"
     },
     {
-      "name": "iphone-system-renewal-failed",
+      "name": "fr-iphone-system-renewal-failed",
       "screen": "system",
       "owned": [
         "0400C3F00006E000",
@@ -2441,182 +605,11 @@
         0
       ],
       "category": "signature",
-      "work": "renewal-failed"
+      "work": "renewal-failed",
+      "language": "fr"
     },
     {
-      "name": "iphone-system-renewal-revoked",
-      "comment": "The System page down to the signature, after Cartouche renewed itself in its last 3 days and failed as Apple had revoked its certificate: what to do, in Cartouche's words.",
-      "screen": "system",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "category": "signature",
-      "work": "renewal-revoked"
-    },
-    {
-      "name": "iphone-system-renewal-session-expired",
-      "comment": "The System page down to the signature, after Cartouche renewed itself in its last 3 days and failed as Apple said that the session the built-in SideStore renews with had expired, then signed in again by itself without it going through: what to do, in Cartouche's words, and Sign in again under it, where up to 0.15.1 SideStore's words showed, and only Renew now, which failed the same way.",
-      "screen": "system",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "category": "signature",
-      "work": "renewal-session-expired"
-    },
-    {
-      "name": "iphone-system-renewal-no-liveprocess",
-      "comment": "The System page down to the signature, in Cartouche's last 3 days, LiveProcess missing from the app: Cartouche no longer renews itself, and says what to do in its own words, where up to 0.13.1 a renewal failed every six hours with LiveContainer's English words.",
-      "screen": "system",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "category": "signature",
-      "work": "renewal-no-liveprocess"
-    },
-    {
-      "name": "iphone-system-renewal-unanswered",
-      "comment": "The System page down to the signature, after Cartouche renewed itself in its last 3 days and failed as this iPhone did not answer through LocalDevVPN: what to do, in the sign-in's words.",
-      "screen": "system",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "category": "signature",
-      "work": "renewal-unanswered"
-    },
-    {
-      "name": "iphone-system-nightly",
-      "comment": "The System page down to Renew every night (category: nightly), the automation having failed this night without LocalDevVPN (work: nightly-no-vpn): its row says so.",
-      "screen": "system",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "nightly-no-vpn",
-      "category": "nightly"
-    },
-    {
-      "name": "iphone-system-signature-setup-to-do",
-      "screen": "system",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "category": "signature"
-    },
-    {
-      "name": "iphone-system-update-before-setup",
-      "comment": "The System page of a copy not set up yet, opened down to its updates, with a version of Cartouche on offer that it cannot install itself, and that a computer with the Cartouche Installer can install over it.",
-      "screen": "system",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": false,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "category": "update",
-      "work": "update"
-    },
-    {
-      "name": "iphone-nightly-renewal",
-      "screen": "nightly",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-nightly-renewal-tailscale",
-      "comment": "Renew every night down to Tailscale: LocalDevVPN turns it off, and Tailscale's Connect action, last, turns it on again.",
+      "name": "fr-iphone-nightly-renewal",
       "screen": "nightly",
       "owned": [
         "0400C3F00006E000",
@@ -2633,50 +626,10 @@
         34,
         0
       ],
-      "category": "tailscale"
+      "language": "fr"
     },
     {
-      "name": "iphone-nightly-renewal-no-vpn",
-      "comment": "Renew every night after its run at 4:00 this night, which Refresh All Apps made without LocalDevVPN connected (work: nightly-no-vpn): what to fix in the automation, and Cartouche checking it again once fixed.",
-      "screen": "nightly",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "nightly-no-vpn"
-    },
-    {
-      "name": "iphone-storage",
-      "screen": "storage",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-storage-offline",
+      "name": "fr-iphone-storage",
       "screen": "storage",
       "owned": [
         "0400C3F00006E000",
@@ -2693,10 +646,10 @@
         34,
         0
       ],
-      "work": "offline"
+      "language": "fr"
     },
     {
-      "name": "iphone-storage-games-folders",
+      "name": "fr-iphone-storage-games-folders",
       "comment": "Two games folders, a NAS's, out of reach away from home, and a Google Drive's: the NAS's games that the Drive holds too install from the Drive meanwhile.",
       "screen": "storage",
       "owned": [
@@ -2714,29 +667,11 @@
         34,
         0
       ],
-      "work": "games-folders"
+      "work": "games-folders",
+      "language": "fr"
     },
     {
-      "name": "iphone-storage-names",
-      "screen": "storage-names",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-storage-names-saves",
+      "name": "fr-iphone-storage-names",
       "screen": "storage-names",
       "owned": [
         "0400C3F00006E000",
@@ -2753,72 +688,10 @@
         34,
         0
       ],
-      "category": "saves"
+      "language": "fr"
     },
     {
-      "name": "iphone-storage-names-dumps",
-      "screen": "storage-names",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "category": "dumps"
-    },
-    {
-      "name": "iphone-storage-smb-refused",
-      "comment": "Add a shared folder (screen storage-smb), with a NAS nearby that refused the sign-in which lists its shared folders: the user name or the password the player typed (work smb-refused).",
-      "screen": "storage-smb",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "smb-refused"
-    },
-    {
-      "name": "iphone-storage-smb-no-guests",
-      "comment": "Add a shared folder (screen storage-smb), with a NAS nearby that refused the sign-in which lists its shared folders: a guest, without a user name (work smb-no-guests).",
-      "screen": "storage-smb",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "smb-no-guests"
-    },
-    {
-      "name": "iphone-storage-mac-nearby",
+      "name": "fr-iphone-storage-mac-nearby",
       "screen": "storage-mac",
       "owned": [
         "0400C3F00006E000",
@@ -2835,10 +708,11 @@
         34,
         0
       ],
-      "work": "mac-nearby"
+      "work": "mac-nearby",
+      "language": "fr"
     },
     {
-      "name": "iphone-storage-mac-cable",
+      "name": "fr-iphone-storage-mac-code",
       "screen": "storage-mac",
       "owned": [
         "0400C3F00006E000",
@@ -2855,216 +729,11 @@
         34,
         0
       ],
-      "work": "mac-cable"
+      "work": "mac-code",
+      "language": "fr"
     },
     {
-      "name": "iphone-storage-mac-code",
-      "screen": "storage-mac",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "mac-code"
-    },
-    {
-      "name": "iphone-storage-mac-refused",
-      "screen": "storage-mac",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "mac-refused"
-    },
-    {
-      "name": "iphone-storage-mac",
-      "screen": "storage",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "mac"
-    },
-    {
-      "name": "iphone-storage-mac-offline",
-      "screen": "storage",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "mac-offline"
-    },
-    {
-      "name": "iphone-storage-mac-tailscale-off",
-      "comment": "The player's Mac out of reach away from home, its addresses in the tailnet known and Tailscale off on this iPhone, as LocalDevVPN leaves it: turn Tailscale on.",
-      "screen": "storage",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "mac-tailscale-off"
-    },
-    {
-      "name": "iphone-storage-tailscale-off",
-      "comment": "The same, the Storage page scrolled down to Tailscale: off, with its App Store page.",
-      "screen": "storage",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "mac-tailscale-off",
-      "category": "tailscale"
-    },
-    {
-      "name": "iphone-storage-tailscale",
-      "comment": "The Storage page scrolled down to Tailscale, connected on this iPhone, the player's Mac paired with its addresses in the tailnet.",
-      "screen": "storage",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "mac-tailscale",
-      "category": "tailscale"
-    },
-    {
-      "name": "iphone-storage-mac-tailscale",
-      "comment": "The player's Mac's own form, with its address in the tailnet beside the last one, as its Cartouche Builder told it.",
-      "screen": "storage-mac",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "mac-tailscale"
-    },
-    {
-      "name": "iphone-storage-mac-away",
-      "comment": "Add your Mac away from home, Tailscale connected: no Mac nearby, and the Mac paired by its Tailscale name or address.",
-      "screen": "storage-mac",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "tailscale"
-    },
-    {
-      "name": "iphone-storage-drive",
-      "screen": "storage-drive",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-storage-drive-guide",
+      "name": "fr-iphone-storage-drive-guide",
       "screen": "storage-drive-guide",
       "owned": [
         "0400C3F00006E000",
@@ -3080,90 +749,11 @@
         0,
         34,
         0
-      ]
+      ],
+      "language": "fr"
     },
     {
-      "name": "iphone-storage-drive-signed-out",
-      "screen": "storage",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "drive-signed-out"
-    },
-    {
-      "name": "iphone-home-drive-signed-out",
-      "screen": "games",
-      "owned": [
-        "040074A01BF12000",
-        "0400C3F00006E000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "drive-signed-out"
-    },
-    {
-      "name": "iphone-home-tailscale-turned-off",
-      "comment": "The home after Cartouche renewed itself with Tailscale on: LocalDevVPN turned Tailscale off, and the top bar says so until it is on again, opening Tailscale's page of the App Store.",
-      "screen": "games",
-      "owned": [
-        "040074A01BF12000",
-        "0400C3F00006E000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "tailscale-turned-off"
-    },
-    {
-      "name": "iphone-telemetry",
-      "screen": "telemetry",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-report",
+      "name": "fr-iphone-report",
       "screen": "report",
       "owned": [
         "0400C3F00006E000",
@@ -3179,279 +769,14 @@
         0,
         34,
         0
-      ]
+      ],
+      "language": "fr"
     },
     {
-      "name": "iphone-system-other-apps",
-      "comment": "The System page down to Other installed apps (category: otherApps): two IPAs the player installed that are not nxnative games (work: other-apps), each with Open and Uninstall (decision 154). Up to 0.15.1, Cartouche said they were in Apps, LiveContainer's tab, which it hides.",
-      "screen": "system",
-      "work": "other-apps",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "category": "otherApps"
-    },
-    {
-      "name": "iphone-system-end",
-      "comment": "The System page at its end, on Reset Cartouche.",
-      "screen": "system",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "category": "reset"
-    },
-    {
-      "name": "iphone-reset",
-      "comment": "Reset Cartouche's page, as the System page opens it.",
-      "screen": "reset",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ]
-    },
-    {
-      "name": "iphone-reset-end",
-      "comment": "Reset Cartouche's page at its end: the saves of the first of the player's games, which the reset would lose, and the button.",
-      "screen": "reset-end",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "saves"
-    },
-    {
-      "name": "iphone-sim-reset-confirm",
-      "comment": "Reset Cartouche's confirmation, at the page's end, on the iPhone 17 Pro's own screen, where iOS shows it from its button as on an iPhone: drawn at a size on the iPad, it would fall outside the frame.",
-      "device": "iPhone 17 Pro",
-      "screen": "reset",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "work": "confirm"
-    },
-    {
-      "name": "iphone-reset-erasing",
-      "comment": "Reset Cartouche under way.",
-      "screen": "reset",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 402,
-      "height": 874,
-      "insets": [
-        62,
-        0,
-        34,
-        0
-      ],
-      "work": "erasing"
-    },
-    {
-      "name": "duo-folded-sign-in-code",
-      "screen": "signin",
-      "work": "code",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 466,
-      "height": 678,
-      "insets": [
-        32,
-        0,
-        20,
-        0
-      ]
-    },
-    {
-      "name": "duo-folded-guide-build",
-      "screen": "guide",
-      "owned": [],
-      "setup": true,
-      "controller": false,
-      "width": 466,
-      "height": 678,
-      "insets": [
-        32,
-        0,
-        20,
-        0
-      ]
-    },
-    {
-      "name": "duo-folded-home",
-      "screen": "games",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 466,
-      "height": 678,
-      "insets": [
-        32,
-        0,
-        20,
-        0
-      ]
-    },
-    {
-      "name": "duo-folded-home-newer-build",
-      "screen": "games",
-      "owned": [
-        "040074A01BF12000",
-        "0400C3F00006E000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 466,
-      "height": 678,
-      "insets": [
-        32,
-        0,
-        20,
-        0
-      ],
-      "work": "newer-build"
-    },
-    {
-      "name": "duo-folded-storage-mac-nearby",
-      "screen": "storage-mac",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 466,
-      "height": 678,
-      "insets": [
-        32,
-        0,
-        20,
-        0
-      ],
-      "work": "mac-nearby"
-    },
-    {
-      "name": "duo-folded-storage-mac-code",
-      "screen": "storage-mac",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 466,
-      "height": 678,
-      "insets": [
-        32,
-        0,
-        20,
-        0
-      ],
-      "work": "mac-code"
-    },
-    {
-      "name": "duo-folded-storage-mac",
-      "screen": "storage",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 466,
-      "height": 678,
-      "insets": [
-        32,
-        0,
-        20,
-        0
-      ],
-      "work": "mac"
-    },
-    {
-      "name": "duo-folded-storage-mac-offline",
-      "screen": "storage",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false,
-      "width": 466,
-      "height": 678,
-      "insets": [
-        32,
-        0,
-        20,
-        0
-      ],
-      "work": "mac-offline"
-    },
-    {
-      "name": "duo-unfolded-home",
+      "name": "fr-ipad-home-landscape",
+      "model": "iPad15,3",
+      "device": "iPad Pro 13-inch (M5)",
+      "orientation": "landscape",
       "screen": "games",
       "owned": [
         "0400C3F00006E000",
@@ -3460,17 +785,24 @@
       ],
       "setup": true,
       "controller": true,
-      "width": 626,
-      "height": 890,
-      "insets": [
-        32,
-        0,
-        20,
-        0
-      ]
+      "language": "fr"
     },
     {
-      "name": "duo-unfolded-landscape-home",
+      "name": "fr-ipad-library",
+      "model": "iPad15,3",
+      "device": "iPad Pro 13-inch (M5)",
+      "screen": "library",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "language": "fr"
+    },
+    {
+      "name": "es-iphone-home",
       "screen": "games",
       "owned": [
         "0400C3F00006E000",
@@ -3479,33 +811,19 @@
       ],
       "setup": true,
       "controller": true,
-      "width": 890,
-      "height": 626,
+      "width": 402,
+      "height": 874,
       "insets": [
-        24,
+        62,
         0,
-        20,
+        34,
         0
-      ]
+      ],
+      "language": "es"
     },
     {
-      "name": "duo-unfolded-landscape-first-launch",
+      "name": "es-iphone-home-landscape",
       "screen": "games",
-      "owned": [],
-      "setup": false,
-      "controller": false,
-      "width": 890,
-      "height": 626,
-      "insets": [
-        24,
-        0,
-        20,
-        0
-      ]
-    },
-    {
-      "name": "duo-unfolded-library",
-      "screen": "library",
       "owned": [
         "0400C3F00006E000",
         "040074A01BF12000",
@@ -3513,75 +831,19 @@
       ],
       "setup": true,
       "controller": true,
-      "width": 626,
-      "height": 890,
+      "width": 874,
+      "height": 402,
+      "widthClass": "compact",
       "insets": [
-        32,
         0,
-        20,
-        0
-      ]
-    },
-    {
-      "name": "duo-unfolded-first-launch",
-      "screen": "games",
-      "owned": [],
-      "setup": true,
-      "controller": false,
-      "width": 626,
-      "height": 890,
-      "insets": [
-        32,
-        0,
-        20,
-        0
-      ]
-    },
-    {
-      "name": "duo-unfolded-library-first-launch",
-      "screen": "library",
-      "owned": [],
-      "setup": true,
-      "controller": false,
-      "width": 626,
-      "height": 890,
-      "insets": [
-        32,
-        0,
-        20,
-        0
-      ]
-    },
-    {
-      "name": "duo-unfolded-landscape-library-first-launch",
-      "screen": "library",
-      "owned": [],
-      "setup": true,
-      "controller": false,
-      "width": 890,
-      "height": 626,
-      "insets": [
-        24,
-        0,
-        20,
-        0
-      ]
-    },
-    {
-      "name": "duo-sim-home",
-      "device": "iPhone Duo",
-      "screen": "games",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
+        62,
+        21,
+        62
       ],
-      "setup": true,
-      "controller": true
+      "language": "es"
     },
     {
-      "name": "duo-sim-library",
-      "device": "iPhone Duo",
+      "name": "es-iphone-library",
       "screen": "library",
       "owned": [
         "0400C3F00006E000",
@@ -3589,11 +851,19 @@
         "01006BB00C6F0000"
       ],
       "setup": true,
-      "controller": false
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
     },
     {
-      "name": "duo-sim-sheet",
-      "device": "iPhone Duo",
+      "name": "es-iphone-sheet-mine",
       "screen": "sheet",
       "sheet": "0400C3F00006E000",
       "owned": [
@@ -3602,11 +872,153 @@
         "01006BB00C6F0000"
       ],
       "setup": true,
-      "controller": false
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
     },
     {
-      "name": "duo-sim-game-settings",
-      "device": "iPhone Duo",
+      "name": "es-iphone-sheet-mac-building",
+      "comment": "The sheet, scrolled to the game's build on the player's Mac: that Mac building this game and another waiting its turn, with Stop its build and All the Mac's builds.",
+      "screen": "sheet-mac",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "mac-builds",
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-mac-builds",
+      "comment": "All the Mac's builds, as System opens them: Build what is due and Stop all, the game building with Stop its build, the one waiting its turn with Remove, the build that failed and why, and every game of the Mac.",
+      "screen": "mac-builds",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "mac-builds",
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-cloud-linking",
+      "comment": "The same, as the link of the account's page opened Cartouche: its code in the field, linking this iPhone.",
+      "screen": "cloud",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-linking",
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-cloud-games",
+      "comment": "This iPhone linked: the account's credits, those held for the game being built, and its games, each with its cover, in the site's words: being built, at its fifth step of six, with the phases of the build of the game itself, its shaders under way with how much of them is done and the time left; waiting for it; built, with Install and when it is deleted; built and installed on this iPhone since, On this iPhone in place of Install; and not built, with why and until when the site builds it again.",
+      "screen": "cloud",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-games",
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-sheet-cloud",
+      "comment": "That game's sheet: Install from Cartouche Cloud, its size, and when Cartouche Cloud deletes it.",
+      "screen": "sheet",
+      "sheet": "01003FC01670C000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-games",
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-game-info",
+      "screen": "gameinfo",
+      "sheet": "0100C0FFEE0A0000",
+      "owned": [
+        "0100C0FFEE0A0000:Celeste",
+        "0100F00D0BAD0000:Pixel Quest",
+        "0400C3F00006E000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "own-cover",
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-game-settings",
       "screen": "settings",
       "sheet": "0400C3F00006E000",
       "owned": [
@@ -3615,139 +1027,22 @@
         "01006BB00C6F0000"
       ],
       "setup": true,
-      "controller": false
-    },
-    {
-      "name": "duo-sim-install-not-signed",
-      "device": "iPhone Duo",
-      "screen": "games",
-      "sheet": "01007EF00011E000",
-      "work": "not-signed-install",
-      "owned": [
-        "01007EF00011E000",
-        "0400C3F00006E000",
-        "01006BB00C6F0000"
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
       ],
-      "setup": true,
-      "controller": false
+      "language": "es"
     },
     {
-      "name": "duo-sim-start-not-signed",
-      "device": "iPhone Duo",
-      "screen": "games",
-      "sheet": "01007EF00011E000",
-      "work": "not-signed-start",
-      "owned": [
-        "01007EF00011E000",
-        "0400C3F00006E000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false
-    },
-    {
-      "name": "duo-sim-game-signature-refused",
-      "device": "iPhone Duo",
-      "screen": "games",
-      "sheet": "01007EF00011E000",
-      "work": "signature-refused",
-      "owned": [
-        "01007EF00011E000",
-        "0400C3F00006E000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false
-    },
-    {
-      "name": "duo-sim-game-stopped-on-error",
-      "device": "iPhone Duo",
-      "screen": "games",
-      "sheet": "01007EF00011E000",
-      "work": "stopped-on-error",
-      "owned": [
-        "01007EF00011E000",
-        "0400C3F00006E000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false
-    },
-    {
-      "name": "duo-sim-installed-not-a-game",
-      "comment": "What Cartouche says once it has installed an IPA that is not an nxnative game (work: installed-not-a-game), to a player who plays by touch: where it is, on the System page under Other installed apps (decision 154), where up to 0.15.1 it said Apps. An alert, so on the iPhone Duo's own simulator.",
-      "device": "iPhone Duo",
-      "screen": "games",
-      "work": "installed-not-a-game",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": false
-    },
-    {
-      "name": "duo-sim-home-landscape",
-      "device": "iPhone Duo",
-      "orientation": "landscape",
-      "screen": "games",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true
-    },
-    {
-      "name": "ipad-home",
-      "model": "iPad15,3",
-      "device": "iPad Pro 13-inch (M5)",
-      "screen": "games",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true
-    },
-    {
-      "name": "ipad-home-german",
-      "comment": "The iPad's console in German: an iPad says iPad in German too (decision 152).",
-      "language": "de",
-      "model": "iPad15,3",
-      "device": "iPad Pro 13-inch (M5)",
-      "screen": "games",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true
-    },
-    {
-      "name": "ipad-home-landscape",
-      "model": "iPad15,3",
-      "device": "iPad Pro 13-inch (M5)",
-      "orientation": "landscape",
-      "screen": "games",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true
-    },
-    {
-      "name": "ipad-home-paused-landscape",
-      "model": "iPad15,3",
-      "device": "iPad Pro 13-inch (M5)",
-      "orientation": "landscape",
-      "screen": "games",
+      "name": "es-iphone-game-settings-controls",
+      "screen": "settings",
+      "sheet": "0400C3F00006E000",
+      "category": "Controls",
       "owned": [
         "0400C3F00006E000",
         "040074A01BF12000",
@@ -3755,10 +1050,538 @@
       ],
       "setup": true,
       "controller": false,
-      "work": "paused"
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
     },
     {
-      "name": "ipad-library",
+      "name": "es-iphone-sheet-saves",
+      "comment": "The sheet of the player's game brought down to its saves, with its copies in the saves folder, and Switch saves.",
+      "screen": "sheet-saves",
+      "sheet": "0400C3F00006E000",
+      "work": "saves",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-switch-save",
+      "comment": "A game's saves between the Switch and this iPhone, the sheet's game's, with the save JKSV exported for it read: what it holds, Continue this game here, and Make the ZIP for JKSV.",
+      "screen": "switch-save",
+      "sheet": "01006BB00C6F0000",
+      "work": "saves",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-game-shortcuts",
+      "screen": "shortcuts",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-installing",
+      "screen": "games",
+      "sheet": "0400C3F00006E000",
+      "work": "installing",
+      "owned": [
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-whats-new",
+      "comment": "What's new over the console, as after an update to the newest version the gallery carries notes for (app/releases), in the gallery's French: notes written in English only show in English.",
+      "screen": "games",
+      "work": "whats-new",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-home-offline",
+      "screen": "games",
+      "owned": [
+        "040074A01BF12000",
+        "0400C3F00006E000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "offline",
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-home-paused",
+      "screen": "games",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "paused",
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-gamelog",
+      "comment": "The page that shares those logs (screen: gamelog): the last session and the one before, Send the log… as the game wrote them, and Send to Cartouche, cleaned.",
+      "screen": "gamelog",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "log",
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-setup",
+      "screen": "setup",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-setup-own-certificate",
+      "comment": "The setup of a Cartouche signed by a signing app on the iPhone (signing: iphone), the signing app having left Increased Memory Limit out (work: iml-left-out).",
+      "screen": "setup",
+      "signing": "iphone",
+      "work": "iml-left-out",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-setup-sidestore",
+      "comment": "The setup of a Cartouche the player's own SideStore installed, from Cartouche's source for SideStore (signing: sidestore): the pairing file asked of that SideStore, the sign-in with its Apple ID, and Increased Memory Limit, left for after the setup.",
+      "screen": "setup",
+      "signing": "sidestore",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-guide-first-launch",
+      "screen": "guide",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-guide-build",
+      "screen": "guide",
+      "owned": [],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-guide-cloud",
+      "comment": "Your first game, this iPhone linked to Cartouche Cloud, which built games of the player (work: cloud-games): the Mac's step done, the games folder's passed over, and the last step installing the games Cartouche Cloud built.",
+      "screen": "guide",
+      "owned": [],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-games",
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-system",
+      "screen": "system",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-system-signature",
+      "screen": "system",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "category": "signature",
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-system-renewal-failed",
+      "screen": "system",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "category": "signature",
+      "work": "renewal-failed",
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-nightly-renewal",
+      "screen": "nightly",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-storage",
+      "screen": "storage",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-storage-games-folders",
+      "comment": "Two games folders, a NAS's, out of reach away from home, and a Google Drive's: the NAS's games that the Drive holds too install from the Drive meanwhile.",
+      "screen": "storage",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "games-folders",
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-storage-names",
+      "screen": "storage-names",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-storage-mac-nearby",
+      "screen": "storage-mac",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "mac-nearby",
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-storage-mac-code",
+      "screen": "storage-mac",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "mac-code",
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-storage-drive-guide",
+      "screen": "storage-drive-guide",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
+    },
+    {
+      "name": "es-iphone-report",
+      "screen": "report",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "es"
+    },
+    {
+      "name": "es-ipad-home-landscape",
+      "model": "iPad15,3",
+      "device": "iPad Pro 13-inch (M5)",
+      "orientation": "landscape",
+      "screen": "games",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true,
+      "language": "es"
+    },
+    {
+      "name": "es-ipad-library",
       "model": "iPad15,3",
       "device": "iPad Pro 13-inch (M5)",
       "screen": "library",
@@ -3768,31 +1591,548 @@
         "01006BB00C6F0000"
       ],
       "setup": true,
-      "controller": false
+      "controller": false,
+      "language": "es"
     },
     {
-      "name": "ipad-home-first-launch",
-      "model": "iPad15,3",
-      "device": "iPad Pro 13-inch (M5)",
+      "name": "de-iphone-home",
       "screen": "games",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-home-landscape",
+      "screen": "games",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true,
+      "width": 874,
+      "height": 402,
+      "widthClass": "compact",
+      "insets": [
+        0,
+        62,
+        21,
+        62
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-library",
+      "screen": "library",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-sheet-mine",
+      "screen": "sheet",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-sheet-mac-building",
+      "comment": "The sheet, scrolled to the game's build on the player's Mac: that Mac building this game and another waiting its turn, with Stop its build and All the Mac's builds.",
+      "screen": "sheet-mac",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "mac-builds",
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-mac-builds",
+      "comment": "All the Mac's builds, as System opens them: Build what is due and Stop all, the game building with Stop its build, the one waiting its turn with Remove, the build that failed and why, and every game of the Mac.",
+      "screen": "mac-builds",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "mac-builds",
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-cloud-linking",
+      "comment": "The same, as the link of the account's page opened Cartouche: its code in the field, linking this iPhone.",
+      "screen": "cloud",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-linking",
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-cloud-games",
+      "comment": "This iPhone linked: the account's credits, those held for the game being built, and its games, each with its cover, in the site's words: being built, at its fifth step of six, with the phases of the build of the game itself, its shaders under way with how much of them is done and the time left; waiting for it; built, with Install and when it is deleted; built and installed on this iPhone since, On this iPhone in place of Install; and not built, with why and until when the site builds it again.",
+      "screen": "cloud",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-games",
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-sheet-cloud",
+      "comment": "That game's sheet: Install from Cartouche Cloud, its size, and when Cartouche Cloud deletes it.",
+      "screen": "sheet",
+      "sheet": "01003FC01670C000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-games",
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-game-info",
+      "screen": "gameinfo",
+      "sheet": "0100C0FFEE0A0000",
+      "owned": [
+        "0100C0FFEE0A0000:Celeste",
+        "0100F00D0BAD0000:Pixel Quest",
+        "0400C3F00006E000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "own-cover",
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-game-settings",
+      "screen": "settings",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-game-settings-controls",
+      "screen": "settings",
+      "sheet": "0400C3F00006E000",
+      "category": "Controls",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-sheet-saves",
+      "comment": "The sheet of the player's game brought down to its saves, with its copies in the saves folder, and Switch saves.",
+      "screen": "sheet-saves",
+      "sheet": "0400C3F00006E000",
+      "work": "saves",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-switch-save",
+      "comment": "A game's saves between the Switch and this iPhone, the sheet's game's, with the save JKSV exported for it read: what it holds, Continue this game here, and Make the ZIP for JKSV.",
+      "screen": "switch-save",
+      "sheet": "01006BB00C6F0000",
+      "work": "saves",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-game-shortcuts",
+      "screen": "shortcuts",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-installing",
+      "screen": "games",
+      "sheet": "0400C3F00006E000",
+      "work": "installing",
+      "owned": [
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-whats-new",
+      "comment": "What's new over the console, as after an update to the newest version the gallery carries notes for (app/releases), in the gallery's French: notes written in English only show in English.",
+      "screen": "games",
+      "work": "whats-new",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-home-offline",
+      "screen": "games",
+      "owned": [
+        "040074A01BF12000",
+        "0400C3F00006E000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "offline",
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-home-paused",
+      "screen": "games",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "paused",
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-gamelog",
+      "comment": "The page that shares those logs (screen: gamelog): the last session and the one before, Send the log… as the game wrote them, and Send to Cartouche, cleaned.",
+      "screen": "gamelog",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "log",
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-setup",
+      "screen": "setup",
       "owned": [],
       "setup": false,
-      "controller": false
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
     },
     {
-      "name": "ipad-home-first-launch-landscape",
-      "model": "iPad15,3",
-      "device": "iPad Pro 13-inch (M5)",
-      "orientation": "landscape",
-      "screen": "games",
+      "name": "de-iphone-setup-own-certificate",
+      "comment": "The setup of a Cartouche signed by a signing app on the iPhone (signing: iphone), the signing app having left Increased Memory Limit out (work: iml-left-out).",
+      "screen": "setup",
+      "signing": "iphone",
+      "work": "iml-left-out",
       "owned": [],
       "setup": false,
-      "controller": false
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
     },
     {
-      "name": "ipad-system",
-      "model": "iPad15,3",
-      "device": "iPad Pro 13-inch (M5)",
+      "name": "de-iphone-setup-sidestore",
+      "comment": "The setup of a Cartouche the player's own SideStore installed, from Cartouche's source for SideStore (signing: sidestore): the pairing file asked of that SideStore, the sign-in with its Apple ID, and Increased Memory Limit, left for after the setup.",
+      "screen": "setup",
+      "signing": "sidestore",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-guide-first-launch",
+      "screen": "guide",
+      "owned": [],
+      "setup": false,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-guide-build",
+      "screen": "guide",
+      "owned": [],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-guide-cloud",
+      "comment": "Your first game, this iPhone linked to Cartouche Cloud, which built games of the player (work: cloud-games): the Mac's step done, the games folder's passed over, and the last step installing the games Cartouche Cloud built.",
+      "screen": "guide",
+      "owned": [],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-games",
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-system",
       "screen": "system",
       "owned": [
         "0400C3F00006E000",
@@ -3800,11 +2140,229 @@
         "01006BB00C6F0000"
       ],
       "setup": true,
-      "controller": false
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
     },
     {
-      "name": "ipad-mini-home",
+      "name": "de-iphone-system-signature",
+      "screen": "system",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "category": "signature",
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-system-renewal-failed",
+      "screen": "system",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "category": "signature",
+      "work": "renewal-failed",
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-nightly-renewal",
+      "screen": "nightly",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-storage",
+      "screen": "storage",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-storage-games-folders",
+      "comment": "Two games folders, a NAS's, out of reach away from home, and a Google Drive's: the NAS's games that the Drive holds too install from the Drive meanwhile.",
+      "screen": "storage",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "games-folders",
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-storage-names",
+      "screen": "storage-names",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-storage-mac-nearby",
+      "screen": "storage-mac",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "mac-nearby",
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-storage-mac-code",
+      "screen": "storage-mac",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "mac-code",
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-storage-drive-guide",
+      "screen": "storage-drive-guide",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-iphone-report",
+      "screen": "report",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "language": "de"
+    },
+    {
+      "name": "de-ipad-home-landscape",
       "model": "iPad15,3",
+      "device": "iPad Pro 13-inch (M5)",
+      "orientation": "landscape",
       "screen": "games",
       "owned": [
         "0400C3F00006E000",
@@ -3813,54 +2371,21 @@
       ],
       "setup": true,
       "controller": true,
-      "width": 744,
-      "height": 1133,
-      "insets": [
-        24,
-        0,
-        20,
-        0
-      ]
+      "language": "de"
     },
     {
-      "name": "ipad-11-home",
+      "name": "de-ipad-library",
       "model": "iPad15,3",
-      "screen": "games",
+      "device": "iPad Pro 13-inch (M5)",
+      "screen": "library",
       "owned": [
         "0400C3F00006E000",
         "040074A01BF12000",
         "01006BB00C6F0000"
       ],
       "setup": true,
-      "controller": true,
-      "width": 820,
-      "height": 1180,
-      "insets": [
-        24,
-        0,
-        20,
-        0
-      ]
-    },
-    {
-      "name": "ipad-11-window-third",
-      "model": "iPad15,3",
-      "screen": "games",
-      "owned": [
-        "0400C3F00006E000",
-        "040074A01BF12000",
-        "01006BB00C6F0000"
-      ],
-      "setup": true,
-      "controller": true,
-      "width": 375,
-      "height": 820,
-      "insets": [
-        24,
-        0,
-        20,
-        0
-      ]
+      "controller": false,
+      "language": "de"
     }
   ]
 }
