@@ -172,8 +172,11 @@ final class CartoucheSetup: ObservableObject {
     var canPlay: Bool { true }
     var needsSetup: Bool { false }
     var showsBanner: Bool { false }
+    var bannerHides: Bool { false }
     var bannerIcon: String { "checkmark.circle.fill" }
     var bannerTitle: String { "" }
+
+    func hideBanner() {}
 
     func refresh() {}
     func bannerDetail(signingInAgain: Bool, registeringDevice: Bool = false) -> String { "" }
