@@ -19,6 +19,8 @@ Bajo cada error, Cartouche dice por qué y qué hacer, y **Copiar el informe** d
 
 **Falta una parte de la app.** Cartouche lo dice cuando inicia sesión, se renueva o se actualiza. Vuelve a instalarlo sobre esta copia con el Instalador de Cartouche, que la restituye.
 
+**Cartouche dice que su IPA para SideStore se instaló sin su grupo de apps.** Algunas apps de firma quitan el grupo de apps que necesita el inicio de sesión de Cartouche. Instala Cartouche con el [Instalador de Cartouche](/es/installer/) desde un ordenador, o, con tu app de firma, firma la IPA para tu propio certificado, `Cartouche-<version>-Own-Certificate.ipa`, de las versiones de Cartouche en GitHub.
+
 **Falta el archivo de emparejamiento.** En el Instalador de Cartouche, **Volver a poner el archivo de emparejamiento en Cartouche**.
 
 **La renovación no salió.** Comprueba que LocalDevVPN está instalado y puede conectarse, y luego **Renovar ahora** en la página Sistema, que dice por qué falló.

@@ -19,6 +19,8 @@ Unter jedem Fehler sagt Cartouche, warum und was zu tun ist, und **Bericht kopie
 
 **Ein Teil der App fehlt.** Cartouche sagt es, wenn es sich anmeldet, erneuert oder aktualisiert. Installiere es mit dem Cartouche-Installer erneut über diese Kopie, der ihn wieder einsetzt.
 
+**Cartouche sagt, seine IPA für SideStore wurde ohne ihre App-Gruppe installiert.** Manche Signier-Apps lassen die App-Gruppe weg, die die Anmeldung von Cartouche braucht. Installiere Cartouche stattdessen mit dem [Cartouche-Installer](/de/installer/) auf einem Computer, oder signiere mit deiner Signier-App die IPA für dein eigenes Zertifikat, `Cartouche-<version>-Own-Certificate.ipa`, aus den Versionen von Cartouche auf GitHub.
+
 **Die Kopplungsdatei fehlt.** Im Cartouche-Installer **Kopplungsdatei erneut in Cartouche ablegen**.
 
 **Die Erneuerung ist nicht durchgegangen.** Prüfe, dass LocalDevVPN installiert ist und sich verbinden kann, dann **Jetzt erneuern** auf der Seite „System“, die sagt, warum es fehlschlug.

@@ -19,6 +19,8 @@ Under each error, Cartouche says why and what to do, and **Copy the report** giv
 
 **A part of the app is missing.** Cartouche says so as it signs in, renews or updates itself. Install it again over this copy with the Cartouche Installer, which puts it back.
 
+**Cartouche says its IPA for SideStore was installed without its app group.** Some signing apps leave out the app group Cartouche's sign-in needs. Install Cartouche with the [Cartouche Installer](/installer/) from a computer instead, or, with your signing app, sign the IPA for your own certificate, `Cartouche-<version>-Own-Certificate.ipa`, from Cartouche's releases on GitHub.
+
 **The pairing file is missing.** In the Cartouche Installer, **Put the pairing file in Cartouche again**.
 
 **The renewal did not go through.** Check that LocalDevVPN is installed and can connect, then **Renew now** on the System page, which says why it failed.

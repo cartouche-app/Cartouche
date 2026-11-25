@@ -19,6 +19,8 @@ Sous chaque erreur, Cartouche dit pourquoi et quoi faire, et **Copier le rapport
 
 **Une partie de l'app manque.** Cartouche le dit quand il se connecte, se renouvelle ou se met à jour. Réinstallez-le par-dessus cette copie avec l'Installeur Cartouche, qui la remet.
 
+**Cartouche dit que son IPA pour SideStore a été installée sans son groupe d'apps.** Certaines apps de signature retirent le groupe d'apps dont la connexion de Cartouche a besoin. Installez plutôt Cartouche avec l'[Installeur Cartouche](/fr/installer/) depuis un ordinateur, ou, avec votre app de signature, signez l'IPA pour votre propre certificat, `Cartouche-<version>-Own-Certificate.ipa`, depuis les versions de Cartouche sur GitHub.
+
 **Le fichier de jumelage manque.** Dans l'Installeur Cartouche, **Remettre le fichier de jumelage dans Cartouche**.
 
 **Le renouvellement n'a pas abouti.** Vérifiez que LocalDevVPN est installé et peut se connecter, puis **Renouveler maintenant** sur la page Système, qui dit pourquoi il a échoué.
