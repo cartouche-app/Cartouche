@@ -8,7 +8,9 @@
 //  The builds a paired iPhone sees, and the build it asks for, are the
 //  model's (IPhoneBuilds.swift); its connections to the player's storage
 //  are those of the console's Storage page (ConsoleLink), both sides
-//  keeping the same.
+//  keeping the same; and the console reads a game of the iPhone's games
+//  folders on a NAS for an iPhone plugged in, which the bridge passes on
+//  through the cable (IPhoneRelay).
 //
 
 import AppKit
@@ -68,6 +70,9 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
     /// Reads how fast the iPhones read their games, each second while one
     /// is connected.
     private var sendingWatch: Task<Void, Never>?
+    /// What reads the games of a NAS for an iPhone plugged in: the server
+    /// keeps it weakly.
+    private let relay = IPhoneRelay()
 
     init(home: BuilderHome, sample: Bool) {
         self.home = home
@@ -120,6 +125,7 @@ final class BridgeController: ObservableObject, BridgeServerDelegate {
         self.model = model
         server?.builds = self
         server?.connections = self
+        server?.relay = relay
         if enabled { start() }
     }
 

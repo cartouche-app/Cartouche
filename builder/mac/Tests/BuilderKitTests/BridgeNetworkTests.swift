@@ -51,6 +51,33 @@ final class BridgeNetworkTests: XCTestCase {
         XCTAssertEqual(BridgeNetwork.network(type: nil, name: nil, band: band), CartoucheMacNetwork(medium: "other"))
     }
 
+    func testTheWayToAServerIsTheWayAConnectionThereGoes() async throws {
+        // A server of this Mac's own loopback: neither its Ethernet nor its
+        // Wi-Fi, so that no game of it is passed on (BridgeRelay.swift).
+        let listener = try NWListener(using: .tcp)
+        listener.newConnectionHandler = { $0.cancel() }
+        listener.start(queue: DispatchQueue(label: "route test"))
+        let end = Date().addingTimeInterval(5)
+        while (listener.port?.rawValue ?? 0) == 0, Date() < end {
+            try await Task.sleep(nanoseconds: 20_000_000)
+        }
+        let port = Int(try XCTUnwrap(listener.port?.rawValue))
+        let way = await BridgeNetwork.route(to: "127.0.0.1", port: port, patience: 3)
+        XCTAssertEqual(way?.medium, CartoucheMacNetwork.other)
+        XCTAssertFalse(CartoucheCableRelay.relays(over: way))
+        // Nothing listens there any more: no way, within the patience.
+        listener.cancel()
+        try await Task.sleep(nanoseconds: 200_000_000)
+        let started = Date()
+        let none = await BridgeNetwork.route(to: "127.0.0.1", port: port, patience: 1)
+        XCTAssertNil(none)
+        XCTAssertLessThan(Date().timeIntervalSince(started), 2.5)
+        let nowhere = await BridgeNetwork.route(to: " ", port: 445, patience: 1)
+        XCTAssertNil(nowhere)
+        let noPort = await BridgeNetwork.route(to: "127.0.0.1", port: 0, patience: 1)
+        XCTAssertNil(noPort)
+    }
+
     func testInfoTellsTheSessionsNetwork() {
         let onWiFi = Session(server: server, peer: "iphone",
                              reads: BridgeReads(network: { CartoucheMacNetwork(medium: "wifi", band: "2.4") }))

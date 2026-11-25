@@ -27,6 +27,12 @@
 //  iPhone's ID for the Mac is the server's own UUID: two Macs cannot tell
 //  they serve the same iPhone.
 //
+//  Plugged into the Mac, the iPhone also has the Mac read for it a game of
+//  its games folders on a NAS, when the Mac reaches the NAS on its Ethernet,
+//  and pass it on through the cable (relayed, CartoucheCableRelay): the
+//  install opens the file that way first, and reads the NAS itself when no
+//  Mac is plugged in, it is older, or it refuses (decision 162).
+//
 //  The player's connections to their storage go to the Mac, and its own
 //  come back, so that both have the same (CartoucheConnectionsExchange):
 //  after a pairing, after each change here, and when Cartouche comes to
@@ -403,6 +409,93 @@ enum CartoucheMacStorage {
         guard let address, !address.isEmpty, !address.lowercased().hasPrefix("fe80:") else { return nil }
         return address
     }
+
+    // MARK: A game of a NAS, through the Mac
+
+    /// The Mac each server's game comes through now, by the server's ID:
+    /// the Mac's name, while it reads the game on the NAS and passes it on
+    /// through the cable; none while the iPhone reads it there itself. The
+    /// install's screen says so (CartoucheTransferWay.relayed).
+    @MainActor static private(set) var relays: [UUID: String] = [:]
+
+    /// Notes that SERVER's game comes through the Mac called MAC now, or
+    /// from SERVER itself (nil).
+    @MainActor static func note(relay mac: String?, of server: UUID) {
+        relays[server] = mac
+    }
+
+    /// A file of the games folders, opened through a Mac.
+    struct Relayed {
+        let source: CartoucheByteSource
+        /// Closes the session with the Mac.
+        let close: () async -> Void
+        /// The Mac's name.
+        let mac: String
+    }
+
+    /// The file at PATH of the games folder on SERVER, read by the player's
+    /// Mac this iPhone is plugged into, when that Mac passes it on: a server
+    /// of the local network (CartoucheCableRelay.kinds), which the Mac
+    /// reaches on its Ethernet. Nil otherwise, for the install to read
+    /// SERVER itself: no Mac paired plugged in, a Cartouche for Mac older
+    /// than this, a Mac on its Wi-Fi, or anything the Mac could not do.
+    static func relayed(_ path: String, on server: CartoucheStorageServer, settings: CartoucheStorageSettings = .shared,
+                        cable: CartoucheCableLinks = .shared) async -> Relayed? {
+        guard CartoucheCableRelay.kinds.contains(server.kind.rawValue) else { return nil }
+        let macs = await MainActor.run { settings.servers.filter { $0.kind == .mac } }
+        let plugged = macs.filter { $0.macID.map(cable.isLinked) ?? false }
+        guard !plugged.isEmpty else { return nil }
+        return await relayed(path, on: server, through: plugged.map { ($0, settings.secret(of: $0) ?? "") },
+                             settings: settings, cable: cable)
+    }
+
+    /// As above, through MACS, each paired Mac with its paired key, the
+    /// first that passes it on.
+    static func relayed(_ path: String, on server: CartoucheStorageServer,
+                        through macs: [(server: CartoucheStorageServer, secret: String)],
+                        settings: CartoucheStorageSettings, cable: CartoucheCableLinks) async -> Relayed? {
+        guard CartoucheCableRelay.kinds.contains(server.kind.rawValue) else { return nil }
+        for (mac, secret) in macs {
+            guard let key = pairedKey(secret), let macID = mac.macID, !macID.isEmpty, cable.isLinked(macID) else { continue }
+            // Through the cable alone: on the Wi-Fi, the iPhone reads the
+            // NAS itself.
+            let remote: CartoucheMacRemote
+            do {
+                guard let made = try await throughCable(mac, macID: macID, device: deviceID(of: mac), key: key,
+                                                        settings: settings, cable: cable) as? CartoucheMacRemote else { continue }
+                remote = made
+            } catch {
+                if error is CancellationError { return nil }
+                continue
+            }
+            let client = remote.client
+            do {
+                // A Mac older than this would end the session on a request
+                // it does not know.
+                guard try await client.info().relays == true else {
+                    NSLog("[Cartouche] the Mac passes on no game of a NAS: its Cartouche is older")
+                    await remote.disconnect()
+                    continue
+                }
+                let connection = server.id
+                let size = try await client.relayStat(connection: connection, path: path)
+                let source = CartoucheReadAhead(size: size, chunk: relayChunk) { offset, count in
+                    try await client.relayRead(connection: connection, path: path, at: offset, count: count)
+                }
+                return Relayed(source: source, close: { await remote.disconnect() }, mac: mac.name)
+            } catch {
+                // A Mac on its Wi-Fi, a NAS it does not reach, a folder it
+                // does not know yet: the iPhone reads the NAS itself.
+                NSLog("[Cartouche] the Mac does not pass on the game: %@", error.localizedDescription)
+                await remote.disconnect()
+            }
+        }
+        return nil
+    }
+
+    /// How much of a game of a NAS the iPhone asks the Mac at a time: the
+    /// Mac reads the next while this goes through the cable.
+    static let relayChunk = 8 << 20
 
     // MARK: Pairing
 

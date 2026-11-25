@@ -209,6 +209,11 @@
 //        installing-mac                  the same on the Wi-Fi, the MacBook
 //                                        Air on its 2.4 GHz band, at 3.1 MB/s,
 //                                        with what would go faster
+//        installing-nas                  the same from the NAS, which the
+//                                        iPhone reads on its Wi-Fi, at 11 MB/s
+//        installing-relay                the same from the NAS, through the
+//                                        Mac mini on its Ethernet, by cable,
+//                                        at 36 MB/s (decision 162)
 //        iphone-step                     a sign-in Apple accepted that
 //                                        stopped at the step that registers
 //                                        this iPhone, LocalDevVPN being off
@@ -730,6 +735,21 @@ struct GalleryScenario {
                     shown.way = .network(mac: CartoucheMacNetwork(medium: CartoucheMacNetwork.wifi, band: "2.4"))
                     shown.speed = 3_140_000
                     shown.slow = true
+                }
+                CartoucheGameActions.shared.work = shown
+            }
+            if work == "installing-nas" || work == "installing-relay" {
+                // From the player's NAS: on the iPhone's Wi-Fi, or through
+                // the Mac it is plugged into (decision 162).
+                let name = sheet.flatMap { CartoucheCatalog.shared.game(titleId: $0)?.name } ?? "Game"
+                var shown = CartoucheGameWork(kind: .installing, name: name, step: CartoucheText.installFromStorageStep("NAS"),
+                                              fraction: 0.42, stage: "unpacking", place: "NAS", outside: true)
+                shown.local = true
+                if work == "installing-relay" {
+                    shown.way = .relayed
+                    shown.speed = 36_200_000
+                } else {
+                    shown.speed = 11_300_000
                 }
                 CartoucheGameActions.shared.work = shown
             }

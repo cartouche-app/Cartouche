@@ -20,6 +20,15 @@
 //  with the paired key, or a pairing with its six digits, and the same
 //  encryption. Nothing the cable carries is trusted more than the Wi-Fi.
 //
+//  A game of the iPhone's games folders on a NAS comes through the cable
+//  too, when the Mac reaches that NAS on its Ethernet: the Mac reads it
+//  there, through the player's connection, which the bridge gave it
+//  (CartoucheConnections.swift), and passes it on, a piece read ahead
+//  while the one before goes through the cable (CartoucheCableRelay,
+//  decision 162). The iPhone asks the Mac first, as the install opens the
+//  file; a Mac on its Wi-Fi refuses, the game crossing the Wi-Fi either
+//  way, and the iPhone reads the NAS itself, as it did before.
+//
 //  This file is shared: Cartouche compiles it with the launcher, Cartouche
 //  Builder through the CartoucheCore package. It needs only Foundation.
 //
@@ -362,5 +371,120 @@ public final class CartoucheCableLinks: @unchecked Sendable {
 
     private func announce() {
         NotificationCenter.default.post(name: Self.changed, object: self)
+    }
+}
+
+// MARK: A game of a NAS, through the Mac
+
+/// What the Mac reads for an iPhone plugged into it: a file of the iPhone's
+/// games folders on one of the player's connections to a server of the
+/// local network, a NAS, when the Mac reaches that server on its Ethernet
+/// (decision 162). On its Wi-Fi, the game would cross the Wi-Fi all the
+/// same, then the cable: no faster than the iPhone reading the NAS itself.
+public enum CartoucheCableRelay {
+    /// The kinds of place the Mac reads for the iPhone: a NAS's shared
+    /// folder, an FTP or an SFTP server, of the local network. Not a bucket
+    /// nor a Google Drive, which the internet brings as fast either way.
+    public static let kinds: Set<String> = ["smb", "ftp", "sftp"]
+
+    /// The port the server of KIND takes when the connection gives none
+    /// (GIVEN); nil for a kind the Mac does not read.
+    public static func port(of kind: String, given: Int?) -> Int? {
+        guard kinds.contains(kind) else { return nil }
+        if let given, (1 ... 65535).contains(given) { return given }
+        switch kind {
+        case "smb": return 445
+        case "ftp": return 21
+        default: return 22
+        }
+    }
+
+    /// Whether the Mac reads for the iPhone from a server its connection
+    /// reaches on NETWORK, as it sees it: on its Ethernet alone. Nil, a way
+    /// the Mac could not tell, is not its Ethernet.
+    public static func relays(over network: CartoucheMacNetwork?) -> Bool {
+        network?.medium == CartoucheMacNetwork.ethernet
+    }
+
+    /// The games folders of CHOSEN on the connection CONNECTION, paths from
+    /// its root: the games folder, then the others the iPhone reads, as the
+    /// Mac keeps them.
+    public static func gamesFolders(on connection: UUID, in chosen: CartoucheChosenFolders?) -> [String] {
+        guard let chosen else { return [] }
+        return ([chosen.games].compactMap { $0 } + (chosen.otherGames ?? []))
+            .filter { $0.connection == connection }
+            .map(\.path)
+    }
+
+    /// Whether PATH, from the root of a connection, is a file in one of
+    /// FOLDERS, or in a folder of theirs: the Mac reads nothing else there
+    /// for the iPhone. A folder at the root ("") holds the whole place.
+    public static func holds(_ folders: [String], path: String) -> Bool {
+        guard let parts = CartoucheBridgePath.parts(path), !parts.isEmpty, path.utf8.count < 4096 else { return false }
+        return folders.contains { folder in
+            guard let base = CartoucheBridgePath.parts(folder) else { return false }
+            return parts.count > base.count && Array(parts.prefix(base.count)) == base
+        }
+    }
+}
+
+/// A file the Mac passes on, read a piece ahead: while the piece asked goes
+/// through the cable, the next comes from the server, of the same size,
+/// for the read that follows it, as an install reads an IPA from start to
+/// end. A read elsewhere lets the one ahead end first, the server reading
+/// one piece at a time.
+public actor CartoucheReadingAhead {
+    public nonisolated let size: UInt64
+    private let fetch: @Sendable (UInt64, Int) async throws -> Data
+    private var ahead: (offset: UInt64, count: Int, task: Task<Data, Error>)?
+    /// How many reads the piece read ahead answered, for the tests.
+    public private(set) var hits = 0
+
+    /// FETCH reads COUNT bytes at an offset, all of them unless the file
+    /// ends first.
+    public init(size: UInt64, fetch: @escaping @Sendable (UInt64, Int) async throws -> Data) {
+        self.size = size
+        self.fetch = fetch
+    }
+
+    /// COUNT bytes at OFFSET, fewer only at the end of the file.
+    public func read(at offset: UInt64, count: Int) async throws -> Data {
+        guard offset < size, count > 0 else { return Data() }
+        let wanted = Int(min(UInt64(count), size - offset))
+        let kept = ahead
+        ahead = nil
+        var data: Data
+        if let kept, kept.offset == offset {
+            hits += 1
+            data = try await kept.task.value
+            if data.count > wanted {
+                data = Data(data.prefix(wanted))
+            } else if data.count < wanted, data.count == kept.count {
+                data.append(try await fetch(offset + UInt64(data.count), wanted - data.count))
+            }
+        } else {
+            if let kept {
+                kept.task.cancel()
+                _ = try? await kept.task.value
+            }
+            data = try await fetch(offset, wanted)
+        }
+        let next = offset + UInt64(data.count)
+        if data.count == wanted, next < size {
+            let count = Int(min(UInt64(wanted), size - next))
+            let fetch = self.fetch
+            ahead = (next, count, Task { try await fetch(next, count) })
+        }
+        return data
+    }
+
+    /// Stops the read ahead, once the file is done with: it ends before this
+    /// returns, so that the connection it reads on can close.
+    public func close() async {
+        let kept = ahead
+        ahead = nil
+        guard let kept else { return }
+        kept.task.cancel()
+        _ = try? await kept.task.value
     }
 }

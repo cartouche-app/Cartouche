@@ -422,6 +422,9 @@ final class CartoucheGameActions: ObservableObject {
                 // screen shows them (CartoucheTransferSpeed.swift).
                 source.onRead = { meter.add($0) }
                 work?.way = Self.way(to: server)
+                if work?.way == .relayed {
+                    facts.append(.init("Through", "the Mac, by cable: it reads the game on its Ethernet", own: true))
+                }
                 measure(meter, from: server)
                 let serverName = server.name
                 let readingStep = step
@@ -615,12 +618,22 @@ final class CartoucheGameActions: ObservableObject {
 
     /// The file at PATH of the games folder on SERVER, read where it sits,
     /// and opened again when its connection drops (CartoucheResumingSource).
+    /// A NAS's comes through the player's Mac first, when this iPhone is
+    /// plugged into it and the Mac reaches the NAS on its Ethernet: the Mac
+    /// reads it there and passes it on through the cable (decision 162).
+    /// Unplugged meanwhile, it is opened again on the NAS itself.
     nonisolated private static func openStored(_ path: String,
                                                on server: CartoucheStorageServer) async throws -> CartoucheResumingSource {
         try await CartoucheResumingSource.open {
             // The server as the settings hold it now: an SFTP server keeps
             // the key it gave the first time.
             let current = await MainActor.run { CartoucheStorageSettings.shared.server(server.id) } ?? server
+            let relayed = await CartoucheMacStorage.relayed(path, on: current)
+            // The install's screen says which way it comes now.
+            await MainActor.run { CartoucheMacStorage.note(relay: relayed?.mac, of: server.id) }
+            if let relayed {
+                return CartoucheResumingSource.Opened(source: relayed.source, close: relayed.close)
+            }
             let remote = try await CartoucheStorage.connect(current)
             if let mac = remote as? CartoucheMacRemote {
                 // How the connection reaches the Mac on its side, its Wi-Fi's
@@ -835,7 +848,8 @@ final class CartoucheGameActions: ObservableObject {
     private(set) var installedFrom: String?
     /// How the iPhone reached the Mac the game installed last came from
     /// (game.installed's `link`): through the cable, the tailnet or the
-    /// network (CartoucheMacLink); nil for another place.
+    /// network (CartoucheMacLink); "relay" for a game of a NAS the Mac read
+    /// and passed on through the cable; nil for another place.
     private(set) var installedLink: String?
     /// How fast the game installed last came, in megabytes a second
     /// (game.installed's `speed`); nil from a file on this iPhone.
@@ -1896,17 +1910,24 @@ final class CartoucheGameActions: ObservableObject {
         notice = CartoucheGameNotice(title: title, message: message, report: report, signAgain: signAgain)
     }
 
-    /// How Cartouche last reached SERVER, a Mac, for the measurements; nil
-    /// for another kind of server.
+    /// How Cartouche last reached SERVER, a Mac, for the measurements; for
+    /// a NAS whose game the Mac passes on now, relayLink; nil for another
+    /// server.
     private static func link(to server: CartoucheStorageServer) -> String? {
-        server.kind == .mac ? CartoucheMacStorage.links[server.id]?.rawValue : nil
+        guard server.kind == .mac else { return CartoucheMacStorage.relays[server.id] != nil ? relayLink : nil }
+        return CartoucheMacStorage.links[server.id]?.rawValue
     }
 
+    /// game.installed's link for a game of a NAS the Mac passed on through
+    /// the cable (decision 162).
+    static let relayLink = "relay"
+
     /// How a game comes from SERVER, its Mac: by cable, through Tailscale
-    /// or on the local network, with what the Mac told of its side; nil
+    /// or on the local network, with what the Mac told of its side; from a
+    /// NAS, through the Mac and its cable while it passes the game on; nil
     /// from another server.
     private static func way(to server: CartoucheStorageServer) -> CartoucheTransferWay? {
-        guard server.kind == .mac else { return nil }
+        guard server.kind == .mac else { return CartoucheMacStorage.relays[server.id] != nil ? .relayed : nil }
         return CartoucheTransferWay.toMac(link: link(to: server), network: CartoucheMacStorage.networks[server.id])
     }
 

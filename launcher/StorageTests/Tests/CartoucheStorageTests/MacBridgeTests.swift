@@ -50,6 +50,13 @@ final class FakeMac: @unchecked Sendable {
     /// nil for a Mac older than that, which answers with none.
     private var folders: CartoucheChosenFolders?
     private var tailnet: [String]?
+    /// The NAS it reads for an iPhone plugged in, as Cartouche Builder
+    /// does (BridgeRelay.swift): the files of each connection, and whether
+    /// it reaches them on its Ethernet; nil for a Mac older than that,
+    /// whose info says nothing of it.
+    private var nas: (ethernet: Bool, files: [UUID: [String: Data]])?
+    private var relayAsked = 0
+    private var relayReadCount = 0
     private var listener: NWListener?
     private let queue = DispatchQueue(label: "Fake Mac")
     private(set) var port = 0
@@ -111,7 +118,7 @@ final class FakeMac: @unchecked Sendable {
                 }
                 guard let self else { return connection.close() }
                 self.countThroughCable()
-                await self.handshake(connection)
+                await self.handshake(connection, cable: true)
             }
         }
     }
@@ -166,6 +173,29 @@ final class FakeMac: @unchecked Sendable {
         lock.lock()
         self.tailnet = tailnet
         lock.unlock()
+    }
+
+    /// Reads FILES for an iPhone plugged in from now on, each connection's
+    /// by its path, as a Cartouche Builder that does, on its ETHERNET or
+    /// its Wi-Fi.
+    func passOn(_ files: [UUID: [String: Data]], ethernet: Bool) {
+        lock.lock()
+        nas = (ethernet, files)
+        lock.unlock()
+    }
+
+    /// How many relayStat and relayRead it was asked.
+    var relayRequests: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return relayAsked
+    }
+
+    /// How many pieces of a NAS's file it passed on.
+    var relayReads: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return relayReadCount
     }
 
     /// The iPhones paired with it.
@@ -282,9 +312,9 @@ final class FakeMac: @unchecked Sendable {
         await handshake(transport)
     }
 
-    /// A connection once open, the network's or the cable's: a session, or
-    /// a pairing.
-    private func handshake(_ transport: CartoucheBridgeTransport) async {
+    /// A connection once open, the network's or the cable's (CABLE): a
+    /// session, or a pairing.
+    private func handshake(_ transport: CartoucheBridgeTransport, cable: Bool = false) async {
         do {
             let opening = try await CartoucheBridgeHandshake.server(transport, mac: macID, name: name,
                                                                      keyOf: { [weak self] in self?.key(of: $0) },
@@ -293,7 +323,7 @@ final class FakeMac: @unchecked Sendable {
             switch opening {
             case let .session(channel):
                 while let (request, body) = try? await channel.receive(CartoucheBridgeRequest.self) {
-                    let (response, data) = answer(request, body: body)
+                    let (response, data) = answer(request, body: body, cable: cable)
                     guard (try? await channel.send(response, body: data)) != nil else { break }
                 }
                 channel.close()
@@ -309,8 +339,9 @@ final class FakeMac: @unchecked Sendable {
         CartoucheStoragePath.parent(path)
     }
 
-    /// What Cartouche Builder answers, from the folders in memory.
-    func answer(_ request: CartoucheBridgeRequest, body: Data) -> (CartoucheBridgeResponse, Data) {
+    /// What Cartouche Builder answers, from the folders in memory, on a
+    /// session of the network or the CABLE.
+    func answer(_ request: CartoucheBridgeRequest, body: Data, cable: Bool = false) -> (CartoucheBridgeResponse, Data) {
         lock.lock()
         defer { lock.unlock() }
         let path = request.path ?? ""
@@ -321,6 +352,7 @@ final class FakeMac: @unchecked Sendable {
             response.readOnly = false
             if connections != nil { response.hasConnections = true }
             response.tailscale = tailnet
+            if cable, nas != nil { response.relays = true }
         case .list:
             guard path.isEmpty || entries[path] == .folder else { return (.failure(.notFound, path), Data()) }
             response.items = entries.filter { Self.parent($0.key) == path }
@@ -373,6 +405,24 @@ final class FakeMac: @unchecked Sendable {
         case .builds, .build, .buildDue, .stop, .stopAll, .follow, .nightly:
             // A Mac without builds to show, whose info does not say it has some.
             return (.failure(.notFound, "builds"), Data())
+        case .relayStat, .relayRead:
+            relayAsked += 1
+            // An older Mac would end the session on it.
+            guard let nas else { return (.failure(.protocolError, "unknown request"), Data()) }
+            guard cable else { return (.failure(.denied, "only through the cable"), Data()) }
+            guard nas.ethernet else { return (.failure(.refused, "not on this Mac's Ethernet"), Data()) }
+            guard let connection = request.connection, let data = nas.files[connection]?[path] else {
+                return (.failure(.notFound, path), Data())
+            }
+            response.size = UInt64(data.count)
+            guard request.op == .relayRead else {
+                response.folder = false
+                break
+            }
+            relayReadCount += 1
+            let start = Int(min(request.offset ?? 0, UInt64(data.count)))
+            let end = min(start + min(request.count ?? 0, CartoucheBridge.maxRead), data.count)
+            return (response, data.subdata(in: start ..< end))
         case .connections:
             // Those it keeps, the iPhone's among them, as Cartouche
             // Builder's console takes them.
