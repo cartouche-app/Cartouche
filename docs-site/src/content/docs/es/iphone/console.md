@@ -7,7 +7,7 @@ sidebar:
 
 Cartouche se abre en su consola: tus juegos, en grande, en una sola estantería, con sus portadas oficiales. El juego seleccionado muestra todo lo que necesitas para jugarlo, y el resto de Cartouche está a un paso.
 
-![La pantalla de inicio de Cartouche en un iPhone](../../../../assets/screens/iphone-home.webp)
+![La pantalla de inicio de Cartouche en un iPhone](../../../../assets/screens/es-iphone-home.webp)
 
 ## La pantalla de inicio
 
@@ -18,13 +18,13 @@ Cartouche se abre en su consola: tus juegos, en grande, en una sola estantería,
 
 Una línea bajo el estado del juego dice lo que queda por hacer, como una puesta a punto por terminar, y desaparece cuando el juego está listo para jugar.
 
-![La pantalla de inicio con el iPhone en horizontal](../../../../assets/screens/iphone-home-landscape.webp)
+![La pantalla de inicio con el iPhone en horizontal](../../../../assets/screens/es-iphone-home-landscape.webp)
 
 ## Todos los juegos
 
 **Todos los juegos** lista cada juego que tiene un perfil en nxnative, los tuyos primero, cada uno con su estado bajo su portada. Busca por nombre o por ID de título, y filtra por **Todos**, **Mi biblioteca**, **En iPhone**, **En Mac**, **En puesta en marcha** o por plataforma.
 
-![Todos los juegos, con sus filtros](../../../../assets/screens/iphone-library.webp)
+![Todos los juegos, con sus filtros](../../../../assets/screens/es-iphone-library.webp)
 
 Un juego que no tienes solo muestra **Importar mi copia**: Cartouche nunca ofrece una descarga. Un juego de tu carpeta de juegos que aún no está instalado muestra **Instalar desde** ese lugar.
 

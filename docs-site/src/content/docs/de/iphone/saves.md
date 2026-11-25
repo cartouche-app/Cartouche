@@ -7,7 +7,7 @@ sidebar:
 
 Mit einem unter **System › Speicher** gewählten Spielstandordner hält Cartouche die Spielstände jedes Spiels mit ihm synchron, einen Ordner pro Spiel. Deine Spielstände folgen dir von einem iPhone oder iPad zum nächsten und zu deinem Mac, über deinen Mac oder dein NAS.
 
-![Die Spielstände eines Spiels auf seiner Infoseite](../../../../assets/screens/iphone-sheet-saves.webp)
+![Die Spielstände eines Spiels auf seiner Infoseite](../../../../assets/screens/de-iphone-sheet-saves.webp)
 
 ## Wie sie synchron bleiben
 
@@ -35,7 +35,7 @@ Dein Spiel geht hier weiter, dort, wo du es auf deiner Konsole gelassen hast:
 3. Öffne auf der Infoseite des Spiels **Spielstände**, dann **Switch-Spielstände** und **Exportierten Spielstand auswählen**.
 4. **Diesen Spielstand hier fortsetzen.** Cartouche prüft, dass der Spielstand zu diesem Spiel gehört, behält den, den er ersetzt, und sendet ihn mit einem Spielstandordner als neuesten dorthin.
 
-![Einen Spielstand von deiner Konsole holen](../../../../assets/screens/iphone-switch-save.webp)
+![Einen Spielstand von deiner Konsole holen](../../../../assets/screens/de-iphone-switch-save.webp)
 
 **Spielstand von vor dem Import zurückspielen** macht es rückgängig.
 

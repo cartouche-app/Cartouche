@@ -7,7 +7,7 @@ sidebar:
 
 Tus juegos y tus partidas guardadas se quedan en casa, en tu propio almacenamiento, con tu propia cuenta. **Sistema › Almacenamiento** lo configura: los juegos que hay allí aparecen en tu biblioteca, listos para instalar, y Cartouche mantiene allí tus partidas guardadas al día, de un iPhone o iPad a otro.
 
-![La página Almacenamiento](../../../../assets/screens/iphone-storage.webp)
+![La página Almacenamiento](../../../../assets/screens/es-iphone-storage.webp)
 
 No hay dirección que pegar para una descarga, ni enlace que seguir, ni bucket público: solo tus propios lugares, con tu propia cuenta. Las contraseñas se quedan en el llavero del iPhone.
 
@@ -28,7 +28,7 @@ La primera vez, iOS pide permitir que Cartouche busque dispositivos en tu red lo
 
 Elige la carpeta que contiene las IPA de tus juegos. Tu biblioteca muestra entonces cada una, lista para instalar, y una compilación más reciente de un juego instalado aparece como actualización, conservando las partidas guardadas.
 
-![Varias carpetas de juegos](../../../../assets/screens/iphone-storage-games-folders.webp)
+![Varias carpetas de juegos](../../../../assets/screens/es-iphone-storage-games-folders.webp)
 
 - **Añadir otra carpeta de juegos**, en cualquiera de tus lugares: un juego que está en varias carpetas aparece una sola vez, y se instala desde una carpeta que responde, en casa o fuera.
 - **Copiar a**, en la ficha de un juego, copia el juego instalado a tu carpeta de juegos, la primera: hazlo antes de desinstalar un juego del que no tienes la IPA.
@@ -43,7 +43,7 @@ Elige la carpeta donde Cartouche guarda una copia de tus partidas, una carpeta p
 
 Cartouche reconoce un juego por su ID de título, las 16 letras y cifras entre corchetes de su nombre, como `Celeste [01002B30028F6000].ipa`, y encuentra la mayoría de las IPA incluso sin él. **Cómo nombrar tus juegos**, bajo la carpeta de juegos, muestra con ejemplos qué nombres encuentra Cartouche, cuáles deja de lado y por qué.
 
-![Cómo nombrar tus juegos](../../../../assets/screens/iphone-storage-names.webp)
+![Cómo nombrar tus juegos](../../../../assets/screens/es-iphone-storage-names.webp)
 
 ## Fuera de casa
 
@@ -64,7 +64,7 @@ Cartouche no tiene clave de Google propia: llega a tu Drive a través de un clie
 3. Pega el ID de cliente, toca **Iniciar sesión con Google** y permite el acceso a tu Drive. Google dice que no ha verificado la app: es la tuya, elige **Continuar**.
 4. Elige tu carpeta de juegos en Mi unidad.
 
-![Crear tu cliente de Google, paso a paso](../../../../assets/screens/iphone-storage-drive-guide.webp)
+![Crear tu cliente de Google, paso a paso](../../../../assets/screens/es-iphone-storage-drive-guide.webp)
 
 Mientras tu proyecto de Google Cloud está en pruebas, Google cierra la sesión tras 7 días: **Volver a iniciar sesión en Google** recupera el Drive, y tus partidas guardadas esperan mientras tanto.
 

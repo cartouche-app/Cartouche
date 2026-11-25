@@ -15,7 +15,7 @@ El botón de **inicio**, abajo en la pantalla del juego o en el mando, vuelve a 
 - **Salir** lo cierra, una vez que lo confirmas: se pierde lo jugado desde la última vez que el juego guardó;
 - **Jugar** en otro juego pregunta antes, ya que solo funciona un juego a la vez.
 
-![Un juego en pausa detrás de la consola](../../../../assets/screens/iphone-home-paused.webp)
+![Un juego en pausa detrás de la consola](../../../../assets/screens/es-iphone-home-paused.webp)
 
 El botón de inicio en pantalla se oculta tras unos segundos: toca justo debajo de donde estaba para que vuelva.
 
@@ -43,7 +43,7 @@ Di *«Juega a Stardew Valley en Cartouche»* a Siri, o usa **Jugar a un juego**,
 
 Un juego de tu carpeta de juegos se instala desde su ficha o desde la pantalla de inicio, con **Instalar desde** ese lugar. La pantalla dice cómo llega, por cable, a través de Tailscale o por Wi-Fi, y a qué velocidad, con un consejo cuando podría ir más rápido.
 
-![Un juego instalándose desde la carpeta de juegos](../../../../assets/screens/iphone-installing.webp)
+![Un juego instalándose desde la carpeta de juegos](../../../../assets/screens/es-iphone-installing.webp)
 
 - Mientras tanto puedes salir de Cartouche: la pantalla bloqueada y la Dynamic Island muestran cuánto lleva, en una Actividad en vivo.
 - Una conexión cortada sigue donde se paró en cuanto vuelve la red.

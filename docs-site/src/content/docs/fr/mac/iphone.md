@@ -15,9 +15,9 @@ Associé une fois, votre Mac devient un endroit de stockage de Cartouche sur l'i
 
 <div class="screens">
 
-![Macs à proximité](../../../../assets/screens/iphone-storage-mac-nearby.webp)
+![Macs à proximité](../../../../assets/screens/fr-iphone-storage-mac-nearby.webp)
 
-![Les six chiffres affichés sur les deux écrans](../../../../assets/screens/iphone-storage-mac-code.webp)
+![Les six chiffres affichés sur les deux écrans](../../../../assets/screens/fr-iphone-storage-mac-code.webp)
 
 </div>
 
@@ -33,12 +33,12 @@ Le Mac répond tant que Cartouche y est ouvert.
 
 ## Piloter les constructions du Mac depuis l'iPhone
 
-![Les constructions du Mac, sur l'iPhone](../../../../assets/screens/iphone-mac-builds.webp)
+![Les constructions du Mac, sur l'iPhone](../../../../assets/screens/fr-iphone-mac-builds.webp)
 
 - La fiche de chaque jeu montre **Constructions sur** votre Mac : en construction, avec l'avancement et le temps restant, en attente de son tour, à jour, amélioré par nxnative, ou en échec et pourquoi. Son bouton demande au Mac de le construire, maintenant ou après le lot en cours, ou arrête sa construction.
 - **Système › Constructions sur** votre Mac montre toutes ses constructions, comme sa propre fenêtre : **Construire ce qui est dû**, **Tout arrêter**, la file avec **Retirer**, les constructions échouées, **Suivre** pour chaque jeu, et **Construire ce qui est dû chaque nuit** avec son heure.
 
-![Un jeu en construction sur le Mac, depuis sa fiche sur l'iPhone](../../../../assets/screens/iphone-sheet-mac-building.webp)
+![Un jeu en construction sur le Mac, depuis sa fiche sur l'iPhone](../../../../assets/screens/fr-iphone-sheet-mac-building.webp)
 
 Les dossiers du Mac, ses outils et ses réglages restent sur le Mac.
 

@@ -25,7 +25,7 @@ Bajo cada error, Cartouche dice por qué y qué hacer, y **Copiar el informe** d
 
 **La renovación no salió.** Comprueba que LocalDevVPN está instalado y puede conectarse, y luego **Renovar ahora** en la página Sistema, que dice por qué falló.
 
-![Una renovación que falló, en la página Sistema](../../../../assets/screens/iphone-system-renewal-failed.webp)
+![Una renovación que falló, en la página Sistema](../../../../assets/screens/es-iphone-system-renewal-failed.webp)
 
 **La automatización nocturna no se ejecuta.** **Renovar cada noche**, en la página Sistema, dice lo que vio. En Atajos, comprueba que la automatización sigue ahí, activada, en **Ejecutar inmediatamente**, a una hora en la que el iPhone se carga y tiene conexión, y que **Enable LocalDevVPN** va antes de **Refresh All Apps**, la de Cartouche y no la de LiveContainer.
 
@@ -47,7 +47,7 @@ Bajo cada error, Cartouche dice por qué y qué hacer, y **Copiar el informe** d
 
 **Un lugar está sin conexión.** No responde desde donde está el iPhone. En casa, comprueba su dirección y que el iPhone está en tu Wi-Fi o tu VPN. Fuera, activa Tailscale. Tus juegos funcionan como siempre, y tus partidas guardadas esperan.
 
-![Un lugar que no responde](../../../../assets/screens/iphone-home-offline.webp)
+![Un lugar que no responde](../../../../assets/screens/es-iphone-home-offline.webp)
 
 **Tailscale está desactivado.** LocalDevVPN lo desactivó, ya que iOS mantiene una sola VPN a la vez: abre Tailscale para volver a activarlo, o añade su acción **Connect** a la automatización nocturna.
 

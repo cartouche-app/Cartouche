@@ -15,9 +15,9 @@ Einmal gekoppelt, wird dein Mac zu einem Speicherort von Cartouche auf dem iPhon
 
 <div class="screens">
 
-![Macs in der Nähe](../../../../assets/screens/iphone-storage-mac-nearby.webp)
+![Macs in der Nähe](../../../../assets/screens/de-iphone-storage-mac-nearby.webp)
 
-![Die sechs Ziffern, die beide Bildschirme zeigen](../../../../assets/screens/iphone-storage-mac-code.webp)
+![Die sechs Ziffern, die beide Bildschirme zeigen](../../../../assets/screens/de-iphone-storage-mac-code.webp)
 
 </div>
 
@@ -33,12 +33,12 @@ Der Mac antwortet, solange Cartouche auf ihm geöffnet ist.
 
 ## Die Builds des Mac vom iPhone aus steuern
 
-![Die Builds des Mac, auf dem iPhone](../../../../assets/screens/iphone-mac-builds.webp)
+![Die Builds des Mac, auf dem iPhone](../../../../assets/screens/de-iphone-mac-builds.webp)
 
 - Die Infoseite jedes Spiels zeigt **Builds auf** deinem Mac: wird erstellt, mit Fortschritt und verbleibender Zeit, wartet, bis es dran ist, aktuell, von nxnative verbessert oder fehlgeschlagen und warum. Ihre Taste bittet den Mac, es zu erstellen, jetzt oder nach dem laufenden Durchlauf, oder stoppt seinen Build.
 - **System › Builds auf** deinem Mac zeigt alle seine Builds, wie sein eigenes Fenster sie hat: **Fälliges erstellen**, **Alle stoppen**, die Warteschlange mit **Entfernen**, die fehlgeschlagenen Builds, **Folgen** für jedes Spiel und **Fälliges jede Nacht erstellen** mit seiner Uhrzeit.
 
-![Ein Spiel wird auf dem Mac erstellt, von seiner Infoseite auf dem iPhone aus](../../../../assets/screens/iphone-sheet-mac-building.webp)
+![Ein Spiel wird auf dem Mac erstellt, von seiner Infoseite auf dem iPhone aus](../../../../assets/screens/de-iphone-sheet-mac-building.webp)
 
 Die Ordner des Mac, seine Werkzeuge und seine Einstellungen bleiben auf dem Mac.
 

@@ -17,7 +17,7 @@ Cartouche empfiehlt keine Zertifikatsverkäufer, Signatur-Apps oder Signaturdien
 4. Installiere Cartouche. Das Signieren geschieht auf dem Computer; der Installer meldet sich bei keinem Apple Account an.
 5. Öffne Cartouche: Es übernimmt dein Zertifikat von selbst. Wenn iOS dich bittet, dem Entwickler zu vertrauen oder den Entwicklermodus einzuschalten, tu es in den Einstellungen.
 
-![Die Einrichtung von Cartouche mit deinem eigenen Zertifikat](../../../../assets/screens/iphone-setup-own-certificate.webp)
+![Die Einrichtung von Cartouche mit deinem eigenen Zertifikat](../../../../assets/screens/de-iphone-setup-own-certificate.webp)
 
 ## Was das Profil erlauben muss
 

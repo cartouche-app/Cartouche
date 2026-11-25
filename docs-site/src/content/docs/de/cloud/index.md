@@ -9,7 +9,7 @@ Kein Mac? Sende von einem Computer aus deine eigene Kopie eines Spiels auf der [
 
 Cartouche Cloud stellt kein Spiel bereit: Es erstellt nur die Kopie, die du sendest.
 
-![Ein von Cartouche Cloud erstelltes Spiel, bereit zur Installation aus der Anleitung](../../../../assets/screens/iphone-guide-cloud.webp)
+![Ein von Cartouche Cloud erstelltes Spiel, bereit zur Installation aus der Anleitung](../../../../assets/screens/de-iphone-guide-cloud.webp)
 
 ## Ein Spiel erstellen
 

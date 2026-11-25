@@ -25,7 +25,7 @@ Unter jedem Fehler sagt Cartouche, warum und was zu tun ist, und **Bericht kopie
 
 **Die Erneuerung ist nicht durchgegangen.** Prüfe, dass LocalDevVPN installiert ist und sich verbinden kann, dann **Jetzt erneuern** auf der Seite „System“, die sagt, warum es fehlschlug.
 
-![Eine fehlgeschlagene Erneuerung, auf der Seite „System“](../../../../assets/screens/iphone-system-renewal-failed.webp)
+![Eine fehlgeschlagene Erneuerung, auf der Seite „System“](../../../../assets/screens/de-iphone-system-renewal-failed.webp)
 
 **Die nächtliche Automation läuft nicht.** **Jede Nacht erneuern** auf der Seite „System“ sagt, was es gesehen hat. Prüfe in Kurzbefehle, dass die Automation noch da ist, eingeschaltet, auf **Sofort ausführen**, zu einer Zeit, zu der das iPhone lädt und online ist, und dass **Enable LocalDevVPN** vor **Refresh All Apps** kommt, der von Cartouche und nicht der von LiveContainer.
 
@@ -47,7 +47,7 @@ Unter jedem Fehler sagt Cartouche, warum und was zu tun ist, und **Bericht kopie
 
 **Ein Ort ist offline.** Er antwortet nicht von dort, wo das iPhone ist. Prüfe zu Hause seine Adresse und dass das iPhone in deinem WLAN oder deinem VPN ist. Unterwegs schalte Tailscale ein. Deine Spiele laufen wie immer, und deine Spielstände warten.
 
-![Ein Ort, der nicht antwortet](../../../../assets/screens/iphone-home-offline.webp)
+![Ein Ort, der nicht antwortet](../../../../assets/screens/de-iphone-home-offline.webp)
 
 **Tailscale ist aus.** LocalDevVPN hat es ausgeschaltet, da iOS nur ein VPN gleichzeitig hält: Öffne Tailscale, um es wieder einzuschalten, oder füge seine Aktion **Connect** zur nächtlichen Automation hinzu.
 

@@ -15,9 +15,9 @@ Emparejado una vez, tu Mac se convierte en un lugar de almacenamiento de Cartouc
 
 <div class="screens">
 
-![Mac cercanos](../../../../assets/screens/iphone-storage-mac-nearby.webp)
+![Mac cercanos](../../../../assets/screens/es-iphone-storage-mac-nearby.webp)
 
-![Las seis cifras que muestran ambas pantallas](../../../../assets/screens/iphone-storage-mac-code.webp)
+![Las seis cifras que muestran ambas pantallas](../../../../assets/screens/es-iphone-storage-mac-code.webp)
 
 </div>
 
@@ -33,12 +33,12 @@ El Mac responde mientras Cartouche está abierto en él.
 
 ## Manejar las compilaciones del Mac desde el iPhone
 
-![Las compilaciones del Mac, en el iPhone](../../../../assets/screens/iphone-mac-builds.webp)
+![Las compilaciones del Mac, en el iPhone](../../../../assets/screens/es-iphone-mac-builds.webp)
 
 - La ficha de cada juego muestra **Compilaciones en** tu Mac: compilándose, con cuánto lleva y el tiempo restante, esperando su turno, al día, mejorado por nxnative, o fallido y por qué. Su botón pide al Mac que lo compile, ahora o después de la tanda en curso, o detiene su compilación.
 - **Sistema › Compilaciones en** tu Mac muestra todas sus compilaciones, como las tiene su propia ventana: **Compilar lo pendiente**, **Detener todo**, la cola con **Quitar**, las compilaciones que fallaron, **Seguir** para cada juego, y **Compilar lo pendiente cada noche** con su hora.
 
-![Un juego compilándose en el Mac, desde su ficha en el iPhone](../../../../assets/screens/iphone-sheet-mac-building.webp)
+![Un juego compilándose en el Mac, desde su ficha en el iPhone](../../../../assets/screens/es-iphone-sheet-mac-building.webp)
 
 Las carpetas del Mac, sus herramientas y sus ajustes se quedan en el Mac.
 

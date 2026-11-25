@@ -7,7 +7,7 @@ sidebar:
 
 Con una carpeta de partidas guardadas elegida en **Sistema › Almacenamiento**, Cartouche mantiene al día con ella las partidas de cada juego, una carpeta por juego. Tus partidas te siguen de un iPhone o iPad a otro, y a tu Mac, a través de tu Mac o tu NAS.
 
-![Las partidas guardadas de un juego en su ficha](../../../../assets/screens/iphone-sheet-saves.webp)
+![Las partidas guardadas de un juego en su ficha](../../../../assets/screens/es-iphone-sheet-saves.webp)
 
 ## Cómo se mantienen al día
 
@@ -35,7 +35,7 @@ Tu partida sigue aquí, desde donde la dejaste en tu consola:
 3. En la ficha del juego, abre **Partidas guardadas**, luego **Partidas de Switch**, y **Elegir la partida exportada**.
 4. **Continuar aquí esta partida.** Cartouche comprueba que la partida es de este juego, conserva la que sustituye y, con una carpeta de partidas guardadas, la envía allí como la más reciente.
 
-![Traer una partida de tu consola](../../../../assets/screens/iphone-switch-save.webp)
+![Traer una partida de tu consola](../../../../assets/screens/es-iphone-switch-save.webp)
 
 **Restaurar la partida de antes de la importación** lo deshace.
 

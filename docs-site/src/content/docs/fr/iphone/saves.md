@@ -7,7 +7,7 @@ sidebar:
 
 Avec un dossier des sauvegardes choisi dans **Système › Stockage**, Cartouche garde les sauvegardes de chaque jeu à jour avec lui, un dossier par jeu. Vos sauvegardes vous suivent d'un iPhone ou d'un iPad à l'autre, et jusqu'à votre Mac, par votre Mac ou votre NAS.
 
-![Les sauvegardes d'un jeu sur sa fiche](../../../../assets/screens/iphone-sheet-saves.webp)
+![Les sauvegardes d'un jeu sur sa fiche](../../../../assets/screens/fr-iphone-sheet-saves.webp)
 
 ## Comment elles restent à jour
 
@@ -35,7 +35,7 @@ Votre partie continue ici, là où vous l'avez laissée sur votre console :
 3. Sur la fiche du jeu, ouvrez **Sauvegardes**, puis **Sauvegardes de la Switch**, et **Choisir la sauvegarde exportée**.
 4. **Reprendre cette partie ici.** Cartouche vérifie que la sauvegarde est bien celle de ce jeu, garde celle qu'elle remplace et, avec un dossier des sauvegardes, l'y envoie comme la plus récente.
 
-![Faire venir une sauvegarde de votre console](../../../../assets/screens/iphone-switch-save.webp)
+![Faire venir une sauvegarde de votre console](../../../../assets/screens/fr-iphone-switch-save.webp)
 
 **Remettre la partie d'avant l'import** l'annule.
 

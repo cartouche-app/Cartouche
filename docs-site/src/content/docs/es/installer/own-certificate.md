@@ -17,7 +17,7 @@ Cartouche no recomienda vendedores de certificados, apps de firma ni servicios d
 4. Instala Cartouche. La firma se hace en el ordenador; el Instalador no inicia sesión en ninguna cuenta de Apple.
 5. Abre Cartouche: toma tu certificado solo. Si iOS te pide confiar en el desarrollador o activar el Modo de desarrollador, hazlo en Ajustes.
 
-![La puesta a punto de Cartouche con tu propio certificado](../../../../assets/screens/iphone-setup-own-certificate.webp)
+![La puesta a punto de Cartouche con tu propio certificado](../../../../assets/screens/es-iphone-setup-own-certificate.webp)
 
 ## Lo que debe permitir el perfil
 

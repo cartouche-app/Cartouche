@@ -9,7 +9,7 @@ Pas de Mac ? Depuis un ordinateur, envoyez votre propre copie d'un jeu sur le [s
 
 Cartouche Cloud ne fournit aucun jeu : il ne construit que la copie que vous lui envoyez.
 
-![Un jeu construit par Cartouche Cloud, prêt à installer depuis le guide](../../../../assets/screens/iphone-guide-cloud.webp)
+![Un jeu construit par Cartouche Cloud, prêt à installer depuis le guide](../../../../assets/screens/fr-iphone-guide-cloud.webp)
 
 ## Construire un jeu
 

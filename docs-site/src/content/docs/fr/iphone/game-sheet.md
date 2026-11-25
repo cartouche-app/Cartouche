@@ -7,7 +7,7 @@ sidebar:
 
 Chaque jeu a sa fiche : **Fiche** sur l'accueil, ou <kbd>X</kbd> sur une manette. Elle dit si le jeu tourne sur votre iPhone ou votre iPad, et rassemble tout ce que vous pouvez faire avec lui.
 
-![La fiche d'un jeu](../../../../assets/screens/iphone-sheet-mine.webp)
+![La fiche d'un jeu](../../../../assets/screens/fr-iphone-sheet-mine.webp)
 
 ## En haut
 
@@ -37,11 +37,11 @@ Sur un iPhone dont la puce graphique ne lit pas les textures BC (iPhone 15 et pl
 
 <div class="screens">
 
-![Modifier les infos du jeu](../../../../assets/screens/iphone-game-info.webp)
+![Modifier les infos du jeu](../../../../assets/screens/fr-iphone-game-info.webp)
 
-![Siri et écran d'accueil](../../../../assets/screens/iphone-game-shortcuts.webp)
+![Siri et écran d'accueil](../../../../assets/screens/fr-iphone-game-shortcuts.webp)
 
-![Le journal d'un jeu, prêt à partager](../../../../assets/screens/iphone-gamelog.webp)
+![Le journal d'un jeu, prêt à partager](../../../../assets/screens/fr-iphone-gamelog.webp)
 
 </div>
 

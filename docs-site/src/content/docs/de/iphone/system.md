@@ -7,13 +7,13 @@ sidebar:
 
 **System**, im Dock der Konsole oder mit der Taste <kbd>Menu</kbd> des Controllers, öffnet sich über der Konsole. **Fertig**, oder wieder <kbd>Menu</kbd>, schließt es.
 
-![Die Seite „System“](../../../../assets/screens/iphone-system.webp)
+![Die Seite „System“](../../../../assets/screens/de-iphone-system.webp)
 
 ## Einrichtung und Signatur
 
 **Einrichtung** zeigt die Einrichtungsschritte von Cartouche, abgehakt, sobald sie erledigt sind. **Signatur** sagt, wann die Signatur von Cartouche abläuft, und die verbleibenden Tage.
 
-![Die Signatur und ihre automatische Erneuerung](../../../../assets/screens/iphone-system-signature.webp)
+![Die Signatur und ihre automatische Erneuerung](../../../../assets/screens/de-iphone-system-signature.webp)
 
 Ein kostenloser Apple Account signiert Apps für sieben Tage. Der integrierte SideStore erneuert Cartouche selbst, über LocalDevVPN, das Cartouche verbindet:
 
@@ -35,7 +35,7 @@ Eine Automation in Kurzbefehle erneuert Cartouche jede Nacht, auch wenn es gesch
 4. Füge dann **Refresh All Apps** hinzu, aus den Aktionen von Cartouche und nicht von LiveContainer, und tippe auf **Fertig**.
 5. Tippe zurück in Cartouche auf **Ich habe die Automation erstellt**.
 
-![Die Automation, wie Kurzbefehle sie zeigt](../../../../assets/screens/iphone-nightly-renewal.webp)
+![Die Automation, wie Kurzbefehle sie zeigt](../../../../assets/screens/de-iphone-nightly-renewal.webp)
 
 Cartouche verfolgt jeden Lauf: **Jede Nacht erneuern** auf der Seite „System“ sagt, ob sie noch zu erstellen, erstellt, aktiv oder fehlgeschlagen ist und warum, und was zu beheben ist.
 
@@ -49,7 +49,7 @@ Cartouche bietet seine neuen Versionen über der Konsole an und installiert sie 
 
 Nach einem Update öffnet sich Cartouche mit **Neuigkeiten**, in deiner Sprache. **System › Updates** hat auch **Nach Update suchen** und die **Neuigkeiten** der letzten Versionen.
 
-![Neuigkeiten, nach einem Update](../../../../assets/screens/iphone-whats-new.webp)
+![Neuigkeiten, nach einem Update](../../../../assets/screens/de-iphone-whats-new.webp)
 
 ## Arbeitsspeicher
 
@@ -69,7 +69,7 @@ Nach jedem Spiel sendet Cartouche, was nxnative während des Spiels gemessen hat
 
 **Problem melden** zeigt einen vollständigen Bericht über das, was schiefging, mit dem Modell dieses iPhones, den Versionen und den letzten Schritten und Fehlern von Cartouche, ohne Passwörter, Servernamen oder -adressen, Benutzernamen oder Apple Account. Nichts verlässt das iPhone, bevor du wählst, wie: **An Cartouche senden**, privat, oder per Nachrichten, Mail oder AirDrop an die Person, die dir hilft. Siehe [Hilfe bekommen](/de/help/support/).
 
-![Problem melden](../../../../assets/screens/iphone-report.webp)
+![Problem melden](../../../../assets/screens/de-iphone-report.webp)
 
 ## Andere installierte Apps
 

@@ -7,13 +7,13 @@ sidebar:
 
 **Système**, dans le dock de la console ou par le bouton <kbd>Menu</kbd> de la manette, s'ouvre par-dessus la console. **OK**, ou de nouveau <kbd>Menu</kbd>, la ferme.
 
-![La page Système](../../../../assets/screens/iphone-system.webp)
+![La page Système](../../../../assets/screens/fr-iphone-system.webp)
 
 ## Mise en route et signature
 
 **Mise en route** montre les étapes de mise en route de Cartouche, cochées une fois faites. **Signature** dit quand la signature de Cartouche expire et les jours qui restent.
 
-![La signature et son renouvellement automatique](../../../../assets/screens/iphone-system-signature.webp)
+![La signature et son renouvellement automatique](../../../../assets/screens/fr-iphone-system-signature.webp)
 
 Un compte Apple gratuit signe les apps pour sept jours. Le SideStore intégré renouvelle Cartouche tout seul, par LocalDevVPN, que Cartouche connecte :
 
@@ -35,7 +35,7 @@ Une automatisation de Raccourcis renouvelle Cartouche chaque nuit, même s'il re
 4. Ajoutez ensuite **Refresh All Apps**, parmi les actions de Cartouche et non de LiveContainer, puis touchez **OK**.
 5. De retour dans Cartouche, touchez **J'ai créé l'automatisation**.
 
-![L'automatisation, comme Raccourcis la montre](../../../../assets/screens/iphone-nightly-renewal.webp)
+![L'automatisation, comme Raccourcis la montre](../../../../assets/screens/fr-iphone-nightly-renewal.webp)
 
 Cartouche suit chaque exécution : **Renouveler chaque nuit**, sur la page Système, dit si elle est à créer, créée, active ou en échec et pourquoi, et quoi corriger.
 
@@ -49,7 +49,7 @@ Cartouche propose ses nouvelles versions par-dessus la console, et les installe 
 
 Après une mise à jour, Cartouche s'ouvre sur **Nouveautés**, dans votre langue. **Système › Mises à jour** a aussi **Chercher une mise à jour**, et les **Nouveautés** des dernières versions.
 
-![Nouveautés, après une mise à jour](../../../../assets/screens/iphone-whats-new.webp)
+![Nouveautés, après une mise à jour](../../../../assets/screens/fr-iphone-whats-new.webp)
 
 ## Mémoire
 
@@ -69,7 +69,7 @@ Après chaque partie, Cartouche envoie ce que nxnative a mesuré pendant que le 
 
 **Signaler un problème** montre un rapport complet de ce qui s'est mal passé, avec le modèle de cet iPhone, les versions et les dernières étapes et erreurs de Cartouche, sans mots de passe, noms ni adresses de serveurs, noms d'utilisateur ni compte Apple. Rien ne quitte l'iPhone tant que vous n'avez pas choisi comment : **Envoyer à Cartouche**, en privé, ou par Messages, Mail ou AirDrop à qui vous aide. Voir [Obtenir de l'aide](/fr/help/support/).
 
-![Signaler un problème](../../../../assets/screens/iphone-report.webp)
+![Signaler un problème](../../../../assets/screens/fr-iphone-report.webp)
 
 ## Autres apps installées
 

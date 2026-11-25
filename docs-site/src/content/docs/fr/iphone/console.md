@@ -7,7 +7,7 @@ sidebar:
 
 Cartouche s'ouvre sur sa console : vos jeux, en grand, sur une seule étagère, avec leurs jaquettes officielles. Le jeu en focus montre tout ce qu'il faut pour y jouer, et le reste de Cartouche est à un geste.
 
-![L'accueil de Cartouche sur un iPhone](../../../../assets/screens/iphone-home.webp)
+![L'accueil de Cartouche sur un iPhone](../../../../assets/screens/fr-iphone-home.webp)
 
 ## L'accueil
 
@@ -18,13 +18,13 @@ Cartouche s'ouvre sur sa console : vos jeux, en grand, sur une seule étagère, 
 
 Une ligne sous le statut du jeu dit ce qui reste à faire, comme une mise en route à finir, et disparaît quand le jeu est prêt.
 
-![L'accueil avec l'iPhone couché](../../../../assets/screens/iphone-home-landscape.webp)
+![L'accueil avec l'iPhone couché](../../../../assets/screens/fr-iphone-home-landscape.webp)
 
 ## Tous les jeux
 
 **Tous les jeux** liste chaque jeu qui a un profil dans nxnative, les vôtres d'abord, chacun avec son statut sous sa jaquette. Cherchez par nom ou par identifiant de titre, et filtrez par **Tous**, **Ma bibliothèque**, **Sur iPhone**, **Sur Mac**, **En portage** ou par plateforme.
 
-![Tous les jeux, avec ses filtres](../../../../assets/screens/iphone-library.webp)
+![Tous les jeux, avec ses filtres](../../../../assets/screens/fr-iphone-library.webp)
 
 Un jeu que vous n'avez pas ne propose que **Importer ma copie** : Cartouche ne propose jamais de téléchargement. Un jeu de votre dossier de jeux pas encore installé propose **Installer depuis** cet endroit.
 

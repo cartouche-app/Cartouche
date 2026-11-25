@@ -15,7 +15,7 @@ Die **Home**-Taste, unten auf dem Bildschirm des Spiels oder am Controller, holt
 - **Beenden** beendet es, sobald du es bestätigt hast: Der Fortschritt seit dem letzten Speichern des Spiels geht verloren;
 - **Spielen** bei einem anderen Spiel fragt vorher, da nur ein Spiel gleichzeitig läuft.
 
-![Ein Spiel, hinter der Konsole pausiert](../../../../assets/screens/iphone-home-paused.webp)
+![Ein Spiel, hinter der Konsole pausiert](../../../../assets/screens/de-iphone-home-paused.webp)
 
 Die Home-Taste auf dem Bildschirm verschwindet nach ein paar Sekunden: Tippe knapp unter die Stelle, an der sie war, um sie zurückzuholen.
 
@@ -43,7 +43,7 @@ Sag Siri *„Spiele Stardew Valley in Cartouche“* oder nutze **Spiel starten**
 
 Ein Spiel in deinem Spieleordner wird von seiner Infoseite oder vom Home-Bildschirm aus installiert, mit **Von … installieren** mit diesem Ort. Der Bildschirm zeigt, wie es kommt, per Kabel, über Tailscale oder per WLAN, und wie schnell, mit einem Tipp, wenn es schneller ginge.
 
-![Ein Spiel wird aus dem Spieleordner installiert](../../../../assets/screens/iphone-installing.webp)
+![Ein Spiel wird aus dem Spieleordner installiert](../../../../assets/screens/de-iphone-installing.webp)
 
 - Du kannst Cartouche währenddessen verlassen: Der Sperrbildschirm und die Dynamic Island zeigen in einer Live-Aktivität, wie weit es ist.
 - Eine abgebrochene Verbindung macht dort weiter, wo sie aufgehört hat, sobald das Netz zurück ist.

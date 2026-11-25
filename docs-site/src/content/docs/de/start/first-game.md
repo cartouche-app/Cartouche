@@ -9,9 +9,9 @@ Wenn du Cartouche zum ersten Mal öffnest, öffnet sich seine Anleitung, **Dein 
 
 <div class="screens">
 
-![Der erste Schritt der Anleitung](../../../../assets/screens/iphone-guide-first-launch.webp)
+![Der erste Schritt der Anleitung](../../../../assets/screens/de-iphone-guide-first-launch.webp)
 
-![Der Schritt der Anleitung, um dein Spiel zu erstellen](../../../../assets/screens/iphone-guide-build.webp)
+![Der Schritt der Anleitung, um dein Spiel zu erstellen](../../../../assets/screens/de-iphone-guide-build.webp)
 
 </div>
 
@@ -38,7 +38,7 @@ Mit Cartouche Cloud brauchst du keinen Spieleordner: Die Anleitung überspringt 
 
 Dein Spiel erscheint im letzten Schritt der Anleitung und in deiner Bibliothek. **Installieren** installiert es, aus deinem Spieleordner oder von Cartouche Cloud, dann öffnet sich seine Infoseite mit **Spielen**.
 
-![Cartouche installiert ein Spiel aus dem Spieleordner](../../../../assets/screens/iphone-installing.webp)
+![Cartouche installiert ein Spiel aus dem Spieleordner](../../../../assets/screens/de-iphone-installing.webp)
 
 Deine nächsten Spiele gehen genauso: auf dem Mac oder von Cartouche Cloud erstellt, dann installiert.
 

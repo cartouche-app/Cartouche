@@ -17,7 +17,7 @@ Cartouche ne recommande ni vendeurs de certificats, ni apps ou services de signa
 4. Installez Cartouche. La signature se fait sur l'ordinateur ; l'Installeur ne se connecte à aucun compte Apple.
 5. Ouvrez Cartouche : il prend votre certificat tout seul. Si iOS vous demande de faire confiance au développeur ou d'activer le Mode développeur, faites-le dans Réglages.
 
-![La mise en route de Cartouche avec votre propre certificat](../../../../assets/screens/iphone-setup-own-certificate.webp)
+![La mise en route de Cartouche avec votre propre certificat](../../../../assets/screens/fr-iphone-setup-own-certificate.webp)
 
 ## Ce que le profil doit permettre
 

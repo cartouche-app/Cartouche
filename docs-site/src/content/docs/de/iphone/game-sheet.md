@@ -7,7 +7,7 @@ sidebar:
 
 Jedes Spiel hat eine Infoseite: **Details** auf dem Home-Bildschirm oder <kbd>X</kbd> auf einem Controller. Sie sagt, ob das Spiel auf deinem iPhone oder iPad läuft, und sammelt alles, was du damit tun kannst.
 
-![Die Infoseite eines Spiels](../../../../assets/screens/iphone-sheet-mine.webp)
+![Die Infoseite eines Spiels](../../../../assets/screens/de-iphone-sheet-mine.webp)
 
 ## Oben
 
@@ -37,11 +37,11 @@ Auf einem iPhone, dessen Grafikchip keine BC-Texturen liest (iPhone 15 und älte
 
 <div class="screens">
 
-![Infos des Spiels bearbeiten](../../../../assets/screens/iphone-game-info.webp)
+![Infos des Spiels bearbeiten](../../../../assets/screens/de-iphone-game-info.webp)
 
-![Siri und Home-Bildschirm](../../../../assets/screens/iphone-game-shortcuts.webp)
+![Siri und Home-Bildschirm](../../../../assets/screens/de-iphone-game-shortcuts.webp)
 
-![Das Protokoll eines Spiels, bereit zum Teilen](../../../../assets/screens/iphone-gamelog.webp)
+![Das Protokoll eines Spiels, bereit zum Teilen](../../../../assets/screens/de-iphone-gamelog.webp)
 
 </div>
 

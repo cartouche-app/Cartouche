@@ -9,9 +9,9 @@ La première fois que vous ouvrez Cartouche, son guide, **Votre premier jeu**, s
 
 <div class="screens">
 
-![La première étape du guide](../../../../assets/screens/iphone-guide-first-launch.webp)
+![La première étape du guide](../../../../assets/screens/fr-iphone-guide-first-launch.webp)
 
-![L'étape du guide pour construire votre jeu](../../../../assets/screens/iphone-guide-build.webp)
+![L'étape du guide pour construire votre jeu](../../../../assets/screens/fr-iphone-guide-build.webp)
 
 </div>
 
@@ -38,7 +38,7 @@ Avec Cartouche Cloud, pas besoin de dossier de jeux : le guide saute cette étap
 
 Votre jeu apparaît dans la dernière étape du guide et dans votre bibliothèque. **Installer** l'installe, depuis votre dossier de jeux ou depuis Cartouche Cloud, puis sa fiche s'ouvre avec **Jouer**.
 
-![Cartouche installe un jeu depuis le dossier de jeux](../../../../assets/screens/iphone-installing.webp)
+![Cartouche installe un jeu depuis le dossier de jeux](../../../../assets/screens/fr-iphone-installing.webp)
 
 Vos jeux suivants prennent le même chemin : construits sur le Mac ou par Cartouche Cloud, puis installés.
 

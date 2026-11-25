@@ -40,7 +40,7 @@ Avant d'ouvrir Cartouche la première fois :
 
 Ouvrez Cartouche. Sa mise en route tient en quelques étapes, une fois :
 
-![La mise en route de Cartouche sur l'iPhone, ses étapes cochées](../../../../assets/screens/iphone-setup.webp)
+![La mise en route de Cartouche sur l'iPhone, ses étapes cochées](../../../../assets/screens/fr-iphone-setup.webp)
 
 1. **LocalDevVPN, pour le renouvellement :** **Connecter LocalDevVPN** le connecte et vous ramène dans Cartouche.
 2. **Compte Apple :** connectez-vous avec le compte Apple donné à l'Installeur, et tapez le code qu'Apple envoie. Cartouche prend son certificat.

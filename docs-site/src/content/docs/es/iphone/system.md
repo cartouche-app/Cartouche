@@ -7,13 +7,13 @@ sidebar:
 
 **Sistema**, en el dock de la consola o con el botón <kbd>Menu</kbd> del mando, se abre sobre la consola. **OK**, o de nuevo <kbd>Menu</kbd>, la cierra.
 
-![La página Sistema](../../../../assets/screens/iphone-system.webp)
+![La página Sistema](../../../../assets/screens/es-iphone-system.webp)
 
 ## Puesta a punto y firma
 
 **Puesta a punto** muestra los pasos de la puesta a punto de Cartouche, marcados una vez hechos. **Firma** dice cuándo caduca la firma de Cartouche y los días que quedan.
 
-![La firma y su renovación automática](../../../../assets/screens/iphone-system-signature.webp)
+![La firma y su renovación automática](../../../../assets/screens/es-iphone-system-signature.webp)
 
 Una cuenta de Apple gratuita firma apps por siete días. El SideStore integrado renueva Cartouche solo, a través de LocalDevVPN, que Cartouche conecta:
 
@@ -35,7 +35,7 @@ Una automatización en Atajos renueva Cartouche cada noche, aunque siga cerrado.
 4. Luego añade **Refresh All Apps**, entre las acciones de Cartouche y no las de LiveContainer, y toca **OK**.
 5. De vuelta en Cartouche, toca **He creado la automatización**.
 
-![La automatización, como la muestra Atajos](../../../../assets/screens/iphone-nightly-renewal.webp)
+![La automatización, como la muestra Atajos](../../../../assets/screens/es-iphone-nightly-renewal.webp)
 
 Cartouche sigue cada ejecución: **Renovar cada noche**, en la página Sistema, dice si está por crear, creada, activa o si falló y por qué, y qué arreglar.
 
@@ -49,7 +49,7 @@ Cartouche ofrece sus nuevas versiones sobre la consola, y las instala solo a tra
 
 Tras una actualización, Cartouche se abre en **Novedades**, en tu idioma. **Sistema › Actualizaciones** también tiene **Buscar una actualización**, y las **Novedades** de las últimas versiones.
 
-![Novedades, tras una actualización](../../../../assets/screens/iphone-whats-new.webp)
+![Novedades, tras una actualización](../../../../assets/screens/es-iphone-whats-new.webp)
 
 ## Memoria
 
@@ -69,7 +69,7 @@ Después de cada juego, Cartouche envía lo que nxnative midió mientras funcion
 
 **Informar de un problema** muestra un informe completo de lo que falló, con el modelo de este iPhone, las versiones y los últimos pasos y errores de Cartouche, sin contraseñas, nombres ni direcciones de servidores, nombres de usuario ni cuenta de Apple. Nada sale del iPhone hasta que eliges cómo: **Enviar a Cartouche**, en privado, o por Mensajes, Mail o AirDrop a quien te ayuda. Mira [Obtener ayuda](/es/help/support/).
 
-![Informar de un problema](../../../../assets/screens/iphone-report.webp)
+![Informar de un problema](../../../../assets/screens/es-iphone-report.webp)
 
 ## Otras apps instaladas
 

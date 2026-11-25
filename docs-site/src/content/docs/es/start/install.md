@@ -40,7 +40,7 @@ Antes de que Cartouche se abra por primera vez:
 
 Abre Cartouche. Su puesta a punto lleva unos pocos pasos, una sola vez:
 
-![La puesta a punto de Cartouche en el iPhone, con sus pasos marcados](../../../../assets/screens/iphone-setup.webp)
+![La puesta a punto de Cartouche en el iPhone, con sus pasos marcados](../../../../assets/screens/es-iphone-setup.webp)
 
 1. **LocalDevVPN, para las renovaciones:** **Conectar LocalDevVPN** lo conecta y te devuelve a Cartouche.
 2. **ID de Apple:** inicia sesión con la cuenta de Apple que diste al Instalador y escribe el código que envía Apple. Cartouche toma su certificado.

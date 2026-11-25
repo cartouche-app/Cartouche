@@ -9,7 +9,7 @@ sidebar:
 
 Cartouche Cloud no proporciona ningún juego: solo compila la copia que le envías.
 
-![Un juego compilado por Cartouche Cloud, listo para instalar desde la guía](../../../../assets/screens/iphone-guide-cloud.webp)
+![Un juego compilado por Cartouche Cloud, listo para instalar desde la guía](../../../../assets/screens/es-iphone-guide-cloud.webp)
 
 ## Compilar un juego
 

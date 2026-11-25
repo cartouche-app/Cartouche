@@ -7,7 +7,7 @@ sidebar:
 
 Vos jeux et vos sauvegardes restent chez vous, sur un stockage à vous, avec votre propre compte. **Système › Stockage** le met en place : les jeux qui s'y trouvent apparaissent dans votre bibliothèque, prêts à installer, et Cartouche y garde vos sauvegardes à jour, d'un iPhone ou d'un iPad à l'autre.
 
-![La page Stockage](../../../../assets/screens/iphone-storage.webp)
+![La page Stockage](../../../../assets/screens/fr-iphone-storage.webp)
 
 Il n'y a aucune adresse à coller pour un téléchargement, aucun lien à suivre et aucun bucket public : seulement vos propres endroits, avec votre propre compte. Les mots de passe restent dans le trousseau de l'iPhone.
 
@@ -28,7 +28,7 @@ La première fois, iOS demande de laisser Cartouche trouver des appareils sur vo
 
 Choisissez le dossier qui contient les IPA de vos jeux. Votre bibliothèque montre alors chacun d'eux, prêt à installer, et une construction plus récente d'un jeu installé apparaît en mise à jour, sauvegardes gardées.
 
-![Plusieurs dossiers de jeux](../../../../assets/screens/iphone-storage-games-folders.webp)
+![Plusieurs dossiers de jeux](../../../../assets/screens/fr-iphone-storage-games-folders.webp)
 
 - **Ajouter un autre dossier de jeux**, sur n'importe lequel de vos endroits : un jeu trouvé dans plusieurs dossiers n'apparaît qu'une fois, et s'installe depuis un dossier qui répond, chez vous ou ailleurs.
 - **Copier vers**, sur la fiche d'un jeu, copie le jeu installé dans votre dossier de jeux, le premier : faites-le avant de désinstaller un jeu dont vous n'avez pas l'IPA.
@@ -43,7 +43,7 @@ Choisissez le dossier où Cartouche garde une copie de vos sauvegardes, un dossi
 
 Cartouche reconnaît un jeu par son identifiant de titre, les 16 lettres et chiffres entre crochets dans son nom, comme `Celeste [01002B30028F6000].ipa`, et trouve la plupart des IPA même sans. **Comment nommer vos jeux**, sous le dossier de jeux, montre avec des exemples quels noms Cartouche trouve, lesquels il laisse de côté, et pourquoi.
 
-![Comment nommer vos jeux](../../../../assets/screens/iphone-storage-names.webp)
+![Comment nommer vos jeux](../../../../assets/screens/fr-iphone-storage-names.webp)
 
 ## Hors de chez vous
 
@@ -64,7 +64,7 @@ Cartouche n'a pas de clé Google à lui : il atteint votre Drive par un client O
 3. Collez l'identifiant du client, touchez **Se connecter avec Google**, et autorisez l'accès à votre Drive. Google dit ne pas avoir vérifié l'app : c'est la vôtre, choisissez **Continuer**.
 4. Choisissez votre dossier de jeux dans Mon Drive.
 
-![Créer votre client Google, pas à pas](../../../../assets/screens/iphone-storage-drive-guide.webp)
+![Créer votre client Google, pas à pas](../../../../assets/screens/fr-iphone-storage-drive-guide.webp)
 
 Tant que votre projet Google Cloud est en test, Google met fin à la connexion après 7 jours : **Se reconnecter à Google** ramène le Drive, et vos sauvegardes attendent en attendant.
 

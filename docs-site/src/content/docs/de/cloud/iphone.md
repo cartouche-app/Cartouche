@@ -12,7 +12,7 @@ sidebar:
 1. Wähle auf der Website von Cartouche Cloud, auf der Seite deines Accounts, **Link Cartouche**: Sie gibt einen Code, der zehn Minuten gilt.
 2. Gib ihn in Cartouche unter **Dieses iPhone verknüpfen** ein. Auf dem iPhone geöffnet, füllt diese Seite ihn mit **Open in Cartouche** für dich aus, oder ihr QR-Code tut es.
 
-![Das iPhone mit dem Code verknüpfen](../../../../assets/screens/iphone-cloud-linking.webp)
+![Das iPhone mit dem Code verknüpfen](../../../../assets/screens/de-iphone-cloud-linking.webp)
 
 Verknüpft liest dein iPhone die Spiele deines Accounts und holt die erstellten, nicht mehr: Ein Spiel senden, dein Guthaben und dein Account bleiben auf der Website.
 
@@ -20,13 +20,13 @@ Verknüpft liest dein iPhone die Spiele deines Accounts und holt die erstellten,
 
 Cartouche zeigt jedes Spiel deines Accounts mit seinem Cover, wo es steht, jeden Schritt seines Builds und die verbleibende Zeit, und dein Guthaben.
 
-![Deine Spiele bei Cartouche Cloud, vom iPhone aus](../../../../assets/screens/iphone-cloud-games.webp)
+![Deine Spiele bei Cartouche Cloud, vom iPhone aus](../../../../assets/screens/de-iphone-cloud-games.webp)
 
 ## Es installieren
 
 Ein erstelltes Spiel erscheint in deiner Bibliothek und auf seiner Infoseite, *In Cartouche Cloud*: **Installieren** bringt es auf dein iPhone, wie ein Spiel deines Spieleordners. Es bleibt zwei Tage bei Cartouche Cloud: Installiere es in dieser Zeit.
 
-![Ein von Cartouche Cloud erstelltes Spiel, auf seiner Infoseite](../../../../assets/screens/iphone-sheet-cloud.webp)
+![Ein von Cartouche Cloud erstelltes Spiel, auf seiner Infoseite](../../../../assets/screens/de-iphone-sheet-cloud.webp)
 
 ## Verknüpfung aufheben
 

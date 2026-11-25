@@ -15,7 +15,7 @@ Le bouton **Home**, en bas de l'écran du jeu ou sur la manette, ramène la cons
 - **Quitter** l'arrête, une fois que vous l'avez confirmé : la progression depuis la dernière sauvegarde du jeu est perdue ;
 - **Jouer** sur un autre jeu demande d'abord, car un seul jeu tourne à la fois.
 
-![Un jeu en pause derrière la console](../../../../assets/screens/iphone-home-paused.webp)
+![Un jeu en pause derrière la console](../../../../assets/screens/fr-iphone-home-paused.webp)
 
 Le bouton Home à l'écran se cache après quelques secondes : touchez juste en dessous de là où il était pour le faire revenir.
 
@@ -43,7 +43,7 @@ Dites *« Lance Stardew Valley dans Cartouche »* à Siri, ou utilisez **Lancer 
 
 Un jeu de votre dossier de jeux s'installe depuis sa fiche ou depuis l'accueil, avec **Installer depuis** cet endroit. L'écran dit comment il arrive, par câble, par Tailscale ou par le Wi-Fi, et à quelle vitesse, avec un conseil quand cela pourrait aller plus vite.
 
-![Un jeu qui s'installe depuis le dossier de jeux](../../../../assets/screens/iphone-installing.webp)
+![Un jeu qui s'installe depuis le dossier de jeux](../../../../assets/screens/fr-iphone-installing.webp)
 
 - Vous pouvez quitter Cartouche pendant ce temps : l'écran verrouillé et la Dynamic Island montrent l'avancement, dans une Activité en direct.
 - Une connexion coupée reprend là où elle s'était arrêtée quand le réseau revient.

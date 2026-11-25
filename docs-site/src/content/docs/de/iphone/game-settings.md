@@ -9,9 +9,9 @@ sidebar:
 
 <div class="screens">
 
-![Die Einstellungen eines Spiels](../../../../assets/screens/iphone-game-settings.webp)
+![Die Einstellungen eines Spiels](../../../../assets/screens/de-iphone-game-settings.webp)
 
-![Der Abschnitt Steuerung](../../../../assets/screens/iphone-game-settings-controls.webp)
+![Der Abschnitt Steuerung](../../../../assets/screens/de-iphone-game-settings-controls.webp)
 
 </div>
 

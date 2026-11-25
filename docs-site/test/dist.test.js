@@ -183,7 +183,29 @@ test('every image of a screen is the app, never a game', () => {
   // their names say which app, and nothing else is allowed in.
   const screens = readdirSync(join(root, 'src', 'assets', 'screens'));
   for (const name of screens) {
-    assert.match(name, /^(?:iphone|ipad|mac|installer)-[a-z0-9-]+\.webp$/, `${name} is not named after its app`);
+    assert.match(name, /^(?:(?:fr|es|de)-(?:iphone|ipad)|iphone|ipad|mac|installer)-[a-z0-9-]+\.webp$/, `${name} is not named after its app`);
     assert.doesNotMatch(name, /ingame|in-game|gameplay|playing-/, `${name} looks like a game running`);
+  }
+});
+
+test('each language shows Cartouche on the iPhone and the iPad in its own words', () => {
+  // Each screen of the iPhone and the iPad has a copy per language, prefixed
+  // fr-, es- or de-, from the same gallery, and a page in that language shows
+  // its own copy, never the English one. The Mac's and the Installer's are in
+  // English only.
+  const screens = new Set(readdirSync(join(root, 'src', 'assets', 'screens')));
+  for (const name of screens) {
+    const translated = name.match(/^(?:fr|es|de)-(.+)$/);
+    if (translated) assert.ok(screens.has(translated[1]), `${name} has no English screen`);
+    if (/^(?:iphone|ipad)-/.test(name)) {
+      for (const locale of LOCALES) assert.ok(screens.has(`${locale}-${name}`), `${name} has no copy in ${locale}`);
+    }
+  }
+  for (const locale of LOCALES) {
+    for (const path of walk(join(content, locale)).filter((p) => /\.mdx?$/.test(p))) {
+      for (const [, prefix, name] of readFileSync(path, 'utf8').matchAll(/assets\/screens\/(?:(fr|es|de)-)?((?:iphone|ipad)-[a-z0-9-]+\.webp)/g)) {
+        assert.equal(prefix, locale, `${relative(content, path)} shows ${prefix ? prefix + '-' : ''}${name}, not its ${locale} copy`);
+      }
+    }
   }
 });

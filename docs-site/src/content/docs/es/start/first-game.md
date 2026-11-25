@@ -9,9 +9,9 @@ La primera vez que abres Cartouche, su guía, **Tu primer juego**, se abre en el
 
 <div class="screens">
 
-![El primer paso de la guía](../../../../assets/screens/iphone-guide-first-launch.webp)
+![El primer paso de la guía](../../../../assets/screens/es-iphone-guide-first-launch.webp)
 
-![El paso de la guía para compilar tu juego](../../../../assets/screens/iphone-guide-build.webp)
+![El paso de la guía para compilar tu juego](../../../../assets/screens/es-iphone-guide-build.webp)
 
 </div>
 
@@ -38,7 +38,7 @@ Con Cartouche Cloud, no necesitas carpeta de juegos: la guía se salta este paso
 
 Tu juego aparece en el último paso de la guía y en tu biblioteca. **Instalar** lo instala, desde tu carpeta de juegos o desde Cartouche Cloud, y luego se abre su ficha con **Jugar**.
 
-![Cartouche instalando un juego desde la carpeta de juegos](../../../../assets/screens/iphone-installing.webp)
+![Cartouche instalando un juego desde la carpeta de juegos](../../../../assets/screens/es-iphone-installing.webp)
 
 Tus siguientes juegos van igual: compilados en el Mac o por Cartouche Cloud, y luego instalados.
 

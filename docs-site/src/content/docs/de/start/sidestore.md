@@ -15,7 +15,7 @@ Wenn SideStore schon auf deinem iPhone oder iPad ist, kannst du Cartouche daraus
 3. Öffne Cartouche. Seine Einrichtung holt sich bei deinem SideStore die Kopplungsdatei und übernimmt sein Zertifikat: Du musst keinen Apple Account erneut eingeben.
 4. Danach installiert sich Cartouche einmal neu, um das erhöhte Speicherlimit zu bekommen, den Arbeitsspeicher, den deine Spiele brauchen.
 
-![Die Einrichtung von Cartouche nach einer Installation aus SideStore](../../../../assets/screens/iphone-setup-sidestore.webp)
+![Die Einrichtung von Cartouche nach einer Installation aus SideStore](../../../../assets/screens/de-iphone-setup-sidestore.webp)
 
 Von da an erneuert und aktualisiert sich Cartouche wie nach einer Installation mit dem Installer. Seine Einrichtung endet mit demselben letzten Schritt, [Jede Nacht erneuern](/de/iphone/system/#jede-nacht-erneuern).
 

@@ -40,7 +40,7 @@ Bevor Cartouche sich zum ersten Mal öffnet:
 
 Öffne Cartouche. Seine Einrichtung dauert ein paar Schritte, einmal:
 
-![Die Einrichtung von Cartouche auf dem iPhone, mit abgehakten Schritten](../../../../assets/screens/iphone-setup.webp)
+![Die Einrichtung von Cartouche auf dem iPhone, mit abgehakten Schritten](../../../../assets/screens/de-iphone-setup.webp)
 
 1. **LocalDevVPN, für die Erneuerungen:** **LocalDevVPN verbinden** verbindet es und bringt dich zurück zu Cartouche.
 2. **Apple-ID:** Melde dich mit dem Apple Account an, den du dem Installer gegeben hast, und gib den Code ein, den Apple sendet. Cartouche übernimmt sein Zertifikat.

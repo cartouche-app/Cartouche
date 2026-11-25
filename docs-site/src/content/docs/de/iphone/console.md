@@ -7,7 +7,7 @@ sidebar:
 
 Cartouche öffnet sich mit seiner Konsole: deine Spiele, groß, in einem einzigen Regal, mit ihren offiziellen Covern. Das Spiel im Fokus zeigt alles, was du zum Spielen brauchst, und der Rest von Cartouche ist einen Schritt entfernt.
 
-![Der Home-Bildschirm von Cartouche auf einem iPhone](../../../../assets/screens/iphone-home.webp)
+![Der Home-Bildschirm von Cartouche auf einem iPhone](../../../../assets/screens/de-iphone-home.webp)
 
 ## Der Home-Bildschirm
 
@@ -18,13 +18,13 @@ Cartouche öffnet sich mit seiner Konsole: deine Spiele, groß, in einem einzige
 
 Eine Zeile unter dem Status des Spiels sagt, was noch zu tun ist, etwa eine Einrichtung abschließen, und verschwindet, sobald das Spiel bereit ist.
 
-![Der Home-Bildschirm mit dem iPhone quer](../../../../assets/screens/iphone-home-landscape.webp)
+![Der Home-Bildschirm mit dem iPhone quer](../../../../assets/screens/de-iphone-home-landscape.webp)
 
 ## Alle Spiele
 
 **Alle Spiele** listet jedes Spiel mit einem Profil in nxnative, deine zuerst, jedes mit seinem Status unter dem Cover. Suche nach Name oder Titel-ID und filtere nach **Alle**, **Meine Bibliothek**, **Auf iPhone**, **Auf Mac**, **In Arbeit** oder Plattform.
 
-![Alle Spiele, mit ihren Filtern](../../../../assets/screens/iphone-library.webp)
+![Alle Spiele, mit ihren Filtern](../../../../assets/screens/de-iphone-library.webp)
 
 Ein Spiel, das du nicht hast, zeigt nur **Meine Kopie importieren**: Cartouche bietet nie einen Download an. Ein Spiel in deinem Spieleordner, das noch nicht installiert ist, zeigt **Von … installieren** mit diesem Ort.
 
