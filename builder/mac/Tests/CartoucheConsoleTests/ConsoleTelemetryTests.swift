@@ -108,7 +108,8 @@ final class ConsoleTelemetryTests: XCTestCase {
     // MARK: Helpers
 
     /// The game's app as nxnative builds it for the Mac, in the console: its
-    /// version, the nxnative commit it was built from and its settings, the
+    /// version, the nxnative commit it was built from, the shader chain
+    /// beside it, as nxnative writes them in long, and its settings, the
     /// frame rate and the display mode as they come, the language the one
     /// the player's env.txt sets.
     private func showGame() throws {
@@ -118,7 +119,8 @@ final class ConsoleTelemetryTests: XCTestCase {
         try FileManager.default.createDirectory(at: contents.appendingPathComponent("MacOS"), withIntermediateDirectories: true)
         let info: [String: Any] = ["CFBundleIdentifier": "com.example.mk8.\(UUID().uuidString.lowercased())",
                                    "CFBundleName": "Mario Kart 8 Deluxe", "DMTitleID": titleID, "CFBundleShortVersionString": "3.0.3",
-                                   "DMCommit": "6c3aeb3d70a1f00d5eed0123456789abcdef0123", "CFBundlePackageType": "APPL"]
+                                   "DMCommit": "6c3aeb3d70a1f00d5eed0123456789abcdef0123",
+                                   "DMChain": "844BF1A5EA8F00112233", "CFBundlePackageType": "APPL"]
         try PropertyListSerialization.data(fromPropertyList: info, format: .xml, options: 0)
             .write(to: contents.appendingPathComponent("Info.plist"))
         try Data(settingsList.utf8).write(to: contents.appendingPathComponent("Resources/dm/launcher.json"))
@@ -192,8 +194,10 @@ final class ConsoleTelemetryTests: XCTestCase {
         }
         XCTAssertEqual(NSDictionary(dictionary: made), NSDictionary(dictionary: kept),
                        "builder-reports.json should hold the console's session: \(report.body)")
-        // Never a line of the log, a path, a name.
-        for word in ["launcher", "Mario", "Applications", "dmhost", "cloud", "844bf1a5ea8f", root.path] {
+        // Never a line of the log, a path, a name: the shader chain is the
+        // Info.plist's, in 12 digits, as the commit.
+        for word in ["launcher", "Mario", "Applications", "dmhost", "cloud", "shader chain", "mk8", "844bf1a5ea8f0011",
+                     root.path] {
             XCTAssertFalse(report.body.contains(word), word)
         }
 

@@ -23,6 +23,12 @@ final class CartoucheGameBuildTests: XCTestCase {
         XCTAssertEqual(build.builtAt, night)
         XCTAssertTrue(build.isDirty)
         XCTAssertEqual(build.shortCommit, "52124866a1b2")
+        XCTAssertEqual(build.shortChain, "844bf1a5ea8f")
+        // A session's report sends 12 digits of each, whatever nxnative writes.
+        let long = CartoucheGameBuild(commit: "52124866a1b2c3d4", chain: "844bf1a5ea8f0011+x")
+        XCTAssertEqual(long.shortCommit, "52124866a1b2")
+        XCTAssertEqual(long.shortChain, "844bf1a5ea8f")
+        XCTAssertNil(CartoucheGameBuild(chain: "+dirty").shortChain)
         XCTAssertNil(CartoucheGameBuild(info: ["DMCommit": "", "CFBundleShortVersionString": 3], builtAt: nil).commit)
         XCTAssertNil(CartoucheGameBuild(info: [:], builtAt: nil).version)
     }
