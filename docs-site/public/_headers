@@ -1,0 +1,11 @@
+# Sent with every page and file of the documentation (Cloudflare's static
+# assets read this file; deploy.sh). The page loads nothing from another
+# site, and these keep it so: scripts, styles, pictures and the search's
+# index come from the documentation itself. Pagefind's search runs in
+# WebAssembly, and Starlight's theme picker sets the theme with an inline
+# script before the page shows.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()

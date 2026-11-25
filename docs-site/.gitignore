@@ -1,0 +1,5 @@
+# Installed, built and kept by the tools, never committed.
+node_modules/
+dist/
+.astro/
+.wrangler/

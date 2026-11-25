@@ -1,0 +1,20 @@
+// The Worker cartouche-docs: the documentation, as Astro builds it in dist/,
+// served from Cloudflare's static assets at https://docs.cartouche.cloud/ and
+// nowhere else, with no code of its own (README.md, deploy.sh).
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cartouche-docs",
+  "compatibility_date": "2026-09-01",
+  // Its domain alone: no workers.dev address, no preview address.
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "docs.cartouche.cloud", "custom_domain": true }],
+  "assets": {
+    "directory": "./dist",
+    // Astro's 404.html, in the reader's language when the address says it.
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  },
+  // No logs kept.
+  "observability": { "enabled": false }
+}

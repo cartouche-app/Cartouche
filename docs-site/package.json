@@ -1,0 +1,23 @@
+{
+  "name": "cartouche-docs",
+  "private": true,
+  "description": "Cartouche's documentation for players, at https://docs.cartouche.cloud/ (README.md): Starlight, built into static pages that a Cloudflare Worker serves.",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "test": "node --test test/dist.test.js test/deploy.test.js"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "0.43.1",
+    "astro": "7.4.12",
+    "sharp": "0.35.4"
+  },
+  "devDependencies": {
+    "wrangler": "4.161.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
