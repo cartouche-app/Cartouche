@@ -47,8 +47,9 @@ enum BridgeNetwork {
         let queue = DispatchQueue(label: "io.github.clabeuhtegrite.cartouche-builder.route")
         let once = Flag()
         return await withCheckedContinuation { (continuation: CheckedContinuation<CartoucheMacNetwork?, Never>) in
-            /// Answers once, whichever comes first, then closes the connection.
-            func end(_ network: CartoucheMacNetwork?) {
+            // Answers once, whichever comes first, then closes the
+            // connection: on QUEUE alone, the connection's and the timer's.
+            let end: @Sendable (CartoucheMacNetwork?) -> Void = { network in
                 guard !once.isSet else { return }
                 once.set()
                 connection.cancel()
