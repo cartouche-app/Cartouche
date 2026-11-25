@@ -209,3 +209,19 @@ test('each language shows Cartouche on the iPhone and the iPad in its own words'
     }
   }
 });
+
+test('every screen gets its frame, whatever its language', () => {
+  // cartouche.css frames a screen by a part of its file's name: each screen
+  // the pages show, in each language, carries one of those parts.
+  const css = readFileSync(join(root, 'src', 'styles', 'cartouche.css'), 'utf8');
+  const parts = [...css.matchAll(/img\[src\*='([^']+)'\]/g)].map((m) => m[1]);
+  let seen = 0;
+  for (const page of pages) {
+    for (const [, src] of page.html.matchAll(/<img\s[^>]*src="([^"]+)"/g)) {
+      if (!/\/(?:(?:fr|es|de)-)?(?:iphone|ipad|mac|installer)-[^/]*$/.test(src)) continue;
+      seen += 1;
+      assert.ok(parts.some((part) => src.includes(part)), `${page.name}: ${src} gets no frame`);
+    }
+  }
+  assert.ok(seen > 100, `only ${seen} screens found`);
+});
