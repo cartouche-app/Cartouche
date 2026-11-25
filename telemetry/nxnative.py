@@ -498,7 +498,7 @@ def page(catalog: Catalog, sessions: list[dict], events: list[dict], first: dt.d
         f"Vulkan, which writes no `[nvn]` line, its `[vk] frame` lines that drew, from Cartouche's reading {VULKAN_READER} "
         "of the log on, which tell how far it drew and time nothing: its frame figures and stutters show –. "
         "A session's commit is the first 12 digits of `DMCommit` in the game's `Info.plist`; Cartouche 0.11.2 and "
-        "before did not send it. Its shader chain is the first 12 digits of `DMChain` beside it; Cartouche 0.16.0 "
+        "before did not send it. Its shader chain is the first 12 digits of `DMChain` beside it; Cartouche 0.16.1 "
         "and before did not send it. Target fps is the rate most of the line's sessions asked for.",
         "- Reached serious heat: the sessions iOS put in its serious thermal state. Drew no frame: the session ended "
         "before nxnative's first summary line, or `[vk] frame` line that drew, whatever its end. A line none of whose "
