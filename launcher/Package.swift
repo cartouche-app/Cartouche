@@ -57,6 +57,7 @@ let package = Package(
                 "CartoucheInstallQuestions.swift",
                 "CartoucheMeasuredNote.swift",
                 "CartoucheNaming.swift",
+                "CartoucheOffers.swift",
                 "CartoucheOwnSignature.swift",
                 "CartouchePickerMeasures.swift",
                 "CartouchePlayTime.swift",

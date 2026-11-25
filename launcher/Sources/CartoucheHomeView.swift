@@ -517,8 +517,10 @@ struct CartoucheHomeView: View {
         actionButton(CartoucheText.importCopy, systemImage: "square.and.arrow.down", primary: true,
                      input: .a, action: onImport)
         if hasNoGame {
-            actionButton(CartoucheText.howToGetGame, systemImage: "questionmark.circle", primary: false,
-                         input: .x, action: onGuide)
+            actionButton(CartoucheText.howToGetGame, systemImage: "questionmark.circle", primary: false, input: .x) {
+                CartoucheOffer.howToGetGame.tapped(at: .home)
+                onGuide()
+            }
         }
     }
 
@@ -830,6 +832,7 @@ struct CartoucheHomeView: View {
             if case .game(let entry) = focused {
                 onSheet(entry)
             } else if focused == .importGame, hasNoGame {
+                CartoucheOffer.howToGetGame.tapped(at: .home)
                 onGuide()
             }
         case .y:
@@ -1057,7 +1060,10 @@ struct CartoucheHomeSetupBanner: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Button(action: action) {
+            Button {
+                if setup.bannerHides { CartoucheOffer.nightlyBanner.tapped(at: .home) }
+                action()
+            } label: {
                 HStack(spacing: 14) {
                     Image(systemName: setup.bannerIcon)
                         .font(.title3.weight(.semibold))
@@ -1083,6 +1089,7 @@ struct CartoucheHomeSetupBanner: View {
             .buttonStyle(.plain)
             if setup.bannerHides {
                 Button {
+                    CartoucheOffer.nightlyHidden.tapped(at: .home)
                     withAnimation(.easeInOut(duration: 0.25)) { setup.hideBanner() }
                 } label: {
                     Image(systemName: "xmark")
@@ -1103,5 +1110,15 @@ struct CartoucheHomeSetupBanner: View {
             LinearGradient(colors: [CartoucheTheme.indigo, CartoucheTheme.pink.opacity(0.85)],
                            startPoint: .topLeading, endPoint: .bottomTrailing),
             in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+}
+
+extension CartoucheOffer {
+    /// Tells the game measurements the player tapped it at PLACE
+    /// (CartoucheOffers.swift): here, as the home, the game sheet and the
+    /// guide each have it, on the iPhone and on the Mac's console.
+    @MainActor
+    func tapped(at place: Place) {
+        CartoucheTelemetry.shared.event(Self.event, fields: fields(at: place))
     }
 }

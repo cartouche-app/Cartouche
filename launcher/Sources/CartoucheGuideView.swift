@@ -406,12 +406,15 @@ struct CartoucheGuideView: View {
         .controlSize(.large)
         .cartouchePrimaryButton()
         action(CartoucheText.guideBuildCloud, systemImage: "cloud", primary: false) {
+            CartoucheOffer.buildCloud.tapped(at: .guide)
             showingCloud = true
         }
         action(CartoucheText.guideBuildHaveIPA, systemImage: "folder", primary: false) {
+            CartoucheOffer.buildHaveIPA.tapped(at: .guide)
             chooseIPA()
         }
         action(CartoucheText.guideBuildSkip, systemImage: "forward.fill", primary: false) {
+            CartoucheOffer.buildSkip.tapped(at: .guide)
             withAnimation(.easeInOut(duration: 0.2)) {
                 guide.skipBuild()
                 opened = nil
