@@ -36,6 +36,7 @@ extension Words {
     static let signedElsewhereStep = "Sign the IPA for your own certificate" // signing.elsewhere.title
     static let signedElsewhere = "A signing app signed the IPA of Cartouche made for an Apple ID" // signing.elsewhere
     static let signedElsewhereSideStore = "The IPA of Cartouche made for SideStore was installed without the app group" // signing.elsewhere.sideStore
+    static let memoryStep = "Increased Memory Limit" // sideStore.memory.title
     static let downloadVersion = "Download Cartouche %@"    // system.updates.download
     static let profileFile = "This file is a profile (.mobileprovision), not the certificate" // signing.profileFile
     static let wrongPasswordOnIPhone = "This password does not open this certificate. Type the one that came with the .p12, which your signing app asked for too" // signing.wrongPasswordOnIPhone
@@ -235,6 +236,10 @@ final class OwnCertificateUITests: ConsoleTestCase {
         expect(app.buttons[download].waitForExistence(timeout: 10),
                "The setup does not offer the IPA for the player's own certificate", in: app)
         expect(!app.buttons[Words.signIn].exists, "The setup asks for an Apple ID this IPA cannot sign in with", in: app)
+        // Increased Memory Limit comes with the IPA for SideStore once set
+        // up: this one is never set up, and the player installs another.
+        expect(!element(labelled: Words.memoryStep, in: app).exists,
+               "The setup offers Increased Memory Limit to an IPA that cannot be set up", in: app)
         back(from: Words.setup, in: app)
         tap(app.buttons[Words.done], "Done of the System page", in: app)
         expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)
