@@ -30,13 +30,17 @@ struct CartoucheSetupView: View {
     @ObservedObject private var nightly = CartoucheNightly.shared
     @State private var choosingPairingFile = false
     @State private var signingIn = false
+    /// Opened from the home's banner on the automation of every night, the
+    /// only step left: the setup shows its end, where that step is.
+    @State private var opensOnNightly = CartoucheSetup.shared.nightlyLeft
     @Environment(\.openURL) private var openURL
 
     static let localDevVPN = URL(string: "localdevvpn://")!
     static let localDevVPNAppStore = URL(string: "https://apps.apple.com/app/localdevvpn/id6755608044")!
 
     /// Whether the setup opens scrolled down to its end, on Renew every
-    /// night: the launcher's gallery (launcher/Gallery); never in Cartouche.
+    /// night, whatever is left: the launcher's gallery (launcher/Gallery);
+    /// in Cartouche, only from the home's banner on it (opensOnNightly).
     #if CARTOUCHE_GALLERY
     static var opensAtEnd = false
     #else
@@ -176,7 +180,7 @@ struct CartoucheSetupView: View {
             .frame(maxWidth: 640)
             .frame(maxWidth: .infinity)
         }
-        .defaultScrollAnchor(Self.opensAtEnd ? .bottom : nil)
+        .defaultScrollAnchor(Self.opensAtEnd || opensOnNightly ? .bottom : nil)
         .background(CartoucheStage(key: nil))
         .navigationTitle(CartoucheText.setupTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -475,17 +479,43 @@ extension CartoucheSetup {
         CartoucheSideStoreInstall.isSideStoreInstall && CartoucheSideStoreInstall.memory == .reinstall
     }
 
-    /// Whether the banners show: the setup is left, or Increased Memory
-    /// Limit.
-    var showsBanner: Bool { needsSetup || memoryLeft }
+    /// Whether the built-in SideStore renews Cartouche with the player's
+    /// Apple ID: a certificate of the player's own is never renewed here.
+    var renewsWithAppleID: Bool {
+        !usesImportedSigning && !CartoucheImportedSigning.isSignedElsewhere
+    }
+
+    /// Set up with an Apple ID, once the player's first game is installed,
+    /// while the automation that renews Cartouche every night is still to
+    /// make, and the player has not taken its banner off: the home says this
+    /// last step is left, which Cartouche plays without (decision 159).
+    var nightlyLeft: Bool {
+        let nightly = CartoucheNightly.shared
+        return !needsSetup && !memoryLeft && renewsWithAppleID && CartoucheGuide.shared.isFinishedOnce
+            && nightly.state == .toMake && !nightly.isBannerHidden
+    }
+
+    /// Whether the banners show: the setup is left, Increased Memory
+    /// Limit, or the automation of every night.
+    var showsBanner: Bool { needsSetup || memoryLeft || nightlyLeft }
+
+    /// Whether the banner has a × that takes it off the home: the
+    /// automation's alone, since Cartouche plays without it.
+    var bannerHides: Bool { nightlyLeft }
+
+    func hideBanner() {
+        CartoucheNightly.shared.hideBanner()
+    }
 
     var bannerIcon: String {
         if !needsSetup && memoryLeft { return "memorychip" }
+        if nightlyLeft { return "moon.zzz" }
         return certificateRefused ? "exclamationmark.shield.fill" : canPlay ? "arrow.triangle.2.circlepath" : "checklist"
     }
 
     var bannerTitle: String {
         if !needsSetup && memoryLeft { return CartoucheText.sideStoreMemoryBannerTitle }
+        if nightlyLeft { return CartoucheText.renewEveryNight }
         if CartoucheImportedSigning.isSignedElsewhere { return CartoucheText.signedElsewhereTitle }
         if certificateRefused { return CartoucheText.setupBannerCertificate }
         return canPlay ? CartoucheText.setupBannerRenewal : CartoucheText.setupBannerTitle
@@ -493,6 +523,7 @@ extension CartoucheSetup {
 
     func bannerDetail(signingInAgain: Bool, registeringDevice: Bool = false) -> String {
         if !needsSetup && memoryLeft { return CartoucheText.sideStoreMemoryBannerDetail }
+        if nightlyLeft { return CartoucheText.setupBannerNightlyDetail }
         if CartoucheImportedSigning.isSignedElsewhere { return CartoucheText.setupBannerSignedElsewhere }
         if usesImportedSigning {
             if CartoucheImportedSigning.isSignedOnIPhone {

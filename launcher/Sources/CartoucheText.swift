@@ -246,6 +246,9 @@ enum CartoucheText {
     static var setupBannerUnfinishedDetail: String { s("setup.banner.unfinished", "The sign-in stopped before the certificate") }
     static var setupBannerRenewal: String { s("setup.banner.renewal", "Renewal to set up") }
     static var setupBannerRenewalDetail: String { s("setup.banner.renewal.detail", "Add your pairing file") }
+    /// Once the first game is installed, under Renew every night.
+    static var setupBannerNightlyDetail: String { s("setup.banner.nightly.detail", "So that Cartouche renews itself, even if you leave it closed for a week.") }
+    static var setupBannerNightlyHide: String { s("setup.banner.nightly.hide", "Hide this reminder") }
     static var setupBannerSignInDetail: String { s("setup.banner.renewal.signIn", "Sign in with your Apple ID") }
     static var setupBannerCertificate: String { s("setup.banner.certificate", "The certificate no longer works") }
     static var setupBannerCertificateDetail: String { s("setup.banner.certificate.detail", "Sign in again to play") }

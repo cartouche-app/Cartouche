@@ -376,8 +376,11 @@ struct CartoucheGamesView: View {
             guard let app else { return }
             actions.installed = nil
             let entries = catalog.entries(for: sharedModel.apps, stored: storedGames.games, cloud: cloud.builtGames)
-            // The player's first game: the guide has done its job.
-            guide.note(guide.progress(entries))
+            // The player's first game: the guide has done its job, and
+            // Cartouche asks to warn before its signature expires.
+            if guide.note(guide.progress(entries)), CartoucheSetup.shared.renewsWithAppleID {
+                Task { await CartoucheRenewal.allowAlertsAfterFirstGame() }
+            }
             guard actions.notice == nil,
                   let entry = entries.owned.first(where: { $0.app === app }) else { return }
             path.removeAll()
