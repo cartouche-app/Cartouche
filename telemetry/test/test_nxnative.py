@@ -191,7 +191,7 @@ class NxnativePageTest(unittest.TestCase):
         self.assertEqual(rows(page, "By game and model"),
                          [{"Game": MKW_NAME, "Model": "`iPhone19,4`", "nxnative": "`6c3aeb3d70a1`", **figures}])
         self.assertEqual(rows(page, "By game and nxnative commit"),
-                         [{"Game": MKW_NAME, "nxnative": "`6c3aeb3d70a1`", **figures}])
+                         [{"Game": MKW_NAME, "nxnative": "`6c3aeb3d70a1`", "Shader chain": "`844bf1a5ea8f`", **figures}])
         summary = (self.work / "summary.md").read_text(encoding="utf-8")
         self.assertIn("4 game sessions from 3 installs", summary)
         self.assertIn("The page goes on the branch `nxnative-measurements`.", result.stdout)
@@ -263,6 +263,22 @@ class NxnativePageTest(unittest.TestCase):
         self.run_page()
         line = rows(self.page(), "By game")[0]
         self.assertEqual((line["Sessions"], line["Drew no frame"]), ("3", "3"))
+
+    def test_a_game_drawn_with_vulkan_draws_from_its_frame_lines_and_times_nothing(self):
+        """From Cartouche's fifth reading of the log, a game drawn with
+        Vulkan counts its frames from its [vk] frame lines, which time
+        nothing (seedds/nxnative#2998): it drew, its frame figures show –."""
+        for phone in self.phones[:3]:
+            self.session(phone, game=SENTINELS, frames=9000, fps=None, targetFps=None, frameMs=None, gpuMs=None,
+                         stutters=None, shaderStallMsPerMinute=None, minutes=40.0, reader=5, end={"kind": "quit"})
+        self.run_page()
+        page = self.page()
+        line = rows(page, "By game")[0]
+        self.assertEqual((line["Sessions"], line["FPS median"], line["Frame p99 ms"], line["Stutters a minute"],
+                          line["Drew no frame"]), ("3", "–", "–", "–", "0"))
+        self.assertIn("its `[vk] frame` lines that drew, from Cartouche's reading 5 of the log on", page)
+        summary = (self.work / "summary.md").read_text(encoding="utf-8")
+        self.assertNotIn("Played long without a summary line", summary)
 
     def test_sessions_that_are_not_nxnatives_doing_are_set_apart(self):
         for phone in self.phones[:3]:
@@ -352,6 +368,24 @@ class NxnativePageTest(unittest.TestCase):
         self.assertIn("9 of the 10 sessions that count name their nxnative commit.", page)
         self.assertNotIn("cccccccccccc", page)
         self.assertNotIn("iPhone17,1", page)
+
+    def test_a_commits_line_names_the_shader_chain_three_installs_share(self):
+        # nxnative asked for the shader chain beside the exact commit (seedds/nxnative#2998).
+        for phone in self.phones[:3]:
+            self.session(phone, nxnative="aaaaaaaaaaaa", chain="0f1e2d3c4b5a")
+        self.session(self.phones[3], nxnative="aaaaaaaaaaaa", chain="99999999aaaa")
+        for phone, chain in zip(self.phones[4:7], ("111111111111", "222222222222", None)):
+            self.session(phone, nxnative="bbbbbbbbbbbb", chain=chain)
+        for phone in self.phones[7:10]:
+            self.session(phone, nxnative="cccccccccccc", chain=None)
+        self.run_page()
+        page = self.page()
+        self.assertEqual([(r["nxnative"], r["Shader chain"]) for r in rows(page, "By game and nxnative commit")],
+                         [("`aaaaaaaaaaaa`", "`0f1e2d3c4b5a` (+1)"), ("`bbbbbbbbbbbb`", "2 chains"),
+                          ("`cccccccccccc`", "not said")])
+        # A chain fewer than three installs ran is not named.
+        for chain in ("99999999aaaa", "111111111111", "222222222222"):
+            self.assertNotIn(chain, page)
 
     def test_a_crash_shows_when_three_installs_share_it(self):
         crash = {"kind": "crash", "signal": 11, "pc": "main+0x10", "lr": "main+0x08"}

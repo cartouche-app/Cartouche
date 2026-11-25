@@ -4,7 +4,8 @@ nxnative's games in the last 28 days: the page the nxnative page workflow
 puts on the branch nxnative-measurements each Thursday
 (.github/workflows/nxnative.yml, telemetry/README.md#nxnatives-page).
 
-By game, by game and model, and by game and nxnative commit: installs,
+By game, by game and model, and by game and nxnative commit, with the
+shader chain most of its installs ran: installs,
 sessions and hours, the frame rate, the frame time, the stutters and what
 they waited for, the shader stall, the preparation before the first frame,
 the memory peak, the heat, and how the sessions ended; the crashes several
@@ -85,7 +86,11 @@ GPU_LOST_READER = 4
 # screen: Super Mario Galaxy, 15 sessions and 11 hours on 7 installs, none
 # with a summary line (17 November). Its sessions are not said to have drawn
 # no frame. The dashboard's rule (UNCOUNTED_MINUTES, telemetry/dashboard).
+# Super Mario Galaxy is drawn with Vulkan, which writes no [nvn] line, as
+# nxnative told us (seedds/nxnative#2998): from Cartouche's fifth reading of
+# the log on, its [vk] frame lines count its frames (VULKAN_READER).
 UNCOUNTED_MINUTES = 30
+VULKAN_READER = 5
 
 # The sessions one day received, a page at a time, with D1's parameters as
 # text. A session sent again because its log grew is the same session with
@@ -94,6 +99,7 @@ SESSIONS = (
     "SELECT id, install, session, seq, day, device, ios, game, "
     "json_extract(body, '$.nxnative') AS nxnative, "
     "json_extract(body, '$.nxnativeChanged') AS changed, "
+    "json_extract(body, '$.chain') AS chain, "
     "json_extract(body, '$.gameVersion') AS version, "
     "json_extract(body, '$.minutes') AS minutes, "
     "json_extract(body, '$.frames') AS frames, "
@@ -333,6 +339,11 @@ def commits_text(group: Group) -> str:
     return most_shared(((s.get("nxnative"), s["install"]) for s in group.sessions), "commit")
 
 
+def chains_text(group: Group) -> str:
+    """The shader chain most installs of the group ran, and how many others."""
+    return most_shared(((s.get("chain"), s["install"]) for s in group.sessions), "chain")
+
+
 FIGURES = ("Installs", "Sessions", "Hours", "Target fps", "FPS median", "FPS slowest 5%", "Frame p99 ms",
            "Stutters a minute", "Waiting for shaders", "Shader stall ms a minute", "Prepare s", "Peak MiB",
            "Reached serious heat", "Crashed", "GPU lost", "Failed to boot", "Out of memory", "Drew no frame")
@@ -446,8 +457,8 @@ def page(catalog: Catalog, sessions: list[dict], events: list[dict], first: dt.d
     lines += table("By game and model", ["Game", "Model", "nxnative"], by_model,
                    lambda key, group: [catalog.name(key[0]), f"`{key[1]}`", commits_text(group)],
                    f"No game was played on {MIN_INSTALLS} installs or more of one model.")
-    lines += table("By game and nxnative commit", ["Game", "nxnative"], by_commit,
-                   lambda key, group: [catalog.name(key[0]), f"`{key[1]}`"],
+    lines += table("By game and nxnative commit", ["Game", "nxnative", "Shader chain"], by_commit,
+                   lambda key, group: [catalog.name(key[0]), f"`{key[1]}`", chains_text(group)],
                    f"No game was played from one nxnative commit on {MIN_INSTALLS} installs or more.")
     lines += crashes(catalog, kept)
     lines += devices(events)
@@ -483,21 +494,24 @@ def page(catalog: Catalog, sessions: list[dict], events: list[dict], first: dt.d
         "- The figures come from the lines nxnative writes in `log.txt`, which Cartouche reads after each session "
         "([CartoucheGameLog.swift](https://github.com/cartouche-app/Cartouche/blob/main/launcher/Sources/"
         "CartoucheGameLog.swift)): the `[nvn]` timing, on-screen and power lines, `[longframe]`, `pipeline prepare`, "
-        "the memory and thermal lines, `CRASH sig=`, `GPU access revoked` and `[RED] boot:`. "
+        "the memory and thermal lines, `CRASH sig=`, `GPU access revoked` and `[RED] boot:`; for a game drawn with "
+        f"Vulkan, which writes no `[nvn]` line, its `[vk] frame` lines that drew, from Cartouche's reading {VULKAN_READER} "
+        "of the log on, which tell how far it drew and time nothing: its frame figures and stutters show –. "
         "A session's commit is the first 12 digits of `DMCommit` in the game's `Info.plist`; Cartouche 0.11.2 and "
-        "before did not send it. Target fps is the rate most of the line's sessions asked for.",
+        "before did not send it. Its shader chain is the first 12 digits of `DMChain` beside it; Cartouche 0.16.1 "
+        "and before did not send it. Target fps is the rate most of the line's sessions asked for.",
         "- Reached serious heat: the sessions iOS put in its serious thermal state. Drew no frame: the session ended "
-        "before nxnative's first summary line, whatever its end. A line none of whose sessions wrote one, though they "
-        f"lasted {UNCOUNTED_MINUTES} minutes or more in all, says no summary line instead: the game may run while "
-        "nxnative writes no `[nvn]` timing, on-screen or power line for it, as much as stay on a black screen, and "
-        "its frame figures show –.",
+        "before nxnative's first summary line, or `[vk] frame` line that drew, whatever its end. A line none of whose "
+        f"sessions wrote one, though they lasted {UNCOUNTED_MINUTES} minutes or more in all, says no summary line "
+        "instead: the game may run while Cartouche reads none of these lines for it, as a game drawn with Vulkan "
+        f"before its reading {VULKAN_READER}, as much as stay on a black screen, and its frame figures show –.",
         "- GPU lost: the crashes nxnative ended once the system took the GPU away from the game for the GPU errors it "
         "caused (`[RED] GPU access revoked`), as the crashes' cause says too. Cartouche tells them from its reading "
         f"{GPU_LOST_READER} of the log on: before it, such a session is a crash like any other abort, and a line "
         "with no session read so shows –. On a Mac, nxnative quits the game itself, and its crash has no signal.",
         "- A session counts once, as last sent; a copy of another region counts for its game.",
-        "- nxnative, Models: the commit, or the model, most installs of the line ran, when at least 3 did, and how "
-        "many others; else only how many. A Mac counts as an install does: a step of a build shows when at least 3 "
+        "- nxnative, Shader chain, Models: the commit, the shader chain or the model most installs of the line ran, "
+        "when at least 3 did, and how many others; else only how many, or not said when none sent it. A Mac counts as an install does: a step of a build shows when at least 3 "
         "Macs failed at it.",
         "- On players' Macs: a play is a game Cartouche Builder started, from its Play button, the Finder, the Dock "
         "or Launchpad, counted once it ended, as the last line of nxnative's launcher in its log says: Quit, "

@@ -612,6 +612,7 @@
     {
       "audioUnderrunsPerMinute": 0,
       "cartouche": "0.2.1",
+      "chain": "844bf1a5ea8f",
       "cpu": {
         "percent": 310,
         "performanceCoresPercent": 70,
@@ -658,7 +659,7 @@
         "lines": 4210,
         "seconds": 6.2
       },
-      "reader": 4,
+      "reader": 5,
       "schema": 1,
       "seq": 29,
       "session": "c4d1b8e0-7a2f-4e19-8c3d-2f6a9b0e1d7c",

@@ -73,9 +73,15 @@ struct CartoucheGameBuild: Codable, Hashable {
     var isDirty: Bool { commit?.hasSuffix("+dirty") ?? false }
 
     /// The commit as nxnative shows it: its first 12 digits.
-    var shortCommit: String? {
-        guard let commit else { return nil }
-        let digits = commit.prefix { $0.isHexDigit }
+    var shortCommit: String? { Self.shortHex(commit) }
+
+    /// The shader chain as nxnative writes it: its first 12 digits.
+    var shortChain: String? { Self.shortHex(chain) }
+
+    /// The first 12 hexadecimal digits of TEXT, nil when it starts with none.
+    private static func shortHex(_ text: String?) -> String? {
+        guard let text else { return nil }
+        let digits = text.prefix { $0.isHexDigit }
         return digits.isEmpty ? nil : String(digits.prefix(12))
     }
 
