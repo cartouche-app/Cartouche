@@ -75,7 +75,9 @@ final class SystemUITests: ConsoleTestCase {
             (Words.report, nil),
         ]
         for page in pages {
-            let row = element(in: app.buttons, beginningWith: page.row)
+            // In the page's list: the home under it, with a game installed,
+            // has Renew every night too, as its banner (decision 159).
+            let row = element(in: app.collectionViews.buttons, beginningWith: page.row)
             scrollTo(row, "\(page.row) on the System page", in: app)
             tap(row, "\(page.row) on the System page", in: app)
             expect(app.navigationBars[page.row].waitForExistence(timeout: 15), "\(page.row) did not open", in: app)
