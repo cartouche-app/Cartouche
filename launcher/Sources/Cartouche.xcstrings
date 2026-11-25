@@ -22244,6 +22244,35 @@
         }
       }
     },
+    "signing.elsewhere.sideStore" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die für SideStore gemachte IPA von Cartouche wurde ohne die App-Gruppe installiert, die ihre Anmeldung braucht: Die Anmeldung kann hier nicht funktionieren. Signiere mit einer Signier-App stattdessen Cartouche-%@-Own-Certificate.ipa aus den Versionen von Cartouche auf GitHub, oder installiere Cartouche mit dem Cartouche-Installer auf einem Computer."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The IPA of Cartouche made for SideStore was installed without the app group its sign-in needs: signing in cannot work here. With a signing app, sign Cartouche-%@-Own-Certificate.ipa instead, from Cartouche’s releases on GitHub, or install Cartouche with the Cartouche Installer on a computer."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La IPA de Cartouche hecha para SideStore se instaló sin el grupo de apps que necesita su inicio de sesión: el inicio de sesión no puede funcionar aquí. Con una app de firma, firma en su lugar Cartouche-%@-Own-Certificate.ipa, de las versiones de Cartouche en GitHub, o instala Cartouche con el Instalador de Cartouche en un ordenador."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’IPA de Cartouche faite pour SideStore a été installée sans le groupe d’apps dont sa connexion a besoin : la connexion ne peut pas marcher ici. Avec une app de signature, signez plutôt Cartouche-%@-Own-Certificate.ipa, depuis les versions de Cartouche sur GitHub, ou installez Cartouche avec l’Installeur Cartouche sur un ordinateur."
+          }
+        }
+      }
+    },
     "signing.elsewhere.title" : {
       "extractionState" : "manual",
       "localizations" : {
