@@ -501,6 +501,12 @@ struct CartoucheGamesView: View {
         }
     }
 
+    /// No game installed, in the games folders or built by Cartouche Cloud:
+    /// a game's sheet offers the guide beside Import my copy.
+    private var hasNoGame: Bool {
+        !catalog.hasOwnedGames(among: sharedModel.apps, stored: storedGames.games, cloud: cloud.builtGames)
+    }
+
     /// A game's sheet, with its settings page one step further: over the
     /// console, with Done, or BESIDE it, where the player is asked about the
     /// game by the console's own questions. The Files picker shows over
@@ -528,7 +534,9 @@ struct CartoucheGamesView: View {
                     if beside { paneID = entry.id }
                     gameSettings = nil
                     shortcutsPage = app.appInfo.bundleIdentifier()
-                })
+                },
+                // The sheet goes, and the guide opens over the console.
+                onGuide: hasNoGame ? { guide.requestOpen() } : nil)
                 .id(entry.id)
                 // Beside the console, the sheet's bar would hold nothing.
                 .toolbar(beside ? .hidden : .automatic, for: .navigationBar)

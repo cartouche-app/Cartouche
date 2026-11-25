@@ -475,7 +475,10 @@ public struct CartoucheMacConsoleView: View {
                     onImport: { console.onImport() },
                     onUninstall: { console.onUninstall($0.appInfo.url) },
                     onInstallStored: { console.install($0) },
-                    onEditInfo: { editingInfo = entry })
+                    onEditInfo: { editingInfo = entry },
+                    // No game built for this Mac yet: the guide, in the
+                    // console's place, as the home's card opens it.
+                    onGuide: console.apps.isEmpty && console.stored.isEmpty ? { path.append(.guide) } : nil)
                     .id(entry.id)
                     .navigationDestination(isPresented: $showsSavesPage) {
                         savesPage(of: entry)

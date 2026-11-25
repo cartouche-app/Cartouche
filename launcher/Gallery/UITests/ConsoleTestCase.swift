@@ -33,6 +33,7 @@ enum Words {
     static let cancel = "Cancel"                            // action.cancel
     static let gameSettings = "Game settings"               // action.gameSettings
     static let importCopy = "Import my copy"                // action.import
+    static let howToGetGame = "How to get a game"           // action.howToGetGame
     static let search = "Name or title ID"                  // library.search
     static let controls = "Controls"                        // setting.section.controls
     static let touchFeedback = "Touch feedback"             // setting.touchFeedback

@@ -590,6 +590,23 @@
       ]
     },
     {
+      "name": "iphone-sheet-other-no-game",
+      "comment": "The sheet of a game the player does not have, for a player with no game yet: How to get a game, the guide, beside Import my copy.",
+      "screen": "sheet",
+      "sheet": "01003FC01670C000",
+      "owned": [],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-sheet-games-folders",
       "comment": "A game the player does not have yet, in both games folders, newer on the NAS, which does not answer: Install from Google Drive, also in the NAS, offline.",
       "screen": "sheet",
