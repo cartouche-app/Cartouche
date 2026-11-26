@@ -84,8 +84,8 @@ final class CartoucheTelemetryReportTests: XCTestCase {
         let session = CartoucheSessionReport(
             id: "5f0c2a9e-4b1d-4c3e-9a77-1e2f3d4c5b6a", session: "b8e1d0c4-7a2f-4e19-8c3d-2f6a9b0e1d7c", seq: 7,
             context: context, game: "0400C3F00006E000", gameVersion: "1.0.0", nxnative: "6c3aeb3d70a1", nxnativeChanged: false,
-            chain: "844bf1a5ea8f", bcTextures: "converted", settings: ["DM_OPMODE": "0", "DM_RENDER_SCALE": "1.0"], minutes: 35.2, measures: measures,
-            process: process)
+            chain: "844bf1a5ea8f", bcTextures: "converted", settings: ["DM_OPMODE": "0", "DM_RENDER_SCALE": "1.0"], otherAudio: true,
+            minutes: 35.2, measures: measures, process: process)
         let event = try XCTUnwrap(CartoucheEventReport(
             id: "3d9b2f5e-0000-4000-8000-000000000001", seq: 8, context: context, name: "game.installed", game: "0400C3F00006E000",
             fields: ["version": .text("1.0.0"), "nxnative": .text("6c3aeb3d70a1"), "from": .text("mac"), "link": .text("cable")]))

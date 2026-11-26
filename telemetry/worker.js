@@ -234,6 +234,9 @@ const session = object(
     audioUnderrunsPerMinute: number(0, 1e6),
     display: object({ tv: flag, foldSplit: flag }),
     dlc: flag,
+    // On the iPhone, whether the game let other apps' sound play on, as the
+    // player chose (launcher/Sources/CartoucheOtherAudio.swift).
+    otherAudio: flag,
     // How many mods the game took (launcher/Sources/CartoucheMods.swift),
     // never their names.
     mods: integer(1, 64),

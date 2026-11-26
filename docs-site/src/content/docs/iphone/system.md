@@ -53,7 +53,7 @@ After an update, Cartouche opens on **What's new**, in your language. **System â
 
 ## Memory
 
-Cartouche gets **Increased Memory Limit**, even with a free Apple account. **Memory** shows the limit iOS gives Cartouche here, the one it gave the last game behind the console, and whether Increased Memory Limit is active. **While a game runs** holds **Keep Cartouche open behind the game** ([Playing](/iphone/playing/#a-game-that-needs-more-memory)).
+Cartouche gets **Increased Memory Limit**, even with a free Apple account. **Memory** shows the limit iOS gives Cartouche here, the one it gave the last game behind the console, and whether Increased Memory Limit is active. **While a game runs** holds **Keep Cartouche open behind the game** ([Playing](/iphone/playing/#a-game-that-needs-more-memory)) and **Keep other apps' sound**, which lets your music or podcast play on under the game's sound ([Playing](/iphone/playing/#your-music-or-podcast)).
 
 ## Storage, builds and Cartouche Cloud
 

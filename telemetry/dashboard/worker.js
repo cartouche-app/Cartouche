@@ -121,6 +121,7 @@ export const SESSION = [
   "display.tv",
   "display.foldSplit",
   "dlc",
+  "otherAudio",
   "mods",
   "end.kind",
   "end.signal",

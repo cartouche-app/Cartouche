@@ -1,6 +1,6 @@
 ---
 title: Jouer
-description: Comment un jeu tourne derrière la console de Cartouche, le bouton Home, jouer sur une TV, debout ou couché, Siri, et installer et mettre à jour vos jeux.
+description: Comment un jeu tourne derrière la console de Cartouche, le bouton Home, jouer sur une TV, votre musique ou votre podcast, debout ou couché, Siri, et installer et mettre à jour vos jeux.
 sidebar:
   order: 4
 ---
@@ -30,6 +30,10 @@ Si iOS ferme un jeu près de sa limite de mémoire derrière la console, Cartouc
 Branchez l'iPhone à une TV par un câble, ou recopiez son écran par AirPlay vers une Apple TV ou une TV compatible AirPlay. La TV montre le jeu seul, comme une console sur sa station, et les commandes restent sur l'iPhone. Avec la TV, le jeu reste couché.
 
 Il n'y a pas de version Apple TV : l'iPhone fait tourner le jeu et l'envoie à la TV.
+
+## Votre musique ou votre podcast
+
+Un jeu arrête en démarrant la musique ou le podcast d'une autre app. Pour qu'ils continuent sous le son du jeu, activez **Système › Pendant une partie › Garder le son des autres apps** : c'est pris en compte au prochain lancement du jeu. Le jeu joue toujours en mode silencieux, comme avant ; un appel ou Siri interrompt les deux, comme le son de n'importe quelle app.
 
 ## Debout ou couché
 

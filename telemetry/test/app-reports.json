@@ -62,6 +62,7 @@
       "mods": 2,
       "nxnative": "6c3aeb3d70a1",
       "nxnativeChanged": false,
+      "otherAudio": true,
       "overTargetPercent": 2.4,
       "prepare": {
         "lines": 13394,

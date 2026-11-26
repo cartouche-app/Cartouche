@@ -441,6 +441,8 @@
 //                                        its end, on that step
 //        requirements                    on a game's sheet, what the game
 //                                        needs, opened on each need
+//        playing                         on the System page, the page
+//                                        scrolled down to While a game runs
 //        reset                           on the System page, the page at its
 //                                        end, on Reset Cartouche
 //        results                         on a game's sheet, the testers'
