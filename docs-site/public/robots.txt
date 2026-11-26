@@ -1,0 +1,5 @@
+# docs.cartouche.cloud: every page may be read and listed by search engines.
+User-agent: *
+Allow: /
+
+Sitemap: https://docs.cartouche.cloud/sitemap-index.xml

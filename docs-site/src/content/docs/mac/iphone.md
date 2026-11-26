@@ -32,6 +32,17 @@ The Mac shares two folders, and nothing else of it can be reached: **Games**, yo
 
 The Mac answers while Cartouche is open on it.
 
+## Cartouche renewed by your Mac
+
+Cartouche opens for seven days at a time on your iPhone, then needs renewing. Cartouche for Mac renews it for you, by the cable or on your Wi-Fi, with or without the sharing above, and without LocalDevVPN:
+
+1. In the Builder's **iPhone** page, under **Renewing Cartouche**, click **Sign In…**, sign in with the Apple Account you installed Cartouche with, then type the code Apple sends.
+2. Plug the iPhone into the Mac, and trust the Mac if it asks. To reach it on your Wi-Fi as well, turn on Wi-Fi sync for it in the Finder.
+
+From then on, the Mac looks at the iPhones it reaches every half hour while it is open, its window or its menu bar, and renews Cartouche in its last two days, or once it has expired. **Renew** does it at once. A renewal installs nothing again: Cartouche keeps its games, its saves and its increased memory, and shows its new date at its next start.
+
+Your password goes to Apple alone, once: the Mac keeps only the session Apple gives in return, so it never asks for your password when it opens, builds or plays. Once Apple ends that session (a sign-in elsewhere, a new password, or the days Apple gives it) and a renewal is due, a notification, one a day at most, says to sign in again on the **iPhone** page. The Mac leaves alone a Cartouche installed with another Apple Account; and a Cartouche whose certificate is gone from your account opens again only with an install from the Cartouche Installer.
+
 ## Drive the Mac's builds from the iPhone
 
 ![The Mac's builds, on the iPhone](../../../assets/screens/iphone-mac-builds.webp)

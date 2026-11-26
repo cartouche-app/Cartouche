@@ -7,7 +7,7 @@ from unittest import mock
 
 from cartouche_builder import identify, library, titles
 
-from support import HOLLOW, MKW, ODYSSEY, ZELDA, Home, make_dump, make_nsp, make_nup, make_xci, make_zip_dump, npdm, write_keys
+from support import HOLLOW, MKW, ODYSSEY, ZELDA, Home, make_dump, make_nsp, make_nup, make_romfs_image, make_xci, make_zip_dump, npdm, write_keys
 
 
 class TitleIds(unittest.TestCase):
@@ -236,6 +236,101 @@ class NamedWithoutTheirId(Home):
         self.assertEqual(found.games, [])
         self.assertEqual(len(found.issues), 1)
         self.assertIn("Zelda/zelda.xci: not a game Cartouche can read", found.issues[0])
+
+
+class DlcImagesBesideANup(Home):
+    """A NUP without DLC of its own and the images of its DLC, 1.img and on,
+    in an aoc folder beside it: nxnative builds them in (--aoc-dir)."""
+
+    def setUp(self):
+        super().setUp()
+        self.root = self.tmp / "sources"
+        self.game = self.root / "Mario Kart World"
+        make_nup(self.game / "MKW.nup", [(MKW, 0), ("0400C3F00006E800", 1)])
+
+    def test_a_nup_takes_the_images_of_its_dlc(self):
+        aoc = self.game / "aoc"
+        make_romfs_image(aoc / "2.IMG", b"second")
+        make_romfs_image(aoc / "1.img")
+        (aoc / "._1.img").write_bytes(b"apple double")
+        (aoc / "notes.txt").write_text("DLC from my console")
+        found = library.discover(self.root)
+        self.assertEqual(found.issues, [])
+        mkw = found.games[0]
+        self.assertEqual((mkw.kind, mkw.aoc), ("nup", [aoc / "1.img", aoc / "2.IMG"]))
+        self.assertEqual(mkw.size, sum(p.stat().st_size for p in [self.game / "MKW.nup", *mkw.aoc]))
+        # A new DLC image is a change of the game's files: it builds again.
+        before = mkw.fingerprint()
+        make_romfs_image(aoc / "3.img")
+        self.assertNotEqual(library.discover(self.root).games[0].fingerprint(), before)
+
+    def test_the_fingerprint_of_a_nup_without_images_is_as_before(self):
+        # Their aoc folder changes nothing for the NUPs built already.
+        mkw = library.discover(self.root).games[0]
+        digest = __import__("hashlib").sha256(b"nup")
+        info = (self.game / "MKW.nup").stat()
+        digest.update(f"\0MKW.nup\0{info.st_size}\0{info.st_mtime_ns}".encode())
+        self.assertEqual(mkw.fingerprint(), digest.hexdigest()[:24])
+
+    def test_loose_in_the_sources_folder_its_aoc_folder_is_no_empty_folder(self):
+        loose = self.tmp / "loose"
+        make_nup(loose / "MKW.nup", [(MKW, 0)])
+        make_romfs_image(loose / "AOC" / "1.img")
+        found = library.discover(loose)
+        self.assertEqual(found.issues, [])
+        self.assertEqual(found.games[0].aoc, [loose / "AOC" / "1.img"])
+
+    def test_images_nxnative_would_refuse_are_left_out_and_said(self):
+        aoc = self.game / "aoc"
+        make_romfs_image(aoc / "1.img")
+        make_romfs_image(aoc / "01.img")
+        make_romfs_image(aoc / "2001.img")
+        make_romfs_image(aoc / "Pass.img")
+        (aoc / "3.img").write_bytes(b"DMROMFS1 cut short")
+        found = library.discover(self.root)
+        self.assertEqual(found.games[0].aoc, [aoc / "1.img"])
+        self.assertEqual(found.issues, [
+            "Mario Kart World/aoc/01.img: not the name of a DLC’s image. nxnative takes 1.img to 2000.img, each DLC by its number.",
+            "Mario Kart World/aoc/2001.img: not the name of a DLC’s image. nxnative takes 1.img to 2000.img, each DLC by its number.",
+            "Mario Kart World/aoc/3.img: not a whole image of a DLC’s files (copied in part?): left out.",
+            "Mario Kart World/aoc/Pass.img: not the name of a DLC’s image. nxnative takes 1.img to 2000.img, each DLC by its number.",
+        ])
+
+    def test_one_number_twice_on_a_drive_that_tells_letter_case(self):
+        aoc = self.game / "aoc"
+        make_romfs_image(aoc / "1.img")
+        if (aoc / "1.IMG").exists():
+            self.skipTest("this drive takes 1.IMG for 1.img, as a Mac's does")
+        make_romfs_image(aoc / "1.IMG")
+        found = library.discover(self.root)
+        self.assertEqual(found.games[0].aoc, [aoc / "1.IMG"])
+        self.assertEqual(found.issues, [
+            "Mario Kart World/aoc/1.img: the same DLC number as Mario Kart World/aoc/1.IMG; only Mario Kart World/aoc/1.IMG is built."])
+
+    def test_a_nup_with_dlc_of_its_own_keeps_them(self):
+        make_nup(self.game / "MKW.nup", [(MKW, 0), ("0400C3F00006F001", 2)])
+        make_romfs_image(self.game / "aoc" / "1.img")
+        found = library.discover(self.root)
+        self.assertEqual(found.games[0].aoc, [])
+        self.assertEqual(found.issues, [
+            "Mario Kart World/aoc: images of DLC beside Mario Kart World/MKW.nup, which holds DLC of its own: nxnative builds those, and leaves these out."])
+
+    def test_images_with_no_nup_alone_beside_them(self):
+        make_nup(self.game / "MKW (copy).nup", [(MKW, 0)])
+        make_romfs_image(self.game / "aoc" / "1.img")
+        make_romfs_image(self.root / "aoc" / "1.img")
+        found = library.discover(self.root)
+        self.assertTrue(all(g.aoc == [] for g in found.games))
+        self.assertEqual([i for i in found.issues if "aoc" in i], [
+            "aoc: images of DLC, but no .nup alone beside them, which they would go with. Put the aoc folder in the folder of its game’s .nup.",
+            "Mario Kart World/aoc: images of DLC, but no .nup alone beside them, which they would go with. Put the aoc folder in the folder of its game’s .nup.",
+        ])
+
+    def test_a_folder_named_aoc_without_images_is_looked_through(self):
+        make_xci(self.root / "aoc" / "Zelda" / "zelda.xci", [ZELDA])
+        found = library.discover(self.root, keys=write_keys(self.tmp / "prod.keys"))
+        self.assertEqual({g.title_id for g in found.games}, {MKW, ZELDA})
+        self.assertEqual(found.issues, [])
 
 
 class Zips(Home):

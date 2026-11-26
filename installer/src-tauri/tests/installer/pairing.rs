@@ -16,6 +16,8 @@ fn pairs_once_and_remembers_it_after_a_restart() {
     assert!(h.has_stored_pairing(), "the window would not pick the iPhone by itself");
     h.select_device().expect("after a restart");
     assert_eq!(h.iphone.state().pair_setups, 1, "asked to trust again");
+    // Kept, once the iPhone said it still knows it.
+    assert!(h.iphone.state().pair_verifies >= 1, "kept without asking the iPhone");
     // The same computer for the iPhone: one host, not one per start.
     assert_eq!(h.iphone.state().rp_hosts.len(), 1);
 }

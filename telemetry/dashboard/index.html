@@ -1110,6 +1110,12 @@
         const stuckRenewing = renewalCopies.filter((list) => lastOf(list)?.name === "error" && lastWeek.has(lastOf(list).day));
         const renewalWhy = (event) => (text(event.fields.stage) ?? "") + "|" + (text(event.fields.cause) ?? "unknown");
         const triedRenewing = new Set([...renewalsDone, ...renewalErrors].map((event) => event.install));
+        // Cartouche for Mac's renewals of Cartouche on the iPhones it reaches
+        // (builder.renewed, builder.renewFailed), and its sign-ins to Apple
+        // (builder.appleSignIn), from the version that brings them.
+        const macNamed = (name) => macEvents.filter((event) => event.name === name);
+        const macRenewed = macNamed("builder.renewed");
+        const macRenewFailed = macNamed("builder.renewFailed");
         const renewalsView = {
             renewed: renewedList.length,
             renewedCopies: new Set(renewedList.map((event) => event.install)).size,
@@ -1143,6 +1149,17 @@
                 byCause: countBy(updateErrors, (event) => text(event.fields.cause) ?? "unknown"),
             },
             imported: countBy(named("signing.imported"), (event) => text(event.fields.outcome) ?? "unknown"),
+            mac: {
+                done: macRenewed.length,
+                macs: new Set(macRenewed.map((event) => event.install)).size,
+                asked: share(macRenewed, (event) => event.fields.asked),
+                seconds: median(macRenewed.map((event) => event.fields.seconds)),
+                cable: share(macRenewed, (event) => (text(event.fields.link) ? event.fields.link === "usb" : null)),
+                failed: macRenewFailed.length,
+                failedMacs: new Set(macRenewFailed.map((event) => event.install)).size,
+                kinds: countBy(macRenewFailed, (event) => text(event.fields.kind) ?? "unknown"),
+                signIns: countBy(macNamed("builder.appleSignIn"), (event) => text(event.fields.result) ?? "unknown"),
+            },
         };
 
         // MARK: Errors
@@ -1997,6 +2014,13 @@
             });
         });
         addMac(macs[0], dayIndex[Math.min(2, dayIndex.length - 1)], "builder.paired", { allowed: true });
+        // Cartouche renewed on an iPhone from the first Mac, once without a
+        // session Apple had ended: drawn from nothing, the rest as it was.
+        dayIndex.forEach((day, d) => {
+            if (d % 6 === 3) addMac(macs[0], day, "builder.renewed", { asked: d % 12 === 9, daysGiven: 6, daysLeft: 1, due: "now", link: d % 12 === 3 ? "usb" : "network", recorded: true, refreshedSession: d % 18 === 9, registeredAppId: false, seconds: 3.4 + (d % 4) / 2 });
+            if (d % 12 === 8) addMac(macs[0], day, "builder.renewFailed", { asked: false, code: -22406, daysLeft: 1, due: "now", kind: "session-ended", stage: "session" });
+            if (d % 12 === 8) addMac(macs[0], day, "builder.appleSignIn", { result: "signed-in", seconds: 38 });
+        });
 
         // Their games played in nxnative's app for the Mac, read by
         // Cartouche's console: a generator of their own, the iPhones' data
@@ -2309,14 +2333,24 @@
         "signature.renewed": "Signature renouvelée", "renewal.done": "Renouvellement réussi", "game.installed": "Jeu installé ou mis à jour",
         "game.infoChanged": "Infos d'un jeu modifiées", "game.shortcut": "Raccourci vers un jeu", "account.signedIn": "Connexion Apple réussie",
         "signing.imported": "Certificat importé", "import.picker": "Sélecteur de fichiers d'un import", error: "Erreur",
-        "saves.synced": "Sauvegardes synchronisées",
+        "saves.synced": "Sauvegardes synchronisées", "game.controllerPause": "Pause pour la manette déconnectée",
     };
     // What renewed Cartouche's signature (signature.renewed's via).
     const RENEWAL_VIA = {
         update: "Une mise à jour de Cartouche", cartouche: "Cartouche lui-même", outside: "Une autre app ou un raccourci, Cartouche fermé",
-        reinstall: "Cartouche réinstallé", unsaid: "Non dit (avant le 13 nov.)",
+        reinstall: "Cartouche réinstallé", mac: "Cartouche pour Mac", unsaid: "Non dit (avant le 13 nov.)",
     };
-    const RENEWAL_VIA_TONES = { update: "var(--s1)", cartouche: "var(--good)", outside: "var(--s3)", reinstall: "var(--warning)", unsaid: "var(--other)" };
+    const RENEWAL_VIA_TONES = { update: "var(--s1)", cartouche: "var(--good)", outside: "var(--s3)", reinstall: "var(--warning)", mac: "var(--s2)", unsaid: "var(--other)" };
+    // Why Cartouche for Mac could not renew Cartouche on an iPhone, or sign
+    // in to Apple (cartouche-signer's kinds of error, builder/mac/signer).
+    const MAC_RENEWAL_KINDS = {
+        "no-session": "Pas connecté à Apple", "session-ended": "Session fermée par Apple", "wrong-password": "Mauvais mot de passe",
+        "wrong-code": "Mauvais code", cancelled: "Annulé par le joueur", "account-refused": "Compte refusé par Apple", "too-many-requests": "Trop de demandes à Apple",
+        anisette: "Anisette", apple: "Apple en erreur", network: "Réseau", "no-iphone": "iPhone absent", "iphone-refused": "iPhone verrouillé ou sans confiance",
+        "no-cartouche": "Cartouche absent de l'iPhone", "other-team": "Installé par un autre compte", "certificate-gone": "Certificat disparu du compte",
+        "no-app-ids": "Plus d'identifiant d'app libre", "profile-refused": "Profil refusé par l'iPhone", iphone: "iPhone en erreur", usage: "Appel de l'app",
+        internal: "Erreur de l'outil", "signed-in": "Connecté",
+    };
     // The steps of SideStore's renewal (its operations), in words.
     const RENEWAL_STAGES = {
         VerifyCertificate: "Vérification du certificat", BackgroundRefreshApps: "Renouvellement en arrière-plan", RefreshApp: "Renouvellement de l'app",
@@ -3372,6 +3406,16 @@
             card("Mises à jour de Cartouche", plural(r.updates.count, "mise à jour", "mises à jour") + " sur " + plural(r.updates.copies, "copie", "copies") + (r.updates.failed ? ", " + plural(r.updates.failed, "échec", "échecs") + " sur " + plural(r.updates.failedCopies, "copie", "copies") + "." : "."),
                 ranked(r.updates.byCause.slice(0, 6), (row) => FAILURE_CAUSES[row.key] || row.key),
                 r.imported.length ? h("p", { class: "foot", text: "Certificats donnés : " + r.imported.map((row) => count(row.count) + " " + (IMPORT_OUTCOMES[row.key] || row.key) + " (" + plural(row.installs, "copie", "copies") + ")").join(", ") + "." }) : null),
+            card("Quand Cartouche pour Mac le renouvelle", r.mac.done || r.mac.failed ? plural(r.mac.done, "renouvellement", "renouvellements") + " sur " + plural(r.mac.macs, "Mac", "Macs") + ", d'un iPhone que le Mac atteint, par câble ou sur le Wi-Fi." : "Aucun renouvellement par un Mac sur cette période.",
+                facts([
+                    ["Réussis", count(r.mac.done)],
+                    ["Demandés", shareText(r.mac.asked), r.mac.asked ? "par le joueur" : ""],
+                    ["Par câble", shareText(r.mac.cable)],
+                    ["Durée médiane", has(r.mac.seconds) ? n1.format(r.mac.seconds) : DASH, "s"],
+                    ["Échecs", count(r.mac.failed), r.mac.failed ? "sur " + plural(r.mac.failedMacs, "Mac", "Macs") : ""],
+                ]),
+                ranked(r.mac.kinds.slice(0, 8), (row) => MAC_RENEWAL_KINDS[row.key] || row.key, ["Mac", "Macs"]),
+                r.mac.signIns.length ? h("p", { class: "foot", text: "Connexions à Apple : " + r.mac.signIns.map((row) => (MAC_RENEWAL_KINDS[row.key] || row.key) + " (" + count(row.count) + ")").join(", ") + "." }) : null),
         ];
     }
 

@@ -172,6 +172,28 @@ final class GameFilesApartTests: HarnessCase {
         XCTAssertEqual(apps.count, 1, "one copy of the game in Applications: \(apps)")
     }
 
+    func testItsDLCAndItsOtherProgramsComeInItsIPAAndStayThroughANewBuild() async throws {
+        // nxnative leaves out only the game's own files: the app of a build
+        // with them apart still carries its DLC and the files of the game's
+        // other programs, as a build of the whole game does (build_ipa.sh,
+        // decision 171). They are installed with the app; nothing more is
+        // looked for beside the IPA.
+        var first = apart(2)
+        first.dlcAndPrograms = true
+        let installedFirst = try await install(try HarnessIPA.gameApart(first, in: try newFolder("with DLC")))
+        XCTAssertNil(actions.notice, "\(String(describing: actions.notice))")
+        try assertInstalled(try XCTUnwrap(installedFirst), as: first)
+
+        var second = first
+        second.version = "1.1.0"
+        second.commit = "9f0e8d7c6b5a4f3e2d1c0b9a8f7e6d5c4b3a2f1e"
+        let installedSecond = try await install(try HarnessIPA.gameApart(second, in: try newFolder("with DLC, again"), image: nil))
+        XCTAssertNil(actions.notice, "\(String(describing: actions.notice))")
+        let app = try XCTUnwrap(installedSecond)
+        XCTAssertEqual(model.apps.count, 1, "the new build takes the place of the first")
+        try assertInstalled(app, as: second)
+    }
+
     func testANewBuildThatNeedsOtherFilesIsRefusedAndTheInstalledGameStaysWhole() async throws {
         let first = apart(7)
         let installedFirst = try await install(try HarnessIPA.gameApart(first, in: try newFolder("first build")))

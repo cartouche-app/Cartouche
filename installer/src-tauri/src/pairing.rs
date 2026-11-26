@@ -1,4 +1,4 @@
-use std::sync::Mutex;
+use std::{sync::Mutex, time::Duration};
 
 // used https://github.com/jkcoxson/idevice_pair/ as a guide
 use idevice::{
@@ -7,7 +7,7 @@ use idevice::{
     house_arrest::HouseArrestClient,
     lockdown::LockdownClient,
     provider::IdeviceProvider,
-    remote_pairing::{RemotePairingLockdownService, RpPairingFile},
+    remote_pairing::{RemotePairingLockdownService, RpPairingFile, errors::RemotePairingError},
     usbmuxd::UsbmuxdConnection,
 };
 use isideload::util::storage::{InMemoryStorage, SideloadingStorage};
@@ -135,6 +135,49 @@ async fn generate_rppairing(
         .await?;
 
     Ok(pairing_file)
+}
+
+/// What the iPhone says of the RPPairing this computer kept for it.
+enum KeptCheck {
+    /// It knows it: Cartouche's SideStore reaches the iPhone with it.
+    Known,
+    /// It does not: an iPhone erased (Erase All Content and Settings) or set
+    /// up again keeps its UDID, the key the pairing is kept under, but
+    /// forgets the computers it paired with. Its RemotePairing service then
+    /// breaks the connection as soon as SideStore shows that pairing, and
+    /// Cartouche says the iPhone did not answer through LocalDevVPN.
+    Refused,
+    /// No answer to the question, for this reason.
+    Unanswered(String),
+}
+
+/// How long the iPhone has to say whether it knows the RPPairing kept.
+const KEPT_CHECK_TIME: Duration = Duration::from_secs(15);
+
+/// Asks the iPhone, through its RemotePairing service over lockdown, whether
+/// it still knows the RPPairing KEPT for it: pair-verify, as SideStore does
+/// it through LocalDevVPN, which leaves the iPhone as it was.
+async fn check_kept_rppairing(provider: &dyn IdeviceProvider, hostname: &str, kept: &plist::Value) -> KeptCheck {
+    match tokio::time::timeout(KEPT_CHECK_TIME, pair_verify(provider, hostname, kept)).await {
+        Ok(Ok(())) => KeptCheck::Known,
+        Ok(Err(IdeviceError::RemotePairing(RemotePairingError::PairVerifyFailed))) => KeptCheck::Refused,
+        Ok(Err(e)) => KeptCheck::Unanswered(e.to_string()),
+        Err(_) => KeptCheck::Unanswered(format!("no answer in {} s", KEPT_CHECK_TIME.as_secs())),
+    }
+}
+
+async fn pair_verify(provider: &dyn IdeviceProvider, hostname: &str, kept: &plist::Value) -> Result<(), IdeviceError> {
+    let mut bytes = Vec::new();
+    kept.to_writer_xml(&mut bytes)
+        .map_err(|e| IdeviceError::InternalError(format!("RPPairing kept: {e}")))?;
+    // One that is not an RPPairing goes nowhere either.
+    let Ok(mut pairing_file) = RpPairingFile::from_bytes(&bytes) else {
+        return Err(RemotePairingError::PairVerifyFailed.into());
+    };
+    let service = RemotePairingLockdownService::connect(provider).await?;
+    let mut client = service.into_client(hostname)?;
+    client.attempt_pair_verify().await?;
+    client.validate_pairing(&mut pairing_file).await
 }
 
 pub async fn place_file(
@@ -348,7 +391,33 @@ pub async fn pairing_file<R: Runtime>(
 
     let cache_key = format!("rppairing1.1_file_{}", device.udid);
 
-    let rppairing_plist = match kept_rppairing(app, &cache_key)? {
+    // The one kept, once the iPhone says it still knows it.
+    let kept = match kept_rppairing(app, &cache_key)? {
+        Some(plist) => {
+            let hostname = host_label(app, &device.udid)?;
+            let check = tokio::select! {
+                _ = cancel.cancelled() => {
+                    return Err(AppError::Canceled("Pairing".into()));
+                }
+                check = check_kept_rppairing(&provider, &hostname, &plist) => check
+            };
+            match check {
+                KeptCheck::Known => Some(plist),
+                KeptCheck::Refused => {
+                    warn!("The iPhone no longer knows the RPPairing kept for it (erased, or set up again?), pairing again");
+                    forget_rppairing(app, &device.udid)?;
+                    None
+                }
+                KeptCheck::Unanswered(why) => {
+                    warn!("The iPhone did not say whether it knows the RPPairing kept for it, using it: {why}");
+                    Some(plist)
+                }
+            }
+        }
+        None => None,
+    };
+
+    let rppairing_plist = match kept {
         Some(plist) => plist,
         None => {
             info!("Generating new RPPairing for device {}", device.name);
@@ -397,10 +466,16 @@ pub async fn delete_stored_rppairing<R: Runtime>(
         }
     };
 
-    let cache_key = format!("rppairing1.1_file_{}", device.info.udid);
-    let host_label_key = format!("host_label_{}", device.info.udid);
+    forget_rppairing(&app, &device.info.udid)
+}
 
-    with_pairing_storage(&app, |storage| {
+/// Deletes the RPPairing kept for the iPhone of UDID, and gives this computer
+/// a new name there: the next pairing shows the iPhone a new computer.
+fn forget_rppairing<R: Runtime>(app: &AppHandle<R>, udid: &str) -> Result<(), AppError> {
+    let cache_key = format!("rppairing1.1_file_{udid}");
+    let host_label_key = format!("host_label_{udid}");
+
+    with_pairing_storage(app, |storage| {
         storage.delete(&cache_key).map_err(|e| {
             AppError::Storage("Failed to delete stored RPPairing".into(), e.to_string())
         })?;
@@ -410,9 +485,7 @@ pub async fn delete_stored_rppairing<R: Runtime>(
             .map_err(|e| {
                 AppError::Storage("Failed to rotate pairing hostname".into(), e.to_string())
             })
-    })?;
-
-    Ok(())
+    })
 }
 
 #[tauri::command]

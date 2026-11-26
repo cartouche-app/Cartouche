@@ -591,6 +591,9 @@ struct CartoucheHomeView: View {
             return signedOut ? CartoucheText.statusUpdateSignedOut(serverName) : CartoucheText.statusUpdateOffline(serverName)
         case .stored where offline:
             return signedOut ? CartoucheText.statusStoredSignedOut(serverName) : CartoucheText.statusStoredOffline(serverName)
+        case .paused where actions.running?.pausedForController == true:
+            // It lost its last controller (CartoucheControllerPause).
+            return CartoucheText.pausedForController
         default:
             return status.long
         }

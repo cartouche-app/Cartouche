@@ -28,6 +28,12 @@ Un dossier des sauvegardes qui ne répond pas, un NAS pendant que vous êtes ail
 - **Synchroniser avec** votre dossier **maintenant**, quand le jeu ne tourne pas.
 - **Remettre une copie :** choisissez une des copies du jeu, la plus récente d'abord. Cartouche envoie d'abord les sauvegardes actuelles dans votre dossier, pour que vous puissiez y revenir.
 
+## Revenir au début d'une partie
+
+À chaque lancement, un jeu garde sur votre iPhone une copie des sauvegardes d'où il part, jusqu'à dix, avec ou sans dossier des sauvegardes. Si un mod ou une partie a mal tourné, ouvrez **Remettre une copie** sur la fiche du jeu : sous **Sur cet iPhone**, les copies marquées **Au début d'une partie** vous y ramènent.
+
+Cartouche garde d'abord sur votre iPhone les sauvegardes qu'elles remplacent, sous **Avant la remise d'une copie**, et, avec un dossier des sauvegardes, les y envoie, puis la copie remise, comme la plus récente.
+
 ## Un jeu venu de votre console
 
 Votre partie continue ici, là où vous l'avez laissée sur votre console :

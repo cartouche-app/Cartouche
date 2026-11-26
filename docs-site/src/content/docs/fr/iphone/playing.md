@@ -19,6 +19,15 @@ Le bouton **Home**, en bas de l'écran du jeu ou sur la manette, ramène la cons
 
 Le bouton Home à l'écran se cache après quelques secondes : touchez juste en dessous de là où il était pour le faire revenir.
 
+## Si la manette se déconnecte
+
+Quand la dernière manette se déconnecte en pleine partie, parce que sa batterie est vide ou que son Bluetooth a décroché, le jeu se met en pause 3 secondes plus tard et la console revient, en disant que la manette s'est déconnectée. Reconnectez-la et le jeu revient de lui-même. **Reprendre** retourne au jeu sans manette, sur les commandes tactiles.
+
+- Un jeu auquel vous jouez sur l'écran seul, sans manette, ne se met jamais en pause pour elle.
+- Une manette qui revient dans les 3 secondes ne met rien en pause.
+- **Système › Pendant une partie › Mettre en pause si la manette se déconnecte** le désactive.
+- Un jeu qui démarre à la place de Cartouche ne se met pas encore en pause pour sa manette.
+
 ## Un jeu qui demande plus de mémoire
 
 Un jeu qui demande plus de mémoire qu'il n'en a derrière la console démarre à la place de Cartouche, avec toute la mémoire de Cartouche : la console se ferme pendant qu'il tourne, et se rouvre quand le jeu s'arrête. La fiche du jeu le dit, avec **Réessayer derrière Cartouche**.

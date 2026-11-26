@@ -22,12 +22,15 @@ struct CartoucheRunningGame: Equatable {
     let started: Date
     /// On screen, rather than paused behind the console.
     var isInFront: Bool
+    /// Paused behind the console as it lost its last controller, which
+    /// the console says (CartoucheControllerPause, docs/decisions/166.md).
+    var pausedForController = false
 
     var name: String { app.displayName }
 
     static func == (lhs: CartoucheRunningGame, rhs: CartoucheRunningGame) -> Bool {
         lhs.app === rhs.app && lhs.dataFolder == rhs.dataFolder && lhs.started == rhs.started
-            && lhs.isInFront == rhs.isInFront
+            && lhs.isInFront == rhs.isInFront && lhs.pausedForController == rhs.pausedForController
     }
 }
 

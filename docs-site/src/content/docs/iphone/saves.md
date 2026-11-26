@@ -28,6 +28,12 @@ The sheet's **Saves** says when they were last in step and what the last sync di
 - **Sync with** your folder **now**, when the game is not running.
 - **Put back a copy:** choose one of the game's copies, the newest first. Cartouche sends the current saves to your folder first, so that you can come back to them.
 
+## Back to the start of a game
+
+Each time a game starts, it keeps on your iPhone a copy of the saves it starts from, up to ten of them, with or without a saves folder. If a mod or a session went wrong, open **Put back a copy** on the game's sheet: under **On this iPhone**, the copies marked **At the start of a game** take you back there.
+
+Cartouche keeps the saves they replace on your iPhone first, under **Before a copy was put back**, and, with a saves folder, sends them there, then the copy put back, as the newest.
+
 ## A game from your console
 
 Your game goes on here, from where you left it on your console:
