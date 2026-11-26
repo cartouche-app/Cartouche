@@ -218,12 +218,51 @@ jobs:
           cargo clippy --locked --all-targets -- -D warnings
           cargo fmt --check
 
+  # cartouche-signer for Apple silicon, which the app carries in its
+  # Helpers, built on a Mac of its own: the app's job then compiles no
+  # Rust, and its window's checks and screenshots run on a Mac that built
+  # nothing else, as before the signer. A build of the signer there made
+  # that job 7 minutes longer, and its window's checks failed twice
+  # (#342). About six minutes.
+  signer-mac:
+    name: Signer for the Mac
+    needs: built
+    if: ${{ !cancelled() && needs.built.outputs.built != 'true' }}
+    runs-on: xcode-27
+    timeout-minutes: 30
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Rust, from Homebrew when the runner has none.
+      - name: Rust
+        run: |
+          if ! command -v cargo > /dev/null; then
+            brew install rust
+          fi
+          if command -v rustup > /dev/null; then
+            rustup target add aarch64-apple-darwin
+          fi
+          cargo --version
+      - name: Build it
+        run: cargo build --release --locked --manifest-path builder/mac/signer/Cargo.toml --target aarch64-apple-darwin
+      - name: Upload it
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: cartouche-signer
+          path: builder/mac/signer/target/aarch64-apple-darwin/release/cartouche-signer
+          retention-days: 1
+          if-no-files-found: error
+
   mac:
     name: Mac app
-    needs: built
+    needs: [built, signer-mac]
     # Built unless the first job found it was, so that a failure there
     # cannot skip it.
-    if: ${{ !cancelled() && needs.built.outputs.built != 'true' }}
+    if: ${{ !cancelled() && needs.built.outputs.built != 'true' && needs.signer-mac.result == 'success' }}
     runs-on: xcode-27
     timeout-minutes: 60
     env:
@@ -323,15 +362,15 @@ jobs:
           CARTOUCHE_BUILDER_PYTHON: ${{ steps.python.outputs.path }}
           PYTHONDONTWRITEBYTECODE: "1"
         run: '"$CARTOUCHE_BUILDER_PYTHON" -m unittest discover -s tests -t tests -v'
-      # cartouche-signer, which bundle.sh builds into the app's Helpers:
-      # Rust, from Homebrew when the runner has none.
-      - name: Rust for the signer
-        run: |
-          if ! command -v cargo > /dev/null; then
-            brew install rust
-          fi
-          cargo --version
+      # cartouche-signer, as the job above built it, for bundle.sh to put
+      # in the app's Helpers.
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: cartouche-signer
+          path: build/signer
       - name: Build the app
+        env:
+          CARTOUCHE_SIGNER_BINARY: build/signer/cartouche-signer
         run: builder/mac/bundle.sh build/builder
       # The app as the player opens it, on sample games whose nxnative
       # commits are as long as nxnative's own, taken through a game's sheet,

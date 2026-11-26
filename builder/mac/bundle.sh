@@ -28,20 +28,28 @@ swift build -c release --arch arm64 --package-path "$here"
 binary="$(swift build -c release --arch arm64 --package-path "$here" --show-bin-path)/CartoucheBuilder"
 
 # cartouche-signer, for Apple silicon too, from the crates of its Cargo.lock
-# (signer/README.md).
-signer_target=aarch64-apple-darwin
-if command -v rustup >/dev/null 2>&1; then
-  rustup target add "$signer_target" >/dev/null
+# (signer/README.md); or the one CARTOUCHE_SIGNER_BINARY names, built so
+# already (the Builder workflow builds it on a Mac of its own).
+signer="${CARTOUCHE_SIGNER_BINARY:-}"
+if [ -z "$signer" ]; then
+  signer_target=aarch64-apple-darwin
+  if command -v rustup >/dev/null 2>&1; then
+    rustup target add "$signer_target" >/dev/null
+  fi
+  cargo build --release --locked --manifest-path "$here/signer/Cargo.toml" --target "$signer_target"
+  signer="$here/signer/target/$signer_target/release/cartouche-signer"
 fi
-cargo build --release --locked --manifest-path "$here/signer/Cargo.toml" --target "$signer_target"
-signer="$here/signer/target/$signer_target/release/cartouche-signer"
+if [ "$(lipo -archs "$signer")" != arm64 ]; then
+  echo "bundle.sh: $signer is not cartouche-signer for Apple silicon" >&2
+  exit 1
+fi
 
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources/engine" "$app/Contents/Resources/en.lproj" "$app/Contents/Resources/fr.lproj" \
   "$app/Contents/Resources/es.lproj" "$app/Contents/Resources/de.lproj"
 cp "$binary" "$app/Contents/MacOS/Cartouche"
 mkdir -p "$app/Contents/Helpers"
-cp "$signer" "$app/Contents/Helpers/cartouche-signer"
+install -m 755 "$signer" "$app/Contents/Helpers/cartouche-signer"
 cp -R "$builder/cartouche_builder" "$app/Contents/Resources/engine/"
 find "$app/Contents/Resources/engine" -name __pycache__ -type d -prune -exec rm -rf {} +
 cp "$root/catalog/covers.json" "$app/Contents/Resources/covers.json"

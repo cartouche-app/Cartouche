@@ -48,7 +48,7 @@ CARTOUCHE_TEST_LOG=1 cargo test --manifest-path builder/mac/signer/Cargo.toml <n
 cargo build --release --locked --manifest-path builder/mac/signer/Cargo.toml --target aarch64-apple-darwin
 ```
 
-[`bundle.sh`](../bundle.sh) builds the helper and puts it in the app. The **Builder** workflow runs its tests on Linux (job *Signer*), then builds it into the app on the Mac.
+[`bundle.sh`](../bundle.sh) builds the helper and puts it in the app, or puts in the one `CARTOUCHE_SIGNER_BINARY` names. The **Builder** workflow runs its tests on Linux (job *Signer*), builds it on a Mac of its own (job *Signer for the Mac*), and the app's job puts that one in the app: a build of it in the app's job made that job 7 minutes longer, and its window's checks failed twice.
 
 The tests ([`tests/signer`](tests/signer)) run against the Installer's fakes ([`installer/src-tauri/tests/README.md`](../../../installer/src-tauri/tests/README.md)): an iPhone 17 Pro behind usbmuxd, whose `misagent` keeps the profiles it is given and opens an app only while one of them covers it (`FakeIphone::runs_until`); Apple, which can end a session's Xcode tokens or the whole session; and the anisette server. Cartouche is put on the iPhone the way the Installer puts it, with isideload. The tests check that a renewal installs nothing again, keeps the app's files and saves, and asks Apple for no certificate and no App ID. They also check that the password is in no file and no line the helper writes, and they cover each refusal above. A debug build takes `CARTOUCHE_SIGNER_TEST_APPLE_PROXY`, the fake Apple's address. A release build, which the app carries, does not read it.
 
