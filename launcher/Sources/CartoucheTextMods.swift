@@ -42,7 +42,7 @@ extension CartoucheText {
 
     static var modsNoRomfs: String { s("mods.problem.noRomfs", "There is no romfs folder in it, where a mod keeps its files: choose the mod’s folder or its ZIP.") }
     static var modsEmptyRomfs: String { s("mods.problem.empty", "Its romfs folder holds no file.") }
-    static var modsCode: String { s("mods.problem.code", "It changes the game’s code too, in its exefs folder: an iPhone runs only the code signed with the game, and the game would stop on a black screen. Only mods that change the game’s files work on an iPhone.") }
+    static var modsCode: String { s("mods.problem.code", "It changes the game’s code too, in its exefs folder: iOS runs only the code signed with the game, and the game would stop on a black screen. Only mods that change the game’s files work here.") }
     static func modsOtherGame(_ game: String) -> String { f("mods.problem.otherGame", "It is a mod of another game: %@.", game) }
     static var modsUnsafe: String { s("mods.problem.unsafe", "It holds a link or a path that leads out of it: Cartouche does not copy it.") }
     static func modsTooMany(_ count: Int) -> String { f("mods.problem.tooMany", "%lld mods are on already: turn one off first.", count) }

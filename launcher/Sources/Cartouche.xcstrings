@@ -11143,25 +11143,25 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Er ändert auch den Code des Spiels, in seinem exefs-Ordner: Ein iPhone führt nur Code aus, der mit dem Spiel signiert ist, und das Spiel bliebe auf einem schwarzen Bildschirm stehen. Auf dem iPhone funktionieren nur Mods, die die Dateien des Spiels ändern."
+            "value" : "Er ändert auch den Code des Spiels, in seinem exefs-Ordner: iOS führt nur Code aus, der mit dem Spiel signiert ist, und das Spiel bliebe auf einem schwarzen Bildschirm stehen. Hier funktionieren nur Mods, die die Dateien des Spiels ändern."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "It changes the game’s code too, in its exefs folder: an iPhone runs only the code signed with the game, and the game would stop on a black screen. Only mods that change the game’s files work on an iPhone."
+            "value" : "It changes the game’s code too, in its exefs folder: iOS runs only the code signed with the game, and the game would stop on a black screen. Only mods that change the game’s files work here."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "También cambia el código del juego, en su carpeta exefs: un iPhone solo ejecuta el código firmado con el juego, y el juego se quedaría en una pantalla negra. En iPhone solo funcionan los mods que cambian los archivos del juego."
+            "value" : "También cambia el código del juego, en su carpeta exefs: iOS solo ejecuta el código firmado con el juego, y el juego se quedaría en una pantalla negra. Aquí solo funcionan los mods que cambian los archivos del juego."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Il change aussi le code du jeu, dans son dossier exefs : un iPhone n’exécute que le code signé avec le jeu, et le jeu s’arrêterait sur un écran noir. Seuls les mods qui changent les fichiers du jeu marchent sur iPhone."
+            "value" : "Il change aussi le code du jeu, dans son dossier exefs : iOS n’exécute que le code signé avec le jeu, et le jeu s’arrêterait sur un écran noir. Seuls les mods qui changent les fichiers du jeu marchent ici."
           }
         }
       }
