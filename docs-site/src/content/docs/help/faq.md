@@ -25,6 +25,10 @@ No. Cartouche provides no game, no key and no firmware: you build your own from 
 
 With [Cartouche for Mac](/mac/install/), on a Mac with Apple silicon: show it the folder of your copies and your games folder, and it installs what it needs, builds each game with nxnative, then builds it again when nxnative improves it. With no Mac, [Cartouche Cloud](/cloud/) builds them for you.
 
+## Can I add a game's updates and DLC?
+
+Yes. With Cartouche for Mac, put them in your dumps folder with the game: the Builder builds them into it, and builds the game again when you add a newer one. With Cartouche Cloud, send them with the base game. See [Updates and DLC](/mac/builder/#updates-and-dlc) on the Mac, and [on Cartouche Cloud](/cloud/#updates-and-dlc).
+
 ## Does Cartouche work on iPad and on a Mac?
 
 On an iPad with an M1 chip or newer, it is the same app as on the iPhone ([On iPad](/iphone/ipad/)). On a Mac with Apple silicon, Cartouche for Mac builds each of your games for the Mac too and plays it there, with the same saves and the same connections as your iPhone and iPad.

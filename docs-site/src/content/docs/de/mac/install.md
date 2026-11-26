@@ -42,7 +42,7 @@ Für einen Ordner auf deinem NAS gibst du im Assistenten die Adresse seiner Frei
 
 ## Deine Dumps
 
-Der Builder liest deine Spiele als Pakete deiner Konsole (`.nsp`, `.xci`, `.nsz`, `.xcz`, mit ihren Updates und DLCs, die `prod.keys` brauchen, oder `.nup`), als Dumps oder als `.zip` eines Dumps. Sie können lose im Ordner liegen, ein Ordner pro Spiel, oder in Ordnern von Ordnern. Ein Spiel wird an seiner Titel-ID erkannt; die Bibliothek sagt, was sie ausgelassen hat und warum.
+Der Builder liest deine Spiele als Pakete deiner Konsole (`.nsp`, `.xci`, `.nsz`, `.xcz`, mit ihren Updates und DLCs, die `prod.keys` brauchen, oder `.nup`), als Dumps oder als `.zip` eines Dumps. Sie können lose im Ordner liegen, ein Ordner pro Spiel, oder in Ordnern von Ordnern. Ein Spiel wird an seiner Titel-ID erkannt; die Bibliothek sagt, was sie ausgelassen hat und warum. Update und DLCs eines Spiels werden mit ihm erstellt: siehe [Updates und DLCs](/de/mac/builder/#updates-und-dlcs).
 
 **Deine Spiele benennen**, unter **Ordner** in den Einstellungen, zeigt mit Beispielen, was der Builder und Cartouche aus jedem Namen machen.
 

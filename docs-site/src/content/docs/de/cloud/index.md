@@ -18,9 +18,13 @@ Cartouche Cloud stellt kein Spiel bereit: Es erstellt nur die Kopie, die du send
 3. Verknüpfe Cartouche einmal mit deinem Account ([Dein iPhone verknüpfen](/de/cloud/iphone/#dein-iphone-verknüpfen)).
 4. Cartouche verfolgt den Build Schritt für Schritt, und eine E-Mail sagt dir, wann er fertig ist. Dann bringt **Installieren** das Spiel auf dein iPhone, wie deine anderen Spiele.
 
+## Updates und DLCs
+
+Wähle Basisspiel, Updates und DLCs zusammen, wenn du es sendest: Das neueste Update wird angewendet, und die DLCs werden mit erstellt. Ein Update oder DLC wird mit seinem Basisspiel gesendet: Um eins zu einem schon erstellten Spiel hinzuzufügen, sende das Spiel noch einmal damit, was ein neuer Build ist.
+
 ## Deine Schlüssel bleiben bei dir
 
-Dein Browser öffnet das Spiel auf deinem Computer und sendet nur das Spiel: Deine Schlüssel verlassen den Computer nie. Basisspiel, Updates und DLCs lassen sich zusammen wählen, und das neueste Update wird angewendet.
+Dein Browser öffnet das Spiel auf deinem Computer und sendet nur das Spiel: Deine Schlüssel verlassen den Computer nie.
 
 ## Guthaben
 

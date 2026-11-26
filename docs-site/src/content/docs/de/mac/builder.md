@@ -27,6 +27,14 @@ Die Infoseite eines Spiels zeigt, was nxnative seit seinem Build dafür geänder
 - **Dieses Spiel stoppen** stoppt nur das Spiel, das erstellt wird; **Alle stoppen** stoppt den Durchlauf und leert seine Warteschlange.
 - Eine Mitteilung sagt, wann ein Durchlauf endet.
 
+## Updates und DLCs
+
+Lege das Update und die DLCs eines Spiels mit ihm in deinen Dump-Ordner: Der Builder erstellt sie mit dem Spiel, das neueste Update und jedes DLC.
+
+- **Pakete** (`.nsp`, `.xci`, `.nsz`, `.xcz`) können neben dem Spiel liegen, in einem eigenen Ordner wie `Zelda/Update/` oder irgendwo sonst im Dump-Ordner: Der Builder erkennt ihr Spiel an seiner Titel-ID. Sie brauchen `prod.keys`, gewählt im Einrichtungsassistenten oder in den Einstellungen.
+- **Ein Dump** hat sie in `updates/<version>/` und `dlc/`; die `.nup` eines Switch-2-Spiels enthält die, die in ihr verpackt sind.
+- **Ein neues Update oder DLC** im Dump-Ordner lässt das Spiel neu erstellen. Cartouche auf dem iPhone bietet dann das Update auf der Infoseite des Spiels an, die Spielstände bleiben.
+
 ## Wenn nxnative deine Spiele verbessert
 
 nxnative bekommt Dutzende Änderungen am Tag. Der Builder liest, was sich seit dem Build jedes Spiels geändert hat, und erstellt ein Spiel nur neu, wenn es etwas gewinnt:

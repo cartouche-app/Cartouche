@@ -27,6 +27,14 @@ Abre un juego y elige **Compilar**. La primera compilación de un juego grande l
 - **Detener este juego** detiene solo el juego que se compila; **Detener todo** detiene la tanda y vacía su cola.
 - Una notificación avisa cuando termina una tanda.
 
+## Actualizaciones y DLC
+
+Pon la actualización y los DLC de un juego con él en tu carpeta de dumps: el Builder los compila con el juego, la actualización más reciente y cada DLC.
+
+- **Los paquetes** (`.nsp`, `.xci`, `.nsz`, `.xcz`) pueden estar junto al juego, en una carpeta propia, como `Zelda/Update/`, o en cualquier otro sitio de la carpeta de dumps: el Builder reconoce su juego por su ID de título. Necesitan `prod.keys`, elegido en el asistente de configuración o en los ajustes.
+- **Un dump** los guarda en `updates/<version>/` y `dlc/`; el `.nup` de un juego de Switch 2 lleva los que contiene.
+- **Una actualización o un DLC nuevo** en la carpeta de dumps hace que el juego se vuelva a compilar. Cartouche en el iPhone ofrece entonces la actualización en la ficha del juego, conservando las partidas guardadas.
+
 ## Cuando nxnative mejora tus juegos
 
 nxnative recibe decenas de cambios al día. El Builder lee lo que cambió desde la compilación de cada juego, y solo vuelve a compilar un juego cuando gana algo:
