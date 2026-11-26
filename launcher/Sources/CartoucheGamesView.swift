@@ -316,6 +316,9 @@ struct CartoucheGamesView: View {
             if let bundleId = notice.signAgain {
                 Button(CartoucheText.signAgainAndPlay) { actions.signAgain(bundleId) }
             }
+            if let bundleId = notice.playAnyway {
+                Button(CartoucheText.playAnyway) { actions.playAnyway(bundleId) }
+            }
             if let report = notice.report {
                 Button(CartoucheText.reportCopy) {
                     CartoucheReports.copy(report)

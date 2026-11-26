@@ -244,8 +244,10 @@ const session = object(
         pc: text(LOCATION),
         lr: text(LOCATION),
         // Why, when nxnative's log says: gpuLost, the system took the GPU
-        // away from the game (CartoucheGameLog.swift, from reader 4).
-        cause: oneOf("gpuLost"),
+        // away from the game (CartoucheGameLog.swift, from reader 4);
+        // diskFull, nxnative stopped it for lack of room on the disk for
+        // its memory kept in files (from reader 6).
+        cause: oneOf("gpuLost", "diskFull"),
       },
       ["kind"],
     ),

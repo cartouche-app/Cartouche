@@ -288,6 +288,11 @@ test("fields it does not know, or with values it does not expect, are left out",
   assert.equal({}.polluted, undefined);
 });
 
+test("a session nxnative stopped for lack of room on the disk keeps why", () => {
+  const kept = clean(sessionReport({ end: { kind: "unknown", cause: "diskFull" } }));
+  assert.deepEqual(kept.end, { kind: "unknown", cause: "diskFull" });
+});
+
 test("the device's language comes without its region", () => {
   assert.equal(clean(sessionReport({ deviceLanguage: "es" })).deviceLanguage, "es");
   assert.equal(clean(sessionReport({ deviceLanguage: "zh-Hant" })).deviceLanguage, "zh-Hant");

@@ -126,6 +126,10 @@ struct CartoucheGameNotice: Equatable {
     /// iOS refused its signature as it started (CartoucheGameActions
     /// signAgain).
     var signAgain: String? = nil
+    /// The bundle identifier of a game the player may start all the same,
+    /// from the notice: Cartouche warned that it may close for lack of
+    /// space (CartoucheGameActions playAnyway).
+    var playAnyway: String? = nil
 }
 
 /// An install the console asks about before it starts, on an iPhone whose
