@@ -212,14 +212,16 @@ final class CartoucheGameActions: ObservableObject {
     func confirmSwitch(_ change: CartoucheGameSwitch) { switching = nil }
 
     /// APP runs behind the console, paused there, since a quarter of an hour.
-    func showRunningForGallery(_ app: LCAppModel) {
+    func showRunningForGallery(_ app: LCAppModel, forController: Bool = false) {
         // On screen first, then paused as the player comes back to the
-        // console, which puts the game in focus on the home.
+        // console, which puts the game in focus on the home; FORCONTROLLER,
+        // as it lost its last controller.
         running = CartoucheRunningGame(app: app, dataFolder: "gallery", started: Date().addingTimeInterval(-15 * 60),
                                        isInFront: true)
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(600))
             self.running?.isInFront = false
+            self.running?.pausedForController = forController
         }
     }
     func uninstall(_ app: LCAppModel, erasingData: Bool) { GalleryTest.uninstall(app, with: self) }
