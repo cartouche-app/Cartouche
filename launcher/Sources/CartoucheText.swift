@@ -670,6 +670,8 @@ enum CartoucheText {
     static var behindLimitUnknown: String { s("system.playing.limit.unknown", "Measured at the next game") }
     static var behindWithoutIML: String { s("system.playing.noIML", "Behind Cartouche, games run without Increased Memory Limit here: they start in Cartouche’s place, with all of its memory, unless their sheet shows they need less.") }
     static var playingFooter: String { s("system.playing.footer", "The Home button over the game, or the controller’s, brings back the console and pauses the game. A game that needs more memory than it has here starts in Cartouche’s place, when Cartouche has more.") }
+    static var keepOtherAudio: String { s("system.playing.otherAudio", "Keep other apps’ sound") }
+    static var otherAudioFooter: String { s("system.playing.otherAudio.footer", "On, the music or podcast you play in another app goes on under the game’s sound, from the game’s next start. Off, the game stops it as it starts.") }
     static var memoryFooterBehind: String { s("system.memory.footer.behind", "Games that start in Cartouche’s place share this limit; behind Cartouche, a game has its own, below. With Increased Memory Limit, an iPhone with 12 GB allows Cartouche about 8 GiB.") }
     static func updateWhilePlaying(_ name: String) -> String { f("system.updates.playing", "Quit %@ first: Cartouche closes to install its update.", name) }
 

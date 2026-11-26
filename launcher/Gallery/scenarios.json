@@ -2442,6 +2442,27 @@
       ]
     },
     {
+      "name": "iphone-system-playing",
+      "comment": "The System page down to While a game runs (category: playing): Keep Cartouche open behind the game, and Keep other apps' sound, off until the player turns it on, which lets their music or podcast play on under a game's sound (decision 168).",
+      "screen": "system",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "category": "playing"
+    },
+    {
       "name": "iphone-system-signature",
       "screen": "system",
       "owned": [

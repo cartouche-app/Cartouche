@@ -85,6 +85,10 @@ struct CartoucheSessionReport: Codable, Equatable {
     var bcTextures: String?
     /// nxnative's settings the game ran with, by their variable.
     var settings: [String: String]?
+    /// On the iPhone, whether the game let other apps' sound play on, as
+    /// the player chose (CartoucheOtherAudio.swift); nothing on the Mac,
+    /// which plays every app's sound together.
+    var otherAudio: Bool?
     /// How long the session lasted, from its log's dates.
     var minutes: Double
     /// The reading of nxnative's log that made the measures.
@@ -94,8 +98,8 @@ struct CartoucheSessionReport: Codable, Equatable {
     var process: CartoucheGameProcess?
 
     init(id: String, session: String, seq: Int, context: CartoucheTelemetryContext, game: String?, gameVersion: String?,
-         nxnative: String?, nxnativeChanged: Bool?, chain: String? = nil, bcTextures: String? = nil, settings: [String: String]?, minutes: Double,
-         measures: CartoucheGameMeasures, process: CartoucheGameProcess? = nil) {
+         nxnative: String?, nxnativeChanged: Bool?, chain: String? = nil, bcTextures: String? = nil, settings: [String: String]?,
+         otherAudio: Bool? = nil, minutes: Double, measures: CartoucheGameMeasures, process: CartoucheGameProcess? = nil) {
         self.id = id
         self.session = session
         self.seq = seq
@@ -107,6 +111,7 @@ struct CartoucheSessionReport: Codable, Equatable {
         self.chain = chain
         self.bcTextures = bcTextures
         self.settings = settings.flatMap { CartoucheTelemetrySettings.cleaned($0) }
+        self.otherAudio = otherAudio
         self.minutes = minutes
         self.measures = measures
         self.process = process
@@ -137,8 +142,8 @@ struct CartoucheSessionReport: Codable, Equatable {
 
     // The context and the measures sit beside the report's own keys.
     private enum CodingKeys: String, CodingKey {
-        case schema, kind, id, session, seq, game, gameVersion, nxnative, nxnativeChanged, chain, bcTextures, settings, minutes, reader,
-             process
+        case schema, kind, id, session, seq, game, gameVersion, nxnative, nxnativeChanged, chain, bcTextures, settings, otherAudio, minutes,
+             reader, process
     }
 
     init(from decoder: Decoder) throws {
@@ -155,6 +160,7 @@ struct CartoucheSessionReport: Codable, Equatable {
         chain = try container.decodeIfPresent(String.self, forKey: .chain)
         bcTextures = try container.decodeIfPresent(String.self, forKey: .bcTextures)
         settings = try container.decodeIfPresent([String: String].self, forKey: .settings)
+        otherAudio = try container.decodeIfPresent(Bool.self, forKey: .otherAudio)
         minutes = try container.decode(Double.self, forKey: .minutes)
         reader = try container.decode(Int.self, forKey: .reader)
         process = try container.decodeIfPresent(CartoucheGameProcess.self, forKey: .process)
@@ -176,6 +182,7 @@ struct CartoucheSessionReport: Codable, Equatable {
         try container.encodeIfPresent(chain, forKey: .chain)
         try container.encodeIfPresent(bcTextures, forKey: .bcTextures)
         try container.encodeIfPresent(settings, forKey: .settings)
+        try container.encodeIfPresent(otherAudio, forKey: .otherAudio)
         try container.encode(minutes, forKey: .minutes)
         try container.encode(reader, forKey: .reader)
         try container.encodeIfPresent(process, forKey: .process)

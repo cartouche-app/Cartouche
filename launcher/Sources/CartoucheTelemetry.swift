@@ -306,6 +306,8 @@ final class CartoucheTelemetry: ObservableObject {
         /// On a GPU without BC textures, whether the build converts them.
         let bcTextures: String?
         let settings: [String: String]
+        /// Whether the game let other apps' sound play on.
+        let otherAudio: Bool
         /// What its process wrote, when the game ran behind the console, and
         /// whether its last reading was close to its limit.
         let process: CartoucheGameProcess?
@@ -349,7 +351,7 @@ final class CartoucheTelemetry: ObservableObject {
                 let report = CartoucheSessionReport(
                     id: Self.newNumber(), session: job.session, seq: nextSeq(), context: context(limitMiB: sessionLimit),
                     game: job.game, gameVersion: job.gameVersion, nxnative: job.nxnative, nxnativeChanged: job.nxnativeChanged,
-                    chain: job.chain, bcTextures: job.bcTextures, settings: job.settings,
+                    chain: job.chain, bcTextures: job.bcTextures, settings: job.settings, otherAudio: job.otherAudio,
                     minutes: CartoucheGameLogReader.rounded(job.seconds / 60, 1), measures: measures,
                     process: job.process)
                 enqueue(report, id: report.id)
@@ -411,7 +413,9 @@ final class CartoucheTelemetry: ObservableObject {
                                     nxnativeChanged: build?.commit == nil ? nil : build?.isDirty,
                                     chain: build?.shortChain,
                                     bcTextures: details?.bcTextures,
-                                    settings: details?.settings ?? [:], process: process?.process,
+                                    settings: details?.settings ?? [:],
+                                    otherAudio: CartoucheOtherAudio.isKept(home: container.containerURL),
+                                    process: process?.process,
                                     nearLimit: process?.nearLimit ?? false))
                 }
             }
