@@ -56,6 +56,20 @@ class Workspace:
             (folder / name).symlink_to(path.absolute())
         return folder
 
+    def link_aoc(self, title_id: str, images: list[Path]) -> Path:
+        """A folder of links to IMAGES, a NUP's DLC images from the aoc
+        folder beside it, made anew: what nxnative takes as its --aoc-dir.
+        Its images alone, each named by its number as nxnative wants it
+        (1.img, not 1.IMG), so that another file of the player's folder never
+        stops the build; outside the build folder, as nxnative asks, since
+        it stages them in there. The images stay where they are."""
+        folder = self.root / NOTES / "aoc" / title_id.upper()
+        remove_tree(folder)
+        folder.mkdir(parents=True)
+        for path in images:
+            (folder / (path.stem + ".img")).symlink_to(path.absolute())
+        return folder
+
     def _note(self, folder: Path) -> Path:
         return self.root / NOTES / f"{folder.name}.json"
 

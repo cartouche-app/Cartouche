@@ -207,6 +207,18 @@ _NUP_BASE, _NUP_UPDATE, _NUP_ADDON, _NUP_ADDON_UPDATE = 0, 1, 2, 3
 def nup_title_ids(path: Path) -> list[str]:
     """The title IDs a NUP's packages carry: the base game's, its updates'
     and its DLC's, as its table of contents lists them."""
+    return [title_id for title_id, _ in _nup_packages(path)]
+
+
+def nup_lists_dlc(path: Path) -> bool:
+    """Whether a NUP holds DLC of its own: a package of the add-on kind, as
+    nxnative's pack_nup.scan counts them. nxnative takes DLC images from
+    elsewhere (--aoc-dir) only for a NUP without them."""
+    return any(kind == _NUP_ADDON for _, kind in _nup_packages(path))
+
+
+def _nup_packages(path: Path) -> list[tuple[str, int]]:
+    """(title ID, kind) of each package a NUP's table of contents lists."""
     with open(path, "rb") as f:
         head = f.read(_NUP_SUPER.size)
         if len(head) < _NUP_SUPER.size or head[:3] != b"NUP":
@@ -224,7 +236,7 @@ def nup_title_ids(path: Path) -> list[str]:
     for i in range(count):
         title_id, _, _, _, _, kind, *_ = _NUP_PACKAGE.unpack_from(toc, _NUP_TOC.size + i * _NUP_PACKAGE.size)
         if title_id and kind in (_NUP_BASE, _NUP_UPDATE, _NUP_ADDON, _NUP_ADDON_UPDATE):
-            found.append(f"{title_id:016X}")
+            found.append((f"{title_id:016X}", kind))
     return found
 
 

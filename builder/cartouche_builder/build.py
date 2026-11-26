@@ -75,11 +75,13 @@ class Result:
 
 
 def command(python: Path, script: Path, source: Path, work: Path, out: Path, keys: Path | None, language: str = "", keep_extracted: bool | None = None,
-            platform: str = "ios") -> list[str]:
+            platform: str = "ios", aoc: Path | None = None) -> list[str]:
     """nxnative's command line: the IPA (PLATFORM "ios", OUT an .ipa), or
     the game's Mac app ("mac-app", OUT an .app, macapps.py). KEEP_EXTRACTED
     None leaves nxnative's own choice (a checkout without --keep-extracted
-    keeps the files; a Mac app always keeps them, as it is made of them)."""
+    keeps the files; a Mac app always keeps them, as it is made of them).
+    AOC: the folder of a NUP's DLC images (Workspace.link_aoc), which
+    nxnative builds in with --aoc-dir."""
     args = [str(python), "-u", str(script), str(source)]
     if keys is not None:
         args += ["-k", str(keys)]
@@ -88,6 +90,8 @@ def command(python: Path, script: Path, source: Path, work: Path, out: Path, key
         args.append("--keep-extracted" if keep_extracted else "--no-keep-extracted")
     if language:
         args += ["-l", language]
+    if aoc is not None:
+        args += ["--aoc-dir", str(aoc)]
     return args
 
 

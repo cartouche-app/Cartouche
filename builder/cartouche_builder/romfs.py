@@ -34,6 +34,24 @@ def identity(reader) -> tuple[int, str]:
     return size, f"{value:016x}"
 
 
+def is_image(path) -> bool:
+    """Whether the file at PATH begins as a whole DMROMFS1 image does: its
+    header, and an index that ends the file. 32 bytes read, so that a folder
+    of images on a NAS is looked through in a moment; nxnative checks the
+    rest when it builds."""
+    try:
+        with open(path, "rb") as reader:
+            size = os.fstat(reader.fileno()).st_size
+            header = reader.read(32)
+    except OSError:
+        return False
+    if len(header) != 32:
+        return False
+    magic, offset, length, count = struct.unpack("<8sQQQ", header)
+    return (magic == b"DMROMFS1" and 0 < count <= 0xFFFFFFFF
+            and 32 <= offset <= size and length == size - offset and count <= length // 24)
+
+
 def _mix(value: int, data: bytes) -> int:
     for (word,) in struct.iter_unpack("<Q", data):
         value = ((value ^ word) * 0x100000001B3) & 0xFFFFFFFFFFFFFFFF
