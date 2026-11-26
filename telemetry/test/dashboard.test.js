@@ -613,9 +613,43 @@ test("errors by version of Cartouche, against its openings, the newest version f
   const error = (cartouche, seq) => ({ ...event, cartouche, seq, name: "error", game: undefined, fields: { origin: "storage", error: "NSPOSIXErrorDomain 60", background: true } });
   const rows = [opened("0.9.0", 1), error("0.9.0", 2), opened("0.10.0", 3), opened("0.10.0", 4), error("0.10.0", 5)].map(asRow);
   const model = M.build(answer(rows), CATALOG);
-  assert.deepEqual(model.errors.byVersion, [{ version: "0.10.0", errors: 1, opens: 2 }, { version: "0.9.0", errors: 1, opens: 1 }]);
+  assert.deepEqual(model.errors.byVersion, [{ version: "0.10.0", errors: 1, counted: 1, opens: 2 }, { version: "0.9.0", errors: 1, counted: 1, opens: 1 }]);
   assert.deepEqual(model.errors.byCode.map((row) => [row.origin, row.error, row.count]), [["storage", "NSPOSIXErrorDomain 60", 2]]);
   assert.deepEqual(["0.9.0", "0.10.0", "0.10.1", "1.0"].sort(M.newestFirst), ["1.0", "0.10.1", "0.10.0", "0.9.0"]);
+});
+
+test("a copy that meets the same error again before it opens the app once more counts it once in the rates", () => {
+  // As in 0.16.2, on 26 November: a player taps Sign In again and again,
+  // and it fails at once each time, LocalDevVPN not reaching the iPhone.
+  const [, event] = APP_REPORTS;
+  const stuck = { ...event, install: "5e7d1a2b-0000-4000-8000-000000000000", cartouche: "0.16.2", game: undefined };
+  const other = { ...event, install: "9a4c3f10-0000-4000-8000-000000000000", cartouche: "0.16.2", game: undefined };
+  let seq = 0;
+  const opened = (copy) => ({ ...copy, seq: ++seq, name: "app.opened", fields: { games: 0 } });
+  const vpn = (copy) => ({ ...copy, seq: ++seq, name: "error", fields: { origin: "signIn", cause: "vpn", stage: "deviceCheck", kind: "invalidVPN", error: "SideStore.OperationError 10", vpn: true, seconds: 0 } });
+  const wifi = (copy) => ({ ...copy, seq: ++seq, name: "error", fields: { origin: "signIn", cause: "device", stage: "deviceCheck", kind: "noConnection", error: "SideStore.OperationError 17", vpn: true, seconds: 0 } });
+  const reports = [
+    // The stuck copy: 40 times the same error, then another, then, opened again, 20 times the first.
+    opened(stuck), ...Array.from({ length: 40 }, () => vpn(stuck)), wifi(stuck), vpn(stuck),
+    opened(stuck), ...Array.from({ length: 20 }, () => vpn(stuck)),
+    // Another copy, which meets it once.
+    opened(other), vpn(other), opened(other),
+  ];
+  // The server keeps them in any order: the copy's own order is its seq.
+  const model = M.build(answer(reports.map(asRow).reverse()), CATALOG);
+  // 62 + 1 errors sent; counted: the stuck copy's two errors of its first
+  // opening, its one of its second, and the other copy's.
+  assert.equal(model.totals.errors, 63);
+  assert.equal(model.totals.counted, 4);
+  assert.equal(model.totals.opens, 4);
+  assert.equal(model.totals.errorsPer100, 100);
+  assert.deepEqual(model.errors.byVersion, [{ version: "0.16.2", errors: 63, counted: 4, opens: 4 }]);
+  const [version] = model.versions;
+  assert.equal(version.errors, 63);
+  assert.equal(version.counted, 4);
+  assert.equal(model.daily.find((day) => day.day === TODAY).errorsPer100, 100);
+  // What the errors are stays told as many times as they were sent.
+  assert.deepEqual(model.errors.byCode.map((row) => [row.cause, row.count, row.iphones]), [["vpn", 62, 2], ["device", 1, 1]]);
 });
 
 test("the Apple sign-in says how often it goes through, the step it stops at and why", () => {
