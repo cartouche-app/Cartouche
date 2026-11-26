@@ -7,6 +7,7 @@ Cartouche's domain. The owner registered it at OVH on 2026-11-16 and handed it t
 | `cartouche.cloud` | A and AAAA, GitHub Pages' four addresses of each | The showcase site, [`site/`](../site/), on GitHub Pages |
 | `www.cartouche.cloud` | CNAME `cartouche-app.github.io` | `www`, which GitHub Pages sends on to `cartouche.cloud` |
 | `_github-pages-challenge-cartouche-app.cartouche.cloud` | TXT | GitHub's verification of the domain for the organization `cartouche-app` |
+| `cartouche.cloud` | TXT `google-site-verification=…` | Google Search Console's verification of the domain for the owner, which covers the site and the documentation ([below](#search-engines)) |
 | `_dmarc.cartouche.cloud` | TXT `v=DMARC1; p=reject; …` | No server sends mail as `cartouche.cloud`: mail servers refuse mail that claims to come from it, unless SPF or DKIM vouches for it |
 
 ## The site
@@ -16,6 +17,10 @@ GitHub Pages serves the site, as it did at `cartouche-app.github.io/Cartouche`, 
 The site's half is [`site/CNAME`](../site/CNAME), the domain, which the Showcase site workflow publishes beside the page each time: GitHub Pages reads it to serve the site there and to send its old address, `cartouche-app.github.io/Cartouche`, on to it, page by page ([site/README.md](../site/README.md#publishing)). It came once these records answered: published before them, it would have sent the old address to a name that answered nothing, and resolvers would have kept that empty answer for the zone's half hour.
 
 GitHub can also verify the domain for the organization: then no repository but the organization's can serve a site on `cartouche.cloud` or a name right under it, even if Cartouche's site ever stopped while the records still point to GitHub Pages. The organization's owner added the domain in the organization's **Settings › Pages › Add a domain**, which showed a TXT record, `_github-pages-challenge-cartouche-app.cartouche.cloud`, now in the file (2026-11-17); once it answers, the owner clicks **Verify** there. It must then stay, or the verification lapses.
+
+## Search engines
+
+The owner added the domain to [Google Search Console](https://search.google.com/search-console) as a *Domain* property, which covers every name of the zone, `cartouche.cloud` and `docs.cartouche.cloud` alike, with the owner's Google account (2026-11-26). Search Console showed a TXT record at the apex, `google-site-verification=…`, now in the file; once it answers, the owner clicks **Verify** there, then gives Search Console the site's and the documentation's sitemaps, `https://cartouche.cloud/sitemap.xml` and `https://docs.cartouche.cloud/sitemap-index.xml`. The record must then stay, or the verification lapses. It is a TXT record, not an SPF one, so it stands beside Email Routing's at the apex ([Mail](#mail)).
 
 ## Names Cloudflare keeps
 
