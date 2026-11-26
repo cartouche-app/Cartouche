@@ -4,7 +4,8 @@
 //
 //  A game's saves on this Mac, where its app keeps them (nxnative's Mac
 //  launcher: ~/Library/Application Support/nxnative/<title ID>/save and
-//  save_device), kept in step with their copies in the player's saves
+//  save_device, and save_user2 to save_user8 with save.users for a game
+//  with other profiles), kept in step with their copies in the player's saves
 //  folder as Cartouche keeps an iPhone's: the same decisions and the same
 //  copies (launcher/Sources/CartoucheSaveSync.swift), a folder of the game's
 //  "<game> [<title ID>]" holding zips "<date>.zip" of save/ and save_device/,
@@ -43,6 +44,12 @@
 //    it finds on a share mounted here (adopted), the iPhone's on a NAS.
 //  - What was the same on both sides last, the base, is kept for each game
 //    and one saves folder (MacSaveStore): another folder starts from none.
+//  - The other profiles of a game, save_user2/ to save_user8/, and their
+//    registry, save.users, go and come with its saves, as on the iPhone;
+//    the list of pipelines the game prepared, pso_user.tsv, beside save/,
+//    goes into the one beside the copies, which every device adds its lines
+//    to, and its lines this Mac lacks come before the game starts
+//    (CartoucheSaveSync.keepPipelines).
 //
 //  Platform-independent: Foundation and CartoucheCore only.
 //
@@ -82,15 +89,19 @@ public struct MacSaveOutcome: Equatable {
     /// The version of the game the newest copy names, newer than the app's
     /// on this Mac, when it held the copy back (CartoucheSaveSync.heldBack).
     public var newer: String?
+    /// What moved of the list of pipelines the game prepared, beside the
+    /// copies (CartoucheSaveSync.keepPipelines).
+    public var pipelines: CartouchePipelinesMoved
 
     public init(step: CartoucheSaveStep, base: CartoucheSaveBase? = nil, sent: String? = nil, kept: String? = nil, fetched: String? = nil,
-                newer: String? = nil) {
+                newer: String? = nil, pipelines: CartouchePipelinesMoved = CartouchePipelinesMoved()) {
         self.step = step
         self.base = base
         self.sent = sent
         self.kept = kept
         self.fetched = fetched
         self.newer = newer
+        self.pipelines = pipelines
     }
 
     /// Whether a copy went or came.
@@ -372,6 +383,23 @@ public final class MacSavesFolder: MacSavesPlace {
             }
             outcome.base = try await fetch(newest, into: documents, from: folder, quiet: quiet)
             outcome.fetched = newest.name
+        }
+        // The list of pipelines the game prepared, beside its copies, once
+        // the game has a folder there: not from the copy of the saves made
+        // while it plays, which holds none.
+        if Self.isFolder(folder) {
+            let list = folder.appendingPathComponent(CartoucheSaveSync.pipelinesFile)
+            let there = (try? list.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])).flatMap { values in
+                values.isRegularFile == true ? UInt64(max(values.fileSize ?? 0, 0)) : nil
+            }
+            outcome.pipelines = await CartoucheSaveSync.keepPipelines(
+                in: documents, there: there, fetching: fetching, quiet: quiet,
+                read: {
+                    let data = try Data(contentsOf: list)
+                    guard data.count <= CartoucheSaveSync.pipelinesLimit else { throw MacSavesError.unreadable(list.lastPathComponent) }
+                    return data
+                },
+                write: { try $0.write(to: list, options: .atomic) })
         }
         return outcome
     }

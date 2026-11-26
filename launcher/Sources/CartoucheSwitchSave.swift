@@ -12,6 +12,10 @@
 //    account save, is the game's Documents/save; the console's, a device
 //    save, too, but for a game that mounts both, as Mario Kart 8 Deluxe,
 //    whose device save is Documents/save_device, made at its first start.
+//    The first profile's alone: a Switch exports one user's save at a
+//    time, and the game's other profiles here (Documents/save_user2 to
+//    save_user8, CartoucheSaveSync.profileFolders) stay as they are, at
+//    the import as in the ZIP for JKSV.
 //  - JKSV writes .nx_save_meta.bin beside the files (fs::SaveMetaData,
 //    include/fs/SaveMetaData.hpp): the game's title ID and the save's type,
 //    which Cartouche checks. Checkpoint writes the files alone, in a

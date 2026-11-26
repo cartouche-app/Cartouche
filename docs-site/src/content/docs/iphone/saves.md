@@ -16,6 +16,8 @@ With a saves folder chosen in **System › Storage**, Cartouche keeps each game'
 - **The newest wins.** When both sides changed, the saves written last win, and the others stay in the folder as a copy of their own.
 - **Ten copies** of each game are kept, the newest first.
 - **Each copy names the version of the game** that wrote it: an older version of the game never takes it, and the sheet says the copy comes once the game is updated.
+- **Every profile goes with them.** The saves of the game's other players, its profiles 2 to 8, go and come with its own.
+- **The shaders it prepared come back.** The list of what the game prepared as you played goes beside its copies, with what your other iPhones, iPads and Macs prepared: a game installed again, or on another device, prepares them before it starts, and stutters less in its first games. It makes no copy of its own.
 
 A saves folder that does not answer, a NAS while you are away, keeps your saves waiting: Cartouche copies them as soon as it answers again.
 
@@ -39,7 +41,7 @@ Your game goes on here, from where you left it on your console:
 
 **Put back the game from before the import** undoes it.
 
-The other way, **Make the ZIP for JKSV** makes the game's save into a ZIP: put it on your console's microSD card, in JKSV's folder of the game, and restore it in JKSV.
+The other way, **Make the ZIP for JKSV** makes the game's save into a ZIP: put it on your console's microSD card, in JKSV's folder of the game, and restore it in JKSV. Both ways, only the first profile's save moves: the other profiles stay as they are.
 
 :::caution
 The game on your console should not be newer than the one on your iPhone: a game may not read the save of a newer version.

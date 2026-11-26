@@ -22,7 +22,7 @@ Die Infoseite sagt auch, wie lange du das Spiel auf diesem Mac gespielt hast und
 
 ## Deine Spielstände auf dem Mac
 
-Der Mac hält die Spielstände der dort gespielten Spiele mit deinem Spielstandordner synchron, wie das iPhone: Die neueste Kopie kommt, bevor ein Spiel startet, und die Spielstände des Mac gehen ein paar Sekunden nach dem Speichern des Spiels. Wenn sich beide Seiten geändert haben, gewinnen die zuletzt geschriebenen Spielstände, und die anderen werden als Kopie behalten. Die Infoseite zeigt sie, mit **Jetzt mit … synchronisieren** und **Kopie zurückspielen**, und holt einen Spielstand von deiner Konsole wie auf dem iPhone.
+Der Mac hält die Spielstände der dort gespielten Spiele mit deinem Spielstandordner synchron, wie das iPhone: Die neueste Kopie kommt, bevor ein Spiel startet, und die Spielstände des Mac gehen ein paar Sekunden nach dem Speichern des Spiels. Wenn sich beide Seiten geändert haben, gewinnen die zuletzt geschriebenen Spielstände, und die anderen werden als Kopie behalten. Alle Profile des Spiels gehen mit, und die Shader, die es vorbereitet hat, kommen wieder, wie auf dem iPhone. Die Infoseite zeigt sie, mit **Jetzt mit … synchronisieren** und **Kopie zurückspielen**, und holt einen Spielstand von deiner Konsole wie auf dem iPhone.
 
 Die Kopie eines Spiels auf diesem Mac, das dein NAS aufbewahrt, bleibt aus Time Machine heraus: Sie kommt wieder vom NAS. Die Spielstände des Spiels kommen weiterhin hinein.
 

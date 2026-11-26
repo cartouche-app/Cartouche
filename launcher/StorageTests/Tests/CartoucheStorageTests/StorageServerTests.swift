@@ -531,6 +531,67 @@ class StorageServerTests: XCTestCase {
         XCTAssertEqual(try party(in: second.documents), "partie 11")
     }
 
+    /// The game's other profiles and their registry go and come with its
+    /// saves; the list of the pipelines it prepared goes beside its copies,
+    /// where each iPhone adds the lines it prepared, and comes back to an
+    /// iPhone that has the game again.
+    func testKeepsTheOtherProfilesAndThePipelinesAcrossIPhones() async throws {
+        let remote = try await signIn()
+        let folder = try await scratchFolder(remote)
+        let scratchHere = try localFolder()
+        func round() -> CartoucheSavesFolder {
+            CartoucheSavesFolder(remote: remote, path: folder, place: "test|" + folder, scratch: scratchHere)
+        }
+        let gameFolder = CartoucheStoragePath.join(folder, "Essai de stockage [0100CA27C0DE0000]")
+        let morning = Date(timeIntervalSince1970: 1_794_292_800)
+        func write(_ text: String, _ path: String, in documents: URL) throws {
+            let url = documents.appendingPathComponent(path)
+            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try Data(text.utf8).write(to: url)
+            try FileManager.default.setAttributes([.modificationDate: morning], ofItemAtPath: url.path)
+        }
+        func text(_ path: String, in documents: URL) -> String? {
+            (try? Data(contentsOf: documents.appendingPathComponent(path))).map { String(decoding: $0, as: UTF8.self) }
+        }
+
+        // An iPhone where a second profile played too.
+        let first = CartoucheSaveTarget(key: "first", name: "Essai de stockage", titleId: "0100CA27C0DE0000",
+                                        documents: try play("partie 1", written: morning))
+        try write("joueur 2", "save_user2/save0.bin", in: first.documents)
+        try write("nxnative-users-1 03\n", "save.users", in: first.documents)
+        try write("S\tabc\t0\nR\t0011\n", CartoucheSaveSync.pipelinesFile, in: first.documents)
+        let sent = try await round().sync(first, base: nil, fetching: false)
+        XCTAssertEqual(sent.step, .send)
+        XCTAssertEqual(sent.pipelines, CartouchePipelinesMoved(came: false, went: true))
+        let listed = try await remote.list(gameFolder).map(\.name).filter { !$0.hasSuffix(".partial") }.sorted()
+        XCTAssertEqual(listed, [CartoucheSaveSync.fileName(morning), CartoucheSaveSync.pipelinesFile])
+
+        // Cartouche installed again: both profiles come, and the pipelines.
+        let second = CartoucheSaveTarget(key: "second", name: "Essai de stockage", titleId: "0100CA27C0DE0000",
+                                         documents: try localFolder())
+        let fetched = try await round().sync(second, base: nil, fetching: true)
+        XCTAssertEqual(fetched.step, .fetch)
+        XCTAssertEqual(fetched.pipelines, CartouchePipelinesMoved(came: true, went: false))
+        XCTAssertEqual(try party(in: second.documents), "partie 1")
+        XCTAssertEqual(text("save_user2/save0.bin", in: second.documents), "joueur 2")
+        XCTAssertEqual(text("save.users", in: second.documents), "nxnative-users-1 03\n")
+        XCTAssertEqual(text(CartoucheSaveSync.pipelinesFile, in: second.documents), "S\tabc\t0\nR\t0011\n")
+
+        // It prepares more as it plays, and saves nothing: no copy, but
+        // the lines go, and come to the first at its next start.
+        try write("S\tabc\t0\nR\t0011\nR\t0022\n", CartoucheSaveSync.pipelinesFile, in: second.documents)
+        let after = try await round().sync(second, base: fetched.base, fetching: false)
+        XCTAssertEqual(after.step, .none)
+        XCTAssertEqual(after.pipelines, CartouchePipelinesMoved(came: false, went: true))
+        let starts = try await round().sync(first, base: sent.base, fetching: true)
+        XCTAssertEqual(starts.step, .none)
+        XCTAssertEqual(starts.pipelines, CartouchePipelinesMoved(came: true, went: false))
+        XCTAssertEqual(text(CartoucheSaveSync.pipelinesFile, in: first.documents), "S\tabc\t0\nR\t0011\nR\t0022\n")
+        let copies = try await round().copies(of: first)
+        XCTAssertEqual(copies.map { CartoucheStoragePath.name($0.path) }, [CartoucheSaveSync.fileName(morning)],
+                       "the list is no copy of the saves")
+    }
+
     /// While a game plays behind the console, its saves go a few seconds
     /// after it saves, from a copy of them made at one moment; each copy
     /// that goes in the same game takes the place of the one that went
