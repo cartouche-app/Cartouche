@@ -1,0 +1,235 @@
+From d4bb50ace9b1032df120aa613318feb8c7984fbf Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Thu, 26 Nov 2026 18:23:16 +0000
+Subject: [PATCH] Look for the iPhone's RemotePairing port again when its port
+ breaks the connection
+
+SideStore reaches this iPhone through LocalDevVPN at the port of its
+RemotePairing service: 49152, unless it found another one. iOS gives
+that service the port it is given as it starts, not always 49152:
+another service of the iPhone can hold that one and answer in its
+place, then break the connection as soon as SideStore speaks. The
+port answers minimuxer's probe, and the connection is reset at once,
+which minimuxer gives as invalidVPN. SideStore looked for the
+service's port again, through Bonjour, only for noDevice and
+notReachable, so such a port kept the sign-in, a renewal and an update
+failing within a second, whatever the player did: LocalDevVPN
+connected again, the iPhone restarted.
+
+When the port breaks the connection (reset, early end, broken pipe,
+refused) or does not answer minimuxer's probe, SideStore now looks for
+the service's port again, and goes on with the one it finds. Should
+that one answer no better, as the port of another device on the
+network would not, it goes back to the port before. The outcome gives
+"portLookup": "moved" when it went on with another port, "same" when
+Bonjour found the port it used, "notFound" when it found none.
+
+Needs proper testing on an iPhone whose RemotePairing service is not at
+49152.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01MzPJorWAtKYwygDCUoAsrC
+---
+ .../Core/DeviceApi/CartouchePortLookup.swift  | 66 +++++++++++++++++++
+ .../Core/DeviceApi/MinimuxerWrapper.swift     | 38 ++++++++++-
+ SideStore/Intents/CartoucheOutcome.swift      | 30 +++++++++
+ 3 files changed, 132 insertions(+), 2 deletions(-)
+ create mode 100644 SideStore/Core/DeviceApi/CartouchePortLookup.swift
+
+diff --git a/SideStore/Core/DeviceApi/CartouchePortLookup.swift b/SideStore/Core/DeviceApi/CartouchePortLookup.swift
+new file mode 100644
+index 0000000..bc70c84
+--- /dev/null
++++ b/SideStore/Core/DeviceApi/CartouchePortLookup.swift
+@@ -0,0 +1,66 @@
++//
++//  CartouchePortLookup.swift
++//  SideStore
++//
++//  Cartouche: SideStore reaches this iPhone through LocalDevVPN at the port
++//  of its RemotePairing service, 49152 unless it found another one. iOS gives
++//  that service the port it is given as it starts, not always 49152: another
++//  service of the iPhone can hold that one and answer in its place, then
++//  break the connection as soon as SideStore speaks. SideStore looked for
++//  the service's port again (Bonjour, withRemotePairingRetry) only when it
++//  could not find this iPhone at all, so such a port kept the sign-in, a
++//  renewal and an update failing within a second, whatever the player did:
++//  LocalDevVPN connected again, this iPhone restarted. It now looks again
++//  when the port breaks the connection, or does not answer, and goes on
++//  with the port it finds, kept only once that one answers.
++//
++//  Needs proper testing on an iPhone whose RemotePairing service is not at
++//  49152.
++//
++
++import Foundation
++
++enum CartouchePortLookup
++{
++    /// The words of minimuxer, and of the library it reaches this iPhone
++    /// with, for a port that did not answer as the RemotePairing service
++    /// does: the connection broken as soon as it was made, or no answer to
++    /// minimuxer's probe. Not "no route to host", which LocalDevVPN gives,
++    /// whatever the port.
++    static let words = [
++        "connection reset", "connectionreset",
++        "early eof", "unexpectedeof",
++        "broken pipe", "brokenpipe",
++        "connection refused",
++        "tcp port poll failed",
++    ]
++
++    /// Whether minimuxer's SENTENCE, which SideStore passes on in its
++    /// invalidVPN, says that the port broke the connection or did not answer.
++    static func isWrongPort(_ sentence: String) -> Bool
++    {
++        let sentence = sentence.lowercased()
++        return self.words.contains { sentence.contains($0) }
++    }
++
++    /// What looking for the service's port again found, for Cartouche's
++    /// measurements (CartoucheOutcome, "portLookup").
++    enum Found: String
++    {
++        /// Another port, which the action went on with.
++        case moved
++        /// The port SideStore already used.
++        case same
++        /// None: Bonjour did not find the service in time, or Local Network
++        /// access is not allowed.
++        case notFound
++    }
++
++    /// What finding PORT, or none, means for the port SideStore used,
++    /// CURRENT.
++    static func found(_ port: UInt16?, using current: UInt16) -> Found
++    {
++        guard let port else { return .notFound }
++        return port == current ? .same : .moved
++    }
++}
+diff --git a/SideStore/Core/DeviceApi/MinimuxerWrapper.swift b/SideStore/Core/DeviceApi/MinimuxerWrapper.swift
+index 9dfb2c5..27e2d7b 100644
+--- a/SideStore/Core/DeviceApi/MinimuxerWrapper.swift
++++ b/SideStore/Core/DeviceApi/MinimuxerWrapper.swift
+@@ -108,7 +108,23 @@ private func resolveDiscoveredRemotePairingPortThrottled() async -> UInt16? {
+     return await task.value
+ }
+ 
++/// Cartouche: whether ERROR says that this iPhone's port broke the connection
++/// or did not answer, as a port another service holds does
++/// (CartouchePortLookup).
++private func isWrongPortError(_ error: Error) -> Bool {
++    switch error {
++    case MinimuxerError.invalidVPN(let sentence), OperationError.invalidVPN(let sentence):
++        return CartouchePortLookup.isWrongPort(sentence)
++    default:
++        return false
++    }
++}
++
+ private func isRetriableRemotePairingError(_ error: Error) -> Bool {
++    // Cartouche: the RemotePairing service may be at another port.
++    if isWrongPortError(error) {
++        return true
++    }
+     if let minErr = error as? MinimuxerError {
+         switch minErr {
+         case .noDevice, .notReachable:
+@@ -139,11 +155,29 @@ private func withRemotePairingRetry<T>(_ operation: () async throws -> T) async
+             throw error
+         }
+ 
+-        if let newPort = await resolveDiscoveredRemotePairingPortThrottled(), newPort != remotePairingPortCache {
++        let previousPort = remotePairingPortCache
++        let discovered = await resolveDiscoveredRemotePairingPortThrottled()
++        let wrongPort = isWrongPortError(error)
++        if wrongPort {
++            // Cartouche: what the lookup found, for its measurements.
++            CartoucheOutcome.lookedForPort(CartouchePortLookup.found(discovered, using: previousPort))
++        }
++        if let newPort = discovered, newPort != previousPort {
+             debugLog("[SideStore] Operation failed with retriable error (\(error)), updating RemotePairing port from \(remotePairingPortCache) -> \(newPort) and retrying...")
+             remotePairingPortCache = newPort
+             minimuxer.set(MinimuxerParams(remotePairingPort: newPort))
+-            return try await operation()
++            do {
++                return try await operation()
++            } catch let retried where wrongPort && isWrongPortError(retried) {
++                // Cartouche: the port found answers no better, as that of
++                // another device on the network would not: back to the one
++                // before, which may only have dropped the connection once.
++                debugLog("[SideStore] RemotePairing port \(newPort) did not answer either, back to \(previousPort)")
++                remotePairingPortCache = previousPort
++                UserDefaults.standard.lastDiscoveredRemotePairingPort = Int(previousPort)
++                minimuxer.set(MinimuxerParams(remotePairingPort: previousPort))
++                throw retried
++            }
+         }
+         throw error
+     }
+diff --git a/SideStore/Intents/CartoucheOutcome.swift b/SideStore/Intents/CartoucheOutcome.swift
+index 4afbc17..9b127c2 100644
+--- a/SideStore/Intents/CartoucheOutcome.swift
++++ b/SideStore/Intents/CartoucheOutcome.swift
+@@ -24,6 +24,11 @@
+ //  again after Apple answered 429, Too Many Requests (GrandSlamResend, in
+ //  SideSign), when any did.
+ //
++//  "portLookup" is what looking for this iPhone's RemotePairing port again
++//  found, when its port broke the connection or did not answer
++//  (CartouchePortLookup): "moved", another port, which the action went on
++//  with; "same", the port it used; "notFound".
++//
+ //  An error SideStore wraps to give it a title, as its refresh does with each
+ //  app's failure ("Failed to Refresh ..."), is told by the error it wraps.
+ //  Its invalidParameters, which it throws for what its own code did not
+@@ -130,6 +135,26 @@ final class CartoucheOutcome: @unchecked Sendable
+         return self.resends
+     }
+ 
++    // MARK: - This iPhone's port, looked for again
++
++    private static var portLookup: CartouchePortLookup.Found?
++
++    /// Notes what looking for this iPhone's RemotePairing port again found
++    /// (withRemotePairingRetry): the last lookup of the action counts.
++    static func lookedForPort(_ found: CartouchePortLookup.Found)
++    {
++        self.trailLock.lock()
++        defer { self.trailLock.unlock() }
++        self.portLookup = found
++    }
++
++    private static func takePortLookup() -> CartouchePortLookup.Found?
++    {
++        self.trailLock.lock()
++        defer { self.trailLock.unlock() }
++        return self.portLookup
++    }
++
+     // MARK: - Outcome
+ 
+     let action: Action
+@@ -143,6 +168,7 @@ final class CartoucheOutcome: @unchecked Sendable
+         Self.trailLock.lock()
+         Self.trail = []
+         Self.resends = 0
++        Self.portLookup = nil
+         Self.trailLock.unlock()
+         Self.delete()
+     }
+@@ -182,6 +208,10 @@ final class CartoucheOutcome: @unchecked Sendable
+         {
+             outcome["resent"] = resends
+         }
++        if let found = Self.takePortLookup()
++        {
++            outcome["portLookup"] = found.rawValue
++        }
+         if let progress, progress.totalUnitCount > 0
+         {
+             let fraction = min(max(progress.fractionCompleted, 0), 1)
+-- 
+2.43.0
+
