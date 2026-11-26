@@ -25,6 +25,10 @@ Non. Cartouche ne fournit aucun jeu, aucune clé et aucun firmware : vous constr
 
 Avec [Cartouche pour Mac](/fr/mac/install/), sur un Mac à puce Apple : montrez-lui le dossier de vos copies et votre dossier des jeux, et il installe ce dont il a besoin, construit chaque jeu avec nxnative, puis le reconstruit quand nxnative l'améliore. Sans Mac, [Cartouche Cloud](/fr/cloud/) les construit pour vous.
 
+## Puis-je ajouter les mises à jour et DLC d'un jeu ?
+
+Oui. Avec Cartouche pour Mac, mettez-les avec le jeu dans votre dossier des dumps : le Builder les construit avec lui, et reconstruit le jeu quand vous en ajoutez un nouveau. Avec Cartouche Cloud, envoyez-les avec le jeu de base. Voir [Mises à jour et DLC](/fr/mac/builder/#mises-à-jour-et-dlc) sur le Mac, et [sur Cartouche Cloud](/fr/cloud/#mises-à-jour-et-dlc).
+
 ## Cartouche fonctionne-t-il sur iPad et sur Mac ?
 
 Sur un iPad à puce M1 ou plus récente, c'est la même app que sur l'iPhone ([Sur iPad](/fr/iphone/ipad/)). Sur un Mac à puce Apple, Cartouche pour Mac construit aussi chacun de vos jeux pour le Mac et l'y fait jouer, avec les mêmes sauvegardes et les mêmes connexions que votre iPhone et votre iPad.

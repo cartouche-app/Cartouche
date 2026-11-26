@@ -18,9 +18,13 @@ Cartouche Cloud no proporciona ningún juego: solo compila la copia que le enví
 3. Vincula Cartouche a tu cuenta, una vez ([Vincular tu iPhone](/es/cloud/iphone/#vincular-tu-iphone)).
 4. Cartouche sigue la compilación, paso a paso, y un correo te avisa cuando termina. Luego **Instalar** pone el juego en tu iPhone, como tus otros juegos.
 
+## Actualizaciones y DLC
+
+Elige juntos el juego base, sus actualizaciones y sus DLC al enviarlo: se aplica la actualización más reciente, y los DLC se compilan con él. Una actualización o un DLC se envía con su juego base: para añadir uno a un juego ya compilado, vuelve a enviar el juego con él, lo que es una compilación nueva.
+
 ## Tus claves se quedan contigo
 
-Tu navegador abre el juego en tu ordenador y envía solo el juego: tus claves nunca salen del ordenador. El juego base, las actualizaciones y los DLC se pueden elegir juntos, y se aplica la actualización más reciente.
+Tu navegador abre el juego en tu ordenador y envía solo el juego: tus claves nunca salen del ordenador.
 
 ## Créditos
 

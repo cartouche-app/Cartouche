@@ -27,6 +27,14 @@ Open a game and choose **Build**. A large game's first build takes hours; the ne
 - **Stop this game** stops only the game building; **Stop all** stops the batch and empties its queue.
 - A notification says when a batch ends.
 
+## Updates and DLC
+
+Put a game's update and DLC in your dumps folder with the game: the Builder builds them into it, the newest update and every DLC.
+
+- **Packages** (`.nsp`, `.xci`, `.nsz`, `.xcz`) can be beside the game, in a folder of their own, such as `Zelda/Update/`, or anywhere else in the dumps folder: the Builder knows their game by its title ID. They need `prod.keys`, chosen in the setup assistant or in the settings.
+- **A dump** holds them in `updates/<version>/` and `dlc/`; a Switch 2 game's `.nup` holds those packed in it.
+- **A new update or DLC** in the dumps folder builds the game again. Cartouche on the iPhone then offers the update on the game's sheet, saves kept.
+
 ## When nxnative improves your games
 
 nxnative gets dozens of changes a day. The Builder reads what changed since each game's build, and builds a game again only when it gains something:

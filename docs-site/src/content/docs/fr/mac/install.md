@@ -42,7 +42,7 @@ Pour un dossier sur votre NAS, tapez l'adresse de son partage dans l'assistant e
 
 ## Vos dumps
 
-Le Builder lit vos jeux en paquets de votre console (`.nsp`, `.xci`, `.nsz`, `.xcz`, avec leurs mises à jour et DLC, qui demandent `prod.keys`, ou `.nup`), en dumps, ou en `.zip` d'un dump. Ils peuvent être en vrac dans le dossier, un dossier par jeu, ou dans des dossiers de dossiers. Un jeu est reconnu par son identifiant de titre ; la bibliothèque dit ce qu'elle a laissé de côté, et pourquoi.
+Le Builder lit vos jeux en paquets de votre console (`.nsp`, `.xci`, `.nsz`, `.xcz`, avec leurs mises à jour et DLC, qui demandent `prod.keys`, ou `.nup`), en dumps, ou en `.zip` d'un dump. Ils peuvent être en vrac dans le dossier, un dossier par jeu, ou dans des dossiers de dossiers. Un jeu est reconnu par son identifiant de titre ; la bibliothèque dit ce qu'elle a laissé de côté, et pourquoi. La mise à jour et les DLC d'un jeu sont construits avec lui : voir [Mises à jour et DLC](/fr/mac/builder/#mises-à-jour-et-dlc).
 
 **Nommer vos jeux**, sous **Dossiers** dans les réglages, montre avec des exemples ce que le Builder et Cartouche font de chaque nom.
 
