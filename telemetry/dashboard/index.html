@@ -604,6 +604,30 @@
         return latestBy(sessions, (session) => session.install + "|" + session.session);
     }
 
+    // An error by its code: where, why, the step it stopped at and its
+    // domains and codes. Since 0.11.1, an error says its cause and the step
+    // (launcher/Sources/CartoucheFailure.swift).
+    const errorCode = (event) => ["origin", "cause", "stage", "error"].map((key) => text(event.fields[key]) ?? "").join("|");
+
+    // The errors the rates count, of EVENTS: a copy that meets the same
+    // error again before it opens Cartouche once more counts it once, in the
+    // order its reports were made. A player who taps Sign In again and
+    // again as it fails at once does not make the rate of a version by
+    // themselves: in 0.16.2, one iPhone sent 263 of its 287 errors that way.
+    function countedErrors(events) {
+        const counted = new Set();
+        for (const list of groupBy(events, (event) => event.install).values()) {
+            let met = new Set();
+            for (const event of [...list].sort((a, b) => (a.seq ?? 0) - (b.seq ?? 0))) {
+                if (event.name === "app.opened") met = new Set();
+                if (event.name !== "error" || met.has(errorCode(event))) continue;
+                met.add(errorCode(event));
+                counted.add(event);
+            }
+        }
+        return counted;
+    }
+
     // Cartouche Builder's reports come from a Mac: events named builder.*.
     const fromMac = (report) => (typeof report.name === "string" && report.name.startsWith("builder.")) || /^Mac/.test(report.device ?? "");
     // Cartouche Cloud's platform says how the builds of its Macs ended and
@@ -724,6 +748,8 @@
         const days = shownDays(data, [...all.sessions, ...all.events]);
         const sessionsAll = latestSessions(all.sessions.filter((session) => !fromMac(session)));
         const phoneEvents = all.events.filter((event) => !fromMac(event) && !fromCloud(event));
+        // Those the rates count, of each copy's whole window, whatever the filters.
+        const counted = countedErrors(phoneEvents);
         const macEvents = all.events.filter((event) => fromMac(event) && !fromCloud(event));
         const cloudEvents = all.events.filter(fromCloud);
         const gameId = (report) => gameOf(catalog, report.game).id;
@@ -750,7 +776,7 @@
         const errors = named("error");
 
         // MARK: Days
-        const byDay = new Map(days.map((day) => [day, { day, iphones: new Set(), players: new Set(), sessions: 0, minutes: 0, opens: 0, errors: 0, bad: 0, signedIn: 0, signInFailed: 0, cadences: [] }]));
+        const byDay = new Map(days.map((day) => [day, { day, iphones: new Set(), players: new Set(), sessions: 0, minutes: 0, opens: 0, errors: 0, counted: 0, bad: 0, signedIn: 0, signInFailed: 0, cadences: [] }]));
         for (const report of reports) byDay.get(report.day)?.iphones.add(report.install);
         for (const session of sessions) {
             const day = byDay.get(session.day);
@@ -766,6 +792,7 @@
             if (!day) continue;
             if (event.name === "app.opened") day.opens += 1;
             if (event.name === "error") day.errors += 1;
+            if (counted.has(event)) day.counted += 1;
             if (event.name === "account.signedIn") day.signedIn += 1;
             if (event.name === "error" && event.fields.origin === "signIn") day.signInFailed += 1;
         }
@@ -776,7 +803,7 @@
             hours: day.minutes / 60,
             cadence: median(cadences),
             signIn: day.signedIn + day.signInFailed ? day.signedIn / (day.signedIn + day.signInFailed) : null,
-            errorsPer100: day.opens ? (day.errors / day.opens) * 100 : null,
+            errorsPer100: day.opens ? (day.counted / day.opens) * 100 : null,
         }));
 
         // MARK: Games
@@ -1119,9 +1146,7 @@
         };
 
         // MARK: Errors
-        // Since 0.11.1, an error says its cause and the step it stopped at
-        // (launcher/Sources/CartoucheFailure.swift).
-        const codeOf = (event) => ["origin", "cause", "stage", "error"].map((key) => text(event.fields[key]) ?? "").join("|");
+        const codeOf = errorCode;
         const codes = groupBy(errors, codeOf);
         // The versions of Cartouche the window heard from, the newest first,
         // and those each error was seen in, whatever the filters: an error
@@ -1198,6 +1223,7 @@
                 .map(([version, list]) => ({
                     version,
                     errors: list.filter((event) => event.name === "error").length,
+                    counted: list.filter((event) => counted.has(event)).length,
                     opens: list.filter((event) => event.name === "app.opened").length,
                 }))
                 .sort((a, b) => newestFirst(a.version, b.version))
@@ -1528,6 +1554,7 @@
                     players: new Set(vSessions.filter(drewFrames).map((session) => session.install)).size,
                     bad: vSessions.filter((session) => BAD.has(endOf(session))).length,
                     errors: vErrors.length,
+                    counted: vErrors.filter((event) => counted.has(event)).length,
                     errorCopies: new Set(vErrors.map((event) => event.install)).size,
                     // Its code too, which says more than a cause the app could not name.
                     topError: topError
@@ -1653,9 +1680,10 @@
                 cadence: median(sessions.map(cadence)),
                 bad: sessions.length ? endsOf(sessions).bad / sessions.length : null,
                 errors: errors.length,
+                counted: errors.filter((event) => counted.has(event)).length,
                 errorIphones: new Set(errors.map((event) => event.install)).size,
                 opens: named("app.opened").length,
-                errorsPer100: named("app.opened").length ? (errors.length / named("app.opened").length) * 100 : null,
+                errorsPer100: named("app.opened").length ? (errors.filter((event) => counted.has(event)).length / named("app.opened").length) * 100 : null,
                 // The copies that tried the Apple sign-in, and those it let through.
                 signIn: (() => {
                     const tried = new Set([...signedIn, ...signInErrors].map((event) => event.install));
@@ -2789,7 +2817,7 @@
             ["Copies qui ont joué", playedValue, playedUnit, played !== null ? statusDot(toneOf(played, 0.6, 0.35), plural(t.players, "copie", "copies") + " sur " + count(t.iphones)) : "", spark("players")],
             ["Connexion Apple", signInValue, signInUnit, t.signIn ? statusDot(toneOf(t.signIn.share, 0.8, 0.5), "des copies qui l'ont tentée (" + count(t.signIn.through) + " sur " + count(t.signIn.copies) + ")") : "Aucune tentative", spark("signIn", { zoom: true })],
             ["Parties qui finissent mal", badValue, badUnit, has(t.bad) ? statusDot(toneOf(t.bad, 0.03, 0.1, false), plural(model.endings.ends.bad, "partie", "parties") + " sur " + count(t.sessions)) : "", spark("bad")],
-            ["Erreurs / 100 ouvertures", has(t.errorsPer100) ? n0.format(t.errorsPer100) : DASH, null, t.errors ? plural(t.errors, "erreur", "erreurs") + " sur " + plural(t.errorIphones, "copie", "copies") : "Aucune erreur", spark("errorsPer100", { zoom: true })],
+            ["Erreurs / 100 ouvertures", has(t.errorsPer100) ? n0.format(t.errorsPer100) : DASH, null, t.errors ? plural(t.errors, "erreur", "erreurs") + " sur " + plural(t.errorIphones, "copie", "copies") + (t.errors > t.counted ? ", dont " + plural(t.errors - t.counted, "répétée", "répétées") : "") : "Aucune erreur", spark("errorsPer100", { zoom: true })],
             ["Constructions réussies", buildValue, buildUnit, t.builds ? statusDot(toneOf(t.builds.share, 0.8, 0.5), count(t.builds.built) + " sur " + count(t.builds.built + t.builds.failed) + ", " + plural(t.macs, "Mac", "Macs")) : "Aucune construction", sparkline(model.builder.daily.map((day) => day.built + day.failed ? day.built / (day.built + day.failed) : null), { zoom: true })],
             ["Renouvellements réussis", renewValue, renewUnit, t.renewals ? statusDot(toneOf(t.renewals.share, 0.8, 0.5), "des copies qui ont essayé (" + count(t.renewals.through) + " sur " + count(t.renewals.copies) + ")") : "Aucun essai de Cartouche", sparkline(model.renewals.daily.map((day) => day.renewed || 0))],
             ["Cartouche Cloud", cloudValue, cloudUnit, t.cloud ? statusDot(toneOf(t.cloud.share, 0.8, 0.5), "des constructions (" + count(t.cloud.built) + " sur " + count(t.cloud.built + t.cloud.failed) + ")") : model.cloud.iphone.installs ? plural(model.cloud.iphone.installs, "jeu installé", "jeux installés") + " depuis le Cloud" : "Aucune construction", sparkline(model.cloud.daily.map((day) => day.built + day.failed ? day.built / (day.built + day.failed) : null), { zoom: true })],
@@ -2953,7 +2981,7 @@
                 const signIn = row.signIn.copies ? row.signIn.okCopies / row.signIn.copies : null;
                 const played = row.copies ? row.players / row.copies : null;
                 const bad = row.sessions ? row.bad / row.sessions : null;
-                const errors = row.opens ? (row.errors / row.opens) * 100 : null;
+                const errors = row.opens ? (row.counted / row.opens) * 100 : null;
                 return h("tr", { class: row.version === newest ? "newest" : null },
                     h("td", { class: "nowrap" }, h("b", { text: row.version || "?" }), row.version === newest ? tag("la plus récente") : null),
                     h("td", { class: "n" }, count(row.copies)),
@@ -2962,13 +2990,13 @@
                         has(signIn) ? percent(signIn) : DASH, row.signIn.copies ? h("small", { text: " " + count(row.signIn.okCopies) + "/" + count(row.signIn.copies) }) : null, meter(signIn, toneOf(signIn, 0.8, 0.5))),
                     h("td", { class: "n" }, row.setUp ? percent(row.setUp.share) : DASH, meter(row.setUp && row.setUp.share, toneOf(row.setUp && row.setUp.share, 0.6, 0.3))),
                     h("td", { class: "n" }, has(bad) ? percent(bad, 1) : DASH, row.sessions ? h("small", { text: " sur " + count(row.sessions) }) : null),
-                    h("td", { class: "n" }, has(errors) ? n0.format(errors) : DASH),
+                    h("td", { class: "n", title: row.errors > row.counted ? count(row.errors) + " erreurs envoyées, dont " + count(row.errors - row.counted) + " répétées avant que la copie rouvre l'app, comptées une fois" : "" }, has(errors) ? n0.format(errors) : DASH),
                     h("td", { class: "wide" }, row.topError ? [errorLabel(row.topError), " ", h("small", { class: "nowrap", text: plural(row.topError.copies, "copie", "copies") })] : DASH),
                     h("td", { class: "n" }, row.first === row.last ? dayText(row.last) : dayText(row.first) + " – " + dayText(row.last)));
             }))));
         return [h("article", { class: "card span" },
             h("h3", { text: "Santé de chaque version" }),
-            h("p", { class: "sub", text: "Les copies, d'après les rapports de chaque version : à comparer d'une version à l'autre. La connexion Apple compte les copies qui l'ont tentée et celles qui l'ont réussie ; la configuration, celles qui l'ont terminée." }),
+            h("p", { class: "sub", text: "Les copies, d'après les rapports de chaque version : à comparer d'une version à l'autre. La connexion Apple compte les copies qui l'ont tentée et celles qui l'ont réussie ; la configuration, celles qui l'ont terminée ; les erreurs, une fois chacune tant que la copie ne rouvre pas l'app." }),
             table)];
     }
 
@@ -3282,8 +3310,8 @@
                     ["Durée d'une réussite", has(s.secondsOk) ? n0.format(s.secondsOk) : DASH, "s"],
                 ]),
                 bars(s.byStage.map((row) => ({ label: SIGN_IN_STAGES[row.key] || row.key, value: row.count, figure: count(row.count), note: plural(row.installs, "iPhone", "iPhones"), tip: ["étape atteinte"] })), { empty: "Aucun échec de connexion sur cette période." })),
-            card("Par version de Cartouche", "Erreurs pour 100 ouvertures de l'app, les versions récentes d'abord.",
-                bars(e.byVersion.filter((row) => row.opens).map((row) => ({ label: "Cartouche " + row.version, value: (row.errors / row.opens) * 100, figure: one((row.errors / row.opens) * 100) + " / 100", note: plural(row.errors, "erreur", "erreurs"), tip: [plural(row.opens, "ouverture", "ouvertures")] })), { empty: "Aucune erreur sur cette période." })),
+            card("Par version de Cartouche", "Erreurs pour 100 ouvertures de l'app, les versions récentes d'abord. Une erreur qu'une copie rencontre encore avant de rouvrir l'app compte une fois.",
+                bars(e.byVersion.filter((row) => row.opens).map((row) => ({ label: "Cartouche " + row.version, value: (row.counted / row.opens) * 100, figure: one((row.counted / row.opens) * 100) + " / 100", note: plural(row.counted, "erreur", "erreurs"), tip: [plural(row.opens, "ouverture", "ouvertures"), ...(row.errors > row.counted ? [plural(row.errors - row.counted, "répétition", "répétitions") + " en plus"] : [])] })), { empty: "Aucune erreur sur cette période." })),
             h("article", { class: "card span" }, h("h3", { text: "Codes d'erreur" }),
                 h("p", { class: "sub", text: (e.newest ? "D'abord celles que la " + e.newest + ", la version la plus récente, envoie encore, puis celles qu'elle n'envoie plus ; dans chaque groupe, " : "") + "celles que le plus de copies ont rencontrées d'abord : cause, étape atteinte, cas de l'erreur, domaines et codes de l'erreur et de celles qu'elle contient, jamais son texte. « Nouvelle » : seule la version la plus récente l'a envoyée ; « plus vue » : elle ne l'a pas envoyée, sur " + count(M.GONE_COPIES) + " copies au moins." }),
                 table([
