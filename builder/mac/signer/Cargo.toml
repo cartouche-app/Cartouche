@@ -1,7 +1,7 @@
 [package]
 name = "cartouche-signer"
 version = "0.1.0"
-description = "Renews Cartouche on the player's iPhone from Cartouche for Mac, with a new provisioning profile"
+description = "Renews Cartouche on the player's iPhone from Cartouche for Mac, with a new provisioning profile, or installs it again over itself"
 authors = ["Cartouche contributors"]
 license = "AGPL-3.0-only"
 repository = "https://github.com/cartouche-app/Cartouche"
@@ -36,6 +36,10 @@ rustls = "0.23.36"
 # isideload's own, to tell a 429 and a network failure in its reports.
 reqwest = { version = "0.13.2", default-features = false }
 futures = "0.3.31"
+# Cartouche's IPA checked against its source, for an install over it, as
+# the Installer checks it.
+sha2 = "0.11.0"
+hex = "0.4.3"
 base64 = "0.22"
 chrono = "0.4"
 tracing = "0.1.44"

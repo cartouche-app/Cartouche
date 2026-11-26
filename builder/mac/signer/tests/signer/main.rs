@@ -5,5 +5,6 @@
 
 mod cli;
 mod harness;
+mod reinstall;
 mod renew;
 mod session;

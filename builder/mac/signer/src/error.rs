@@ -46,6 +46,11 @@ pub enum Kind {
     CertificateGone,
     /// No App ID left this week to register Cartouche's again.
     NoAppIds,
+    /// The account has as many certificates as Apple allows: an install
+    /// over Cartouche needs one more, and the signer never revokes one.
+    NoCertificateLeft,
+    /// Cartouche's source or IPA did not come from GitHub as it should.
+    Download,
     /// The iPhone refused the profile.
     ProfileRefused,
     /// The iPhone's connection ended, or it answered what it should not.
@@ -75,6 +80,8 @@ impl Kind {
             Kind::OtherTeam => "other-team",
             Kind::CertificateGone => "certificate-gone",
             Kind::NoAppIds => "no-app-ids",
+            Kind::NoCertificateLeft => "no-certificate-left",
+            Kind::Download => "download",
             Kind::ProfileRefused => "profile-refused",
             Kind::Iphone => "iphone",
             Kind::Usage => "usage",
@@ -84,13 +91,14 @@ impl Kind {
 }
 
 /// Where it stopped, for the measurements: signing in, Apple's developer
-/// services, or the iPhone.
+/// services, the iPhone, or Cartouche's IPA from GitHub.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum Stage {
     Session,
     Apple,
     Iphone,
+    Download,
 }
 
 /// A failure, with its kind, its stage and what was said, for the Mac's
@@ -137,6 +145,7 @@ impl Failure {
                         let kind = match code {
                             1100 => Kind::SessionEnded,
                             1102 => Kind::AccountRefused,
+                            7460 => Kind::NoCertificateLeft,
                             _ => Kind::Apple,
                         };
                         return Failure::new(kind, stage, message).with_code(code);
@@ -159,6 +168,9 @@ impl Failure {
             }
             if text.contains("429") || text.contains("Too Many Requests") {
                 return Failure::new(Kind::TooManyRequests, stage, message).with_code(429);
+            }
+            if text.contains("Maximum number of certificates") {
+                return Failure::new(Kind::NoCertificateLeft, Stage::Apple, message).with_code(7460);
             }
             if text.contains("Not enough available app IDs") {
                 return Failure::new(Kind::NoAppIds, Stage::Apple, message);

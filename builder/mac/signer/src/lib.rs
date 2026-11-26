@@ -1,8 +1,10 @@
 //! Cartouche for Mac's signer: renews Cartouche on the player's iPhone with
 //! a new provisioning profile, as SideStore does on the iPhone, from the
 //! Mac it is plugged in to, without signing or installing anything again
-//! (README.md, decision 165). The Mac keeps the player's Apple session,
-//! never their password.
+//! (README.md, decision 165); and, when a profile no longer opens it, its
+//! certificate gone, installs the newest Cartouche over it with the same
+//! team, which keeps its games and saves (reinstall.rs). The Mac keeps the
+//! player's Apple session, never their password.
 //!
 //! It signs in as the Cartouche Installer does (installer/src-tauri), with
 //! isideload and idevice, and is tested against the Installer's fakes.
@@ -11,6 +13,8 @@ pub mod error;
 pub mod iphone;
 pub mod profile;
 pub mod protocol;
+pub mod reinstall;
+pub mod release;
 pub mod renew;
 pub mod rules;
 pub mod session;
@@ -51,9 +55,23 @@ pub struct Environment {
     /// The proxy isideload sends Apple's requests through: none in the app.
     pub apple_proxy: Option<String>,
     pub anisette_url: String,
+    /// The client for Cartouche's source and IPA, on GitHub, for an install
+    /// over Cartouche (release.rs).
+    pub http: reqwest::Client,
     /// The signer's folder, readable by the player's account alone: the
     /// session (session.json) and isideload's files (the anisette machine).
     pub folder: PathBuf,
+}
+
+/// The client for GitHub, which gives up on a connection that stalls
+/// rather than wait for it: a download of Cartouche goes on as long as its
+/// bytes come.
+pub fn http_client(builder: reqwest::ClientBuilder) -> Result<reqwest::Client> {
+    builder
+        .connect_timeout(std::time::Duration::from_secs(30))
+        .read_timeout(std::time::Duration::from_secs(60))
+        .build()
+        .map_err(|e| internal(format!("HTTP client: {e}")))
 }
 
 impl Environment {
@@ -66,6 +84,7 @@ impl Environment {
             usbmuxd,
             apple_proxy: None,
             anisette_url: anisette_url.unwrap_or_else(|| DEFAULT_ANISETTE.to_string()),
+            http: http_client(reqwest::Client::builder())?,
             folder,
         })
     }
@@ -100,6 +119,7 @@ pub(crate) fn private(_path: &std::path::Path, _mode: u32) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn internal(message: impl Into<String>) -> Failure {
+/// A failure of the signer itself, or of the Mac it runs on.
+pub fn internal(message: impl Into<String>) -> Failure {
     Failure::new(Kind::Internal, Stage::Session, message)
 }

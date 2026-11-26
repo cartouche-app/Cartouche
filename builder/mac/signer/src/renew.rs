@@ -9,7 +9,8 @@
 //! this iPhone, a certificate of the profile Cartouche runs under now, and
 //! every entitlement Cartouche was signed with. Without the certificate,
 //! revoked since, a profile does not open Cartouche, and only an install
-//! over it does (`Kind::CertificateGone`): the signer never revokes one.
+//! over it does (`Kind::CertificateGone`, reinstall.rs): the signer never
+//! revokes one.
 
 use std::time::{Instant, SystemTime};
 
@@ -138,7 +139,7 @@ pub async fn renew(env: &Environment, udid: &str, options: Options) -> Result<Re
     Ok(renewal)
 }
 
-fn other_team() -> Failure {
+pub(crate) fn other_team() -> Failure {
     Failure::new(
         Kind::OtherTeam,
         Stage::Session,
@@ -147,7 +148,7 @@ fn other_team() -> Failure {
 }
 
 /// The copy of Cartouche the session's team signed.
-fn choose<'a>(copies: &'a [Cartouche], team_id: &str) -> Result<&'a Cartouche> {
+pub(crate) fn choose<'a>(copies: &'a [Cartouche], team_id: &str) -> Result<&'a Cartouche> {
     if copies.is_empty() {
         return Err(Failure::new(Kind::NoCartouche, Stage::Iphone, "Cartouche is not on this iPhone"));
     }
