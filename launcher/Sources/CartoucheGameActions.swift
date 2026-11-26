@@ -34,6 +34,8 @@
 //    choices saved in its preferences, which the game's settings page in
 //    Cartouche writes (CartoucheGameSettings.swift). Start on nxnative's
 //    screen takes the line out, so that the screen shows.
+//    Play also writes in the game's data folder whether it lets other
+//    apps' sound play on, as the player chose (CartoucheOtherAudio.swift).
 //  - The game runs behind the console, in a process of its own, so that
 //    the Home button brings the player back to Cartouche without ending it
 //    (CartoucheGameHost); one game at a time, and Quit ends it. A game that
@@ -1662,6 +1664,23 @@ final class CartoucheGameActions: ObservableObject {
               let container else { return }
         try CartoucheStartSwitch.write(showingSettings: showingSettings, home: container.containerURL)
         chooseLanguage(of: app, bundle: URL(fileURLWithPath: bundle, isDirectory: true), container: container)
+        keepOtherAudio(of: app, container: container)
+    }
+
+    /// Whether the game lets other apps' sound play on, as the player
+    /// chose on the System page: Cartouche's code in the game's process
+    /// reads it in its data folder (CartoucheOtherAudio.swift). A file that
+    /// cannot be written leaves the game's sound as nxnative sets it: the
+    /// game starts all the same.
+    private static func keepOtherAudio(of app: LCAppModel, container: LCContainer) {
+        let keeps = CartoucheOtherAudioSetting.shared.keeps
+        do {
+            try CartoucheOtherAudio.write(keeping: keeps, home: container.containerURL)
+            if keeps { CartoucheReports.note(app.displayName + ": starts with other apps' sound kept") }
+        } catch {
+            CartoucheReports.note(app.displayName + ": other apps' sound not kept, its file could not be written: "
+                + error.localizedDescription)
+        }
     }
 
     /// The language the game starts in: the first of the iPhone's that the

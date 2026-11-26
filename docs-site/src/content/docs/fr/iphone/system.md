@@ -53,7 +53,7 @@ Après une mise à jour, Cartouche s'ouvre sur **Nouveautés**, dans votre langu
 
 ## Mémoire
 
-Cartouche obtient la **Mémoire augmentée**, même avec un compte Apple gratuit. **Mémoire** montre la limite qu'iOS donne ici à Cartouche, celle qu'il a donnée au dernier jeu derrière la console, et si la Mémoire augmentée est active. **Pendant une partie** contient **Garder Cartouche ouvert derrière le jeu** ([Jouer](/fr/iphone/playing/#un-jeu-qui-demande-plus-de-mémoire)) et **Mettre en pause si la manette se déconnecte** ([Jouer](/fr/iphone/playing/#si-la-manette-se-déconnecte)).
+Cartouche obtient la **Mémoire augmentée**, même avec un compte Apple gratuit. **Mémoire** montre la limite qu'iOS donne ici à Cartouche, celle qu'il a donnée au dernier jeu derrière la console, et si la Mémoire augmentée est active. **Pendant une partie** contient **Garder Cartouche ouvert derrière le jeu** ([Jouer](/fr/iphone/playing/#un-jeu-qui-demande-plus-de-mémoire)), **Mettre en pause si la manette se déconnecte** ([Jouer](/fr/iphone/playing/#si-la-manette-se-déconnecte)) et **Garder le son des autres apps**, qui laisse votre musique ou votre podcast continuer sous le son du jeu ([Jouer](/fr/iphone/playing/#votre-musique-ou-votre-podcast)).
 
 ## Stockage, constructions et Cartouche Cloud
 

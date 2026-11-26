@@ -110,6 +110,10 @@
       "why": "A game's build on the paired Mac, asked over the bridge from its sheet: on the Mac, the console is the app that builds, and the game's sheet in its window shows its build, Build, Stop and Follow.",
       "mac": "CartoucheBuilder/GameDetailView.swift"
     },
+    "CartoucheOtherAudio.swift": {
+      "kind": "iphone",
+      "why": "Keep other apps' sound, which mixes a game's audio session with the music or podcast of another app (decision 168): iOS stops other apps' sound for a game's session that does not mix; macOS plays every app's sound together, and nxnative plays through the Mac's default output, without taking the device for itself."
+    },
     "CartoucheOwnSignature.swift": {
       "kind": "iphone",
       "why": "How Cartouche was signed on the iPhone (by the built-in SideStore, the Cartouche Installer or a signing app there) and what the player's own certificate gives it (Increased Memory Limit, the games' keychain groups): the Mac's app is signed by its own release, and a Mac game by nxnative's build."

@@ -32249,6 +32249,64 @@
         }
       }
     },
+    "system.playing.otherAudio" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ton anderer Apps beibehalten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep other apps’ sound"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantener el sonido de otras apps"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Garder le son des autres apps"
+          }
+        }
+      }
+    },
+    "system.playing.otherAudio.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein: Musik oder Podcast aus einer anderen App laufen unter dem Ton des Spiels weiter, ab dem nächsten Start des Spiels. Aus: Das Spiel hält sie beim Start an."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On, the music or podcast you play in another app goes on under the game’s sound, from the game’s next start. Off, the game stops it as it starts."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activado, la música o el pódcast de otra app sigue sonando bajo el sonido del juego, desde el próximo inicio del juego. Desactivado, el juego lo detiene al iniciarse."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activé, la musique ou le podcast d’une autre app continue sous le son du jeu, dès le prochain lancement du jeu. Désactivé, le jeu l’arrête en démarrant."
+          }
+        }
+      }
+    },
     "system.releaseNotes" : {
       "extractionState" : "manual",
       "localizations" : {
