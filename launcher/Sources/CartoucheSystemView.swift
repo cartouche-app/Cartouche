@@ -96,6 +96,9 @@ struct CartoucheSystemView: View {
     /// The first row of this iPhone's section.
     static let deviceRow = "device"
 
+    /// The first row of the section of a game that runs.
+    static let playingRow = "playing"
+
     #if CARTOUCHE_GALLERY
     /// Whether the gallery's page opens on the Mac's builds, as the row
     /// under Storage opens them (screen: mac-builds).
@@ -436,6 +439,7 @@ struct CartoucheSystemView: View {
         if CartoucheGameKeeping.isAvailable {
             Section {
                 Toggle(CartoucheText.keepConsoleOpen, isOn: $keeping.keepsConsoleOpen)
+                    .id(Self.playingRow)
                 if keeping.keepsConsoleOpen {
                     LabeledContent(CartoucheText.behindLimit,
                                    value: keeping.limitMiB.map { CartoucheText.memoryAmount(mebibytes: $0) }
