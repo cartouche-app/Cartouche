@@ -1442,7 +1442,8 @@ final class CartoucheGameActions: ObservableObject {
             "dataFolder": container.folderName, "started": started, "behind": true,
         ])
         do {
-            try await CartoucheGameHost.shared.start(app, bundle: bundle, dataFolder: container.folderName)
+            try await CartoucheGameHost.shared.start(app, bundle: bundle, dataFolder: container.folderName,
+                                                     rotation: Self.rotation(of: app, container: container))
         } catch {
             running = nil
             NSLog("[Cartouche] %@ did not start behind the console, it starts in Cartouche's place: %@",
@@ -1705,6 +1706,22 @@ final class CartoucheGameActions: ObservableObject {
             source = "the iPhone's"
         }
         CartoucheReports.note(app.displayName + ": starts in " + language + ", " + source)
+    }
+
+    /// nxnative's Rotation the game starts with behind the console, where
+    /// Cartouche turns its screen (CartoucheGameRotation.starting): its env
+    /// files', else the player's choice in its preferences, else its
+    /// settings list's default; nil for a game built before nxnative had
+    /// it.
+    private static func rotation(of app: LCAppModel, container: LCContainer) -> CartoucheGameRotation? {
+        guard let path = app.appInfo.bundlePath() else { return nil }
+        let bundle = URL(fileURLWithPath: path, isDirectory: true)
+        guard let rows = CartoucheGameSetting.rows(inBundle: bundle) else { return nil }
+        let chosen = app.appInfo.bundleIdentifier()
+            .flatMap { CartoucheGamePreferences(domain: $0, home: guestHome(of: container)) }?
+            .string(forKey: CartoucheGameRotation.savedKey)
+        return CartoucheGameRotation.starting(rows: rows, fixed: CartoucheGameSetting.fixedValues(home: container.containerURL, bundle: bundle),
+                                              chosen: chosen)
     }
 
     /// The data folder runApp starts the game with, made as runApp makes it

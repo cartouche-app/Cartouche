@@ -112,14 +112,17 @@ public enum CartoucheGameLanguage {
 
     /// The Switch's languages, by nxnative's codes (its nacp.py), that one
     /// of the iPhone's languages stands for, the closest first: "fr-CA"
-    /// gives Canadian French, then French. Empty for a language no Switch
-    /// game has, such as Polish. Chinese also goes by its older codes,
-    /// zh-CN and zh-TW, which some games' lists may use.
+    /// gives Canadian French, then French. Polish and Thai are among them:
+    /// a game's control data lists them since a Switch 2 SDK, and nxnative
+    /// reads them since its commit 79ac8c89 of 19 November 2026 (Super Mario
+    /// Bros. Wonder 1.2.1 has both). Empty for a language no Switch game
+    /// has, such as Swedish. Chinese also goes by its older codes, zh-CN and
+    /// zh-TW, which some games' lists may use.
     static func codes(for identifier: String) -> [String] {
         let (language, script, region) = parts(of: identifier)
         let inAmericas = region.map { americas.contains($0) } ?? false
         switch language {
-        case "ja", "ko", "de", "it", "nl", "ru":
+        case "ja", "ko", "de", "it", "nl", "ru", "pl", "th":
             return [language]
         case "en":
             // English without a region is American English on an iPhone.

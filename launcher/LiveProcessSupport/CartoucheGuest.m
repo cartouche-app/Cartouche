@@ -47,6 +47,11 @@
 //                    or ends, so that a report from a player whose TV shows
 //                    the game's card says whether the game put its picture
 //                    there (CartoucheGameHost.notePictureOnTV)
+//        rotation    nxnative's Rotation of the game, as its process has it
+//                    now (DM_ROTATION: auto, landscape or portrait), which
+//                    its settings or its in-game menu set; missing when it
+//                    has none. Cartouche turns the game's screen as it says
+//                    (CartoucheGameHost.followRotation, decision 173)
 //
 //  - The controllers: iOS hands their presses to the process that has the
 //    keyboard, and the game's process asks for it, without showing one,
@@ -175,10 +180,10 @@ static NSNumber *CartoucheGuestPictureOnTV(void) {
 }
 
 /// On measureQueue: SIZE, the game's screen now, PRESS, the last press of
-/// a controller's button that reached the game, if one has, and
-/// PICTUREONTV, whether the game's picture is on its scene on a TV, if it
-/// has one.
-static void CartoucheGuestRecord(CGSize size, NSDate *press, NSNumber *pictureOnTV) {
+/// a controller's button that reached the game, if one has, PICTUREONTV,
+/// whether the game's picture is on its scene on a TV, if it has one, and
+/// ROTATION, nxnative's Rotation of the game, if it has one.
+static void CartoucheGuestRecord(CGSize size, NSDate *press, NSNumber *pictureOnTV, NSString *rotation) {
     uint64_t footprint = 0, peak = 0;
     if (!CartoucheGuestFootprint(&footprint, &peak)) return;
     uint64_t available = (uint64_t)os_proc_available_memory();
@@ -209,6 +214,11 @@ static void CartoucheGuestRecord(CGSize size, NSDate *press, NSNumber *pictureOn
     } else {
         [reading removeObjectForKey:@"tvPicture"];
     }
+    if (rotation) {
+        reading[@"rotation"] = rotation;
+    } else {
+        [reading removeObjectForKey:@"rotation"];
+    }
     [reading writeToFile:memoryFile atomically:YES];
 }
 
@@ -226,8 +236,13 @@ static void CartoucheGuestMeasure(void) {
         double pressed = atomic_load(&lastPress);
         NSDate *press = pressed > 0 ? [NSDate dateWithTimeIntervalSinceReferenceDate:pressed] : nil;
         NSNumber *pictureOnTV = CartoucheGuestPictureOnTV();
+        // nxnative sets it on the main thread, from its settings at the
+        // start and from its in-game menu (front_ios.m, dm_rotation_set):
+        // read there too, never while it changes.
+        const char *rotationValue = getenv("DM_ROTATION");
+        NSString *rotation = rotationValue && *rotationValue ? @(rotationValue) : nil;
         dispatch_async(measureQueue, ^{
-            CartoucheGuestRecord(size, press, pictureOnTV);
+            CartoucheGuestRecord(size, press, pictureOnTV, rotation);
         });
     });
 }

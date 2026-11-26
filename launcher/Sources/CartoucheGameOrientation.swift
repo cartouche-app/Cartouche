@@ -28,6 +28,19 @@
 //  allow upright too, by the same rule (launcher/Guest/
 //  CartoucheUprightGame.m).
 //
+//  nxnative's Rotation, a setting of its games built since 23 November 2026
+//  (DM_ROTATION, CartoucheGameRotation), locks the game sideways or
+//  upright, on its settings screen, on Cartouche's page of the game's
+//  settings or in its in-game menu: in Cartouche's place, nxnative's own
+//  app delegate and view controllers turn the game as it says, and
+//  CartoucheUprightGame.m adds upright only for a view controller that
+//  allows it itself, which Landscape's do not. Behind the console, where
+//  Cartouche turns the game's screen, the screen turns as the game's
+//  Rotation says too (docs/decisions/173.md): Automatic as above, Landscape
+//  sideways only, Portrait upright only, for a game that lays itself out
+//  upright; on an iPhone, sideways while the game's picture is on a TV, as
+//  before.
+//
 //  An iPhone turns the screen only the ways it allows. An iPad turns
 //  Cartouche's scenes as it is held, whatever a game allows: the screen
 //  keeps the way it is turned once the game allows it, and turns from one
@@ -47,6 +60,38 @@ struct CartoucheGameOrientations: OptionSet {
     static let landscapeLeft = CartoucheGameOrientations(rawValue: 1 << 2)
     static let landscapeRight = CartoucheGameOrientations(rawValue: 1 << 3)
     static let landscape: CartoucheGameOrientations = [.landscapeLeft, .landscapeRight]
+}
+
+/// nxnative's Rotation (DM_ROTATION, its settings.tsv, iPhone and iPad):
+/// as the device turns, the default, sideways only or upright only. A value
+/// it does not know turns as the device does, as nxnative reads it
+/// (DmLayout.h, dm_rotation_mask).
+enum CartoucheGameRotation: String {
+    case automatic = "auto"
+    case landscape
+    case portrait
+
+    /// nxnative's variable, in the game's settings list and in its process.
+    static let variable = "DM_ROTATION"
+    /// Where nxnative saves the player's choice, in the game's preferences.
+    static let savedKey = "launcher." + variable
+
+    init(_ value: String?) {
+        self = value.flatMap { Self(rawValue: $0) } ?? .automatic
+    }
+
+    /// The Rotation a game starts with: the one an env file sets, which
+    /// nxnative keeps over the player's choice (FIXED, CartoucheGameSetting.
+    /// fixedValues), else the player's choice the game still offers
+    /// (CHOSEN, its preferences' "launcher.DM_ROTATION"), else the row's
+    /// default; nil for a game whose settings list (ROWS) has no Rotation,
+    /// built before nxnative had it, whose screen turns as before.
+    static func starting(rows: [CartoucheGameSetting], fixed: [String: String], chosen: String?) -> CartoucheGameRotation? {
+        guard let row = rows.first(where: { $0.env == variable }) else { return nil }
+        if let value = fixed[variable] { return CartoucheGameRotation(value) }
+        if let chosen, row.accepts(chosen) { return CartoucheGameRotation(chosen) }
+        return CartoucheGameRotation(row.def)
+    }
 }
 
 extension CartoucheGameOrientations {
@@ -104,10 +149,23 @@ extension CartoucheGameOrientations {
     /// held whatever the game allows. Not while the game's picture is on a TV
     /// (PICTUREONTV): nxnative leaves the iPhone its controls alone, laid out
     /// to be held sideways. On an iPad, as the game allows: every way for a
-    /// game that lays itself out upright.
-    func behindTheConsole(isPad: Bool, laysOutUpright: Bool, pictureOnTV: Bool) -> CartoucheGameOrientations {
-        guard !isPad, laysOutUpright, !pictureOnTV else { return self }
-        return union(.portrait)
+    /// game that lays itself out upright. Then as the game's ROTATION says:
+    /// Landscape sideways only, Portrait upright only, among those; a
+    /// Rotation that would leave none, Portrait while the game's picture is
+    /// on a TV, leaves them all.
+    func behindTheConsole(isPad: Bool, laysOutUpright: Bool, pictureOnTV: Bool,
+                          rotation: CartoucheGameRotation = .automatic) -> CartoucheGameOrientations {
+        var turns = self
+        if !isPad, laysOutUpright, !pictureOnTV {
+            turns.insert(.portrait)
+        }
+        let locked: CartoucheGameOrientations
+        switch rotation {
+        case .automatic: return turns
+        case .landscape: locked = turns.intersection(.landscape)
+        case .portrait: locked = turns.intersection([.portrait, .portraitUpsideDown])
+        }
+        return locked.isEmpty ? turns : locked
     }
 
     /// Whether the screen of a game that allows these orientations keeps the

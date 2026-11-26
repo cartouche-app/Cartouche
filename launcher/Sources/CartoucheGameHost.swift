@@ -75,15 +75,20 @@ final class CartoucheGameHost {
     /// What the journal said last of the game's picture on the TV, as the
     /// game's process sees its scene there.
     private var notedPictureOnTV: Bool?
+    /// Follows the game's Rotation in its process's readings, for a game
+    /// that has nxnative's Rotation (followRotation).
+    private var rotationWatch: Task<Void, Never>?
 
     private init() {}
 
     // MARK: Start
 
     /// Starts APP, from its bundle folder BUNDLE with its data folder
-    /// DATAFOLDER, on screen over the console. Returns once its process
-    /// runs, or throws, and then nothing of it is left.
-    func start(_ app: LCAppModel, bundle: String, dataFolder: String) async throws {
+    /// DATAFOLDER, on screen over the console, its screen turned as its
+    /// ROTATION says, nxnative's setting, nil for a game built before
+    /// nxnative had it (CartoucheGameRotation.starting). Returns once its
+    /// process runs, or throws, and then nothing of it is left.
+    func start(_ app: LCAppModel, bundle: String, dataFolder: String, rotation: CartoucheGameRotation? = nil) async throws {
         guard self.app == nil, let host = Self.hostScene() else { throw CartoucheGameHostError() }
         self.app = app
         quitting = false
@@ -93,6 +98,11 @@ final class CartoucheGameHost {
         let screen = CartoucheGameScreen(allowed: Self.orientations(of: app, isPad: isPad),
                                          laysOutUpright: Self.laysOutUpright(app), isPad: isPad) { [weak self] in
             self?.showConsole()
+        }
+        followsRotation = rotation != nil
+        if let rotation, rotation != .automatic {
+            screen.rotation = rotation
+            CartoucheReports.note(app.displayName + ": its Rotation, " + rotation.rawValue + ", turns its screen")
         }
         let window = UIWindow(windowScene: host)
         window.windowLevel = UIWindow.Level(rawValue: UIWindow.Level.normal.rawValue + 1)
@@ -178,6 +188,51 @@ final class CartoucheGameHost {
             try? await Task.sleep(for: .seconds(3))
             guard let self, self.app === app, let reading = CartoucheGameMemoryReading.last(pid: pid) else { return }
             CartoucheGameActions.shared.gameMeasured(app, reading: reading)
+        }
+        watchRotation(of: app, pid: pid)
+    }
+
+    // MARK: The game's Rotation
+
+    /// Whether the game has nxnative's Rotation, whose choice its process
+    /// says in its readings.
+    private var followsRotation = false
+
+    /// How often the screen looks at the game's Rotation in its process's
+    /// readings, which it writes every 2 seconds (CartoucheGuest.m): a
+    /// choice in nxnative's in-game menu turns the screen within 3 seconds.
+    static let rotationCheck: Duration = .seconds(1)
+
+    /// Follows the Rotation of APP, whose process is PID, while it runs: a
+    /// choice in nxnative's in-game menu turns the game's own view
+    /// controllers, in its process, but Cartouche turns the screen behind
+    /// the console (docs/decisions/173.md).
+    private func watchRotation(of app: LCAppModel, pid: Int) {
+        rotationWatch?.cancel()
+        guard followsRotation else { return }
+        rotationWatch = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: Self.rotationCheck)
+                guard let self, self.app === app else { return }
+                self.followRotation(in: CartoucheGameMemoryReading.last(pid: pid))
+            }
+        }
+    }
+
+    /// The game's Rotation, as its process says it in READING, turns the
+    /// screen, once it changed: at once while the game is on screen, as it
+    /// shows again otherwise (showGame). A reading that says none, the
+    /// game's process having no DM_ROTATION, changes nothing.
+    func followRotation(in reading: CartoucheGameMemoryReading?) {
+        guard followsRotation, let screen, let value = reading?.rotation else { return }
+        let rotation = CartoucheGameRotation(value)
+        guard rotation != screen.rotation else { return }
+        screen.rotation = rotation
+        if let app {
+            CartoucheReports.note(app.displayName + ": its Rotation is now " + rotation.rawValue)
+        }
+        if isInFront {
+            screen.rotate()
         }
     }
 
@@ -381,6 +436,9 @@ final class CartoucheGameHost {
     }
 
     private func tearDown() {
+        rotationWatch?.cancel()
+        rotationWatch = nil
+        followsRotation = false
         // The TV goes back to iOS, which mirrors the console on it again.
         closeGameOnTV()
         stopAskingForTheTV()
@@ -758,6 +816,9 @@ final class CartoucheGameScreen: UIViewController {
     /// The game's picture is on a TV, and the game's controls alone on the
     /// iPhone (CartoucheGameHost.pictureMoved).
     var pictureOnTV = false
+    /// nxnative's Rotation of the game, as it starts and as its process
+    /// says it then (CartoucheGameHost.followRotation).
+    var rotation = CartoucheGameRotation.automatic
     private let onHome: () -> Void
     private let spinner = UIActivityIndicatorView(style: .large)
     private let homeButton = UIButton(type: .custom)
@@ -834,7 +895,7 @@ final class CartoucheGameScreen: UIViewController {
 
     /// The ways the screen turns now.
     var turns: CartoucheGameOrientations {
-        allowed.behindTheConsole(isPad: isPad, laysOutUpright: laysOutUpright, pictureOnTV: pictureOnTV)
+        allowed.behindTheConsole(isPad: isPad, laysOutUpright: laysOutUpright, pictureOnTV: pictureOnTV, rotation: rotation)
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask { Self.mask(of: turns) }

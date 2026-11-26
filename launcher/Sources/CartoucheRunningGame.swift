@@ -109,6 +109,9 @@ struct CartoucheGameMemoryReading {
     /// Whether the game's picture is on its scene on a TV, as its process
     /// sees that scene; nil without one (CartoucheGuest.m).
     let pictureOnTV: Bool?
+    /// nxnative's Rotation of the game, as its process has it now
+    /// (DM_ROTATION: auto, landscape or portrait); nil when it has none.
+    let rotation: String?
 
     var footprintMiB: Int { Int(footprintBytes / 1_048_576) }
     var peakMiB: Int { Int(peakBytes / 1_048_576) }
@@ -162,6 +165,7 @@ struct CartoucheGameMemoryReading {
         }
         lastControllerPress = plist["controllerPress"] as? Date
         pictureOnTV = (plist["tvPicture"] as? NSNumber)?.boolValue
+        rotation = plist["rotation"] as? String
     }
 }
 

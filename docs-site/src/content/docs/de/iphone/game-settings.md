@@ -22,6 +22,7 @@ Die Einstellungen kommen in Abschnitten, **Spiel**, **Leistung**, **Steuerung** 
 - **Bildrate** und **Renderskalierung**, mit der Größe in Pixeln, die die Skalierung ergibt.
 - **Konsolenmodus:** **Handheld** oder **Im Dock**.
 - **Bild:** den Bildschirm **Einpassen** oder **Füllen**.
+- **Ausrichtung:** **Automatisch**, wie du das iPhone hältst, oder fest im **Querformat** oder **Hochformat**.
 - **Hochskalierung**, **Dynamische Auflösung**, **Bildratenanzeige** und **Leistungsanzeige**.
 - **Vibration des Spiels** und **Haptisches Feedback**.
 - **Sprache des Spiels** ([weiter unten](#sprache-des-spiels)).

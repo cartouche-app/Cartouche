@@ -293,10 +293,13 @@ class AppSceneViewController: UIViewController {
     /// AVAILABLE more before iOS's limit; whether the process has
     /// Increased Memory Limit, as its signature gives it, nil when it could
     /// not tell; CONTROLLERPRESS, the last press of a controller's button
-    /// that reached the game, if one has; and PICTUREONTV, whether the
-    /// game's picture is on its scene on a TV, if it has one there.
+    /// that reached the game, if one has; PICTUREONTV, whether the game's
+    /// picture is on its scene on a TV, if it has one there; and ROTATION,
+    /// nxnative's Rotation of the game, as its process has it, if it has
+    /// one.
     func writeMemory(footprintMiB: UInt64, availableMiB: UInt64, peakMiB: UInt64? = nil, started: Date = Date(),
-                     increasedMemoryLimit: Bool? = true, controllerPress: Date? = nil, pictureOnTV: Bool? = nil) {
+                     increasedMemoryLimit: Bool? = true, controllerPress: Date? = nil, pictureOnTV: Bool? = nil,
+                     rotation: String? = nil) {
         guard let file = CartoucheGameMemoryReading.file else { return }
         try? FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
         let footprint = footprintMiB << 20
@@ -321,6 +324,9 @@ class AppSceneViewController: UIViewController {
         }
         if let pictureOnTV {
             reading["tvPicture"] = NSNumber(value: pictureOnTV)
+        }
+        if let rotation {
+            reading["rotation"] = rotation
         }
         (reading as NSDictionary).write(to: file, atomically: true)
     }

@@ -22,6 +22,7 @@ Los ajustes vienen en secciones, **Juego**, **Rendimiento**, **Controles** y **P
 - **Fotogramas por segundo** y **Escala de renderizado**, con el tamaño en píxeles que da la escala.
 - **Modo de la consola:** **Portátil** o **En la base**.
 - **Imagen:** **Ajustar** o **Rellenar** la pantalla.
+- **Orientación:** **Automática**, como sostienes el iPhone, o fija en **Horizontal** o **Vertical**.
 - **Reescalado**, **Resolución dinámica**, **Contador de fotogramas** e **Indicadores de rendimiento**.
 - **Vibración del juego** y **Respuesta táctil**.
 - **Idioma del juego** ([más abajo](#idioma-del-juego)).
