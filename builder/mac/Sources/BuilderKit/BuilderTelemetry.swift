@@ -584,6 +584,13 @@ public final class BuilderTelemetry: ObservableObject {
             if let built = game.commit.flatMap(BuilderTelemetry.commit) ?? head { fields["nxnative"] = .text(built) }
             if game.fallback == true { fields["fallback"] = .flag(true) }
             if game.split == true { fields["split"] = .flag(true) }
+            // Its pipeline archive (decision 174): how many GPUs it is made
+            // for, and how many of them the paired iPhones added; never
+            // which.
+            if let gpus = game.gpus, !gpus.isEmpty {
+                fields["gpus"] = .count(gpus.count)
+                fields["gpusAdded"] = .count(min(max(game.gpusAdded ?? 0, 0), gpus.count))
+            }
             if game.state == "built" {
                 if let size = library?.game(game.titleID)?.ipa?.size, size > 0 {
                     fields["ipaMB"] = .number((Double(size) / 1_000_000).rounded())

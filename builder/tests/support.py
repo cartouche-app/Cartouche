@@ -192,6 +192,7 @@ ap.add_argument("--platform")
 ap.add_argument("--progress")
 ap.add_argument("-l", "--language")
 ap.add_argument("--keep-extracted", action=argparse.BooleanOptionalAction)
+ap.add_argument("--gpu")
 a = ap.parse_args()
 repo = Path(__file__).resolve().parents[1]
 
@@ -351,6 +352,23 @@ if os.environ.get("FAKE_SLEEP") and os.environ.get("FAKE_SLEEP_ONLY", title_id) 
     for _ in range(int(os.environ["FAKE_SLEEP"]) * 10):
         time.sleep(0.1)
 ev(ev="stage", k=2, n=2, name="pack", step="")
+# The pipeline archive, for the GPUs --gpu names (pso_offline.py): metal-tt
+# fails for those FAKE_METAL_TT names ("<title ID>:g20p,g21p"), and the app
+# then has none at all, as build_ipa.sh packs it.
+archives = []
+if a.gpu:
+    gpus = ["applegpu_" + g.removeprefix("applegpu_") for g in a.gpu.split(",")]
+    who, _, unknown = os.environ.get("FAKE_METAL_TT", "").partition(":")
+    failing = [g for g in gpus if who == title_id and g.removeprefix("applegpu_") in unknown.split(",")]
+    ev(ev="say", msg=f"pipeline archive: {a.gpu} (made on this Mac with metal-tt; --gpu none leaves it out)")
+    for g in sorted(gpus):
+        if g in failing:
+            ev(ev="say", msg=f"[RED] pso_offline: metal-tt failed for {g} (exit 1): applegpu-nt: error: unknown target {g}")
+            ev(ev="say", msg="[RED] pipeline archive: pso_offline.py failed (its output is above); the app is built without one and the device builds its pipeline bases on its first start (DM_PSO_GPUS=none skips this step)")
+            archives = []
+            break
+        archives.append(g)
+        ev(ev="say", msg=f"pso_offline: {g}: 650 MB in 240 s")
 # The commit the IPA says it was built from, as nxnative's packer reads it:
 # the checkout's at the end of the build, as at its start, unless something
 # moved the checkout while the game built.
@@ -366,6 +384,8 @@ with zipfile.ZipFile(out, "w") as archive:
         "CFBundleShortVersionString": "1.0.0", "CFBundleIdentifier": "org.nxnative." + title_id.lower(),
         "CFBundleDisplayName": name}))
     archive.writestr("Payload/Game.app/Game", b"binary " + commit.encode())
+    for g in archives:
+        archive.writestr(f"Payload/Game.app/pso/{g}.mtl4a", b"archive of " + g.encode())
 ev(ev="stage_end", k=2, n=2, name="pack", ok=True, summary="", elapsed=0.1)
 if a.keep_extracted is False:
     # Minutes after the game event in a real build: time for the builder to
@@ -416,7 +436,7 @@ def make_engine_remote(folder: Path, games: dict[str, str]) -> Path:
 # What makes the fake nxnative fail, sleep, wait for the test (FAKE_HOLD) or
 # end without an IPA (or a Mac app), for a game.
 FAKES = ("FAKE_FAIL", "FAKE_SLEEP", "FAKE_SLEEP_ONLY", "FAKE_HOLD", "FAKE_NO_IPA", "FAKE_NO_SPACE", "FAKE_DAMAGED", "FAKE_METAL", "FAKE_XCODE", "FAKE_CRASH",
-         "FAKE_APP_BUILD", "FAKE_BROKEN_ONLY", "FAKE_MAC_FAIL", "FAKE_MAC_NO_SPACE", "FAKE_MAC_SLEEP", "FAKE_MAC_NO_APP")
+         "FAKE_APP_BUILD", "FAKE_BROKEN_ONLY", "FAKE_MAC_FAIL", "FAKE_MAC_NO_SPACE", "FAKE_MAC_SLEEP", "FAKE_MAC_NO_APP", "FAKE_METAL_TT")
 
 
 class Home(unittest.TestCase):

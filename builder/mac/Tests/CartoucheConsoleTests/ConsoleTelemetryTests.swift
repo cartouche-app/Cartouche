@@ -24,6 +24,8 @@ private let sampleRun = """
     launcher: Mario Kart 8 Deluxe (0100152000022000), host /Applications/Mario Kart 8 Deluxe.app/Contents/MacOS/dmhost
     launcher: env DM_FPS_TARGET=60 (saved choice)
     [dm] build: commit 6c3aeb3d70a1, shader chain 844bf1a5ea8f, profile mk8
+    [dm] [nvn-mtl] pipeline archive bundled with the app: /Applications/Mario Kart 8 Deluxe.app/Contents/Resources/pso/applegpu_g14s.mtl4a, 586.2 MB, opened in 20.6 ms
+    [dm] [nvn-mtl] pipeline prebuild done: 4210 pairs, 0 bases built, 4210 already archived, 0 left to the draws, 0 failed, 0.2 s; 0 times a pair was put back while another capture had one of its shader functions (fn_claim)
     [dm] [nvn-mtl] pipeline prepare: 4210 lines (3000 shaders, 4000 render pipelines, 210 compute pipelines) in 6.20 s on 10 workers before the first frame, progress screen shown; bases 40 compiled, 4170 from the archive, 0 reused; 3 specializations
     [dm] [nvn] timing up to frame 300: frame time p50 16.67 / p95 17.80 / max 40.00 ms (300 frames); frame work p50 8.00 / p95 10.00 / max 20.00 ms (300 frames); GPU p50 6.50 / p95 9.00 / max 12.00 ms (300 frames);
     [dm] [nvn] pipelines up to frame 300: on the submit thread pipelines 40.0 ms, shader libraries 0.0 ms, predictions 0 / 0.0 ms
@@ -196,7 +198,7 @@ final class ConsoleTelemetryTests: XCTestCase {
                        "builder-reports.json should hold the console's session: \(report.body)")
         // Never a line of the log, a path, a name: the shader chain is the
         // Info.plist's, in 12 digits, as the commit.
-        for word in ["launcher", "Mario", "Applications", "dmhost", "cloud", "shader chain", "mk8", "844bf1a5ea8f0011",
+        for word in ["launcher", "Mario", "Applications", "dmhost", "cloud", "shader chain", "mk8", "844bf1a5ea8f0011", "applegpu", "g14s", "mtl4a",
                      root.path] {
             XCTAssertFalse(report.body.contains(word), word)
         }

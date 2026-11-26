@@ -253,6 +253,12 @@ enum CartoucheDevice {
 
     static let supportsBCTextureCompression: Bool = MTLCreateSystemDefaultDevice()?.supportsBCTextureCompression ?? false
 
+    /// The GPU and the iOS an iPhone tells its paired Mac, which a game's
+    /// pipeline archive is made for (decision 174): none for a Mac, whose
+    /// GPU and macOS no IPA's archive is for.
+    static let gpuArchitecture: String? = nil
+    static let iOSMajorVersion: Int? = nil
+
     /// Increased Memory Limit is iOS's: a Mac's app has its memory without it.
     static let hasIncreasedMemoryLimit = true
 }

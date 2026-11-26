@@ -10,7 +10,9 @@
 //  footprint, the power and the thermal state (dm/gfx/nvn/hle_nvn.c); a
 //  line for each frame clearly longer than the ones before it, with the
 //  pipelines and textures it waited for; the pipeline preparation before
-//  the first frame and memory readings (nvn_mtl.m); the iPhone's thermal
+//  the first frame, the pipeline archive the game was built with and the
+//  pipeline bases the device built itself, and memory readings
+//  (nvn_mtl.m); the iPhone's thermal
 //  state and Low Power Mode as they change, and the layout of the picture
 //  and the controls (front_ios.m); audio underruns (hle_audio.c); and the
 //  crash line of a game that crashed (crash.c). A game nxnative draws with
@@ -64,6 +66,17 @@ struct CartoucheGameMeasures: Codable, Equatable {
     struct Prepare: Codable, Equatable {
         var seconds: Double
         var lines: Int
+    }
+
+    /// The pipeline bases of the game's shader pairs the device built
+    /// itself, nxnative's prebuild ("Pipeline prebuild: the first start
+    /// waits a few minutes for it, once"): how long it took, the bases it
+    /// built and those it found in an archive, the one bundled with the
+    /// game or this device's own from an earlier start.
+    struct Prebuild: Codable, Equatable {
+        var seconds: Double
+        var built: Int
+        var archived: Int
     }
 
     struct CPU: Codable, Equatable {
@@ -147,6 +160,16 @@ struct CartoucheGameMeasures: Codable, Equatable {
     /// shader libraries, per minute.
     var shaderStallMsPerMinute: Double?
     var prepare: Prepare?
+    /// The pipeline archive nxnative made on the Mac for the game, by GPU
+    /// (pso/<GPU>.mtl4a, the build's --gpu), as the game found it when it
+    /// started: "opened"; "otherGPU", the game has none for this device's
+    /// GPU and builds the bases itself, at its first start
+    /// (CartoucheGameLogReader.version 6); "otherSystem", made for another
+    /// major version of the system, or an update changed the GPU compiler;
+    /// "unreadable", not an archive. Absent for a game built without one.
+    /// Never its path, nor the GPUs it has.
+    var pipelineArchive: String?
+    var prebuild: Prebuild?
     var cpu: CPU?
     var gpuBusyMsPerSecond: Double?
     var thermal: Thermal?
@@ -179,7 +202,10 @@ struct CartoucheGameLogReader {
     /// game nxnative draws with Vulkan from its [vk] frame lines: before
     /// it, such a session drew no frame, as Super Mario Galaxy's 15 did in
     /// November, which nxnative told us to read so (seedds/nxnative#2998).
-    static let version = 5
+    /// 6 reads the pipeline archive bundled with the game and the bases
+    /// the device built itself (pipelineArchive, prebuild): before it,
+    /// they were absent, whatever the game found (decision 174).
+    static let version = 6
     /// A frame this long is a pause, not a slow frame: the game left behind
     /// the console, Cartouche in the background, or a freeze. nxnative
     /// times each stretch of 300 frames by the clock (power_line,
@@ -243,6 +269,8 @@ struct CartoucheGameLogReader {
     private var longTextures = 0
     private var latestSeconds = 0.0
     private var prepare: CartoucheGameMeasures.Prepare?
+    private var pipelineArchive: String?
+    private var prebuild: CartoucheGameMeasures.Prebuild?
     private var gpuAllocatedPeak: Int?
     private var headroomLowest: Int?
     private var lastHeadroom: Int?
@@ -330,6 +358,10 @@ struct CartoucheGameLogReader {
             readMemory(line)
         } else if line.contains("pipeline prepare: ") {
             readPrepare(line)
+        } else if line.contains("pipeline archive bundled with the app: ") {
+            readPipelineArchive(line)
+        } else if line.contains("pipeline prebuild done: ") {
+            readPrebuild(line)
         } else if line.contains("present command buffer GPU time") {
             readPresent(line)
         } else if line.contains("audio #") {
@@ -527,6 +559,27 @@ struct CartoucheGameLogReader {
         prepare = CartoucheGameMeasures.Prepare(seconds: Self.rounded(seconds, 2), lines: lines)
     }
 
+    /// The game's start, opening the pipeline archive bundled with it
+    /// (pso_bundle_open): the first of its lines says it, for one start.
+    private mutating func readPipelineArchive(_ line: String) {
+        guard pipelineArchive == nil else { return }
+        if line.contains("pipeline archive bundled with the app: none for this GPU (") {
+            pipelineArchive = "otherGPU"
+        } else if line.contains("pipeline archive bundled with the app: this system cannot open ") {
+            pipelineArchive = "otherSystem"
+        } else if line.contains("[RED] pipeline archive bundled with the app: "), line.contains(" is not a pipeline archive") {
+            pipelineArchive = "unreadable"
+        } else if Self.groups(Self.archiveOpened, line) != nil {
+            pipelineArchive = "opened"
+        }
+    }
+
+    private mutating func readPrebuild(_ line: String) {
+        guard prebuild == nil, let groups = Self.groups(Self.prebuildDone, line),
+              let built = Int(groups[0]), let archived = Int(groups[1]), let seconds = Self.number(groups[2]) else { return }
+        prebuild = CartoucheGameMeasures.Prebuild(seconds: Self.rounded(seconds, 1), built: built, archived: archived)
+    }
+
     private mutating func readPresent(_ line: String) {
         guard let groups = Self.groups(Self.present, line), let p50 = Self.number(groups[1]) else { return }
         upscalerKind = groups[0] == "MetalFX" ? "metalfx" : "bilinear"
@@ -614,6 +667,8 @@ struct CartoucheGameLogReader {
             measures.shaderStallMsPerMinute = perMinute(stallMs)
         }
         measures.prepare = prepare
+        measures.pipelineArchive = pipelineArchive
+        measures.prebuild = prebuild
         let cpu = CartoucheGameMeasures.CPU(watts: Self.median(watts).map { Self.rounded($0, 2) },
                                             percent: Self.median(cpuPercent).map { Self.rounded($0, 0) },
                                             performanceCoresPercent: Self.median(performancePercent).map { Self.rounded($0, 0) })
@@ -802,6 +857,12 @@ struct CartoucheGameLogReader {
     private static let headroom = expression(#"headroom to the system memory limit ([0-9]+) MB"#)
     private static let prepareLine = expression(
         #"pipeline prepare: ([0-9]+) lines \([0-9]+ shaders, [0-9]+ render pipelines, [0-9]+ compute pipelines\) in ([0-9.]+) s on [0-9]+ workers before the first frame"#)
+    /// nvn_mtl.m's pso_bundle_open, once it opened the archive: its path,
+    /// its size and how long it took.
+    private static let archiveOpened = expression(
+        #"pipeline archive bundled with the app: .+, [0-9.]+ MB, opened in [0-9.]+ ms"#)
+    private static let prebuildDone = expression(
+        #"pipeline prebuild done: [0-9]+ pairs, ([0-9]+) bases built, ([0-9]+) already archived, [0-9]+ left to the draws, [0-9]+ failed, ([0-9.]+) s"#)
     private static let present = expression(
         #"present command buffer GPU time over [0-9]+ presents through (MetalFX|the bilinear pass): p50 ([0-9.]+) ms"#)
     private static let audio = expression(#"audio #[0-9]+ device callbacks [0-9]+: .*; in these ([0-9]+), ([0-9]+) underruns"#)

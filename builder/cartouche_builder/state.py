@@ -45,6 +45,9 @@ class Build:
     origin: str = "builder"  # "builder", or "ipa" (read from the IPA)
     dirty: bool = False
     engine: str = ""  # the nxnative it was made from, "<repository>#<branch>" (targets.key); "" before builds said it
+    # The GPUs its pipeline archive was made for ("g18p", pipelines.py):
+    # none for a game whose profile asks for none, or before builds said it.
+    gpus: list[str] = field(default_factory=list)
 
     @property
     def time(self) -> float:

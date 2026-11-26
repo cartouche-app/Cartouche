@@ -14,7 +14,8 @@ decisions 137 and 145).
 The settings say whom the games are for (config.build_for): the iPhones
 paired with this Mac, as Cartouche tells each its model and whether its GPU
 reads BC when it connects (bridge.json, BridgeDevices.swift), or a model the
-player chose. The games are built from the fork when one of them reads no
+player chose. Each also tells its GPU's architecture and its iOS, which a
+game's pipeline archive is made for (pipelines.py). The games are built from the fork when one of them reads no
 BC, from nxnative otherwise. A repository or branch the player chose under
 Advanced (config.engine_url, engine_branch) wins over both. The games of the
 iPhone are built again when the nxnative they were built from is no longer
@@ -27,6 +28,7 @@ import json
 import re
 from dataclasses import dataclass
 
+from . import pipelines
 from .config import ENGINE_BRANCH, ENGINE_URL, Config
 from .i18n import t
 from .paths import Paths
@@ -70,11 +72,15 @@ def reads_bc(model: str) -> bool:
 class Device:
     """A paired iPhone, as Cartouche told the Mac: its model, and whether
     its GPU reads BC (None from a Cartouche that said only its model, or
-    nothing: an older one)."""
+    nothing: an older one); its GPU's architecture as Metal names it
+    ("applegpu_g19p") and the major version of its iOS ("" and None from
+    an older Cartouche)."""
 
     name: str
     model: str = ""
     said: bool | None = None
+    gpu: str = ""
+    ios: int | None = None
 
     @property
     def reads_bc(self) -> bool | None:
@@ -97,10 +103,13 @@ def paired(paths: Paths) -> list[Device]:
         if not isinstance(device, dict):
             continue
         name, model, said = device.get("name"), device.get("model"), device.get("readsBC")
+        gpu, ios = device.get("gpu"), device.get("iOS")
         found.append(Device(
             name=name if isinstance(name, str) else "",
             model=model if isinstance(model, str) and is_model(model) else "",
             said=said if isinstance(said, bool) else None,
+            gpu=gpu if pipelines.is_architecture(gpu) else "",
+            ios=ios if isinstance(ios, int) and not isinstance(ios, bool) and 1 <= ios <= 999 else None,
         ))
     return found
 

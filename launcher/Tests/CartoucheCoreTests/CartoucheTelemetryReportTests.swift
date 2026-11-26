@@ -65,6 +65,8 @@ final class CartoucheTelemetryReportTests: XCTestCase {
         measures.stutters = .init(count: 108, perMinute: 3.1, shaders: 76, textures: 21, other: 11)
         measures.shaderStallMsPerMinute = 210
         measures.prepare = .init(seconds: 21.43, lines: 13_394)
+        measures.pipelineArchive = "otherGPU"
+        measures.prebuild = .init(seconds: 412.3, built: 15_700, archived: 0)
         measures.cpu = .init(watts: 4.1, percent: 230, performanceCoresPercent: 85)
         measures.gpuBusyMsPerSecond = 610
         measures.thermal = .init(nominal: 18, fair: 9, serious: 8.2, critical: 0, seriousAfterMinutes: 24)

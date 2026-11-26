@@ -48,6 +48,27 @@ enum CartoucheDevice {
         return text
     }
 
+    /// The major version of iOS, as a pipeline archive is made for one
+    /// (CartoucheBridgeDevice).
+    static var iOSMajorVersion: Int { ProcessInfo.processInfo.operatingSystemVersion.majorVersion }
+
+    /// The GPU's architecture as Metal names it (MTLDevice.architecture):
+    /// "applegpu_g18p" for the A19 Pro of an iPhone 17 Pro. nxnative's
+    /// pipeline archive is a file of that name (pso/<it>.mtl4a), and
+    /// Cartouche Builder makes one for this iPhone's GPU, which it tells
+    /// its paired Mac (decision 174). Nil before iOS 17, or when Metal names
+    /// it otherwise.
+    #if CARTOUCHE_HARNESS || CARTOUCHE_GALLERY
+    /// In the launcher's harness and gallery: an iPhone 17 Pro's.
+    static let gpuArchitecture: String? = "applegpu_g18p"
+    #else
+    static let gpuArchitecture: String? = {
+        guard #available(iOS 17.0, *), let device = MTLCreateSystemDefaultDevice() else { return nil }
+        let name = device.architecture.name
+        return CartoucheBridgeDevice.isGPUArchitecture(name) ? name : nil
+    }()
+    #endif
+
     /// Whether this iOS is at least `minimum`, such as "26.0".
     static func runsAtLeast(_ minimum: String) -> Bool {
         let parts = minimum.split(separator: ".").map { Int($0) ?? 0 }
