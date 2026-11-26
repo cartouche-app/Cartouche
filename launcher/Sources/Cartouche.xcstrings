@@ -13985,25 +13985,25 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pausiert: Der Controller wurde getrennt. Verbinde ihn erneut, um weiterzuspielen, oder tippe auf Fortsetzen."
+            "value" : "Pausiert: Der Controller wurde getrennt. Verbinde ihn erneut, um weiterzuspielen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Paused: the controller disconnected. Connect it again to play on, or press Resume."
+            "value" : "Paused: the controller disconnected. Connect it again to play on."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "En pausa: el mando se desconectó. Vuelve a conectarlo para seguir, o pulsa Reanudar."
+            "value" : "En pausa: el mando se desconectó. Vuelve a conectarlo para seguir."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "En pause : la manette s’est déconnectée. Reconnectez-la pour continuer, ou appuyez sur Reprendre."
+            "value" : "En pause : la manette s’est déconnectée. Reconnectez-la pour continuer."
           }
         }
       }

@@ -639,7 +639,7 @@ enum CartoucheText {
     static var statusPausedShort: String { s("status.paused.short", "Paused") }
     static var pausedDetail: String { s("running.paused", "Paused behind Cartouche, where you left it.") }
     static var pausedForController: String {
-        s("running.paused.controller", "Paused: the controller disconnected. Connect it again to play on, or press Resume.")
+        s("running.paused.controller", "Paused: the controller disconnected. Connect it again to play on.")
     }
     static var backToCartouche: String { s("running.back", "Back to Cartouche") }
     static var homeButtonHint: String { s("running.homeHint", "The controller’s Home button brings you back to Cartouche.") }
