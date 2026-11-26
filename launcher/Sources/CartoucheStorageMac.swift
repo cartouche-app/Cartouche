@@ -396,8 +396,6 @@ enum CartoucheMacStorage {
         let now = known.reached(usable(client.address), port: client.port, told: told)
         // This connection's own: the install that made it says so (links).
         let link = CartoucheMacLink.of(cable: cable, address: client.address, tailnet: now.tailnet)
-        // Without the fix: every sign-in says how the install's game comes.
-        await MainActor.run { links[server.id] = link }
         if now != known {
             await MainActor.run {
                 // As the player has it now, unless they removed it meanwhile.
