@@ -7,7 +7,7 @@ sidebar:
 
 ## Vos jeux, vos sauvegardes et vos comptes
 
-Cartouche n'envoie vos jeux et vos sauvegardes nulle part ailleurs que sur le stockage que vous avez mis en place vous-même, avec votre propre compte. Les mots de passe restent dans le trousseau de votre iPhone, et ne vont qu'à votre Mac associé, chiffrés. Votre compte Apple ne va qu'à Apple, pour signer Cartouche et vos jeux. Cartouche ne télécharge aucun jeu, sauf ceux que Cartouche Cloud a construits pour le compte auquel vous l'avez lié.
+Cartouche n'envoie vos jeux et vos sauvegardes nulle part ailleurs que sur le stockage que vous avez mis en place vous-même, avec votre propre compte. Les mots de passe restent dans le trousseau de votre iPhone, et ne vont qu'à votre Mac associé, chiffrés. Votre compte Apple ne va qu'à Apple, pour signer Cartouche et vos jeux. Pour renouveler Cartouche depuis votre Mac, Cartouche pour Mac envoie votre mot de passe à Apple seul, et ne garde que la session qu'Apple donne en retour, lisible par votre seul compte du Mac, jamais le mot de passe. Cartouche ne télécharge aucun jeu, sauf ceux que Cartouche Cloud a construits pour le compte auquel vous l'avez lié.
 
 ## Les mesures de jeu
 
