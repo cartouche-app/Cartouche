@@ -479,6 +479,41 @@ fn puts_the_pairing_file_in_cartouche_again() {
 }
 
 #[test]
+fn puts_a_pairing_the_iphone_knows_in_cartouche_once_the_iphone_was_erased() {
+    // Erase All Content and Settings, or the iPhone set up again: it keeps
+    // its UDID but forgets Cartouche and the computers it paired with. The
+    // pairing this computer kept for that UDID must not go in Cartouche
+    // again: SideStore's connection through LocalDevVPN would break as soon
+    // as it shows it there, and Cartouche would say the iPhone did not
+    // answer, whatever the player did.
+    let mut h = Harness::new();
+    h.publish_cartouche();
+    h.ready();
+    h.install().unwrap_or_else(|e| panic!("{e}\n{}", h.report()));
+    {
+        let mut iphone = h.iphone.state();
+        iphone.apps.clear();
+        iphone.profiles.clear();
+        iphone.rp_hosts.clear();
+    }
+
+    h.restart();
+    h.ready();
+    h.install().unwrap_or_else(|e| panic!("{e}\n{}", h.report()));
+    let app = h.iphone.app(BUNDLE_ID).expect("Cartouche");
+    let pairing = read_plist(&h.iphone.container_file(&app.bundle_id, PAIRING_FILE).expect("pairing file"));
+    let identifier = pairing["identifier"].as_string().expect("identifier").to_string();
+    let hosts: Vec<String> = h.iphone.state().rp_hosts.iter().map(|host| host.identifier.clone()).collect();
+    assert!(
+        hosts.contains(&identifier),
+        "the pairing put in Cartouche is one the iPhone forgot: {identifier}, not in {hosts:?}\n{}",
+        h.report()
+    );
+    assert_eq!(h.iphone.state().pair_setups, 2);
+    assert!(h.has_stored_pairing());
+}
+
+#[test]
 fn says_when_cartouche_is_not_there_for_its_pairing_file() {
     let h = Harness::new();
     h.select_device().expect("pairing");

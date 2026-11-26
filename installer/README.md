@@ -8,6 +8,8 @@ The app that puts Cartouche on an iPhone or an iPad from a Mac or a Windows PC, 
 
 Cartouche then opens on its setup with the pairing file and the certificate in place: the player only signs in to the built-in SideStore ([launcher/README.md](../launcher/README.md#setup)). Installing again over Cartouche keeps its App ID, its games and their saves, and updates it to the latest release.
 
+The installer keeps the remote pairing it made for each iPhone, under its UDID, and asks the iPhone over the cable whether it still knows it (pair-verify) each time the iPhone is picked, before the pairing goes in Cartouche. An iPhone erased or set up again keeps its UDID but forgets the computers it paired with: Cartouche's SideStore could no longer reach it through LocalDevVPN with the pairing kept, so the installer pairs again, under a new name, and the iPhone asks to trust this computer. If the iPhone does not answer that question, the installer keeps the pairing it has.
+
 The window also installs Cartouche from an IPA of Cartouche on the computer, and puts the pairing file in Cartouche again, after the iPhone was erased or its stored pairing deleted. Settings hold the language (English, French, Spanish or German), the anisette server, the account's certificates and App IDs, the logs, and the pairing stored for the selected iPhone.
 
 It installs nothing but Cartouche: an IPA whose bundle identifier is not Cartouche's is refused, and it never downloads anything but Cartouche's own releases.
