@@ -16,7 +16,7 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: 'Cartouche',
-			description: 'How to install Cartouche, build your games and play them on iPhone, iPad and Mac.',
+			description: 'How to install Cartouche, build the Switch games nxnative runs natively from your own copies, and play them on iPhone, iPad and Mac.',
 			logo: { src: './src/assets/cartouche.svg', alt: '' },
 			favicon: '/favicon.svg',
 			defaultLocale: 'root',
@@ -29,6 +29,15 @@ export default defineConfig({
 			social: [
 				{ icon: 'discord', label: 'Discord', href: 'https://discord.gg/wG3DZjdAeF' },
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/cartouche-app/Cartouche' },
+			],
+			// What a link to the documentation shows where it is shared, and
+			// what search engines read of it: the site's own picture, from
+			// cartouche.cloud (site/social.png), which the page never loads.
+			head: [
+				{ tag: 'meta', attrs: { property: 'og:image', content: 'https://cartouche.cloud/social.png' } },
+				{ tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
+				{ tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
+				{ tag: 'meta', attrs: { property: 'og:image:alt', content: 'Cartouche’s icon beside “Your games, on iPhone, iPad and Mac.”' } },
 			],
 			customCss: ['./src/styles/cartouche.css'],
 			lastUpdated: false,

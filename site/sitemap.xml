@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The site's pages, for search engines: the showcase page in each of its
+     four languages, each with the three others, and the download page. The
+     documentation, at docs.cartouche.cloud, has its own sitemap. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://cartouche.cloud/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cartouche.cloud/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://cartouche.cloud/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cartouche.cloud/es/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://cartouche.cloud/de/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://cartouche.cloud/"/>
+  </url>
+  <url>
+    <loc>https://cartouche.cloud/fr/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cartouche.cloud/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://cartouche.cloud/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cartouche.cloud/es/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://cartouche.cloud/de/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://cartouche.cloud/"/>
+  </url>
+  <url>
+    <loc>https://cartouche.cloud/es/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cartouche.cloud/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://cartouche.cloud/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cartouche.cloud/es/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://cartouche.cloud/de/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://cartouche.cloud/"/>
+  </url>
+  <url>
+    <loc>https://cartouche.cloud/de/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://cartouche.cloud/"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://cartouche.cloud/fr/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://cartouche.cloud/es/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://cartouche.cloud/de/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://cartouche.cloud/"/>
+  </url>
+  <url>
+    <loc>https://cartouche.cloud/download/</loc>
+  </url>
+</urlset>

@@ -32,11 +32,17 @@ from __future__ import annotations
 import colorsys
 import json
 import re
+import shutil
+import sys
+import tempfile
 import unittest
 from html.parser import HTMLParser
 from pathlib import Path
 
 SITE = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(SITE / "tools"))
+
+import languages  # noqa: E402
 PAGE = SITE / "index.html"
 DOWNLOAD_PAGE = SITE / "download" / "index.html"
 NOT_FOUND_PAGE = SITE / "404.html"
@@ -122,7 +128,10 @@ GAME_FILES = re.compile(
 # from tools/social.html.
 SITE_FILES = {".html", ".svg", ".md", ".py"}
 PICTURES = {"apple-touch-icon.png": (180, 180), "social.png": (1200, 630)}
-SITE_NAMES = {"CNAME", *PICTURES}
+# What search engines read first: robots.txt, which lets them read every
+# page and names the sitemap, and sitemap.xml, the site's pages.
+SEARCH_FILES = ("robots.txt", "sitemap.xml")
+SITE_NAMES = {"CNAME", *PICTURES, *SEARCH_FILES}
 
 # The site's address, at its domain.
 SITE_URL = "https://" + (SITE / "CNAME").read_text(encoding="utf-8").strip() + "/"
@@ -305,11 +314,34 @@ def app_colors(title_id: str) -> tuple[str, str]:
     return color(hue, 0.62, 0.90), color((hue + 0.07) % 1, 0.80, 0.40)
 
 
+# The page in each of its languages, each at its own address, which the
+# publication writes from index.html (tools/languages.py, decision 175):
+# English at the root, the others in their folders.
+def address_in(language: str) -> str:
+    return SITE_URL + ("" if language == "en" else language + "/")
+
+
+HREFLANG = {**{language: address_in(language) for language in LANGUAGES}, "x-default": SITE_URL}
+
+# What search engines read of the app (application/ld+json): the site's own
+# addresses, its documentation's and its repository's, nothing else.
+STRUCTURED_LINKS = [
+    re.compile(re.escape(SITE_URL) + r"(?:#[\w-]+|download/|social\.png)?"),
+    re.compile(re.escape(DOCS)),
+    re.compile(re.escape(REPOSITORY) + r"(?:/blob/main/LICENSE)?"),
+    re.compile(r"https://schema\.org"),
+]
+
+
+def structured_data(page: Page) -> list[dict]:
+    return [json.loads(text) for attrs, text in page.scripts if attrs.get("type") == "application/ld+json"]
+
+
 class SiteTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.text, cls.page = read_page()
-        cls.code = "\n".join(text for attrs, text in cls.page.scripts if attrs.get("type") != "application/json")
+        cls.code = "\n".join(text for attrs, text in cls.page.scripts if attrs.get("type") not in ("application/json", "application/ld+json"))
         data = [text for attrs, text in cls.page.scripts if attrs.get("id") == "games"]
         cls.games = json.loads(data[0]) if len(data) == 1 else []
         # Links the script writes into the screens: href="#…" in its markup
@@ -332,6 +364,9 @@ class SiteTests(unittest.TestCase):
                     self.assertEqual(href, IGDB_HOST)
                 elif attrs.get("rel") == "canonical":
                     self.assertEqual(href, SITE_URL)
+                elif attrs.get("rel") == "alternate":
+                    # The page in another language, at the site's domain.
+                    self.assertEqual(HREFLANG.get(attrs.get("hreflang")), href)
                 else:
                     self.assertNotRegex(href, r"^(?:[a-z][a-z0-9+.-]*:|//)", f"<link> loads {href!r}")
             self.assertNotIn(tag, ("iframe", "embed", "object", "form", "base", "video", "audio"), f"the page has an <{tag}>")
@@ -365,8 +400,9 @@ class SiteTests(unittest.TestCase):
         for href in self.links():
             if href.startswith("#"):
                 self.assertIn(href[1:], self.page.ids, f"{href} leads nowhere on the page")
-            elif href == "download/":
-                # The site's download page, beside it on Pages.
+            elif href == "/download/":
+                # The site's download page, beside it on Pages, from the
+                # site's root, as the page is published in folders too.
                 self.assertTrue(DOWNLOAD_PAGE.is_file())
             else:
                 self.assertTrue(any(p.fullmatch(href) for p in ALLOWED_LINKS), f"the page links to {href!r}")
@@ -711,6 +747,156 @@ class DownloadPageTests(unittest.TestCase):
             self.assertIn(sentence, self.text)
 
 
+class SearchEngines(unittest.TestCase):
+    """What a search engine reads of the site (decision 175): the page once in
+    each language, each at its own address with its title and description in
+    that language, naming the three others; what it says of the app; and
+    robots.txt and sitemap.xml, which list those pages. The words players
+    search for: Cartouche, Switch, nxnative, iPhone, iPad and Mac, Switch
+    named for what the games are, as the owner chose (2026-11-26)."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.text, cls.page = read_page()
+        cls.directory = tempfile.TemporaryDirectory()
+        root = Path(cls.directory.name)
+        shutil.copy(PAGE, root / "index.html")
+        languages.write(root)
+        cls.pages = {language: read_page(root / languages.folder(language) / "index.html") for language in LANGUAGES}
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        cls.directory.cleanup()
+
+    def said(self, tag: str, key: str, value: str) -> dict[str, str]:
+        """The words of the source's tag, in the four languages."""
+        for name, attrs in self.page.tags:
+            if name == tag and attrs.get(key) == value:
+                return {language: attrs["data-" + language] for language in LANGUAGES}
+        self.fail(f"no <{tag} {key}={value!r}>")
+
+    def test_the_title_and_the_description_name_what_players_search_for(self) -> None:
+        titles = next({language: attrs["data-" + language] for language in LANGUAGES} for tag, attrs in self.page.tags if tag == "title")
+        descriptions = self.said("meta", "name", "description")
+        for language in LANGUAGES:
+            for words in (titles[language], descriptions[language]):
+                for word in ("Cartouche", "Switch", "nxnative", "iPhone", "iPad", "Mac"):
+                    self.assertIn(word, words, f"{language}: {words!r}")
+            # A title a results page shows whole, a description it shows
+            # most of.
+            self.assertLessEqual(len(titles[language]), 64, titles[language])
+            self.assertLessEqual(len(descriptions[language]), 260, descriptions[language])
+        # The page's own title and description are the English ones, as a
+        # search engine reads the page before any script.
+        self.assertIn(f">{titles['en']}</title>", self.text)
+        self.assertIn(f'<meta name="description" content="{descriptions["en"]}"', self.text)
+
+    def test_each_language_at_its_own_address(self) -> None:
+        body = re.sub(r"<script\b.*?</script>", "", self.text[self.text.index("<body>"):], flags=re.S)
+        source = {language: len(re.findall(rf'<\w+\b[^>]*\slang="{language}"', body)) for language in LANGUAGES}
+        titles = next({language: attrs["data-" + language] for language in LANGUAGES} for tag, attrs in self.page.tags if tag == "title")
+        for language, (text, page) in self.pages.items():
+            with self.subTest(language=language):
+                self.assertIn(f'<html lang="{language}" data-lang="{language}" data-page-lang="{language}">', text)
+                check_shared(self, page, address_in(language))
+                links = [(attrs.get("hreflang"), attrs.get("href")) for tag, attrs in page.tags if tag == "link" and attrs.get("rel") == "alternate"]
+                self.assertEqual(dict(links), HREFLANG)
+                self.assertEqual(len(links), len(HREFLANG))
+                metas = {attrs.get("property", attrs.get("name")): attrs for tag, attrs in page.tags if tag == "meta"}
+                self.assertEqual(metas["og:locale"]["content"], languages.LOCALES[language])
+                self.assertEqual(sorted(attrs["content"] for tag, attrs in page.tags if tag == "meta" and attrs.get("property") == "og:locale:alternate"),
+                                 sorted(languages.LOCALES[other] for other in LANGUAGES if other != language))
+                # Its title, its description and what a shared link shows,
+                # in its language alone.
+                self.assertIn(f"<title>{titles[language]}</title>", text)
+                for key, value in (("name", "description"), ("property", "og:title"), ("property", "og:description")):
+                    self.assertEqual(metas[value]["content"], self.said("meta", key, value)[language])
+                    self.assertFalse(any(name.startswith("data-") for name in metas[value]), value)
+                # Every text of the page in its language, none in another,
+                # outside the screens the script draws.
+                body = re.sub(r"<script\b.*?</script>", "", text[text.index("<body>"):], flags=re.S)
+                found = re.findall(r'<\w+\b[^>]*\slang="(fr|en|es|de)"', body)
+                self.assertEqual(set(found), {language})
+                self.assertEqual(len(found), source[language])
+                # The page is the source's, script and styles alike.
+                self.assertEqual([t for a, t in page.scripts if a.get("type") != "application/ld+json"],
+                                 [t for a, t in self.page.scripts if a.get("type") != "application/ld+json"])
+                self.assertEqual(page.styles, self.page.styles)
+                self.assertEqual(page.ids, self.page.ids)
+
+    def test_each_page_says_its_language_to_the_script(self) -> None:
+        # The script shows the page's language, the English page sends a
+        # visitor who reads another on to theirs, and the buttons lead to
+        # the page in the language chosen.
+        code = "\n".join(text for attrs, text in self.page.scripts if not attrs.get("type"))
+        self.assertIn('page = root.getAttribute("data-page-lang")', code)
+        self.assertIn('if (page === "en" && lang !== "en") location.replace("/" + lang + "/" + location.search + location.hash);', code)
+        self.assertIn('if (lang !== page) location.href = "/" + (lang === "en" ? "" : lang + "/") + location.hash;', code)
+        # Its links to its icons and its download page lead to the same
+        # files from every folder.
+        for tag, attrs in self.page.tags:
+            for name in ("href", "src"):
+                value = attrs.get(name, "")
+                if value and not re.match(r"(?:[a-z][a-z0-9+.-]*:|#|/)", value):
+                    self.fail(f"<{tag} {name}={value!r}> depends on the page's folder")
+
+    def test_what_search_engines_read_of_the_app(self) -> None:
+        for language, (text, page) in {"source": (self.text, self.page), **self.pages}.items():
+            with self.subTest(language=language):
+                data = structured_data(page)
+                self.assertEqual(len(data), 1)
+                graph = {node["@type"]: node for node in data[0]["@graph"]}
+                self.assertEqual(data[0]["@context"], "https://schema.org")
+                self.assertEqual(graph["WebSite"]["name"], "Cartouche")
+                self.assertEqual(graph["WebSite"]["url"], SITE_URL)
+                app = graph["SoftwareApplication"]
+                self.assertEqual(app["name"], "Cartouche")
+                self.assertEqual(app["applicationCategory"], "GameApplication")
+                self.assertEqual(app["operatingSystem"], "iOS, iPadOS, macOS")
+                self.assertIs(app["isAccessibleForFree"], True)
+                self.assertEqual(sorted(app["inLanguage"]), sorted(LANGUAGES))
+                # Never a price, an offer or a rating: Cartouche is free, and
+                # Cartouche Cloud's price stays on its own site.
+                for key in ("offers", "price", "aggregateRating", "review"):
+                    self.assertNotIn(key, json.dumps(data))
+                self.assertIsNone(PRICE.search(json.dumps(data, ensure_ascii=False)))
+                metas = {attrs.get("name"): attrs.get("content") for tag, attrs in page.tags if tag == "meta"}
+                self.assertEqual(app["description"], metas["description"])
+                self.assertEqual(graph["WebSite"]["inLanguage"], "en" if language == "source" else language)
+                for url in re.findall(r"https?://[^\s\"]+", json.dumps(data)):
+                    self.assertTrue(any(p.fullmatch(url) for p in STRUCTURED_LINKS), url)
+
+    def test_robots_and_the_sitemap_list_the_pages(self) -> None:
+        robots = (SITE / "robots.txt").read_text(encoding="utf-8")
+        rules = [line for line in robots.splitlines() if line and not line.startswith("#")]
+        self.assertEqual(rules, ["User-agent: *", "Allow: /", f"Sitemap: {SITE_URL}sitemap.xml"])
+        from xml.etree import ElementTree
+        ns = {"s": "http://www.sitemaps.org/schemas/sitemap/0.9", "x": "http://www.w3.org/1999/xhtml"}
+        urls = ElementTree.parse(SITE / "sitemap.xml").getroot().findall("s:url", ns)
+        self.assertEqual([url.find("s:loc", ns).text for url in urls], [address_in(language) for language in languages.LANGUAGES] + [SITE_URL + "download/"])
+        for url in urls:
+            alternates = {link.get("hreflang"): link.get("href") for link in url.findall("x:link", ns)}
+            self.assertEqual(alternates, HREFLANG if url.find("s:loc", ns).text != SITE_URL + "download/" else {})
+        # The publication writes the four pages once the download links have
+        # their newest files, so that each page gives them.
+        workflow = job_text(SITE.parent / ".github" / "workflows" / "site.yml", "page")
+        self.assertIn("python3 site/tools/languages.py build/site\n", workflow)
+        self.assertLess(workflow.index("site/tools/downloads.py"), workflow.index("site/tools/languages.py"))
+
+    def test_the_page_says_what_cartouche_is(self) -> None:
+        # The first paragraph names the Switch games and nxnative, and the
+        # questions start with the one players ask first.
+        for sentence in (
+            "Cartouche installe, lance et garde les jeux Switch que <a",
+            "Cartouche installs, starts and keeps the Switch games <a",
+            "Cartouche instala, abre y guarda los juegos de Switch que <a",
+            "Cartouche installiert, startet und verwaltet die Switch-Spiele, die <a",
+        ):
+            self.assertIn(sentence, self.text)
+        faq = self.text[self.text.index('<div class="panel qa">'):]
+        self.assertTrue(faq.split("<summary>", 1)[1].startswith('<span lang="fr">Cartouche est-il un émulateur ?</span><span lang="en">Is Cartouche an emulator?</span>'))
+
+
 class NotFoundPageTests(unittest.TestCase):
     """404.html: what GitHub Pages serves for an address the site does not
     have, at any depth, so its links and icons start from the site's root.
@@ -768,9 +954,9 @@ class Publication(unittest.TestCase):
         workflow = (SITE.parent / ".github" / "workflows" / "site.yml").read_text(encoding="utf-8")
         copied = re.search(r"\n\s+cp ([^\n]*) build/site/\n", workflow)
         self.assertIsNotNone(copied, "site.yml copies the site's files to build/site/")
-        self.assertEqual(sorted(copied.group(1).split()), sorted("site/" + name for name in ["index.html", "404.html", "favicon.svg", "CNAME", *PICTURES]))
+        self.assertEqual(sorted(copied.group(1).split()), sorted("site/" + name for name in ["index.html", "404.html", "favicon.svg", "CNAME", *PICTURES, *SEARCH_FILES]))
         self.assertIn("cp site/download/index.html build/site/download/", workflow)
-        for name in ["index.html", "404.html", "favicon.svg", "CNAME", *PICTURES]:
+        for name in ["index.html", "404.html", "favicon.svg", "CNAME", *PICTURES, *SEARCH_FILES]:
             self.assertTrue((SITE / name).is_file(), name)
 
     def test_it_serves_the_source_for_the_players_sidestore(self) -> None:
