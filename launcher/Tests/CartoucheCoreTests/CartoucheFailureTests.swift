@@ -366,6 +366,36 @@ final class CartoucheFailureTests: XCTestCase {
         XCTAssertEqual(read.facts, [:])
     }
 
+    // MARK: This iPhone's RemotePairing port, looked for again (patch 0026)
+
+    func testSaysWhatLookingForThisIPhonesPortAgainFound() throws {
+        // A port another service of the iPhone holds, which broke the
+        // connection at once: the service was at another port, and the
+        // sign-in went on with it.
+        let moved = try XCTUnwrap(outcome(["ok": true, "stage": "finish", "portLookup": "moved"], action: .signIn))
+        XCTAssertEqual(moved.facts, ["portLookup": .text("moved")])
+        XCTAssertEqual(CartoucheFailure.sideStoreSuccess(outcome: moved, seconds: nil)["portLookup"], .text("moved"))
+
+        // The service at the port SideStore used: the connection broke for
+        // another reason.
+        let same = try XCTUnwrap(outcome([
+            "stage": "deviceCheck", "family": "operation", "kind": "invalidVPN", "codes": "SideStore.OperationError 10",
+            "reason": "dropped", "detail": "reset", "pairingKind": "rppairing", "ipsec": true, "portLookup": "same",
+        ]))
+        let failure = CartoucheFailure.sideStore(outcome: same, message: "Connection reset by peer", fraction: 0,
+                                                 seconds: 0, vpn: true, pairing: true)
+        XCTAssertEqual(failure.cause, .vpn)
+        XCTAssertEqual(failure.fields["portLookup"], .text("same"))
+        XCTAssertEqual(failure.fields["reason"], .text("dropped"))
+    }
+
+    func testKeepsNoPortNumberNorWordsForTheLookup() throws {
+        let read = try XCTUnwrap(outcome(["kind": "invalidVPN", "reason": "dropped", "portLookup": "49153"]))
+        XCTAssertEqual(read.facts, ["reason": .text("dropped")])
+        let words = try XCTUnwrap(outcome(["kind": "invalidVPN", "portLookup": "found at 10.7.0.1:49153"]))
+        XCTAssertEqual(words.facts, [:])
+    }
+
     // MARK: How a renewal ended
 
     func testARenewalEndsAsSideStoreLeftIt() throws {
