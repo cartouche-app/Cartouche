@@ -10,30 +10,56 @@
   },
   "results": [
     {
+      "device": "iPhone19,3",
+      "iOS": "27.2",
+      "date": "2026-11-25",
+      "engine": "nxnative 7cbeab70b609",
+      "status": "playable-with-issues",
+      "peakMemoryMiB": 3050,
+      "notes": [
+        "Measured by Cartouche on 3 iPhones, 8 sessions from 2026-11-14 to 2026-11-25: 58.3 fps for 60 (median), 58.3 fps in the slowest 5% of the time, 18.8 stutters a minute. 2 sessions ended badly: 2 did not start."
+      ],
+      "measured": {
+        "iPhones": 3,
+        "sessions": 8,
+        "from": "2026-11-14",
+        "to": "2026-11-25",
+        "fps": 58.3,
+        "slowestFps": 58.3,
+        "targetFps": 60,
+        "stuttersPerMinute": 18.8,
+        "endedBadlyPercent": 25,
+        "endedBadly": {
+          "didNotStart": 2
+        },
+        "nxnative": "7cbeab70b609"
+      }
+    },
+    {
       "device": "iPhone19,4",
       "iOS": "27.3",
-      "date": "2026-11-18",
-      "engine": "nxnative a3b5230f2c98 and 7 other builds",
+      "date": "2026-11-24",
+      "engine": "nxnative b989137a51d0 and 10 other builds",
       "status": "playable-with-issues",
       "peakMemoryMiB": 3910,
       "notes": [
-        "Measured by Cartouche on 5 iPhones, 54 sessions from 2026-11-12 to 2026-11-18: 30 fps for 30 (median), 29.8 fps in the slowest 5% of the time, 9.9 stutters a minute. 9 sessions ended badly: 9 crashes."
+        "Measured by Cartouche on 6 iPhones, 80 sessions from 2026-11-12 to 2026-11-24: 30 fps for 30 (median), 29.8 fps in the slowest 5% of the time, 11.7 stutters a minute. 9 sessions ended badly: 9 crashes."
       ],
       "measured": {
-        "iPhones": 5,
-        "sessions": 54,
+        "iPhones": 6,
+        "sessions": 80,
         "from": "2026-11-12",
-        "to": "2026-11-18",
+        "to": "2026-11-24",
         "fps": 30,
         "slowestFps": 29.8,
         "targetFps": 30,
-        "stuttersPerMinute": 9.9,
-        "endedBadlyPercent": 16.7,
+        "stuttersPerMinute": 11.7,
+        "endedBadlyPercent": 11.2,
         "endedBadly": {
           "crashes": 9
         },
-        "nxnative": "a3b5230f2c98",
-        "otherBuilds": 7
+        "nxnative": "b989137a51d0",
+        "otherBuilds": 10
       }
     }
   ]

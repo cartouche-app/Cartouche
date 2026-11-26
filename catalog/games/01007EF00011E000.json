@@ -10,26 +10,50 @@
   },
   "results": [
     {
-      "device": "iPhone19,4",
-      "iOS": "27.2",
-      "date": "2026-11-15",
-      "engine": "nxnative 0c078130f6db and 2 other builds",
+      "device": "iPhone18,3",
+      "iOS": "27.2.1",
+      "date": "2026-11-24",
+      "engine": "nxnative 131bd01328d9 and 1 other build",
       "status": "playable-with-issues",
-      "peakMemoryMiB": 3178,
+      "peakMemoryMiB": 3771,
       "notes": [
-        "Measured by Cartouche on 5 iPhones, 33 sessions from 2026-11-12 to 2026-11-15: 30 fps for 60 (median), 8.1 stutters a minute. None ended badly."
+        "Measured by Cartouche on 3 iPhones, 7 sessions from 2026-11-11 to 2026-11-24: 45 fps for 60 (median), 9.5 stutters a minute. None ended badly."
       ],
       "measured": {
-        "iPhones": 5,
-        "sessions": 33,
-        "from": "2026-11-12",
-        "to": "2026-11-15",
-        "fps": 30,
+        "iPhones": 3,
+        "sessions": 7,
+        "from": "2026-11-11",
+        "to": "2026-11-24",
+        "fps": 45,
         "targetFps": 60,
-        "stuttersPerMinute": 8.1,
+        "stuttersPerMinute": 9.5,
+        "endedBadlyPercent": 0,
+        "nxnative": "131bd01328d9",
+        "otherBuilds": 1
+      }
+    },
+    {
+      "device": "iPhone19,4",
+      "iOS": "27.2",
+      "date": "2026-11-24",
+      "engine": "nxnative 0c078130f6db and 4 other builds",
+      "status": "playable-with-issues",
+      "peakMemoryMiB": 3197,
+      "notes": [
+        "Measured by Cartouche on 6 iPhones, 38 sessions from 2026-11-12 to 2026-11-24: 30 fps for 60 (median), 30 fps in the slowest 5% of the time, 13.9 stutters a minute. None ended badly."
+      ],
+      "measured": {
+        "iPhones": 6,
+        "sessions": 38,
+        "from": "2026-11-12",
+        "to": "2026-11-24",
+        "fps": 30,
+        "slowestFps": 30,
+        "targetFps": 60,
+        "stuttersPerMinute": 13.9,
         "endedBadlyPercent": 0,
         "nxnative": "0c078130f6db",
-        "otherBuilds": 2
+        "otherBuilds": 4
       }
     }
   ]

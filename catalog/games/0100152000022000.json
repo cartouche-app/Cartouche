@@ -10,27 +10,49 @@
   },
   "results": [
     {
+      "device": "iPhone18,1",
+      "iOS": "27.2",
+      "date": "2026-11-24",
+      "engine": "nxnative 24e007bed7c2",
+      "status": "playable",
+      "peakMemoryMiB": 4453,
+      "notes": [
+        "Measured by Cartouche on 3 iPhones, 11 sessions from 2026-11-12 to 2026-11-24: 59.9 fps for 60 (median), 11.8 stutters a minute. None ended badly."
+      ],
+      "measured": {
+        "iPhones": 3,
+        "sessions": 11,
+        "from": "2026-11-12",
+        "to": "2026-11-24",
+        "fps": 59.9,
+        "targetFps": 60,
+        "stuttersPerMinute": 11.8,
+        "endedBadlyPercent": 0,
+        "nxnative": "24e007bed7c2"
+      }
+    },
+    {
       "device": "iPhone19,4",
       "iOS": "27.3",
-      "date": "2026-11-17",
-      "engine": "nxnative 0c078130f6db and 1 other build",
+      "date": "2026-11-22",
+      "engine": "nxnative a2b819fd787a and 3 other builds",
       "status": "playable",
       "peakMemoryMiB": 3582,
       "notes": [
-        "Measured by Cartouche on 4 iPhones, 11 sessions from 2026-11-12 to 2026-11-17: 59.9 fps for 60 (median), 56.1 fps in the slowest 5% of the time, 17.5 stutters a minute. None ended badly."
+        "Measured by Cartouche on 6 iPhones, 18 sessions from 2026-11-12 to 2026-11-22: 60 fps for 60 (median), 57.2 fps in the slowest 5% of the time, 19.1 stutters a minute. None ended badly."
       ],
       "measured": {
-        "iPhones": 4,
-        "sessions": 11,
+        "iPhones": 6,
+        "sessions": 18,
         "from": "2026-11-12",
-        "to": "2026-11-17",
-        "fps": 59.9,
-        "slowestFps": 56.1,
+        "to": "2026-11-22",
+        "fps": 60,
+        "slowestFps": 57.2,
         "targetFps": 60,
-        "stuttersPerMinute": 17.5,
+        "stuttersPerMinute": 19.1,
         "endedBadlyPercent": 0,
-        "nxnative": "0c078130f6db",
-        "otherBuilds": 1
+        "nxnative": "a2b819fd787a",
+        "otherBuilds": 3
       }
     }
   ]

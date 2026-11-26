@@ -12,19 +12,23 @@
     {
       "device": "iPhone18,2",
       "iOS": "27.2.1",
-      "date": "2026-11-18",
+      "date": "2026-11-25",
       "engine": "nxnative, its build not reported",
       "status": "playable-with-issues",
+      "peakMemoryMiB": 2826,
       "notes": [
-        "Measured by Cartouche on 3 iPhones, 11 sessions from 2026-11-12 to 2026-11-18. 3 sessions ended badly: 3 crashes."
+        "Measured by Cartouche on 4 iPhones, 19 sessions from 2026-11-12 to 2026-11-25: 38.8 fps for 60 (median), 19.9 fps in the slowest 5% of the time, 52.5 stutters a minute. 3 sessions ended badly: 3 crashes."
       ],
       "measured": {
-        "iPhones": 3,
-        "sessions": 11,
+        "iPhones": 4,
+        "sessions": 19,
         "from": "2026-11-12",
-        "to": "2026-11-18",
+        "to": "2026-11-25",
+        "fps": 38.8,
+        "slowestFps": 19.9,
         "targetFps": 60,
-        "endedBadlyPercent": 27.3,
+        "stuttersPerMinute": 52.5,
+        "endedBadlyPercent": 15.8,
         "endedBadly": {
           "crashes": 3
         }
@@ -32,29 +36,29 @@
     },
     {
       "device": "iPhone19,4",
-      "iOS": "27.2.1",
-      "date": "2026-11-17",
-      "engine": "nxnative 1794a35a1a24 and 3 other builds",
+      "iOS": "27.3",
+      "date": "2026-11-25",
+      "engine": "nxnative 1794a35a1a24 and 5 other builds",
       "status": "playable-with-issues",
       "peakMemoryMiB": 4730,
       "notes": [
-        "Measured by Cartouche on 8 iPhones, 31 sessions from 2026-11-11 to 2026-11-17: 56.5 fps for 60 (median), 32.6 fps in the slowest 5% of the time, 47 stutters a minute. 7 sessions ended badly: 7 crashes."
+        "Measured by Cartouche on 9 iPhones, 46 sessions from 2026-11-11 to 2026-11-25: 56.5 fps for 60 (median), 32.6 fps in the slowest 5% of the time, 47 stutters a minute. 12 sessions ended badly: 12 crashes."
       ],
       "measured": {
-        "iPhones": 8,
-        "sessions": 31,
+        "iPhones": 9,
+        "sessions": 46,
         "from": "2026-11-11",
-        "to": "2026-11-17",
+        "to": "2026-11-25",
         "fps": 56.5,
         "slowestFps": 32.6,
         "targetFps": 60,
         "stuttersPerMinute": 47,
-        "endedBadlyPercent": 22.6,
+        "endedBadlyPercent": 26.1,
         "endedBadly": {
-          "crashes": 7
+          "crashes": 12
         },
         "nxnative": "1794a35a1a24",
-        "otherBuilds": 3
+        "otherBuilds": 5
       }
     }
   ]
