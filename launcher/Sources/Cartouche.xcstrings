@@ -15893,6 +15893,64 @@
         }
       }
     },
+    "setting.microphone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofon"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Micrófono"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Micro"
+          }
+        }
+      }
+    },
+    "setting.microphoneGain" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mikrofonverstärkung"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone gain"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ganancia del micrófono"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gain du micro"
+          }
+        }
+      }
+    },
     "setting.note.dynamicResolution" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16038,6 +16096,35 @@
         }
       }
     },
+    "setting.note.microphone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lässt das Spiel dein Mikrofon hören. macOS fragt nach dem Zugriff, wenn du das Spiel damit startest."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lets the game hear your microphone. macOS asks for access when you launch with this enabled."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deja que el juego oiga tu micrófono. macOS pide acceso cuando inicias el juego con esto activado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laisse le jeu entendre votre micro. macOS en demande l’accès quand vous lancez le jeu avec ce réglage activé."
+          }
+        }
+      }
+    },
     "setting.note.picture" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16092,6 +16179,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Calcule environ un quart de pixels en plus : un peu plus lent, et un peu plus chaud."
+          }
+        }
+      }
+    },
+    "setting.note.pictureShapeTaller" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Höhere Formen berechnen mehr Pixel und können GPU-Zeit und Wärme erhöhen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taller shapes render more pixels and can increase GPU time and heat."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las formas más altas dibujan más píxeles y pueden aumentar el tiempo de GPU y el calor."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un format plus haut calcule plus de pixels : il demande plus de temps au GPU et peut faire chauffer l’appareil."
           }
         }
       }
@@ -16154,6 +16270,35 @@
         }
       }
     },
+    "setting.note.textureFiltering" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Schärfere Böden und Wände aus schrägem Blickwinkel. 16x kostet auf einem Mac wenig."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sharper ground and walls seen at an angle. 16x costs little on a Mac."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suelo y paredes más nítidos vistos en ángulo. 16x cuesta poco en un Mac."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Un sol et des murs plus nets vus de biais. 16x coûte peu sur un Mac."
+          }
+        }
+      }
+    },
     "setting.note.upscaling" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16179,6 +16324,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Demande plus de temps au GPU et peut faire chauffer l’iPhone."
+          }
+        }
+      }
+    },
+    "setting.option.automatic" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatisch"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automática"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatique"
           }
         }
       }
@@ -16328,6 +16502,35 @@
         }
       }
     },
+    "setting.option.gameDefault" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wie im Spiel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Game default"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El del juego"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Celui du jeu"
+          }
+        }
+      }
+    },
     "setting.option.gameOwn" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16353,6 +16556,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Celle du jeu"
+          }
+        }
+      }
+    },
+    "setting.option.landscape" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Querformat"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Landscape"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Horizontal"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paysage"
+          }
+        }
+      }
+    },
+    "setting.option.macBook" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirm des MacBook (16:10)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MacBook (16:10)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pantalla del MacBook (16:10)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Écran du MacBook (16:10)"
           }
         }
       }
@@ -16386,6 +16647,35 @@
         }
       }
     },
+    "setting.option.portrait" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hochformat"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Portrait"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vertical"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Portrait"
+          }
+        }
+      }
+    },
     "setting.option.standard" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16411,6 +16701,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Standard"
+          }
+        }
+      }
+    },
+    "setting.option.switchShape" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "16:9 (wie die Switch)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "16:9 (Switch)"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "16:9 (como la Switch)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "16:9 (comme la Switch)"
           }
         }
       }
@@ -16585,6 +16904,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Échelle de rendu"
+          }
+        }
+      }
+    },
+    "setting.rotation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ausrichtung"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rotation"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orientación"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orientation"
           }
         }
       }
@@ -16788,6 +17136,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Manettes Switch 2"
+          }
+        }
+      }
+    },
+    "setting.textureFiltering" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texturfilterung"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texture filtering"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtrado de texturas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filtrage des textures"
           }
         }
       }

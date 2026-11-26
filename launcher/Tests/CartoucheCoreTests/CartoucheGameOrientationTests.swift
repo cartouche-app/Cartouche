@@ -198,6 +198,78 @@ final class CartoucheGameOrientationTests: XCTestCase {
         XCTAssertEqual(iPhone.behindTheConsole(isPad: false, laysOutUpright: true, pictureOnTV: false), iPhone)
     }
 
+    // MARK: nxnative's Rotation
+
+    /// Up to 0.16.2, behind the console, the screen of a game whose
+    /// Rotation the player set to Landscape or Portrait, on Cartouche's page
+    /// of the game's settings or in nxnative's in-game menu, turned as if
+    /// it were Automatic: upright too on an iPhone, every way on an iPad.
+    func testTheGamesRotationLocksTheScreenBehindTheConsole() throws {
+        try writeNxnativeGame(builtSinceNovember4: true)
+        let onAnIPhone = CartoucheGameOrientations(bundle: bundle, isPad: false)
+        XCTAssertEqual(onAnIPhone.behindTheConsole(isPad: false, laysOutUpright: true, pictureOnTV: false, rotation: .automatic), iPhone)
+        XCTAssertEqual(onAnIPhone.behindTheConsole(isPad: false, laysOutUpright: true, pictureOnTV: false, rotation: .landscape), .landscape)
+        XCTAssertEqual(onAnIPhone.behindTheConsole(isPad: false, laysOutUpright: true, pictureOnTV: false, rotation: .portrait), upright,
+                       "never upside down on an iPhone")
+        let onAnIPad = CartoucheGameOrientations(bundle: bundle, isPad: true)
+        XCTAssertEqual(onAnIPad.behindTheConsole(isPad: true, laysOutUpright: true, pictureOnTV: false, rotation: .automatic), iPad)
+        XCTAssertEqual(onAnIPad.behindTheConsole(isPad: true, laysOutUpright: true, pictureOnTV: false, rotation: .landscape), .landscape)
+        XCTAssertEqual(onAnIPad.behindTheConsole(isPad: true, laysOutUpright: true, pictureOnTV: false, rotation: .portrait),
+                       [.portrait, .portraitUpsideDown])
+    }
+
+    /// A Rotation that leaves no way the game turns leaves them all: on an
+    /// iPhone, Portrait while the game's picture is on a TV, which leaves
+    /// nxnative's controls alone, laid out to be held sideways, or for a
+    /// game that does not lay itself out upright.
+    func testARotationThatLeavesNoWayLeavesThemAll() {
+        let sideways = CartoucheGameOrientations.landscape
+        XCTAssertEqual(sideways.behindTheConsole(isPad: false, laysOutUpright: true, pictureOnTV: true, rotation: .portrait), sideways)
+        XCTAssertEqual(sideways.behindTheConsole(isPad: false, laysOutUpright: false, pictureOnTV: false, rotation: .portrait), sideways)
+        XCTAssertEqual(sideways.behindTheConsole(isPad: false, laysOutUpright: true, pictureOnTV: true, rotation: .landscape), sideways)
+        XCTAssertEqual(upright.behindTheConsole(isPad: false, laysOutUpright: false, pictureOnTV: false, rotation: .landscape), upright)
+    }
+
+    /// Landscape on an iPad keeps the screen sideways and asks the player
+    /// to turn an iPad held upright, as for a game made to be played
+    /// sideways there.
+    func testLandscapeOnAnIPadAsksToTurnItSideways() {
+        let turns = iPad.behindTheConsole(isPad: true, laysOutUpright: true, pictureOnTV: false, rotation: .landscape)
+        XCTAssertTrue(turns.asksToTurnSideways(.portrait, isPad: true))
+        XCTAssertTrue(turns.keeps(.landscapeLeft, held: .portrait, isPad: true))
+    }
+
+    /// nxnative's values, as its settings.tsv lists them; one it does not
+    /// know turns as the device does.
+    func testTheRotationsValues() {
+        XCTAssertEqual(CartoucheGameRotation("auto"), .automatic)
+        XCTAssertEqual(CartoucheGameRotation("landscape"), .landscape)
+        XCTAssertEqual(CartoucheGameRotation("portrait"), .portrait)
+        XCTAssertEqual(CartoucheGameRotation(nil), .automatic)
+        XCTAssertEqual(CartoucheGameRotation(""), .automatic)
+        XCTAssertEqual(CartoucheGameRotation("upside-down"), .automatic)
+    }
+
+    /// The Rotation a game starts with: its env file's, which nxnative
+    /// keeps over the player's choice, then the player's, then the row's
+    /// default; none for a game built before nxnative had it.
+    func testTheRotationAGameStartsWith() throws {
+        let list = """
+        {"schema": 1, "settings": [
+          {"env": "DM_ROTATION", "kind": "choice", "section": "Game", "label": "Rotation", "note": "", "default": "auto",
+           "options": [["auto", "Automatic"], ["landscape", "Landscape"], ["portrait", "Portrait"]]}
+        ]}
+        """
+        let rows = try XCTUnwrap(CartoucheGameSetting.rows(in: Data(list.utf8)))
+        XCTAssertEqual(CartoucheGameRotation.starting(rows: rows, fixed: [:], chosen: nil), .automatic)
+        XCTAssertEqual(CartoucheGameRotation.starting(rows: rows, fixed: [:], chosen: "landscape"), .landscape)
+        XCTAssertEqual(CartoucheGameRotation.starting(rows: rows, fixed: ["DM_ROTATION": "portrait"], chosen: "landscape"), .portrait)
+        XCTAssertEqual(CartoucheGameRotation.starting(rows: rows, fixed: [:], chosen: "sideways"), .automatic,
+                       "a choice the game does not offer")
+        XCTAssertNil(CartoucheGameRotation.starting(rows: [], fixed: ["DM_ROTATION": "portrait"], chosen: "landscape"),
+                     "a game built before nxnative's Rotation")
+    }
+
     // MARK: On an iPad
 
     /// On an iPad, which turns the game's screen as it is held, whatever

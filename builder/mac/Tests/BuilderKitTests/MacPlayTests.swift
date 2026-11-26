@@ -252,6 +252,20 @@ final class MacPlayTests: XCTestCase {
         XCTAssertEqual(prepare(["de-DE"]), "ja")
     }
 
+    /// Up to Mac 0.8.2, a Mac in Polish or Thai started a game that has its
+    /// language in the game's own, as the iPhone did.
+    func testAGameStartsInPolishOrThaiOnAMacInIt() throws {
+        let game = try appWithLanguages(["en-US", "fr", "pl", "th"])
+        let documents = root.appendingPathComponent("0100152000022000", isDirectory: true)
+        var saved: [String: String] = [:]
+        let read: (String, String) -> String? = { key, domain in saved[domain + " " + key] }
+        let write: (String, String?, String) -> Void = { key, value, domain in saved[domain + " " + key] = value }
+        XCTAssertEqual(MacGameLanguage.prepare(game, documents: documents, preferred: ["pl-PL", "en-PL"], read: read, write: write), "pl")
+        XCTAssertEqual(saved["com.example.mk8 launcher.DM_LANG"], "pl")
+        XCTAssertEqual(MacGameLanguage.prepare(game, documents: documents, preferred: ["th-TH"], read: read, write: write), "th")
+        XCTAssertEqual(saved["com.example.mk8 launcher.DM_LANG"], "th")
+    }
+
     func testALanguageAnEnvFileOrTheStartSetsIsLeftAlone() throws {
         let game = try appWithLanguages(["en-US", "fr"])
         let documents = root.appendingPathComponent("0100152000022000", isDirectory: true)

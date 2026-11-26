@@ -22,6 +22,7 @@ The settings come in sections, **Game**, **Performance**, **Controls** and **Sav
 - **Frame rate** and **Render scale**, with the size in pixels the scale gives.
 - **Console mode:** **Handheld** or **Docked**.
 - **Picture:** **Fit** or **Fill** the screen.
+- **Rotation:** **Automatic**, as you hold the iPhone, or locked in **Landscape** or **Portrait**.
 - **Upscaling**, **Dynamic resolution**, **Frame-rate counter** and **Performance HUD**.
 - **Game rumble** and **Touch feedback**.
 - **Game language** ([below](#game-language)).

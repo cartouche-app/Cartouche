@@ -276,8 +276,9 @@ final class CartoucheTelemetry: ObservableObject {
 }
 
 /// A settings list as nxnative writes one into a game (dm/launcher.json,
-/// from its settings.tsv), for a game played in handheld mode, and a
-/// player's choice: a lower render scale.
+/// from its settings.tsv, at its commit 2f959ede of 27 November 2026), for
+/// a game played in handheld mode, and a player's choice: a lower render
+/// scale.
 enum GallerySettings {
     static let choices = GalleryChoices(["launcher.DM_RENDER_SCALE": "0.85"])
 
@@ -297,6 +298,8 @@ enum GallerySettings {
       {"env": "DM_PICTURE_FIT", "kind": "choice", "section": "Game", "label": "Picture",
        "note": "Fill crops the game's 16:9 picture to cover the screen. Health bars, subtitles or maps near the edges can be cut off. A full-screen picture without cropping needs a patch for each game.",
        "default": "fit", "options": [["fit", "Fit"], ["fill", "Fill"]]},
+      {"env": "DM_ROTATION", "kind": "choice", "section": "Game", "label": "Rotation", "note": "", "default": "auto",
+       "options": [["auto", "Automatic"], ["landscape", "Landscape"], ["portrait", "Portrait"]]},
       {"env": "DM_SHOW_FPS", "kind": "toggle", "section": "Game", "label": "Frame-rate counter", "note": "", "default": "0"},
       {"env": "DM_TOUCH_HAPTICS", "kind": "toggle", "section": "Controls", "label": "Touch feedback", "note": "", "default": "1"},
       {"env": "DM_RUMBLE", "kind": "toggle", "section": "Controls", "label": "Game rumble", "note": "", "default": "1", "level": "basic"},
@@ -304,6 +307,9 @@ enum GallerySettings {
        "min": 0, "max": 3, "step": 0.1, "needs": "DM_RUMBLE=1"},
       {"env": "DM_RUMBLE_MIN", "kind": "range", "section": "Controls", "label": "Rumble cutoff", "note": "", "default": "0",
        "min": 0, "max": 0.9, "step": 0.05},
+      {"env": "DM_SCREEN_ASPECT", "kind": "choice", "section": "Game", "label": "Picture shape",
+       "note": "Taller shapes render more pixels and can increase GPU time and heat.", "default": "auto",
+       "options": [["auto", "Match screen"], ["1.43", "iPhone Duo screen (1.43:1)"], ["0", "16:9 (Switch)"]]},
       {"env": "DM_PRESENT_SNAP", "kind": "toggle", "section": "Performance", "label": "Frame buffering",
        "note": "Up to one frame more display latency.", "default": "1"},
       {"env": "DM_PSO_MTL4", "kind": "toggle", "section": "Performance", "label": "Metal 4 pipelines",

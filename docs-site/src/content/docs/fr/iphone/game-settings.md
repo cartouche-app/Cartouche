@@ -22,6 +22,7 @@ Les réglages sont rangés en sections, **Jeu**, **Performances**, **Commandes**
 - **Fréquence d'images** et **Échelle de rendu**, avec la taille en pixels que donne l'échelle.
 - **Mode de la console :** **Portable** ou **TV**.
 - **Image :** **Ajuster** ou **Remplir** l'écran.
+- **Orientation :** **Automatique**, comme vous tenez l'iPhone, ou bloquée en **Paysage** ou en **Portrait**.
 - **Mise à l'échelle**, **Résolution dynamique**, **Compteur d'images par seconde** et **Indicateurs de performance**.
 - **Vibrations du jeu** et **Retour tactile**.
 - **Langue du jeu** ([plus bas](#la-langue-du-jeu)).

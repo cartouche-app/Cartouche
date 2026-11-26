@@ -246,14 +246,26 @@ class HarnessCase: XCTestCase {
         return try XCTUnwrap(app, "\(game.name) installed", file: file, line: line)
     }
 
-    /// Installs GAME and starts it behind the console, once its scene shows.
-    func started(_ game: HarnessGame, file: StaticString = #filePath,
+    /// Installs GAME and starts it behind the console, once its scene shows,
+    /// with the player's CHOICES in its preferences, as nxnative keeps them
+    /// ("launcher.<variable>"), made before Play.
+    func started(_ game: HarnessGame, choices: [String: String] = [:], file: StaticString = #filePath,
                  line: UInt = #line) async throws -> (LCAppModel, AppSceneViewController) {
         guard CartoucheGameKeeping.isAvailable else {
             XCTFail("LiveContainer's LiveProcess extension is not in the harness", file: file, line: line)
             throw Timeout(description: "no LiveProcess")
         }
         let app = try await installed(game, file: file, line: line)
+        if !choices.isEmpty {
+            // The game's settings page makes its data folder, as the
+            // player who opens it before a first start.
+            _ = actions.settings(for: app, tileKey: "")
+            let preferences = try XCTUnwrap(CartoucheGamePreferences(domain: game.bundleIdentifier, home: try gameHome(of: app)),
+                                            file: file, line: line)
+            for (key, value) in choices {
+                preferences.set(value, forKey: key)
+            }
+        }
         let shown = HarnessScenes.shownCount
         actions.play(app)
         try await waitUntil("the start is over", file: file, line: line) { actions.work == nil }
@@ -295,13 +307,17 @@ class HarnessCase: XCTestCase {
         return LCPath.dataPath.appendingPathComponent(name, isDirectory: true)
     }
 
+    /// The game's HOME, as LiveContainer sets it (LCBootstrap.m).
+    func gameHome(of app: LCAppModel) throws -> URL {
+        let folder = try dataFolder(of: app)
+        return URL(fileURLWithPath: NSHomeDirectory() + "/Documents/Data/Application/" + folder.lastPathComponent,
+                   isDirectory: true)
+    }
+
     /// What the game's preferences hold under KEY, as nxnative reads them.
     func preference(_ key: String, of app: LCAppModel) throws -> String? {
-        let folder = try dataFolder(of: app)
-        // The game's HOME, as LiveContainer sets it (LCBootstrap.m).
-        let home = URL(fileURLWithPath: NSHomeDirectory() + "/Documents/Data/Application/" + folder.lastPathComponent,
-                       isDirectory: true)
-        let preferences = try XCTUnwrap(CartoucheGamePreferences(domain: try XCTUnwrap(app.appInfo.bundleIdentifier()), home: home))
+        let preferences = try XCTUnwrap(CartoucheGamePreferences(domain: try XCTUnwrap(app.appInfo.bundleIdentifier()),
+                                                                 home: try gameHome(of: app)))
         return preferences.string(forKey: key)
     }
 
