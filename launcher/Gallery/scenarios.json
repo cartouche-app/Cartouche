@@ -3799,6 +3799,51 @@
       "controller": false
     },
     {
+      "name": "duo-sim-game-stopped-closed",
+      "comment": "What the console said, up to 0.16.2, of a game nxnative stopped for lack of room on the iPhone for its memory kept in files (exit 87): only that it closed on its own (work: stopped-closed). The before of decision 169. An alert, so on the iPhone Duo's own simulator.",
+      "device": "iPhone Duo",
+      "screen": "games",
+      "sheet": "01007EF00011E000",
+      "work": "stopped-closed",
+      "owned": [
+        "01007EF00011E000",
+        "0400C3F00006E000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false
+    },
+    {
+      "name": "duo-sim-game-stopped-space",
+      "comment": "A game nxnative stopped for lack of room on the iPhone for its memory kept in files (work: stopped-space, decision 169): what was free, and that iOS frees what it counts as available too late for the game. Made-up figures.",
+      "device": "iPhone Duo",
+      "screen": "games",
+      "sheet": "01007EF00011E000",
+      "work": "stopped-space",
+      "owned": [
+        "01007EF00011E000",
+        "0400C3F00006E000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false
+    },
+    {
+      "name": "duo-sim-game-start-space",
+      "comment": "Before a start, a game whose memory went in files at its last start, with less free than its pool and nxnative's 2 GB minimum (work: start-space, decision 169): it may close for lack of space, with Play anyway. Made-up figures.",
+      "device": "iPhone Duo",
+      "screen": "games",
+      "sheet": "01007EF00011E000",
+      "work": "start-space",
+      "owned": [
+        "01007EF00011E000",
+        "0400C3F00006E000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false
+    },
+    {
       "name": "duo-sim-installed-not-a-game",
       "comment": "What Cartouche says once it has installed an IPA that is not an nxnative game (work: installed-not-a-game), to a player who plays by touch: where it is, on the System page under Other installed apps (decision 154), where up to 0.15.1 it said Apps. An alert, so on the iPhone Duo's own simulator.",
       "device": "iPhone Duo",

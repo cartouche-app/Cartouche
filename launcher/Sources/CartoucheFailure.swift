@@ -522,7 +522,10 @@ struct CartoucheSideStoreOutcome: Equatable, Sendable {
     /// of the library behind it ("detail"), the kind of pairing file it
     /// loaded ("pairingKind") and whether an IPsec interface was up; for
     /// Apple's answer to a new machine (patch 0024), the step of its
-    /// provisioning that gave it ("reason": lookup, start or finish).
+    /// provisioning that gave it ("reason": lookup, start or finish); when
+    /// this iPhone's port broke the connection or did not answer (patch
+    /// 0026), what looking for its RemotePairing port again found
+    /// ("portLookup": moved, same or notFound).
     var facts: [String: CartoucheTelemetryValue]
 
     /// What SideStore wrote, each value of the type it must have or none.
@@ -534,6 +537,7 @@ struct CartoucheSideStoreOutcome: Equatable, Sendable {
             case reason, missing
             case resent
             case detail, pairingKind, ipsec
+            case portLookup
         }
 
         var version: Int
@@ -553,7 +557,7 @@ struct CartoucheSideStoreOutcome: Equatable, Sendable {
             for key in [Key.seconds, .percent, .apple, .http, .network, .certificates, .teams, .retryAfter, .resent] {
                 if let value = try? values.decodeIfPresent(Int.self, forKey: key) { ints[key] = value }
             }
-            for key in [Key.stage, .trail, .family, .kind, .codes, .host, .codeMode, .teamType, .service, .reason, .missing, .detail, .pairingKind] {
+            for key in [Key.stage, .trail, .family, .kind, .codes, .host, .codeMode, .teamType, .service, .reason, .missing, .detail, .pairingKind, .portLookup] {
                 if let value = try? values.decodeIfPresent(String.self, forKey: key) { texts[key] = value }
             }
             for key in [Key.codeAsked, .bundledCertificate, .activeCertificate, .ipsec] {
@@ -602,7 +606,7 @@ struct CartoucheSideStoreOutcome: Equatable, Sendable {
         for key in [Written.Key.certificates, .teams, .resent] {
             if let count = written.int(key, in: 0...10_000) { facts[key.rawValue] = .number(Double(count)) }
         }
-        for key in [Written.Key.codeMode, .teamType, .reason, .missing, .detail, .pairingKind] {
+        for key in [Written.Key.codeMode, .teamType, .reason, .missing, .detail, .pairingKind, .portLookup] {
             if let name = written.name(key) { facts[key.rawValue] = .text(name) }
         }
         self.facts = facts

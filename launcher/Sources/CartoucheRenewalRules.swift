@@ -258,16 +258,68 @@ enum CartoucheRenewalVia: String, Equatable {
     /// background: its Refresh All Apps action, as the automation of
     /// Shortcuts runs it every night.
     case outside
+    /// Cartouche for Mac renewed it, from the Mac the iPhone is plugged
+    /// into or on the Wi-Fi of, with a new profile, as its record in
+    /// Cartouche's Documents says (CartoucheMacRenewal, decision 165).
+    case mac
 
     /// What renewed the signature since Cartouche last read it: UPDATED, a
     /// new version; REINSTALLED, another installation of it, nil when
     /// Cartouche had not noted the one before; RENEWED HERE, Cartouche
-    /// renewed itself meanwhile. Nil when it cannot tell.
-    static func of(updated: Bool, reinstalled: Bool?, renewedHere: Bool) -> CartoucheRenewalVia? {
+    /// renewed itself meanwhile; BY MAC, the new date is the one Cartouche
+    /// for Mac wrote. Nil when it cannot tell.
+    static func of(updated: Bool, reinstalled: Bool?, renewedHere: Bool, byMac: Bool = false) -> CartoucheRenewalVia? {
         if updated { return .update }
         if reinstalled == true { return .reinstall }
         if renewedHere { return .cartouche }
+        if byMac { return .mac }
         return reinstalled == false ? .outside : nil
+    }
+}
+
+/// The renewal Cartouche for Mac made (decision 165): its helper,
+/// cartouche-signer, installs a new provisioning profile on the iPhone and
+/// leaves the app as it is, embedded.mobileprovision included, then writes
+/// the renewal's date in Cartouche's Documents with the fields of the
+/// built-in SideStore's record (builder/mac/signer/src/iphone.rs,
+/// RENEWAL_RECORD), for Cartouche to show until when it opens.
+struct CartoucheMacRenewal: Decodable, Equatable {
+    /// Its place in Cartouche's Documents (builder/tests/test_signer.py).
+    static let path = ".cartouche/renewal.json"
+
+    let bundleIdentifier: String
+    let expirationDate: Date
+    let refreshedDate: Date
+    /// Who renewed it: "mac".
+    let by: String
+
+    /// The record DATA holds, for the app BUNDLE IDENTIFIER as it is
+    /// installed: nil for another app's, another renewer's, or a record
+    /// that does not read.
+    static func read(_ data: Data, bundleIdentifier: String) -> CartoucheMacRenewal? {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        guard let record = try? decoder.decode(CartoucheMacRenewal.self, from: data),
+              record.bundleIdentifier == bundleIdentifier, record.by == "mac" else { return nil }
+        return record
+    }
+}
+
+/// Until when Cartouche opens: a renewal installs a new profile and leaves
+/// the embedded one as the last install wrote it, so the latest of the
+/// embedded profile's date, the built-in SideStore's record of its last
+/// renewal and Cartouche for Mac's counts.
+enum CartoucheExpiry: Equatable {
+    case embedded, sideStore, mac
+
+    /// The latest date, and whose it is; nil when none is known.
+    static func latest(embedded: Date?, sideStore: Date?, mac: Date?) -> (date: Date, source: CartoucheExpiry)? {
+        var latest: (date: Date, source: CartoucheExpiry)? = embedded.map { (date: $0, source: CartoucheExpiry.embedded) }
+        for (date, source) in [(sideStore, CartoucheExpiry.sideStore), (mac, CartoucheExpiry.mac)] {
+            guard let date else { continue }
+            if latest.map({ date > $0.date }) ?? true { latest = (date: date, source: source) }
+        }
+        return latest
     }
 }
 

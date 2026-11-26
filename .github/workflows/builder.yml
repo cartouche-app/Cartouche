@@ -59,6 +59,7 @@ on:
       - "launcher/Sources/CartoucheGameLookup.swift"
       - "launcher/Sources/CartoucheGamePlace.swift"
       - "launcher/Sources/CartoucheGameResultsView.swift"
+      - "launcher/Sources/CartoucheGameRoom.swift"
       - "launcher/Sources/CartoucheGameSettingList.swift"
       - "launcher/Sources/CartoucheGameSettings.swift"
       - "launcher/Sources/CartoucheGameSheetView.swift"

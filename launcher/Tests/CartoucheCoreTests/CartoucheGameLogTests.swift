@@ -334,6 +334,27 @@ final class CartoucheGameLogTests: XCTestCase {
         XCTAssertEqual(abort.end, CartoucheGameMeasures.End(kind: "crash", signal: 6, pc: "__pthread_kill+0x8", lr: "pthread_kill+0x10c"))
     }
 
+    /// nxnative stopped the game, whose memory it kept in files, once the
+    /// room on their disk ran out (exit code 87, CartoucheGameRoom): from
+    /// the sixth reading on, its end says so, close to the memory limit as
+    /// well, where it read as iOS's stop for the memory before. Its going
+    /// on while iOS counts enough is no stop.
+    func testAGameNxnativeStoppedForLackOfRoomSaysWhy() {
+        let stop = "[dm] [RED] [mem] guest file: 2.4 GB free on its disk (47.2 with what the system can purge), 1.8 GB of it still to be taken by dirty pages: under 2.0 GB left, stopping the game"
+        XCTAssertGreaterThanOrEqual(CartoucheGameLogReader.version, 6)
+        XCTAssertEqual(measures(stop).end, CartoucheGameMeasures.End(kind: "unknown", cause: "diskFull"))
+        let near = """
+        [dm] [nvn-mtl] memory up to frame 300: resident 5900 MB, GPU allocated 2100 MB, deferred-release queue 8; headroom to the system memory limit 243 MB
+        \(stop)
+        """
+        XCTAssertEqual(measures(near).end, CartoucheGameMeasures.End(kind: "unknown", cause: "diskFull"))
+        let behind = measures(stop).with(CartoucheGameProcess(limitMiB: 6144, peakMiB: 6000, lastAvailableMiB: 100, quit: false, screens: []),
+                                         nearLimit: true)
+        XCTAssertEqual(behind.end, CartoucheGameMeasures.End(kind: "unknown", cause: "diskFull"))
+        let goingOn = "[dm] [mem] guest file: 4.9 GB free on its disk, less 2.9 GB for dirty pages, is under 2.0 GB, but 47.2 GB with what the system can purge: going on (stopping under 1.0 GB of f_bavail)"
+        XCTAssertEqual(measures(goingOn).end, CartoucheGameMeasures.End(kind: "unknown"))
+    }
+
     /// Lines it does not know, and numbers it cannot read, leave the
     /// measures out rather than wrong.
     func testUnknownLinesAndBadNumbersAreLeftOut() {

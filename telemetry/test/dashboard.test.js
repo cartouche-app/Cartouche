@@ -1208,6 +1208,28 @@ test("a Mac's failures say the Builder's step and its cause, and the console's e
   assert.equal(model.errors.count, 0);
 });
 
+test("the renewals Cartouche for Mac made of Cartouche on the iPhones, apart from the iPhones' own", () => {
+  const mac = (n, name, fields) => eventOf(300 + n, name, fields, { device: "Mac16,12", ios: "26.6", cartouche: "0.9.0" });
+  const model = build([
+    eventOf(1, "signature.renewed", { daysLeft: 7, via: "mac" }),
+    mac(1, "builder.renewed", { asked: false, daysGiven: 6, daysLeft: 1, due: "now", link: "usb", recorded: true, refreshedSession: false, registeredAppId: false, seconds: 3.2 }),
+    mac(1, "builder.renewed", { asked: true, daysGiven: 6, daysLeft: 0, due: "now", link: "network", recorded: true, refreshedSession: true, registeredAppId: false, seconds: 5.0 }),
+    mac(2, "builder.renewFailed", { asked: false, code: -22406, daysLeft: 1, due: "now", kind: "session-ended", stage: "session" }),
+    mac(2, "builder.renewFailed", { asked: false, daysLeft: 0, due: "now", kind: "session-ended", stage: "session" }),
+    mac(3, "builder.renewFailed", { asked: true, daysLeft: -1, due: "expired", kind: "iphone-refused", stage: "iphone" }),
+    mac(2, "builder.appleSignIn", { result: "signed-in", seconds: 40 }),
+  ]);
+  const r = model.renewals;
+  assert.deepEqual(Object.fromEntries(r.via.map((row) => [row.key, row.count])), { mac: 1 });
+  assert.deepEqual([r.mac.done, r.mac.macs, r.mac.asked.yes, r.mac.cable.yes, r.mac.seconds], [2, 1, 1, 1, 4.1]);
+  assert.deepEqual([r.mac.failed, r.mac.failedMacs], [3, 2]);
+  assert.deepEqual(r.mac.kinds.map((row) => [row.key, row.count, row.installs]), [["session-ended", 2, 1], ["iphone-refused", 1, 1]]);
+  assert.deepEqual(r.mac.signIns.map((row) => [row.key, row.count]), [["signed-in", 1]]);
+  // Not the iPhones' own renewals, nor their failures.
+  assert.deepEqual([r.done, r.tried, r.failed], [0, 0, 0]);
+  assert.equal(model.totals.iphones, 1);
+});
+
 test("the sample data fills every section, and is the same each time", () => {
   const first = M.demo(28, CATALOG, NOW);
   assert.equal(JSON.stringify(first), JSON.stringify(M.demo(28, CATALOG, NOW)));
@@ -1227,6 +1249,8 @@ test("the sample data fills every section, and is the same each time", () => {
     crashes: model.endings.crashes.length,
     installs: model.installs.count,
     renewals: model.devices.renewals,
+    macRenewals: model.renewals.mac.done,
+    macRenewFailed: model.renewals.mac.failed,
     updates: model.devices.updates.length,
     built: model.builder.built.count,
     signedIn: model.errors.signIn.succeeded,
