@@ -10,7 +10,9 @@
 //  this iPhone to their account there (CartoucheCloudPage), which a link
 //  of the account's page opens too; the memory
 //  limit iOS sets for it, which the games that start in its place share;
-//  whether games run behind the console, and the memory they have there;
+//  whether games run behind the console, and the memory they have there,
+//  and whether they let the player's music or podcast play on
+//  (CartoucheOtherAudio.swift);
 //  when its signature expires, and how it is renewed; the device that the
 //  game sheets are compared with; Cartouche's updates; the game
 //  measurements it sends (CartoucheTelemetryView); the other apps installed
@@ -51,6 +53,8 @@ struct CartoucheSystemView: View {
     @ObservedObject private var account = CartoucheAccount.shared
     @ObservedObject private var updates = CartoucheUpdates.shared
     @ObservedObject private var keeping = CartoucheGameKeeping.shared
+    /// Whether games let other apps' sound play on.
+    @ObservedObject private var otherAudio = CartoucheOtherAudioSetting.shared
     @ObservedObject private var actions = CartoucheGameActions.shared
     @ObservedObject private var storedGames = CartoucheStoredGames.shared
     @EnvironmentObject private var sharedModel: SharedModel
@@ -433,11 +437,10 @@ struct CartoucheSystemView: View {
     // MARK: While a game runs
 
     /// Whether games run behind the console, and the memory iOS gave the
-    /// last one there.
-    @ViewBuilder
+    /// last one there; whether they let other apps' sound play on.
     private var playingSection: some View {
-        if CartoucheGameKeeping.isAvailable {
-            Section {
+        Section {
+            if CartoucheGameKeeping.isAvailable {
                 Toggle(CartoucheText.keepConsoleOpen, isOn: $keeping.keepsConsoleOpen)
                     .id(Self.playingRow)
                 if keeping.keepsConsoleOpen {
@@ -458,12 +461,20 @@ struct CartoucheSystemView: View {
                         .padding(.vertical, 2)
                     }
                 }
-            } header: {
-                Text(CartoucheText.playingTitle)
-            } footer: {
-                Text(CartoucheText.playingFooter)
             }
+            Toggle(CartoucheText.keepOtherAudio, isOn: $otherAudio.keeps)
+        } header: {
+            Text(CartoucheText.playingTitle)
+        } footer: {
+            Text(playingFooter)
         }
+    }
+
+    /// What the rows above say: the console behind the game, where games
+    /// run there, then other apps' sound.
+    private var playingFooter: String {
+        guard CartoucheGameKeeping.isAvailable else { return CartoucheText.otherAudioFooter }
+        return CartoucheText.playingFooter + "\n\n" + CartoucheText.otherAudioFooter
     }
 
     // MARK: Signature

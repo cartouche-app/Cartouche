@@ -49,6 +49,10 @@ targets:
       # controllers: the tests run it in the harness's own scene
       # (Tests/ControllerTests.swift).
       - path: ../LiveProcessSupport/CartoucheGuestControllers.m
+      # How the game's process mixes its sound with other apps', when the
+      # player keeps it: the tests run it with the Simulator's
+      # AVAudioSession (Tests/OtherAudioTests.swift).
+      - path: ../Guest/CartoucheOtherAudioSession.m
       - path: Build/LiveContainer/LiveContainerSwiftUI/Models/LCAppModel.swift
       - path: Build/LiveContainer/LiveContainerSwiftUI/Models/LCContainer.swift
       - path: Build/LiveContainer/LiveContainerSwiftUI/Utilities
