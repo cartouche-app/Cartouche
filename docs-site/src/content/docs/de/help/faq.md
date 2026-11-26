@@ -25,6 +25,10 @@ Nein. Cartouche stellt kein Spiel, keinen Schlüssel und keine Firmware bereit: 
 
 Mit [Cartouche für Mac](/de/mac/install/), auf einem Mac mit Apple silicon: Zeig ihm den Ordner deiner Kopien und deinen Spieleordner, und es installiert, was es braucht, erstellt jedes Spiel mit nxnative und erstellt es neu, wenn nxnative es verbessert. Ohne Mac erstellt [Cartouche Cloud](/de/cloud/) sie für dich.
 
+## Kann ich Updates und DLCs eines Spiels hinzufügen?
+
+Ja. Mit Cartouche für Mac legst du sie mit dem Spiel in deinen Dump-Ordner: Der Builder erstellt sie mit ihm und erstellt das Spiel neu, wenn du ein neues hinzufügst. Mit Cartouche Cloud sendest du sie mit dem Basisspiel. Siehe [Updates und DLCs](/de/mac/builder/#updates-und-dlcs) auf dem Mac und [bei Cartouche Cloud](/de/cloud/#updates-und-dlcs).
+
 ## Funktioniert Cartouche auf dem iPad und auf einem Mac?
 
 Auf einem iPad mit M1-Chip oder neuer ist es dieselbe App wie auf dem iPhone ([Auf dem iPad](/de/iphone/ipad/)). Auf einem Mac mit Apple silicon erstellt Cartouche für Mac jedes deiner Spiele auch für den Mac und spielt es dort, mit denselben Spielständen und denselben Verbindungen wie dein iPhone und iPad.

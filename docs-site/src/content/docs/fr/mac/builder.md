@@ -27,6 +27,14 @@ Ouvrez un jeu et choisissez **Construire**. La première construction d'un gros 
 - **Arrêter ce jeu** n'arrête que le jeu en construction ; **Tout arrêter** arrête le lot et vide sa file.
 - Une notification dit quand un lot se termine.
 
+## Mises à jour et DLC
+
+Mettez la mise à jour et les DLC d'un jeu avec lui dans votre dossier des dumps : le Builder les construit avec le jeu, la mise à jour la plus récente et chaque DLC.
+
+- **Les paquets** (`.nsp`, `.xci`, `.nsz`, `.xcz`) peuvent être à côté du jeu, dans un dossier à eux, comme `Zelda/Update/`, ou n'importe où ailleurs dans le dossier des dumps : le Builder reconnaît leur jeu à son identifiant de titre. Ils demandent `prod.keys`, choisi dans l'assistant de configuration ou dans les réglages.
+- **Un dump** les range dans `updates/<version>/` et `dlc/` ; le `.nup` d'un jeu Switch 2 contient ceux qui y ont été mis.
+- **Une nouvelle mise à jour ou un nouveau DLC** dans le dossier des dumps fait reconstruire le jeu. Cartouche sur l'iPhone propose ensuite la mise à jour sur la fiche du jeu, sauvegardes gardées.
+
 ## Quand nxnative améliore vos jeux
 
 nxnative reçoit des dizaines de changements par jour. Le Builder lit ce qui a changé depuis la construction de chaque jeu, et ne reconstruit un jeu que quand il y gagne quelque chose :

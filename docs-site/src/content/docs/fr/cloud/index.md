@@ -18,9 +18,13 @@ Cartouche Cloud ne fournit aucun jeu : il ne construit que la copie que vous lui
 3. Liez Cartouche à votre compte, une fois ([Lier votre iPhone](/fr/cloud/iphone/#lier-votre-iphone)).
 4. Cartouche suit la construction, étape par étape, et un e-mail vous dit quand elle est finie. **Installer** met alors le jeu sur votre iPhone, comme vos autres jeux.
 
+## Mises à jour et DLC
+
+Choisissez ensemble le jeu de base, ses mises à jour et ses DLC quand vous l'envoyez : la mise à jour la plus récente est appliquée, et les DLC sont construits avec. Une mise à jour ou un DLC part avec son jeu de base : pour en ajouter un à un jeu déjà construit, renvoyez le jeu avec, ce qui fait une nouvelle construction.
+
 ## Vos clés restent chez vous
 
-Votre navigateur ouvre le jeu sur votre ordinateur et n'envoie que le jeu : vos clés ne quittent jamais l'ordinateur. Jeu de base, mises à jour et DLC peuvent être choisis ensemble, et la mise à jour la plus récente est appliquée.
+Votre navigateur ouvre le jeu sur votre ordinateur et n'envoie que le jeu : vos clés ne quittent jamais l'ordinateur.
 
 ## Les crédits
 

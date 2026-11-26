@@ -42,7 +42,7 @@ Para una carpeta de tu NAS, escribe la dirección de su recurso compartido en el
 
 ## Tus dumps
 
-El Builder lee tus juegos como paquetes de tu consola (`.nsp`, `.xci`, `.nsz`, `.xcz`, con sus actualizaciones y DLC, que necesitan `prod.keys`, o `.nup`), como dumps, o como un `.zip` de un dump. Pueden estar sueltos en la carpeta, una carpeta por juego, o en carpetas dentro de carpetas. Un juego se reconoce por su ID de título; la biblioteca dice lo que dejó de lado, y por qué.
+El Builder lee tus juegos como paquetes de tu consola (`.nsp`, `.xci`, `.nsz`, `.xcz`, con sus actualizaciones y DLC, que necesitan `prod.keys`, o `.nup`), como dumps, o como un `.zip` de un dump. Pueden estar sueltos en la carpeta, una carpeta por juego, o en carpetas dentro de carpetas. Un juego se reconoce por su ID de título; la biblioteca dice lo que dejó de lado, y por qué. La actualización y los DLC de un juego se compilan con él: mira [Actualizaciones y DLC](/es/mac/builder/#actualizaciones-y-dlc).
 
 **Nombrar tus juegos**, en **Carpetas** de los ajustes, muestra con ejemplos lo que el Builder y Cartouche hacen con cada nombre.
 

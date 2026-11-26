@@ -11,29 +11,30 @@
   "results": [
     {
       "device": "iPhone19,4",
-      "iOS": "27.2.1",
-      "date": "2026-11-18",
-      "engine": "nxnative c1df4ddaaedc and 2 other builds",
+      "iOS": "27.3",
+      "date": "2026-11-25",
+      "engine": "nxnative c1df4ddaaedc and 7 other builds",
       "status": "playable-with-issues",
-      "peakMemoryMiB": 4656,
+      "peakMemoryMiB": 5566,
       "notes": [
-        "Measured by Cartouche on 5 iPhones, 10 sessions from 2026-11-15 to 2026-11-18: 59.4 fps for 60 (median), 55 fps in the slowest 5% of the time, 38.6 stutters a minute. 1 session ended badly: 1 crash."
+        "Measured by Cartouche on 6 iPhones, 69 sessions from 2026-11-15 to 2026-11-25: 59.4 fps for 60 (median), 55.1 fps in the slowest 5% of the time, 36.4 stutters a minute. 7 sessions ended badly: 4 crashes, 3 out of memory."
       ],
       "measured": {
-        "iPhones": 5,
-        "sessions": 10,
+        "iPhones": 6,
+        "sessions": 69,
         "from": "2026-11-15",
-        "to": "2026-11-18",
+        "to": "2026-11-25",
         "fps": 59.4,
-        "slowestFps": 55,
+        "slowestFps": 55.1,
         "targetFps": 60,
-        "stuttersPerMinute": 38.6,
-        "endedBadlyPercent": 10,
+        "stuttersPerMinute": 36.4,
+        "endedBadlyPercent": 10.1,
         "endedBadly": {
-          "crashes": 1
+          "crashes": 4,
+          "outOfMemory": 3
         },
         "nxnative": "c1df4ddaaedc",
-        "otherBuilds": 2
+        "otherBuilds": 7
       }
     }
   ]
