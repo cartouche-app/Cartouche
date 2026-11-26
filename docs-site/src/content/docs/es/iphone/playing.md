@@ -1,6 +1,6 @@
 ---
 title: Jugar
-description: Cómo funciona un juego detrás de la consola de Cartouche, el botón de inicio, jugar en una tele, en vertical o en horizontal, Siri, e instalar y actualizar tus juegos.
+description: Cómo funciona un juego detrás de la consola de Cartouche, el botón de inicio, jugar en una tele, tu música o tu pódcast, en vertical o en horizontal, Siri, e instalar y actualizar tus juegos.
 sidebar:
   order: 4
 ---
@@ -30,6 +30,10 @@ Si iOS cierra un juego cerca de su límite de memoria detrás de la consola, Car
 Conecta el iPhone a una tele con un cable, o duplica su pantalla con AirPlay en un Apple TV o una tele con AirPlay. La tele muestra solo el juego, como una consola en su base, y los controles se quedan en el iPhone. Con la tele, el juego se queda en horizontal.
 
 No hay versión para Apple TV: el iPhone ejecuta el juego y lo envía a la tele.
+
+## Tu música o tu pódcast
+
+Un juego detiene al iniciarse la música o el pódcast de otra app. Para que sigan sonando bajo el sonido del juego, activa **Sistema › Mientras funciona un juego › Mantener el sonido de otras apps**: se aplica desde el próximo inicio del juego. El juego sigue sonando en modo silencio, como antes; una llamada o Siri interrumpe ambos, como el sonido de cualquier app.
 
 ## En vertical o en horizontal
 

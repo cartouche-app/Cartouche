@@ -25,6 +25,7 @@ on:
       - "launcher/Sources/**"
       - "launcher/Harness/**"
       - "launcher/LiveProcessSupport/CartoucheGuestControllers.*"
+      - "launcher/Guest/CartoucheOtherAudioSession.*"
       - "app/LiveContainer"
       - "app/patches/livecontainer/**"
       - "catalog/devices.json"
@@ -37,6 +38,7 @@ on:
       - "launcher/Sources/**"
       - "launcher/Harness/**"
       - "launcher/LiveProcessSupport/CartoucheGuestControllers.*"
+      - "launcher/Guest/CartoucheOtherAudioSession.*"
       - "app/LiveContainer"
       - "app/patches/livecontainer/**"
       - "catalog/devices.json"
@@ -83,7 +85,8 @@ jobs:
         run: |
           # HEAD^1 is main, HEAD the pull request merged into it.
           CHANGES="$(git diff --binary HEAD^1 HEAD -- launcher/Sources launcher/Harness \
-            'launcher/LiveProcessSupport/CartoucheGuestControllers.*' app/LiveContainer \
+            'launcher/LiveProcessSupport/CartoucheGuestControllers.*' 'launcher/Guest/CartoucheOtherAudioSession.*' \
+            app/LiveContainer \
             app/patches/livecontainer catalog/devices.json catalog/nxnative.json catalog/covers.json catalog/games \
             .github/workflows/harness.yml | sha256sum | cut -c1-64)"
           echo "key=harness-xcode-$XCODE_VERSION-$CHANGES" >> "$GITHUB_OUTPUT"

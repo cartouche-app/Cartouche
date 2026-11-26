@@ -115,6 +115,8 @@ class HarnessCase: XCTestCase {
         actions.closeInstallQuestion()
         let keeping = CartoucheGameKeeping.shared
         keeping.keepsConsoleOpen = true
+        // Other apps' sound stops as a game starts, as nxnative sets it.
+        CartoucheOtherAudioSetting.shared.keeps = false
         for bundleId in keeping.inPlace {
             keeping.startBehind(bundleId: bundleId)
         }

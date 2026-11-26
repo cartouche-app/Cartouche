@@ -1,6 +1,6 @@
 ---
 title: Playing
-description: How a game runs behind Cartouche's console, the Home button, playing on a TV, upright or sideways, Siri, and installing and updating your games.
+description: How a game runs behind Cartouche's console, the Home button, playing on a TV, your music or podcast, upright or sideways, Siri, and installing and updating your games.
 sidebar:
   order: 4
 ---
@@ -30,6 +30,10 @@ If iOS closes a game near its memory limit behind the console, Cartouche says so
 Connect the iPhone to a TV with a cable, or mirror its screen with AirPlay to an Apple TV or a TV that has AirPlay. The TV shows the game alone, as a console on its dock, and the controls stay on the iPhone. With the TV, the game stays sideways.
 
 There is no Apple TV version: the iPhone runs the game and sends it to the TV.
+
+## Your music or podcast
+
+A game stops the music or podcast you play in another app as it starts. To keep it playing under the game's sound, turn on **System › While a game runs › Keep other apps' sound**: it takes effect from the game's next start. The game still plays on silent, as before; a call or Siri interrupts both, as it interrupts any app's sound.
 
 ## Upright or sideways
 
