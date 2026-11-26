@@ -636,10 +636,13 @@ final class CartoucheGameActions: ObservableObject {
             }
             let remote = try await CartoucheStorage.connect(current)
             if let mac = remote as? CartoucheMacRemote {
-                // How the connection reaches the Mac on its side, its Wi-Fi's
-                // band: the install's screen says it.
+                // How this connection reaches the Mac, the cable or not, and
+                // on the Mac's side, its Wi-Fi's band: the install's screen
+                // says it, as the game comes through this connection, whatever
+                // another sign-in to the Mac goes through meanwhile.
+                let link = mac.link
                 let network = await mac.network()
-                await MainActor.run { CartoucheMacStorage.note(network, of: server.id) }
+                await MainActor.run { CartoucheMacStorage.note(link, network: network, of: server.id) }
             }
             do {
                 let opened = try await remote.open(path)
@@ -1910,9 +1913,9 @@ final class CartoucheGameActions: ObservableObject {
         notice = CartoucheGameNotice(title: title, message: message, report: report, signAgain: signAgain)
     }
 
-    /// How Cartouche last reached SERVER, a Mac, for the measurements; for
-    /// a NAS whose game the Mac passes on now, relayLink; nil for another
-    /// server.
+    /// How the install's connection to SERVER, a Mac, reaches it, for the
+    /// screen and the measurements (CartoucheMacStorage.links); for a NAS
+    /// whose game the Mac passes on now, relayLink; nil for another server.
     private static func link(to server: CartoucheStorageServer) -> String? {
         guard server.kind == .mac else { return CartoucheMacStorage.relays[server.id] != nil ? relayLink : nil }
         return CartoucheMacStorage.links[server.id]?.rawValue

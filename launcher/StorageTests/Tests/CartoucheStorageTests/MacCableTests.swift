@@ -8,9 +8,11 @@
 //  Cartouche Builder does through usbmuxd once the iPhone is plugged in
 //  (the test's loopback stands in for usbmuxd). Pairing, signing in and
 //  files through the cable alone, with no network to find the Mac on; the
-//  cable first when both reach it; the network again once unplugged; and
-//  offline, saying to plug it in, when neither does. The Mac's side of the
-//  cable is in builder/mac's tests (BridgeCableTests).
+//  cable first when both reach it; the network again once unplugged; an
+//  install that says the way of its own connection, whatever another
+//  sign-in goes through; and offline, saying to plug it in, when neither
+//  does. The Mac's side of the cable is in builder/mac's tests
+//  (BridgeCableTests).
 //
 
 import Foundation
@@ -123,6 +125,70 @@ final class MacCableTests: XCTestCase {
         _ = try await again.list("")
         await again.disconnect()
         XCTAssertEqual(mac.connectionsThroughCable, 1, "nothing more through the cable once unplugged")
+    }
+
+    /// An install reads its game on the network, and the iPhone is plugged
+    /// in meanwhile: another sign-in to the Mac, such as the games folder's
+    /// reading, goes through the cable, while the install's own connection
+    /// stays on the network. The install's screen and game.installed's link
+    /// say the network, as CartoucheGameActions.openStored notes the way of
+    /// its own connection, not "cable" at the Wi-Fi's speed until Cartouche
+    /// is opened again (issue #323).
+    func testAnInstallOnTheNetworkSaysTheNetworkWhenAnotherSignInGoesThroughTheCable() async throws {
+        try await mac.start()
+        let paired = try await CartoucheMacStorage.pair(CartoucheStorageServer(kind: .mac, name: ""),
+                                                        at: .hostPort(host: "127.0.0.1", port: NWEndpoint.Port(rawValue: UInt16(mac.port))!),
+                                                        name: "Mac par câble", deviceName: "iPhone de test") { _ in }
+        let id = paired.server.id
+        let settings = settings()
+        let bytes = Data((0 ..< 200_000).map { UInt8($0 % 251) })
+        let upload = try await CartoucheMacStorage.connect(paired.server, secret: paired.secret, settings: settings)
+        let made = try await upload.create("Games/Jeu [0100000000010000].ipa", size: UInt64(bytes.count))
+        try await made.write(bytes)
+        try await made.finish()
+        await upload.disconnect()
+
+        // The install's connection, on the network: the cable is not in yet.
+        let signedIn = try await CartoucheMacStorage.connect(paired.server, secret: paired.secret, settings: settings)
+        let install = try XCTUnwrap(signedIn as? CartoucheMacRemote)
+        let link = install.link
+        XCTAssertEqual(link, .network)
+        // What CartoucheGameActions.openStored does with it.
+        let network = await install.network()
+        await MainActor.run { CartoucheMacStorage.note(link, network: network, of: id) }
+        let game = try await install.open("Games/Jeu [0100000000010000].ipa")
+        let first = try await game.read(at: 0, count: 100_000)
+        XCTAssertEqual(first, Data(bytes.prefix(100_000)))
+        let before = await MainActor.run { CartoucheMacStorage.links[id] }
+        XCTAssertEqual(before, .network)
+
+        // Plugged in meanwhile: another sign-in goes through the cable.
+        try await plugIn()
+        let other = try await CartoucheMacStorage.connect(paired.server, secret: paired.secret, settings: settings)
+        XCTAssertEqual((other as? CartoucheMacRemote)?.link, .cable)
+        _ = try await other.list("Games")
+        await other.disconnect()
+        XCTAssertEqual(mac.connectionsThroughCable, 1, "the other sign-in went through the cable")
+
+        // The game still comes on the network, and the install says so.
+        let rest = try await game.read(at: 100_000, count: 100_000)
+        XCTAssertEqual(rest, Data(bytes.suffix(100_000)))
+        XCTAssertEqual(mac.connectionsThroughCable, 1, "the install's connection did not move to the cable")
+        let shown = await MainActor.run { CartoucheMacStorage.links[id] }
+        XCTAssertEqual(shown, .network, "the install's way, not the other sign-in's")
+        XCTAssertEqual(CartoucheTransferWay.toMac(link: shown?.rawValue, network: network), .network(mac: network))
+        await install.disconnect()
+
+        // Opened again, now that the cable is in, the install's connection
+        // goes through it, and the install says so.
+        let reopened = try await CartoucheMacStorage.connect(paired.server, secret: paired.secret, settings: settings)
+        let again = try XCTUnwrap(reopened as? CartoucheMacRemote)
+        let cable = again.link
+        XCTAssertEqual(cable, .cable)
+        await MainActor.run { CartoucheMacStorage.note(cable, network: nil, of: id) }
+        let cabled = await MainActor.run { CartoucheMacStorage.links[id] }
+        XCTAssertEqual(cabled, .cable)
+        await again.disconnect()
     }
 
     func testUnpluggedAndOffTheNetworkTheMacIsOfflineAndSaysToPlugItIn() async throws {
