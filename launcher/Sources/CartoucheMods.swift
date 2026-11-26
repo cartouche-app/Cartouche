@@ -175,7 +175,8 @@ public enum CartoucheMods {
         var mods = listed
         for name in names.sorted(by: { $0.localizedStandardCompare($1) == .orderedAscending }) where !seen.contains(name) {
             let url = folder.appendingPathComponent(name, isDirectory: true)
-            let counted = count(romfs(of: url))
+            // Without a romfs folder, what the player copied still shows.
+            let counted = count(romfs(of: url) ?? url)
             let attributes = try? fileManager.attributesOfItem(atPath: url.path)
             mods.append(CartoucheMod(folder: name, name: name, isOn: false, files: counted.files, size: counted.size,
                                      added: attributes?[.creationDate] as? Date ?? Date()))

@@ -174,6 +174,7 @@ final class CartoucheModsTests: XCTestCase {
         XCTAssertEqual(mods.map(\.folder), ["Listed", "Bare", "By Hand", "Code"])
         XCTAssertEqual(mods.map(\.isOn), [true, false, false, false])
         XCTAssertEqual(mods.map(\.problem), [nil, .noRomfs, nil, .code])
+        XCTAssertEqual(mods[1].files, 1)
         XCTAssertEqual(mods[2].files, 1)
         XCTAssertThrowsError(try CartoucheMods.turn("Code", on: true, in: documents)) { error in
             XCTAssertEqual(error as? CartoucheModProblem, .code)

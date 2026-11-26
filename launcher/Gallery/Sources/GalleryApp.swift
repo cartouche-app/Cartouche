@@ -906,6 +906,9 @@ struct GalleryScenario {
             if screen == "sheet-saves" {
                 GallerySaves.bringingDown = true
                 CartoucheGameSheetView.galleryToSaves = { scrollTo in await GallerySaves.bringDown(scrollTo) }
+                // The sheet at its mods, just below its saves.
+                GallerySaves.toMods = work == "mods"
+                CartoucheGameSheetView.galleryToMods = work == "mods"
             }
             if work == "log", let titleId = sheet ?? ownedTitles.first {
                 GalleryLogs.prepare(titleId: titleId)
@@ -1622,6 +1625,16 @@ enum GallerySaves {
     /// screenshot waits for (GalleryScenario.settle).
     @MainActor static var bringingDown = false
 
+    /// Whether the sheet goes down to the row of its mods, below its saves,
+    /// instead of the row of the Switch saves.
+    @MainActor static var toMods = false
+
+    /// Where the row the sheet goes down to is in the window.
+    @MainActor
+    private static var rowFrame: CGRect? {
+        toMods ? CartoucheModsSection.galleryRowFrame : CartoucheSavesSection.galleryRowFrame
+    }
+
     /// Brings the sheet down to the row of the Switch saves, in the middle
     /// of the screen, with SCROLLTO, SwiftUI's scroll to it: a few times, as
     /// the gallery's first seconds can hold the main thread for a second or
@@ -1638,7 +1651,7 @@ enum GallerySaves {
         for _ in 0..<40 where !rowInTheMiddle {
             guard let list = collectionView(), list.bounds.height > 0 else { break }
             let shown = list.convert(list.bounds, to: nil)
-            let by = CartoucheSavesSection.galleryRowFrame.map { $0.midY - shown.midY } ?? list.bounds.height * 0.6
+            let by = rowFrame.map { $0.midY - shown.midY } ?? list.bounds.height * 0.6
             let end = max(0, list.contentSize.height + list.adjustedContentInset.bottom - list.bounds.height)
             let y = min(end, max(-list.adjustedContentInset.top, list.contentOffset.y + by))
             guard abs(y - list.contentOffset.y) >= 1 else { break }
@@ -1647,7 +1660,7 @@ enum GallerySaves {
         }
         try? await Task.sleep(for: .milliseconds(300))
         if !rowInTheMiddle {
-            NSLog("[Gallery] the sheet did not come down to the row of the Switch saves")
+            NSLog("[Gallery] the sheet did not come down to the row of the %@", toMods ? "mods" : "Switch saves")
         }
     }
 
@@ -1655,7 +1668,7 @@ enum GallerySaves {
     /// the list on the screen.
     @MainActor
     private static var rowInTheMiddle: Bool {
-        guard let row = CartoucheSavesSection.galleryRowFrame, let list = collectionView() else { return false }
+        guard let row = rowFrame, let list = collectionView() else { return false }
         let shown = list.convert(list.bounds, to: nil)
         return row.minY >= shown.minY + shown.height / 5 && row.maxY <= shown.maxY - shown.height / 5
     }

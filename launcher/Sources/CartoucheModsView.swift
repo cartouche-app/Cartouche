@@ -33,6 +33,12 @@ struct CartoucheModsSection: View {
     /// The row, which a list can scroll to.
     static let row = "mods"
 
+    #if CARTOUCHE_GALLERY
+    /// Where the row is in the window, once the list has laid it out, for
+    /// the gallery's screenshot of the sheet at its mods.
+    static var galleryRowFrame: CGRect?
+    #endif
+
     var body: some View {
         Section {
             NavigationLink {
@@ -45,6 +51,9 @@ struct CartoucheModsSection: View {
                 }
             }
             .id(Self.row)
+            #if CARTOUCHE_GALLERY
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { Self.galleryRowFrame = $0 }
+            #endif
         }
         .task(id: game.target?.documents) {
             guard let documents = game.target?.documents else {
@@ -215,9 +224,11 @@ struct CartoucheModsView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: mod.name)
                         .lineLimit(2)
-                    Text(CartoucheText.modsFiles(mod.files, CartoucheText.fileSize(mod.size)))
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    if mod.files > 0 {
+                        Text(CartoucheText.modsFiles(mod.files, CartoucheText.fileSize(mod.size)))
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 Spacer(minLength: 8)
                 Menu {

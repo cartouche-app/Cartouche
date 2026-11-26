@@ -172,6 +172,8 @@ struct CartoucheGameSheetView: View {
     /// How the gallery brings the sheet down to its saves, for their
     /// screenshot, given SwiftUI's scroll to the row of the Switch saves.
     static var galleryToSaves: ((@escaping @MainActor () -> Void) async -> Void)?
+    /// Whether it goes to the row of its mods, just below, instead.
+    static var galleryToMods = false
     #endif
 
     var body: some View {
@@ -319,7 +321,8 @@ struct CartoucheGameSheetView: View {
             // once the game's saves are on the sheet.
             .task(id: entry.app != nil) {
                 guard entry.app != nil, let toSaves = Self.galleryToSaves else { return }
-                await toSaves { reader.scrollTo(CartoucheSavesSection.switchRow, anchor: .center) }
+                let row = Self.galleryToMods ? CartoucheModsSection.row : CartoucheSavesSection.switchRow
+                await toSaves { reader.scrollTo(row, anchor: .center) }
             }
             #endif
         }
