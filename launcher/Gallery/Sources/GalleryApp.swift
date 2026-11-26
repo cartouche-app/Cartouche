@@ -288,6 +288,9 @@
 //                                        the player's, paused behind the
 //                                        console; on the TV (screen tv), the
 //                                        game paused behind the console
+//        paused-controller               the same, paused as it lost its
+//                                        last controller, which the console
+//                                        says (decision 166)
 //        provisioning-refused            a sign-in for which Apple refused a
 //                                        new machine for now, LocalDevVPN
 //                                        connected, with the wait under way
@@ -414,6 +417,9 @@
 //                                        saves
 //        cloud                           on the System page, the page
 //                                        scrolled down to Cartouche Cloud
+//        controller                      on the System page, the page
+//                                        scrolled down to While a game runs,
+//                                        on its pause for the controller
 //        device                          on the System page, the page
 //                                        scrolled down to this iPhone
 //        dumps                           on how to name the games (screen
@@ -772,7 +778,7 @@ struct GalleryScenario {
             }
             // Cartouche Cloud's answers, never asked of the platform.
             GalleryCloud.show(screen: screen, work: work)
-            if let notice = signingNotice() {
+            if let notice = signingNotice() ?? roomNotice() {
                 CartoucheGameActions.shared.notice = notice
             }
             if work == "update" {
@@ -985,6 +991,37 @@ struct GalleryScenario {
         return CartoucheGameNotice(title: title, message: message, report: report, signAgain: signAgain ? bundleId : nil)
     }
 
+    /// The notices of the sheet's game whose memory nxnative keeps in
+    /// files, as CartoucheGameActions shows them (gameDidEnd, checkRoom):
+    /// the game closed with no word of why, as up to 0.16.2 when nxnative
+    /// stopped it for lack of room; stopped for lack of room, with what was
+    /// free and what iOS counted as available; and, before a start, that
+    /// it may close, with Play anyway. The figures are made up: a 9 GB pool
+    /// and nxnative's 2 GB minimum.
+    @MainActor
+    private func roomNotice() -> CartoucheGameNotice? {
+        let titleId = sheet ?? ownedTitles.first ?? ""
+        let name = CartoucheCatalog.shared.game(titleId: titleId)?.name ?? "Game"
+        let free = CartoucheText.storageAmount(bytes: 2_400_000_000)
+        let available = CartoucheText.storageAmount(bytes: 47_200_000_000)
+        switch work ?? "" {
+        case "stopped-closed":
+            return CartoucheGameNotice(title: CartoucheText.gameStoppedTitle(name), message: CartoucheText.gameStopped)
+        case "stopped-space":
+            return CartoucheGameNotice(title: CartoucheText.gameStoppedTitle(name),
+                                       message: CartoucheText.gameStoppedSpace(free: free, available: available))
+        case "start-space":
+            let files = CartoucheGameRoom.Files(poolBytes: 9 << 30, minimumBytes: CartoucheGameRoom.defaultMinimumBytes)
+            return CartoucheGameNotice(title: CartoucheText.startSpaceTitle(name),
+                                       message: CartoucheText.startSpace(needed: CartoucheText.storageAmount(bytes: files.neededBytes),
+                                                                         free: CartoucheText.storageAmount(bytes: 7_500_000_000),
+                                                                         available: available),
+                                       playAnyway: "org.nxnative." + titleId.lowercased())
+        default:
+            return nil
+        }
+    }
+
     /// The player's games as IPAs in FOLDER, as Cartouche Builder leaves
     /// them there: built last night.
     @MainActor
@@ -1071,12 +1108,13 @@ struct GalleryScenario {
     private var updatedTitle: String? { work == "newer-build" || work == "offline" ? sheet ?? ownedTitles.first : nil }
 
     /// The sheet's game, or the first of the player's, paused behind the
-    /// console (work: paused).
+    /// console (work: paused), or as it lost its last controller (work:
+    /// paused-controller).
     @MainActor
     func pause(among apps: [LCAppModel]) {
-        guard work == "paused", let titleId = sheet ?? ownedTitles.first,
+        guard work == "paused" || work == "paused-controller", let titleId = sheet ?? ownedTitles.first,
               let app = apps.first(where: { $0.appInfo.relativeBundlePath == titleId + ".app" }) else { return }
-        CartoucheGameActions.shared.showRunningForGallery(app)
+        CartoucheGameActions.shared.showRunningForGallery(app, forController: work == "paused-controller")
     }
 
     /// The iPhone's translations of what testers wrote on the sheet of the

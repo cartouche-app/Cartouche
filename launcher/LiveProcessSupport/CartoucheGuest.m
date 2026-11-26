@@ -64,6 +64,17 @@
 //    notification CartoucheGameHome.<data folder>, which Cartouche listens
 //    to while the game runs.
 //
+//  - Whether the game has controllers: as one connects, and as the game's
+//    scene activates with one, this process posts the Darwin notification
+//    CartoucheGameControllers.<data folder>; as the last one goes,
+//    CartoucheGameNoControllers.<data folder>. A game that loses its last
+//    controller on screen pauses behind the console
+//    (CartoucheControllerPause in CartoucheGamepad.swift,
+//    docs/decisions/166.md): the game's controllers are those its process
+//    has, whose word Cartouche takes over its own. Never none as the scene
+//    activates: GameController may not have found the controllers of a
+//    process that has just started.
+//
 
 #import <Foundation/Foundation.h>
 #import <GameController/GameController.h>
@@ -81,6 +92,8 @@ static dispatch_queue_t measureQueue;
 static dispatch_source_t measureTimer;
 static NSString *memoryFile;
 static NSString *homeNotification;
+static NSString *controllersNotification;
+static NSString *noControllersNotification;
 static NSMutableDictionary *reading;
 static NSMutableArray *sizes;
 static CGSize lastSize;
@@ -276,6 +289,20 @@ static void CartoucheGuestWatchHomeButton(GCController *controller) {
     };
 }
 
+/// Says to Cartouche whether the game has controllers now, GONE, one that
+/// has just disconnected, left out; with SOMEONLY, only if it has.
+static void CartoucheGuestSayControllers(GCController *gone, BOOL someOnly) {
+    NSUInteger count = 0;
+    for (GCController *controller in GCController.controllers) {
+        if (controller != gone) count++;
+    }
+    if (count == 0 && someOnly) return;
+    NSString *name = count > 0 ? controllersNotification : noControllersNotification;
+    if (!name) return;
+    CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
+                                         (__bridge CFStringRef)name, NULL, NULL, true);
+}
+
 void CartoucheGuestStart(NSDictionary *appInfo) {
     NSString *container = appInfo[@"selectedContainer"];
     NSString *bundle = appInfo[@"selected"];
@@ -306,7 +333,11 @@ void CartoucheGuestStart(NSDictionary *appInfo) {
     [NSNotificationCenter.defaultCenter addObserverForName:UISceneDidActivateNotification object:nil
                                                      queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
         UIWindowScene *scene = gameScene;
-        if (scene && note.object == scene) CartoucheGuestTakeControllers(scene);
+        if (scene && note.object == scene) {
+            CartoucheGuestTakeControllers(scene);
+            // On screen again: what Cartouche knew of them may be old.
+            CartoucheGuestSayControllers(nil, YES);
+        }
     }];
     [NSNotificationCenter.defaultCenter addObserverForName:UISceneWillDeactivateNotification object:nil
                                                      queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
@@ -315,6 +346,8 @@ void CartoucheGuestStart(NSDictionary *appInfo) {
     }];
 
     homeNotification = [@"CartoucheGameHome." stringByAppendingString:container];
+    controllersNotification = [@"CartoucheGameControllers." stringByAppendingString:container];
+    noControllersNotification = [@"CartoucheGameNoControllers." stringByAppendingString:container];
     for (GCController *controller in GCController.controllers) {
         CartoucheGuestWatchHomeButton(controller);
         CartoucheGuestWatchPresses(controller);
@@ -325,6 +358,11 @@ void CartoucheGuestStart(NSDictionary *appInfo) {
             CartoucheGuestWatchHomeButton(note.object);
             CartoucheGuestWatchPresses(note.object);
         }
+        CartoucheGuestSayControllers(nil, YES);
+    }];
+    [NSNotificationCenter.defaultCenter addObserverForName:GCControllerDidDisconnectNotification object:nil
+                                                     queue:NSOperationQueue.mainQueue usingBlock:^(NSNotification *note) {
+        CartoucheGuestSayControllers([note.object isKindOfClass:GCController.class] ? note.object : nil, NO);
     }];
 
     NSURL *folder = [group URLByAppendingPathComponent:@"Cartouche" isDirectory:YES];
@@ -342,7 +380,7 @@ void CartoucheGuestStart(NSDictionary *appInfo) {
 
     measureQueue = dispatch_queue_create("Cartouche.GameMemory", DISPATCH_QUEUE_SERIAL);
     dispatch_async(measureQueue, ^{
-        CartoucheGuestRecord(CGSizeZero, nil, nil);
+        CartoucheGuestRecord(CGSizeZero, nil, nil, nil);
     });
     measureTimer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, measureQueue);
     dispatch_source_set_timer(measureTimer, dispatch_time(DISPATCH_TIME_NOW, 2 * NSEC_PER_SEC), 2 * NSEC_PER_SEC, NSEC_PER_SEC / 2);

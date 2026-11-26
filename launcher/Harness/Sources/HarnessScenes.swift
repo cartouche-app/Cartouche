@@ -273,6 +273,15 @@ class AppSceneViewController: UIViewController {
                                              nil, nil, true)
     }
 
+    /// The game's process says whether it has controllers (SOME), as it
+    /// posts it as one connects or goes, and as its scene activates
+    /// (CartoucheGuest.m).
+    func sayControllers(_ some: Bool) {
+        let name = (some ? "CartoucheGameControllers." : "CartoucheGameNoControllers.") + (dataUUID ?? "")
+        CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(), CFNotificationName(name as CFString),
+                                             nil, nil, true)
+    }
+
     /// Cartouche's own scene changed, as when the player comes back to it,
     /// or leaves it for another app (FOREGROUND false): LiveContainer hands
     /// the change on, for the game's scene to take.

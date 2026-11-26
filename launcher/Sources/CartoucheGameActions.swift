@@ -204,6 +204,12 @@ final class CartoucheGameActions: ObservableObject {
     private var pendingStart: (app: LCAppModel, showingSettings: Bool)?
     /// The running game opened on nxnative's settings screen.
     private var runningShowsSettings = false
+    /// The games Cartouche warned may close for lack of space, since it
+    /// opened, by bundle identifier, with whether they were to open on
+    /// nxnative's settings screen: the next start of one goes ahead, from
+    /// the notice or the console, a controller's A included
+    /// (checkRoom, playAnyway).
+    private var roomWarned: [String: Bool] = [:]
 
     /// Whether a file another app opened Cartouche with is an app to
     /// install: Cartouche installs it itself instead of the Apps tab
@@ -1343,6 +1349,11 @@ final class CartoucheGameActions: ObservableObject {
                 self?.work?.fraction = fraction
             }
         Task {
+            if isGame, await checkRoom(of: app, showingSettings: showingSettings) {
+                signing = nil
+                work = nil
+                return
+            }
             let delegate = app.delegate
             do {
                 // Starting the game closes Cartouche: the syncs of saves
@@ -1423,6 +1434,53 @@ final class CartoucheGameActions: ObservableObject {
             app.appInfo.cartoucheSigningFailure = "asked"
         }
         play(app)
+    }
+
+    /// Before the game starts: true when Cartouche warns instead that it
+    /// may close for lack of space. nxnative keeps the memory of a game
+    /// that does not fit under the memory limit in files, which take up to
+    /// its pool on the disk as it plays, and stops it once the room left
+    /// there falls under its minimum, whatever iOS counts as available,
+    /// since iOS frees what it could purge only once it runs short itself
+    /// (CartoucheGameRoom, docs/decisions/169.md). Its log of the last
+    /// start says whether it did and how large the pool is; it is checked
+    /// against what is free now, once a game since Cartouche opened, so
+    /// that the player may play all the same.
+    private func checkRoom(of app: LCAppModel, showingSettings: Bool) async -> Bool {
+        guard let bundleId = app.appInfo.bundleIdentifier(), roomWarned[bundleId] == nil,
+              let container = Self.dataFolder(of: app) else { return false }
+        let log = container.containerURL.appendingPathComponent("Documents/log.txt")
+        guard let short = await Self.roomShort(ofLog: log) else { return false }
+        roomWarned[bundleId] = showingSettings
+        let needed = CartoucheText.storageAmount(bytes: short.files.neededBytes)
+        let free = CartoucheText.storageAmount(bytes: short.free)
+        let available = CartoucheGameRoom.countsPurgeable(free: short.free, available: short.available)
+            ? short.available.map(CartoucheText.storageAmount(bytes:)) : nil
+        CartoucheReports.note(app.displayName + ": may close for lack of space, needing up to "
+                              + needed + " for its memory in files, with " + free + " free")
+        notice = CartoucheGameNotice(title: CartoucheText.startSpaceTitle(app.displayName),
+                                     message: CartoucheText.startSpace(needed: needed, free: free, available: available),
+                                     playAnyway: bundleId)
+        return true
+    }
+
+    /// The room the log at URL says the game's memory may take, when what
+    /// is free now, without what iOS could purge, is short of it; with what
+    /// iOS counts as available, off the main thread: it takes iOS a moment.
+    nonisolated private static func roomShort(ofLog url: URL)
+        async -> (files: CartoucheGameRoom.Files, free: Int64, available: Int64?)? {
+        guard let files = CartoucheGameRoom.files(ofLog: url),
+              let free = CartoucheFreeSpace.available(at: LCPath.docPath),
+              CartoucheGameRoom.isShort(free, for: files) else { return nil }
+        return (files, free, CartoucheFreeSpace.forImportantUsage(at: LCPath.docPath))
+    }
+
+    /// The player read that the game may close for lack of space, and
+    /// starts it all the same.
+    func playAnyway(_ bundleId: String) {
+        notice = nil
+        guard let app = DataManager.shared.model.apps.first(where: { $0.appInfo.bundleIdentifier() == bundleId }) else { return }
+        play(app, showingSettings: roomWarned[bundleId] ?? false)
     }
 
     /// Starts the game behind the console, if it plays there: true once it
@@ -1530,10 +1588,13 @@ final class CartoucheGameActions: ObservableObject {
         quitRunningGame()
     }
 
-    /// The running game went behind the console, paused, or came back.
-    func gameDidMove(inFront: Bool) {
+    /// The running game went behind the console, paused, or came back;
+    /// FORCONTROLLER, it paused as it lost its last controller, which the
+    /// console says (CartoucheControllerPause).
+    func gameDidMove(inFront: Bool, forController: Bool = false) {
         guard let current = running else { return }
         running?.isInFront = inFront
+        running?.pausedForController = !inFront && forController
         if !inFront {
             NotificationCenter.default.post(name: .cartoucheGameDidPause, object: current.app)
         }
@@ -1572,6 +1633,9 @@ final class CartoucheGameActions: ObservableObject {
     /// process without Increased Memory Limit, starts again in Cartouche's
     /// place at once, as gameMeasured would have started it: Donkey Kong
     /// Bananza lasted two seconds there (CartoucheGamePlace.afterStop).
+    /// One that nxnative stopped for lack of room on the disk for its
+    /// memory in files stays where it was, and the notice says so
+    /// (stoppedForRoom).
     func gameDidEnd(_ app: LCAppModel, quit: Bool, wasInFront: Bool, reading: CartoucheGameMemoryReading?,
                     error: Error? = nil) {
         guard let ended = running, ended.app === app else { return }
@@ -1586,6 +1650,11 @@ final class CartoucheGameActions: ObservableObject {
         NotificationCenter.default.post(name: .cartoucheGameDidEnd, object: app, userInfo: info)
         if !quit, let error {
             stoppedOnError(app, error: error, started: ended.started)
+        } else if !quit, let stop = Self.roomStop(of: app, dataFolder: ended.dataFolder) {
+            // nxnative stopped it for lack of room on the disk for its
+            // memory in files: memory is not what it lacked, nothing to
+            // start again elsewhere, and the player reads why.
+            stoppedForRoom(app, stop)
         } else if !quit {
             let title = CartoucheText.gameStoppedTitle(app.displayName)
             let needs = sheetNeeds(of: app)
@@ -1625,6 +1694,25 @@ final class CartoucheGameActions: ObservableObject {
             // Once LiveContainer has let go of the game's data folder.
             Task { play(next.app, showingSettings: next.showingSettings) }
         }
+    }
+
+    /// nxnative's stop for lack of room that the log of the game's session
+    /// in DATAFOLDER ends on, if it does (CartoucheGameRoom).
+    private static func roomStop(of app: LCAppModel, dataFolder: String) -> CartoucheGameRoom.Stop? {
+        guard let container = app.uiContainers.first(where: { $0.folderName == dataFolder }) else { return nil }
+        return CartoucheGameRoom.stop(ofLog: container.containerURL.appendingPathComponent("Documents/log.txt"))
+    }
+
+    /// nxnative stopped the game: the room left on the iPhone for its
+    /// memory in files ran out. The notice says what was free, and why what
+    /// iOS counts as available did not help when it counts much more.
+    private func stoppedForRoom(_ app: LCAppModel, _ stop: CartoucheGameRoom.Stop) {
+        let free = CartoucheText.storageAmount(bytes: stop.freeBytes)
+        let available = CartoucheGameRoom.countsPurgeable(free: stop.freeBytes, available: stop.availableBytes)
+            ? stop.availableBytes.map(CartoucheText.storageAmount(bytes:)) : nil
+        CartoucheReports.note(app.displayName + ": stopped by nxnative for lack of space, " + free + " free")
+        notice = CartoucheGameNotice(title: CartoucheText.gameStoppedTitle(app.displayName),
+                                     message: CartoucheText.gameStoppedSpace(free: free, available: available))
     }
 
     /// The game's process ended on an error of LiveContainer's LiveProcess

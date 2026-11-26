@@ -53,7 +53,7 @@ Tras una actualización, Cartouche se abre en **Novedades**, en tu idioma. **Sis
 
 ## Memoria
 
-Cartouche obtiene la **memoria ampliada**, incluso con una cuenta de Apple gratuita. **Memoria** muestra el límite que iOS da aquí a Cartouche, el que dio al último juego detrás de la consola, y si la memoria ampliada está activa. **Mientras funciona un juego** tiene **Mantener Cartouche abierto detrás del juego** ([Jugar](/es/iphone/playing/#un-juego-que-necesita-más-memoria)) y **Mantener el sonido de otras apps**, que deja tu música o tu pódcast sonando bajo el sonido del juego ([Jugar](/es/iphone/playing/#tu-música-o-tu-pódcast)).
+Cartouche obtiene la **memoria ampliada**, incluso con una cuenta de Apple gratuita. **Memoria** muestra el límite que iOS da aquí a Cartouche, el que dio al último juego detrás de la consola, y si la memoria ampliada está activa. **Mientras funciona un juego** tiene **Mantener Cartouche abierto detrás del juego** ([Jugar](/es/iphone/playing/#un-juego-que-necesita-más-memoria)), **Pausar si el mando se desconecta** ([Jugar](/es/iphone/playing/#si-el-mando-se-desconecta)) y **Mantener el sonido de otras apps**, que deja tu música o tu pódcast sonando bajo el sonido del juego ([Jugar](/es/iphone/playing/#tu-música-o-tu-pódcast)).
 
 ## Almacenamiento, compilaciones y Cartouche Cloud
 

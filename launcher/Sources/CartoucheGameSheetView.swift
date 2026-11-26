@@ -377,7 +377,13 @@ struct CartoucheGameSheetView: View {
                     secondaryButton(CartoucheText.gameSettings, systemImage: "slider.horizontal.3") { onSettings(app) }
                     secondaryButton(CartoucheText.quit, systemImage: "stop.circle") { actions.askToQuit() }
                 }
-                buildLine(CartoucheText.pausedDetail, systemImage: "pause.circle")
+                // Paused as it lost its last controller, which it says
+                // (CartoucheControllerPause).
+                if actions.running?.pausedForController == true {
+                    buildLine(CartoucheText.pausedForController, systemImage: "gamecontroller")
+                } else {
+                    buildLine(CartoucheText.pausedDetail, systemImage: "pause.circle")
+                }
             } else if let app = entry.app {
                 primaryButton(CartoucheText.play, systemImage: "play.fill") { onPlay(app) }
                 HStack(spacing: 10) {
