@@ -26,6 +26,12 @@ Una carpeta de partidas guardadas que no responde, un NAS mientras estás fuera,
 - **Sincronizar ahora con** tu carpeta, cuando el juego no está funcionando.
 - **Restaurar una copia:** elige una de las copias del juego, la más reciente primero. Cartouche envía antes las partidas actuales a tu carpeta, para que puedas volver a ellas.
 
+## Volver al inicio de una partida
+
+Cada vez que un juego arranca, guarda en tu iPhone una copia de las partidas guardadas con las que empieza, hasta diez, con o sin carpeta de partidas guardadas. Si un mod o una partida salió mal, abre **Restaurar una copia** en la ficha del juego: en **En este iPhone**, las copias marcadas **Al empezar una partida** te llevan de vuelta allí.
+
+Cartouche conserva antes en tu iPhone las partidas que sustituyen, en **Antes de restaurar una copia**, y, con una carpeta de partidas guardadas, las envía allí, y luego la copia restaurada, como la más reciente.
+
 ## Una partida de tu consola
 
 Tu partida sigue aquí, desde donde la dejaste en tu consola:

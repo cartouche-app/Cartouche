@@ -916,6 +916,15 @@ enum CartoucheText {
     static var savesCopyFailed: String { s("saves.failed.copy", "The saves were not synced") }
     static var savesListFailed: String { s("saves.failed.list", "The copies of the saves were not read") }
     static var savesPutBackFailed: String { s("saves.failed.putBack", "The copy was not put back") }
+    /// The copies of a game's saves on this iPhone, which nxnative makes as
+    /// each session starts, beside those of the saves folder.
+    static var savesFolderCopies: String { s("saves.copies.folder", "In your saves folder") }
+    static var savesHereHeader: String { s("saves.here.header", "On this iPhone") }
+    static var savesHereStart: String { s("saves.here.start", "At the start of a game") }
+    static var savesHereBeforePutBack: String { s("saves.here.beforePutBack", "Before a copy was put back") }
+    static var savesHereFooter: String { s("saves.here.footer", "Each time the game starts, it keeps on this iPhone a copy of the saves it starts from, up to ten: if a mod or a game went wrong, put back the copy from its start. The saves a copy put back replaces are kept here too.") }
+    static var savesHereMessage: String { s("saves.here.message", "It replaces the game’s saves on this iPhone. Cartouche keeps them here first, so you can come back to them.") }
+    static var savesHereMessageFolder: String { s("saves.here.message.folder", "It replaces the game’s saves on this iPhone. Cartouche keeps them here and sends them to your saves folder first, so you can come back to them; the copy put back then goes there as the newest.") }
     static func savesWaiting(_ count: Int) -> String {
         count == 1 ? s("saves.waiting.one", "One game’s saves are waiting: Cartouche copies them as soon as the server answers.")
             : f("saves.waiting.many", "%lld games’ saves are waiting: Cartouche copies them as soon as the server answers.", count)

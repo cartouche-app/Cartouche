@@ -23,7 +23,7 @@ La fiche dit aussi combien de temps vous avez joué au jeu sur ce Mac et s'il y 
 
 ## Vos sauvegardes sur le Mac
 
-Le Mac garde les sauvegardes des jeux qui y sont joués à jour avec votre dossier des sauvegardes, comme l'iPhone : la copie la plus récente arrive avant qu'un jeu démarre, et les sauvegardes du Mac partent quelques secondes après que le jeu a sauvegardé. Quand les deux côtés ont changé, les sauvegardes écrites en dernier gagnent et les autres sont gardées en copie. La fiche les montre, avec **Synchroniser avec … maintenant** et **Remettre une copie**, et fait venir une sauvegarde de votre console comme sur l'iPhone.
+Le Mac garde les sauvegardes des jeux qui y sont joués à jour avec votre dossier des sauvegardes, comme l'iPhone : la copie la plus récente arrive avant qu'un jeu démarre, et les sauvegardes du Mac partent quelques secondes après que le jeu a sauvegardé. Quand les deux côtés ont changé, les sauvegardes écrites en dernier gagnent et les autres sont gardées en copie. La fiche les montre, avec **Synchroniser avec … maintenant** et **Remettre une copie**, et fait venir une sauvegarde de votre console comme sur l'iPhone. **Remettre une copie** propose aussi, sous **Sur ce Mac**, les copies que chaque jeu fait de ses sauvegardes à son lancement, pour revenir au début d'une partie ([Vos sauvegardes](/fr/iphone/saves/)).
 
 La copie, sur ce Mac, d'un jeu que garde votre NAS reste hors de Time Machine : elle revient depuis le NAS. Les sauvegardes du jeu, elles, y vont.
 

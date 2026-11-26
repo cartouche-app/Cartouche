@@ -13,7 +13,8 @@
 //  the gallery in its own folder there, picked in Files and put in place
 //  after a question, the save it replaced put back,
 //  and the game's save made into a ZIP archive for JKSV, all of it
-//  Cartouche's own on real files too.
+//  Cartouche's own on real files too. And the copies nxnative makes on
+//  this iPhone as each session of the game starts, one put back.
 //
 
 import XCTest
@@ -29,6 +30,8 @@ extension Words {
     static let putBackImport = "Put back the game from before the import" // switchSave.putBack
     static let putBackImportQuestion = "Put back the game from before the import?" // switchSave.putBack.question
     static let putBackImportDone = "The game from before the import is back." // switchSave.putBack.done
+    static let atTheStart = "At the start of a game"        // saves.here.start
+    static let beforePutBack = "Before a copy was put back" // saves.here.beforePutBack
     static let makeZip = "Make the ZIP for JKSV"            // switchSave.send.make
     static let shareZip = "Share "                          // switchSave.send.share
 }
@@ -73,6 +76,33 @@ final class SavesUITests: ConsoleTestCase {
         tap(element(in: app.buttons, beginningWith: Words.putBackCopy), "Put back the copy, in the question", in: app)
         expect(element(beginningWith: Words.putBackDone, in: app).waitForExistence(timeout: 30),
                "The copy of the saves is not back in place", in: app)
+        expect(app.alerts.count == 0, "Putting the copy back showed an error: \(app.alerts.firstMatch.debugDescription)",
+               in: app)
+
+        back(from: Words.putBack, in: app)
+        closeSheet(in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// Without a saves folder, from the sheet of the game, Put back a copy
+    /// lists the copies nxnative made on this iPhone as the game's last
+    /// sessions started (work: start-copies); one is put back after a
+    /// question, and the saves it replaced are offered in their turn, all
+    /// without an error, the console answering throughout.
+    @MainActor
+    func testTheCopyOfASessionsStartComesBack() {
+        let app = openConsole(Launch(work: "start-copies"))
+        openSheet(of: Games.names[0], in: app)
+        scrollAndTap(element(in: app.buttons, beginningWith: Words.putBack), "\(Words.putBack), on the sheet", in: app)
+        expect(app.navigationBars[Words.putBack].waitForExistence(timeout: 15), "\(Words.putBack) did not open", in: app)
+        let start = element(in: app.buttons, containing: Words.atTheStart)
+        expect(start.waitForExistence(timeout: 30), "\(Words.putBack) lists no copy of a session's start", in: app)
+        tap(start, "the copy of the last session's start", in: app)
+        tap(element(in: app.buttons, beginningWith: Words.putBackCopy), "Put back the copy, in the question", in: app)
+        expect(element(beginningWith: Words.putBackDone, in: app).waitForExistence(timeout: 30),
+               "The copy of the session's start is not back in place", in: app)
+        expect(element(in: app.buttons, containing: Words.beforePutBack).waitForExistence(timeout: 15),
+               "The saves the copy replaced are not offered once it is back", in: app)
         expect(app.alerts.count == 0, "Putting the copy back showed an error: \(app.alerts.firstMatch.debugDescription)",
                in: app)
 

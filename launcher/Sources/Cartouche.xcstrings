@@ -14501,6 +14501,35 @@
         }
       }
     },
+    "saves.copies.folder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In deinem Spielstandordner"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In your saves folder"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En tu carpeta de partidas guardadas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dans votre dossier des sauvegardes"
+          }
+        }
+      }
+    },
     "saves.failed.copy" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14671,6 +14700,180 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cartouche synchronise ces sauvegardes avec votre dossier des sauvegardes : les plus récentes arrivent à l’installation du jeu et avant chaque lancement, et y repartent quelques secondes après chaque sauvegarde du jeu, au plus tard après la partie. Si les deux ont changé, les plus récentes l’emportent et les autres restent en copie. Les %lld copies les plus récentes sont gardées, une par partie."
+          }
+        }
+      }
+    },
+    "saves.here.beforePutBack" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bevor eine Kopie zurückgespielt wurde"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Before a copy was put back"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Antes de restaurar una copia"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avant la remise d’une copie"
+          }
+        }
+      }
+    },
+    "saves.here.footer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bei jedem Start behält das Spiel auf diesem iPhone eine Kopie der Spielstände, mit denen es beginnt, bis zu zehn: Ist ein Mod oder eine Sitzung schiefgegangen, spiel die Kopie von ihrem Start zurück. Die Spielstände, die eine zurückgespielte Kopie ersetzt, werden auch hier behalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each time the game starts, it keeps on this iPhone a copy of the saves it starts from, up to ten: if a mod or a game went wrong, put back the copy from its start. The saves a copy put back replaces are kept here too."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cada vez que arranca, el juego guarda en este iPhone una copia de las partidas guardadas con las que empieza, hasta diez: si un mod o una partida salió mal, restaura la copia de su inicio. Las partidas guardadas que sustituye una copia restaurada también se conservan aquí."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "À chaque lancement, le jeu garde sur cet iPhone une copie des sauvegardes d’où il part, jusqu’à dix : si un mod ou une partie a mal tourné, remettez la copie de son début. Les sauvegardes qu’une copie remise remplace sont gardées ici aussi."
+          }
+        }
+      }
+    },
+    "saves.here.header" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf diesem iPhone"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On this iPhone"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En este iPhone"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sur cet iPhone"
+          }
+        }
+      }
+    },
+    "saves.here.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sie ersetzt die Spielstände des Spiels auf diesem iPhone. Cartouche behält sie zuerst hier, damit du zu ihnen zurückkehren kannst."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It replaces the game’s saves on this iPhone. Cartouche keeps them here first, so you can come back to them."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sustituye las partidas guardadas del juego en este iPhone. Cartouche las conserva antes aquí, para que puedas volver a ellas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elle remplace les sauvegardes du jeu sur cet iPhone. Cartouche les garde d’abord ici : vous pourrez y revenir."
+          }
+        }
+      }
+    },
+    "saves.here.message.folder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sie ersetzt die Spielstände des Spiels auf diesem iPhone. Cartouche behält sie hier und sendet sie zuerst in deinen Spielstandordner, damit du zu ihnen zurückkehren kannst; die zurückgespielte Kopie geht dann als neueste dorthin."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It replaces the game’s saves on this iPhone. Cartouche keeps them here and sends them to your saves folder first, so you can come back to them; the copy put back then goes there as the newest."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sustituye las partidas guardadas del juego en este iPhone. Cartouche las conserva aquí y las envía antes a tu carpeta de partidas guardadas, para que puedas volver a ellas; luego la copia restaurada va allí como la más reciente."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elle remplace les sauvegardes du jeu sur cet iPhone. Cartouche les garde ici et les envoie d’abord dans votre dossier des sauvegardes : vous pourrez y revenir. La copie remise y part ensuite comme la plus récente."
+          }
+        }
+      }
+    },
+    "saves.here.start" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Beim Start einer Sitzung"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "At the start of a game"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Al empezar una partida"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Au début d’une partie"
           }
         }
       }
