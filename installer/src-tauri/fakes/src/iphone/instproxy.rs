@@ -5,7 +5,7 @@ use std::io;
 
 use tokio::net::TcpStream;
 
-use super::{FakeIphone, InstalledApp, MemFs, afc, verify};
+use super::{FakeIphone, HeldProfile, InstalledApp, MemFs, afc, verify};
 use crate::{
     dict,
     wire::{Stream, get_str, read_plist, write_plist},
@@ -167,6 +167,15 @@ async fn install<S: Stream>(iphone: &FakeIphone, stream: &mut S, package: &str) 
             },
         );
         let _ = state.media.remove(package, true);
+    }
+    // iOS keeps the app's own profile with those misagent holds.
+    let embedded = iphone
+        .state()
+        .apps
+        .get(&bundle_id)
+        .and_then(|a| a.files.get("embedded.mobileprovision").cloned());
+    if let Some(profile) = embedded.and_then(|bytes| HeldProfile::read(&bytes).ok()) {
+        iphone.hold_profile(profile);
     }
     iphone.note(format!("installation_proxy: installed {bundle_id}"));
     write_plist(stream, &dict! { "PercentComplete" => 100u64, "Status" => "Complete" }).await

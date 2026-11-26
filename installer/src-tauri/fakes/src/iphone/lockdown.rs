@@ -130,6 +130,7 @@ fn answer(iphone: &FakeIphone, request: &plist::Dictionary, in_session: bool) ->
                 "com.apple.afc" => Service::Afc,
                 "com.apple.mobile.installation_proxy" => Service::InstallationProxy,
                 "com.apple.mobile.house_arrest" => Service::HouseArrest,
+                "com.apple.misagent" => Service::Misagent,
                 "com.apple.dt.remotepairingdeviced.lockdown" if iphone.has_remote_pairing() => {
                     Service::RemotePairing
                 }

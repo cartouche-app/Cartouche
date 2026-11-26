@@ -119,6 +119,33 @@ public enum MacGameEnding: String, Codable, Sendable {
     }
 }
 
+extension MacGameEnding {
+    /// nxnative's exit code when it stopped the game for lack of room on
+    /// the disk for its memory kept in files (DM_GUEST_FILE, hle_svc.c): on
+    /// the Mac, which sets no memory limit, only once the player turned
+    /// that on; on the iPhone, for the games whose memory does not fit
+    /// under the limit (docs/decisions/169.md).
+    public static let roomExit = 87
+
+    /// What the console says of GAME, which ended with EXIT: for lack of
+    /// room, with FREE left on the Mac's disk, rather than that it stopped
+    /// unexpectedly; nil for another ending.
+    public static func roomWords(game: String, exit: Int?, free: Int64?) -> String? {
+        guard exit == roomExit else { return nil }
+        guard let free else {
+            return tr("\(game) stopped: its memory, which nxnative keeps in files on your Mac's disk, ran out of room there. Free some room, on the Storage page for example, then play again. Your progress is kept up to its last save.",
+                      "\(game) s’est arrêté\u{00A0}: sa mémoire, que nxnative garde dans des fichiers sur le disque du Mac, n’y avait plus de place. Libérez de la place, par exemple dans Stockage, puis rejouez. Votre progression est gardée jusqu’à sa dernière sauvegarde.",
+                      "\(game) se detuvo: su memoria, que nxnative guarda en archivos en el disco del Mac, se quedó sin espacio. Libera espacio, por ejemplo en Almacenamiento, y vuelve a jugar. Tu progreso se conserva hasta su último guardado.",
+                      "\(game) wurde beendet: Sein Speicher, den nxnative in Dateien auf der Festplatte des Mac ablegt, hatte dort keinen Platz mehr. Gib Platz frei, zum Beispiel unter „Speicher“, und spiele dann erneut. Dein Fortschritt bleibt bis zur letzten Sicherung erhalten.")
+        }
+        let left = DiskSpace.amount(free)
+        return tr("\(game) stopped: its memory, which nxnative keeps in files on your Mac's disk, ran out of room there (\(left) left). Free some room, on the Storage page for example, then play again. Your progress is kept up to its last save.",
+                  "\(game) s’est arrêté\u{00A0}: sa mémoire, que nxnative garde dans des fichiers sur le disque du Mac, n’y avait plus de place (il reste \(left)). Libérez de la place, par exemple dans Stockage, puis rejouez. Votre progression est gardée jusqu’à sa dernière sauvegarde.",
+                  "\(game) se detuvo: su memoria, que nxnative guarda en archivos en el disco del Mac, se quedó sin espacio (quedan \(left)). Libera espacio, por ejemplo en Almacenamiento, y vuelve a jugar. Tu progreso se conserva hasta su último guardado.",
+                  "\(game) wurde beendet: Sein Speicher, den nxnative in Dateien auf der Festplatte des Mac ablegt, hatte dort keinen Platz mehr (noch \(left) frei). Gib Platz frei, zum Beispiel unter „Speicher“, und spiele dann erneut. Dein Fortschritt bleibt bis zur letzten Sicherung erhalten.")
+    }
+}
+
 /// The environment the builder starts a game with, over the player's own
 /// (nxnative's docs/frontends.md, "Starting a game"). Only what is for this
 /// start: what the player chose is in the app's saved choices, which a

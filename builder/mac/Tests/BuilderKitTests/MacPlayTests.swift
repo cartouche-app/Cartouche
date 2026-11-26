@@ -98,6 +98,24 @@ final class MacPlayTests: XCTestCase {
         XCTAssertEqual(after.ending, .quit)
     }
 
+    /// nxnative's exit code 87: it stopped the game for lack of room on
+    /// the disk for its memory kept in files. The console says so, with
+    /// what was left, rather than that it stopped unexpectedly.
+    func testAGameStoppedForLackOfRoomSaysSo() {
+        let chosen = L10n.chosen
+        L10n.use("fr")
+        defer { L10n.use(chosen) }
+        let ended = MacGameEnding.parse("launcher: the host exited with 87\n")
+        XCTAssertEqual(ended.ending, .crashed)
+        XCTAssertEqual(ended.exit, MacGameEnding.roomExit)
+        XCTAssertEqual(MacGameEnding.roomWords(game: "Dread", exit: ended.exit, free: 2_400_000_000),
+                       "Dread s’est arrêté\u{00A0}: sa mémoire, que nxnative garde dans des fichiers sur le disque du Mac, n’y avait plus de place (il reste 2,4 Go). Libérez de la place, par exemple dans Stockage, puis rejouez. Votre progression est gardée jusqu’à sa dernière sauvegarde.")
+        XCTAssertNotNil(MacGameEnding.roomWords(game: "Dread", exit: 87, free: nil))
+        // Any other ending is worded as before.
+        XCTAssertNil(MacGameEnding.roomWords(game: "Dread", exit: 134, free: 2_400_000_000))
+        XCTAssertNil(MacGameEnding.roomWords(game: "Dread", exit: nil, free: nil))
+    }
+
     func testTheEndingIsReadFromTheEndOfThisStartsLog() throws {
         let log = root.appendingPathComponent("0100152000022000.log")
         // A long log: what ends it is at its end.

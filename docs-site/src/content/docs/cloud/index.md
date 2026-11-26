@@ -18,9 +18,13 @@ Cartouche Cloud provides no game: it builds only the copy you send it.
 3. Link Cartouche to your account, once ([Link your iPhone](/cloud/iphone/#link-your-iphone)).
 4. Cartouche follows the build, step by step, and an email tells you when it is done. Then **Install** puts the game on your iPhone, like your other games.
 
+## Updates and DLC
+
+Choose the base game, its updates and its DLC together when you send it: the newest update is applied, and the DLC are built in. An update or DLC is sent with its base game: to add one to a game already built, send the game again with it, which is a new build.
+
 ## Your keys stay with you
 
-Your browser opens the game on your computer and sends the game alone: your keys never leave the computer. Base game, updates and DLC can be chosen together, and the newest update is applied.
+Your browser opens the game on your computer and sends the game alone: your keys never leave the computer.
 
 ## Credits
 

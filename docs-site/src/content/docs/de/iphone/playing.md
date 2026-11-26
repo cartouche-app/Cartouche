@@ -1,6 +1,6 @@
 ---
 title: Spielen
-description: Wie ein Spiel hinter der Konsole von Cartouche läuft, die Home-Taste, Spielen auf einem Fernseher, hochkant oder quer, Siri, und das Installieren und Aktualisieren deiner Spiele.
+description: Wie ein Spiel hinter der Konsole von Cartouche läuft, die Home-Taste, Spielen auf einem Fernseher, deine Musik oder dein Podcast, hochkant oder quer, Siri, und das Installieren und Aktualisieren deiner Spiele.
 sidebar:
   order: 4
 ---
@@ -30,6 +30,10 @@ Wenn iOS ein Spiel nahe an seiner Speichergrenze hinter der Konsole schließt, s
 Verbinde das iPhone per Kabel mit einem Fernseher oder spiegle seinen Bildschirm per AirPlay auf ein Apple TV oder einen Fernseher mit AirPlay. Der Fernseher zeigt nur das Spiel, wie eine Konsole in ihrem Dock, und die Steuerung bleibt auf dem iPhone. Mit dem Fernseher bleibt das Spiel quer.
 
 Es gibt keine Version für Apple TV: Das iPhone führt das Spiel aus und sendet es an den Fernseher.
+
+## Deine Musik oder dein Podcast
+
+Ein Spiel hält beim Start die Musik oder den Podcast einer anderen App an. Damit sie unter dem Ton des Spiels weiterlaufen, schalte **System › Während ein Spiel läuft › Ton anderer Apps beibehalten** ein: Das gilt ab dem nächsten Start des Spiels. Das Spiel ist im Stummmodus weiterhin zu hören, wie bisher; ein Anruf oder Siri unterbricht beides, wie den Ton jeder App.
 
 ## Hochkant oder quer
 

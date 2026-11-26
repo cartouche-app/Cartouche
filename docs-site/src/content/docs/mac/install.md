@@ -42,7 +42,7 @@ For a folder on your NAS, type its share's address in the assistant and the Find
 
 ## Your dumps
 
-The Builder reads your games as your console's packages (`.nsp`, `.xci`, `.nsz`, `.xcz`, with their updates and DLC, which need `prod.keys`, or `.nup`), as dumps, or as a `.zip` of a dump. They can be loose in the folder, one folder per game, or in folders of folders. A game is known by its title ID; the library says what it left aside, and why.
+The Builder reads your games as your console's packages (`.nsp`, `.xci`, `.nsz`, `.xcz`, with their updates and DLC, which need `prod.keys`, or `.nup`), as dumps, or as a `.zip` of a dump. They can be loose in the folder, one folder per game, or in folders of folders. A game is known by its title ID; the library says what it left aside, and why. A game's update and DLC are built into it: see [Updates and DLC](/mac/builder/#updates-and-dlc).
 
 **Naming your games**, under **Folders** in the settings, shows with examples what the Builder and Cartouche make of each name.
 

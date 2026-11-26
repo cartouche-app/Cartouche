@@ -106,6 +106,33 @@ final class PlayTests: HarnessCase {
         XCTAssertEqual(try preference(CartoucheGameLanguage.sourceKey, of: app), "player")
     }
 
+    /// Keep other apps' sound (System › While a game runs): Play tells the
+    /// game in its data folder, where Cartouche's code in the game's process
+    /// reads it (launcher/Guest/CartoucheOtherAudioSession.m). Off, as
+    /// until the player turns it on, nothing is left there.
+    func testPlayTellsTheGameWhetherItKeepsOtherAppsSound() async throws {
+        let app = try await installed(.plain())
+        try await play(app)
+        let folder = try dataFolder(of: app)
+        let file = folder.appendingPathComponent(CartoucheOtherAudio.file)
+        XCTAssertEqual(CartoucheOtherAudio.file, HarnessOtherAudio.file, "the file the game's process reads")
+        XCTAssertFalse(CartoucheOtherAudioSetting.shared.keeps, "off until the player turns it on")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: file.path))
+        XCTAssertFalse(HarnessOtherAudio.isKept(home: folder))
+
+        CartoucheOtherAudioSetting.shared.keeps = true
+        try await play(app)
+        XCTAssertTrue(HarnessOtherAudio.isKept(home: folder), "the game's process reads what Play wrote")
+        XCTAssertTrue(CartoucheOtherAudio.isKept(home: folder), "and so do the game measurements")
+        XCTAssertEqual(UserDefaults.standard.object(forKey: CartoucheOtherAudioSetting.defaultsKey) as? Bool, true)
+
+        CartoucheOtherAudioSetting.shared.keeps = false
+        try await play(app)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: file.path))
+        XCTAssertFalse(HarnessOtherAudio.isKept(home: folder))
+        XCTAssertEqual(HarnessLC.launches.count, 3)
+    }
+
     func testAGameInClassicModeStartsAsLiveContainerRunsIt() async throws {
         let app = try await installed(.plain())
         app.appInfo.classicMode = true

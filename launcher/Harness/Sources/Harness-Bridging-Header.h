@@ -10,13 +10,16 @@
 //  calls CartoucheDevice.swift makes, answered as an iPhone with Increased
 //  Memory Limit would, as the launcher's gallery answers them; and how a
 //  game's process asks for the keyboard, which brings it the controllers
-//  (launcher/LiveProcessSupport/CartoucheGuestControllers.h).
+//  (launcher/LiveProcessSupport/CartoucheGuestControllers.h); and how it
+//  mixes its sound with other apps' (launcher/Guest/
+//  CartoucheOtherAudioSession.h).
 //
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import "unarchive.h"
 #import "../../LiveProcessSupport/CartoucheGuestControllers.h"
+#import "../../Guest/CartoucheOtherAudioSession.h"
 
 @interface NSUserDefaults (HarnessPrivate)
 - (instancetype)_initWithSuiteName:(NSString *)suiteName container:(NSURL *)container;

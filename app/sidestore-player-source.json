@@ -17,6 +17,15 @@
       "bundleIdentifier": "io.github.clabeuhtegrite.cartouche",
       "versions": [
         {
+          "version": "0.16.2",
+          "date": "2026-11-26T14:05:57Z",
+          "localizedDescription": "Cartouche 0.16.2 can bring a game of your NAS through your Mac and its cable, when the Mac is on Ethernet.\n\n- NAS through your Mac: with the iPhone plugged into your Mac by a cable, and the Mac on Ethernet, the Mac reads the game on the NAS and passes it on through the cable, instead of the iPhone's Wi-Fi, and the install screen says By cable, through the Mac. On the Mac's Wi-Fi, the iPhone reads the NAS itself, as before. Needs Cartouche 0.8.1 or later on your Mac, which updates itself. Not tried with a real Mac and NAS yet.",
+          "downloadURL": "https://github.com/clabeuhtegrite/Cartouche/releases/download/v0.16.2/Cartouche-0.16.2-SideStore.ipa",
+          "size": 30612418,
+          "sha256": "aa3be55f19fcdaa9c2558c31c3c6026148fc5a7a6cb26f0dd14b790fa42979be",
+          "minOSVersion": "15.0"
+        },
+        {
           "version": "0.16.1",
           "date": "2026-11-25T21:22:48Z",
           "localizedDescription": "Cartouche 0.16.1 installs again from your own SideStore: it asks your SideStore for the pairing file, and a copy without its app group says what to do.\n\n- Your own SideStore: in 0.16.0, Cartouche asked its own built-in SideStore for the pairing file instead of yours; it asks yours again. Not tried on a real iPhone yet.\n- Without its app group: a copy of the IPA for SideStore installed without its app group, as some signing apps do, no longer asks for your Apple ID only to fail; it says so, and offers the IPA for your own certificate or the Installer instead. Not tried on a real iPhone yet.",

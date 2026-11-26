@@ -1452,7 +1452,13 @@ final class AppModel: ObservableObject {
             // Started from here, the game filled the screen, Cartouche
             // behind it: Cartouche comes back as it ends, as a console does.
             if run.fromBuilder { comeBack() }
-            if ending == .crashed {
+            if ending == .crashed, code == MacGameEnding.roomExit {
+                // nxnative stopped it for lack of room for its memory in
+                // files: what was left, as nxnative said it, else now.
+                let free = CartoucheGameRoom.stop(ofLog: macGames.logs.appendingPathComponent(run.app.titleID + ".log"))?.freeBytes
+                    ?? DiskSpace.free(at: URL(fileURLWithPath: NSHomeDirectory()))
+                banner = Banner(kind: .error, text: MacGameEnding.roomWords(game: run.app.name, exit: code, free: free) ?? "")
+            } else if ending == .crashed {
                 let log = "~/Library/Logs/nxnative/\(run.app.titleID).log"
                 banner = Banner(kind: .error, text: tr("\(run.app.name) stopped unexpectedly. Its log: \(log)",
                                                        "\(run.app.name) s’est arrêté de façon inattendue. Son journal : \(log)",

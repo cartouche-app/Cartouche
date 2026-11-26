@@ -2,12 +2,13 @@
 //! iPhone is plugged in. It answers lockdown in TLS with the keys of its pair
 //! record, asks "Trust This Computer?" for a remote pairing, stores files
 //! sent over AFC, installs apps only once it has checked their signature and
-//! provisioning profile as iOS does, and lets house_arrest into an app's
-//! Documents.
+//! provisioning profile as iOS does, lets house_arrest into an app's
+//! Documents, and keeps the provisioning profiles misagent installs.
 
 mod afc;
 mod instproxy;
 mod lockdown;
+pub mod misagent;
 mod rppairing;
 mod usbmuxd;
 pub mod verify;
@@ -19,6 +20,7 @@ use std::{
 };
 
 pub use afc::MemFs;
+pub use misagent::HeldProfile;
 pub use usbmuxd::FakeUsbmuxd;
 
 use crate::tls::PairKeys;
@@ -100,6 +102,7 @@ pub(crate) enum Service {
     InstallationProxy,
     HouseArrest,
     RemotePairing,
+    Misagent,
 }
 
 /// Everything about the iPhone a test may look at or change.
@@ -122,6 +125,11 @@ pub struct State {
     pub pair_verifies: usize,
     /// When set, the next install fails with this lockdown error and description.
     pub fail_install: Option<(String, String)>,
+    /// The provisioning profiles the iPhone holds, as misagent lists them:
+    /// each app's own, from its install, and those installed since.
+    pub profiles: Vec<HeldProfile>,
+    /// When set, misagent refuses the next profile with this status.
+    pub fail_profile_install: Option<u64>,
     /// When true, the iPhone is unplugged: usbmuxd no longer lists it.
     pub unplugged: bool,
     /// How long the iPhone takes over each step of an install, to let a
@@ -177,6 +185,8 @@ impl FakeIphone {
                 pair_setups: 0,
                 pair_verifies: 0,
                 fail_install: None,
+                profiles: Vec::new(),
+                fail_profile_install: None,
                 unplugged: false,
                 install_delay: Duration::ZERO,
                 log: Vec::new(),

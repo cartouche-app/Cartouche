@@ -204,6 +204,7 @@ final class CartoucheGameActions: ObservableObject {
     func closeInstallQuestion() { installQuestion = nil }
     func play(_ app: LCAppModel, showingSettings: Bool = false) { GalleryTest.play(app, with: self) }
     func signAgain(_ bundleId: String) { notice = nil }
+    func playAnyway(_ bundleId: String) { notice = nil }
     func resumeRunningGame() {}
     func showConsole() { running?.isInFront = false }
     func askToQuit() { quitQuestion = running }
