@@ -901,16 +901,20 @@ public struct BuildFolder: Codable, Equatable, Identifiable {
     public var size: UInt64
     public var parts: [String: UInt64]
     public var used: Double?
+    /// Whether a NAS keeps it between two builds, made on this Mac
+    /// (decision 163): nil from an older engine.
+    public var shelf: Bool?
 
     public var id: String { path }
 
     enum CodingKeys: String, CodingKey {
-        case path, workspace, name, kind, size, parts, used
+        case path, workspace, name, kind, size, parts, used, shelf
         case titleID = "title_id"
     }
 
     public var extracted: UInt64 { parts["extracted"] ?? 0 }
     public var shaders: UInt64 { parts["shaders"] ?? 0 }
+    public var onNAS: Bool { shelf == true }
 }
 
 public struct IPACopy: Codable, Equatable, Identifiable {
@@ -992,6 +996,10 @@ public struct StorageReport: Codable, Equatable {
 
     public func total(_ key: String) -> UInt64 { totals[key] ?? 0 }
     public var workspaceDisk: Disk? { disks["workspace"] ?? nil }
+    /// The disk of the NAS that keeps the build folders between two builds.
+    public var shelfDisk: Disk? { disks["shelf"] ?? nil }
+    /// What the build folders a NAS keeps take there, apart from this Mac's.
+    public var onNAS: UInt64 { total("shelf") }
     public var gamesDisk: Disk? { disks["games"] ?? nil }
     /// The disk of the folder of the games' Mac apps.
     public var macAppsDisk: Disk? { disks["mac_apps"] ?? nil }

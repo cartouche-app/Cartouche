@@ -533,6 +533,29 @@ final class EngineAnswerTests: XCTestCase {
         XCTAssertEqual(try self.answer(FollowAnswer.self, "follow").followed, true)
     }
 
+    /// The build folders chosen on a NAS keep the games' between two builds,
+    /// made on this Mac (decision 163): the Storage page counts them apart.
+    func testTheBuildFoldersANASKeepsAreCountedApart() throws {
+        let storage = try answer(StorageAnswer.self, "storage").storage
+        XCTAssertFalse(storage.folders.isEmpty)
+        XCTAssertEqual(storage.folders.filter(\.onNAS), [])
+        XCTAssertNil(storage.shelfDisk)
+        XCTAssertEqual(storage.onNAS, 0)
+        let kept = try JSONDecoder().decode(StorageReport.self, from: Data(#"""
+            {"workspace": "/Volumes/Games/Builds", "disks": {"workspace": {"path": "/w", "free": 1, "total": 2, "present": true},
+             "shelf": {"path": "/Volumes/Games/Builds", "free": 3, "total": 4, "present": true}},
+             "folders": [{"path": "/Volumes/Games/Builds/0100000000010000_build", "workspace": "/Volumes/Games/Builds", "title_id": "0100000000010000",
+                          "name": "Super Mario Odyssey", "kind": "build", "size": 300, "parts": {"shaders": 300}, "used": 1, "shelf": true},
+                         {"path": "/w/0100152000022000_build", "workspace": "/w", "title_id": "0100152000022000", "name": "Mario Kart 8 Deluxe",
+                          "kind": "build", "size": 700, "parts": {"extracted": 700}, "used": 2}],
+             "ipa_copies": [], "totals": {"extracted": 700, "shelf": 300}}
+            """#.utf8))
+        XCTAssertEqual(kept.folders.map(\.onNAS), [true, false])
+        XCTAssertEqual(kept.shelfDisk?.free, 3)
+        XCTAssertEqual(kept.onNAS, 300)
+        XCTAssertEqual(kept.buildFolders, 700)
+    }
+
     func testWhatGoesWrongIsAFailureOfItsKind() throws {
         XCTAssertThrowsError(try answer(ConfigAnswer.self, "error")) { error in
             XCTAssertEqual((error as? EngineFailure)?.kind, "bad_request")

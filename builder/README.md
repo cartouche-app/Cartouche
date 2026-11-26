@@ -84,9 +84,10 @@ A game's build folder, `<title ID>_build`, keeps what the next build reuses, so 
 - the files it extracts from a game's packages, as big as the game, are removed once the build ends, unless **Keep the extracted files** is on, for a faster next build;
 - before a build, and when the disk has less free room than **Keep at least … GB free**, the build folders used the longest ago go first, and a size limit can be set for all of them; a game of the batch that ended, built or not, leaves its folder to the games after it;
 - when the disk has less free room than that setting even so, the library says before a build how many gigabytes are missing and what makes room: **Storage**, build folders on another disk, or a lower setting; a game skipped for it says how much was free and how much it needed;
-- an IPA kept beside the games folder on the same disk is an APFS clone, which takes no room.
+- an IPA kept beside the games folder on the same disk is an APFS clone, which takes no room;
+- **Build folders**, in **Settings › Folders**, chosen on a NAS keeps the games' build folders there between two builds, never builds there ([decision 163](../docs/decisions/163.md), [`shelf.py`](cartouche_builder/shelf.py)): each game is built on this Mac, in the builder's own folder, its build folder brought back from the NAS first, with its shader caches and its app's build, then sent back once built, and this Mac's removed. The game's extracted files and its converted packages stay on this Mac, and go as before. On the NAS a folder is replaced whole: the new one is written beside the old one, which goes once it is there; a NAS that does not take it, or **Stop** as it goes, leaves the one before there, and this Mac's for the next build.
 
-**Storage** shows each of these, with what it takes and **Free**.
+**Storage** shows each of these, with what it takes and **Free**; the build folders a NAS keeps apart, under **Build folders on your NAS**, with their NAS's room, sized from what the builder noted as it sent them, never by reading the NAS's files again.
 
 ## Your games on this Mac
 
