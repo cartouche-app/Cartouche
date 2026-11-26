@@ -2,10 +2,10 @@
 //  CartouchePickerMeasuresTests.swift
 //  CartoucheCoreTests
 //
-//  What Cartouche tells of the Files picker a game is imported with
-//  (Sources/CartouchePickerMeasures.swift): its journal line, the fields of
-//  its `import.picker` event, and the measures kept on disk while it is
-//  open.
+//  What Cartouche tells of the Files picker a game, a signing certificate
+//  or its profile is imported with (Sources/CartouchePickerMeasures.swift):
+//  its journal line, the fields of its `import.picker` event, and the
+//  measures kept on disk while it is open.
 //
 
 import Foundation
@@ -87,6 +87,25 @@ final class CartouchePickerMeasuresTests: XCTestCase {
         XCTAssertNil(fields["shownMs"])
         XCTAssertEqual(fields["background"], .flag(true))
         XCTAssertTrue(picker.line(.closed, at: closed).hasPrefix("Files picker from the home: closed with the controller after 8.0 s"))
+    }
+
+    /// The pickers of Import signing certificate, for the certificate and
+    /// for its profile, say which in the journal a report carries, and in
+    /// their event: up to 0.16.2, SwiftUI's file importer showed them,
+    /// which told nothing of a .p12 tapped that never came back (issue
+    /// #353).
+    func testThePickersOfASigningFileSayWhichFile() {
+        var certificate = measures(place: "certificate")
+        certificate.shown = opened.addingTimeInterval(0.4)
+        let picked = opened.addingTimeInterval(3)
+        XCTAssertEqual(certificate.line(.picked, at: picked),
+                       "Files picker from the certificate's import: picked after 3.0 s, on screen after 0.4 s")
+        XCTAssertEqual(certificate.fields(.picked, at: picked)["place"], .text("certificate"))
+
+        let profile = measures(place: "profile")
+        XCTAssertEqual(profile.line(.cancelled, at: picked),
+                       "Files picker from the profile's import: cancelled after 3.0 s, never on screen")
+        XCTAssertEqual(profile.fields(.cancelled, at: picked)["place"], .text("profile"))
     }
 
     /// The main thread's answers come in any order with the waits seen from
