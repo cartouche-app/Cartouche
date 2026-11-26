@@ -638,6 +638,9 @@ enum CartoucheText {
     static var quit: String { s("action.quit", "Quit") }
     static var statusPausedShort: String { s("status.paused.short", "Paused") }
     static var pausedDetail: String { s("running.paused", "Paused behind Cartouche, where you left it.") }
+    static var pausedForController: String {
+        s("running.paused.controller", "Paused: the controller disconnected. Connect it again to play on, or press Resume.")
+    }
     static var backToCartouche: String { s("running.back", "Back to Cartouche") }
     static var homeButtonHint: String { s("running.homeHint", "The controller’s Home button brings you back to Cartouche.") }
     static var homeFadesHint: String { s("running.homeFades", "The Home button hides after a few seconds: touch just below to bring it back.") }
@@ -666,6 +669,10 @@ enum CartoucheText {
     static var tryBehindAgain: String { s("sheet.inPlace.retry", "Try behind Cartouche again") }
     static var playingTitle: String { s("system.playing", "While a game runs") }
     static var keepConsoleOpen: String { s("system.playing.keep", "Keep Cartouche open behind the game") }
+    static var pauseForController: String { s("system.playing.controller", "Pause when the controller disconnects") }
+    static var pauseForControllerDetail: String {
+        s("system.playing.controller.detail", "When the last controller disconnects during a game, the game pauses 3 seconds later and the console shows. A controller connected again brings it back.")
+    }
     static var behindLimit: String { s("system.playing.limit", "Memory for a game behind Cartouche") }
     static var behindLimitUnknown: String { s("system.playing.limit.unknown", "Measured at the next game") }
     static var behindWithoutIML: String { s("system.playing.noIML", "Behind Cartouche, games run without Increased Memory Limit here: they start in Cartouche’s place, with all of its memory, unless their sheet shows they need less.") }

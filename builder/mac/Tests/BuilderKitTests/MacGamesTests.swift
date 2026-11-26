@@ -41,6 +41,40 @@ final class MacGamesTests: XCTestCase {
         XCTAssertTrue(MacGames.alive(getpid()))
     }
 
+    /// A game paused for its controller has its processes stopped, as
+    /// SIGSTOP leaves them, and they go on with SIGCONT
+    /// (docs/decisions/166.md).
+    func testAGamesProcessesStopAndGoOn() throws {
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/sleep")
+        process.arguments = ["30"]
+        try process.run()
+        defer { process.terminate() }
+        let pid = process.processIdentifier
+        XCTAssertFalse(MacGames.isStopped(pid))
+
+        MacGames.signal([pid], SIGSTOP)
+        XCTAssertTrue(waitFor { MacGames.isStopped(pid) }, "stopped")
+        XCTAssertTrue(process.isRunning, "stopped, not ended")
+        MacGames.signal([pid], SIGCONT)
+        XCTAssertTrue(waitFor { !MacGames.isStopped(pid) }, "it goes on")
+
+        // Neither stopped nor signalled: what is no process of a game's.
+        XCTAssertFalse(MacGames.isStopped(-1))
+        XCTAssertFalse(MacGames.isStopped(0))
+        XCTAssertFalse(MacGames.isStopped(getpid()))
+    }
+
+    /// Whether CONDITION holds within 5 seconds, looked at every 10 ms.
+    private func waitFor(_ condition: () -> Bool) -> Bool {
+        let deadline = Date().addingTimeInterval(5)
+        while !condition() {
+            guard Date() < deadline else { return false }
+            usleep(10_000)
+        }
+        return true
+    }
+
     /// The saves folder: the Mac's own, or the iPhone's on a connection,
     /// the one in use staying when it is the same.
     @MainActor

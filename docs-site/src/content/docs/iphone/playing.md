@@ -19,6 +19,15 @@ The **Home** button, at the bottom of the game's screen or on the controller, br
 
 The on-screen Home button hides after a few seconds: touch just below where it was to bring it back.
 
+## If the controller disconnects
+
+When the last controller disconnects during a game, because its battery ran out or its Bluetooth link dropped, the game pauses 3 seconds later and the console comes back, saying that the controller disconnected. Connect it again and the game comes back by itself. **Resume** goes back to the game without one, on the touch controls.
+
+- A game you play on the screen alone, without a controller, never pauses for one.
+- A controller that comes back within the 3 seconds pauses nothing.
+- **System › While a game runs › Pause when the controller disconnects** turns it off.
+- A game that starts in Cartouche's place does not pause for its controller yet.
+
 ## A game that needs more memory
 
 A game that needs more memory than it has behind the console starts in Cartouche's place instead, with all of Cartouche's memory: the console closes while it runs, and opens again when the game ends. The game's sheet says so, with **Try behind Cartouche again**.

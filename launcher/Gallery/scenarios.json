@@ -1622,6 +1622,49 @@
       "work": "paused"
     },
     {
+      "name": "iphone-home-paused-controller",
+      "comment": "The console over a game paused as it lost its last controller, which it says (decision 166).",
+      "screen": "games",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "paused-controller"
+    },
+    {
+      "name": "iphone-sheet-paused-controller",
+      "comment": "The sheet of a game paused as it lost its last controller (decision 166).",
+      "screen": "sheet",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "paused-controller"
+    },
+    {
       "name": "iphone-sheet-manage",
       "comment": "A game's sheet opened on its management (category: manage), as a game that has not written a log yet shows it: without Share the log.",
       "screen": "sheet",
@@ -2419,6 +2462,27 @@
         34,
         0
       ]
+    },
+    {
+      "name": "iphone-system-controller",
+      "comment": "The System page down to While a game runs, and its switch of the pause for a lost controller (decision 166).",
+      "screen": "system",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "category": "controller"
     },
     {
       "name": "iphone-system-german",

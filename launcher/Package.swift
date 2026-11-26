@@ -35,6 +35,7 @@ let package = Package(
                 "CartoucheBridgeCable.swift",
                 "CartoucheCloud.swift",
                 "CartoucheConnections.swift",
+                "CartoucheControllerLoss.swift",
                 "CartoucheCoverList.swift",
                 "CartoucheDeviceWords.swift",
                 "CartoucheDrive.swift",

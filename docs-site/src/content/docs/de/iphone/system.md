@@ -53,7 +53,7 @@ Nach einem Update öffnet sich Cartouche mit **Neuigkeiten**, in deiner Sprache.
 
 ## Arbeitsspeicher
 
-Cartouche bekommt das **erhöhte Speicherlimit**, auch mit einem kostenlosen Apple Account. **Arbeitsspeicher** zeigt die Grenze, die iOS Cartouche hier gibt, die, die es dem letzten Spiel hinter der Konsole gab, und ob das erhöhte Speicherlimit aktiv ist. **Während ein Spiel läuft** enthält **Cartouche hinter dem Spiel geöffnet lassen** ([Spielen](/de/iphone/playing/#ein-spiel-das-mehr-arbeitsspeicher-braucht)).
+Cartouche bekommt das **erhöhte Speicherlimit**, auch mit einem kostenlosen Apple Account. **Arbeitsspeicher** zeigt die Grenze, die iOS Cartouche hier gibt, die, die es dem letzten Spiel hinter der Konsole gab, und ob das erhöhte Speicherlimit aktiv ist. **Während ein Spiel läuft** enthält **Cartouche hinter dem Spiel geöffnet lassen** ([Spielen](/de/iphone/playing/#ein-spiel-das-mehr-arbeitsspeicher-braucht)) und **Pausieren, wenn der Controller getrennt wird** ([Spielen](/de/iphone/playing/#wenn-der-controller-getrennt-wird)).
 
 ## Speicher, Builds und Cartouche Cloud
 

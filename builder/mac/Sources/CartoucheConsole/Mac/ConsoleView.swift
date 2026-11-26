@@ -24,6 +24,7 @@
 //  shares some of its files.
 //
 
+import AppKit
 import SwiftUI
 
 /// A game the Builder keeps for this Mac in its games folder, in one file
@@ -64,6 +65,10 @@ public final class CartoucheMacConsole: ObservableObject {
     public var onPlay: (_ game: URL, _ showingSettings: Bool) -> Void = { _, _ in }
     /// Asks the running game's app to quit.
     public var onQuit: (_ game: URL) -> Void = { _ in }
+    /// The running game lost its last controller (CartoucheControllerPause):
+    /// its app pauses, and the console comes in front of it. onPlay brings
+    /// it back.
+    public var onPause: (_ game: URL) -> Void = { _ in }
     /// Import, on the home or the sheet of a game the player has no copy
     /// of: the Builder adds games.
     public var onImport: () -> Void = {}
@@ -226,18 +231,64 @@ public final class CartoucheMacConsole: ObservableObject {
     }
 
     /// The game whose app runs, if one of the console's does, and whether
-    /// it is the Mac's active app.
+    /// it is the Mac's active app. While it runs, a game in front that
+    /// loses its last controller pauses, and a controller that connects
+    /// again brings it back (CartoucheControllerPause, as on the iPhone).
     public func showRunning(_ game: URL?, inFront: Bool) {
         let actions = CartoucheGameActions.shared
+        let pause = CartoucheControllerPause.shared
         guard let game, let app = models[game.standardizedFileURL.path] else {
-            actions.running = nil
+            if actions.running != nil {
+                pause.gameEnded(quit: actions.quitAsked)
+                actions.running = nil
+            }
+            CartoucheGamepad.shared.gameInFront = false
             return
         }
         if let running = actions.running, running.app === app {
-            if running.isInFront != inFront { actions.running?.isInFront = inFront }
+            if running.isInFront != inFront {
+                actions.running?.isInFront = inFront
+                if inFront { actions.running?.pausedForController = false }
+                pause.gameMoved(inFront: inFront)
+            }
         } else {
+            if actions.running != nil { pause.gameEnded(quit: actions.quitAsked) }
             actions.running = CartoucheRunningGame(app: app, started: Date(), isInFront: inFront)
+            actions.quitAsked = false
+            followControllers(of: app, at: game)
+            if !inFront { pause.gameMoved(inFront: false) }
         }
+        // The console hears the controllers while the game runs, even
+        // behind it (CartoucheControllerPause): it takes none of their
+        // presses while it is not the Mac's active app.
+        CartoucheGamepad.shared.gameInFront = !NSApp.isActive
+    }
+
+    /// APP, the game's app at GAME, pauses should it lose its last
+    /// controller in front: its app stops (onPause), the console comes in
+    /// front of it and says so; a controller that connects again brings it
+    /// back, as Resume does. Each pause goes in the journal and the
+    /// measurements, with how it ended.
+    private func followControllers(of app: LCAppModel, at game: URL) {
+        let name = app.displayName
+        let title = CartoucheGameActions.shared.titleId(of: app)?.uppercased()
+        CartoucheControllerPause.shared.gameStarted(.init(
+            pause: { [weak self] in
+                let actions = CartoucheGameActions.shared
+                guard let self, actions.running?.app === app else { return }
+                CartoucheReports.note(name + ": no controller for 3 seconds, the game paused behind the console")
+                actions.running?.pausedForController = true
+                self.onPause(game)
+            },
+            resume: { [weak self] in
+                guard let self, CartoucheGameActions.shared.running?.app === app else { return }
+                CartoucheReports.note(name + ": a controller connected, the game comes back")
+                self.onPlay(game, false)
+            },
+            ended: { pause in
+                CartoucheTelemetry.shared.event("game.controllerPause", game: title,
+                                                fields: CartoucheControllerLoss.fields(of: pause))
+            }))
     }
 
     /// The language the console speaks, as the app's settings choose it:

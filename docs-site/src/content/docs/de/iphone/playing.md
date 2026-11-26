@@ -19,6 +19,15 @@ Die **Home**-Taste, unten auf dem Bildschirm des Spiels oder am Controller, holt
 
 Die Home-Taste auf dem Bildschirm verschwindet nach ein paar Sekunden: Tippe knapp unter die Stelle, an der sie war, um sie zurückzuholen.
 
+## Wenn der Controller getrennt wird
+
+Wird der letzte Controller während eines Spiels getrennt, weil sein Akku leer ist oder seine Bluetooth-Verbindung abbricht, pausiert das Spiel 3 Sekunden später und die Konsole kommt zurück, die sagt, dass der Controller getrennt wurde. Verbinde ihn wieder, und das Spiel kommt von selbst zurück. **Fortsetzen** kehrt ohne Controller zum Spiel zurück, mit der Touch-Steuerung.
+
+- Ein Spiel, das du nur auf dem Bildschirm spielst, ohne Controller, pausiert nie für einen.
+- Ein Controller, der innerhalb der 3 Sekunden zurückkommt, pausiert nichts.
+- **System › Während ein Spiel läuft › Pausieren, wenn der Controller getrennt wird** schaltet es aus.
+- Ein Spiel, das an Cartouches Stelle startet, pausiert noch nicht für seinen Controller.
+
 ## Ein Spiel, das mehr Arbeitsspeicher braucht
 
 Ein Spiel, das mehr Arbeitsspeicher braucht, als es hinter der Konsole hat, startet stattdessen anstelle von Cartouche, mit dem ganzen Arbeitsspeicher von Cartouche: Die Konsole schließt sich, solange es läuft, und öffnet sich wieder, wenn das Spiel endet. Die Infoseite des Spiels sagt es, mit **Erneut hinter Cartouche versuchen**.

@@ -14,6 +14,12 @@
 //  controller's buttons, and the Home button, which comes to Cartouche
 //  rather than to iOS, shows the console, then the game again.
 //
+//  A game that loses its last controller while the player plays pauses,
+//  behind the console, and a controller that connects again brings it back
+//  (CartoucheControllerPause, below; the rule is CartoucheControllerLoss's,
+//  docs/decisions/166.md). On the Mac, Cartouche's console does the same
+//  for a game's app (builder/mac).
+//
 
 import Combine
 import GameController
@@ -32,6 +38,18 @@ final class CartoucheGamepad: ObservableObject {
     /// Whether a controller with a D-pad and face buttons is connected, so
     /// that the screen shows which button does what.
     @Published private(set) var isConnected = false
+
+    /// How many controllers are connected, of any kind: a game that loses
+    /// its last one pauses (CartoucheControllerPause).
+    @Published private(set) var count = 0
+
+    #if CARTOUCHE_HARNESS
+    /// The controllers the harness's tests connect, in place of the real
+    /// ones: the Simulator has none.
+    var harnessControllers: Int? {
+        didSet { update() }
+    }
+    #endif
 
     /// Each press once; a held direction repeats.
     let inputs = PassthroughSubject<Input, Never>()
@@ -68,8 +86,9 @@ final class CartoucheGamepad: ObservableObject {
             let controller = note.object as? GCController
             MainActor.assumeIsolated { self?.attach(controller) }
         })
-        observers.append(center.addObserver(forName: .GCControllerDidDisconnect, object: nil, queue: .main) { [weak self] _ in
-            MainActor.assumeIsolated { self?.update() }
+        observers.append(center.addObserver(forName: .GCControllerDidDisconnect, object: nil, queue: .main) { [weak self] note in
+            let controller = note.object as? GCController
+            MainActor.assumeIsolated { self?.update(without: controller) }
         })
         for controller in GCController.controllers() {
             attach(controller)
@@ -99,8 +118,20 @@ final class CartoucheGamepad: ObservableObject {
         }
     }
 
-    private func update() {
-        isConnected = GCController.controllers().contains { $0.extendedGamepad != nil }
+    /// The controllers connected now; GONE, one that has just
+    /// disconnected, never among them.
+    private func update(without gone: GCController? = nil) {
+        let controllers = GCController.controllers().filter { $0 !== gone }
+        isConnected = controllers.contains { $0.extendedGamepad != nil }
+        var count = controllers.count
+        #if CARTOUCHE_HARNESS
+        if let harnessControllers {
+            count = harnessControllers
+        }
+        #endif
+        if count != self.count {
+            self.count = count
+        }
         if !isConnected {
             held = nil
             repeating?.cancel()
@@ -168,6 +199,157 @@ final class CartoucheGamepad: ObservableObject {
                 self?.send(input)
                 try? await Task.sleep(for: .milliseconds(110))
             }
+        }
+    }
+}
+
+/// A game that loses its last controller while the player plays pauses,
+/// as CartoucheControllerLoss says (docs/decisions/166.md): this follows
+/// the controllers and the game running, and does what the rule says,
+/// through what the device gives it as the game starts: on the iPhone, the
+/// game behind the console (CartoucheGameHost), on the Mac, Cartouche's
+/// console and the game's app (builder/mac, ConsoleView.swift). One game
+/// at a time.
+@available(iOS 17.0, *)
+@MainActor
+final class CartoucheControllerPause {
+    static let shared = CartoucheControllerPause()
+
+    /// What the device does for the rule.
+    struct Actions {
+        /// The console over the game, which pauses.
+        var pause: () -> Void
+        /// The game again, where the player left it.
+        var resume: () -> Void
+        /// A pause for the controller ended, for the measurements.
+        var ended: (CartoucheControllerLoss.Pause) -> Void
+    }
+
+    private(set) var rule = CartoucheControllerLoss()
+    private var actions: Actions?
+    private var inFront = false
+    /// What the game's own process said last of its controllers, on the
+    /// iPhone (CartoucheGuest.m): whether it has any; nil until it says
+    /// it, from the game's last coming on screen. Its word wins over
+    /// Cartouche's own: the game's controllers are those its process has.
+    private var gameHasControllers: Bool?
+    private var watching: AnyCancellable?
+    private var looking: Task<Void, Never>?
+
+    var isPausedForController: Bool { rule.isPausedForController }
+
+    private init() {}
+
+    /// A game starts, on screen: from now on, until it ends, the rule
+    /// follows its controllers, and ACTIONS do what it says.
+    func gameStarted(_ actions: Actions) {
+        looking?.cancel()
+        looking = nil
+        self.actions = actions
+        inFront = true
+        gameHasControllers = nil
+        let gamepad = CartoucheGamepad.shared
+        rule.started(controllers: controllers(gamepad.count))
+        // The value to come: a published value is sent before it is set.
+        watching = gamepad.$count.dropFirst().removeDuplicates().sink { [weak self] count in
+            self?.changed(count)
+        }
+        #if os(macOS)
+        // The console is behind the game's app, which macOS hands the
+        // controllers: the console still hears of them, and takes none of
+        // their presses while the game is in front (gameInFront).
+        GCController.shouldMonitorBackgroundEvents = true
+        #endif
+    }
+
+    /// The game goes behind the console (INFRONT false), or comes on
+    /// screen again.
+    func gameMoved(inFront: Bool) {
+        guard actions != nil, inFront != self.inFront else { return }
+        self.inFront = inFront
+        // Its process may have heard nothing while it was paused.
+        gameHasControllers = nil
+        looking?.cancel()
+        looking = nil
+        if inFront {
+            if let pause = rule.cameToFront(controllers: controllers(CartoucheGamepad.shared.count), now: Date()) {
+                actions?.ended(pause)
+            }
+        } else {
+            rule.wentBehind()
+        }
+    }
+
+    /// The game has ended, as the player quit it (QUIT) or not.
+    func gameEnded(quit: Bool) {
+        guard let actions else { return }
+        if let pause = rule.ended(quit: quit, now: Date()) {
+            actions.ended(pause)
+        }
+        self.actions = nil
+        inFront = false
+        gameHasControllers = nil
+        watching = nil
+        looking?.cancel()
+        looking = nil
+        #if os(macOS)
+        GCController.shouldMonitorBackgroundEvents = false
+        #endif
+    }
+
+    /// The game's own process says whether it has controllers now, on the
+    /// iPhone: as one connects or goes, and as the game comes on screen.
+    func gameSays(hasControllers: Bool) {
+        guard actions != nil, inFront else { return }
+        gameHasControllers = hasControllers
+        changed(CartoucheGamepad.shared.count)
+    }
+
+    /// The controllers the rule counts, Cartouche's being COUNT: the game's
+    /// process's word when it has said it, Cartouche's own otherwise.
+    private func controllers(_ count: Int) -> Int {
+        switch gameHasControllers {
+        case true?: return max(count, 1)
+        case false?: return 0
+        case nil: return count
+        }
+    }
+
+    private func changed(_ count: Int) {
+        guard let actions else { return }
+        switch rule.controllersChanged(controllers(count), inFront: inFront, now: Date()) {
+        case .wait:
+            look()
+        case .resume:
+            actions.resume()
+        case .nothing, .pause:
+            break
+        }
+    }
+
+    /// Looks again once the delay has passed since the controller went.
+    private func look() {
+        looking?.cancel()
+        let since = rule.lostSince ?? Date()
+        let left = max(0.05, CartoucheControllerLoss.delay - Date().timeIntervalSince(since))
+        looking = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(Int(left * 1000)))
+            guard !Task.isCancelled else { return }
+            self?.lookAgain()
+        }
+    }
+
+    private func lookAgain() {
+        looking = nil
+        guard let actions else { return }
+        switch rule.check(controllers(CartoucheGamepad.shared.count), inFront: inFront,
+                          isOn: CartoucheControllerLoss.isOn(), now: Date()) {
+        case .pause:
+            actions.pause()
+        case .wait:
+            look()
+        case .nothing, .resume:
+            break
         }
     }
 }

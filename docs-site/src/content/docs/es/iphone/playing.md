@@ -19,6 +19,15 @@ El botón de **inicio**, abajo en la pantalla del juego o en el mando, vuelve a 
 
 El botón de inicio en pantalla se oculta tras unos segundos: toca justo debajo de donde estaba para que vuelva.
 
+## Si el mando se desconecta
+
+Cuando el último mando se desconecta durante una partida, porque se le acabó la batería o se cortó su Bluetooth, el juego se pone en pausa 3 segundos después y vuelve la consola, que dice que el mando se desconectó. Vuelve a conectarlo y el juego vuelve solo. **Reanudar** vuelve al juego sin mando, con los controles táctiles.
+
+- Un juego al que juegas solo en la pantalla, sin mando, nunca se pone en pausa por él.
+- Un mando que vuelve en esos 3 segundos no pone nada en pausa.
+- **Sistema › Mientras funciona un juego › Pausar si el mando se desconecta** lo desactiva.
+- Un juego que se abre en lugar de Cartouche aún no se pone en pausa por su mando.
+
 ## Un juego que necesita más memoria
 
 Un juego que necesita más memoria de la que tiene detrás de la consola se abre en lugar de Cartouche, con toda la memoria de Cartouche: la consola se cierra mientras funciona y vuelve a abrirse cuando el juego termina. La ficha del juego lo dice, con **Volver a probar detrás de Cartouche**.
