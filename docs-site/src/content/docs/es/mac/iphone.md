@@ -32,6 +32,17 @@ El Mac comparte dos carpetas, y nada más de él es accesible: **Juegos**, tu ca
 
 El Mac responde mientras Cartouche está abierto en él.
 
+## Cartouche renovado por tu Mac
+
+Cartouche se abre siete días seguidos en tu iPhone, y luego hay que renovarlo. Cartouche para Mac lo renueva por ti, por el cable o en tu Wi-Fi, con o sin el uso compartido de arriba, y sin LocalDevVPN:
+
+1. En la página **iPhone** del Builder, en **Renovación de Cartouche**, haz clic en **Iniciar sesión…**, inicia sesión con la cuenta de Apple con la que instalaste Cartouche y escribe el código que envía Apple.
+2. Conecta el iPhone al Mac y confía en el Mac si te lo pide. Para llegar a él también en tu Wi-Fi, activa su sincronización por Wi-Fi en el Finder.
+
+A partir de ahí, el Mac mira cada media hora los iPhone a su alcance mientras está abierto, su ventana o su barra de menús, y renueva Cartouche en sus dos últimos días, o una vez caducado. **Renovar** lo hace al momento. Una renovación no reinstala nada: Cartouche conserva sus juegos, sus partidas guardadas y su memoria ampliada, y muestra su nueva fecha en su siguiente inicio.
+
+Tu contraseña va solo a Apple, una vez: el Mac guarda solo la sesión que Apple da a cambio, así que nunca te pide la contraseña al abrirse, compilar o jugar. Cuando Apple cierra esa sesión (un inicio de sesión en otro sitio, una contraseña nueva o los días que Apple le da) y toca una renovación, una notificación, una al día como mucho, pide volver a iniciar sesión en la página **iPhone**. El Mac no toca un Cartouche instalado con otra cuenta de Apple; y un Cartouche cuyo certificado ya no está en tu cuenta solo vuelve a abrirse con una instalación desde el Instalador de Cartouche.
+
 ## Manejar las compilaciones del Mac desde el iPhone
 
 ![Las compilaciones del Mac, en el iPhone](../../../../assets/screens/es-iphone-mac-builds.webp)

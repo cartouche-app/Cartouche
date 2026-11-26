@@ -101,6 +101,8 @@ final class AppModel: ObservableObject {
     let home: BuilderHome
     let setup = MacSetup()
     let bridge: BridgeController
+    /// Cartouche renewed on the iPhones this Mac reaches (Renewals.swift).
+    let renewals: RenewalController
     let covers = CoverStore.shared
     let updater: Updater
     let telemetry: BuilderTelemetry
@@ -183,6 +185,7 @@ final class AppModel: ObservableObject {
         self.home = home
         self.sample = sample
         bridge = BridgeController(home: home, sample: sample)
+        renewals = RenewalController(home: home, sample: sample)
         macGames = MacGames(store: home.macSaves, scratch: home.savesScratch, sample: sample)
         iPhoneGames = IPhoneGames(store: ConnectionGamesStore(url: home.connectionGames), scratch: home.gamesScratch)
         if sample {
@@ -231,6 +234,7 @@ final class AppModel: ObservableObject {
         // At once, before the library: its first check fetches nxnative.
         showSetup = needsSetup
         bridge.attach(model: self)
+        renewals.attach(model: self)
         ConsoleLink.start(self)
         startMacGames()
         // The sessions of the games played since the app last read them,
@@ -849,7 +853,9 @@ final class AppModel: ObservableObject {
         notify(title: title, body: body, section: .library, game: news.count == 1 ? news[0].titleID : nil)
     }
 
-    func notify(title: String, body: String, section: AppSection, game: String? = nil) {
+    /// A notification that opens SECTION; without a SOUND for one that
+    /// only says something waits on a page.
+    func notify(title: String, body: String, section: AppSection, game: String? = nil, sound: Bool = true) {
         var info: [String: String] = ["section": section.rawValue]
         if let game { info["game"] = game }
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { [info] granted, _ in
@@ -857,7 +863,7 @@ final class AppModel: ObservableObject {
             let content = UNMutableNotificationContent()
             content.title = title
             content.body = body
-            content.sound = .default
+            if sound { content.sound = .default }
             content.userInfo = info
             UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
         }

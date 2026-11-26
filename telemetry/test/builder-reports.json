@@ -610,6 +610,68 @@
       "seq": 28
     },
     {
+      "cartouche": "0.2.1",
+      "device": "Mac16,12",
+      "deviceLanguage": "fr",
+      "fields": {
+        "asked": false,
+        "daysGiven": 6,
+        "daysLeft": 1,
+        "due": "now",
+        "link": "usb",
+        "recorded": true,
+        "refreshedSession": true,
+        "registeredAppId": false,
+        "seconds": 3.2
+      },
+      "id": "6a1d9e3c-0000-4000-8000-000000000029",
+      "install": "8c1f6c2e-7a2f-4e19-8c3d-2f6a9b0e1d7c",
+      "ios": "26.6",
+      "kind": "event",
+      "language": "fr",
+      "name": "builder.renewed",
+      "schema": 1,
+      "seq": 29
+    },
+    {
+      "cartouche": "0.2.1",
+      "device": "Mac16,12",
+      "deviceLanguage": "fr",
+      "fields": {
+        "asked": true,
+        "code": -22406,
+        "daysLeft": -1,
+        "due": "expired",
+        "kind": "session-ended",
+        "stage": "session"
+      },
+      "id": "6a1d9e3c-0000-4000-8000-000000000030",
+      "install": "8c1f6c2e-7a2f-4e19-8c3d-2f6a9b0e1d7c",
+      "ios": "26.6",
+      "kind": "event",
+      "language": "fr",
+      "name": "builder.renewFailed",
+      "schema": 1,
+      "seq": 30
+    },
+    {
+      "cartouche": "0.2.1",
+      "device": "Mac16,12",
+      "deviceLanguage": "fr",
+      "fields": {
+        "result": "wrong-code",
+        "seconds": 42
+      },
+      "id": "6a1d9e3c-0000-4000-8000-000000000031",
+      "install": "8c1f6c2e-7a2f-4e19-8c3d-2f6a9b0e1d7c",
+      "ios": "26.6",
+      "kind": "event",
+      "language": "fr",
+      "name": "builder.appleSignIn",
+      "schema": 1,
+      "seq": 31
+    },
+    {
       "audioUnderrunsPerMinute": 0,
       "cartouche": "0.2.1",
       "chain": "844bf1a5ea8f",
@@ -642,7 +704,7 @@
         "p50": 6.45,
         "p95": 8.9
       },
-      "id": "6a1d9e3c-0000-4000-8000-000000000029",
+      "id": "6a1d9e3c-0000-4000-8000-000000000032",
       "install": "8c1f6c2e-7a2f-4e19-8c3d-2f6a9b0e1d7c",
       "ios": "26.6",
       "kind": "session",
@@ -661,7 +723,7 @@
       },
       "reader": 6,
       "schema": 1,
-      "seq": 29,
+      "seq": 32,
       "session": "c4d1b8e0-7a2f-4e19-8c3d-2f6a9b0e1d7c",
       "settings": {
         "DM_FPS_TARGET": "60",
