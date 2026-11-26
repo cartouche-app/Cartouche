@@ -46,6 +46,14 @@
 //  - A copy that holds no other profile, as one an older Cartouche made,
 //    leaves the profiles here as they are when it comes: it replaces save/
 //    and save_device/ only. Profiles are only ever added, never removed.
+//  - Beside each folder of saves, nxnative keeps the size the game gave it
+//    by ExtendSaveData or ExtendDeviceSaveData, "<folder>.size" (its
+//    hle_fs.c, save_size_path), which its own sync carries with the save
+//    (save_sync.c): a copy holds them, those of the profiles it holds, and
+//    they count in what tells that the saves changed. A copy that comes
+//    without the one of a folder it replaces, as one made before, takes it
+//    away, as nxnative does when it puts back an older save: the size goes
+//    with the save it was given to.
 //  - The list of the shaders and pipelines the game prepared on the spot,
 //    Documents/pso_user.tsv, which nxnative prepares again before the next
 //    start, is no save: it stays out of the copies and of what tells that
@@ -168,6 +176,21 @@ public enum CartoucheSaveSync {
     public static let profileRegistry = "save.users"
     /// The folders a copy holds, the first profile's first.
     static let savedFolders = folders + profileFolders
+    /// nxnative's records of the size a game gave its first profile's save
+    /// and the device's by ExtendSaveData or ExtendDeviceSaveData, beside
+    /// their folders (hle_fs.c, save_size_path: "<DM_SAVE>.size",
+    /// "<DM_SAVE>_device.size"), "<size> <journal>" in bytes: without one, a
+    /// save has the size control.nacp gives. Written whole, then renamed,
+    /// only when the game makes its save larger.
+    public static let sizeRecords = folders.map { $0 + ".size" }
+    /// The records of the sizes of the other profiles' saves
+    /// ("<DM_SAVE>_userN.size").
+    public static let profileSizeRecords = profileFolders.map { $0 + ".size" }
+    /// What a copy holds of the other profiles: their folders, their
+    /// registry and the records of their sizes.
+    static let profileItems = profileFolders + [profileRegistry] + profileSizeRecords
+    /// The files a copy holds beside its folders.
+    static let savedFiles = [profileRegistry] + sizeRecords + profileSizeRecords
     /// nxnative's working copy of the saves, which the game makes again from
     /// them when it starts: it goes when other saves come in. Each folder of
     /// saves has its own, "<folder>.work".
@@ -382,19 +405,25 @@ public enum CartoucheSaveSync {
                 add(try? url.resourceValues(forKeys: Set(keys)))
             }
         }
-        if let registry = registry(in: documents) {
+        if let registry = file(profileRegistry, in: documents) {
             add(try? registry.resourceValues(forKeys: Set(keys)))
         }
         guard count > 0 else { return nil }
+        // The sizes, of saves there are, as nxnative packs them.
+        for name in sizeRecords + profileSizeRecords {
+            if let record = file(name, in: documents) {
+                add(try? record.resourceValues(forKeys: Set(keys)))
+            }
+        }
         // The form older versions kept their saves' fingerprint in.
         return CartoucheLocalSaves(look: "\(count)|\(size)|\(newest)",
                                    written: Date(timeIntervalSince1970: TimeInterval(newest) / 1000))
     }
 
-    /// The registry of the profiles added, in DOCUMENTS, when it is there,
-    /// a file.
-    private static func registry(in documents: URL) -> URL? {
-        let url = documents.appendingPathComponent(profileRegistry)
+    /// The file NAME in DOCUMENTS, the profiles' registry or the record of
+    /// a save's size, when it is there, a file.
+    private static func file(_ name: String, in documents: URL) -> URL? {
+        let url = documents.appendingPathComponent(name)
         let values = try? url.resourceValues(forKeys: [.isRegularFileKey])
         return values?.isRegularFile == true ? url : nil
     }
@@ -422,9 +451,16 @@ public enum CartoucheSaveSync {
                 }
             }
         }
-        if let registry = registry(in: documents) {
+        if let registry = file(profileRegistry, in: documents) {
             let (size, crc) = try checksum(of: registry)
             lines.append(line(profileRegistry, size: size, crc: crc))
+        }
+        guard !lines.isEmpty else { return "" }
+        for name in sizeRecords + profileSizeRecords {
+            if let record = file(name, in: documents) {
+                let (size, crc) = try checksum(of: record)
+                lines.append(line(name, size: size, crc: crc))
+            }
         }
         return digest(lines)
     }
@@ -464,8 +500,10 @@ public enum CartoucheSaveSync {
 
     /// The saves' folders, files and links in DOCUMENTS, as a zip with paths
     /// from Documents: save/..., save_device/..., save_user2/... and
-    /// save.users for a game with other profiles; its comment names
-    /// GAMEVERSION, the version of the game that wrote them, when known.
+    /// save.users for a game with other profiles, and the records of their
+    /// sizes, save.size..., for a game that made them larger; its comment
+    /// names GAMEVERSION, the version of the game that wrote them, when
+    /// known.
     public static func writeZip(ofSavesIn documents: URL, to sink: CartoucheByteSink,
                                 gameVersion: String? = nil) async throws {
         let writer = CartoucheZipWriter(sink: sink)
@@ -494,46 +532,50 @@ public enum CartoucheSaveSync {
                 }
             }
         }
-        if let registry = registry(in: documents) {
-            let date = (try? registry.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? Date()
-            try await writer.addFile(profileRegistry, from: registry, date: date)
+        for name in savedFiles {
+            guard let url = file(name, in: documents) else { continue }
+            let date = (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? Date()
+            try await writer.addFile(name, from: url, date: date)
         }
         try await writer.finish(comment: comment(gameVersion: gameVersion))
     }
 
     /// Whether ENTRIES are those of a copy of saves: each in save/,
-    /// save_device/ or the folder of another profile, or the profiles'
-    /// registry.
+    /// save_device/ or the folder of another profile, the profiles'
+    /// registry or the record of a save's size.
     public static func holdsSavesOnly(_ entries: [CartoucheZipEntry]) -> Bool {
         entries.allSatisfy { entry in
-            entry.name == profileRegistry || savedFolders.contains { entry.name == $0 + "/" || entry.name.hasPrefix($0 + "/") }
+            savedFiles.contains(entry.name) || savedFolders.contains { entry.name == $0 + "/" || entry.name.hasPrefix($0 + "/") }
         }
     }
 
     /// Whether ENTRIES, a copy's, hold the game's other profiles: their
-    /// folders or their registry. A copy an older Cartouche made, or one of
-    /// a game no profile was added to, holds none.
+    /// folders, their registry or the records of their sizes. A copy an
+    /// older Cartouche made, or one of a game no profile was added to,
+    /// holds none.
     public static func holdsProfiles(_ entries: [CartoucheZipEntry]) -> Bool {
         entries.contains { entry in
-            entry.name == profileRegistry || profileFolders.contains { entry.name == $0 + "/" || entry.name.hasPrefix($0 + "/") }
+            profileItems.contains { entry.name == $0 || entry.name.hasPrefix($0 + "/") }
         }
     }
 
     /// Puts the saves unpacked in UNPACKED in place of those in DOCUMENTS,
     /// and removes nxnative's working copies, for the game to make them
-    /// again from them. A folder the copy does not have goes, so that both
-    /// sides hold the same; but the other profiles and their registry stay
-    /// as they are when the copy holds none of them, as one an older
-    /// Cartouche made (holdsProfiles). What is replaced goes to ASIDE, a
-    /// folder of its own, first, and comes back if a step fails.
+    /// again from them. A folder or a record of a size the copy does not
+    /// have goes, so that both sides hold the same, as nxnative takes the
+    /// records of the sizes away when it puts back a save made without them
+    /// (save_sync.c, pull); but the other profiles, their registry and their
+    /// sizes stay as they are when the copy holds none of them, as one an
+    /// older Cartouche made (holdsProfiles). What is replaced goes to ASIDE,
+    /// a folder of its own, first, and comes back if a step fails.
     public static func replaceSaves(in documents: URL, with unpacked: URL, aside: URL) throws {
         let fileManager = FileManager.default
         try fileManager.createDirectory(at: documents, withIntermediateDirectories: true)
         try fileManager.createDirectory(at: aside, withIntermediateDirectories: true)
-        let profiles = (profileFolders + [profileRegistry]).contains {
+        let profiles = profileItems.contains {
             fileManager.fileExists(atPath: unpacked.appendingPathComponent($0).path)
         }
-        let replaced = profiles ? folders + profileFolders + [profileRegistry] : folders
+        let replaced = folders + sizeRecords + (profiles ? profileItems : [])
         let working = (profiles ? savedFolders : folders).map { $0 + ".work" }
         var moved: [String] = []
         var placed: [String] = []
@@ -705,7 +747,8 @@ extension CartoucheSaveSync {
 public struct CartoucheSavesSnapshot: Hashable, Sendable {
     /// The folder they were copied into, laid out as a game's Documents:
     /// save/ and save_device/, and the other profiles' folders and their
-    /// registry for a game that has them; never the list of pipelines.
+    /// registry for a game that has them, with the records of their sizes;
+    /// never the list of pipelines.
     public let documents: URL
     /// How the saves looked in the game's Documents as they were copied.
     public let look: String
@@ -772,12 +815,14 @@ extension CartoucheSaveSync {
                     break
                 }
             }
-            if failure == nil, let registry = registry(in: documents) {
-                // nxnative writes it whole, then renames it over the old one.
-                let copy = folder.appendingPathComponent(profileRegistry)
+            // nxnative writes the registry and the sizes whole, then renames
+            // them over the old ones.
+            for name in savedFiles where failure == nil {
+                guard let source = file(name, in: documents) else { continue }
+                let copy = folder.appendingPathComponent(name)
                 do {
-                    try fileManager.copyItem(at: registry, to: copy)
-                    if let date = try? registry.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate {
+                    try fileManager.copyItem(at: source, to: copy)
+                    if let date = try? source.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate {
                         try? fileManager.setAttributes([.modificationDate: date], ofItemAtPath: copy.path)
                     }
                 } catch {

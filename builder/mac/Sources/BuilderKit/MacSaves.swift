@@ -45,7 +45,8 @@
 //  - What was the same on both sides last, the base, is kept for each game
 //    and one saves folder (MacSaveStore): another folder starts from none.
 //  - The other profiles of a game, save_user2/ to save_user8/, and their
-//    registry, save.users, go and come with its saves, as on the iPhone;
+//    registry, save.users, go and come with its saves, as on the iPhone,
+//    and the sizes the game gave them, save.size... beside each folder;
 //    the list of pipelines the game prepared, pso_user.tsv, beside save/,
 //    goes into the one beside the copies, which every device adds its lines
 //    to, and its lines this Mac lacks come before the game starts

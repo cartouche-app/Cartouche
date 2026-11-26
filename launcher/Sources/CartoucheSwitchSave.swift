@@ -22,8 +22,16 @@
 //    folder of the game's, "0x<title ID> <name>": a save without the fiche
 //    is taken for a player's, and the title ID a name around it gives, if
 //    any, for the game's.
+//  - The size the save has on the Switch goes with it: JKSV's fiche gives
+//    it, as the Switch's save data keeps it (the extra data's size and
+//    journal size, which JKSV extends a save to when it puts one back), and
+//    it is written as nxnative keeps the size a game gave a save beside its
+//    folder, "<folder>.size" (hle_fs.c, ExtendSaveData), for the game to
+//    find its save as large as on the Switch. The record of the save
+//    replaced goes with it.
 //  - The folder the save replaces is kept first, in
-//    save-backups/<date> before import, beside the backups nxnative makes
+//    save-backups/<date> before import, with the record of its size,
+//    beside the backups nxnative makes
 //    of the saves its cloud sync replaces, which it never touches
 //    (save_sync.c, is_backup); the game's sheet puts it back, and what that
 //    replaces is kept the same way.
@@ -67,6 +75,11 @@ struct CartoucheSwitchSaveMeta: Equatable {
     /// catalogue writes it.
     let titleId: String
     let kind: CartoucheSwitchSaveKind
+    /// The size of the save on the Switch and of its journal, in bytes, as
+    /// nn::fs::GetSaveDataSize gives them: those of control.nacp, or larger
+    /// when the game extended its save (ExtendSaveData).
+    var size: Int64 = 0
+    var journal: Int64 = 0
 
     /// The fiche in DATA, nil for none: too short, or not JKSV's. Its
     /// fields, in bytes: the magic (4), JKSV's revision (1), the
@@ -79,6 +92,16 @@ struct CartoucheSwitchSaveMeta: Equatable {
         guard bytes.count == Self.size, Self.number(bytes, at: 0, count: 4) == UInt64(Self.magic) else { return nil }
         titleId = String(format: "%016llX", Self.number(bytes, at: 5, count: 8))
         kind = CartoucheSwitchSaveKind(type: bytes[37])
+        size = Int64(bitPattern: Self.number(bytes, at: 61, count: 8))
+        journal = Int64(bitPattern: Self.number(bytes, at: 69, count: 8))
+    }
+
+    /// The record of the save's size nxnative keeps beside its folder
+    /// ("<size> <journal>", hle_fs.c, save_size_put_locked); nil for a
+    /// fiche without a size, which nxnative would not read.
+    var sizeRecord: Data? {
+        guard size > 0, journal >= 0 else { return nil }
+        return Data("\(size) \(journal)\n".utf8)
     }
 
     private static func number(_ bytes: [UInt8], at offset: Int, count: Int) -> UInt64 {
@@ -181,6 +204,9 @@ enum CartoucheSwitchSave {
     /// start.
     static let workSuffix = ".work"
     static let newSuffix = ".new"
+    /// The record of the size the game gave the save of a folder, beside it
+    /// (CartoucheSaveSync.sizeRecords).
+    static let sizeSuffix = ".size"
     /// nxnative's backups of the saves it replaces, Documents/save-backups,
     /// where Cartouche keeps its own.
     static let backupsFolder = "save-backups"
@@ -356,11 +382,16 @@ enum CartoucheSwitchSave {
         return FileManager.default.fileExists(atPath: url.path, isDirectory: &folder) && folder.boolValue
     }
 
+    private static func isFile(_ url: URL) -> Bool {
+        (try? url.resourceValues(forKeys: [.isRegularFileKey]))?.isRegularFile == true
+    }
+
     // MARK: Putting it in place
 
     /// Copies, or MOVING moves, the save's files and folders from SOURCE,
     /// the folder picked or the archive unpacked, to FOLDER in STAGED, as
-    /// they go in the game's Documents.
+    /// they go in the game's Documents, with the record of the save's size
+    /// on the Switch beside them when JKSV's fiche gives it.
     static func stage(_ export: CartoucheSwitchSaveExport, from source: URL, as folder: String, into staged: URL,
                       moving: Bool = false) throws {
         let fileManager = FileManager.default
@@ -379,6 +410,9 @@ enum CartoucheSwitchSave {
             } else {
                 try fileManager.copyItem(at: from, to: to)
             }
+        }
+        if let record = export.meta?.sizeRecord {
+            try record.write(to: staged.appendingPathComponent(folder + sizeSuffix))
         }
     }
 
@@ -411,7 +445,8 @@ enum CartoucheSwitchSave {
     }
 
     /// Puts the save folders in INCOMING, save and save_device, in place of
-    /// the game's in DOCUMENTS, dated NOW: those there move to KEPT first, a
+    /// the game's in DOCUMENTS, dated NOW, each with the record of its size
+    /// INCOMING has, or none: those there move to KEPT first, a
     /// folder of their own, and come back if a step fails, as the folders
     /// already moved go back to INCOMING. What nxnative left of its working
     /// copies of those it replaced, <folder>.work and <folder>.new, goes
@@ -426,37 +461,51 @@ enum CartoucheSwitchSave {
         guard !folders.isEmpty else { throw CartoucheSwitchSaveProblem.empty }
         for folder in folders {
             try date(incoming.appendingPathComponent(folder, isDirectory: true), at: now)
+            let record = incoming.appendingPathComponent(folder + sizeSuffix)
+            if isFile(record) { try fileManager.setAttributes([.modificationDate: now], ofItemAtPath: record.path) }
         }
         try fileManager.createDirectory(at: documents, withIntermediateDirectories: true)
+        func exists(_ url: URL) -> Bool { (try? fileManager.attributesOfItem(atPath: url.path)) != nil }
         var moved: [String] = []
         var placed: [String] = []
         do {
             for folder in folders {
+                let record = folder + sizeSuffix
                 let here = documents.appendingPathComponent(folder, isDirectory: true)
-                if (try? fileManager.attributesOfItem(atPath: here.path)) != nil {
+                let hereRecord = documents.appendingPathComponent(record)
+                if exists(here) {
                     if moved.isEmpty { try fileManager.createDirectory(at: kept, withIntermediateDirectories: true) }
                     try fileManager.moveItem(at: here, to: kept.appendingPathComponent(folder, isDirectory: true))
                     moved.append(folder)
+                    if exists(hereRecord) {
+                        try fileManager.moveItem(at: hereRecord, to: kept.appendingPathComponent(record))
+                        moved.append(record)
+                    }
                 }
                 try fileManager.moveItem(at: incoming.appendingPathComponent(folder, isDirectory: true), to: here)
                 placed.append(folder)
+                // The record of a size with no save beside it: it goes.
+                if exists(hereRecord) { try fileManager.removeItem(at: hereRecord) }
+                let coming = incoming.appendingPathComponent(record)
+                if exists(coming) {
+                    try fileManager.moveItem(at: coming, to: hereRecord)
+                    placed.append(record)
+                }
             }
         } catch {
             // The saves as they were.
-            for folder in placed.reversed() {
-                try? fileManager.moveItem(at: documents.appendingPathComponent(folder, isDirectory: true),
-                                          to: incoming.appendingPathComponent(folder, isDirectory: true))
+            for name in placed.reversed() {
+                try? fileManager.moveItem(at: documents.appendingPathComponent(name), to: incoming.appendingPathComponent(name))
             }
-            for folder in moved.reversed() {
-                try? fileManager.moveItem(at: kept.appendingPathComponent(folder, isDirectory: true),
-                                          to: documents.appendingPathComponent(folder, isDirectory: true))
+            for name in moved.reversed() {
+                try? fileManager.moveItem(at: kept.appendingPathComponent(name), to: documents.appendingPathComponent(name))
             }
             if moved.isEmpty || (try? fileManager.contentsOfDirectory(atPath: kept.path))?.isEmpty == true {
                 try? fileManager.removeItem(at: kept)
             }
             throw error
         }
-        for folder in placed {
+        for folder in folders {
             for leftover in [folder + workSuffix, folder + newSuffix] {
                 try? fileManager.removeItem(at: documents.appendingPathComponent(leftover, isDirectory: true))
             }

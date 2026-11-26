@@ -22,7 +22,7 @@ The sheet also says how long you played the game on this Mac and whether it runs
 
 ## Your saves on the Mac
 
-The Mac keeps the saves of the games played there in step with your saves folder, as the iPhone does: the newest copy comes before a game starts, and the Mac's saves go a few seconds after the game saves. When both sides changed, the saves written last win and the others are kept as a copy. Every profile of the game goes with them, and the shaders it prepared come back, as on the iPhone. The sheet shows them, with **Sync with … now** and **Put back a copy**, and brings in a save from your console as on the iPhone.
+The Mac keeps the saves of the games played there in step with your saves folder, as the iPhone does: the newest copy comes before a game starts, and the Mac's saves go a few seconds after the game saves. When both sides changed, the saves written last win and the others are kept as a copy. Every profile of the game goes with them, with the room the game made for each, and the shaders it prepared come back, as on the iPhone. The sheet shows them, with **Sync with … now** and **Put back a copy**, and brings in a save from your console as on the iPhone.
 
 This Mac's copy of a game your NAS keeps stays out of Time Machine: it comes again from the NAS. The game's saves still go in.
 

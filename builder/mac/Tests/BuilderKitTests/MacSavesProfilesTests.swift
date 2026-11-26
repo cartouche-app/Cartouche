@@ -6,7 +6,8 @@
 //  profile, as on the iPhone (MacSaves.swift, CartoucheSaveSync): the saves
 //  of its other profiles and their registry go and come in its copies, and
 //  the list of the pipelines it prepared, pso_user.tsv, goes beside them,
-//  where every device adds its lines, and comes before the game starts.
+//  where every device adds its lines, and comes before the game starts;
+//  the sizes the game gave its saves, save.size..., go with them.
 //
 
 import CartoucheCore
@@ -121,6 +122,43 @@ final class MacSavesProfilesTests: XCTestCase {
         // In step since: nothing goes back.
         let again = try await folder.sync(game, base: came.base, fetching: false)
         XCTAssertEqual(again.step, .none)
+    }
+
+    func testTheSizesTheGameGaveItsSavesGoFromOneMacToAnother() async throws {
+        // The game made its saves larger on this Mac (ExtendSaveData).
+        let first = try folder("nxnative")
+        let mac = documents("nxnative")
+        try write(["save/slot0.bin": "joueur 1", "save.size": "67108864 1048576\n",
+                   "save_user2/slot0.bin": "joueur 2", "save_user2.size": "134217728 1048576\n", "save.users": "nxnative-users-1 03\n"],
+                  in: mac, at: t0)
+        let sent = try await first.sync(game, base: nil, fetching: false)
+        XCTAssertEqual(sent.step, .send)
+        let copy = try XCTUnwrap(sent.sent)
+        let entries = try await CartoucheZip.entries(of: CartoucheFileSource(gameFolder.appendingPathComponent(copy)))
+        XCTAssertTrue(entries.contains { $0.name == "save.size" })
+        XCTAssertTrue(entries.contains { $0.name == "save_user2.size" })
+
+        // Another Mac, its game never played, finds them as large.
+        let second = try folder("other")
+        let other = documents("other")
+        let came = try await second.sync(game, base: nil, fetching: true)
+        XCTAssertEqual(came.step, .fetch)
+        XCTAssertEqual(text("save.size", in: other), "67108864 1048576\n")
+        XCTAssertEqual(text("save_user2.size", in: other), "134217728 1048576\n")
+
+        // An iPhone of an older Cartouche plays the first profile further,
+        // its save never made larger there: its copy takes the size away
+        // with the save it replaces, and leaves the second profile's.
+        let iPhone = root.appendingPathComponent("iPhone/Documents", isDirectory: true)
+        try write(["save/slot0.bin": "joueur 1, sur l'iPhone"], in: iPhone, at: t0.addingTimeInterval(3_600))
+        let sink = try CartoucheFileSink(gameFolder.appendingPathComponent(CartoucheSaveSync.fileName(t0.addingTimeInterval(3_600))))
+        try await CartoucheSaveSync.writeZip(ofSavesIn: iPhone, to: sink)
+        try sink.close()
+        let back = try await first.sync(game, base: sent.base, fetching: true)
+        XCTAssertEqual(back.step, .fetch)
+        XCTAssertEqual(text("save/slot0.bin", in: mac), "joueur 1, sur l'iPhone")
+        XCTAssertNil(text("save.size", in: mac))
+        XCTAssertEqual(text("save_user2.size", in: mac), "134217728 1048576\n")
     }
 
     func testTheCopyMadeWhileTheGamePlaysSendsNoPipelines() async throws {
