@@ -772,7 +772,7 @@ struct GalleryScenario {
             }
             // Cartouche Cloud's answers, never asked of the platform.
             GalleryCloud.show(screen: screen, work: work)
-            if let notice = signingNotice() {
+            if let notice = signingNotice() ?? roomNotice() {
                 CartoucheGameActions.shared.notice = notice
             }
             if work == "update" {
@@ -983,6 +983,37 @@ struct GalleryScenario {
         let origin: CartoucheReport.Origin = work == "not-signed-install" ? .install : .start
         let report = CartoucheReports.make(origin, title, message: message, failure: failure)
         return CartoucheGameNotice(title: title, message: message, report: report, signAgain: signAgain ? bundleId : nil)
+    }
+
+    /// The notices of the sheet's game whose memory nxnative keeps in
+    /// files, as CartoucheGameActions shows them (gameDidEnd, checkRoom):
+    /// the game closed with no word of why, as up to 0.16.2 when nxnative
+    /// stopped it for lack of room; stopped for lack of room, with what was
+    /// free and what iOS counted as available; and, before a start, that
+    /// it may close, with Play anyway. The figures are made up: a 9 GB pool
+    /// and nxnative's 2 GB minimum.
+    @MainActor
+    private func roomNotice() -> CartoucheGameNotice? {
+        let titleId = sheet ?? ownedTitles.first ?? ""
+        let name = CartoucheCatalog.shared.game(titleId: titleId)?.name ?? "Game"
+        let free = CartoucheText.storageAmount(bytes: 2_400_000_000)
+        let available = CartoucheText.storageAmount(bytes: 47_200_000_000)
+        switch work ?? "" {
+        case "stopped-closed":
+            return CartoucheGameNotice(title: CartoucheText.gameStoppedTitle(name), message: CartoucheText.gameStopped)
+        case "stopped-space":
+            return CartoucheGameNotice(title: CartoucheText.gameStoppedTitle(name),
+                                       message: CartoucheText.gameStoppedSpace(free: free, available: available))
+        case "start-space":
+            let files = CartoucheGameRoom.Files(poolBytes: 9 << 30, minimumBytes: CartoucheGameRoom.defaultMinimumBytes)
+            return CartoucheGameNotice(title: CartoucheText.startSpaceTitle(name),
+                                       message: CartoucheText.startSpace(needed: CartoucheText.storageAmount(bytes: files.neededBytes),
+                                                                         free: CartoucheText.storageAmount(bytes: 7_500_000_000),
+                                                                         available: available),
+                                       playAnyway: "org.nxnative." + titleId.lowercased())
+        default:
+            return nil
+        }
     }
 
     /// The player's games as IPAs in FOLDER, as Cartouche Builder leaves

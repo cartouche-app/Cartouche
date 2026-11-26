@@ -233,9 +233,9 @@ struct CartoucheGameProcess: Codable, Equatable {
 extension CartoucheGameMeasures {
     /// The measures of a session that ran behind the console, with what its
     /// own process wrote: the system's own peak, and how it ended when its
-    /// log does not say, as a crash does. NEAR LIMIT: its last reading was
-    /// close to the limit iOS set for it, as that of a game iOS stops for
-    /// its memory is.
+    /// log does not say, as a crash or nxnative's stop for lack of room
+    /// does. NEAR LIMIT: its last reading was close to the limit iOS set
+    /// for it, as that of a game iOS stops for its memory is.
     func with(_ process: CartoucheGameProcess, nearLimit: Bool) -> CartoucheGameMeasures {
         var measures = self
         var memory = measures.memory ?? Memory()
@@ -243,7 +243,8 @@ extension CartoucheGameMeasures {
         memory.exactPeak = true
         measures.memory = memory
         let logged = measures.end?.kind
-        guard logged != "crash", logged != "boot-failed" else { return measures }
+        // nxnative said why it stopped the game: no guess replaces it.
+        guard logged != "crash", logged != "boot-failed", measures.end?.cause != "diskFull" else { return measures }
         if process.quit == true {
             measures.end = End(kind: "quit")
         } else if nearLimit {

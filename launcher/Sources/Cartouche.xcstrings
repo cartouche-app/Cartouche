@@ -320,6 +320,35 @@
         }
       }
     },
+    "action.playAnyway" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trotzdem spielen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play anyway"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jugar igualmente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jouer quand même"
+          }
+        }
+      }
+    },
     "action.quit" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14269,6 +14298,64 @@
         }
       }
     },
+    "running.stopped.space" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dem Spiel fehlte auf diesem iPhone der Platz für seinen Speicher, den es während des Spielens in Dateien hält: %@ waren frei. Schaffe Platz und spiele dann erneut. Dein Fortschritt bleibt bis zum letzten Speichern erhalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The game ran out of room on this iPhone for its memory, which it keeps in files while it plays: %@ was free. Free up some space, then play again. Your progress is kept up to its last save."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El juego se quedó sin espacio en este iPhone para su memoria, que guarda en archivos mientras se juega: quedaban %@ libres. Libera espacio y vuelve a jugar. Tu progreso se conserva hasta su última partida guardada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le jeu n’avait plus de place sur cet iPhone pour sa mémoire, qu’il garde dans des fichiers pendant la partie : il restait %@ de libre. Libérez de la place, puis rejouez. Votre progression est gardée jusqu’à sa dernière sauvegarde."
+          }
+        }
+      }
+    },
+    "running.stopped.space.purgeable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dem Spiel fehlte auf diesem iPhone der Platz für seinen Speicher, den es während des Spielens in Dateien hält: %1$@ waren frei. iOS zählt %2$@ als verfügbar, gibt den Rest aber erst frei, wenn ihm selbst der Platz ausgeht, zu spät für das Spiel. Schaffe Platz, etwa die IPAs bereits installierter Spiele, und spiele dann erneut. Dein Fortschritt bleibt bis zum letzten Speichern erhalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The game ran out of room on this iPhone for its memory, which it keeps in files while it plays: %1$@ was free. iOS counts %2$@ as available, but frees the rest only once it runs short itself, too late for the game. Free up some space, such as the IPAs of games already installed, then play again. Your progress is kept up to its last save."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El juego se quedó sin espacio en este iPhone para su memoria, que guarda en archivos mientras se juega: quedaban %1$@ libres. iOS cuenta %2$@ como disponibles, pero solo libera el resto cuando a él mismo le falta, demasiado tarde para el juego. Libera espacio, por ejemplo los IPA de los juegos ya instalados, y vuelve a jugar. Tu progreso se conserva hasta su última partida guardada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le jeu n’avait plus de place sur cet iPhone pour sa mémoire, qu’il garde dans des fichiers pendant la partie : il restait %1$@ de libre. iOS compte %2$@ de disponible, mais ne libère le reste que quand il en manque lui-même, trop tard pour le jeu. Libérez de la place, par exemple les IPA des jeux déjà installés, puis rejouez. Votre progression est gardée jusqu’à sa dernière sauvegarde."
+          }
+        }
+      }
+    },
     "running.stopped.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -23110,6 +23197,93 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ce fichier est un .zip. Touchez-le d’abord dans l’app Fichiers, qui l’ouvre en dossier, puis choisissez le fichier .p12 de ce dossier."
+          }
+        }
+      }
+    },
+    "start.space" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Während des Spielens hält das Spiel seinen Speicher in Dateien, die bis zu %1$@ belegen können, und dieses iPhone hat %2$@ frei. Schaffe zuerst Platz."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "While it plays, the game keeps its memory in files, which can take up to %1$@, and this iPhone has %2$@ free. Free up some space first."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mientras se juega, el juego guarda su memoria en archivos, que pueden ocupar hasta %1$@, y este iPhone tiene %2$@ libres. Libera espacio primero."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendant la partie, le jeu garde sa mémoire dans des fichiers, qui peuvent prendre jusqu’à %1$@, et cet iPhone a %2$@ de libre. Libérez d’abord de la place."
+          }
+        }
+      }
+    },
+    "start.space.purgeable" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Während des Spielens hält das Spiel seinen Speicher in Dateien, die bis zu %1$@ belegen können, und dieses iPhone hat gerade %2$@ frei. iOS zählt %3$@ als verfügbar, gibt den Rest aber erst frei, wenn ihm selbst der Platz ausgeht, zu spät für das Spiel. Schaffe zuerst Platz, etwa die IPAs bereits installierter Spiele."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "While it plays, the game keeps its memory in files, which can take up to %1$@, and this iPhone has %2$@ free right now. iOS counts %3$@ as available, but frees the rest only once it runs short itself, too late for the game. Free up some space first, such as the IPAs of games already installed."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mientras se juega, el juego guarda su memoria en archivos, que pueden ocupar hasta %1$@, y este iPhone tiene %2$@ libres ahora mismo. iOS cuenta %3$@ como disponibles, pero solo libera el resto cuando a él mismo le falta, demasiado tarde para el juego. Libera espacio primero, por ejemplo los IPA de los juegos ya instalados."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pendant la partie, le jeu garde sa mémoire dans des fichiers, qui peuvent prendre jusqu’à %1$@, et cet iPhone a %2$@ de libre en ce moment. iOS compte %3$@ de disponible, mais ne libère le reste que quand il en manque lui-même, trop tard pour le jeu. Libérez d’abord de la place, par exemple les IPA des jeux déjà installés."
+          }
+        }
+      }
+    },
+    "start.space.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ könnte sich wegen fehlenden Speicherplatzes schließen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ may close for lack of space"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ podría cerrarse por falta de espacio"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ risque de se fermer faute de place"
           }
         }
       }
