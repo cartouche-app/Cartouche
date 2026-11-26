@@ -9,7 +9,7 @@ Cartouche fait tourner les jeux que [nxnative](https://github.com/seedds/nxnativ
 
 | | |
 | --- | --- |
-| **iPhone** | iOS 26 ou plus récent, sur un iPhone 15 Pro ou plus récent. Un iPhone 11 à 15 joue aux jeux que Cartouche pour Mac construit avec nxnative-nobc ([plus bas](#iphone-11-à-15)). Les plus gros jeux demandent un iPhone de 12 Go. |
+| **iPhone** | iOS 26 ou plus récent, sur un iPhone 15 Pro ou plus récent. Un iPhone 11 à 15 joue aux jeux que Cartouche pour Mac et Cartouche Cloud construisent avec nxnative-nobc ([plus bas](#iphone-11-à-15)). Les plus gros jeux demandent un iPhone de 12 Go. |
 | **iPad** | iPadOS 26 ou plus récent, sur un iPad avec une puce M1 ou plus récente. |
 | **Mac** | Un Mac avec une puce Apple et macOS 26.6 ou plus récent, pour construire vos jeux et y jouer. Sans Mac, [Cartouche Cloud](/fr/cloud/) les construit pour vous. |
 | **Compte Apple** | Un compte gratuit suffit, ou votre propre certificat de signature (.p12). |
@@ -24,7 +24,7 @@ Cartouche fait tourner les jeux que [nxnative](https://github.com/seedds/nxnativ
 
 ## iPhone 11 à 15
 
-nxnative demande une puce graphique qui lit les textures compressées en BC, ce que n'ont pas l'iPhone 15, l'iPhone 15 Plus et les modèles plus anciens. [nxnative-nobc](https://github.com/mianmuhammadse/nxnative-nobc), une fourche distincte de nxnative par mianmuhammadse, convertit ces textures pour un tel iPhone. Cartouche pour Mac construit à partir d'elle tout seul quand l'un de vos iPhone associés en a besoin ([Construire pour](/fr/mac/builder/#construire-pour-chacun-de-vos-iphone)), et la fiche d'un jeu dit quand sa construction les convertit.
+nxnative demande une puce graphique qui lit les textures compressées en BC, ce que n'ont pas l'iPhone 15, l'iPhone 15 Plus et les modèles plus anciens. [nxnative-nobc](https://github.com/mianmuhammadse/nxnative-nobc), une fourche distincte de nxnative par mianmuhammadse, convertit ces textures pour un tel iPhone. Cartouche pour Mac construit à partir d'elle tout seul quand l'un de vos iPhone associés en a besoin ([Construire pour](/fr/mac/builder/#construire-pour-chacun-de-vos-iphone)), et la fiche d'un jeu dit quand sa construction les convertit. Cartouche Cloud construit à partir d'elle un jeu que vous envoyez pour un iPhone 11 à 15 ([Construire un jeu](/fr/cloud/#construire-un-jeu)).
 
 :::tip
 Vous ne savez pas si votre iPhone a ce qu'il faut pour un jeu ? La fiche de chaque jeu le vérifie pour vous : mémoire, version d'iOS et puce. Voir [La fiche d'un jeu](/fr/iphone/game-sheet/).

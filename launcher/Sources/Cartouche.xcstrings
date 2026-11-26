@@ -35990,6 +35990,35 @@
         }
       }
     },
+    "work.install.gpu.cloud" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ohne Mac erstellt Cartouche Cloud sie ebenfalls damit, für ein Spiel, das du für ein iPhone 11 bis 15 sendest."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "With no Mac, Cartouche Cloud builds them from it too, for a game you send for an iPhone 11 to 15."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin Mac, Cartouche Cloud también los compila con él, para un juego que envías para un iPhone 11 a 15."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sans Mac, Cartouche Cloud les construit aussi avec elle, pour un jeu que vous envoyez pour un iPhone 11 à 15."
+          }
+        }
+      }
+    },
     "work.install.noSpace" : {
       "extractionState" : "manual",
       "localizations" : {

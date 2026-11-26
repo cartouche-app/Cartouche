@@ -840,7 +840,7 @@
     },
     {
       "name": "iphone-system-gpu-no-bc",
-      "comment": "System on the same iPhone, whose GPU reads no BC-compressed texture: this iPhone's section says that nxnative refuses it, and that Cartouche on a Mac builds its games from nxnative-nobc, a separate fork of nxnative, once it is paired with it.",
+      "comment": "System on the same iPhone, whose GPU reads no BC-compressed texture: this iPhone's section says that nxnative refuses it, that Cartouche on a Mac builds its games from nxnative-nobc, a separate fork of nxnative, once it is paired with it, and that Cartouche Cloud builds them from it too for a game sent for an iPhone 11 to 15.",
       "screen": "system",
       "work": "gpu-no-bc",
       "category": "device",

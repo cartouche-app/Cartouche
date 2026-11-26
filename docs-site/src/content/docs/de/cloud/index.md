@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-Kein Mac? Sende von einem Computer aus deine eigene Kopie eines Spiels auf der [Website von Cartouche Cloud](https://build.cartouche.cloud/). Sie erstellt es mit nxnative auf einem Mac in der Cloud, nur für dich, und löscht dann deine Kopie. Cartouche, mit deinem Account verknüpft, verfolgt den Build und installiert das Spiel auf deinem iPhone.
+Kein Mac? Sende von einem Computer aus deine eigene Kopie eines Spiels auf der [Website von Cartouche Cloud](https://build.cartouche.cloud/). Sie erstellt es auf einem Mac in der Cloud, nur für dich, mit nxnative, oder mit nxnative-nobc für ein iPhone 11 bis 15, und löscht dann deine Kopie. Cartouche, mit deinem Account verknüpft, verfolgt den Build und installiert das Spiel auf deinem iPhone.
 
 Cartouche Cloud stellt kein Spiel bereit: Es erstellt nur die Kopie, die du sendest.
 
@@ -14,7 +14,7 @@ Cartouche Cloud stellt kein Spiel bereit: Es erstellt nur die Kopie, die du send
 ## Ein Spiel erstellen
 
 1. Öffne auf einem Computer die [Website von Cartouche Cloud](https://build.cartouche.cloud/), erstelle deinen Account und kaufe dort Guthaben.
-2. Sende deine eigene Kopie des Spiels: das Paket deiner Konsole (`.nsp`, `.xci`, `.nsz` oder `.xcz`, mit seinen Updates und DLCs und den Schlüsseln deiner Konsole, `prod.keys`), eine `.nup` oder ein `.zip` eines Dumps.
+2. Sende deine eigene Kopie des Spiels: das Paket deiner Konsole (`.nsp`, `.xci`, `.nsz` oder `.xcz`, mit seinen Updates und DLCs und den Schlüsseln deiner Konsole, `prod.keys`), eine `.nup` oder ein `.zip` eines Dumps. Sag dann, für welches iPhone es ist: ein iPhone 15 Pro oder neuer, oder ein iPhone 11 bis 15, für das es mit [nxnative-nobc](/de/start/requirements/#iphone-11-bis-15) erstellt wird.
 3. Verknüpfe Cartouche einmal mit deinem Account ([Dein iPhone verknüpfen](/de/cloud/iphone/#dein-iphone-verknüpfen)).
 4. Cartouche verfolgt den Build Schritt für Schritt, und eine E-Mail sagt dir, wann er fertig ist. Dann bringt **Installieren** das Spiel auf dein iPhone, wie deine anderen Spiele.
 
