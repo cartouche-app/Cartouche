@@ -21,6 +21,13 @@
 //  comment: a newer version's copy never comes to an older game, nor is
 //  put back on it, nor has the saves here go over it (CartoucheSaveSync).
 //
+//  Beside the copies, "<game> [<title ID>]/pso_user.tsv" holds the lines of
+//  the lists of pipelines the game prepared on each device: those it lacks
+//  come into the game's own as it is installed and before it starts, those
+//  the game prepared since go there after it (CartoucheSaveSync's
+//  keepPipelines). An older Cartouche, which looks at the copies only,
+//  leaves it as it is.
+//
 //  Cartouche Builder keeps the saves of the games played on a Mac in step
 //  with the iPhone's saves folder on the same connection by this code too
 //  (builder/mac, ConsoleSaves.swift), with what a Mac adds: a game started
@@ -97,6 +104,9 @@ struct CartoucheSaveOutcome {
     /// The version of the game the newest copy names, newer than the
     /// game's here, when it held the copy back (CartoucheSaveSync.heldBack).
     var newer: String?
+    /// What moved of the list of pipelines the game prepared, beside the
+    /// copies (CartoucheSaveSync.keepPipelines).
+    var pipelines = CartouchePipelinesMoved()
 }
 
 /// The player's saves folder on a server signed in to, for a round of
@@ -172,7 +182,8 @@ final class CartoucheSavesFolder {
         // The saves folder a Mac kept the game in step with before this one.
         let left = leaving != nil && given?.place != place ? given : nil
         let folder = try await gameFolder(of: target)
-        let names = try await copyNames(in: folder)
+        let listed = try await files(in: folder)
+        let names = Self.copyNames(in: listed)
         var here = CartoucheSaveSync.saves(in: target.documents)
         var newest = names.last.flatMap { name in
             CartoucheSaveSync.date(inName: name).map { CartoucheSaveCopy(name: name, date: $0) }
@@ -255,6 +266,18 @@ final class CartoucheSavesFolder {
             outcome.base = try await fetch(newest, of: target, from: folder, quiet: quiet)
             outcome.fetched = newest.name
         }
+        // The list of pipelines the game prepared, beside its copies, once
+        // the game has a folder there: not from the copy of the saves made
+        // while it plays, which holds none.
+        if (try? await hasFolder(folder)) == true {
+            let path = CartoucheStoragePath.join(folder, CartoucheSaveSync.pipelinesFile)
+            let there = listed.first { $0.name == CartoucheSaveSync.pipelinesFile }?.size
+            let remote = self.remote
+            outcome.pipelines = await CartoucheSaveSync.keepPipelines(
+                in: target.documents, there: there, fetching: fetching, quiet: quiet,
+                read: { try await remote.read(path, limit: CartoucheSaveSync.pipelinesLimit) },
+                write: { try await remote.write($0, to: path) })
+        }
         return outcome
     }
 
@@ -317,9 +340,18 @@ final class CartoucheSavesFolder {
     /// The names of the game's copies in FOLDER, the oldest first; none when
     /// the game has no folder yet.
     private func copyNames(in folder: String) async throws -> [String] {
+        Self.copyNames(in: try await files(in: folder))
+    }
+
+    /// The names of the copies among FILES, the oldest first.
+    private static func copyNames(in files: [CartoucheRemoteItem]) -> [String] {
+        files.filter { CartoucheSaveSync.date(inName: $0.name) != nil }.map(\.name).sorted()
+    }
+
+    /// The files in the game's FOLDER; none when it has no folder yet.
+    private func files(in folder: String) async throws -> [CartoucheRemoteItem] {
         guard try await hasFolder(folder) else { return [] }
-        return try await remote.list(folder).filter { !$0.isFolder && CartoucheSaveSync.date(inName: $0.name) != nil }
-            .map(\.name).sorted()
+        return try await remote.list(folder).filter { !$0.isFolder }
     }
 
     /// Whether the game's FOLDER is there: a game never copied has none, and

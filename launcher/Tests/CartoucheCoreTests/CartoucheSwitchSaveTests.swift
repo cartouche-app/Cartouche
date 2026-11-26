@@ -6,7 +6,8 @@
 //  JKSV's fiche read as JKSV writes it, the save found in a folder or an
 //  archive as JKSV, Checkpoint, macOS and Windows make them, what is
 //  refused, the folder of the game's Documents it goes to, as nxnative
-//  mounts its saves, and the saves it replaces, kept and put back.
+//  mounts its saves, the size it has on the Switch, and the saves it
+//  replaces, kept and put back.
 //
 
 import Foundation
@@ -45,6 +46,7 @@ final class CartoucheSwitchSaveTests: XCTestCase {
         put(UInt64(type), at: 37, count: 1)            // the save's type
         put(titleId, at: 41, count: 8)                 // the owner
         put(0x40_0000, at: 61, count: 8)               // the save's size
+        put(0x10_0000, at: 69, count: 8)               // its journal's
         return Data(bytes)
     }
 
@@ -79,6 +81,21 @@ final class CartoucheSwitchSaveTests: XCTestCase {
         XCTAssertEqual(CartoucheSwitchSaveMeta(Self.fiche(titleId: mk8d, type: 0))?.kind, .other(0))
         // A later revision with more after it reads the same.
         XCTAssertEqual(CartoucheSwitchSaveMeta(Self.fiche(titleId: mk8d, type: 1) + Data(count: 14))?.titleId, "0100152000022000")
+    }
+
+    func testTheFicheGivesTheSizeOfTheSaveOnTheSwitch() {
+        let meta = CartoucheSwitchSaveMeta(Self.fiche(titleId: mk8d, type: 1))
+        XCTAssertEqual(meta?.size, 0x40_0000)
+        XCTAssertEqual(meta?.journal, 0x10_0000)
+        // As nxnative records the size a game gave its save.
+        XCTAssertEqual(meta?.sizeRecord, Data("4194304 1048576\n".utf8))
+        // A fiche without a size gives none.
+        var sizeless = Self.fiche(titleId: mk8d, type: 1)
+        sizeless.replaceSubrange(61 ..< 69, with: Data(count: 8))
+        XCTAssertNil(CartoucheSwitchSaveMeta(sizeless)?.sizeRecord)
+        var negative = Self.fiche(titleId: mk8d, type: 1)
+        negative.replaceSubrange(69 ..< 77, with: Data(repeating: 0xFF, count: 8))
+        XCTAssertNil(CartoucheSwitchSaveMeta(negative)?.sizeRecord)
     }
 
     func testAShortOrForeignFicheIsNone() {
@@ -441,6 +458,58 @@ final class CartoucheSwitchSaveTests: XCTestCase {
         let kept = try XCTUnwrap(CartoucheSwitchSave.backups("before putting back", in: game).first)
         XCTAssertEqual(kept.date, later)
         XCTAssertEqual(text(kept.folder.appendingPathComponent("save/userdata.dat")), "played on from the Switch")
+    }
+
+    func testTheSaveComesWithItsSizeOnTheSwitch() throws {
+        let game = try documents([])
+        try write("progress on the iPhone", to: game.appendingPathComponent("save/userdata.dat"))
+        try write("8388608 1048576\n", to: game.appendingPathComponent("save.size"))
+        try write("console", to: game.appendingPathComponent("save_device/common.dat"))
+        try write("33554432 16777216\n", to: game.appendingPathComponent("save_device.size"))
+        let (picked, export) = try pickedFolder()
+        let staged = folder.appendingPathComponent("staged", isDirectory: true)
+        try CartoucheSwitchSave.stage(export, from: picked, as: "save", into: staged)
+        let backup = try XCTUnwrap(CartoucheSwitchSave.place(staged, in: game, now: afternoon))
+
+        // The size the fiche gives, as nxnative records it, dated with the save.
+        XCTAssertEqual(text(game.appendingPathComponent("save.size")), "4194304 1048576\n")
+        XCTAssertEqual(modified(game.appendingPathComponent("save.size")), afternoon)
+        // The one of the save it replaced is kept with it; the console's stays.
+        XCTAssertEqual(text(backup.appendingPathComponent("save.size")), "8388608 1048576\n")
+        XCTAssertEqual(text(game.appendingPathComponent("save_device.size")), "33554432 16777216\n")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: backup.appendingPathComponent("save_device.size").path))
+
+        // Put back, the save comes with its own size.
+        let later = afternoon.addingTimeInterval(3_600)
+        try CartoucheSwitchSave.putBack(backup, in: game, now: later)
+        XCTAssertEqual(text(game.appendingPathComponent("save.size")), "8388608 1048576\n")
+        let kept = try XCTUnwrap(CartoucheSwitchSave.backups("before putting back", in: game).first)
+        XCTAssertEqual(text(kept.folder.appendingPathComponent("save.size")), "4194304 1048576\n")
+    }
+
+    func testASaveWithoutAFicheTakesTheOldSizeAway() throws {
+        // Checkpoint's: the save's size on the Switch is unknown.
+        let game = try documents([])
+        try write("progress on the iPhone", to: game.appendingPathComponent("save/userdata.dat"))
+        try write("8388608 1048576\n", to: game.appendingPathComponent("save.size"))
+        let staged = folder.appendingPathComponent("staged", isDirectory: true)
+        try write("from the Switch", to: staged.appendingPathComponent("save/userdata.dat"))
+        let backup = try XCTUnwrap(CartoucheSwitchSave.place(staged, in: game, now: afternoon))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: game.appendingPathComponent("save.size").path),
+                       "the size went with the save it was given to")
+        XCTAssertEqual(text(backup.appendingPathComponent("save.size")), "8388608 1048576\n")
+        try CartoucheSwitchSave.putBack(backup, in: game, now: afternoon.addingTimeInterval(60))
+        XCTAssertEqual(text(game.appendingPathComponent("save.size")), "8388608 1048576\n")
+    }
+
+    func testASizeLeftWithoutItsSaveGoes() throws {
+        let game = try documents([])
+        try write("8388608 1048576\n", to: game.appendingPathComponent("save.size"))
+        let staged = folder.appendingPathComponent("staged", isDirectory: true)
+        try write("from the Switch", to: staged.appendingPathComponent("save/userdata.dat"))
+        XCTAssertNil(try CartoucheSwitchSave.place(staged, in: game, now: afternoon), "no save was there to keep")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: game.appendingPathComponent("save.size").path))
+        XCTAssertEqual(text(game.appendingPathComponent("save/userdata.dat")), "from the Switch")
     }
 
     func testTheNewestBackupsStayAndNxnativesAreLeftAlone() throws {
