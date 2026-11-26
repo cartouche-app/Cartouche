@@ -204,5 +204,9 @@ class Batches(Home):
         work = batch.context().workspace.build_folder(MKW)
         self.assertEqual((work / "runs.txt").read_text().count("run"), 2)
         self.assertNotIn("--gpu", self.args(MKW), "built again with nxnative's own default")
-        self.assertEqual(batch.context().store.get(MKW).build.gpus, ["g18p"])
-        self.assertEqual(pipelines.refused(self.paths, ""), {"g20p"})
+        build = batch.context().store.get(MKW).build
+        self.assertEqual(build.gpus, ["g18p"])
+        # For the tools it was built with: none on a Linux runner, this
+        # Mac's Xcode on a Mac.
+        self.assertEqual(pipelines.refused(self.paths, build.toolchain), {"g20p"})
+        self.assertEqual(pipelines.refused(self.paths, build.toolchain + " and another"), set())
