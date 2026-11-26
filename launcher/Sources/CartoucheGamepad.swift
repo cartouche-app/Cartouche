@@ -45,7 +45,7 @@ final class CartoucheGamepad: ObservableObject {
 
     #if CARTOUCHE_HARNESS
     /// The controllers the harness's tests connect, in place of the real
-    /// ones: the Simulator has none.
+    /// ones, which a Simulator may have from its Mac.
     var harnessControllers: Int? {
         didSet { update() }
     }
@@ -233,6 +233,10 @@ final class CartoucheControllerPause {
     /// it, from the game's last coming on screen. Its word wins over
     /// Cartouche's own: the game's controllers are those its process has.
     private var gameHasControllers: Bool?
+    /// The controllers Cartouche counts, as CartoucheGamepad last sent
+    /// them: its own count is set only after it sends it, so that a game
+    /// brought back as a controller connects would read the one before.
+    private var count = 0
     private var watching: AnyCancellable?
     private var looking: Task<Void, Never>?
 
@@ -249,7 +253,8 @@ final class CartoucheControllerPause {
         inFront = true
         gameHasControllers = nil
         let gamepad = CartoucheGamepad.shared
-        rule.started(controllers: controllers(gamepad.count))
+        count = gamepad.count
+        rule.started(controllers: controllers(count))
         // The value to come: a published value is sent before it is set.
         watching = gamepad.$count.dropFirst().removeDuplicates().sink { [weak self] count in
             self?.changed(count)
@@ -272,7 +277,7 @@ final class CartoucheControllerPause {
         looking?.cancel()
         looking = nil
         if inFront {
-            if let pause = rule.cameToFront(controllers: controllers(CartoucheGamepad.shared.count), now: Date()) {
+            if let pause = rule.cameToFront(controllers: controllers(count), now: Date()) {
                 actions?.ended(pause)
             }
         } else {
@@ -302,7 +307,7 @@ final class CartoucheControllerPause {
     func gameSays(hasControllers: Bool) {
         guard actions != nil, inFront else { return }
         gameHasControllers = hasControllers
-        changed(CartoucheGamepad.shared.count)
+        changed(count)
     }
 
     /// The controllers the rule counts, Cartouche's being COUNT: the game's
@@ -316,6 +321,7 @@ final class CartoucheControllerPause {
     }
 
     private func changed(_ count: Int) {
+        self.count = count
         guard let actions else { return }
         switch rule.controllersChanged(controllers(count), inFront: inFront, now: Date()) {
         case .wait:
@@ -342,7 +348,7 @@ final class CartoucheControllerPause {
     private func lookAgain() {
         looking = nil
         guard let actions else { return }
-        switch rule.check(controllers(CartoucheGamepad.shared.count), inFront: inFront,
+        switch rule.check(controllers(count), inFront: inFront,
                           isOn: CartoucheControllerLoss.isOn(), now: Date()) {
         case .pause:
             actions.pause()
