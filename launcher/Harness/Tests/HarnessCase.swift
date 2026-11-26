@@ -144,6 +144,11 @@ class HarnessCase: XCTestCase {
         if #available(iOS 18.0, *) {
             UserDefaults.standard.removeObject(forKey: CartoucheGameScreen.homeHintKey)
         }
+        // No controller, whatever the Simulator's Mac has connected, and
+        // the pause for a lost controller on, as the player finds it
+        // (ControllerPauseTests).
+        CartoucheGamepad.shared.harnessControllers = 0
+        UserDefaults.standard.removeObject(forKey: CartoucheControllerLoss.settingKey)
         try? FileManager.default.removeItem(at: HarnessStorage.root)
         // No TV left by the test before (TVTests).
         if #available(iOS 18.0, *), let tv = CartoucheTV.shared.window {

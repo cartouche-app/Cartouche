@@ -1121,6 +1121,88 @@
       ]
     },
     {
+      "name": "iphone-save-copies",
+      "comment": "Put back a copy, from the sheet of the player's game: three copies in the saves folder, and on this iPhone the copies nxnative made as its last three sessions started.",
+      "screen": "save-copies",
+      "sheet": "01006BB00C6F0000",
+      "work": "saves",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-save-copies-here",
+      "comment": "Put back a copy without a saves folder: the copies nxnative made on this iPhone as the game's last three sessions started, alone.",
+      "screen": "save-copies",
+      "sheet": "01006BB00C6F0000",
+      "work": "start-copies",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-sheet-saves-start-copies",
+      "comment": "The sheet of the player's game brought down to its saves, without a saves folder: nxnative's copies of its last sessions' starts are there to put back.",
+      "screen": "sheet-saves",
+      "sheet": "0400C3F00006E000",
+      "work": "start-copies",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "ipad-save-copies",
+      "comment": "Put back a copy on an iPad, which calls itself the iPad: the copies in the saves folder, and those nxnative made on it as the game's last three sessions started.",
+      "model": "iPad15,3",
+      "device": "iPad Pro 13-inch (M5)",
+      "screen": "save-copies",
+      "sheet": "01006BB00C6F0000",
+      "work": "saves",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false
+    },
+    {
       "name": "iphone-switch-save",
       "comment": "A game's saves between the Switch and this iPhone, the sheet's game's, with the save JKSV exported for it read: what it holds, Continue this game here, and Make the ZIP for JKSV.",
       "screen": "switch-save",
@@ -1664,6 +1746,49 @@
         0
       ],
       "work": "paused"
+    },
+    {
+      "name": "iphone-home-paused-controller",
+      "comment": "The console over a game paused as it lost its last controller, which it says (decision 166).",
+      "screen": "games",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "paused-controller"
+    },
+    {
+      "name": "iphone-sheet-paused-controller",
+      "comment": "The sheet of a game paused as it lost its last controller (decision 166).",
+      "screen": "sheet",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "paused-controller"
     },
     {
       "name": "iphone-sheet-manage",
@@ -2463,6 +2588,27 @@
         34,
         0
       ]
+    },
+    {
+      "name": "iphone-system-controller",
+      "comment": "The System page down to While a game runs, and its switch of the pause for a lost controller (decision 166).",
+      "screen": "system",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "category": "controller"
     },
     {
       "name": "iphone-system-german",

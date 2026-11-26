@@ -17,12 +17,13 @@ sidebar:
 - The game speaks your Mac's language when it has it, until you choose one.
 - A game your NAS keeps that is not on this Mac yet shows too: **Install from the NAS** installs it, then **Play** starts it.
 - **Remove from this Mac** puts its app in the Trash; the game stays in your games folder.
+- When the last controller disconnects during a game, the game pauses 3 seconds later and Cartouche comes back in front, saying so. A controller connected again brings the game back; so do **Resume**, and the game brought to the front from the Dock. **System › While a game runs** turns it off.
 
 The sheet also says how long you played the game on this Mac and whether it runs here.
 
 ## Your saves on the Mac
 
-The Mac keeps the saves of the games played there in step with your saves folder, as the iPhone does: the newest copy comes before a game starts, and the Mac's saves go a few seconds after the game saves. When both sides changed, the saves written last win and the others are kept as a copy. The sheet shows them, with **Sync with … now** and **Put back a copy**, and brings in a save from your console as on the iPhone.
+The Mac keeps the saves of the games played there in step with your saves folder, as the iPhone does: the newest copy comes before a game starts, and the Mac's saves go a few seconds after the game saves. When both sides changed, the saves written last win and the others are kept as a copy. The sheet shows them, with **Sync with … now** and **Put back a copy**, and brings in a save from your console as on the iPhone. **Put back a copy** also lists, under **On this Mac**, the copies each game makes of its saves as it starts, to go back to the start of a game ([Your saves](/iphone/saves/)).
 
 This Mac's copy of a game your NAS keeps stays out of Time Machine: it comes again from the NAS. The game's saves still go in.
 
@@ -37,6 +38,7 @@ A game's sheet has **Mods** on the Mac too, as on the iPhone ([A game's sheet](/
 - **Your first game:** the guide, in this Mac's three steps: the setup assistant, a game built for this Mac, and that game played.
 - **Storage:** your connections, the same as your paired iPhones', and the Mac's games and saves folders ([below](#the-same-storage-as-your-iphone)).
 - **Open the Builder**, with its settings.
+- **While a game runs:** **Pause when the controller disconnects** ([above](#playing-on-the-mac)).
 - **This Mac:** its model, chip and macOS, and whether its graphics chip has what nxnative needs.
 - **Updates:** Cartouche for Mac's, with **Check for an update** and **Install updates by itself**.
 - **Game measurements** and **Report a problem**, as on the iPhone.

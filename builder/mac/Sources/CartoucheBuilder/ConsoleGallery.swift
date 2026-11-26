@@ -119,6 +119,26 @@ enum ConsoleGallery {
         }
     }()
 
+    /// The copies nxnative's app made of the sheet's game's saves as its
+    /// last three sessions started, in DOCUMENTS/save-backups, as it makes
+    /// them: a while ago, the evening before and two days before.
+    private static func writeStartCopies(in documents: URL) {
+        let made: [(ago: TimeInterval, size: Int)] = [(38 * 60, 1_310_720), (22 * 3_600 + 17 * 60, 1_298_432),
+                                                      (2 * 86_400 + 5 * 3_600, 1_261_568)]
+        let now = (Date().timeIntervalSince1970 / 60).rounded(.down) * 60
+        // In local time, as nxnative names them (save_sync.c, backup_dir).
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = .current
+        formatter.dateFormat = "yyyy-MM-dd HH.mm.ss"
+        for copy in made {
+            let name = formatter.string(from: Date(timeIntervalSince1970: now - copy.ago)) + " start"
+            let folder = documents.appendingPathComponent("save-backups/" + name, isDirectory: true)
+            try? FileManager.default.createDirectory(at: folder.appendingPathComponent("save"), withIntermediateDirectories: true)
+            try? Data(repeating: 0x2A, count: copy.size).write(to: folder.appendingPathComponent("save/save.dat"))
+        }
+    }
+
     /// A copy's name, as Cartouche names them: its date, in UTC.
     private static func copyName(_ date: Date) -> String {
         let formatter = DateFormatter()
@@ -280,6 +300,7 @@ enum ConsoleGallery {
         try? Data(repeating: 0x2A, count: 4_096).write(to: saves.appendingPathComponent("save.dat"))
         // Its mods, two on, for its sheet's row and its page.
         writeMods(in: console.dataFolder.appendingPathComponent(sheetGame, isDirectory: true))
+        writeStartCopies(in: console.dataFolder.appendingPathComponent(sheetGame, isDirectory: true))
         console.onSaveCopies = { _ in copies }
         console.showForGallery(playTimes: playTimes, sizes: sizes)
         console.show(games: apps, kept: kept)

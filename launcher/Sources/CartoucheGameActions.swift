@@ -1587,10 +1587,13 @@ final class CartoucheGameActions: ObservableObject {
         quitRunningGame()
     }
 
-    /// The running game went behind the console, paused, or came back.
-    func gameDidMove(inFront: Bool) {
+    /// The running game went behind the console, paused, or came back;
+    /// FORCONTROLLER, it paused as it lost its last controller, which the
+    /// console says (CartoucheControllerPause).
+    func gameDidMove(inFront: Bool, forController: Bool = false) {
         guard let current = running else { return }
         running?.isInFront = inFront
+        running?.pausedForController = !inFront && forController
         if !inFront {
             NotificationCenter.default.post(name: .cartoucheGameDidPause, object: current.app)
         }

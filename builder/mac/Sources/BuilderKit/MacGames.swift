@@ -21,6 +21,16 @@
 //  wrote in its log (MacPlay.swift). While it runs, its play time counts
 //  each time its app is the Mac's active one (MacPlayTime.swift).
 //
+//  A game that loses its last controller in front pauses (Cartouche's
+//  console, CartoucheControllerPause; docs/decisions/166.md): nxnative's
+//  app for the Mac takes no word from outside to pause, and goes on out of
+//  focus, so its processes are stopped (SIGSTOP), as iOS suspends a game in
+//  the background, which nxnative's host takes in its stride: its sound
+//  starts its count again rather than make up the time (dm/host/hle_audio.c,
+//  "SIGSTOP on the Mac"). They go on (SIGCONT) as the game is played
+//  again: Resume or Play, a controller that connects again, its app
+//  brought to the front from the Dock, Quit.
+//
 
 import AppKit
 import CartoucheCore
@@ -88,6 +98,9 @@ public final class MacGames: ObservableObject {
     @Published public private(set) var playing: [String: MacGameRun] = [:]
     /// The games whose saves come before the builder starts them.
     @Published public private(set) var preparing: Set<String> = []
+    /// The games paused as they lost their last controller, by title ID:
+    /// their processes stopped until the game is played again (hold).
+    @Published public private(set) var held: Set<String> = []
     /// What each game's saves did last, by title ID.
     @Published public private(set) var last: [String: MacSaveEvent] = [:]
     /// When each game's saves were last kept in step, a copy moving or not,
@@ -300,8 +313,15 @@ public final class MacGames: ObservableObject {
         return front.executableURL.map(Self.realPath)?.hasPrefix(app + "/Contents/MacOS/") ?? false
     }
 
-    /// The app in front changed: the games playing count, or stop counting.
+    /// The app in front changed: the games playing count, or stop counting;
+    /// a game paused for its controller whose app the player brought to the
+    /// front, from the Dock or ⌘-Tab, goes on.
     private func noticeFront() {
+        for titleID in held {
+            if let run = playing[titleID], isInFront(run) {
+                release(titleID)
+            }
+        }
         for (titleID, counter) in counters {
             guard let run = playing[titleID] else { continue }
             if isInFront(run) {
@@ -395,9 +415,16 @@ public final class MacGames: ObservableObject {
     /// run followed, nil when it does not run.
     @discardableResult
     private func followRunning(_ app: MacGameApp, programs: [Program]? = nil) -> MacGameRun? {
-        guard let pid = pids(of: app, programs: programs).first else { return nil }
+        let pids = pids(of: app, programs: programs)
+        guard let pid = pids.first else { return nil }
         let started = NSRunningApplication(processIdentifier: pid)?.launchDate ?? Date()
         let run = MacGameRun(app: app, pid: pid, started: started, fromBuilder: false)
+        // Paused for its controller by a builder that ended meanwhile: it
+        // stays paused until the player plays it again, never stopped for
+        // good with nothing to say so.
+        if pids.contains(where: Self.isStopped) {
+            held.insert(app.titleID)
+        }
         follow(run)
         return run
     }
@@ -457,6 +484,7 @@ public final class MacGames: ObservableObject {
             return
         }
         playing.removeValue(forKey: titleID)
+        held.remove(titleID)
         watches.removeValue(forKey: titleID)
         counters.removeValue(forKey: titleID)?.leftFront()
         let (ending, code) = MacGameEnding.read(log: logs.appendingPathComponent(titleID + ".log"), since: run.started)
@@ -478,6 +506,8 @@ public final class MacGames: ObservableObject {
         let titleID = titleID.uppercased()
         guard let app = apps[titleID] else { throw MacPlayError.noApp(titleID) }
         if let run = playing[titleID] {
+            // Paused for its controller: it goes on first.
+            release(titleID)
             if let process = NSRunningApplication(processIdentifier: run.pid) {
                 _ = process.activate(options: [])
             }
@@ -538,6 +568,9 @@ public final class MacGames: ObservableObject {
     /// first, so that its launcher can say how it ended.
     public func quit(_ titleID: String, grace: TimeInterval = 5) {
         guard !sample, let run = playing[titleID.uppercased()] else { return }
+        // A stopped process takes no word to quit, nor a signal, until it
+        // goes on.
+        release(titleID)
         for pid in pids(of: run.app) {
             _ = NSRunningApplication(processIdentifier: pid)?.terminate()
         }
@@ -554,6 +587,53 @@ public final class MacGames: ObservableObject {
                 kill(pid, SIGTERM)
             }
         }
+    }
+
+    // MARK: A game paused for its controller
+
+    /// Pauses TITLE_ID's game, which lost its last controller in front:
+    /// its app hidden, then its processes stopped, once Cartouche's console,
+    /// which the app brings to the front, has taken the Mac's focus from it
+    /// (STOPAFTER seconds). Played again (play), brought to the front,
+    /// quit, it goes on (release).
+    public func hold(_ titleID: String, stopAfter: TimeInterval = 0.3) {
+        let titleID = titleID.uppercased()
+        guard !sample, let run = playing[titleID], !held.contains(titleID) else { return }
+        held.insert(titleID)
+        // Hidden first, while it still answers: the Mac's focus goes to
+        // another app rather than stay with one that cannot let it go.
+        for pid in pids(of: run.app) {
+            _ = NSRunningApplication(processIdentifier: pid)?.hide()
+        }
+        Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(max(stopAfter, 0) * 1_000_000_000))
+            guard let self, self.held.contains(titleID), let run = self.playing[titleID] else { return }
+            Self.signal(self.pids(of: run.app), SIGSTOP)
+        }
+    }
+
+    /// TITLE_ID's game, paused for its controller, goes on.
+    public func release(_ titleID: String) {
+        let titleID = titleID.uppercased()
+        guard held.remove(titleID) != nil, let run = playing[titleID] else { return }
+        Self.signal(pids(of: run.app), SIGCONT)
+    }
+
+    /// Sends SIGNAL to each of PIDS, never to -1 or 0 (alive(_:)).
+    nonisolated static func signal(_ pids: [pid_t], _ signal: Int32) {
+        for pid in pids where pid > 0 {
+            kill(pid, signal)
+        }
+    }
+
+    /// Whether process PID is stopped, as SIGSTOP leaves it.
+    nonisolated static func isStopped(_ pid: pid_t) -> Bool {
+        guard pid > 0 else { return false }
+        var info = proc_bsdinfo()
+        let size = Int32(MemoryLayout<proc_bsdinfo>.size)
+        guard proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &info, size) == size else { return false }
+        // SSTOP, sys/proc.h.
+        return info.pbi_status == 4
     }
 
     // MARK: Saves

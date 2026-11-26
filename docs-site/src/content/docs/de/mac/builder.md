@@ -33,6 +33,7 @@ Lege das Update und die DLCs eines Spiels mit ihm in deinen Dump-Ordner: Der Bui
 
 - **Pakete** (`.nsp`, `.xci`, `.nsz`, `.xcz`) können neben dem Spiel liegen, in einem eigenen Ordner wie `Zelda/Update/` oder irgendwo sonst im Dump-Ordner: Der Builder erkennt ihr Spiel an seiner Titel-ID. Sie brauchen `prod.keys`, gewählt im Einrichtungsassistenten oder in den Einstellungen.
 - **Ein Dump** hat sie in `updates/<version>/` und `dlc/`; die `.nup` eines Switch-2-Spiels enthält die, die in ihr verpackt sind.
+- **Eine `.nup` ohne ihre DLCs** nimmt sie als Bilder: Lege das Bild jedes DLC, `1.img`, `2.img` … nach seiner Nummer, in einen Ordner namens `aoc` neben der `.nup`, im Ordner des Spiels. nxnative macht ein solches Bild von jedem DLC, mit dem es ein Spiel erstellt, im Ordner `aoc` des Build-Ordners des Spiels. Eine `.nup` mit eigenen DLCs behält diese.
 - **Ein neues Update oder DLC** im Dump-Ordner lässt das Spiel neu erstellen. Cartouche auf dem iPhone bietet dann das Update auf der Infoseite des Spiels an, die Spielstände bleiben.
 
 ## Wenn nxnative deine Spiele verbessert

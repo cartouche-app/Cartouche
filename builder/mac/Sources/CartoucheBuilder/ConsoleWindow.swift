@@ -204,6 +204,7 @@ enum ConsoleLink {
         let console = CartoucheMacConsole.shared
         console.onPlay = { [weak model] game, settings in model?.play(app: game, settings: settings) }
         console.onQuit = { [weak model] game in model?.askToQuit(app: game) }
+        console.onPause = { [weak model] game in model?.pauseForController(app: game) }
         console.onImport = { [weak model] in model?.showBuilder(.library) }
         console.onSystem = { [weak model] in model?.showBuilder(nil) }
         // This Mac's folders, on the console's Storage page: the Builder's

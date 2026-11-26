@@ -6,7 +6,7 @@
 
 ### Your games, on iPhone, iPad and Mac.
 
-Cartouche installs, starts and keeps the games [nxnative](https://github.com/seedds/nxnative) runs natively on iPhone and iPad, from your own copies.<br>
+Cartouche installs, starts and keeps the Switch games [nxnative](https://github.com/seedds/nxnative) runs natively on iPhone and iPad, from your own copies.<br>
 It signs, renews and updates itself, and gets your games the memory they need.<br>
 On your Mac, Cartouche for Mac builds your games, plays them there with the same saves, and builds them again when nxnative improves them.<br>
 With no Mac, [Cartouche Cloud](https://build.cartouche.cloud/) builds them for you, from the copy you send it.
@@ -68,7 +68,7 @@ Cartouche is young and changes often: it offers each new version itself. Somethi
 <details>
 <summary><b>Is Cartouche an emulator?</b></summary>
 
-No. nxnative runs the games natively on the iPhone, the iPad and the Mac; Cartouche installs them, starts them and keeps them, with their saves, and signs, renews and updates itself.
+No. nxnative runs Switch games natively on the iPhone, the iPad and the Mac, each built from your own copy into an app of its own. Cartouche is the launcher around them: it installs them with a free Apple account, starts them from its console and keeps them, with their saves, and signs, renews and updates itself.
 </details>
 
 <details>

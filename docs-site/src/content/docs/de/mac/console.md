@@ -17,12 +17,13 @@ sidebar:
 - Das Spiel spricht die Sprache deines Mac, wenn es sie hat, bis du eine wählst.
 - Ein Spiel, das dein NAS aufbewahrt und das noch nicht auf diesem Mac ist, erscheint auch: **Vom NAS installieren** installiert es, dann startet **Spielen** es.
 - **Von diesem Mac entfernen** legt seine App in den Papierkorb; das Spiel bleibt in deinem Spieleordner.
+- Wird der letzte Controller während eines Spiels getrennt, pausiert das Spiel 3 Sekunden später und Cartouche kommt wieder nach vorn und sagt es. Ein wieder verbundener Controller setzt das Spiel fort, wie **Fortsetzen** oder das Spiel, das du über das Dock nach vorn holst. **System › Während ein Spiel läuft** schaltet es aus.
 
 Die Infoseite sagt auch, wie lange du das Spiel auf diesem Mac gespielt hast und ob es hier läuft.
 
 ## Deine Spielstände auf dem Mac
 
-Der Mac hält die Spielstände der dort gespielten Spiele mit deinem Spielstandordner synchron, wie das iPhone: Die neueste Kopie kommt, bevor ein Spiel startet, und die Spielstände des Mac gehen ein paar Sekunden nach dem Speichern des Spiels. Wenn sich beide Seiten geändert haben, gewinnen die zuletzt geschriebenen Spielstände, und die anderen werden als Kopie behalten. Die Infoseite zeigt sie, mit **Jetzt mit … synchronisieren** und **Kopie zurückspielen**, und holt einen Spielstand von deiner Konsole wie auf dem iPhone.
+Der Mac hält die Spielstände der dort gespielten Spiele mit deinem Spielstandordner synchron, wie das iPhone: Die neueste Kopie kommt, bevor ein Spiel startet, und die Spielstände des Mac gehen ein paar Sekunden nach dem Speichern des Spiels. Wenn sich beide Seiten geändert haben, gewinnen die zuletzt geschriebenen Spielstände, und die anderen werden als Kopie behalten. Die Infoseite zeigt sie, mit **Jetzt mit … synchronisieren** und **Kopie zurückspielen**, und holt einen Spielstand von deiner Konsole wie auf dem iPhone. **Kopie zurückspielen** zeigt unter **Auf diesem Mac** auch die Kopien, die jedes Spiel bei seinem Start von seinen Spielständen macht, um zum Start einer Sitzung zurückzukehren ([Deine Spielstände](/de/iphone/saves/)).
 
 Die Kopie eines Spiels auf diesem Mac, das dein NAS aufbewahrt, bleibt aus Time Machine heraus: Sie kommt wieder vom NAS. Die Spielstände des Spiels kommen weiterhin hinein.
 
@@ -37,6 +38,7 @@ Die Infoseite eines Spiels hat **Mods** auch auf dem Mac, wie auf dem iPhone ([D
 - **Dein erstes Spiel:** die Anleitung, in den drei Schritten dieses Mac: der Einrichtungsassistent, ein für diesen Mac erstelltes Spiel und dieses Spiel gespielt.
 - **Speicher:** deine Verbindungen, dieselben wie die deiner gekoppelten iPhones, und die Spiele- und Spielstandordner des Mac ([weiter unten](#derselbe-speicher-wie-auf-deinem-iphone)).
 - **Den Builder öffnen**, mit seinen Einstellungen.
+- **Während ein Spiel läuft:** **Pausieren, wenn der Controller getrennt wird** ([oben](#auf-dem-mac-spielen)).
 - **Dieser Mac:** sein Modell, sein Chip und sein macOS, und ob sein Grafikchip hat, was nxnative braucht.
 - **Updates:** die von Cartouche für Mac, mit **Nach Update suchen** und **Updates selbst installieren**.
 - **Spielmessungen** und **Problem melden**, wie auf dem iPhone.

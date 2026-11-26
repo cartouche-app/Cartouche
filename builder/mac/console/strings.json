@@ -102,6 +102,30 @@
       "es": "Cartouche mantiene estas partidas guardadas al día con tu carpeta de partidas guardadas: las más recientes llegan antes de que empiece el juego y mientras no está en marcha, y van allí unos segundos después de cada guardado del juego, como muy tarde al terminar la partida. Cuando ambas cambiaron, ganan las más recientes y las otras se quedan como copia. Se conservan las %lld copias más recientes, una por partida jugada.",
       "fr": "Cartouche synchronise ces sauvegardes avec votre dossier des sauvegardes : les plus récentes arrivent avant chaque lancement et tant que le jeu ne tourne pas, et y repartent quelques secondes après chaque sauvegarde du jeu, au plus tard après la partie. Si les deux ont changé, les plus récentes l’emportent et les autres restent en copie. Les %lld copies les plus récentes sont gardées, une par partie."
     },
+    "saves.here.footer": {
+      "de": "Bei jedem Start behält das Spiel auf diesem Mac eine Kopie der Spielstände, mit denen es beginnt, bis zu zehn: Ist ein Mod oder eine Sitzung schiefgegangen, spiel die Kopie von ihrem Start zurück. Die Spielstände, die eine zurückgespielte Kopie ersetzt, werden auch hier behalten.",
+      "en": "Each time the game starts, it keeps on this Mac a copy of the saves it starts from, up to ten: if a mod or a game went wrong, put back the copy from its start. The saves a copy put back replaces are kept here too.",
+      "es": "Cada vez que arranca, el juego guarda en este Mac una copia de las partidas guardadas con las que empieza, hasta diez: si un mod o una partida salió mal, restaura la copia de su inicio. Las partidas guardadas que sustituye una copia restaurada también se conservan aquí.",
+      "fr": "À chaque lancement, le jeu garde sur ce Mac une copie des sauvegardes d’où il part, jusqu’à dix : si un mod ou une partie a mal tourné, remettez la copie de son début. Les sauvegardes qu’une copie remise remplace sont gardées ici aussi."
+    },
+    "saves.here.header": {
+      "de": "Auf diesem Mac",
+      "en": "On this Mac",
+      "es": "En este Mac",
+      "fr": "Sur ce Mac"
+    },
+    "saves.here.message": {
+      "de": "Sie ersetzt die Spielstände des Spiels auf diesem Mac. Cartouche behält sie zuerst hier, damit du zu ihnen zurückkehren kannst.",
+      "en": "It replaces the game’s saves on this Mac. Cartouche keeps them here first, so you can come back to them.",
+      "es": "Sustituye las partidas guardadas del juego en este Mac. Cartouche las conserva antes aquí, para que puedas volver a ellas.",
+      "fr": "Elle remplace les sauvegardes du jeu sur ce Mac. Cartouche les garde d’abord ici : vous pourrez y revenir."
+    },
+    "saves.here.message.folder": {
+      "de": "Sie ersetzt die Spielstände des Spiels auf diesem Mac. Cartouche behält sie hier und sendet sie zuerst in deinen Spielstandordner, damit du zu ihnen zurückkehren kannst; die zurückgespielte Kopie geht dann als neueste dorthin.",
+      "en": "It replaces the game’s saves on this Mac. Cartouche keeps them here and sends them to your saves folder first, so you can come back to them; the copy put back then goes there as the newest.",
+      "es": "Sustituye las partidas guardadas del juego en este Mac. Cartouche las conserva aquí y las envía antes a tu carpeta de partidas guardadas, para que puedas volver a ellas; luego la copia restaurada va allí como la más reciente.",
+      "fr": "Elle remplace les sauvegardes du jeu sur ce Mac. Cartouche les garde ici et les envoie d’abord dans votre dossier des sauvegardes : vous pourrez y revenir. La copie remise y part ensuite comme la plus récente."
+    },
     "saves.kept": {
       "de": "Neuere Spielstände sind in deinem Spielstandordner: Sie kommen als Nächstes auf diesen Mac. Die dieses Mac werden dort als Kopie vom %@ aufbewahrt.",
       "en": "Newer saves are in your saves folder: they come to this Mac next. This Mac’s are kept there as the copy of %@.",

@@ -41,6 +41,7 @@ on:
       - "launcher/Sources/CartoucheBridgeCable.swift"
       - "launcher/Sources/CartoucheCatalog.swift"
       - "launcher/Sources/CartoucheConnections.swift"
+      - "launcher/Sources/CartoucheControllerLoss.swift"
       - "launcher/Sources/CartoucheCoverList.swift"
       - "launcher/Sources/CartoucheCovers.swift"
       - "launcher/Sources/CartoucheDrive.swift"

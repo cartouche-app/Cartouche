@@ -70,6 +70,9 @@
 //                                        or down to -GalleryCategory
 //        storage-smb                     Add a shared folder, with a NAS
 //                                        nearby (GallerySMB)
+//        save-copies                     Put back a copy, from the sheet of
+//                                        the sheet's game, with -GalleryWork
+//                                        saves or start-copies
 //        switch-save                     the saves of the sheet's game
 //                                        between the Switch and this iPhone,
 //                                        with -GalleryWork saves the save
@@ -297,6 +300,9 @@
 //                                        the player's, paused behind the
 //                                        console; on the TV (screen tv), the
 //                                        game paused behind the console
+//        paused-controller               the same, paused as it lost its
+//                                        last controller, which the console
+//                                        says (decision 166)
 //        provisioning-refused            a sign-in for which Apple refused a
 //                                        new machine for now, LocalDevVPN
 //                                        connected, with the wait under way
@@ -325,6 +331,13 @@
 //                                        folder in Files as the saves folder,
 //                                        which Cartouche's own sync uses
 //                                        (GallerySaves)
+//        start-copies                    the saves of the sheet's game, or
+//                                        of the first of the player's, with
+//                                        the copies nxnative made as its
+//                                        last sessions started, and no saves
+//                                        folder; with screen save-copies and
+//                                        work saves, the saves folder holds
+//                                        copies too (GallerySaves)
 //        saves-newer                     the same, the newest copy of the
 //                                        game's saves waiting for its update,
 //                                        version 1.2.0 of the game having
@@ -423,6 +436,9 @@
 //                                        saves
 //        cloud                           on the System page, the page
 //                                        scrolled down to Cartouche Cloud
+//        controller                      on the System page, the page
+//                                        scrolled down to While a game runs,
+//                                        on its pause for the controller
 //        device                          on the System page, the page
 //                                        scrolled down to this iPhone
 //        dumps                           on how to name the games (screen
@@ -885,8 +901,17 @@ struct GalleryScenario {
                     CartoucheMacPairing.gallery = (mac: GalleryMac.nearby[0], code: "482915")
                 }
             }
+            if work == "start-copies", let titleId = sheet ?? ownedTitles.first {
+                GallerySaves.prepare(titleId: titleId, folder: false)
+                GallerySaves.writeStartCopies()
+            }
             if work == "saves" || work == "saves-newer", let titleId = sheet ?? ownedTitles.first {
                 GallerySaves.prepare(titleId: titleId)
+                if screen == "save-copies" {
+                    // Copies in the saves folder, and those nxnative made here.
+                    GallerySaves.writeFolderCopies(titleId: titleId)
+                    GallerySaves.writeStartCopies()
+                }
                 if work == "saves-newer" {
                     CartoucheSaveBackups.shared.showNewerForGallery("org.nxnative." + titleId.lowercased() + "|gallery",
                                                                     CartoucheSaveNewer(copy: "1.2.0", game: "1.0.0"))
@@ -1123,12 +1148,13 @@ struct GalleryScenario {
     private var updatedTitle: String? { work == "newer-build" || work == "offline" ? sheet ?? ownedTitles.first : nil }
 
     /// The sheet's game, or the first of the player's, paused behind the
-    /// console (work: paused).
+    /// console (work: paused), or as it lost its last controller (work:
+    /// paused-controller).
     @MainActor
     func pause(among apps: [LCAppModel]) {
-        guard work == "paused", let titleId = sheet ?? ownedTitles.first,
+        guard work == "paused" || work == "paused-controller", let titleId = sheet ?? ownedTitles.first,
               let app = apps.first(where: { $0.appInfo.relativeBundlePath == titleId + ".app" }) else { return }
-        CartoucheGameActions.shared.showRunningForGallery(app)
+        CartoucheGameActions.shared.showRunningForGallery(app, forController: work == "paused-controller")
     }
 
     /// The iPhone's translations of what testers wrote on the sheet of the
@@ -1463,6 +1489,15 @@ struct CartoucheGalleryApp: App {
             NavigationStack {
                 CartoucheResetView(confirming: scenario.work == "confirm", showsEnd: scenario.screen == "reset-end")
             }
+        case "save-copies":
+            // Put back a copy, from the game's sheet: the copies of the
+            // saves folder, with work: saves, and those on this iPhone.
+            if let entry = entries.owned.first(where: { $0.titleId == (scenario.sheet ?? scenario.ownedTitles.first) }),
+               let app = entry.app, let target = GallerySaves.target(of: app) {
+                NavigationStack {
+                    CartoucheSaveCopiesView(target: target)
+                }
+            }
         case "switch-save":
             // The game's saves between the Switch and this iPhone, from its
             // sheet: with work: saves, the save JKSV exported, read.
@@ -1736,10 +1771,10 @@ enum GallerySaves {
     static var documents: URL { root.appendingPathComponent("Game/Documents", isDirectory: true) }
 
     /// Puts a save in the Documents of the game of TITLEID, as nxnative
-    /// writes one, and the folder in Files in its place as the saves folder,
-    /// with nothing in it yet.
+    /// writes one, and, FOLDER, the folder in Files in its place as the
+    /// saves folder, with nothing in it yet.
     @MainActor
-    static func prepare(titleId: String) {
+    static func prepare(titleId: String, folder makesFolder: Bool = true) {
         let manager = FileManager.default
         try? manager.removeItem(at: root)
         let save = documents.appendingPathComponent("save/0000000000000001", isDirectory: true)
@@ -1753,12 +1788,60 @@ enum GallerySaves {
             var progress = Data(count: 2 << 20)
             progress.withUnsafeMutableBytes { arc4random_buf($0.baseAddress, $0.count) }
             try progress.write(to: save.appendingPathComponent("progress.bin"))
-            let server = CartoucheStorageServer(kind: .folder, name: folderName, bookmark: try CartoucheFolder.bookmark(of: folder))
-            CartoucheStorageSettings.shared.showForGallery(server, games: "", saves: "Saves")
+            if makesFolder {
+                let server = CartoucheStorageServer(kind: .folder, name: folderName, bookmark: try CartoucheFolder.bookmark(of: folder))
+                CartoucheStorageSettings.shared.showForGallery(server, games: "", saves: "Saves")
+            }
             self.titleId = titleId
             switchExportWritten = Task { await writeSwitchExport(titleId: titleId) }
         } catch {
             NSLog("[Gallery] cannot make the saves and their folder: %@", String(describing: error))
+        }
+    }
+
+    /// A minute ago, without its seconds: the dates the copies are made
+    /// up from, as the Builder's gallery makes its own.
+    private static var now: TimeInterval { (Date().timeIntervalSince1970 / 60).rounded(.down) * 60 }
+
+    /// The copies nxnative made of the game's saves as its last three
+    /// sessions started, in its save-backups, as it makes them: a while ago,
+    /// the evening before and two days before, each a little smaller.
+    @MainActor
+    static func writeStartCopies() {
+        let made: [(ago: TimeInterval, size: Int)] = [(38 * 60, 2 << 20), (22 * 3_600 + 17 * 60, 2_017_280),
+                                                      (2 * 86_400 + 5 * 3_600, 1_908_736)]
+        for copy in made {
+            let date = Date(timeIntervalSince1970: now - copy.ago)
+            let folder = CartoucheSwitchSave.newBackup(CartoucheSwitchSave.atStart, in: documents, at: date)
+            let save = folder.appendingPathComponent("save/0000000000000001", isDirectory: true)
+            do {
+                try FileManager.default.createDirectory(at: save, withIntermediateDirectories: true)
+                var progress = Data(count: copy.size)
+                progress.withUnsafeMutableBytes { arc4random_buf($0.baseAddress, $0.count) }
+                try progress.write(to: save.appendingPathComponent("progress.bin"))
+                try Data((String(repeating: "0", count: 64) + "\t\(copy.size)\n").utf8)
+                    .write(to: folder.appendingPathComponent(".hash"))
+            } catch {
+                NSLog("[Gallery] cannot make nxnative's copy of a start: %@", String(describing: error))
+            }
+        }
+    }
+
+    /// Copies of the saves of the game of TITLEID in the saves folder, as
+    /// Cartouche names them: the newest of a few minutes ago, the others of
+    /// the days before. Only their names and sizes are read here.
+    @MainActor
+    static func writeFolderCopies(titleId: String) {
+        let game = root.appendingPathComponent(folderName + "/Saves/Game [" + titleId + "]", isDirectory: true)
+        let made: [(ago: TimeInterval, size: Int)] = [(12 * 60, 1_310_720), (21 * 3_600, 1_298_432), (46 * 3_600, 1_261_568)]
+        do {
+            try FileManager.default.createDirectory(at: game, withIntermediateDirectories: true)
+            for copy in made {
+                let name = CartoucheSaveSync.fileName(Date(timeIntervalSince1970: now - copy.ago))
+                try Data(count: copy.size).write(to: game.appendingPathComponent(name))
+            }
+        } catch {
+            NSLog("[Gallery] cannot make the copies of the saves folder: %@", String(describing: error))
         }
     }
 

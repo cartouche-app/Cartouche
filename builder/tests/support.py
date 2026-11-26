@@ -91,6 +91,9 @@ def make_zip_dump(path: Path, title_id: str, root: str = "Game") -> Path:
 # A header key of the tests' own, as a prod.keys line gives it: no console's.
 HEADER_KEY = bytes(range(32))
 ZELDA = "01007EF00011E000"
+# A Switch 2 game nxnative builds from a NUP, with a DLC it took from an
+# image of its own (--aoc-dir, nxnative PR #2905).
+POKOPIA = "0400A3A01EE4C000"
 
 
 def write_keys(path: Path) -> Path:
@@ -164,6 +167,18 @@ def make_nup(path: Path, packages: list[tuple[str, int]]) -> Path:
     head = struct.pack("<4sHHQQ32sQQII16s32s", b"NUP\x01", 0x80, 0, 0x80, len(toc), bytes(32), 0x80 + len(toc), 0x80 + len(toc), len(packages), 0, bytes(16), bytes(32))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(head + toc)
+    return path
+
+
+def make_romfs_image(path: Path, payload: bytes = b"dlc data") -> Path:
+    """A whole DMROMFS1 image of one file, as nxnative packs a DLC's files
+    (dm/tools/romfs_image.py): its header, the file, then the index that
+    ends it."""
+    index = (struct.pack("<QQIHBB", 1, 1, 0, 0, 0, 0)
+             + struct.pack("<QQIHBB", 32, len(payload), 0, 8, 1, 0) + b"data.bin")
+    header = struct.pack("<8sQQQ", b"DMROMFS1", 32 + len(payload), len(index), 2)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(header + payload + index)
     return path
 
 
