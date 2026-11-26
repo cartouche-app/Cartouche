@@ -233,6 +233,17 @@ class TheRecords(unittest.TestCase):
         self.assertEqual([r.type for r in challenge], ["TXT"])
         self.assertRegex(challenge[0].content, r"^[0-9a-f]{20,}$")
 
+    def test_google_verifies_the_domain_for_the_owner(self) -> None:
+        # The record Google Search Console showed the owner for the domain
+        # property cartouche.cloud, which covers the site and the
+        # documentation: it stays once the domain is verified, else Search
+        # Console loses it. One TXT record of the file's at the apex, beside
+        # Email Routing's SPF record, which is not the file's.
+        apex = self.named("cartouche.cloud", "TXT")
+        self.assertEqual(len(apex), 1)
+        self.assertRegex(apex[0].content, r"^google-site-verification=[\w-]{43}$")
+        self.assertFalse(sync.is_spf(apex[0].type, apex[0].content))
+
     def test_the_check_refuses_what_cloudflare_or_github_would(self) -> None:
         good = {"type": "A", "name": "cartouche.cloud", "content": "185.199.108.153", "why": "The site"}
         for change, problem in (
