@@ -91,8 +91,12 @@ enum Gallery {
         // iPhone 17 Pro by cable renewed two days ago, the iPhone Duo on
         // the Wi-Fi in its last two days, locked at the last try; and
         // signing in, Apple asking for its code, Cartouche expired on the
-        // iPhone Duo.
+        // iPhone Duo; and, the certificate of both copies gone from the
+        // account, Cartouche installed again over itself on the iPhone 17
+        // Pro, where it expired, and Reinstall on the iPhone Duo, where it
+        // still opens and its last install found the account full.
         case iphoneRenewal = "iphone-renewal", iphoneRenewalSignIn = "iphone-renewal-sign-in"
+        case iphoneRenewalInstall = "iphone-renewal-install"
         // The game page of the builder in the window that showed the
         // console just before, the player back from it with the switch at
         // the top of the window: as the game page, whatever the Mac's
@@ -577,7 +581,8 @@ enum Gallery {
             case .library, .activity, .storage, .iphone: model.section = AppSection(rawValue: page.rawValue) ?? .library
             case .storageMac, .storageNAS: model.section = .storage
             case .activitySplit: model.section = .activity
-            case .iphoneTailscale, .iphoneGames, .iphoneCable, .iphoneSending, .iphoneRenewal, .iphoneRenewalSignIn: model.section = .iphone
+            case .iphoneTailscale, .iphoneGames, .iphoneCable, .iphoneSending, .iphoneRenewal, .iphoneRenewalSignIn, .iphoneRenewalInstall:
+                model.section = .iphone
             case .libraryRoom, .game, .gameNarrow, .gameNewer, .gameQueue, .gameXcode, .gameUnbuilt, .gameAfterConsole, .gameSplit:
                 model.section = .library
             case .setup, .setupXcode: model.section = .setup
@@ -666,6 +671,20 @@ enum Gallery {
                                                                                                             expires: pro.cartouche[0].expires),
                                                   RenewalController.key(duo.udid, bundleId): SignerAttempt(at: now.addingTimeInterval(-20 * 60), kind: "iphone-refused",
                                                                                                             expires: duoExpires)])
+            case .iphoneRenewalInstall:
+                let proExpired = now.addingTimeInterval(-5 * 3_600)
+                let expiredPro = SignerIphone(udid: pro.udid, name: pro.name, ios: pro.ios, link: pro.link, cartouche: [
+                    SignerCartouche(bundleId: bundleId, version: "0.16.2", teamId: team, expires: proExpired, due: "expired"),
+                ])
+                let proKey = RenewalController.key(pro.udid, bundleId)
+                model.renewals.preview(session: SignerSession(signedIn: true, email: "camille@example.com", teamId: team, teamName: "Camille Testeur",
+                                                              since: now.addingTimeInterval(-3 * 86_400)),
+                                       iphones: [expiredPro, duo],
+                                       attempts: [proKey: SignerAttempt(at: now.addingTimeInterval(-6 * 3_600), kind: "certificate-gone", expires: proExpired),
+                                                  RenewalController.key(duo.udid, bundleId): SignerAttempt(at: now.addingTimeInterval(-40 * 60),
+                                                                                                            kind: "no-certificate-left",
+                                                                                                            expires: duoExpires, install: true)],
+                                       installing: [proKey: SignerProgress(step: "install", fraction: 0.6)])
             case .iphoneRenewalSignIn:
                 model.renewals.preview(session: nil, iphones: [pro, duo],
                                        signIn: .code(SignerCodeRequest(bySms: false, numbers: [SignerCodeRequest.Number(id: 1, number: "+33 •• •• •• •• 42", lastTwoDigits: "42")])))

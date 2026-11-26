@@ -211,7 +211,7 @@ async fn an_ipa_that_is_not_the_one_the_source_lists_is_never_installed() {
     h.github.state().asset_replace = None;
     h.github.state().asset_truncate = Some(size / 2);
     let error = reinstall::reinstall(&h.env, &h.udid(), &|_, _| {}).await.expect_err("installed half an IPA");
-    assert!(matches!(error.kind, Kind::Download | Kind::Network), "{error}");
+    assert_eq!(error.kind, Kind::Download, "{error}");
     // No source.
     h.github.state().asset_truncate = None;
     h.github.state().source_status = Some(503);

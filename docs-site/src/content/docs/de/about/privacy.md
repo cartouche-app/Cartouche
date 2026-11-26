@@ -7,7 +7,7 @@ sidebar:
 
 ## Deine Spiele, Spielstände und Accounts
 
-Cartouche sendet deine Spiele und Spielstände nirgendwohin außer in den Speicher, den du selbst eingerichtet hast, mit deinem eigenen Konto. Passwörter bleiben im Schlüsselbund deines iPhones und gehen nur verschlüsselt an deinen gekoppelten Mac. Dein Apple Account geht nur an Apple, um Cartouche und deine Spiele zu signieren. Um Cartouche von deinem Mac aus zu erneuern, sendet Cartouche für Mac dein Passwort nur an Apple und behält nur die Sitzung, die Apple dafür gibt, lesbar nur für deinen Account auf dem Mac, nie das Passwort. Cartouche lädt kein Spiel außer denen, die Cartouche Cloud für den Account erstellt hat, mit dem du es verknüpft hast.
+Cartouche sendet deine Spiele und Spielstände nirgendwohin außer in den Speicher, den du selbst eingerichtet hast, mit deinem eigenen Konto. Passwörter bleiben im Schlüsselbund deines iPhones und gehen nur verschlüsselt an deinen gekoppelten Mac. Dein Apple Account geht nur an Apple, um Cartouche und deine Spiele zu signieren. Um Cartouche von deinem Mac aus zu erneuern, sendet Cartouche für Mac dein Passwort nur an Apple und behält nur die Sitzung, die Apple dafür gibt, lesbar nur für deinen Account auf dem Mac, nie das Passwort. Wenn er Cartouche darüber neu installiert, lädt er Cartouche nur aus seinen Versionen auf GitHub. Cartouche lädt kein Spiel außer denen, die Cartouche Cloud für den Account erstellt hat, mit dem du es verknüpft hast.
 
 ## Spielmessungen
 

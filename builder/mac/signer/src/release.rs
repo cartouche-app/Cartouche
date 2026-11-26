@@ -75,12 +75,10 @@ pub fn latest_in(source: &str) -> Result<Release> {
     Ok(release)
 }
 
+/// GitHub out of reach, or a download cut short: the download's, which the
+/// app says as such, never as Apple not answering (`network`).
 fn network(e: reqwest::Error) -> Failure {
-    if e.is_connect() || e.is_timeout() {
-        Failure::new(Kind::Network, Stage::Download, e.to_string())
-    } else {
-        download_failure(e.to_string())
-    }
+    download_failure(e.to_string())
 }
 
 /// The newest Cartouche its source lists.

@@ -1218,12 +1218,16 @@ test("the renewals Cartouche for Mac made of Cartouche on the iPhones, apart fro
     mac(2, "builder.renewFailed", { asked: false, daysLeft: 0, due: "now", kind: "session-ended", stage: "session" }),
     mac(3, "builder.renewFailed", { asked: true, daysLeft: -1, due: "expired", kind: "iphone-refused", stage: "iphone" }),
     mac(2, "builder.appleSignIn", { result: "signed-in", seconds: 40 }),
+    // Its certificate gone: installed over itself, once after an account full.
+    mac(1, "builder.renewFailed", { asked: true, code: 7460, daysLeft: 1, due: "now", how: "install", kind: "no-certificate-left", stage: "apple" }),
+    mac(1, "builder.reinstalled", { asked: false, daysGiven: 6, daysLeft: -1, due: "expired", link: "usb", refreshedSession: false, seconds: 48.3, updated: true }),
   ]);
   const r = model.renewals;
   assert.deepEqual(Object.fromEntries(r.via.map((row) => [row.key, row.count])), { mac: 1 });
   assert.deepEqual([r.mac.done, r.mac.macs, r.mac.asked.yes, r.mac.cable.yes, r.mac.seconds], [2, 1, 1, 1, 4.1]);
-  assert.deepEqual([r.mac.failed, r.mac.failedMacs], [3, 2]);
-  assert.deepEqual(r.mac.kinds.map((row) => [row.key, row.count, row.installs]), [["session-ended", 2, 1], ["iphone-refused", 1, 1]]);
+  assert.deepEqual([r.mac.failed, r.mac.failedMacs], [4, 3]);
+  assert.deepEqual(r.mac.kinds.map((row) => [row.key, row.count, row.installs]), [["session-ended", 2, 1], ["iphone-refused", 1, 1], ["no-certificate-left", 1, 1]]);
+  assert.deepEqual([r.mac.reinstalled, r.mac.reinstalledAsked.yes, r.mac.reinstallFailed], [1, 0, 1]);
   assert.deepEqual(r.mac.signIns.map((row) => [row.key, row.count]), [["signed-in", 1]]);
   // Not the iPhones' own renewals, nor their failures.
   assert.deepEqual([r.done, r.tried, r.failed], [0, 0, 0]);

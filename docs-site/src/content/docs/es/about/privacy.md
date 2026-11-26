@@ -7,7 +7,7 @@ sidebar:
 
 ## Tus juegos, partidas guardadas y cuentas
 
-Cartouche no envía tus juegos ni tus partidas guardadas a ningún sitio salvo al almacenamiento que configuras tú mismo, con tu propia cuenta. Las contraseñas se quedan en el llavero de tu iPhone, y solo van a tu Mac emparejado, cifradas. Tu cuenta de Apple solo va a Apple, para firmar Cartouche y tus juegos. Para renovar Cartouche desde tu Mac, Cartouche para Mac envía tu contraseña solo a Apple, y guarda solo la sesión que Apple da a cambio, legible solo por tu cuenta del Mac, nunca la contraseña. Cartouche no descarga ningún juego salvo los que Cartouche Cloud compiló para la cuenta a la que lo vinculaste.
+Cartouche no envía tus juegos ni tus partidas guardadas a ningún sitio salvo al almacenamiento que configuras tú mismo, con tu propia cuenta. Las contraseñas se quedan en el llavero de tu iPhone, y solo van a tu Mac emparejado, cifradas. Tu cuenta de Apple solo va a Apple, para firmar Cartouche y tus juegos. Para renovar Cartouche desde tu Mac, Cartouche para Mac envía tu contraseña solo a Apple, y guarda solo la sesión que Apple da a cambio, legible solo por tu cuenta del Mac, nunca la contraseña. Cuando reinstala Cartouche encima de sí mismo, descarga Cartouche solo desde sus versiones en GitHub. Cartouche no descarga ningún juego salvo los que Cartouche Cloud compiló para la cuenta a la que lo vinculaste.
 
 ## Mediciones de juego
 

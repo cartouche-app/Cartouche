@@ -41,7 +41,13 @@ Cartouche se abre siete días seguidos en tu iPhone, y luego hay que renovarlo. 
 
 A partir de ahí, el Mac mira cada media hora los iPhone a su alcance mientras está abierto, su ventana o su barra de menús, y renueva Cartouche en sus dos últimos días, o una vez caducado. **Renovar** lo hace al momento. Una renovación no reinstala nada: Cartouche conserva sus juegos, sus partidas guardadas y su memoria ampliada, y muestra su nueva fecha en su siguiente inicio.
 
-Tu contraseña va solo a Apple, una vez: el Mac guarda solo la sesión que Apple da a cambio, así que nunca te pide la contraseña al abrirse, compilar o jugar. Cuando Apple cierra esa sesión (un inicio de sesión en otro sitio, una contraseña nueva o los días que Apple le da) y toca una renovación, una notificación, una al día como mucho, pide volver a iniciar sesión en la página **iPhone**. El Mac no toca un Cartouche instalado con otra cuenta de Apple; y un Cartouche cuyo certificado ya no está en tu cuenta solo vuelve a abrirse con una instalación desde el Instalador de Cartouche.
+Tu contraseña va solo a Apple, una vez: el Mac guarda solo la sesión que Apple da a cambio, así que nunca te pide la contraseña al abrirse, compilar o jugar. Cuando Apple cierra esa sesión (un inicio de sesión en otro sitio, una contraseña nueva o los días que Apple le da) y toca una renovación, una notificación, una al día como mucho, pide volver a iniciar sesión en la página **iPhone**. El Mac no toca un Cartouche instalado con otra cuenta de Apple.
+
+### Cuando su certificado ya no está
+
+Un Cartouche cuyo certificado ya no está en tu cuenta, revocado por otro ordenador u otra app con la misma cuenta de Apple, solo vuelve a abrirse con una instalación encima. El Mac la hace como el Instalador de Cartouche actualiza Cartouche: la versión más reciente, desde las versiones de Cartouche en GitHub, firmada con tu cuenta de Apple y un certificado de este Mac, *Cartouche for Mac*. Cartouche conserva sus juegos, sus partidas guardadas y su memoria ampliada. El Mac la hace solo una vez que Cartouche ha caducado, para que ningún juego esté en curso; antes, una notificación lo dice una vez, y **Reinstalar**, en la página **iPhone**, la hace al momento. Tarda uno o dos minutos, y la página muestra por dónde va.
+
+El Mac nunca revoca un certificado. Si tu cuenta ya tiene tantos como Apple permite, no instala nada y lo dice: revoca uno que ya no uses en la página **Certificados** del Instalador de Cartouche, y el Mac lo intenta de nuevo.
 
 ## Manejar las compilaciones del Mac desde el iPhone
 

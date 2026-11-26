@@ -5,8 +5,9 @@
 //  The app's side of cartouche-signer (Signer.swift), against a helper of
 //  the tests' own that answers as the real one does (its own tests:
 //  builder/mac/signer/tests): the iPhones and their copies of Cartouche, a
-//  renewal, each failure by its kind, and a sign-in whose password goes to
-//  the helper's input alone, then a code.
+//  renewal, an install over Cartouche and its progress, each failure by its
+//  kind, and a sign-in whose password goes to the helper's input alone,
+//  then a code.
 //
 
 import Foundation
@@ -70,6 +71,41 @@ final class SignerTests: XCTestCase {
         XCTAssertEqual(renewal.seconds, 3.2, accuracy: 0.001)
         _ = try await signer.renew(udid: "X", onlyIfDue: false)
         XCTAssertEqual(try arguments(), ["--folder", signer.folder.path, "renew", "--udid", "X"])
+    }
+
+    func testAnInstallOverCartoucheWithItsProgress() async throws {
+        let signer = try helper("""
+        echo '{"event":"progress","step":"download","fraction":0}'
+        echo '{"event":"progress","step":"download","fraction":0.5}'
+        echo '{"event":"something the app does not know"}'
+        echo '{"event":"progress","step":"sign","fraction":1}'
+        echo '{"event":"progress","step":"install","fraction":0.25}'
+        echo '{"result":{"reinstalled":true,"bundleId":"io.github.clabeuhtegrite.cartouche.ABCDE12345","version":"0.16.3","previousVersion":"0.16.2","before":"2026-11-30T08:00:00Z","expires":"2026-12-08T09:41:00Z","due":"expired","refreshedSession":false,"link":"usb","seconds":52.4}}'
+        """)
+        let steps = Steps()
+        let done = try await signer.reinstall(udid: "00008150-001A2B3C4D5E6F01") { steps.append($0) }
+        XCTAssertEqual(try arguments(), ["--folder", signer.folder.path, "reinstall", "--udid", "00008150-001A2B3C4D5E6F01"])
+        XCTAssertTrue(done.reinstalled)
+        XCTAssertEqual(done.version, "0.16.3")
+        XCTAssertTrue(done.updated)
+        XCTAssertEqual(done.due, "expired")
+        XCTAssertEqual(done.expires, ISO8601DateFormatter().date(from: "2026-12-08T09:41:00Z"))
+        XCTAssertEqual(steps.all, [SignerProgress(step: "download", fraction: 0), SignerProgress(step: "download", fraction: 0.5),
+                                   SignerProgress(step: "sign", fraction: 1), SignerProgress(step: "install", fraction: 0.25)])
+        // An account with as many certificates as Apple allows: said, and
+        // nothing installed.
+        let full = try helper("""
+        echo '{"event":"progress","step":"download","fraction":1}'
+        echo '{"error":{"kind":"no-certificate-left","stage":"apple","code":7460,"message":"Maximum number of certificates reached"}}'
+        exit 1
+        """)
+        do {
+            _ = try await full.reinstall(udid: "X") { _ in }
+            XCTFail("installed")
+        } catch let failure as SignerFailure {
+            XCTAssertEqual(failure.kind, "no-certificate-left")
+            XCTAssertEqual(failure.code, 7460)
+        }
     }
 
     func testEachFailureByItsKind() async throws {
@@ -160,6 +196,24 @@ final class SignerTests: XCTestCase {
         if ProcessInfo.processInfo.environment["CARTOUCHE_SIGNER"] == nil {
             XCTAssertNil(Signer.bundled(home: home))
         }
+    }
+}
+
+/// The steps an install went through, from the helper's thread.
+private final class Steps: @unchecked Sendable {
+    private let lock = NSLock()
+    private var steps: [SignerProgress] = []
+
+    func append(_ step: SignerProgress) {
+        lock.lock()
+        steps.append(step)
+        lock.unlock()
+    }
+
+    var all: [SignerProgress] {
+        lock.lock()
+        defer { lock.unlock() }
+        return steps
     }
 }
 
