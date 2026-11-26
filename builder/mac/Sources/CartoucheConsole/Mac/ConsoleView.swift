@@ -178,6 +178,7 @@ public final class CartoucheMacConsole: ObservableObject {
         models = kept
         apps = shown
         if let running = CartoucheGameActions.shared.running, !shown.contains(where: { $0 === running.app }) {
+            CartoucheControllerPause.shared.gameEnded(quit: CartoucheGameActions.shared.quitAsked)
             CartoucheGameActions.shared.running = nil
         }
         // As Cartouche on the iPhone reads them from an IPA's Info.plist.
@@ -260,8 +261,9 @@ public final class CartoucheMacConsole: ObservableObject {
         }
         // The console hears the controllers while the game runs, even
         // behind it (CartoucheControllerPause): it takes none of their
-        // presses while it is not the Mac's active app.
-        CartoucheGamepad.shared.gameInFront = !NSApp.isActive
+        // presses while it is not the Mac's active app (none without an
+        // app, as in the tests).
+        CartoucheGamepad.shared.gameInFront = !(NSApp?.isActive ?? true)
     }
 
     /// APP, the game's app at GAME, pauses should it lose its last
