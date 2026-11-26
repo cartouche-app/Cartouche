@@ -42,6 +42,20 @@ final class RunTests: XCTestCase {
         XCTAssertEqual(result.errorText, "one\ntwo\r\n\nthree")
     }
 
+    /// Its output's lines as they come, the error output's still going to
+    /// the trailing closure.
+    func testTheLinesOfItsOutputAsTheyCome() async throws {
+        let output = Locked<[String]>([])
+        let errors = Locked<[String]>([])
+        let result = try await Run.program("/bin/sh", ["-c", "echo one; echo err >&2; printf 'two\\n\\nthree'"],
+                                           output: Run.Lines { line in output.update { $0.append(line) } }) { line in
+            errors.update { $0.append(line) }
+        }
+        XCTAssertEqual(output.current, ["one", "two", "three"])
+        XCTAssertEqual(errors.current, ["err"])
+        XCTAssertEqual(result.text, "one\ntwo\n\nthree")
+    }
+
     func testItsFolderAndEnvironment() async throws {
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent("RunTests-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)

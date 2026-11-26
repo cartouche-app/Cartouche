@@ -325,7 +325,7 @@ public final class Signer: Sendable {
     /// lines as it comes.
     func command<T: Decodable>(_ arguments: [String], timeout: TimeInterval = Signer.timeout,
                                line: (@Sendable (String) -> Void)? = nil) async throws -> T {
-        let result = try await Run.program(helper.path, baseArguments + arguments, timeout: timeout, outputLine: line)
+        let result = try await Run.program(helper.path, baseArguments + arguments, timeout: timeout, output: line.map(Run.Lines.init))
         if result.timedOut {
             throw SignerFailure(kind: "internal", stage: "session", message: "The signer took more than \(Int(timeout)) s")
         }
