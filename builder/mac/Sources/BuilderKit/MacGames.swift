@@ -502,6 +502,11 @@ public final class MacGames: ObservableObject {
         let documents = games.appendingPathComponent(titleID, isDirectory: true)
         MacGameLanguage.prepare(app, documents: documents, environment: self.environment, preferred: Locale.preferredLanguages,
                                 read: preference, write: keep)
+        // The mods the player turned on in its sheet, in their order, in
+        // the env.txt of its folder, which nxnative's launcher reads first
+        // (CartoucheMods); the game sees the folder as the console does.
+        // A line not written leaves the game without them.
+        try? CartoucheMods.prepareStart(documents: documents, gameDocuments: documents)
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.arguments = MacPlayEnvironment.arguments(settings: settings)
         let own = games.standardizedFileURL.path == MacSavesFolder.nxnativeFolder.standardizedFileURL.path

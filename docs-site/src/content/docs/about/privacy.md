@@ -13,7 +13,7 @@ Cartouche sends your games and saves nowhere but the storage you set up yourself
 
 After each game, Cartouche sends what nxnative measured while it ran, so that games run better on iPhone, iPad and Mac:
 
-- **For each game session:** frame rate, frame and graphics times, stutters, shader preparation, memory, heat and power, and how the session ended.
+- **For each game session:** frame rate, frame and graphics times, stutters, shader preparation, memory, heat and power, how many mods were on, and how the session ended.
 - **About your device:** its model, iOS version, language and memory limit, Cartouche's version, and a random number of this copy of Cartouche.
 - **Cartouche's own events:** starts, installs, updates, renewals and sign-ins, as counts and results.
 

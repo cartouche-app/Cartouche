@@ -128,6 +128,8 @@ public enum CartoucheMacSavesPage: Sendable {
     /// What the game wrote of its last sessions, to share
     /// (CartoucheGameLogView).
     case log
+    /// Its mods (CartoucheModsView).
+    case mods
 }
 
 extension CartoucheMacConsole {

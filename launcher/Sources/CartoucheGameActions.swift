@@ -1650,7 +1650,8 @@ final class CartoucheGameActions: ObservableObject {
     }
 
     /// nxnative's switch for its settings screen, in the data folder the
-    /// game starts with, and the game's language.
+    /// game starts with, the mods the player turned on in its sheet, and
+    /// the game's language.
     private static func prepareStart(of app: LCAppModel, showingSettings: Bool) throws {
         let container = dataFolder(of: app)
         // Only an nxnative game reads it.
@@ -1658,6 +1659,15 @@ final class CartoucheGameActions: ObservableObject {
               FileManager.default.fileExists(atPath: (bundle as NSString).appendingPathComponent("dm")),
               let container else { return }
         try CartoucheStartSwitch.write(showingSettings: showingSettings, home: container.containerURL)
+        // In their order, by the paths the game sees, its home as
+        // LiveContainer sets it: Cartouche's folders may have moved since
+        // the last start, as after Cartouche was installed again.
+        let taken = try CartoucheMods.prepareStart(
+            documents: container.containerURL.appendingPathComponent("Documents", isDirectory: true),
+            gameDocuments: guestHome(of: container).appendingPathComponent("Documents", isDirectory: true))
+        if taken > 0 {
+            CartoucheReports.note(app.displayName + ": starts with " + String(taken) + (taken == 1 ? " mod" : " mods"))
+        }
         chooseLanguage(of: app, bundle: URL(fileURLWithPath: bundle, isDirectory: true), container: container)
     }
 

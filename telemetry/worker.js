@@ -234,6 +234,9 @@ const session = object(
     audioUnderrunsPerMinute: number(0, 1e6),
     display: object({ tv: flag, foldSplit: flag }),
     dlc: flag,
+    // How many mods the game took (launcher/Sources/CartoucheMods.swift),
+    // never their names.
+    mods: integer(1, 64),
     end: object(
       {
         kind: oneOf("crash", "boot-failed", "memory-likely", "quit", "unknown"),

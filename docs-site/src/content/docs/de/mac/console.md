@@ -26,6 +26,10 @@ Der Mac hält die Spielstände der dort gespielten Spiele mit deinem Spielstando
 
 Die Kopie eines Spiels auf diesem Mac, das dein NAS aufbewahrt, bleibt aus Time Machine heraus: Sie kommt wieder vom NAS. Die Spielstände des Spiels kommen weiterhin hinein.
 
+## Mods
+
+Die Infoseite eines Spiels hat **Mods** auch auf dem Mac, wie auf dem iPhone ([Die Infoseite eines Spiels](/de/iphone/game-sheet/#mods)): Füge einen Mod aus einem Ordner oder einem ZIP auf diesem Mac hinzu, schalte ihn ein oder aus und lege die Reihenfolge fest. Ein Mod, der auch den Code des Spiels ändert, mit einem `exefs`-Ordner, funktioniert auf dem Mac noch nicht: Cartouche sagt es und lässt ihn weg. Die Mods des Mac bleiben auf diesem Mac.
+
 ## System
 
 **System** im Dock der Konsole öffnet die Seite „System“ des iPhones mit den eigenen Abschnitten dieses Mac:

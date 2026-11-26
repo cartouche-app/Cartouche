@@ -32,6 +32,10 @@
 //        mac-builds                      all the Mac's builds, as System
 //                                        opens them (work: mac-builds, or
 //                                        mac-too-old)
+//        mods                            the mods of the sheet's game, from
+//                                        its sheet: with work: mods, a ZIP
+//                                        of a mod that changes the game's
+//                                        code, picked and refused
 //        nightly                         Renew every night, its steps, from
 //                                        the System page
 //        release-notes                   the System page's What's new, the
@@ -255,6 +259,11 @@
 //                                        app is 0.5.0 or older: too old to
 //                                        share its builds, and no longer
 //                                        finding its updates by itself
+//        mods                            the saves of the sheet's game, as
+//                                        for saves, and its mods: two on, one
+//                                        off made for version 1.0.0, and one
+//                                        copied in by hand without a romfs
+//                                        folder (GalleryMods.swift)
 //        newer-build                     a newer build of the sheet's game,
 //                                        or of the first of the player's, in
 //                                        the games folder
@@ -885,6 +894,15 @@ struct GalleryScenario {
                     CartoucheSwitchSaveView.galleryPick = { await GallerySaves.switchExport() }
                 }
             }
+            if work == "mods", let titleId = sheet ?? ownedTitles.first {
+                GallerySaves.prepare(titleId: titleId)
+                GalleryMods.prepare()
+                if screen == "mods" {
+                    // A mod that changes the game's code, picked as the page
+                    // opens, which an iPhone refuses.
+                    CartoucheModsView.galleryPick = { await GalleryMods.codeMod() }
+                }
+            }
             if screen == "sheet-saves" {
                 GallerySaves.bringingDown = true
                 CartoucheGameSheetView.galleryToSaves = { scrollTo in await GallerySaves.bringDown(scrollTo) }
@@ -1423,6 +1441,22 @@ struct CartoucheGalleryApp: App {
                                             isRunning: false)
                 }
             }
+        case "mods":
+            // The game's mods, from its sheet: with work: mods, two on, one
+            // off made for an older version, one copied in by hand, and a
+            // mod that changes the game's code refused (GalleryMods).
+            if let entry = entries.owned.first(where: { $0.titleId == (scenario.sheet ?? scenario.ownedTitles.first) }),
+               let app = entry.app {
+                NavigationStack {
+                    CartoucheModsView(game: CartoucheSwitchSaveGame(name: entry.name, titleId: entry.titleId,
+                                                                    version: GalleryMods.gameVersion,
+                                                                    isSwitch2: entry.platform == "switch2",
+                                                                    target: GallerySaves.target(of: app),
+                                                                    makeTarget: { GallerySaves.target(of: app) },
+                                                                    isRunningNow: { false }),
+                                      isRunning: false)
+                }
+            }
         case "root":
             CartoucheRootView()
         case "tv":
@@ -1651,8 +1685,9 @@ enum GallerySaves {
             .appendingPathComponent("GallerySaves", isDirectory: true)
     }
 
-    /// The game's Documents, where nxnative keeps its saves.
-    private static var documents: URL { root.appendingPathComponent("Game/Documents", isDirectory: true) }
+    /// The game's Documents, where nxnative keeps its saves, and Cartouche
+    /// its mods (GalleryMods).
+    static var documents: URL { root.appendingPathComponent("Game/Documents", isDirectory: true) }
 
     /// Puts a save in the Documents of the game of TITLEID, as nxnative
     /// writes one, and the folder in Files in its place as the saves folder,

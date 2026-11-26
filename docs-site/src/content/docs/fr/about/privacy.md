@@ -13,7 +13,7 @@ Cartouche n'envoie vos jeux et vos sauvegardes nulle part ailleurs que sur le st
 
 Après chaque partie, Cartouche envoie ce que nxnative a mesuré pendant que le jeu tournait, pour que les jeux tournent mieux sur iPhone, iPad et Mac :
 
-- **Pour chaque partie :** fréquence d'images, temps des images et du rendu, saccades, préparation des shaders, mémoire, chaleur et énergie, et la façon dont la partie s'est terminée.
+- **Pour chaque partie :** fréquence d'images, temps des images et du rendu, saccades, préparation des shaders, mémoire, chaleur et énergie, le nombre de mods activés, et la façon dont la partie s'est terminée.
 - **Sur votre appareil :** son modèle, sa version d'iOS, sa langue et sa limite de mémoire, la version de Cartouche, et un numéro aléatoire de cette copie de Cartouche.
 - **Les événements de Cartouche :** lancements, installations, mises à jour, renouvellements et connexions, en nombres et en résultats.
 

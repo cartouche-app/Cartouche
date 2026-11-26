@@ -16,7 +16,7 @@
 //  with the button that asks the Mac for one, the one that stops it, and
 //  the way to all the Mac's builds, once Cartouche reaches the Mac and its
 //  Cartouche Builder knows the game (CartoucheMacBuildsView),
-//  the copies of its saves, Edit
+//  the copies of its saves, its mods (CartoucheModsView), Edit
 //  the game's info for the player's own game (CartoucheGameInfoView), with
 //  what IGDB has of a game Cartouche does not know, after which the sheet
 //  goes back to its top, where the name and cover show; for a game installed
@@ -231,6 +231,8 @@ struct CartoucheGameSheetView: View {
                 // in step there (Mac/ConsoleSaves.swift).
                 if let app = entry.app, let game = switchGame(of: app) {
                     CartoucheSavesSection(target: game.target, isRunning: actions.isRunning(app), switchGame: game)
+                    // Its mods, kept with its saves (CartoucheModsView).
+                    CartoucheModsSection(game: game, isRunning: actions.isRunning(app))
                 }
 
                 if entry.isOwned {

@@ -278,6 +278,8 @@ enum ConsoleGallery {
         let saves = console.dataFolder.appendingPathComponent(sheetGame + "/save", isDirectory: true)
         try? FileManager.default.createDirectory(at: saves, withIntermediateDirectories: true)
         try? Data(repeating: 0x2A, count: 4_096).write(to: saves.appendingPathComponent("save.dat"))
+        // Its mods, two on, for its sheet's row and its page.
+        writeMods(in: console.dataFolder.appendingPathComponent(sheetGame, isDirectory: true))
         console.onSaveCopies = { _ in copies }
         console.showForGallery(playTimes: playTimes, sizes: sizes)
         console.show(games: apps, kept: kept)
@@ -288,6 +290,36 @@ enum ConsoleGallery {
             covers.loaded = true
         }
         return covers
+    }
+
+    /// The mods of the sheet's game in DOCUMENTS, its folder, made up as
+    /// Cartouche keeps them (CartoucheMods): two on, in their order, one
+    /// off, and one copied in by hand without the romfs folder a mod's
+    /// files go in, which shows what stops it.
+    private static func writeMods(in documents: URL) {
+        let folder = CartoucheMods.folder(in: documents)
+        let made: [(folder: String, on: Bool, files: [String])] = [
+            ("Brighter colours", true, ["romfs/Shader/colour.bin"]),
+            ("Retro soundtrack", true, ["romfs/Sound/Resource/Stream/track1.bfstm", "romfs/Sound/Resource/Stream/track2.bfstm"]),
+            ("Bigger text", false, ["romfs/UI/font.bfttf"]),
+            ("Old textures", false, ["Texture/kart.bntx"]),
+        ]
+        var mods: [CartoucheMod] = []
+        for (index, mod) in made.enumerated() {
+            let root = folder.appendingPathComponent(mod.folder, isDirectory: true)
+            for file in mod.files {
+                let url = root.appendingPathComponent(file)
+                try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try? Data(repeating: 0x2A, count: 1_536_000 * (index + 1)).write(to: url)
+            }
+            // The one copied in by hand is not in the list.
+            if mod.files.allSatisfy({ $0.hasPrefix("romfs/") }) {
+                mods.append(CartoucheMod(folder: mod.folder, name: mod.folder, isOn: mod.on, files: mod.files.count,
+                                         size: UInt64(1_536_000 * (index + 1) * mod.files.count),
+                                         added: Date().addingTimeInterval(-Double(index + 1) * 86_400)))
+            }
+        }
+        try? CartoucheMods.save(mods, in: documents)
     }
 
     /// The logs of the sheet's game's last two sessions in FOLDER, made up
