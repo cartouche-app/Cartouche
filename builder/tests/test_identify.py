@@ -54,6 +54,13 @@ class Files(Home):
         with self.assertRaises(identify.Unreadable):
             identify.nup_title_ids(self.tmp / "cut.nup")
 
+    def test_whether_a_nup_holds_dlc_of_its_own(self):
+        # As nxnative's pack_nup.scan counts DLC: the add-on packages, not
+        # an add-on's update.
+        self.assertTrue(identify.nup_lists_dlc(make_nup(self.tmp / "dlc.nup", [(MKW, 0), ("0400C3F00006F001", 2)])))
+        self.assertFalse(identify.nup_lists_dlc(make_nup(self.tmp / "base.nup", [(MKW, 0), ("0400C3F00006E800", 1)])))
+        self.assertFalse(identify.nup_lists_dlc(make_nup(self.tmp / "aocup.nup", [(MKW, 0), ("0400C3F00006F001", 3)])))
+
     def test_nsp_by_its_ticket_without_keys(self):
         path = make_nsp(self.tmp / "game.nsp", [
             (f"{ODYSSEY.lower()}0000000000000005.tik", b"ticket"),
