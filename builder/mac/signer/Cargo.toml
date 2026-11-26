@@ -1,0 +1,54 @@
+[package]
+name = "cartouche-signer"
+version = "0.1.0"
+description = "Renews Cartouche on the player's iPhone from Cartouche for Mac, with a new provisioning profile"
+authors = ["Cartouche contributors"]
+license = "AGPL-3.0-only"
+repository = "https://github.com/cartouche-app/Cartouche"
+edition = "2024"
+publish = false
+
+# What the Mac app runs, out of sight, to keep Cartouche going on the
+# iPhone: README.md. Only crates the Cartouche Installer already builds
+# with, at the versions of its Cargo.lock (installer/src-tauri), from which
+# this crate's lock was taken.
+
+[lib]
+name = "cartouche_signer"
+path = "src/lib.rs"
+
+[[bin]]
+name = "cartouche-signer"
+path = "src/main.rs"
+
+[dependencies]
+# Never the keychain (keyring-storage): the Mac app is signed ad hoc, and
+# macOS would ask again after each update (ConsoleStorage.swift).
+isideload = { version = "0.5.2", default-features = false, features = ["install", "tokio-mt", "fs-storage"] }
+idevice = { version = "0.1.68", features = ["usbmuxd", "house_arrest", "afc", "installation_proxy", "misagent", "tcp", "pair"] }
+tokio = { version = "1.49.0", features = ["rt-multi-thread", "macros", "io-std", "io-util", "sync", "time"] }
+plist = "1.8.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rootcause = "0.12.1"
+# One provider for rustls, as the Installer picks it: ring is in the tree too.
+rustls = "0.23.36"
+# isideload's own, to tell a 429 and a network failure in its reports.
+reqwest = { version = "0.13.2", default-features = false }
+futures = "0.3.31"
+base64 = "0.22"
+chrono = "0.4"
+tracing = "0.1.44"
+tracing-subscriber = "0.3.22"
+
+[dev-dependencies]
+cartouche-installer-fakes = { path = "../../../installer/src-tauri/fakes" }
+tempfile = "3"
+
+# isideload makes RSA keys in these: unoptimized, as in `cargo test`, that
+# takes seconds.
+[profile.dev.package.num-bigint-dig]
+opt-level = 3
+
+[profile.dev.package.rsa]
+opt-level = 3

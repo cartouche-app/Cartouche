@@ -44,6 +44,10 @@ public struct BuilderHome: Equatable, Sendable {
     /// readable only by the player's account.
     public var connections: URL { root.appendingPathComponent("connections.json") }
     public var logs: URL { root.appendingPathComponent("logs", isDirectory: true) }
+    /// cartouche-signer's folder (Signer.swift): the player's Apple session,
+    /// never their password, and its anisette machine, readable by the
+    /// player's account alone.
+    public var signer: URL { root.appendingPathComponent("Signer", isDirectory: true) }
     public var engine: URL { root.appendingPathComponent("nxnative", isDirectory: true) }
     public var saves: URL { root.appendingPathComponent("Saves", isDirectory: true) }
     /// What this Mac knows of the saves of the games played on it (MacSaves.swift).

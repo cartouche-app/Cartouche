@@ -28,6 +28,10 @@ The Mac app that builds the player's games with nxnative and shows Cartouche's c
 | --- | --- | --- |
 | [SMBClient](https://github.com/kishikawakatsumi/SMBClient) (`app/SMBClient`, the app's own pin) | The console's connections to the player's shared folders (SMB 2 and 3) | MIT |
 | [swift-nio-ssh](https://github.com/apple/swift-nio-ssh) 0.15.0 and [swift-nio](https://github.com/apple/swift-nio) 2.104.0, by Apple, with swift-crypto, swift-asn1, swift-atomics, swift-collections and swift-system (pinned in [`builder/mac/Package.resolved`](builder/mac/Package.resolved)) | The console's connections to the player's SFTP servers | Apache-2.0 |
+| [isideload](https://crates.io/crates/isideload) 0.5.2, in its helper `cartouche-signer` ([`builder/mac/signer`](builder/mac/signer/README.md)) | Signs in to the Apple account once, keeps its session, and asks Apple for Cartouche's new provisioning profile | MIT |
+| [idevice](https://crates.io/crates/idevice) 0.1.68, in the same helper | Talks to the iPhone: the apps installed, its profiles through `misagent`, Cartouche's Documents for the renewal's date | MIT |
+
+The crates the helper brings are listed in [`builder/mac/signer/Cargo.lock`](builder/mac/signer/Cargo.lock).
 
 What it installs on the Mac when the player asks, Xcode, Homebrew, `xcodegen`, `zstd`, `glslang`, Python and nxnative, keeps its own licence and is not part of it.
 

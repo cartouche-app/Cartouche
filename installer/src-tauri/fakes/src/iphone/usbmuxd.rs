@@ -221,6 +221,7 @@ impl FakeUsbmuxd {
                         Some(Service::InstallationProxy) => super::instproxy::serve(iphone, stream).await,
                         Some(Service::HouseArrest) => super::instproxy::serve_house_arrest(iphone, stream).await,
                         Some(Service::RemotePairing) => super::rppairing::serve(iphone, stream).await,
+                        Some(Service::Misagent) => super::misagent::serve(iphone, stream).await,
                     };
                 }
                 other => {
