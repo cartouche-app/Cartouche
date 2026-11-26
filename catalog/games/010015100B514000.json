@@ -10,27 +10,71 @@
   },
   "results": [
     {
+      "device": "iPhone18,1",
+      "iOS": "27.2.1",
+      "date": "2026-11-19",
+      "engine": "nxnative, its build not reported",
+      "status": "playable",
+      "peakMemoryMiB": 2297,
+      "notes": [
+        "Measured by Cartouche on 3 iPhones, 23 sessions from 2026-11-15 to 2026-11-19: 60 fps for 60 (median), 60 fps in the slowest 5% of the time. None ended badly."
+      ],
+      "measured": {
+        "iPhones": 3,
+        "sessions": 23,
+        "from": "2026-11-15",
+        "to": "2026-11-19",
+        "fps": 60,
+        "slowestFps": 60,
+        "targetFps": 60,
+        "endedBadlyPercent": 0
+      }
+    },
+    {
+      "device": "iPhone18,2",
+      "iOS": "27.2.1",
+      "date": "2026-11-24",
+      "engine": "nxnative f644af4b6381 and 2 other builds",
+      "status": "playable",
+      "peakMemoryMiB": 3602,
+      "notes": [
+        "Measured by Cartouche on 3 iPhones, 7 sessions from 2026-11-12 to 2026-11-24: 59 fps for 60 (median), 59.2 fps in the slowest 5% of the time. None ended badly."
+      ],
+      "measured": {
+        "iPhones": 3,
+        "sessions": 7,
+        "from": "2026-11-12",
+        "to": "2026-11-24",
+        "fps": 59,
+        "slowestFps": 59.2,
+        "targetFps": 60,
+        "endedBadlyPercent": 0,
+        "nxnative": "f644af4b6381",
+        "otherBuilds": 2
+      }
+    },
+    {
       "device": "iPhone19,4",
       "iOS": "27.3",
-      "date": "2026-11-17",
-      "engine": "nxnative f4b7e77c907b and 2 other builds",
+      "date": "2026-11-22",
+      "engine": "nxnative f4b7e77c907b and 3 other builds",
       "status": "playable",
       "peakMemoryMiB": 4065,
       "notes": [
-        "Measured by Cartouche on 6 iPhones, 25 sessions from 2026-11-12 to 2026-11-17: 59.7 fps for 60 (median), 56 fps in the slowest 5% of the time, 21.6 stutters a minute. None ended badly."
+        "Measured by Cartouche on 6 iPhones, 27 sessions from 2026-11-12 to 2026-11-22: 59.7 fps for 60 (median), 55.7 fps in the slowest 5% of the time, 26.1 stutters a minute. None ended badly."
       ],
       "measured": {
         "iPhones": 6,
-        "sessions": 25,
+        "sessions": 27,
         "from": "2026-11-12",
-        "to": "2026-11-17",
+        "to": "2026-11-22",
         "fps": 59.7,
-        "slowestFps": 56,
+        "slowestFps": 55.7,
         "targetFps": 60,
-        "stuttersPerMinute": 21.6,
+        "stuttersPerMinute": 26.1,
         "endedBadlyPercent": 0,
         "nxnative": "f4b7e77c907b",
-        "otherBuilds": 2
+        "otherBuilds": 3
       }
     }
   ]
