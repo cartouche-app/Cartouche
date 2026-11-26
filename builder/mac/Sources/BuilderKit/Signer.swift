@@ -49,6 +49,15 @@ public struct SignerSession: Decodable, Equatable, Sendable {
     public var teamName: String?
     public var since: Date?
     public var refreshed: Date?
+
+    public init(signedIn: Bool, email: String? = nil, teamId: String? = nil, teamName: String? = nil, since: Date? = nil, refreshed: Date? = nil) {
+        self.signedIn = signedIn
+        self.email = email
+        self.teamId = teamId
+        self.teamName = teamName
+        self.since = since
+        self.refreshed = refreshed
+    }
 }
 
 /// A copy of Cartouche on an iPhone, and until when it opens.
@@ -61,6 +70,15 @@ public struct SignerCartouche: Decodable, Equatable, Sendable {
     public var due: String?
     /// When its last two days start, for "not-yet".
     public var from: Date?
+
+    public init(bundleId: String, version: String? = nil, teamId: String? = nil, expires: Date? = nil, due: String? = nil, from: Date? = nil) {
+        self.bundleId = bundleId
+        self.version = version
+        self.teamId = teamId
+        self.expires = expires
+        self.due = due
+        self.from = from
+    }
 }
 
 /// An iPhone this Mac reaches, by the cable ("usb") or on its Wi-Fi
@@ -72,6 +90,15 @@ public struct SignerIphone: Decodable, Equatable, Sendable {
     public var link: String
     public var cartouche: [SignerCartouche]
     public var error: SignerFailure?
+
+    public init(udid: String, name: String? = nil, ios: String? = nil, link: String, cartouche: [SignerCartouche], error: SignerFailure? = nil) {
+        self.udid = udid
+        self.name = name
+        self.ios = ios
+        self.link = link
+        self.cartouche = cartouche
+        self.error = error
+    }
 }
 
 /// What a renewal did.
@@ -91,6 +118,21 @@ public struct SignerRenewal: Decodable, Equatable, Sendable {
     public var recorded: Bool
     public var link: String
     public var seconds: Double
+
+    public init(renewed: Bool, bundleId: String, before: Date? = nil, expires: Date? = nil, due: String, from: Date? = nil,
+                registeredAppId: Bool = false, refreshedSession: Bool = false, recorded: Bool = true, link: String, seconds: Double) {
+        self.renewed = renewed
+        self.bundleId = bundleId
+        self.before = before
+        self.expires = expires
+        self.due = due
+        self.from = from
+        self.registeredAppId = registeredAppId
+        self.refreshedSession = refreshedSession
+        self.recorded = recorded
+        self.link = link
+        self.seconds = seconds
+    }
 }
 
 /// Apple asks for a code: on a trusted device, or by text message.
@@ -99,12 +141,25 @@ public struct SignerCodeRequest: Decodable, Equatable, Sendable {
         public var id: Int
         public var number: String?
         public var lastTwoDigits: String?
+
+        public init(id: Int, number: String? = nil, lastTwoDigits: String? = nil) {
+            self.id = id
+            self.number = number
+            self.lastTwoDigits = lastTwoDigits
+        }
     }
 
     public var bySms: Bool
     public var lastError: String?
     public var numbers: [Number]
     public var selectedNumber: Int?
+
+    public init(bySms: Bool, lastError: String? = nil, numbers: [Number] = [], selectedNumber: Int? = nil) {
+        self.bySms = bySms
+        self.lastError = lastError
+        self.numbers = numbers
+        self.selectedNumber = selectedNumber
+    }
 }
 
 /// The player's answer to a code request.

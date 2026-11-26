@@ -563,7 +563,7 @@ final class CartoucheTelemetry: ObservableObject {
                 var fields: [String: CartoucheTelemetryValue] = [:]
                 if let days = signature.daysLeft { fields["daysLeft"] = .number(Double(days)) }
                 if let via = CartoucheRenewalVia.of(updated: updated, reinstalled: state.lastInstallation.map { $0 != installation },
-                                                    renewedHere: state.renewedHere) {
+                                                    renewedHere: state.renewedHere, byMac: signature.renewedByMac) {
                     fields["via"] = .text(via.rawValue)
                 }
                 event("signature.renewed", fields: fields)
