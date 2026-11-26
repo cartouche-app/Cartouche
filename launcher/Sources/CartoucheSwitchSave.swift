@@ -26,6 +26,12 @@
 //  - The save's files are dated at the import: the newest save, which
 //    Cartouche's sync (CartoucheSaveSync) and nxnative's cloud saves then
 //    send on, rather than an older one of the other side.
+//  - nxnative copies the save each session starts from, before the game
+//    writes, in save-backups/<date> start (save_sync.c, keep_start_copy):
+//    the game's sheet puts one back the same way (copiesHere,
+//    putBack(start:in:work:now:)), as a copy, nxnative's staying as it is,
+//    with the size records beside its folders (save.size, save_device.size)
+//    as nxnative puts back a save of its own.
 //
 //  Platform-independent: tested on its own by launcher/Package.swift.
 //
@@ -161,6 +167,22 @@ struct CartoucheSwitchSaveBackup: Equatable {
     let date: Date
 }
 
+/// A copy of a game's saves on this device, in its save-backups, which the
+/// game's sheet puts back (CartoucheSaveCopiesView): one nxnative made as a
+/// session of the game started, or one Cartouche kept of the saves a copy
+/// put back replaced.
+struct CartoucheSaveCopyHere: Equatable, Identifiable {
+    let folder: URL
+    let date: Date
+    /// Whether nxnative made it as a session started; else Cartouche kept
+    /// it, before a copy was put back.
+    let isStart: Bool
+    /// The size of its saves.
+    let size: UInt64
+
+    var id: String { folder.lastPathComponent }
+}
+
 enum CartoucheSwitchSave {
     /// The folders of a game's Documents where nxnative keeps a player's
     /// save, and the console's for a game that has both
@@ -184,6 +206,16 @@ enum CartoucheSwitchSave {
     /// those that putting them back replaced.
     static let beforeImport = "before import"
     static let beforePutBack = "before putting back"
+    /// nxnative's copies of the save each session of the game starts from,
+    /// made before the game writes when the save changed since the last
+    /// one: its save and save_device folders, the size records beside them
+    /// and a .hash of its own; up to ten, within 256 MB (save_sync.c,
+    /// keep_start_copy).
+    static let atStart = "start"
+    /// What nxnative keeps beside a save folder, <folder>.size: the size the
+    /// game gave its save (ExtendSaveData, hle_fs.c save_size_path), which
+    /// goes and comes with it (save_sync.c, SIZE_FILES).
+    static let sizeSuffix = ".size"
     /// The backups kept of each, as nxnative keeps ten of each side.
     static let kept = 10
     /// More items than this in what was picked is more than a save: a
@@ -352,6 +384,11 @@ enum CartoucheSwitchSave {
         return FileManager.default.fileExists(atPath: url.path, isDirectory: &folder) && folder.boolValue
     }
 
+    private static func isFile(_ url: URL) -> Bool {
+        var folder: ObjCBool = false
+        return FileManager.default.fileExists(atPath: url.path, isDirectory: &folder) && !folder.boolValue
+    }
+
     // MARK: Putting it in place
 
     /// Copies, or MOVING moves, the save's files and folders from SOURCE,
@@ -406,6 +443,38 @@ enum CartoucheSwitchSave {
         prune(beforePutBack, in: documents, sparing: kept)
     }
 
+    /// Puts COPY, nxnative's copy of the saves a session of the game started
+    /// from (save-backups/<date> start), back in place of the game's in
+    /// DOCUMENTS, dated NOW, as the player chose it: its save and
+    /// save_device folders, each with the size record beside it, or without
+    /// one when the copy has none, as nxnative puts back a save of its own
+    /// (save_sync.c, the pull). They come by way of WORK, a folder of
+    /// Cartouche's own, as copies: COPY stays as nxnative made it, to come
+    /// back to again, and nxnative prunes it as it prunes its others. What
+    /// they replace is kept first in save-backups/<date> before putting
+    /// back; the game's other profiles, which nxnative's copy does not
+    /// hold, stay as they are.
+    static func putBack(start copy: URL, in documents: URL, work: URL, now: Date = Date()) throws {
+        let fileManager = FileManager.default
+        guard !fileManager.fileExists(atPath: documents.appendingPathComponent(pullJournal).path) else {
+            throw CartoucheSwitchSaveProblem.cloudPull
+        }
+        let staged = work.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try fileManager.createDirectory(at: staged, withIntermediateDirectories: true)
+        defer { try? fileManager.removeItem(at: staged) }
+        for folder in [saveFolder, deviceFolder] where isFolder(copy.appendingPathComponent(folder)) {
+            try fileManager.copyItem(at: copy.appendingPathComponent(folder, isDirectory: true),
+                                     to: staged.appendingPathComponent(folder, isDirectory: true))
+            let size = copy.appendingPathComponent(folder + sizeSuffix)
+            if isFile(size) {
+                try fileManager.copyItem(at: size, to: staged.appendingPathComponent(folder + sizeSuffix))
+            }
+        }
+        let kept = newBackup(beforePutBack, in: documents, at: now)
+        try swap(staged, into: documents, keeping: kept, now: now, sizes: true)
+        prune(beforePutBack, in: documents, sparing: kept)
+    }
+
     /// Puts the save folders in INCOMING, save and save_device, in place of
     /// the game's in DOCUMENTS, dated NOW: those there move to KEPT first, a
     /// folder of their own, and come back if a step fails, as the folders
@@ -413,10 +482,12 @@ enum CartoucheSwitchSave {
     /// copies of those it replaced, <folder>.work and <folder>.new, goes
     /// then, for the game to make them again from the save that came, as
     /// Cartouche's sync does (CartoucheSaveSync.replaceSaves): nxnative
-    /// discards them at its next start, a build of before that too. Whether
+    /// discards them at its next start, a build of before that too. SIZES:
+    /// the size record beside each folder goes with it, INCOMING's, or none
+    /// when INCOMING has none, the one there kept with its folder. Whether
     /// any was kept.
     @discardableResult
-    static func swap(_ incoming: URL, into documents: URL, keeping kept: URL, now: Date) throws -> Bool {
+    static func swap(_ incoming: URL, into documents: URL, keeping kept: URL, now: Date, sizes: Bool = false) throws -> Bool {
         let fileManager = FileManager.default
         let folders = [saveFolder, deviceFolder].filter { isFolder(incoming.appendingPathComponent($0)) }
         guard !folders.isEmpty else { throw CartoucheSwitchSaveProblem.empty }
@@ -424,35 +495,37 @@ enum CartoucheSwitchSave {
             try date(incoming.appendingPathComponent(folder, isDirectory: true), at: now)
         }
         try fileManager.createDirectory(at: documents, withIntermediateDirectories: true)
+        let items = folders + (sizes ? folders.map { $0 + sizeSuffix } : [])
         var moved: [String] = []
         var placed: [String] = []
         do {
-            for folder in folders {
-                let here = documents.appendingPathComponent(folder, isDirectory: true)
+            for item in items {
+                let here = documents.appendingPathComponent(item)
                 if (try? fileManager.attributesOfItem(atPath: here.path)) != nil {
                     if moved.isEmpty { try fileManager.createDirectory(at: kept, withIntermediateDirectories: true) }
-                    try fileManager.moveItem(at: here, to: kept.appendingPathComponent(folder, isDirectory: true))
-                    moved.append(folder)
+                    try fileManager.moveItem(at: here, to: kept.appendingPathComponent(item))
+                    moved.append(item)
                 }
-                try fileManager.moveItem(at: incoming.appendingPathComponent(folder, isDirectory: true), to: here)
-                placed.append(folder)
+                let coming = incoming.appendingPathComponent(item)
+                // A folder is always there; a size record may not be.
+                guard (try? fileManager.attributesOfItem(atPath: coming.path)) != nil else { continue }
+                try fileManager.moveItem(at: coming, to: here)
+                placed.append(item)
             }
         } catch {
             // The saves as they were.
-            for folder in placed.reversed() {
-                try? fileManager.moveItem(at: documents.appendingPathComponent(folder, isDirectory: true),
-                                          to: incoming.appendingPathComponent(folder, isDirectory: true))
+            for item in placed.reversed() {
+                try? fileManager.moveItem(at: documents.appendingPathComponent(item), to: incoming.appendingPathComponent(item))
             }
-            for folder in moved.reversed() {
-                try? fileManager.moveItem(at: kept.appendingPathComponent(folder, isDirectory: true),
-                                          to: documents.appendingPathComponent(folder, isDirectory: true))
+            for item in moved.reversed() {
+                try? fileManager.moveItem(at: kept.appendingPathComponent(item), to: documents.appendingPathComponent(item))
             }
             if moved.isEmpty || (try? fileManager.contentsOfDirectory(atPath: kept.path))?.isEmpty == true {
                 try? fileManager.removeItem(at: kept)
             }
             throw error
         }
-        for folder in placed {
+        for folder in placed where folders.contains(folder) {
             for leftover in [folder + workSuffix, folder + newSuffix] {
                 try? fileManager.removeItem(at: documents.appendingPathComponent(leftover, isDirectory: true))
             }
@@ -588,6 +661,52 @@ enum CartoucheSwitchSave {
                 CartoucheSwitchSaveBackup(folder: backups.appendingPathComponent(name, isDirectory: true), date: $0)
             }
         }
+    }
+
+    /// The copies of a game's saves in DOCUMENTS that its sheet puts back,
+    /// the newest first: nxnative's of the saves each session started from,
+    /// and Cartouche's of the saves a copy put back replaced. A copy without
+    /// a save folder, which nothing would come from, is left out.
+    static func copiesHere(in documents: URL) -> [CartoucheSaveCopyHere] {
+        let copies = [atStart, beforePutBack].flatMap { side in
+            backups(side, in: documents).compactMap { backup -> CartoucheSaveCopyHere? in
+                let folders = [saveFolder, deviceFolder].map { backup.folder.appendingPathComponent($0, isDirectory: true) }
+                    .filter(isFolder)
+                guard !folders.isEmpty else { return nil }
+                return CartoucheSaveCopyHere(folder: backup.folder, date: backup.date, isStart: side == atStart,
+                                             size: folders.reduce(0) { $0 + size(of: $1) })
+            }
+        }
+        // Two of the same second: the one named after the other, " 2", " 3"... " 10", is newer.
+        return copies.sorted { ($0.date, order(ofBackup: $0.id)) > ($1.date, order(ofBackup: $1.id)) }
+    }
+
+    /// Whether DOCUMENTS holds a copy of the game's saves that its sheet
+    /// puts back (copiesHere), read at a glance: by the names alone.
+    static func hasCopiesHere(in documents: URL) -> Bool {
+        let backups = documents.appendingPathComponent(backupsFolder, isDirectory: true)
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: backups.path)) ?? []
+        return names.contains { date(ofBackup: $0, side: atStart) != nil || date(ofBackup: $0, side: beforePutBack) != nil }
+    }
+
+    /// Where a backup comes among those of its second, by the number after
+    /// its side: 1 for none.
+    private static func order(ofBackup name: String) -> Int {
+        guard let last = name.split(separator: " ").last, let number = Int(last), name.hasSuffix(" " + last) else { return 1 }
+        return number
+    }
+
+    /// The size of the files in FOLDER and its folders.
+    private static func size(of folder: URL) -> UInt64 {
+        let fileManager = FileManager.default
+        guard let walker = fileManager.enumerator(atPath: folder.path) else { return 0 }
+        var total: UInt64 = 0
+        while let relative = walker.nextObject() as? String {
+            guard let attributes = try? fileManager.attributesOfItem(atPath: folder.appendingPathComponent(relative).path),
+                  attributes[.type] as? FileAttributeType == .typeRegular else { continue }
+            total += (attributes[.size] as? NSNumber)?.uint64Value ?? (attributes[.size] as? UInt64) ?? 0
+        }
+        return total
     }
 
     /// Removes Cartouche's backups of SIDE beyond the newest ones, but for

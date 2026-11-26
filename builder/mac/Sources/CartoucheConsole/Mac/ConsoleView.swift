@@ -528,7 +528,7 @@ public struct CartoucheMacConsoleView: View {
             switch opensSavesPage {
             case .copies:
                 if let target = actions.saves(of: app) {
-                    CartoucheSaveCopiesView(target: target)
+                    CartoucheSaveCopiesView(target: target, isRunningNow: { actions.isRunning(app) })
                 }
             case .log:
                 if let logs = actions.logs(of: app) {
