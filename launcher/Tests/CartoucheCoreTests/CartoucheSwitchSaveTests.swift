@@ -6,7 +6,8 @@
 //  JKSV's fiche read as JKSV writes it, the save found in a folder or an
 //  archive as JKSV, Checkpoint, macOS and Windows make them, what is
 //  refused, the folder of the game's Documents it goes to, as nxnative
-//  mounts its saves, and the saves it replaces, kept and put back.
+//  mounts its saves, the size it has on the Switch, and the saves it
+//  replaces, kept and put back.
 //
 
 import Foundation
@@ -45,6 +46,7 @@ final class CartoucheSwitchSaveTests: XCTestCase {
         put(UInt64(type), at: 37, count: 1)            // the save's type
         put(titleId, at: 41, count: 8)                 // the owner
         put(0x40_0000, at: 61, count: 8)               // the save's size
+        put(0x10_0000, at: 69, count: 8)               // its journal's
         return Data(bytes)
     }
 
@@ -79,6 +81,21 @@ final class CartoucheSwitchSaveTests: XCTestCase {
         XCTAssertEqual(CartoucheSwitchSaveMeta(Self.fiche(titleId: mk8d, type: 0))?.kind, .other(0))
         // A later revision with more after it reads the same.
         XCTAssertEqual(CartoucheSwitchSaveMeta(Self.fiche(titleId: mk8d, type: 1) + Data(count: 14))?.titleId, "0100152000022000")
+    }
+
+    func testTheFicheGivesTheSizeOfTheSaveOnTheSwitch() {
+        let meta = CartoucheSwitchSaveMeta(Self.fiche(titleId: mk8d, type: 1))
+        XCTAssertEqual(meta?.size, 0x40_0000)
+        XCTAssertEqual(meta?.journal, 0x10_0000)
+        // As nxnative records the size a game gave its save.
+        XCTAssertEqual(meta?.sizeRecord, Data("4194304 1048576\n".utf8))
+        // A fiche without a size gives none.
+        var sizeless = Self.fiche(titleId: mk8d, type: 1)
+        sizeless.replaceSubrange(61 ..< 69, with: Data(count: 8))
+        XCTAssertNil(CartoucheSwitchSaveMeta(sizeless)?.sizeRecord)
+        var negative = Self.fiche(titleId: mk8d, type: 1)
+        negative.replaceSubrange(69 ..< 77, with: Data(repeating: 0xFF, count: 8))
+        XCTAssertNil(CartoucheSwitchSaveMeta(negative)?.sizeRecord)
     }
 
     func testAShortOrForeignFicheIsNone() {
@@ -443,6 +460,58 @@ final class CartoucheSwitchSaveTests: XCTestCase {
         XCTAssertEqual(text(kept.folder.appendingPathComponent("save/userdata.dat")), "played on from the Switch")
     }
 
+    func testTheSaveComesWithItsSizeOnTheSwitch() throws {
+        let game = try documents([])
+        try write("progress on the iPhone", to: game.appendingPathComponent("save/userdata.dat"))
+        try write("8388608 1048576\n", to: game.appendingPathComponent("save.size"))
+        try write("console", to: game.appendingPathComponent("save_device/common.dat"))
+        try write("33554432 16777216\n", to: game.appendingPathComponent("save_device.size"))
+        let (picked, export) = try pickedFolder()
+        let staged = folder.appendingPathComponent("staged", isDirectory: true)
+        try CartoucheSwitchSave.stage(export, from: picked, as: "save", into: staged)
+        let backup = try XCTUnwrap(CartoucheSwitchSave.place(staged, in: game, now: afternoon))
+
+        // The size the fiche gives, as nxnative records it, dated with the save.
+        XCTAssertEqual(text(game.appendingPathComponent("save.size")), "4194304 1048576\n")
+        XCTAssertEqual(modified(game.appendingPathComponent("save.size")), afternoon)
+        // The one of the save it replaced is kept with it; the console's stays.
+        XCTAssertEqual(text(backup.appendingPathComponent("save.size")), "8388608 1048576\n")
+        XCTAssertEqual(text(game.appendingPathComponent("save_device.size")), "33554432 16777216\n")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: backup.appendingPathComponent("save_device.size").path))
+
+        // Put back, the save comes with its own size.
+        let later = afternoon.addingTimeInterval(3_600)
+        try CartoucheSwitchSave.putBack(backup, in: game, now: later)
+        XCTAssertEqual(text(game.appendingPathComponent("save.size")), "8388608 1048576\n")
+        let kept = try XCTUnwrap(CartoucheSwitchSave.backups("before putting back", in: game).first)
+        XCTAssertEqual(text(kept.folder.appendingPathComponent("save.size")), "4194304 1048576\n")
+    }
+
+    func testASaveWithoutAFicheTakesTheOldSizeAway() throws {
+        // Checkpoint's: the save's size on the Switch is unknown.
+        let game = try documents([])
+        try write("progress on the iPhone", to: game.appendingPathComponent("save/userdata.dat"))
+        try write("8388608 1048576\n", to: game.appendingPathComponent("save.size"))
+        let staged = folder.appendingPathComponent("staged", isDirectory: true)
+        try write("from the Switch", to: staged.appendingPathComponent("save/userdata.dat"))
+        let backup = try XCTUnwrap(CartoucheSwitchSave.place(staged, in: game, now: afternoon))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: game.appendingPathComponent("save.size").path),
+                       "the size went with the save it was given to")
+        XCTAssertEqual(text(backup.appendingPathComponent("save.size")), "8388608 1048576\n")
+        try CartoucheSwitchSave.putBack(backup, in: game, now: afternoon.addingTimeInterval(60))
+        XCTAssertEqual(text(game.appendingPathComponent("save.size")), "8388608 1048576\n")
+    }
+
+    func testASizeLeftWithoutItsSaveGoes() throws {
+        let game = try documents([])
+        try write("8388608 1048576\n", to: game.appendingPathComponent("save.size"))
+        let staged = folder.appendingPathComponent("staged", isDirectory: true)
+        try write("from the Switch", to: staged.appendingPathComponent("save/userdata.dat"))
+        XCTAssertNil(try CartoucheSwitchSave.place(staged, in: game, now: afternoon), "no save was there to keep")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: game.appendingPathComponent("save.size").path))
+        XCTAssertEqual(text(game.appendingPathComponent("save/userdata.dat")), "from the Switch")
+    }
+
     func testTheNewestBackupsStayAndNxnativesAreLeftAlone() throws {
         let game = try documents(["save"])
         let backups = game.appendingPathComponent("save-backups", isDirectory: true)
@@ -463,6 +532,150 @@ final class CartoucheSwitchSaveTests: XCTestCase {
         for name in ["2026-11-01 10.00.00 local", "2026-11-01 10.00.00 cloud 2", "My own copy"] {
             XCTAssertTrue(FileManager.default.fileExists(atPath: backups.appendingPathComponent(name).path), name)
         }
+    }
+
+    // MARK: nxnative's copies of each session's start
+
+    /// A start copy as nxnative makes one (save_sync.c, keep_start_copy):
+    /// NAME in the game's save-backups, its save, its console's save if
+    /// any, the size records beside them, and its .hash.
+    @discardableResult
+    private func startCopy(_ name: String, in game: URL, save: String, device: String? = nil,
+                           size: String? = nil, deviceSize: String? = nil) throws -> URL {
+        let copy = game.appendingPathComponent("save-backups/" + name, isDirectory: true)
+        try write(save, to: copy.appendingPathComponent("save/userdata.dat"))
+        if let device { try write(device, to: copy.appendingPathComponent("save_device/common.dat")) }
+        if let size { try write(size, to: copy.appendingPathComponent("save.size")) }
+        if let deviceSize { try write(deviceSize, to: copy.appendingPathComponent("save_device.size")) }
+        try write(String(repeating: "a", count: 64) + "\t42\n", to: copy.appendingPathComponent(".hash"))
+        return copy
+    }
+
+    func testTheCopiesHereAreNxnativesOfEachStartAndCartouchesOfEachPutBack() throws {
+        let game = try documents(["save"])
+        let backups = game.appendingPathComponent("save-backups", isDirectory: true)
+        try startCopy("2026-11-26 10.00.00 start", in: game, save: "first")
+        try startCopy("2026-11-26 10.00.00 start 2", in: game, save: "second, the same second")
+        try startCopy("2026-11-26 10.00.00 start 10", in: game, save: "tenth, the same second", device: "console")
+        try startCopy("2026-11-26 18.02.11 start", in: game, save: "evening")
+        try write("before", to: backups.appendingPathComponent("2026-11-26 19.00.00 before putting back/save/userdata.dat"))
+        // Not copies the sheet puts back: nxnative's of its cloud saves,
+        // Cartouche's of an import (the Switch saves page puts it back), the
+        // player's own folder, nxnative's staging of a copy, and a copy with
+        // no save folder.
+        for name in ["2026-11-26 11.00.00 local", "2026-11-26 11.00.00 cloud", "2026-11-26 11.00.00 before import",
+                     "My own copy", ".start-stage.4242-0"] {
+            try write("other", to: backups.appendingPathComponent(name + "/save/userdata.dat"))
+        }
+        try write("", to: backups.appendingPathComponent("2026-11-26 12.00.00 start/.hash"))
+
+        let copies = CartoucheSwitchSave.copiesHere(in: game)
+        XCTAssertEqual(copies.map(\.id), ["2026-11-26 19.00.00 before putting back", "2026-11-26 18.02.11 start",
+                                           "2026-11-26 10.00.00 start 10", "2026-11-26 10.00.00 start 2",
+                                           "2026-11-26 10.00.00 start"])
+        XCTAssertEqual(copies.map(\.isStart), [false, true, true, true, true])
+        // Its saves' size, without the .hash, the console's save too.
+        XCTAssertEqual(copies[1].size, UInt64("evening".utf8.count))
+        XCTAssertEqual(copies[2].size, UInt64("tenth, the same second".utf8.count + "console".utf8.count))
+        // In local time, as nxnative names them.
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .current
+        XCTAssertEqual(copies[1].date, calendar.date(from: DateComponents(year: 2026, month: 11, day: 26, hour: 18, minute: 2, second: 11)))
+        XCTAssertTrue(CartoucheSwitchSave.hasCopiesHere(in: game))
+    }
+
+    func testAGameWithoutCopiesHereHasNone() throws {
+        let game = try documents(["save"])
+        XCTAssertEqual(CartoucheSwitchSave.copiesHere(in: game), [])
+        XCTAssertFalse(CartoucheSwitchSave.hasCopiesHere(in: game))
+        try write("other", to: game.appendingPathComponent("save-backups/2026-11-26 11.00.00 local/save/userdata.dat"))
+        try write("other", to: game.appendingPathComponent("save-backups/2026-11-26 11.00.00 before import/save/userdata.dat"))
+        XCTAssertEqual(CartoucheSwitchSave.copiesHere(in: game), [])
+        XCTAssertFalse(CartoucheSwitchSave.hasCopiesHere(in: game))
+    }
+
+    func testTheCopyOfASessionsStartComesBackAndStays() throws {
+        let game = try documents([])
+        let old = afternoon.addingTimeInterval(-86_400)
+        try write("played on, broken by a mod", to: game.appendingPathComponent("save/userdata.dat"), date: old)
+        try write("leftover", to: game.appendingPathComponent("save.work/userdata.dat"))
+        try write("67108864 0", to: game.appendingPathComponent("save.size"))
+        try write("console", to: game.appendingPathComponent("save_device/common.dat"), date: old)
+        try write("16777216 0", to: game.appendingPathComponent("save_device.size"))
+        try write("second player", to: game.appendingPathComponent("save_user2/userdata.dat"))
+        // The session's start: the player's save and its size record; the
+        // console's save was empty then, which nxnative does not copy.
+        let copy = try startCopy("2026-11-26 18.02.11 start", in: game, save: "before the mod", size: "33554432 0")
+        let here = try XCTUnwrap(CartoucheSwitchSave.copiesHere(in: game).first)
+        let work = folder.appendingPathComponent("work", isDirectory: true)
+        // The next day, 27 November.
+        let now = afternoon.addingTimeInterval(14 * 86_400)
+        try CartoucheSwitchSave.putBack(start: here.folder, in: game, work: work, now: now)
+
+        XCTAssertEqual(text(game.appendingPathComponent("save/userdata.dat")), "before the mod")
+        XCTAssertEqual(text(game.appendingPathComponent("save.size")), "33554432 0")
+        // Dated then, to win over the saves it replaces in the syncs.
+        XCTAssertEqual(modified(game.appendingPathComponent("save/userdata.dat")), now)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: game.appendingPathComponent("save.work").path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: game.appendingPathComponent(".hash").path))
+        // What the copy does not hold stays: the console's save, its size,
+        // the other profiles.
+        XCTAssertEqual(text(game.appendingPathComponent("save_device/common.dat")), "console")
+        XCTAssertEqual(modified(game.appendingPathComponent("save_device/common.dat")), old)
+        XCTAssertEqual(text(game.appendingPathComponent("save_device.size")), "16777216 0")
+        XCTAssertEqual(text(game.appendingPathComponent("save_user2/userdata.dat")), "second player")
+        // nxnative's copy stays as it was, to come back to again.
+        XCTAssertEqual(text(copy.appendingPathComponent("save/userdata.dat")), "before the mod")
+        XCTAssertEqual(text(copy.appendingPathComponent("save.size")), "33554432 0")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: copy.appendingPathComponent(".hash").path))
+        // What it replaced is kept, and offered in its turn.
+        let kept = try XCTUnwrap(CartoucheSwitchSave.backups(CartoucheSwitchSave.beforePutBack, in: game).first)
+        XCTAssertEqual(kept.date, now)
+        XCTAssertEqual(text(kept.folder.appendingPathComponent("save/userdata.dat")), "played on, broken by a mod")
+        XCTAssertEqual(text(kept.folder.appendingPathComponent("save.size")), "67108864 0")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: kept.folder.appendingPathComponent("save_device").path))
+        XCTAssertEqual(CartoucheSwitchSave.copiesHere(in: game).map(\.isStart), [false, true])
+        // Nothing of Cartouche's own work is left.
+        XCTAssertEqual((try? FileManager.default.contentsOfDirectory(atPath: work.path)) ?? [], [])
+    }
+
+    /// A copy without a size record replaces the one there, as nxnative
+    /// puts back a save of its own: the game's save, as the copy was, has
+    /// the size of the game's control.nacp.
+    func testACopyWithoutASizeRecordTakesTheOneThereAway() throws {
+        let game = try documents([])
+        try write("played on", to: game.appendingPathComponent("save/userdata.dat"))
+        try write("67108864 0", to: game.appendingPathComponent("save.size"))
+        try write("console played on", to: game.appendingPathComponent("save_device/common.dat"))
+        try write("16777216 0", to: game.appendingPathComponent("save_device.size"))
+        let copy = try startCopy("2026-11-26 18.02.11 start", in: game, save: "at the start", device: "console at the start")
+        try CartoucheSwitchSave.putBack(start: copy, in: game, work: folder.appendingPathComponent("work"), now: afternoon)
+
+        XCTAssertEqual(text(game.appendingPathComponent("save/userdata.dat")), "at the start")
+        XCTAssertEqual(text(game.appendingPathComponent("save_device/common.dat")), "console at the start")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: game.appendingPathComponent("save.size").path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: game.appendingPathComponent("save_device.size").path))
+        let kept = try XCTUnwrap(CartoucheSwitchSave.backups(CartoucheSwitchSave.beforePutBack, in: game).first)
+        XCTAssertEqual(text(kept.folder.appendingPathComponent("save.size")), "67108864 0")
+        XCTAssertEqual(text(kept.folder.appendingPathComponent("save_device.size")), "16777216 0")
+        XCTAssertEqual(text(kept.folder.appendingPathComponent("save_device/common.dat")), "console played on")
+    }
+
+    func testNothingChangesWhenTheCopyOfAStartCannotCome() throws {
+        let game = try documents([])
+        try write("played on", to: game.appendingPathComponent("save/userdata.dat"))
+        let copy = try startCopy("2026-11-26 18.02.11 start", in: game, save: "at the start")
+        // Cartouche's work folder is a file: nothing can be copied there.
+        let work = folder.appendingPathComponent("work")
+        try write("", to: work)
+        XCTAssertThrowsError(try CartoucheSwitchSave.putBack(start: copy, in: game, work: work, now: afternoon))
+        // nxnative stopped while it brought in its cloud's save.
+        try write("", to: game.appendingPathComponent("save.pull"))
+        XCTAssertEqual(problem { try CartoucheSwitchSave.putBack(start: copy, in: game, work: self.folder, now: self.afternoon) },
+                       .cloudPull)
+        XCTAssertEqual(text(game.appendingPathComponent("save/userdata.dat")), "played on")
+        XCTAssertEqual(CartoucheSwitchSave.backups(CartoucheSwitchSave.beforePutBack, in: game), [])
+        XCTAssertEqual(text(copy.appendingPathComponent("save/userdata.dat")), "at the start")
     }
 
     // MARK: Sending it to the Switch

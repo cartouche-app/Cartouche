@@ -16,6 +16,8 @@ With a saves folder chosen in **System › Storage**, Cartouche keeps each game'
 - **The newest wins.** When both sides changed, the saves written last win, and the others stay in the folder as a copy of their own.
 - **Ten copies** of each game are kept, the newest first.
 - **Each copy names the version of the game** that wrote it: an older version of the game never takes it, and the sheet says the copy comes once the game is updated.
+- **Every profile goes with them.** The saves of the game's other players, its profiles 2 to 8, go and come with its own, each with the room the game made for it.
+- **The shaders it prepared come back.** The list of what the game prepared as you played goes beside its copies, with what your other iPhones, iPads and Macs prepared: a game installed again, or on another device, prepares them before it starts, and stutters less in its first games. It makes no copy of its own.
 
 A saves folder that does not answer, a NAS while you are away, keeps your saves waiting: Cartouche copies them as soon as it answers again.
 
@@ -25,6 +27,12 @@ The sheet's **Saves** says when they were last in step and what the last sync di
 
 - **Sync with** your folder **now**, when the game is not running.
 - **Put back a copy:** choose one of the game's copies, the newest first. Cartouche sends the current saves to your folder first, so that you can come back to them.
+
+## Back to the start of a game
+
+Each time a game starts, it keeps on your iPhone a copy of the saves it starts from, up to ten of them, with or without a saves folder. If a mod or a session went wrong, open **Put back a copy** on the game's sheet: under **On this iPhone**, the copies marked **At the start of a game** take you back there.
+
+Cartouche keeps the saves they replace on your iPhone first, under **Before a copy was put back**, and, with a saves folder, sends them there, then the copy put back, as the newest.
 
 ## A game from your console
 
@@ -39,7 +47,7 @@ Your game goes on here, from where you left it on your console:
 
 **Put back the game from before the import** undoes it.
 
-The other way, **Make the ZIP for JKSV** makes the game's save into a ZIP: put it on your console's microSD card, in JKSV's folder of the game, and restore it in JKSV.
+The other way, **Make the ZIP for JKSV** makes the game's save into a ZIP: put it on your console's microSD card, in JKSV's folder of the game, and restore it in JKSV. Both ways, only the first profile's save moves: the other profiles stay as they are. A save from JKSV keeps the room it had on your console.
 
 :::caution
 The game on your console should not be newer than the one on your iPhone: a game may not read the save of a newer version.

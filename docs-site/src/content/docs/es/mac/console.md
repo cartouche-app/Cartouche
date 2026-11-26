@@ -23,7 +23,7 @@ La ficha también dice cuánto has jugado el juego en este Mac y si funciona aqu
 
 ## Tus partidas guardadas en el Mac
 
-El Mac mantiene al día las partidas de los juegos jugados en él con tu carpeta de partidas guardadas, como hace el iPhone: la copia más reciente llega antes de que empiece un juego, y las partidas del Mac se van unos segundos después de que el juego guarde. Cuando ambos lados cambiaron, ganan las partidas escritas en último lugar y las otras se conservan como copia. La ficha las muestra, con **Sincronizar ahora con …** y **Restaurar una copia**, y trae una partida de tu consola como en el iPhone.
+El Mac mantiene al día las partidas de los juegos jugados en él con tu carpeta de partidas guardadas, como hace el iPhone: la copia más reciente llega antes de que empiece un juego, y las partidas del Mac se van unos segundos después de que el juego guarde. Cuando ambos lados cambiaron, ganan las partidas escritas en último lugar y las otras se conservan como copia. Todos los perfiles del juego van con ellas, con el espacio que el juego hizo a cada uno, y los shaders que preparó vuelven, como en el iPhone. La ficha las muestra, con **Sincronizar ahora con …** y **Restaurar una copia**, y trae una partida de tu consola como en el iPhone. **Restaurar una copia** también muestra, en **En este Mac**, las copias que cada juego hace de sus partidas al arrancar, para volver al inicio de una partida ([Tus partidas guardadas](/es/iphone/saves/)).
 
 La copia en este Mac de un juego que guarda tu NAS queda fuera de Time Machine: vuelve desde el NAS. Las partidas guardadas del juego siguen entrando.
 

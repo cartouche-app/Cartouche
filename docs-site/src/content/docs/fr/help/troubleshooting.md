@@ -37,7 +37,7 @@ Sous chaque erreur, Cartouche dit pourquoi et quoi faire, et **Copier le rapport
 
 **Le jeu a été construit sans les fichiers du jeu.** Mettez son `romfs.img`, tel que nxnative l'a écrit, à côté de son IPA dans votre dossier de jeux, puis installez le jeu depuis là.
 
-**Le jeu se ferme au lancement, sur un iPhone 15 ou plus ancien.** nxnative demande une puce graphique qui lit les textures BC. Cartouche pour Mac construit vos jeux avec nxnative-nobc pour un tel iPhone une fois associé : voir [Construire pour chacun de vos iPhone](/fr/mac/builder/#construire-pour-chacun-de-vos-iphone).
+**Le jeu se ferme au lancement, sur un iPhone 15 ou plus ancien.** nxnative demande une puce graphique qui lit les textures BC. Cartouche pour Mac construit vos jeux avec nxnative-nobc pour un tel iPhone une fois associé : voir [Construire pour chacun de vos iPhone](/fr/mac/builder/#construire-pour-chacun-de-vos-iphone). Sur Cartouche Cloud, renvoyez le jeu pour un iPhone 11 à 15 ([Construire un jeu](/fr/cloud/#construire-un-jeu)).
 
 **iOS a fermé le jeu.** Près de sa limite de mémoire derrière la console, le jeu démarre ensuite à la place de Cartouche, avec toute la mémoire de Cartouche. La fiche du jeu dit s'il convient à votre iPhone. Sinon, votre progression est gardée jusqu'à sa dernière sauvegarde.
 

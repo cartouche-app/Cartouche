@@ -37,7 +37,7 @@ Unter jedem Fehler sagt Cartouche, warum und was zu tun ist, und **Bericht kopie
 
 **Das Spiel wurde ohne seine Spieldateien erstellt.** Lege seine `romfs.img`, wie nxnative sie geschrieben hat, neben seine IPA in deinen Spieleordner und installiere das Spiel dann von dort.
 
-**Das Spiel schließt sich beim Start, auf einem iPhone 15 oder älter.** nxnative braucht einen Grafikchip, der BC-Texturen liest. Cartouche für Mac erstellt deine Spiele für ein solches iPhone mit nxnative-nobc, sobald sie gekoppelt sind: siehe [Für jedes deiner iPhones erstellen](/de/mac/builder/#für-jedes-deiner-iphones-erstellen).
+**Das Spiel schließt sich beim Start, auf einem iPhone 15 oder älter.** nxnative braucht einen Grafikchip, der BC-Texturen liest. Cartouche für Mac erstellt deine Spiele für ein solches iPhone mit nxnative-nobc, sobald sie gekoppelt sind: siehe [Für jedes deiner iPhones erstellen](/de/mac/builder/#für-jedes-deiner-iphones-erstellen). Bei Cartouche Cloud sende das Spiel erneut für ein iPhone 11 bis 15 ([Ein Spiel erstellen](/de/cloud/#ein-spiel-erstellen)).
 
 **iOS hat das Spiel geschlossen.** Nahe an seiner Speichergrenze hinter der Konsole startet das Spiel dann anstelle von Cartouche, mit dem ganzen Arbeitsspeicher von Cartouche. Die Infoseite des Spiels sagt, ob es zu deinem iPhone passt. Sonst bleibt dein Fortschritt bis zum letzten Speichern erhalten.
 

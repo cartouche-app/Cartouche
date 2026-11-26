@@ -5,7 +5,9 @@
 //  A game's saves on its sheet, kept in step with the player's saves folder
 //  (CartoucheSaveBackups): when they were last, what came and what was
 //  kept, Sync now, and the copies of the saves, one of which can be put
-//  back, with the game's saves between the player's Switch and this iPhone
+//  back, those of the saves folder and those on this iPhone, which nxnative
+//  makes as each session of the game starts (CartoucheSwitchSave.copiesHere),
+//  with the game's saves between the player's Switch and this iPhone
 //  (CartoucheSwitchSaveView). The same screens on the Mac, in Cartouche's
 //  console, where the Builder keeps the saves of nxnative's apps for the
 //  Mac in step (builder/mac/Sources/CartoucheConsole/Mac/ConsoleSaves.swift).
@@ -92,6 +94,10 @@ struct CartoucheSavesSection: View {
         if backups.isLeftToCloud(target) {
             Label(CartoucheText.savesInCloud, systemImage: "icloud")
                 .foregroundStyle(.secondary)
+            // nxnative's copies of each session's start, on this Mac.
+            if CartoucheSwitchSave.hasCopiesHere(in: target.documents) {
+                putBackLink(of: target)
+            }
         } else {
             keptRows(of: target)
         }
@@ -143,12 +149,7 @@ struct CartoucheSavesSection: View {
                 }
                 .disabled(syncing || backups.isSyncing || isRunning)
             }
-            NavigationLink {
-                CartoucheSaveCopiesView(target: target)
-            } label: {
-                Label(CartoucheText.savesPutBack, systemImage: "clock.arrow.circlepath")
-            }
-            .disabled(isRunning)
+            putBackLink(of: target)
             if isRunning {
                 Text(CartoucheText.savesRunning)
                     .font(.footnote)
@@ -173,7 +174,22 @@ struct CartoucheSavesSection: View {
         } else {
             Text(CartoucheText.savesNoFolder)
                 .foregroundStyle(.secondary)
+            // Without a saves folder, the copies on this iPhone, which
+            // nxnative makes as each session starts.
+            if CartoucheSwitchSave.hasCopiesHere(in: target.documents) {
+                putBackLink(of: target)
+            }
         }
+    }
+
+    /// Put back a copy, of the saves folder or of this iPhone.
+    private func putBackLink(of target: CartoucheSaveTarget) -> some View {
+        NavigationLink {
+            CartoucheSaveCopiesView(target: target, isRunningNow: switchGame?.isRunningNow ?? { false })
+        } label: {
+            Label(CartoucheText.savesPutBack, systemImage: "clock.arrow.circlepath")
+        }
+        .disabled(isRunning)
     }
 
     /// What the last sync did that the player should know: the saves that
@@ -191,14 +207,22 @@ struct CartoucheSavesSection: View {
     }
 }
 
-/// A game's copies of saves, the newest first: one is put back after a
+/// A game's copies of saves, the newest first: those of the saves folder,
+/// and those on this iPhone, which nxnative makes as each session of the
+/// game starts (CartoucheSwitchSave.copiesHere). One is put back after a
 /// question.
 @available(iOS 17.0, *)
 struct CartoucheSaveCopiesView: View {
     let target: CartoucheSaveTarget
+    /// Whether the game runs now: the player may start it from the console
+    /// under the sheet, and no copy comes then.
+    let isRunningNow: @MainActor () -> Bool
+    @ObservedObject private var backups = CartoucheSaveBackups.shared
     @State private var copies: [CartoucheSaveBackup]?
+    /// The copies on this iPhone, once read.
+    @State private var here: [CartoucheSaveCopyHere]?
     @State private var problem: CartoucheReport?
-    @State private var asking: CartoucheSaveBackup?
+    @State private var asking: Asked?
     @State private var restoring = false
     @State private var restored: Date?
     /// Why the last copy was not put back, and the report on it.
@@ -208,11 +232,35 @@ struct CartoucheSaveCopiesView: View {
     @State private var offline: String?
     @State private var restoreOffline: String?
     /// Why the last copy stays where it is: a newer version of the game
-    /// wrote it than the one installed here.
+    /// wrote it than the one installed here, or the game started.
     @State private var refused: String?
 
-    init(target: CartoucheSaveTarget) {
+    /// The copy the player picked, of the saves folder or of this iPhone.
+    private enum Asked {
+        case folder(CartoucheSaveBackup)
+        case here(CartoucheSaveCopyHere)
+
+        var date: Date {
+            switch self {
+            case .folder(let copy): return copy.date
+            case .here(let copy): return copy.date
+            }
+        }
+    }
+
+    init(target: CartoucheSaveTarget, isRunningNow: @escaping @MainActor () -> Bool = { false }) {
         self.target = target
+        self.isRunningNow = isRunningNow
+    }
+
+    /// Whether the saves folder keeps these saves: on the Mac, not those
+    /// nxnative's own cloud saves keep.
+    private var hasFolder: Bool {
+        #if os(macOS)
+        return backups.isOn && !backups.isLeftToCloud(target)
+        #else
+        return backups.isOn
+        #endif
     }
 
     var body: some View {
@@ -241,40 +289,13 @@ struct CartoucheSaveCopiesView: View {
                         .foregroundStyle(Color.orange)
                 }
             }
-            CartoucheSection {
-                if let copies {
-                    ForEach(copies) { copy in
-                        Button {
-                            asking = copy
-                        } label: {
-                            LabeledContent {
-                                Text(CartoucheText.fileSize(copy.size))
-                            } label: {
-                                Label(CartoucheText.dateAndTime(copy.date), systemImage: "doc.zipper")
-                            }
-                        }
-                        .tint(.primary)
-                        .disabled(restoring)
-                    }
-                    if copies.isEmpty {
-                        Text(CartoucheText.savesNoCopy)
-                            .foregroundStyle(.secondary)
-                    }
-                } else if let offline {
-                    CartoucheOfflineRows(message: offline) {
-                        self.offline = nil
-                        Task { await load() }
-                    }
-                } else if let problem {
-                    Text(problem.message)
-                        .foregroundStyle(Color.orange)
-                    CartoucheReportButton(report: problem)
-                } else {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                }
-            } footer: {
-                Text(CartoucheText.savesPutBackFooter)
+            if hasFolder {
+                folderSection
+            }
+            // On this iPhone: shown when it holds copies, or when it is all
+            // there is.
+            if let here, !here.isEmpty || !hasFolder {
+                hereSection(here)
             }
         }
         .cartoucheStageBackground()
@@ -293,16 +314,24 @@ struct CartoucheSaveCopiesView: View {
             }
         }
         .confirmationDialog(CartoucheText.savesPutBackQuestion, isPresented: askingShown, titleVisibility: .visible,
-                            presenting: asking) { copy in
-            Button(CartoucheText.savesPutBackAction(CartoucheText.dateAndTime(copy.date)),
+                            presenting: asking) { asked in
+            Button(CartoucheText.savesPutBackAction(CartoucheText.dateAndTime(asked.date)),
                    role: .destructive) {
-                Task { await restore(copy) }
+                Task { await restore(asked) }
             }
             Button(CartoucheText.cancel, role: .cancel) {}
-        } message: { _ in
-            Text(CartoucheText.savesPutBackMessage)
+        } message: { asked in
+            switch asked {
+            case .folder:
+                Text(CartoucheText.savesPutBackMessage)
+            case .here:
+                Text(hasFolder ? CartoucheText.savesHereMessageFolder : CartoucheText.savesHereMessage)
+            }
         }
-        .task { await load() }
+        .task {
+            await loadHere()
+            await load()
+        }
         // The server answers again: the list it could not give comes.
         .onReceive(CartoucheStorageReach.shared.cameBack) { _ in
             guard offline != nil else { return }
@@ -311,13 +340,93 @@ struct CartoucheSaveCopiesView: View {
         }
     }
 
+    /// The copies of the saves folder.
+    private var folderSection: some View {
+        CartoucheSection {
+            if let copies {
+                ForEach(copies) { copy in
+                    Button {
+                        asking = .folder(copy)
+                    } label: {
+                        LabeledContent {
+                            Text(CartoucheText.fileSize(copy.size))
+                        } label: {
+                            Label(CartoucheText.dateAndTime(copy.date), systemImage: "doc.zipper")
+                        }
+                    }
+                    .tint(.primary)
+                    .disabled(restoring)
+                }
+                if copies.isEmpty {
+                    Text(CartoucheText.savesNoCopy)
+                        .foregroundStyle(.secondary)
+                }
+            } else if let offline {
+                CartoucheOfflineRows(message: offline) {
+                    self.offline = nil
+                    Task { await load() }
+                }
+            } else if let problem {
+                Text(problem.message)
+                    .foregroundStyle(Color.orange)
+                CartoucheReportButton(report: problem)
+            } else {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+            }
+        } header: {
+            Text(CartoucheText.savesFolderCopies)
+        } footer: {
+            Text(CartoucheText.savesPutBackFooter)
+        }
+    }
+
+    /// The copies on this iPhone, which nxnative makes as each session
+    /// starts, and those Cartouche keeps of the saves a copy put back
+    /// replaced.
+    private func hereSection(_ here: [CartoucheSaveCopyHere]) -> some View {
+        CartoucheSection {
+            ForEach(here) { copy in
+                Button {
+                    asking = .here(copy)
+                } label: {
+                    LabeledContent {
+                        Text(CartoucheText.fileSize(copy.size))
+                    } label: {
+                        Label {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(CartoucheText.dateAndTime(copy.date))
+                                Text(copy.isStart ? CartoucheText.savesHereStart : CartoucheText.savesHereBeforePutBack)
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                        } icon: {
+                            Image(systemName: copy.isStart ? "play.circle" : "clock.arrow.circlepath")
+                        }
+                    }
+                }
+                .tint(.primary)
+                .disabled(restoring)
+            }
+            if here.isEmpty {
+                Text(CartoucheText.savesNoCopy)
+                    .foregroundStyle(.secondary)
+            }
+        } header: {
+            Text(CartoucheText.savesHereHeader)
+        } footer: {
+            Text(CartoucheText.savesHereFooter)
+        }
+    }
+
     private var askingShown: Binding<Bool> {
         Binding(get: { asking != nil }, set: { shown in if !shown { asking = nil } })
     }
 
     private func load() async {
+        guard hasFolder else { return }
         do {
-            copies = try await CartoucheSaveBackups.shared.copies(of: target)
+            copies = try await backups.copies(of: target)
             problem = nil
             offline = nil
         } catch let away as CartoucheStorageOffline {
@@ -331,14 +440,33 @@ struct CartoucheSaveCopiesView: View {
         }
     }
 
-    private func restore(_ copy: CartoucheSaveBackup) async {
+    /// Reads the copies on this iPhone, off the main thread.
+    private func loadHere() async {
+        let documents = target.documents
+        here = await Task.detached(priority: .userInitiated) { CartoucheSwitchSave.copiesHere(in: documents) }.value
+    }
+
+    private func restore(_ asked: Asked) async {
         restoring = true
         restored = nil
         failure = nil
         restoreOffline = nil
         refused = nil
+        switch asked {
+        case .folder(let copy):
+            await restore(copy)
+        case .here(let copy):
+            await restore(copy)
+        }
+        restoring = false
+        // Putting a copy back first copies the saves it replaces.
+        await loadHere()
+        await load()
+    }
+
+    private func restore(_ copy: CartoucheSaveBackup) async {
         do {
-            try await CartoucheSaveBackups.shared.restore(copy, of: target)
+            try await backups.restore(copy, of: target)
             restored = copy.date
             CartoucheReports.note("Saves of " + target.name + " put back from " + CartoucheReport.timestamp(copy.date))
         } catch let away as CartoucheStorageOffline {
@@ -354,9 +482,28 @@ struct CartoucheSaveCopiesView: View {
                                             facts: [.init("Copy", CartoucheReport.timestamp(copy.date) + ", "
                                                 + CartoucheReport.bytes(Int64(clamping: copy.size)))])
         }
-        restoring = false
-        // Putting a copy back first copies the saves it replaces.
-        await load()
+    }
+
+    private func restore(_ copy: CartoucheSaveCopyHere) async {
+        let kind = copy.isStart ? "the start of a session" : "before a copy was put back"
+        do {
+            try await backups.putBack(here: copy, of: target, running: isRunningNow)
+            restored = copy.date
+            CartoucheReports.note("Saves of " + target.name + " put back from the copy here of " + kind + ", "
+                                  + CartoucheReport.timestamp(copy.date))
+        } catch let problem as CartoucheSwitchSaveProblem {
+            // No problem to report: the game plays, or nxnative brings in
+            // its cloud's save, which its next start ends.
+            refused = problem == .running ? CartoucheText.savesRunning : CartoucheSwitchSaveView.text(of: problem)
+            CartoucheReports.note("Saves of " + target.name + ": the copy here of " + kind + " not put back, "
+                                  + String(describing: problem))
+        } catch {
+            failure = CartoucheReports.make(.saves, CartoucheText.savesPutBackFailed, message: error.localizedDescription,
+                                            error: error, step: "Putting back a copy of " + target.name + "'s saves on this device, "
+                                                + "of " + kind, stage: "savesPutBackHere",
+                                            facts: [.init("Copy", CartoucheReport.timestamp(copy.date) + ", "
+                                                + CartoucheReport.bytes(Int64(clamping: copy.size)))])
+        }
     }
 }
 

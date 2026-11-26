@@ -339,7 +339,7 @@ struct CartoucheGamesView: View {
             Button(CartoucheText.installAnyway) { actions.installAnyway(question) }
             Button(CartoucheText.cancel, role: .cancel) { actions.dropInstall(question) }
         } message: { _ in
-            Text(CartoucheText.reasonGPU + " " + CartoucheText.installGPUBuilder)
+            Text(CartoucheText.installGPUAdvice)
         }
         // A controller answers the alert: A or B closes it, Y copies the
         // report. It closes once every view has had the input, so that the

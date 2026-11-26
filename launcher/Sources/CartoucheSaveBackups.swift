@@ -28,6 +28,13 @@
 //  - A copy can be put back from the game's sheet: the saves it replaces go
 //    to the saves folder first, and the copy put back becomes the newest
 //    one there, which the player's other iPhones take at their next start.
+//  - The copies of a game's saves on this iPhone come back the same way,
+//    from the game's sheet: those nxnative makes of the saves each session
+//    starts from, and those Cartouche keeps of the saves a copy put back
+//    replaced (CartoucheSwitchSave.copiesHere). The saves here go to the
+//    saves folder first, when they changed since they were last there, and
+//    stay on this iPhone too; the copy put back then goes there as the
+//    newest one.
 //  - A copy a newer version of the game wrote, on a Mac or an iPhone that
 //    has the game's update, never comes to an older one: the saves here go
 //    as a copy under it, and the game's sheet says the copy waits for the
@@ -713,6 +720,44 @@ final class CartoucheSaveBackups: ObservableObject {
             }.value
         }
         try result.get()
+        sendChanged(target)
+    }
+
+    /// Puts COPY, one of TARGET's copies on this iPhone
+    /// (CartoucheSwitchSave.copiesHere), back in place of its saves, as the
+    /// player chose it, once the syncs under way have ended, none starting
+    /// meanwhile, the way a copy of the saves folder comes back: the saves
+    /// here go there first, when they changed since they were last there,
+    /// and are kept on this iPhone too, there or not; the copy put back then
+    /// goes there as the newest one, now or once its server answers again.
+    /// Nothing changes while the game runs (RUNNING).
+    func putBack(here copy: CartoucheSaveCopyHere, of target: CartoucheSaveTarget,
+                 running: @escaping @MainActor () -> Bool) async throws {
+        let documents = target.documents
+        let folder = copy.folder
+        let isStart = copy.isStart
+        let work = Self.scratch.appendingPathComponent("here", isDirectory: true)
+        let result: Result<Void, Error> = await turn {
+            if running() { return .failure(CartoucheSwitchSaveProblem.running) }
+            if self.isOn {
+                // Offline, they stay on this iPhone alone, in the backup.
+                _ = await self.syncRound([target], fetching: false, onlyChanged: true, byPlayer: false)
+                if running() { return .failure(CartoucheSwitchSaveProblem.running) }
+            }
+            return await Task.detached(priority: .userInitiated) {
+                Result {
+                    if isStart {
+                        try CartoucheSwitchSave.putBack(start: folder, in: documents, work: work)
+                    } else {
+                        try CartoucheSwitchSave.putBack(folder, in: documents)
+                    }
+                }
+            }.value
+        }
+        try result.get()
+        // The player put it back: no news to tell of it.
+        news[target.key] = nil
+        defaults.set(try? JSONEncoder().encode(news), forKey: Self.newsKey)
         sendChanged(target)
     }
 

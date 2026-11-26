@@ -33,6 +33,7 @@ Put a game's update and DLC in your dumps folder with the game: the Builder buil
 
 - **Packages** (`.nsp`, `.xci`, `.nsz`, `.xcz`) can be beside the game, in a folder of their own, such as `Zelda/Update/`, or anywhere else in the dumps folder: the Builder knows their game by its title ID. They need `prod.keys`, chosen in the setup assistant or in the settings.
 - **A dump** holds them in `updates/<version>/` and `dlc/`; a Switch 2 game's `.nup` holds those packed in it.
+- **A `.nup` without its DLC** takes them as images: put each DLC's image, `1.img`, `2.img`… by its number, in a folder named `aoc` beside the `.nup`, in the game's own folder. nxnative makes such an image of each DLC it builds a game with, in the `aoc` folder of the game's build folder. A `.nup` that holds DLC of its own keeps those.
 - **A new update or DLC** in the dumps folder builds the game again. Cartouche on the iPhone then offers the update on the game's sheet, saves kept.
 
 ## When nxnative improves your games

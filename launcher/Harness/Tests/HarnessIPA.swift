@@ -35,6 +35,9 @@ struct HarnessGame {
     /// way since nxnative's e2fadf2 (4 November 2026), with a layout for an
     /// upright screen; none before, as here unless set.
     var orientationsOnIPad: [String]?
+    /// Built since nxnative's 388befdf (23 November 2026): its settings
+    /// list has Rotation (DM_ROTATION), which locks it sideways or upright.
+    var hasRotation = false
     /// The SDK nxnative built it with: iOS 26.0.
     var sdk: UInt32 = 0x001A_0000
     var encrypted = false
@@ -48,6 +51,12 @@ struct HarnessGame {
     /// romfs.id, which names the image, and no romfs.img, which the player
     /// keeps beside the IPA.
     var romfsApart = false
+    /// With DLC and the files of another program of the game, as nxnative
+    /// packs them in the app, with its game files apart too
+    /// (dm/ios/tools/build_ipa.sh): aoc/1.img, a DLC's image, and
+    /// romfs_programs/0.img, the files of a Switch 2 Edition's Switch 1
+    /// program.
+    var dlcAndPrograms = false
     /// The bundle identifier, org.nxnative.<title ID> unless set.
     var bundleIdentifierOverride: String?
     /// Built with pso_mtl4 on, as The Legend of Zelda: Breath of the Wild
@@ -84,6 +93,14 @@ struct HarnessGame {
         return game
     }
 
+    /// The same game as nxnative builds it since 23 November 2026, with its
+    /// Rotation.
+    static func withRotation(_ index: Int = 0) -> HarnessGame {
+        var game = laidOutUpright(index)
+        game.hasRotation = true
+        return game
+    }
+
     /// The game's Info.plist, with the keys nxnative's build_ipa.sh gives it.
     var infoPlist: [String: Any] {
         var info: [String: Any] = [
@@ -115,7 +132,7 @@ struct HarnessGame {
 
     /// dm/launcher.json: nxnative's settings screen, its language first.
     var launcherJSON: Data {
-        let settings: [[String: Any]] = [
+        var settings: [[String: Any]] = [
             [
                 "env": "DM_LANG", "kind": "choice", "label": "Language", "note": "The game's language.",
                 "default": languages.first ?? language, "section": "Game",
@@ -130,6 +147,12 @@ struct HarnessGame {
                 "env": "DM_VSYNC", "kind": "toggle", "label": "VSync", "note": "", "default": "1", "section": "Graphics",
             ],
         ]
+        if hasRotation {
+            settings.append([
+                "env": "DM_ROTATION", "kind": "choice", "label": "Rotation", "note": "", "default": "auto", "section": "Game",
+                "options": [["auto", "Automatic"], ["landscape", "Landscape"], ["portrait", "Portrait"]],
+            ])
+        }
         return (try? JSONSerialization.data(withJSONObject: ["settings": settings], options: [.sortedKeys])) ?? Data()
     }
 
@@ -143,6 +166,12 @@ struct HarnessGame {
         let romfs: HarnessZip.Entry = romfsApart
             ? .file(app + "romfs.id", Data(HarnessRomFS.identityLine(of: romfsImage, title: titleId, version: version).utf8))
             : .file(app + "romfs.img", romfsImage)
+        let others: [HarnessZip.Entry] = dlcAndPrograms ? [
+            .folder(app + "aoc/"),
+            .file(app + "aoc/1.img", HarnessRomFS.image(bytes: 8 << 10, seed: titleId + " DLC 1"), method: .store),
+            .folder(app + "romfs_programs/"),
+            .file(app + "romfs_programs/0.img", HarnessRomFS.image(bytes: 16 << 10, seed: titleId + " program 0"), method: .store),
+        ] : []
         let pipelines: [HarnessZip.Entry] = pipelineArchive ? [
             .folder(app + "pso/"),
             .file(app + "pso/applegpu_g18p.mtl4a", HarnessMachOFile.pipelineArchive()),
@@ -167,7 +196,7 @@ struct HarnessGame {
                 "CFBundleIdentifier": "com.moltenvk.MoltenVK", "CFBundleExecutable": "MoltenVK",
                 "CFBundlePackageType": "FMWK",
             ])),
-        ] + pipelines
+        ] + others + pipelines
     }
 }
 

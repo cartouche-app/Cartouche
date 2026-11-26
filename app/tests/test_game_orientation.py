@@ -100,8 +100,9 @@ class GameOrientationTest(unittest.TestCase):
         for line, why in (
             ("override var supportedInterfaceOrientations: UIInterfaceOrientationMask { Self.mask(of: turns) }",
              "the screen turns as it may turn now"),
-            ("allowed.behindTheConsole(isPad: isPad, laysOutUpright: laysOutUpright, pictureOnTV: pictureOnTV)",
-             "upright too on an iPhone, for a game that lays itself out upright, while its picture is on it"),
+            ("allowed.behindTheConsole(isPad: isPad, laysOutUpright: laysOutUpright, pictureOnTV: pictureOnTV, rotation: rotation)",
+             "upright too on an iPhone, for a game that lays itself out upright, while its picture is on it, "
+             "unless the game's Rotation says otherwise"),
             ("requestGeometryUpdate(.iOS(interfaceOrientations: Self.mask(of: turns)))",
              "the screen is turned as it may turn now"),
         ):
@@ -119,6 +120,36 @@ class GameOrientationTest(unittest.TestCase):
                 body = re.search(r"\n    private func " + function + r"\(\).*?\n    \}\n", source, re.S)
                 self.assertIsNotNone(body, f"{HOST.name} has no {function}()")
                 self.assertIn(f"pictureMoved(toTV: {moved})", body.group(0))
+
+    def test_the_games_process_says_its_rotation_and_the_host_follows_it(self):
+        # Up to 0.16.2, nxnative's Rotation, chosen in its in-game menu,
+        # never reached the screen Cartouche turns behind the console.
+        guest = read(ROOT / "launcher" / "LiveProcessSupport" / "CartoucheGuest.m")
+        measure = c_function(guest, "CartoucheGuestMeasure")
+        main = measure.index("dispatch_async(dispatch_get_main_queue()")
+        read_at = measure.index('getenv("DM_ROTATION")')
+        record = measure.index("dispatch_async(measureQueue")
+        self.assertTrue(main < read_at < record, "read on the main thread, where nxnative sets it")
+        self.assertIn("CartoucheGuestRecord(size, press, pictureOnTV, rotation);", measure)
+        recorded = c_function(guest, "CartoucheGuestRecord")
+        self.assertIn('reading[@"rotation"] = rotation;', recorded)
+        self.assertIn('[reading removeObjectForKey:@"rotation"];', recorded, "without one, no word of it")
+        self.assertIn('rotation = plist["rotation"] as? String', read(SOURCES / "CartoucheRunningGame.swift"))
+        self.assertIn('reading["rotation"] = rotation', read(ROOT / "launcher" / "Harness" / "Sources" / "HarnessScenes.swift"),
+                      "the harness's stand-in for the game's process writes it the same way")
+        source = read(HOST)
+        self.assertIn("rotation: Self.rotation(of: app, container: container)", read(SOURCES / "CartoucheGameActions.swift"),
+                      "Play starts the game turned as its Rotation says")
+        watch = re.search(r"\n    private func watchRotation\(of app: LCAppModel, pid: Int\).*?\n    \}\n", source, re.S)
+        self.assertIsNotNone(watch, f"{HOST.name} has no watchRotation(of:pid:)")
+        self.assertIn("self.followRotation(in: CartoucheGameMemoryReading.last(pid: pid))", watch.group(0))
+        self.assertIn("static let rotationCheck: Duration = .seconds(1)", source)
+        follow = re.search(r"\n    func followRotation\(in reading: CartoucheGameMemoryReading\?\).*?\n    \}\n", source, re.S)
+        self.assertIsNotNone(follow)
+        self.assertIn("screen.rotation = rotation", follow.group(0))
+        self.assertIn("screen.rotate()", follow.group(0))
+        teardown = re.search(r"\n    private func tearDown\(\).*?\n    \}\n", source, re.S)
+        self.assertIn("rotationWatch?.cancel()", teardown.group(0))
 
     def test_no_source_reads_more_than_livecontainers_settings_from_info(self):
         own = livecontainers_keys()

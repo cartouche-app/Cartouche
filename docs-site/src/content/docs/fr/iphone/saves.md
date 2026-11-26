@@ -16,6 +16,8 @@ Avec un dossier des sauvegardes choisi dans **Système › Stockage**, Cartouche
 - **La plus récente gagne.** Quand les deux côtés ont changé, les sauvegardes écrites en dernier gagnent, et les autres restent dans le dossier, en copie à part.
 - **Dix copies** de chaque jeu sont gardées, la plus récente d'abord.
 - **Chaque copie nomme la version du jeu** qui l'a écrite : une version plus ancienne du jeu ne la prend jamais, et la fiche dit que la copie arrivera une fois le jeu mis à jour.
+- **Tous les profils suivent.** Les sauvegardes des autres joueurs du jeu, ses profils 2 à 8, partent et arrivent avec les siennes, chacune avec la place que le jeu lui a faite.
+- **Les shaders déjà préparés reviennent.** La liste de ce que le jeu a préparé pendant que vous jouiez part à côté de ses copies, avec ce qu'ont préparé vos autres iPhone, iPad et Mac : un jeu réinstallé, ou sur un autre appareil, les prépare avant de démarrer, et saccade moins à ses premières parties. Elle ne fait aucune copie à elle seule.
 
 Un dossier des sauvegardes qui ne répond pas, un NAS pendant que vous êtes ailleurs, garde vos sauvegardes en attente : Cartouche les copie dès qu'il répond de nouveau.
 
@@ -25,6 +27,12 @@ Un dossier des sauvegardes qui ne répond pas, un NAS pendant que vous êtes ail
 
 - **Synchroniser avec** votre dossier **maintenant**, quand le jeu ne tourne pas.
 - **Remettre une copie :** choisissez une des copies du jeu, la plus récente d'abord. Cartouche envoie d'abord les sauvegardes actuelles dans votre dossier, pour que vous puissiez y revenir.
+
+## Revenir au début d'une partie
+
+À chaque lancement, un jeu garde sur votre iPhone une copie des sauvegardes d'où il part, jusqu'à dix, avec ou sans dossier des sauvegardes. Si un mod ou une partie a mal tourné, ouvrez **Remettre une copie** sur la fiche du jeu : sous **Sur cet iPhone**, les copies marquées **Au début d'une partie** vous y ramènent.
+
+Cartouche garde d'abord sur votre iPhone les sauvegardes qu'elles remplacent, sous **Avant la remise d'une copie**, et, avec un dossier des sauvegardes, les y envoie, puis la copie remise, comme la plus récente.
 
 ## Un jeu venu de votre console
 
@@ -39,7 +47,7 @@ Votre partie continue ici, là où vous l'avez laissée sur votre console :
 
 **Remettre la partie d'avant l'import** l'annule.
 
-Dans l'autre sens, **Préparer le ZIP pour JKSV** met la sauvegarde du jeu dans un ZIP : posez-le sur la carte microSD de votre console, dans le dossier du jeu de JKSV, et restaurez-le dans JKSV.
+Dans l'autre sens, **Préparer le ZIP pour JKSV** met la sauvegarde du jeu dans un ZIP : posez-le sur la carte microSD de votre console, dans le dossier du jeu de JKSV, et restaurez-le dans JKSV. Dans les deux sens, seule la sauvegarde du premier profil passe : les autres profils restent tels quels. Une sauvegarde de JKSV garde la place qu'elle avait sur votre console.
 
 :::caution
 Le jeu sur votre console ne doit pas être plus récent que celui de votre iPhone : un jeu peut ne pas lire la sauvegarde d'une version plus récente.

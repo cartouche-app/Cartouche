@@ -15,9 +15,10 @@
 //  which the Storage page then shows as the iPhone shows it. This stand-in
 //  of the iPhone's CartoucheSaveBackups shows what
 //  the app tells it (CartoucheMacConsole.showSaves), and asks the app for
-//  the rest: a sync now, the copies, a copy put back, a save from the
-//  Switch put in place or the one it replaced put back, each in the
-//  Builder's turn, never at once with a sync of the game.
+//  the rest: a sync now, the copies, a copy put back, from the saves
+//  folder or from this Mac's own (those nxnative makes as each session
+//  starts), a save from the Switch put in place or the one it replaced put
+//  back, each in the Builder's turn, never at once with a sync of the game.
 //
 
 import AppKit
@@ -356,6 +357,36 @@ final class CartoucheSaveBackups: ObservableObject {
             try CartoucheSwitchSave.putBack(folder, in: documents)
             return nil
         }
+    }
+
+    /// Puts COPY, one of TARGET's copies on this Mac
+    /// (CartoucheSwitchSave.copiesHere), back in place of its saves, in the
+    /// Builder's turn, as the iPhone's does: this Mac's go to the saves
+    /// folder first, when the Builder keeps them in step with one, and are
+    /// kept on this Mac too; the Builder then sends the copy put back there
+    /// as the newest one.
+    func putBack(here copy: CartoucheSaveCopyHere, of target: CartoucheSaveTarget,
+                 running: @escaping @MainActor () -> Bool) async throws {
+        if running() { throw CartoucheSwitchSaveProblem.running }
+        if isOn, !isLeftToCloud(target), let titleID = target.titleId {
+            // Away, they stay on this Mac alone, in the backup.
+            try? await onSync(titleID)
+            if running() { throw CartoucheSwitchSaveProblem.running }
+        }
+        let documents = target.documents
+        let folder = copy.folder
+        let isStart = copy.isStart
+        let work = FileManager.default.temporaryDirectory.appendingPathComponent("CartoucheSaveCopies", isDirectory: true)
+        _ = try await changing(target) {
+            if isStart {
+                try CartoucheSwitchSave.putBack(start: folder, in: documents, work: work)
+            } else {
+                try CartoucheSwitchSave.putBack(folder, in: documents)
+            }
+            return nil
+        }
+        // The player put it back: no news to tell of it.
+        news[target.key] = nil
     }
 
     private func changing(_ target: CartoucheSaveTarget, _ change: @escaping @Sendable () throws -> URL?) async throws -> URL? {

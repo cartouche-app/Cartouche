@@ -267,4 +267,71 @@ final class ConsoleSavesTests: XCTestCase {
         XCTAssertEqual(turns, [titleID, titleID])
         XCTAssertEqual(try String(contentsOf: documents.appendingPathComponent("save/slot0.bin"), encoding: .utf8), "mac")
     }
+
+    /// nxnative's copy of the saves a session started from, on this Mac,
+    /// comes back in the Builder's turn, after the saves here went to the
+    /// saves folder, which the Builder keeps in step: nxnative's copy stays,
+    /// and the saves it replaced are kept on this Mac.
+    func testACopyOfASessionsStartComesBackInTheBuildersTurn() async throws {
+        let console = CartoucheMacConsole.shared
+        let backups = CartoucheSaveBackups.shared
+        let documents = root.appendingPathComponent("nxnative/\(titleID)", isDirectory: true)
+        let target = CartoucheSaveTarget(key: titleID, name: "Mario Kart 8 Deluxe", titleId: titleID, documents: documents)
+        try FileManager.default.createDirectory(at: documents.appendingPathComponent("save"), withIntermediateDirectories: true)
+        try Data("played on".utf8).write(to: documents.appendingPathComponent("save/slot0.bin"))
+        let start = documents.appendingPathComponent("save-backups/2026-11-26 18.02.11 start", isDirectory: true)
+        try FileManager.default.createDirectory(at: start.appendingPathComponent("save"), withIntermediateDirectories: true)
+        try Data("at the start".utf8).write(to: start.appendingPathComponent("save/slot0.bin"))
+        XCTAssertTrue(CartoucheSwitchSave.hasCopiesHere(in: documents))
+        let copy = try XCTUnwrap(CartoucheSwitchSave.copiesHere(in: documents).first)
+        XCTAssertTrue(copy.isStart)
+
+        var steps: [String] = []
+        console.showSaves(folder: folder, games: [:])
+        console.onSyncSaves = { titleID in steps.append("sync " + titleID) }
+        console.onChangeSaves = { titleID, change in
+            steps.append("change " + titleID)
+            return try change()
+        }
+        try await backups.putBack(here: copy, of: target, running: { false })
+        XCTAssertEqual(steps, ["sync " + titleID, "change " + titleID])
+        XCTAssertEqual(try String(contentsOf: documents.appendingPathComponent("save/slot0.bin"), encoding: .utf8), "at the start")
+        XCTAssertEqual(try String(contentsOf: start.appendingPathComponent("save/slot0.bin"), encoding: .utf8), "at the start")
+        let kept = try XCTUnwrap(CartoucheSwitchSave.backups(CartoucheSwitchSave.beforePutBack, in: documents).first)
+        XCTAssertEqual(try String(contentsOf: kept.folder.appendingPathComponent("save/slot0.bin"), encoding: .utf8), "played on")
+
+        // The saves folder away: the copy comes all the same.
+        console.onSyncSaves = { _ in throw CartoucheMacSaveError.offline }
+        try Data("played again".utf8).write(to: documents.appendingPathComponent("save/slot0.bin"))
+        try await backups.putBack(here: copy, of: target, running: { false })
+        XCTAssertEqual(try String(contentsOf: documents.appendingPathComponent("save/slot0.bin"), encoding: .utf8), "at the start")
+
+        // The game plays, or starts as the Builder takes its turn: nothing
+        // changes.
+        try Data("playing".utf8).write(to: documents.appendingPathComponent("save/slot0.bin"))
+        steps = []
+        do {
+            try await backups.putBack(here: copy, of: target, running: { true })
+            XCTFail("a copy never comes under a game playing")
+        } catch {
+            XCTAssertEqual(error as? CartoucheSwitchSaveProblem, .running)
+        }
+        console.onChangeSaves = { _, _ in throw CartoucheMacSaveError.busy }
+        do {
+            try await backups.putBack(here: copy, of: target, running: { false })
+            XCTFail("a copy never comes under a game playing")
+        } catch {
+            XCTAssertEqual(error as? CartoucheSwitchSaveProblem, .running)
+        }
+        XCTAssertEqual(try String(contentsOf: documents.appendingPathComponent("save/slot0.bin"), encoding: .utf8), "playing")
+
+        // Without a saves folder, nothing goes first.
+        console.showSaves(folder: nil, games: [:])
+        console.onSyncSaves = { titleID in steps.append("sync " + titleID) }
+        console.onChangeSaves = { _, change in try change() }
+        steps = []
+        try await backups.putBack(here: copy, of: target, running: { false })
+        XCTAssertEqual(steps, [])
+        XCTAssertEqual(try String(contentsOf: documents.appendingPathComponent("save/slot0.bin"), encoding: .utf8), "at the start")
+    }
 }

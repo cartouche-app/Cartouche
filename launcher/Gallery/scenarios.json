@@ -840,7 +840,7 @@
     },
     {
       "name": "iphone-system-gpu-no-bc",
-      "comment": "System on the same iPhone, whose GPU reads no BC-compressed texture: this iPhone's section says that nxnative refuses it, and that Cartouche on a Mac builds its games from nxnative-nobc, a separate fork of nxnative, once it is paired with it.",
+      "comment": "System on the same iPhone, whose GPU reads no BC-compressed texture: this iPhone's section says that nxnative refuses it, that Cartouche on a Mac builds its games from nxnative-nobc, a separate fork of nxnative, once it is paired with it, and that Cartouche Cloud builds them from it too for a game sent for an iPhone 11 to 15.",
       "screen": "system",
       "work": "gpu-no-bc",
       "category": "device",
@@ -1013,6 +1013,27 @@
       ]
     },
     {
+      "name": "iphone-game-settings-whole",
+      "comment": "A game's whole Game section, down to Rotation and Picture shape, nxnative's newest rows (decision 173).",
+      "screen": "settings",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 1366,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-game-settings-spanish",
       "comment": "A game's settings in Spanish (decision 152).",
       "language": "es",
@@ -1119,6 +1140,88 @@
         34,
         0
       ]
+    },
+    {
+      "name": "iphone-save-copies",
+      "comment": "Put back a copy, from the sheet of the player's game: three copies in the saves folder, and on this iPhone the copies nxnative made as its last three sessions started.",
+      "screen": "save-copies",
+      "sheet": "01006BB00C6F0000",
+      "work": "saves",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-save-copies-here",
+      "comment": "Put back a copy without a saves folder: the copies nxnative made on this iPhone as the game's last three sessions started, alone.",
+      "screen": "save-copies",
+      "sheet": "01006BB00C6F0000",
+      "work": "start-copies",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-sheet-saves-start-copies",
+      "comment": "The sheet of the player's game brought down to its saves, without a saves folder: nxnative's copies of its last sessions' starts are there to put back.",
+      "screen": "sheet-saves",
+      "sheet": "0400C3F00006E000",
+      "work": "start-copies",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "ipad-save-copies",
+      "comment": "Put back a copy on an iPad, which calls itself the iPad: the copies in the saves folder, and those nxnative made on it as the game's last three sessions started.",
+      "model": "iPad15,3",
+      "device": "iPad Pro 13-inch (M5)",
+      "screen": "save-copies",
+      "sheet": "01006BB00C6F0000",
+      "work": "saves",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false
     },
     {
       "name": "iphone-switch-save",

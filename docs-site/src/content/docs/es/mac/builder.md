@@ -33,6 +33,7 @@ Pon la actualización y los DLC de un juego con él en tu carpeta de dumps: el B
 
 - **Los paquetes** (`.nsp`, `.xci`, `.nsz`, `.xcz`) pueden estar junto al juego, en una carpeta propia, como `Zelda/Update/`, o en cualquier otro sitio de la carpeta de dumps: el Builder reconoce su juego por su ID de título. Necesitan `prod.keys`, elegido en el asistente de configuración o en los ajustes.
 - **Un dump** los guarda en `updates/<version>/` y `dlc/`; el `.nup` de un juego de Switch 2 lleva los que contiene.
+- **Un `.nup` sin sus DLC** los toma como imágenes: pon la imagen de cada DLC, `1.img`, `2.img`… según su número, en una carpeta llamada `aoc` junto al `.nup`, en la carpeta del juego. nxnative hace una imagen así de cada DLC con el que compila un juego, en la carpeta `aoc` de la carpeta de compilación del juego. Un `.nup` que lleva sus propios DLC conserva esos.
 - **Una actualización o un DLC nuevo** en la carpeta de dumps hace que el juego se vuelva a compilar. Cartouche en el iPhone ofrece entonces la actualización en la ficha del juego, conservando las partidas guardadas.
 
 ## Cuando nxnative mejora tus juegos
