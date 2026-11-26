@@ -287,6 +287,29 @@ impl FakeApple {
         f(account)
     }
 
+    /// Apple ends the account's Xcode tokens, as it does after some days:
+    /// the developer services answer "Your session has expired" (1100) to
+    /// each, and a new one comes from the account's session without the
+    /// password, as long as that session lives.
+    pub fn end_xcode_tokens(&self, email: &str) {
+        self.with_account(email, |a| a.xcode_tokens.clear());
+    }
+
+    /// Apple ends the account's whole session, as after a new sign-in
+    /// elsewhere or a password change: its Xcode tokens and the session
+    /// they come from. Only the password signs in again.
+    pub fn end_session(&self, email: &str) {
+        self.with_account(email, |a| {
+            a.xcode_tokens.clear();
+            a.idms_token = BASE64_STANDARD.encode(random_bytes(48));
+        });
+    }
+
+    /// How many Xcode tokens the account was given and still has.
+    pub fn xcode_tokens(&self, email: &str) -> usize {
+        self.with_account(email, |a| a.xcode_tokens.len())
+    }
+
     /// Gives `failure` the next time `endpoint` is asked: "init",
     /// "complete", "apptokens", "validate", "trusteddevice", a developer
     /// service's action ("listTeams", "submitDevelopmentCSR", "addAppId"…)

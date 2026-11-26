@@ -3,13 +3,14 @@
 # the SwiftUI app built for Apple silicon, the builder's engine (the Python
 # package cartouche_builder, which the app runs) and the covers list in its
 # resources, with the catalogue and the words of Cartouche's console, its
-# icon, its Info.plist, and its ad hoc signature.
+# icon, its Info.plist, cartouche-signer in its Helpers (signer/, which
+# renews Cartouche on the iPhone from this Mac), and its ad hoc signature.
 #
 #   builder/mac/bundle.sh [DESTINATION]
 #
 # The version is the builder's (builder/pyproject.toml); the telemetry
-# server is Cartouche's (app/config.env). Needs Xcode's Swift, Python 3, and
-# macOS's sips, iconutil and codesign.
+# server is Cartouche's (app/config.env). Needs Xcode's Swift, Rust's cargo,
+# Python 3, and macOS's sips, iconutil and codesign.
 
 set -euo pipefail
 
@@ -26,10 +27,21 @@ telemetry=$(sed -n 's/^CARTOUCHE_TELEMETRY_URL=//p' "$root/app/config.env")
 swift build -c release --arch arm64 --package-path "$here"
 binary="$(swift build -c release --arch arm64 --package-path "$here" --show-bin-path)/CartoucheBuilder"
 
+# cartouche-signer, for Apple silicon too, from the crates of its Cargo.lock
+# (signer/README.md).
+signer_target=aarch64-apple-darwin
+if command -v rustup >/dev/null 2>&1; then
+  rustup target add "$signer_target" >/dev/null
+fi
+cargo build --release --locked --manifest-path "$here/signer/Cargo.toml" --target "$signer_target"
+signer="$here/signer/target/$signer_target/release/cartouche-signer"
+
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources/engine" "$app/Contents/Resources/en.lproj" "$app/Contents/Resources/fr.lproj" \
   "$app/Contents/Resources/es.lproj" "$app/Contents/Resources/de.lproj"
 cp "$binary" "$app/Contents/MacOS/Cartouche"
+mkdir -p "$app/Contents/Helpers"
+cp "$signer" "$app/Contents/Helpers/cartouche-signer"
 cp -R "$builder/cartouche_builder" "$app/Contents/Resources/engine/"
 find "$app/Contents/Resources/engine" -name __pycache__ -type d -prune -exec rm -rf {} +
 cp "$root/catalog/covers.json" "$app/Contents/Resources/covers.json"

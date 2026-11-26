@@ -125,6 +125,9 @@ on:
       # The SMB package the console's storage builds (builder/mac/Package.swift).
       - "app/SMBClient"
       - "telemetry/test/builder-reports.json"
+      # The Cartouche Installer's fakes of the iPhone, Apple and the anisette
+      # server, which cartouche-signer's tests run against (builder/mac/signer).
+      - "installer/src-tauri/fakes/**"
       - ".github/workflows/builder.yml"
   workflow_dispatch:
     inputs:
@@ -176,7 +179,7 @@ jobs:
           SHARED="$(find builder/mac/Sources/CartoucheConsole/Shared -name '*.swift' -exec basename {} \; | sort | sed 's|^|launcher/Sources/|')"
           # shellcheck disable=SC2086
           CHANGES="$(git diff --binary HEAD^1 HEAD -- builder launcher/Package.swift $SHARED launcher/Sources/Cartouche.xcstrings \
-            app/SMBClient telemetry/test/builder-reports.json .github/workflows/builder.yml | sha256sum | cut -c1-64)"
+            app/SMBClient telemetry/test/builder-reports.json installer/src-tauri/fakes .github/workflows/builder.yml | sha256sum | cut -c1-64)"
           echo "key=builder-xcode-$XCODE_VERSION-$CHANGES" >> "$GITHUB_OUTPUT"
       - name: Was it built?
         id: memo
@@ -192,6 +195,28 @@ jobs:
         run: |
           echo "::notice::An earlier run built and tested these very changes, with their screenshots on $BRANCH: run this workflow from the Actions tab to build them again."
           echo "An earlier run built and tested these very changes; their screenshots are on \`$BRANCH\`." >> "$GITHUB_STEP_SUMMARY"
+
+  # cartouche-signer (builder/mac/signer), which the app carries to renew
+  # Cartouche on the iPhone with a new profile: its tests, against the
+  # Cartouche Installer's fakes of the iPhone, Apple and the anisette
+  # server, need neither a Mac nor an iPhone; then clippy and rustfmt.
+  # About two minutes.
+  signer:
+    name: Signer
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Tests
+        working-directory: builder/mac/signer
+        run: cargo test --locked
+      - name: Clippy and rustfmt
+        working-directory: builder/mac/signer
+        run: |
+          cargo clippy --locked --all-targets -- -D warnings
+          cargo fmt --check
 
   mac:
     name: Mac app
@@ -298,6 +323,14 @@ jobs:
           CARTOUCHE_BUILDER_PYTHON: ${{ steps.python.outputs.path }}
           PYTHONDONTWRITEBYTECODE: "1"
         run: '"$CARTOUCHE_BUILDER_PYTHON" -m unittest discover -s tests -t tests -v'
+      # cartouche-signer, which bundle.sh builds into the app's Helpers:
+      # Rust, from Homebrew when the runner has none.
+      - name: Rust for the signer
+        run: |
+          if ! command -v cargo > /dev/null; then
+            brew install rust
+          fi
+          cargo --version
       - name: Build the app
         run: builder/mac/bundle.sh build/builder
       # The app as the player opens it, on sample games whose nxnative
