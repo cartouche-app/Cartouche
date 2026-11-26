@@ -4,7 +4,8 @@ name: Showcase site
 # https://cartouche.cloud/. When the page changes on main, it runs the page's
 # tests, then keeps index.html, the download page, the page for an address the
 # site does not have (404.html), the icons, the picture shown where a link to
-# the site is shared (social.png) and CNAME alone on the branch gh-pages, which
+# the site is shared (social.png), what search engines read first (robots.txt,
+# sitemap.xml) and CNAME alone on the branch gh-pages, which
 # Pages serves: Settings › Pages › Build and deployment, Deploy from a branch,
 # gh-pages, / (root). CNAME names the domain, which Pages serves the site at
 # and sends its old address, cartouche-app.github.io/Cartouche, on to: a
@@ -19,7 +20,9 @@ name: Showcase site
 # secret CLOUDFLARE_DOMAIN_TOKEN of the environment cloudflare, the Domain
 # workflow's; the telemetry's CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID
 # remove the copy the first deploy left in the telemetry's account.
-# Each download link gets the newest file of its releases on the way: the
+# The page goes out once in each of its four languages, each at its own
+# address (site/tools/languages.py). Each download link gets the newest file
+# of its releases on the way: the
 # Builder and Installer workflows run this one again once they have published
 # a release.
 # The Full test pass checks the page and its links, and publishes nothing
@@ -81,7 +84,7 @@ jobs:
       - name: The files Pages serves
         run: |
           mkdir -p build/site/download
-          cp site/index.html site/404.html site/favicon.svg site/apple-touch-icon.png site/social.png site/CNAME build/site/
+          cp site/index.html site/404.html site/favicon.svg site/apple-touch-icon.png site/social.png site/robots.txt site/sitemap.xml site/CNAME build/site/
           cp site/download/index.html build/site/download/
           # The source for the player's own SideStore, as main has it.
           python3 -m json.tool app/sidestore-player-source.json > /dev/null
@@ -90,6 +93,10 @@ jobs:
             build/releases.json build/site/index.html build/site/download/index.html > build/downloads.md
           cat build/downloads.md
           cat build/downloads.md >> "$GITHUB_STEP_SUMMARY"
+          # The page in each of its four languages, each at its own address
+          # for search engines: English in its place, fr/, es/ and de/
+          # (site/tools/languages.py, decision 175).
+          python3 site/tools/languages.py build/site
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: showcase-site

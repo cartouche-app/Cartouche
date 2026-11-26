@@ -16,14 +16,19 @@
 //    Home button again, or Resume on the console, brings it back. The Home
 //    button on screen fades away a few seconds after the game shows, and a
 //    touch on its place brings it back (CartoucheGameScreen);
+//  - a game that loses its last controller while the player plays shows
+//    the console too, paused, 3 seconds later, which says that the
+//    controller disconnected; a controller that connects again brings it
+//    back, as Resume does (CartoucheControllerPause, docs/decisions/166.md);
 //  - Quit, on the console, stops the game's process;
 //  - a game that iOS stops comes back to the console, which says why when
 //    it can tell (CartoucheGameActions.gameDidEnd), and so does one whose
 //    process LiveProcess ended on an error, with that error.
 //
 //  The game's own process measures its memory, and posts the presses of a
-//  controller's Home button while the game has the controller
-//  (launcher/LiveProcessSupport/CartoucheGuest.m). It asks for the
+//  controller's Home button while the game has the controller, and
+//  whether it has controllers, as one connects or goes and as the game
+//  comes on screen (launcher/LiveProcessSupport/CartoucheGuest.m). It asks for the
 //  keyboard, without showing one, while the game is on screen: iOS hands
 //  a controller's presses to the process that has the keyboard, and
 //  nothing in a game started without nxnative's settings screen asked for
@@ -140,6 +145,7 @@ final class CartoucheGameHost {
         if GCController.controllers().contains(where: { $0.extendedGamepad?.buttonHome != nil }) {
             screen.showHint(CartoucheText.homeButtonHint)
         }
+        followControllers(of: app)
     }
 
     fileprivate func failStart(_ error: Error) {
@@ -183,8 +189,10 @@ final class CartoucheGameHost {
 
     // MARK: The console and the game
 
-    /// The console over the game, which pauses.
-    func showConsole() {
+    /// The console over the game, which pauses; FORCONTROLLER, as the game
+    /// lost its last controller (CartoucheControllerPause), which the
+    /// console then says.
+    func showConsole(forController: Bool = false) {
         guard app != nil, isInFront, let window else { return }
         if let scene {
             let reading = CartoucheGameMemoryReading.last(pid: Int(scene.pid))
@@ -208,7 +216,8 @@ final class CartoucheGameHost {
             self.consoleWindow?.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
         }
         backToConsole()
-        CartoucheGameActions.shared.gameDidMove(inFront: false)
+        CartoucheControllerPause.shared.gameMoved(inFront: false)
+        CartoucheGameActions.shared.gameDidMove(inFront: false, forController: forController)
     }
 
     /// The game again, where the player left it.
@@ -232,6 +241,7 @@ final class CartoucheGameHost {
         showOnTV(inFront: true)
         CartoucheGamepad.shared.gameInFront = true
         UIApplication.shared.isIdleTimerDisabled = true
+        CartoucheControllerPause.shared.gameMoved(inFront: true)
         CartoucheGameActions.shared.gameDidMove(inFront: true)
     }
 
@@ -310,6 +320,25 @@ final class CartoucheGameHost {
             "CartoucheGameHome.\(dataFolder)" as CFString,
             nil,
             .deliverImmediately)
+        // What the game's process says of its controllers.
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            Unmanaged.passUnretained(self).toOpaque(),
+            { _, _, _, _, _ in
+                Task { @MainActor in CartoucheControllerPause.shared.gameSays(hasControllers: true) }
+            },
+            (Self.controllersNotification + dataFolder) as CFString,
+            nil,
+            .deliverImmediately)
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(),
+            Unmanaged.passUnretained(self).toOpaque(),
+            { _, _, _, _, _ in
+                Task { @MainActor in CartoucheControllerPause.shared.gameSays(hasControllers: false) }
+            },
+            (Self.noControllersNotification + dataFolder) as CFString,
+            nil,
+            .deliverImmediately)
         listensToHome = true
         let gamepad = CartoucheGamepad.shared
         gamepad.holdsHome = true
@@ -355,6 +384,39 @@ final class CartoucheGameHost {
         }
     }
 
+    // MARK: The controllers
+
+    /// The Darwin notifications the game's process posts, followed by its
+    /// data folder, as it has controllers or none (CartoucheGuest.m).
+    static let controllersNotification = "CartoucheGameControllers."
+    static let noControllersNotification = "CartoucheGameNoControllers."
+
+    /// From now on, until APP ends: should it lose its last controller on
+    /// screen, the console over it, which says so; a controller that
+    /// connects again brings it back (CartoucheControllerPause). Each pause
+    /// for the controller goes in the journal and the measurements, with
+    /// how it ended.
+    private func followControllers(of app: LCAppModel) {
+        let name = app.displayName
+        let catalog = CartoucheCatalog.shared
+        let title = catalog.gameTitle(of: app).flatMap { $0.isEmpty ? catalog.titleId(matchingName: name) : $0 }
+        CartoucheControllerPause.shared.gameStarted(.init(
+            pause: { [weak self] in
+                guard let self, self.app === app else { return }
+                CartoucheReports.note(name + ": no controller for 3 seconds, the game paused behind the console")
+                self.showConsole(forController: true)
+            },
+            resume: { [weak self] in
+                guard let self, self.app === app else { return }
+                CartoucheReports.note(name + ": a controller connected, the game comes back")
+                self.showGame()
+            },
+            ended: { pause in
+                CartoucheTelemetry.shared.event("game.controllerPause", game: title,
+                                                fields: CartoucheControllerLoss.fields(of: pause))
+            }))
+    }
+
     // MARK: The end
 
     fileprivate func sceneDidExit(_ vc: AppSceneViewController) {
@@ -381,6 +443,7 @@ final class CartoucheGameHost {
     }
 
     private func tearDown() {
+        CartoucheControllerPause.shared.gameEnded(quit: quitting)
         // The TV goes back to iOS, which mirrors the console on it again.
         closeGameOnTV()
         stopAskingForTheTV()

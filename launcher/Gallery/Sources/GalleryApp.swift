@@ -288,6 +288,9 @@
 //                                        the player's, paused behind the
 //                                        console; on the TV (screen tv), the
 //                                        game paused behind the console
+//        paused-controller               the same, paused as it lost its
+//                                        last controller, which the console
+//                                        says (decision 166)
 //        provisioning-refused            a sign-in for which Apple refused a
 //                                        new machine for now, LocalDevVPN
 //                                        connected, with the wait under way
@@ -414,6 +417,9 @@
 //                                        saves
 //        cloud                           on the System page, the page
 //                                        scrolled down to Cartouche Cloud
+//        controller                      on the System page, the page
+//                                        scrolled down to While a game runs,
+//                                        on its pause for the controller
 //        device                          on the System page, the page
 //                                        scrolled down to this iPhone
 //        dumps                           on how to name the games (screen
@@ -1102,12 +1108,13 @@ struct GalleryScenario {
     private var updatedTitle: String? { work == "newer-build" || work == "offline" ? sheet ?? ownedTitles.first : nil }
 
     /// The sheet's game, or the first of the player's, paused behind the
-    /// console (work: paused).
+    /// console (work: paused), or as it lost its last controller (work:
+    /// paused-controller).
     @MainActor
     func pause(among apps: [LCAppModel]) {
-        guard work == "paused", let titleId = sheet ?? ownedTitles.first,
+        guard work == "paused" || work == "paused-controller", let titleId = sheet ?? ownedTitles.first,
               let app = apps.first(where: { $0.appInfo.relativeBundlePath == titleId + ".app" }) else { return }
-        CartoucheGameActions.shared.showRunningForGallery(app)
+        CartoucheGameActions.shared.showRunningForGallery(app, forController: work == "paused-controller")
     }
 
     /// The iPhone's translations of what testers wrote on the sheet of the

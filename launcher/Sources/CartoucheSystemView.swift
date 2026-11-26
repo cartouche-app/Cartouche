@@ -78,6 +78,9 @@ struct CartoucheSystemView: View {
     @ObservedObject private var reach = CartoucheStorageReach.shared
     @ObservedObject private var telemetry = CartoucheTelemetry.shared
     @ObservedObject private var guide = CartoucheGuide.shared
+    /// The player's switch: a game that loses its last controller pauses
+    /// (CartoucheControllerLoss).
+    @AppStorage(CartoucheControllerLoss.settingKey) private var pausesForController = true
 
     private let catalog = CartoucheCatalog.shared
 
@@ -102,6 +105,9 @@ struct CartoucheSystemView: View {
 
     /// The first row of the section of a game that runs.
     static let playingRow = "playing"
+    /// The switch of the pause for a lost controller, in the section of
+    /// a game that runs.
+    static let controllerRow = "controller"
 
     #if CARTOUCHE_GALLERY
     /// Whether the gallery's page opens on the Mac's builds, as the row
@@ -179,6 +185,7 @@ struct CartoucheSystemView: View {
             setupSection
             storageSection
             CartoucheMacBuilderSection()
+            macPlayingSection
             deviceSection
             CartoucheMacUpdatesSection()
             telemetrySection
@@ -460,6 +467,8 @@ struct CartoucheSystemView: View {
                         }
                         .padding(.vertical, 2)
                     }
+                    // Only a game behind the console comes back to it.
+                    controllerPauseToggle
                 }
             }
             Toggle(CartoucheText.keepOtherAudio, isOn: $otherAudio.keeps)
@@ -638,6 +647,40 @@ struct CartoucheSystemView: View {
         }
     }
     #endif
+
+    // MARK: The controller, while a game runs
+
+    /// On the Mac, a game's app pauses as it loses its last controller,
+    /// and Cartouche's console comes in front of it (builder/mac).
+    private var macPlayingSection: some View {
+        CartoucheSection {
+            controllerPauseToggle
+        } header: {
+            Text(CartoucheText.playingTitle)
+        } footer: {
+            Text(CartoucheText.pauseForControllerDetail)
+        }
+    }
+
+    /// Whether a game that loses its last controller while the player
+    /// plays pauses (CartoucheControllerPause, docs/decisions/166.md). On
+    /// the iPhone, what it does is said under it; on the Mac, in its
+    /// section's footer.
+    private var controllerPauseToggle: some View {
+        Toggle(isOn: $pausesForController) {
+            #if os(iOS)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(CartoucheText.pauseForController)
+                Text(CartoucheText.pauseForControllerDetail)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            #else
+            Text(CartoucheText.pauseForController)
+            #endif
+        }
+        .id(Self.controllerRow)
+    }
 
     // MARK: This iPhone
 

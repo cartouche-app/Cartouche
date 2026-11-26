@@ -14008,6 +14008,35 @@
         }
       }
     },
+    "running.paused.controller" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausiert: Der Controller wurde getrennt. Verbinde ihn erneut, um weiterzuspielen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused: the controller disconnected. Connect it again to play on."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En pausa: el mando se desconectó. Vuelve a conectarlo para seguir."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En pause : la manette s’est déconnectée. Reconnectez-la pour continuer."
+          }
+        }
+      }
+    },
     "running.quit.confirm" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -32187,6 +32216,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pendant une partie"
+          }
+        }
+      }
+    },
+    "system.playing.controller" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausieren, wenn der Controller getrennt wird"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause when the controller disconnects"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausar si el mando se desconecta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre en pause si la manette se déconnecte"
+          }
+        }
+      }
+    },
+    "system.playing.controller.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wenn der letzte Controller während eines Spiels getrennt wird, pausiert das Spiel 3 Sekunden später und die Konsole erscheint. Ein wieder verbundener Controller setzt es fort."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When the last controller disconnects during a game, the game pauses 3 seconds later and the console shows. A controller connected again brings it back."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuando el último mando se desconecta durante una partida, el juego se pone en pausa 3 segundos después y aparece la consola. Un mando conectado de nuevo lo reanuda."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quand la dernière manette se déconnecte en pleine partie, le jeu se met en pause 3 secondes plus tard et la console s’affiche. Une manette reconnectée le relance."
           }
         }
       }

@@ -1331,6 +1331,18 @@ final class AppModel: ObservableObject {
         play(game, settings: settings)
     }
 
+    /// The game whose app is APP lost its last controller in front
+    /// (CartoucheControllerPause, in the console): it pauses, its app
+    /// stopped, and the console comes in front of it, which says so. The
+    /// console's Resume, a controller that connects again, or the game's
+    /// app brought to the front, bring it back (MacGames.release).
+    func pauseForController(app: URL) {
+        guard !sample, let game = self.game(ofApp: app), macGames.isPlaying(game.titleID) else { return }
+        macGames.hold(game.titleID)
+        show(.console)
+        showMainWindow()
+    }
+
     /// The console's Quit, once the player said so, as the console asks on
     /// the iPhone.
     func askToQuit(app: URL) {
