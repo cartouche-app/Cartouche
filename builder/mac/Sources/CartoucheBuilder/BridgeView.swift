@@ -16,7 +16,9 @@
 //  installs apart on this Mac and on the iPhone, the paired iPhones reach
 //  this Mac away from home too: the page says whether it is on, and this
 //  Mac's address there, by which an iPhone pairs when Bonjour cannot see
-//  the Mac (CartoucheTailscale.swift).
+//  the Mac (CartoucheTailscale.swift). Under the switch, whether the
+//  bridge is on or not, this Mac renews Cartouche on the iPhones it
+//  reaches (RenewalView.swift, decision 165).
 //
 
 import BuilderKit
@@ -34,6 +36,8 @@ struct BridgeView: View {
             VStack(alignment: .leading, spacing: 22) {
                 PageHeader(title: "iPhone", subtitle: tr("Cartouche reads its games from this Mac", "Cartouche lit ses jeux depuis ce Mac", "Cartouche lee sus juegos desde este Mac", "Cartouche liest seine Spiele von diesem Mac"))
                 switchCard
+                // On or off, the bridge: the cable or the Wi-Fi is enough.
+                RenewalSection(renewals: model.renewals)
                 if bridge.enabled {
                     howTo
                     tailscale

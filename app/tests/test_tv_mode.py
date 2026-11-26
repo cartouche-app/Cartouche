@@ -189,7 +189,7 @@ class TVModeTest(unittest.TestCase):
         self.assertIn('reading["tvPicture"] = NSNumber(value: pictureOnTV)', self.harness,
                       "the harness's stand-in for the game's process writes it the same way")
         # Said as the game pauses and as it ends, with the game's nxnative.
-        for name in ("func showConsole() {", "fileprivate func sceneDidExit("):
+        for name in ("func showConsole(forController: Bool = false) {", "fileprivate func sceneDidExit("):
             with self.subTest(at=name):
                 body = re.search(re.escape(name) + r".*?\n    \}\n", self.host, re.S)
                 self.assertIsNotNone(body)

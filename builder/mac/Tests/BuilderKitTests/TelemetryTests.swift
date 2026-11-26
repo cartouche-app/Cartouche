@@ -80,6 +80,19 @@ final class TelemetryTests: XCTestCase {
                                               "server": .text("s3")]
         let installedFromThere: [String: TelemetryValue] = ["again": .flag(true), "appMB": .number(1904), "from": .text("connection"),
                                                             "seconds": .number(95), "server": .text("s3")]
+        // Cartouche renewed on the iPhone from this Mac, a renewal that
+        // failed, and a sign-in to Apple, as SignerMeasures makes them
+        // (SignerPlan.swift).
+        let now = ISO8601DateFormatter().date(from: "2026-12-01T10:00:00Z")!
+        let bundleId = "io.github.clabeuhtegrite.cartouche.ABCDE12345"
+        let renewed = SignerMeasures.renewed(SignerRenewal(renewed: true, bundleId: bundleId, before: now.addingTimeInterval(36 * 3_600),
+                                                           expires: now.addingTimeInterval(7 * 86_400 - 60), due: "now", registeredAppId: false,
+                                                           refreshedSession: true, recorded: true, link: "usb", seconds: 3.24),
+                                             asked: false, now: now)
+        let renewFailed = SignerMeasures.failed(SignerFailure(kind: "session-ended", stage: "session", code: -22406, message: "Your session has expired."),
+                                                copy: SignerCartouche(bundleId: bundleId, expires: now.addingTimeInterval(-3_600), due: "expired"),
+                                                asked: true, now: now)
+        let signedIn = SignerMeasures.signIn(result: "wrong-code", seconds: 41.6)
         let events: [(name: String, game: String?, fields: [String: TelemetryValue])] = [
             ("builder.opened", nil, opened),
             ("builder.setup", nil, setup),
@@ -109,6 +122,9 @@ final class TelemetryTests: XCTestCase {
             ("builder.skipped", "0100000000010000", noRoom),
             ("builder.sent", "0100000000010000", sent),
             ("builder.macInstalled", "0100000000010000", installedFromThere),
+            ("builder.renewed", nil, renewed),
+            ("builder.renewFailed", nil, renewFailed),
+            ("builder.appleSignIn", nil, signedIn),
         ]
         var made: [TelemetryEvent] = []
         for (index, event) in events.enumerated() {

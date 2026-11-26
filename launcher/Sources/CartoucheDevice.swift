@@ -176,11 +176,15 @@ struct CartoucheMemoryReading {
 /// SideStore renews an app by installing a new provisioning profile, and
 /// leaves the embedded.mobileprovision of the app as its last install wrote
 /// it. The built-in SideStore records every renewal for its widget, in
-/// widget_data.json in the app group, so the later of the two dates counts.
+/// widget_data.json in the app group, and Cartouche for Mac its own in
+/// Cartouche's Documents (CartoucheMacRenewal), so the latest of the three
+/// dates counts (CartoucheExpiry).
 struct CartoucheSignature {
     let expirationDate: Date?
     let renewalDate: Date?
     let teamName: String?
+    /// Whether that date is the one Cartouche for Mac gave it.
+    var renewedByMac = false
 
     /// Whole days left, 0 on the last day, negative once expired.
     var daysLeft: Int? {
@@ -199,12 +203,29 @@ struct CartoucheSignature {
 
     static func current() -> CartoucheSignature {
         let profile = embeddedProfile()
-        let renewal = CartoucheImportedSigning.accountSigningDisabled ? nil : lastRenewal()
-        var expirationDate = profile.expirationDate
-        if let renewed = renewal?.expirationDate, expirationDate.map({ renewed > $0 }) ?? true {
-            expirationDate = renewed
+        let ownCertificate = CartoucheImportedSigning.accountSigningDisabled
+        let renewal = ownCertificate ? nil : lastRenewal()
+        let mac = ownCertificate ? nil : macRenewal()
+        let latest = CartoucheExpiry.latest(embedded: profile.expirationDate, sideStore: renewal?.expirationDate, mac: mac?.expirationDate)
+        let renewalDate: Date?
+        switch latest?.source {
+        case .mac?: renewalDate = mac?.refreshedDate
+        case .sideStore?: renewalDate = renewal?.refreshedDate
+        default: renewalDate = renewal?.refreshedDate ?? mac?.refreshedDate
         }
-        return CartoucheSignature(expirationDate: expirationDate, renewalDate: renewal?.refreshedDate, teamName: profile.teamName)
+        return CartoucheSignature(expirationDate: latest?.date, renewalDate: renewalDate, teamName: profile.teamName,
+                                  renewedByMac: latest?.source == .mac)
+    }
+
+    /// Cartouche for Mac's record of its last renewal of this copy, in
+    /// Cartouche's Documents.
+    private static func macRenewal() -> CartoucheMacRenewal? {
+        guard let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first,
+              let ownIdentifier = Bundle.main.bundleIdentifier,
+              let data = try? Data(contentsOf: documents.appendingPathComponent(CartoucheMacRenewal.path)) else {
+            return nil
+        }
+        return CartoucheMacRenewal.read(data, bundleIdentifier: ownIdentifier)
     }
 
     private static func embeddedProfile() -> (expirationDate: Date?, teamName: String?) {

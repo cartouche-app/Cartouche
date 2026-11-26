@@ -86,6 +86,13 @@ enum Gallery {
         // a game going there, and a Mac app another Mac sent
         // (IPhoneGames.swift).
         case iphoneGames = "iphone-games"
+        // Cartouche renewed from this Mac (RenewalView.swift, decision
+        // 165), the iPhone page above not signed in yet: signed in, the
+        // iPhone 17 Pro by cable renewed two days ago, the iPhone Duo on
+        // the Wi-Fi in its last two days, locked at the last try; and
+        // signing in, Apple asking for its code, Cartouche expired on the
+        // iPhone Duo.
+        case iphoneRenewal = "iphone-renewal", iphoneRenewalSignIn = "iphone-renewal-sign-in"
         // The game page of the builder in the window that showed the
         // console just before, the player back from it with the switch at
         // the top of the window: as the game page, whatever the Mac's
@@ -570,7 +577,7 @@ enum Gallery {
             case .library, .activity, .storage, .iphone: model.section = AppSection(rawValue: page.rawValue) ?? .library
             case .storageMac, .storageNAS: model.section = .storage
             case .activitySplit: model.section = .activity
-            case .iphoneTailscale, .iphoneGames, .iphoneCable, .iphoneSending: model.section = .iphone
+            case .iphoneTailscale, .iphoneGames, .iphoneCable, .iphoneSending, .iphoneRenewal, .iphoneRenewalSignIn: model.section = .iphone
             case .libraryRoom, .game, .gameNarrow, .gameNewer, .gameQueue, .gameXcode, .gameUnbuilt, .gameAfterConsole, .gameSplit:
                 model.section = .library
             case .setup, .setupXcode: model.section = .setup
@@ -638,6 +645,33 @@ enum Gallery {
             model.bridge.preview(devices: iphones, connected: [iphones[0].id], cabled: page == .iphoneCable ? [iphones[0].id] : [],
                                  sending: sending, games: config.games, name: "MacBook Air", saves: saves,
                                  tailnet: page == .iphoneTailscale ? ["100.101.102.103", "fd7a:115c:a1e0::1"] : [])
+            // The copies of Cartouche on the iPhones this Mac reaches, with a
+            // made-up account and team, never the project's.
+            let team = "ABCDE12345"
+            let bundleId = "io.github.clabeuhtegrite.cartouche." + team
+            let pro = SignerIphone(udid: "00008150-000A1C2E3F40001E", name: "iPhone 17 Pro", ios: "27.1", link: "usb", cartouche: [
+                SignerCartouche(bundleId: bundleId, version: "0.16.2", teamId: team, expires: now.addingTimeInterval(4.4 * 86_400), due: "not-yet",
+                                from: now.addingTimeInterval(2.4 * 86_400)),
+            ])
+            let duoExpires = page == .iphoneRenewalSignIn ? now.addingTimeInterval(-3 * 3_600) : now.addingTimeInterval(30 * 3_600)
+            let duo = SignerIphone(udid: "00008160-001B2D3E4F50002E", name: "iPhone Duo", ios: "27.1", link: "network", cartouche: [
+                SignerCartouche(bundleId: bundleId, version: "0.16.2", teamId: team, expires: duoExpires, due: page == .iphoneRenewalSignIn ? "expired" : "now"),
+            ])
+            switch page {
+            case .iphoneRenewal:
+                model.renewals.preview(session: SignerSession(signedIn: true, email: "camille@example.com", teamId: team, teamName: "Camille Testeur",
+                                                              since: now.addingTimeInterval(-3 * 86_400)),
+                                       iphones: [pro, duo],
+                                       attempts: [RenewalController.key(pro.udid, bundleId): SignerAttempt(at: now.addingTimeInterval(-2 * 86_400), kind: nil,
+                                                                                                            expires: pro.cartouche[0].expires),
+                                                  RenewalController.key(duo.udid, bundleId): SignerAttempt(at: now.addingTimeInterval(-20 * 60), kind: "iphone-refused",
+                                                                                                            expires: duoExpires)])
+            case .iphoneRenewalSignIn:
+                model.renewals.preview(session: nil, iphones: [pro, duo],
+                                       signIn: .code(SignerCodeRequest(bySms: false, numbers: [SignerCodeRequest.Number(id: 1, number: "+33 •• •• •• •• 42", lastTwoDigits: "42")])))
+            default:
+                model.renewals.preview(session: nil, iphones: [pro])
+            }
             // Mario Kart 8 Deluxe played on this Mac, the iPhone's saves come
             // before its last game, or, on game-newer, held back, version
             // 3.0.4 of the game on the iPhone having written the newest copy

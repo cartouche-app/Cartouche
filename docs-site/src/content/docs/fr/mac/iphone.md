@@ -32,6 +32,17 @@ Le Mac partage deux dossiers, et rien d'autre de lui n'est accessible : **Jeux**
 
 Le Mac répond tant que Cartouche y est ouvert.
 
+## Cartouche renouvelé par votre Mac
+
+Cartouche s'ouvre sept jours d'affilée sur votre iPhone, puis doit être renouvelé. Cartouche pour Mac le renouvelle pour vous, par le câble ou sur votre Wi-Fi, avec ou sans le partage ci-dessus, et sans LocalDevVPN :
+
+1. Dans la page **iPhone** du Builder, sous **Renouvellement de Cartouche**, cliquez sur **Se connecter…**, connectez-vous avec le compte Apple qui a installé Cartouche, puis saisissez le code qu'Apple envoie.
+2. Branchez l'iPhone au Mac, et faites confiance au Mac s'il le demande. Pour l'atteindre aussi sur votre Wi-Fi, activez sa synchronisation Wi-Fi dans le Finder.
+
+Dès lors, le Mac regarde toutes les demi-heures les iPhone qu'il atteint tant qu'il est ouvert, sa fenêtre ou sa barre des menus, et renouvelle Cartouche dans ses deux derniers jours, ou une fois expiré. **Renouveler** le fait tout de suite. Un renouvellement ne réinstalle rien : Cartouche garde ses jeux, ses sauvegardes et sa mémoire augmentée, et montre sa nouvelle date à son lancement suivant.
+
+Votre mot de passe va à Apple seul, une fois : le Mac ne garde que la session qu'Apple donne en retour, et ne vous demande donc jamais votre mot de passe quand il s'ouvre, construit ou joue. Une fois qu'Apple a fermé cette session (une connexion ailleurs, un nouveau mot de passe, ou les jours qu'Apple lui donne) et qu'un renouvellement est dû, une notification, une par jour au plus, dit de se reconnecter dans la page **iPhone**. Le Mac ne touche pas à un Cartouche installé avec un autre compte Apple ; et un Cartouche dont le certificat a disparu de votre compte ne se rouvre qu'avec une installation par l'Installeur Cartouche.
+
 ## Piloter les constructions du Mac depuis l'iPhone
 
 ![Les constructions du Mac, sur l'iPhone](../../../../assets/screens/fr-iphone-mac-builds.webp)

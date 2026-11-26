@@ -410,5 +410,51 @@ final class CartoucheRenewalRulesTests: XCTestCase {
         XCTAssertEqual(CartoucheRenewalVia.reinstall.rawValue, "reinstall")
         XCTAssertEqual(CartoucheRenewalVia.cartouche.rawValue, "cartouche")
         XCTAssertEqual(CartoucheRenewalVia.outside.rawValue, "outside")
+        XCTAssertEqual(CartoucheRenewalVia.mac.rawValue, "mac")
+    }
+
+    // MARK: Renewed by Cartouche for Mac (decision 165)
+
+    /// The new date is the one Cartouche for Mac wrote: neither an update,
+    /// a reinstall nor Cartouche itself, which come first.
+    func testWhatCartoucheForMacRenewedIsTheMacs() {
+        XCTAssertEqual(CartoucheRenewalVia.of(updated: false, reinstalled: false, renewedHere: false, byMac: true), .mac)
+        XCTAssertEqual(CartoucheRenewalVia.of(updated: false, reinstalled: nil, renewedHere: false, byMac: true), .mac)
+        XCTAssertEqual(CartoucheRenewalVia.of(updated: false, reinstalled: false, renewedHere: true, byMac: true), .cartouche)
+        XCTAssertEqual(CartoucheRenewalVia.of(updated: true, reinstalled: false, renewedHere: false, byMac: true), .update)
+    }
+
+    /// The record the helper writes (builder/mac/signer/src/iphone.rs), as
+    /// its tests read it back.
+    private let macRecord = Data("""
+    {"bundleIdentifier":"io.github.clabeuhtegrite.cartouche.ABCDE12345","expirationDate":"2026-12-03T09:41:00Z",\
+    "refreshedDate":"2026-11-26T09:41:05Z","by":"mac"}
+    """.utf8)
+
+    func testCartoucheReadsTheMacsRecordOfItsOwnRenewal() throws {
+        let record = try XCTUnwrap(CartoucheMacRenewal.read(macRecord, bundleIdentifier: "io.github.clabeuhtegrite.cartouche.ABCDE12345"))
+        XCTAssertEqual(record.expirationDate, ISO8601DateFormatter().date(from: "2026-12-03T09:41:00Z"))
+        XCTAssertEqual(record.refreshedDate, ISO8601DateFormatter().date(from: "2026-11-26T09:41:05Z"))
+        // Another copy's, another renewer's, or nothing that reads.
+        XCTAssertNil(CartoucheMacRenewal.read(macRecord, bundleIdentifier: "io.github.clabeuhtegrite.cartouche.FGHIJ67890"))
+        XCTAssertNil(CartoucheMacRenewal.read(Data(String(decoding: macRecord, as: UTF8.self).replacingOccurrences(of: "\"mac\"", with: "\"pc\"").utf8),
+                                              bundleIdentifier: "io.github.clabeuhtegrite.cartouche.ABCDE12345"))
+        XCTAssertNil(CartoucheMacRenewal.read(Data("{}".utf8), bundleIdentifier: "io.github.clabeuhtegrite.cartouche.ABCDE12345"))
+    }
+
+    /// A renewal leaves the embedded profile as the install wrote it: the
+    /// latest of its date, SideStore's and the Mac's counts.
+    func testTheLatestDateCountsWhoeverGaveIt() {
+        let installed = now
+        let bySideStore = now.addingTimeInterval(86_400)
+        let byMac = now.addingTimeInterval(2 * 86_400)
+        XCTAssertEqual(CartoucheExpiry.latest(embedded: installed, sideStore: bySideStore, mac: byMac)?.source, .mac)
+        XCTAssertEqual(CartoucheExpiry.latest(embedded: installed, sideStore: bySideStore, mac: byMac)?.date, byMac)
+        XCTAssertEqual(CartoucheExpiry.latest(embedded: installed, sideStore: byMac, mac: bySideStore)?.source, .sideStore)
+        XCTAssertEqual(CartoucheExpiry.latest(embedded: byMac, sideStore: nil, mac: bySideStore)?.source, .embedded)
+        XCTAssertEqual(CartoucheExpiry.latest(embedded: nil, sideStore: nil, mac: byMac)?.source, .mac)
+        XCTAssertNil(CartoucheExpiry.latest(embedded: nil, sideStore: nil, mac: nil))
+        // The same date as the profile's is no renewal of the Mac's.
+        XCTAssertEqual(CartoucheExpiry.latest(embedded: byMac, sideStore: nil, mac: byMac)?.source, .embedded)
     }
 }

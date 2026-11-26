@@ -139,7 +139,10 @@ struct CartoucheGameMeasures: Codable, Equatable {
         /// away from it for the GPU errors it caused ("GPU access revoked",
         /// gpu_lost_check in nxnative's nvn_mtl.m). An iPhone aborts the
         /// game then, a crash with signal 6 like any other abort; a Mac
-        /// tells the player and quits it, without a crash line.
+        /// tells the player and quits it, without a crash line. diskFull,
+        /// from the sixth reading on: nxnative stopped the game, whose
+        /// memory it kept in files, once the room on their disk ran out
+        /// (exit code 87, CartoucheGameRoom), an end of kind unknown.
         var cause: String?
     }
 
@@ -202,10 +205,14 @@ struct CartoucheGameLogReader {
     /// game nxnative draws with Vulkan from its [vk] frame lines: before
     /// it, such a session drew no frame, as Super Mario Galaxy's 15 did in
     /// November, which nxnative told us to read so (seedds/nxnative#2998).
-    /// 6 reads the pipeline archive bundled with the game and the bases
+    /// 6 tells a game nxnative stopped when the disk of the files it kept
+    /// the game's memory in ran short (End.cause diskFull): before it, an
+    /// end of kind unknown, or memory-likely when the game had come close to
+    /// its limit.
+    /// 7 reads the pipeline archive bundled with the game and the bases
     /// the device built itself (pipelineArchive, prebuild): before it,
     /// they were absent, whatever the game found (decision 174).
-    static let version = 6
+    static let version = 7
     /// A frame this long is a pause, not a slow frame: the game left behind
     /// the console, Cartouche in the background, or a freeze. nxnative
     /// times each stretch of 300 frames by the clock (power_line,
@@ -297,6 +304,7 @@ struct CartoucheGameLogReader {
     private var crash: CartoucheGameMeasures.End?
     private var bootProblem = false
     private var gpuLost = false
+    private var diskFull = false
 
     init() {}
 
@@ -371,6 +379,7 @@ struct CartoucheGameLogReader {
         } else if line.contains("GPU access revoked") {
             gpuLost = true
         } else if line.contains("guest file: ") {
+            if CartoucheGameRoom.isStop(line) { diskFull = true }
             readGuestFile(line)
         } else if line.contains("boot: DLC from ") {
             dlc = true
@@ -718,6 +727,10 @@ struct CartoucheGameLogReader {
             return end
         }
         if let crash { return crash }
+        if diskFull {
+            // nxnative stopped it, whatever memory it had left.
+            return CartoucheGameMeasures.End(kind: "unknown", cause: "diskFull")
+        }
         if bootProblem && lastFrame == nil && vulkanFrame == nil {
             return CartoucheGameMeasures.End(kind: "boot-failed")
         }

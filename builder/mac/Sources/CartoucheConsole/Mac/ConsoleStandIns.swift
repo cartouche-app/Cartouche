@@ -44,6 +44,9 @@ final class CartoucheGameActions: ObservableObject {
     @Published var work: CartoucheGameWork?
     /// What the app does when the console asks it.
     var onQuit: (LCAppModel) -> Void = { _ in }
+    /// The player asked to quit the running game, from the console: a
+    /// pause for its controller then ends as quit (CartoucheControllerPause).
+    var quitAsked = false
 
     /// Whether APP is the game running.
     func isRunning(_ app: LCAppModel?) -> Bool {
@@ -55,6 +58,7 @@ final class CartoucheGameActions: ObservableObject {
     /// does, so that the game saves as it ends.
     func askToQuit() {
         guard let running else { return }
+        quitAsked = true
         onQuit(running.app)
     }
 
@@ -132,11 +136,16 @@ struct CartoucheRunningGame: Equatable {
     let started: Date
     /// Its app is the Mac's active app.
     var isInFront: Bool
+    /// Paused as it lost its last controller, its app stopped, the console
+    /// in front, which says so (CartoucheControllerPause,
+    /// docs/decisions/166.md).
+    var pausedForController = false
 
     var name: String { app.displayName }
 
     static func == (lhs: CartoucheRunningGame, rhs: CartoucheRunningGame) -> Bool {
         lhs.app === rhs.app && lhs.started == rhs.started && lhs.isInFront == rhs.isInFront
+            && lhs.pausedForController == rhs.pausedForController
     }
 }
 

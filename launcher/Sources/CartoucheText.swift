@@ -638,6 +638,9 @@ enum CartoucheText {
     static var quit: String { s("action.quit", "Quit") }
     static var statusPausedShort: String { s("status.paused.short", "Paused") }
     static var pausedDetail: String { s("running.paused", "Paused behind Cartouche, where you left it.") }
+    static var pausedForController: String {
+        s("running.paused.controller", "Paused: the controller disconnected. Connect it again to play on.")
+    }
     static var backToCartouche: String { s("running.back", "Back to Cartouche") }
     static var homeButtonHint: String { s("running.homeHint", "The controller’s Home button brings you back to Cartouche.") }
     static var homeFadesHint: String { s("running.homeFades", "The Home button hides after a few seconds: touch just below to bring it back.") }
@@ -659,6 +662,26 @@ enum CartoucheText {
     static func gameStoppedMemoryBehind(_ limit: String) -> String {
         f("running.stopped.memory.behind", "iOS closed the game near its limit of %@ behind Cartouche: in Cartouche’s place, it would have no more memory. Your progress is kept up to its last save.", limit)
     }
+    /// nxnative stopped the game, whose memory it keeps in files, once the
+    /// room on the iPhone ran out (CartoucheGameRoom): FREE was left, and
+    /// iOS counted AVAILABLE, when it counted much more.
+    static func gameStoppedSpace(free: String, available: String?) -> String {
+        if let available {
+            return f("running.stopped.space.purgeable", "The game ran out of room on this iPhone for its memory, which it keeps in files while it plays: %1$@ was free. iOS counts %2$@ as available, but frees the rest only once it runs short itself, too late for the game. Free up some space, such as the IPAs of games already installed, then play again. Your progress is kept up to its last save.", free, available)
+        }
+        return f("running.stopped.space", "The game ran out of room on this iPhone for its memory, which it keeps in files while it plays: %@ was free. Free up some space, then play again. Your progress is kept up to its last save.", free)
+    }
+    /// Before a start: the game keeps its memory in files, which may take
+    /// up to NEEDED, and the iPhone has only FREE right now, with AVAILABLE
+    /// counted by iOS when it counts much more (CartoucheGameRoom).
+    static func startSpaceTitle(_ name: String) -> String { f("start.space.title", "%@ may close for lack of space", name) }
+    static func startSpace(needed: String, free: String, available: String?) -> String {
+        if let available {
+            return f("start.space.purgeable", "While it plays, the game keeps its memory in files, which can take up to %1$@, and this iPhone has %2$@ free right now. iOS counts %3$@ as available, but frees the rest only once it runs short itself, too late for the game. Free up some space first, such as the IPAs of games already installed.", needed, free, available)
+        }
+        return f("start.space", "While it plays, the game keeps its memory in files, which can take up to %1$@, and this iPhone has %2$@ free. Free up some space first.", needed, free)
+    }
+    static var playAnyway: String { s("action.playAnyway", "Play anyway") }
     static var startsInPlaceNote: String { s("sheet.inPlace", "Behind Cartouche, this game would run short of memory: it starts in Cartouche’s place, and the console closes while it runs.") }
     static func startsInPlaceWithoutIML(_ limit: String) -> String {
         f("sheet.inPlace.iml", "Behind Cartouche, games have only %@ here, without Increased Memory Limit: this game starts in Cartouche’s place, and the console closes while it runs.", limit)
@@ -666,6 +689,10 @@ enum CartoucheText {
     static var tryBehindAgain: String { s("sheet.inPlace.retry", "Try behind Cartouche again") }
     static var playingTitle: String { s("system.playing", "While a game runs") }
     static var keepConsoleOpen: String { s("system.playing.keep", "Keep Cartouche open behind the game") }
+    static var pauseForController: String { s("system.playing.controller", "Pause when the controller disconnects") }
+    static var pauseForControllerDetail: String {
+        s("system.playing.controller.detail", "When the last controller disconnects during a game, the game pauses 3 seconds later and the console shows. A controller connected again brings it back.")
+    }
     static var behindLimit: String { s("system.playing.limit", "Memory for a game behind Cartouche") }
     static var behindLimitUnknown: String { s("system.playing.limit.unknown", "Measured at the next game") }
     static var behindWithoutIML: String { s("system.playing.noIML", "Behind Cartouche, games run without Increased Memory Limit here: they start in Cartouche’s place, with all of its memory, unless their sheet shows they need less.") }
