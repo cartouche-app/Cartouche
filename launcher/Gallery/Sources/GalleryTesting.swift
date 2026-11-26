@@ -28,7 +28,9 @@
 //  - an IPA to pick, Test Game.ipa in the gallery's Documents, which the
 //    Files picker shows under On My iPhone › Gallery, as uitests.sh puts
 //    one in On My iPhone: the stand-in install says over the console which
-//    file it was given (GalleryStubs.swift);
+//    file it was given (GalleryStubs.swift); and a certificate to pick
+//    beside it, Test Certificate.p12, for the import of the player's own
+//    certificate;
 //  - a game started, which the stand-in start says over the console, with
 //    how many starts so far, as an install says its IPA; and an app
 //    uninstalled, which goes from the player's apps;
@@ -55,6 +57,9 @@ enum GalleryTest {
 
     /// The IPA the tests pick in the Files picker.
     static let ipaName = "Test Game.ipa"
+    /// The certificate they pick there, for Cartouche signed with the
+    /// player's own certificate.
+    static let certificateName = "Test Certificate.p12"
 
     /// First thing as the gallery starts, before any part of the launcher
     /// reads its defaults.
@@ -88,10 +93,14 @@ enum GalleryTest {
         // An empty ZIP archive: the stand-in install reads none of it.
         let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let empty = Data([0x50, 0x4B, 0x05, 0x06] + [UInt8](repeating: 0, count: 18))
-        do {
-            try empty.write(to: documents.appendingPathComponent(ipaName), options: .atomic)
-        } catch {
-            NSLog("[Gallery] cannot write %@: %@", ipaName, String(describing: error))
+        // And a .p12, which iOS reads without its key or its certificate,
+        // for the import of the player's own certificate.
+        for (name, data) in [(ipaName, empty), (certificateName, GalleryScenario.standInPKCS12)] {
+            do {
+                try data.write(to: documents.appendingPathComponent(name), options: .atomic)
+            } catch {
+                NSLog("[Gallery] cannot write %@: %@", name, String(describing: error))
+            }
         }
     }
 

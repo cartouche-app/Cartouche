@@ -41,6 +41,13 @@ extension Words {
     static let profileFile = "This file is a profile (.mobileprovision), not the certificate" // signing.profileFile
     static let wrongPasswordOnIPhone = "This password does not open this certificate. Type the one that came with the .p12, which your signing app asked for too" // signing.wrongPasswordOnIPhone
     static let ownProfileUnreadable = "Cartouche cannot read the profile your signing app signed it with" // signing.ownProfileUnreadable
+    static let certificateChosen = "Choose another certificate (.p12)" // signing.certificateChosen
+}
+
+/// The certificate the tests pick in the Files picker, in the gallery's
+/// Documents and in On My iPhone (GalleryTest.certificateName, uitests.sh).
+extension GalleryWords {
+    static let certificate = "Test Certificate.p12"
 }
 
 final class OwnCertificateUITests: ConsoleTestCase {
@@ -109,6 +116,66 @@ final class OwnCertificateUITests: ConsoleTestCase {
         tap(app.buttons[Words.done], "Done of the System page", in: app)
         expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)
         expectMainThreadAnswered(app)
+    }
+
+    /// The certificate picked in the Files picker, from Import signing
+    /// certificate in the guide, comes back to the import: its button now
+    /// offers another one, and Use this certificate works. Up to 0.16.2,
+    /// the import showed SwiftUI's file importer, in which a .p12 tapped on
+    /// an iPhone of iOS 27.3 never came back (issue #353).
+    @MainActor
+    func testSignedOnTheIPhoneTheCertificatePickedFromTheGuideComesBack() {
+        let app = launchGallery(Launch(setupDone: false, owned: [], signing: "iphone"))
+        let guide = app.navigationBars[Words.guide]
+        expect(guide.waitForExistence(timeout: Self.firstLaunch), "The guide did not open by itself on the first launch", in: app)
+        tap(app.buttons[Words.importCertificate], "Import signing certificate, in the guide", in: app)
+        pickCertificate(from: "the guide", in: app)
+        back(from: Words.importCertificate, in: app)
+        expect(guide.waitForExistence(timeout: 10), "Back from the import did not come back to the guide", in: app)
+        tap(guide.buttons[Words.done], "Done of the guide", in: app)
+        expect(waitForGone(guide), "Done did not close the guide", in: app)
+        expect(waitUntil(10) { isOnConsole(app) }, "The console did not come back once the guide closed", in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// The same from the setup, from the System page: the setup has a Files
+    /// picker of its own, for the pairing file, which an Apple ID needs.
+    @MainActor
+    func testSignedOnTheIPhoneTheCertificatePickedFromTheSetupComesBack() {
+        let app = openConsole(Launch(setupDone: false, signing: "iphone"))
+        tap(app.buttons[Words.system], "System in the dock", in: app)
+        expect(app.navigationBars[Words.system].waitForExistence(timeout: 15), "The System page did not open", in: app)
+        let row = element(in: app.buttons, beginningWith: Words.setup)
+        scrollTo(row, "Setup on the System page", in: app)
+        tap(row, "Setup on the System page", in: app)
+        expect(app.navigationBars[Words.setup].waitForExistence(timeout: 15), "Setup did not open", in: app)
+        tap(app.buttons[Words.importCertificate], "Import signing certificate, in the setup", in: app)
+        pickCertificate(from: "the setup", in: app)
+        back(from: Words.importCertificate, in: app)
+        back(from: Words.setup, in: app)
+        tap(app.buttons[Words.done], "Done of the System page", in: app)
+        expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)
+        expectMainThreadAnswered(app)
+    }
+
+    /// On Import signing certificate, opened from PLACE: Choose the
+    /// certificate shows the Files picker, which goes once the .p12 is
+    /// picked, and the import has it.
+    @MainActor
+    private func pickCertificate(from place: String, in app: XCUIApplication) {
+        expect(app.navigationBars[Words.importCertificate].waitForExistence(timeout: 15),
+               "Import signing certificate did not open from \(place)", in: app)
+        expect(!app.buttons[Words.useCertificate].isEnabled, "Use this certificate works before a certificate is chosen", in: app)
+        tap(app.buttons[Words.chooseCertificate], "\(Words.chooseCertificate), from \(place)", in: app)
+        let picker = FilesPicker(app: app, test: self)
+        expect(picker.waitForIt(), "The Files picker did not show within a minute of \(Words.chooseCertificate), from \(place)",
+               in: app)
+        picker.pick(GalleryWords.certificate)
+        expect(picker.waitForItToGo(), "The Files picker stayed once the certificate was picked, from \(place)", in: app)
+        expect(app.buttons[Words.certificateChosen].waitForExistence(timeout: 15),
+               "The certificate picked did not come back to the import, from \(place)", in: app)
+        expect(app.buttons[Words.useCertificate].isEnabled,
+               "Use this certificate does not work once the certificate is chosen, from \(place)", in: app)
     }
 
     /// A certificate the setup refused says why, in words of its own, on the

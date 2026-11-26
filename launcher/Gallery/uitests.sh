@@ -22,8 +22,9 @@
 # an iPhone 17 Pro, else the newest iPhone Pro, of the newest iOS runtime
 # that has one, created should no simulator of it exist. simctl opens the
 # gallery once first, with time: its first launch after the install can take
-# minutes. The import's tests pick an IPA in On My iPhone, and the saves'
-# test a save JKSV exported, which this script puts there. A test that
+# minutes. The import's tests pick an IPA in On My iPhone, the import of
+# the player's own certificate a .p12, and the saves' test a save JKSV
+# exported, which this script puts there. A test that
 # fails runs once more before it counts as failed, and so do the tests
 # when the test runner stops before the first one; a
 # test has ten minutes, which a test that runs out of them does not get
@@ -189,6 +190,11 @@ if [ -n "$LOCAL" ]; then
   # An empty zip archive: the gallery's install reads none of it.
   { printf 'PK\005\006'; head -c 18 /dev/zero; } >"$LOCAL/Test Game.ipa"
   echo "   Test Game.ipa in On My iPhone"
+  # A .p12 beside it, for the import of the player's own certificate to
+  # pick: what iOS reads of one, without its key or its certificate, as the
+  # gallery writes it in its own folder too (GalleryScenario.standInPKCS12).
+  { printf '\060\202\001\000\002\001\003'; head -c 253 /dev/zero; } >"$LOCAL/Test Certificate.p12"
+  echo "   Test Certificate.p12 in On My iPhone"
   # The save JKSV exported on the Switch, for the saves' test to pick, where
   # a player keeps one too, named as the test has it (GalleryWords.switchExport
   # in UITests/SavesUITests.swift), of the first of the player's games (Games.owned):
