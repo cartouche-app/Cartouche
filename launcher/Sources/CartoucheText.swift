@@ -435,6 +435,15 @@ enum CartoucheText {
     /// Beside reasonGPU on an iPhone whose GPU reads no BC: the Mac's
     /// builds of nxnative-nobc, a separate fork (cartouche_builder/build_for.py).
     static var installGPUBuilder: String { s("work.install.gpu.builder", "Cartouche on your Mac builds them for this iPhone from nxnative-nobc, a separate fork of nxnative that converts those textures, once the two are paired.") }
+    /// After installGPUBuilder: Cartouche Cloud builds from that fork too a
+    /// game sent for an iPhone 11 to 15, as its page asks which iPhone a
+    /// game is for since 26 November 2026. Until then it built every game
+    /// from nxnative, and only the Mac was said here.
+    static var installGPUCloud: String { s("work.install.gpu.cloud", "With no Mac, Cartouche Cloud builds them from it too, for a game you send for an iPhone 11 to 15.") }
+    /// What an iPhone whose GPU reads no BC is told, on the question an
+    /// install asks first and under This iPhone on the System page: why
+    /// nxnative's games stop there, and where they are built for it.
+    static var installGPUAdvice: String { reasonGPU + " " + installGPUBuilder + " " + installGPUCloud }
     /// Where an app that is not an nxnative game is once installed: on the
     /// System page, as the console shows games only (docs/decisions/154.md).
     /// Up to 0.15.1, "in Apps", LiveContainer's tab, which Cartouche hides.

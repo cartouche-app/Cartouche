@@ -100,6 +100,9 @@ final class CartoucheDeviceWordsTests: XCTestCase {
             "storage.mac.offline.tailscaleOff", "storage.saves.footer", "switchSave.import.sending",
             "system.memory.footer",
             "system.memory.footer.behind", "telemetry.footer",
+            // The iPhones Cartouche Cloud's page names for a game built from
+            // nxnative-nobc, an iPad with an A14 to A16 chip among them.
+            "work.install.gpu.cloud",
         ]
         let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
             .appendingPathComponent("../../Sources/Cartouche.xcstrings").standardizedFileURL
