@@ -7,7 +7,7 @@ sidebar:
 
 **Builder**, arriba en la ventana o <kbd>⌘</kbd><kbd>2</kbd>, muestra el Builder. Compila cada uno de tus juegos con nxnative en una IPA para el iPhone y el iPad, y en una app para este Mac, los pone en tu carpeta de juegos y los vuelve a compilar cuando nxnative los mejora.
 
-![La biblioteca del Builder](../../../../assets/screens/mac-library.webp)
+![La biblioteca del Builder](../../../../assets/screens/es-mac-library.webp)
 
 ## La biblioteca
 
@@ -15,13 +15,13 @@ sidebar:
 
 La ficha de un juego muestra lo que nxnative cambió para él desde su compilación, su IPA y su app para este Mac, **Compilar**, **Recompilar** o **Compilar de nuevo**, si se sigue, y para qué se compila.
 
-![La ficha de un juego en el Builder](../../../../assets/screens/mac-game.webp)
+![La ficha de un juego en el Builder](../../../../assets/screens/es-mac-game.webp)
 
 ## Compilar
 
 Abre un juego y elige **Compilar**. La primera compilación de un juego grande lleva horas; las siguientes reutilizan su carpeta de compilación y llevan minutos. **Compilaciones** muestra la tanda en curso, juego a juego y paso a paso, su cola, y las tandas anteriores con sus informes.
 
-![La tanda en curso, y su cola](../../../../assets/screens/mac-builds.webp)
+![La tanda en curso, y su cola](../../../../assets/screens/es-mac-builds.webp)
 
 - Un juego pedido mientras compila una tanda, con **Añadir a la cola**, espera su turno al final de la tanda.
 - **Detener este juego** detiene solo el juego que se compila; **Detener todo** detiene la tanda y vacía su cola.

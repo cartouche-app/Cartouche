@@ -149,15 +149,20 @@ extension CartoucheMacConsole {
     /// Google Drive, named in LANGUAGE, for the app's gallery: kept in
     /// memory only, nothing of the player's read or written from then on.
     public func showStorageForGallery(language: String) {
-        let french = language == "fr"
+        func named(_ english: String, _ french: String, _ spanish: String, _ german: String) -> String {
+            ["fr": french, "es": spanish, "de": german][language] ?? english
+        }
+        let player = named("player", "joueur", "jugador", "spieler")
         let changed = Date()
         CartoucheStorageSettings.shared.showForGallery([
-            CartoucheStorageServer(id: Self.galleryNAS, kind: .smb, name: french ? "NAS du salon" : "Living room NAS", host: "192.168.1.20",
-                                   username: french ? "joueur" : "player", share: french ? "Jeux" : "Games", changed: changed),
-            CartoucheStorageServer(kind: .s3, name: french ? "Sauvegardes" : "Saves", host: "s3.eu-west-3.amazonaws.com",
+            CartoucheStorageServer(id: Self.galleryNAS, kind: .smb,
+                                   name: named("Living room NAS", "NAS du salon", "NAS del salón", "Wohnzimmer-NAS"), host: "192.168.1.20",
+                                   username: player, share: named("Games", "Jeux", "Juegos", "Spiele"), changed: changed),
+            CartoucheStorageServer(kind: .s3, name: named("Saves", "Sauvegardes", "Partidas guardadas", "Spielstände"),
+                                   host: "s3.eu-west-3.amazonaws.com",
                                    username: "AKIAIOSFODNN7EXAMPLE", share: "cartouche-saves", region: "eu-west-3", changed: changed),
             CartoucheStorageServer(id: Self.galleryDrive, kind: .drive, name: "Google Drive",
-                                   host: french ? "joueur@example.com" : "player@example.com",
+                                   host: player + "@example.com",
                                    username: "123456789012-example.apps.googleusercontent.com", changed: changed),
         ])
     }

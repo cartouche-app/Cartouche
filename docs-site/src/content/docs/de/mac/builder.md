@@ -7,7 +7,7 @@ sidebar:
 
 **Builder**, oben im Fenster oder <kbd>⌘</kbd><kbd>2</kbd>, zeigt den Builder. Er erstellt jedes deiner Spiele mit nxnative zu einer IPA für iPhone und iPad und zu einer App für diesen Mac, legt sie in deinen Spieleordner und erstellt sie neu, wenn nxnative sie verbessert.
 
-![Die Bibliothek des Builders](../../../../assets/screens/mac-library.webp)
+![Die Bibliothek des Builders](../../../../assets/screens/de-mac-library.webp)
 
 ## Die Bibliothek
 
@@ -15,13 +15,13 @@ sidebar:
 
 Die Infoseite eines Spiels zeigt, was nxnative seit seinem Build dafür geändert hat, seine IPA und seine App für diesen Mac, **Erstellen**, **Neu erstellen** oder **Erneut erstellen**, ob ihm gefolgt wird und wofür es erstellt wird.
 
-![Die Infoseite eines Spiels im Builder](../../../../assets/screens/mac-game.webp)
+![Die Infoseite eines Spiels im Builder](../../../../assets/screens/de-mac-game.webp)
 
 ## Erstellen
 
 Öffne ein Spiel und wähle **Erstellen**. Der erste Build eines großen Spiels dauert Stunden; die nächsten nutzen seinen Build-Ordner wieder und dauern Minuten. **Builds** zeigt den laufenden Durchlauf, Spiel für Spiel und Schritt für Schritt, seine Warteschlange und die früheren Durchläufe mit ihren Berichten.
 
-![Der laufende Durchlauf und seine Warteschlange](../../../../assets/screens/mac-builds.webp)
+![Der laufende Durchlauf und seine Warteschlange](../../../../assets/screens/de-mac-builds.webp)
 
 - Ein Spiel, das während eines Durchlaufs mit **Zur Warteschlange hinzufügen** angefordert wird, wartet am Ende des Durchlaufs, bis es dran ist.
 - **Dieses Spiel stoppen** stoppt nur das Spiel, das erstellt wird; **Alle stoppen** stoppt den Durchlauf und leert seine Warteschlange.

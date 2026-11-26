@@ -17,7 +17,7 @@ Sur le Mac, Cartouche est une seule app : sa **console**, comme sur l'iPhone, et
 
 À son premier lancement, un assistant de configuration prépare le Mac avec vous, une étape à la fois. Rien n'est choisi à votre place : chaque dossier part vide. Chaque choix est enregistré au fur et à mesure, et tous peuvent être changés plus tard dans les réglages, où **Avancé › Ouvrir l'assistant de configuration** le rouvre.
 
-![L'accueil de l'assistant de configuration](../../../../assets/screens/mac-assistant-welcome.webp)
+![L'accueil de l'assistant de configuration](../../../../assets/screens/fr-mac-assistant-welcome.webp)
 
 1. **Bienvenue :** ce que fait l'app.
 2. **Outils du Mac :** **Tout préparer** installe ce avec quoi nxnative construit. Xcode vient de l'App Store, que l'app ouvre pour vous ; Homebrew demande le mot de passe de votre Mac ; le reste s'installe en arrière-plan pendant que vous passez aux étapes suivantes.
@@ -28,7 +28,7 @@ Sur le Mac, Cartouche est une seule app : sa **console**, comme sur l'iPhone, et
 7. **iPhone :** si le Mac partage ses jeux et ses sauvegardes avec Cartouche sur l'iPhone, et comment l'associer.
 8. **Prêt :** ce que chaque étape a choisi, avec un bouton pour y revenir.
 
-![Choisir le dossier des jeux](../../../../assets/screens/mac-assistant-games.webp)
+![Choisir le dossier des jeux](../../../../assets/screens/fr-mac-assistant-games.webp)
 
 :::tip[Vos jeux sur un NAS]
 Pour un dossier sur votre NAS, tapez l'adresse de son partage dans l'assistant et le Finder le connecte, puis choisissez-y le dossier. macOS garde le mot de passe dans le trousseau, et Cartouche reconnecte le partage tout seul, la nuit aussi.
@@ -38,7 +38,7 @@ Pour un dossier sur votre NAS, tapez l'adresse de son partage dans l'assistant e
 
 **Outils du Mac**, dans le Builder, montre chaque outil dont nxnative a besoin, installé ou manquant, avec une installation pour ce qui manque, et **Mettre à jour Xcode** quand nxnative en demande un plus récent.
 
-![Les outils du Mac](../../../../assets/screens/mac-tools.webp)
+![Les outils du Mac](../../../../assets/screens/fr-mac-tools.webp)
 
 ## Vos dumps
 

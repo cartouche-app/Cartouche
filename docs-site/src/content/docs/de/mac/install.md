@@ -17,7 +17,7 @@ Auf dem Mac ist Cartouche eine einzige App: seine **Konsole**, wie auf dem iPhon
 
 Beim ersten Start richtet ein Einrichtungsassistent den Mac mit dir ein, Schritt für Schritt. Nichts wird für dich gewählt: Jeder Ordner ist anfangs leer. Jede Wahl wird gespeichert, sobald du sie triffst, und alle lassen sich später in den Einstellungen ändern, wo **Erweitert › Einrichtungsassistenten öffnen** ihn wieder öffnet.
 
-![Die Begrüßung des Einrichtungsassistenten](../../../../assets/screens/mac-assistant-welcome.webp)
+![Die Begrüßung des Einrichtungsassistenten](../../../../assets/screens/de-mac-assistant-welcome.webp)
 
 1. **Willkommen:** was die App tut.
 2. **Werkzeuge dieses Mac:** **Alles vorbereiten** installiert, womit nxnative erstellt. Xcode kommt aus dem App Store, den die App für dich öffnet; Homebrew fragt nach dem Passwort deines Mac; der Rest wird im Hintergrund installiert, während du mit den nächsten Schritten weitermachst.
@@ -28,7 +28,7 @@ Beim ersten Start richtet ein Einrichtungsassistent den Mac mit dir ein, Schritt
 7. **iPhone:** ob der Mac seine Spiele und Spielstände mit Cartouche auf dem iPhone teilt, und wie du ihn koppelst.
 8. **Bereit:** was jeder Schritt gewählt hat, mit einer Taste zurück dorthin.
 
-![Den Spieleordner wählen](../../../../assets/screens/mac-assistant-games.webp)
+![Den Spieleordner wählen](../../../../assets/screens/de-mac-assistant-games.webp)
 
 :::tip[Deine Spiele auf einem NAS]
 Für einen Ordner auf deinem NAS gibst du im Assistenten die Adresse seiner Freigabe ein, und der Finder verbindet sie; dann wählst du den Ordner darin. macOS bewahrt das Passwort im Schlüsselbund auf, und Cartouche verbindet die Freigabe selbst wieder, auch nachts.
@@ -38,7 +38,7 @@ Für einen Ordner auf deinem NAS gibst du im Assistenten die Adresse seiner Frei
 
 **Werkzeuge dieses Mac** im Builder zeigt jedes Werkzeug, das nxnative braucht, installiert oder fehlend, mit einer Installation für das Fehlende, und **Xcode aktualisieren**, wenn nxnative ein neueres braucht.
 
-![Werkzeuge dieses Mac](../../../../assets/screens/mac-tools.webp)
+![Werkzeuge dieses Mac](../../../../assets/screens/de-mac-tools.webp)
 
 ## Deine Dumps
 

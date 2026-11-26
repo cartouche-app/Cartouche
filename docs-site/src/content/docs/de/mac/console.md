@@ -7,7 +7,7 @@ sidebar:
 
 **Console**, oben im Fenster oder <kbd>⌘</kbd><kbd>1</kbd>, zeigt die Konsole von Cartouche, wie auf dem iPhone: deine für diesen Mac erstellten Spiele mit ihren Covern, das Spiel im Fokus mit **Spielen** und seine Infoseite daneben.
 
-![Die Konsole von Cartouche auf dem Mac](../../../../assets/screens/mac-console.webp)
+![Die Konsole von Cartouche auf dem Mac](../../../../assets/screens/de-mac-console.webp)
 
 ## Auf dem Mac spielen
 
@@ -41,6 +41,6 @@ Die Kopie eines Spiels auf diesem Mac, das dein NAS aufbewahrt, bleibt aus Time 
 
 Deine gekoppelten iPhones und der Mac behalten dieselben Verbindungen zu deinem Speicher, Passwörter eingeschlossen: Ein freigegebener Ordner, ein S3-Bucket, ein FTP- oder SFTP-Server oder dein Google Drive, auf einem hinzugefügt, kommt beim anderen an. Den Spieleordner und den Spielstandordner, die du auf einem davon wählst, behalten beide.
 
-![Die Seite „Speicher“ der Konsole auf dem Mac](../../../../assets/screens/mac-console-storage.webp)
+![Die Seite „Speicher“ der Konsole auf dem Mac](../../../../assets/screens/de-mac-console-storage.webp)
 
 Wenn der auf dem iPhone gewählte Spieleordner auf einer deiner Verbindungen liegt, sendet der Builder ihm jedes Spiel, das er erstellt, eines nach dem anderen, damit dein iPhone sie findet, auch wenn der Mac schläft.

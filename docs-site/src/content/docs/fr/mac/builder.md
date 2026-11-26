@@ -7,7 +7,7 @@ sidebar:
 
 **Builder**, en haut de la fenêtre ou <kbd>⌘</kbd><kbd>2</kbd>, affiche le Builder. Il construit chacun de vos jeux avec nxnative en une IPA pour l'iPhone et l'iPad, et une app pour ce Mac, les dépose dans votre dossier des jeux, et les reconstruit quand nxnative les améliore.
 
-![La bibliothèque du Builder](../../../../assets/screens/mac-library.webp)
+![La bibliothèque du Builder](../../../../assets/screens/fr-mac-library.webp)
 
 ## La bibliothèque
 
@@ -15,13 +15,13 @@ sidebar:
 
 La fiche d'un jeu montre ce que nxnative a changé pour lui depuis sa construction, son IPA et son app pour ce Mac, **Construire**, **Reconstruire** ou **Construire à nouveau**, s'il est suivi, et pour quoi il est construit.
 
-![La fiche d'un jeu dans le Builder](../../../../assets/screens/mac-game.webp)
+![La fiche d'un jeu dans le Builder](../../../../assets/screens/fr-mac-game.webp)
 
 ## Construire
 
 Ouvrez un jeu et choisissez **Construire**. La première construction d'un gros jeu prend des heures ; les suivantes réutilisent son dossier de construction et prennent quelques minutes. **Constructions** montre le lot en cours, jeu par jeu et étape par étape, sa file, et les lots précédents avec leurs rapports.
 
-![Le lot en cours, et sa file](../../../../assets/screens/mac-builds.webp)
+![Le lot en cours, et sa file](../../../../assets/screens/fr-mac-builds.webp)
 
 - Un jeu demandé pendant qu'un lot construit, avec **Ajouter à la file**, attend son tour à la fin du lot.
 - **Arrêter ce jeu** n'arrête que le jeu en construction ; **Tout arrêter** arrête le lot et vide sa file.
