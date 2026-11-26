@@ -61,8 +61,9 @@ enum ConsoleGallery {
     ]
 
     /// The settings nxnative lists for a game built for the Mac
-    /// (dm/games/settings.tsv, its rows for the Mac; the app's
-    /// Contents/Resources/dm/launcher.json), with a game's defaults.
+    /// (dm/games/settings.tsv, its rows for the Mac at its commit 2f959ede
+    /// of 27 November 2026; the app's Contents/Resources/dm/launcher.json),
+    /// with a game's defaults.
     static func settings(of titleID: String) -> String {
         """
         {"schema": 1, "game": "\(titleID)", "settings": [
@@ -72,11 +73,17 @@ enum ConsoleGallery {
            "level": "basic", "options": [["1", "Docked"], ["0", "Handheld"]]},
           {"env": "DM_PRESENT_UPSCALE", "kind": "choice", "section": "Game", "label": "Upscaling",
            "note": "Uses more GPU time and can increase heat.", "default": "off", "options": [["off", "Standard"], ["metalfx", "MetalFX"]]},
+          {"env": "DM_NVN_ANISO", "kind": "choice", "section": "Game", "label": "Texture filtering",
+           "note": "Sharper ground and walls seen at an angle. 16x costs little on a Mac.", "default": "0",
+           "options": [["0", "Game default"], ["2", "2x"], ["4", "4x"], ["8", "8x"], ["16", "16x"]]},
           {"env": "DM_LANG", "kind": "choice", "section": "Game", "label": "Game language", "note": "", "default": "en-US", "level": "basic",
            "options": [["en-US", "American English"], ["en-GB", "British English"], ["ja", "Japanese"], ["fr", "French"], ["de", "German"],
                        ["es-419", "Latin American Spanish"], ["es", "Spanish"], ["it", "Italian"], ["nl", "Dutch"], ["fr-CA", "Canadian French"]]},
           {"env": "DM_FULLSCREEN", "kind": "choice", "section": "Game", "label": "Display mode", "note": "", "default": "0",
            "level": "basic", "options": [["0", "Window"], ["1", "Fullscreen"]]},
+          {"env": "DM_PICTURE_FIT", "kind": "choice", "section": "Game", "label": "Picture",
+           "note": "Fill crops the game's 16:9 picture to cover the screen. Health bars, subtitles or maps near the edges can be cut off. A full-screen picture without cropping needs a patch for each game.",
+           "default": "fit", "options": [["fit", "Fit"], ["fill", "Fill"]]},
           {"env": "DM_RUMBLE", "kind": "toggle", "section": "Controls", "label": "Game rumble", "note": "", "default": "1",
            "level": "basic", "on": "1", "off": "0"},
           {"env": "DM_RUMBLE_GAIN", "kind": "range", "section": "Controls", "label": "Rumble strength", "note": "", "default": "1.0",
@@ -88,6 +95,14 @@ enum ConsoleGallery {
           {"env": "DM_SW2", "kind": "toggle", "section": "Controls", "label": "Switch 2 controllers",
            "note": "Plays Joy-Con 2 and Pro Controller 2 over Bluetooth: hold Sync on one during the game to pair it. macOS asks once for Bluetooth access.",
            "default": "0", "on": "1", "off": "0"},
+          {"env": "DM_MIC", "kind": "toggle", "section": "Controls", "label": "Microphone",
+           "note": "Lets the game hear your microphone. macOS asks for access when you launch with this enabled.",
+           "default": "0", "level": "basic", "on": "1", "off": "0"},
+          {"env": "DM_MIC_GAIN", "kind": "range", "section": "Controls", "label": "Microphone gain", "note": "", "default": "1",
+           "needs": "DM_MIC=1", "min": 1.0, "max": 8.0, "step": 0.5},
+          {"env": "DM_SCREEN_ASPECT", "kind": "choice", "section": "Game", "label": "Picture shape",
+           "note": "Taller shapes render more pixels and can increase GPU time and heat.", "default": "0",
+           "options": [["1.6", "MacBook (16:10)"], ["1.43", "iPhone Duo screen (1.43:1)"], ["0", "16:9 (Switch)"]]},
           {"env": "DM_PRESENT_SNAP", "kind": "toggle", "section": "Performance", "label": "Frame buffering",
            "note": "Up to one frame more display latency.", "default": "0", "on": "1", "off": "0"},
           {"env": "DM_PSO_MTL4", "kind": "toggle", "section": "Performance", "label": "Metal 4 pipelines",
