@@ -27,6 +27,10 @@ El Mac mantiene al día las partidas de los juegos jugados en él con tu carpeta
 
 La copia en este Mac de un juego que guarda tu NAS queda fuera de Time Machine: vuelve desde el NAS. Las partidas guardadas del juego siguen entrando.
 
+## Mods
+
+La ficha de un juego también tiene **Mods** en el Mac, como en el iPhone ([La ficha de un juego](/es/iphone/game-sheet/#mods)): añade un mod desde una carpeta o un ZIP de este Mac, actívalo o desactívalo y fija el orden. Un mod que también cambia el código del juego, con una carpeta `exefs`, aún no funciona en el Mac: Cartouche lo dice y lo deja fuera. Los mods del Mac se quedan en este Mac.
+
 ## Sistema
 
 **Sistema**, en el dock de la consola, abre la página Sistema del iPhone con las secciones propias de este Mac:

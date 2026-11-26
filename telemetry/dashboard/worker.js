@@ -122,6 +122,7 @@ export const SESSION = [
   "display.foldSplit",
   "dlc",
   "otherAudio",
+  "mods",
   "end.kind",
   "end.signal",
   "end.pc",

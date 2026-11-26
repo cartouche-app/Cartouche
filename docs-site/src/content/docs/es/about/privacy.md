@@ -13,7 +13,7 @@ Cartouche no envía tus juegos ni tus partidas guardadas a ningún sitio salvo a
 
 Después de cada juego, Cartouche envía lo que nxnative midió mientras funcionaba, para que los juegos funcionen mejor en iPhone, iPad y Mac:
 
-- **Por cada sesión de juego:** fotogramas por segundo, tiempos de fotograma y de gráficos, tirones, preparación de shaders, memoria, temperatura y energía, y cómo terminó la sesión.
+- **Por cada sesión de juego:** fotogramas por segundo, tiempos de fotograma y de gráficos, tirones, preparación de shaders, memoria, temperatura y energía, cuántos mods estaban activados, y cómo terminó la sesión.
 - **Sobre tu dispositivo:** su modelo, su versión de iOS, su idioma y su límite de memoria, la versión de Cartouche, y un número aleatorio de esta copia de Cartouche.
 - **Los propios eventos de Cartouche:** inicios, instalaciones, actualizaciones, renovaciones e inicios de sesión, como recuentos y resultados.
 

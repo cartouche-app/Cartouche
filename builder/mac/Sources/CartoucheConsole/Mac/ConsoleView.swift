@@ -588,17 +588,23 @@ public struct CartoucheMacConsoleView: View {
                     CartoucheGameLogView(folder: logs, tileKey: entry.tileKey)
                 }
             case .switchSaves:
-                CartoucheSwitchSaveView(
-                    game: CartoucheSwitchSaveGame(name: entry.name, titleId: entry.titleId,
-                                                  version: CartoucheInstalledBuilds.installedBuild(of: app).version,
-                                                  isSwitch2: entry.platform == "switch2", target: actions.saves(of: app),
-                                                  makeTarget: { actions.savesToImport(of: app) },
-                                                  isRunningNow: { actions.isRunning(app) }),
-                    isRunning: actions.isRunning(app))
+                CartoucheSwitchSaveView(game: sheetGame(entry, app), isRunning: actions.isRunning(app))
+            case .mods:
+                CartoucheModsView(game: sheetGame(entry, app), isRunning: actions.isRunning(app))
             case nil:
                 EmptyView()
             }
         }
+    }
+
+    /// The game, for the pages of its saves and of its mods, as the sheet
+    /// has it (CartoucheGameSheetView.switchGame).
+    private func sheetGame(_ entry: CartoucheEntry, _ app: LCAppModel) -> CartoucheSwitchSaveGame {
+        CartoucheSwitchSaveGame(name: entry.name, titleId: entry.titleId,
+                                version: CartoucheInstalledBuilds.installedBuild(of: app).version,
+                                isSwitch2: entry.platform == "switch2", target: actions.saves(of: app),
+                                makeTarget: { actions.savesToImport(of: app) },
+                                isRunningNow: { actions.isRunning(app) })
     }
 
     private func openSettings(_ app: LCAppModel, of entry: CartoucheEntry) {

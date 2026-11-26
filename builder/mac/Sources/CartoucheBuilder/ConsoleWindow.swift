@@ -164,15 +164,16 @@ struct MainView: View {
 
 /// A page the console opens over a game's sheet, for the gallery
 /// (Gallery.swift, which does not import the console): the copies of the
-/// game's saves, its Switch saves, or its log.
+/// game's saves, its Switch saves, its log, or its mods.
 enum ConsoleSavesPage {
-    case copies, switchSaves, log
+    case copies, switchSaves, log, mods
 
     var console: CartoucheMacSavesPage {
         switch self {
         case .copies: return .copies
         case .switchSaves: return .switchSaves
         case .log: return .log
+        case .mods: return .mods
         }
     }
 }

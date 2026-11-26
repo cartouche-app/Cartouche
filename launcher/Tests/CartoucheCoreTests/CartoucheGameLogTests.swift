@@ -373,6 +373,17 @@ final class CartoucheGameLogTests: XCTestCase {
         XCTAssertEqual(measures.dlc, false)
     }
 
+    /// The mods the game took, from the line nxnative writes as it reads
+    /// the env.txt Cartouche wrote them in (CartoucheMods): their number,
+    /// never their names.
+    func testTheModsTheGameTookAreCounted() {
+        let iPhone = "boot: env DM_ROMFS_OVERLAY=/var/mobile/Containers/Data/Application/0F1E/Documents/Data/Application/5A3C/Documents/mods/HD (v2)/romfs:/var/mobile/Containers/Data/Application/0F1E/Documents/Data/Application/5A3C/Documents/mods/Music/romfs (env.txt)"
+        XCTAssertEqual(measures(iPhone + "\n" + session).mods, 2)
+        let mac = "launcher: env DM_ROMFS_OVERLAY=/Users/player/Library/Application Support/nxnative/0100F2C0115B6000/mods/HD/romfs (/Users/player/Library/Application Support/nxnative/0100F2C0115B6000/env.txt)"
+        XCTAssertEqual(measures(mac).mods, 1)
+        XCTAssertNil(measures(session).mods)
+    }
+
     func testAnEmptyLogMeasuresNothing() {
         let measures = measures("", seconds: nil, limitMiB: nil)
         XCTAssertEqual(measures, CartoucheGameMeasures(dlc: false, end: CartoucheGameMeasures.End(kind: "unknown")))

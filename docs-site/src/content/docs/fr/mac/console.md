@@ -27,6 +27,10 @@ Le Mac garde les sauvegardes des jeux qui y sont joués à jour avec votre dossi
 
 La copie, sur ce Mac, d'un jeu que garde votre NAS reste hors de Time Machine : elle revient depuis le NAS. Les sauvegardes du jeu, elles, y vont.
 
+## Mods
+
+La fiche d'un jeu a aussi **Mods** sur le Mac, comme sur l'iPhone ([La fiche d'un jeu](/fr/iphone/game-sheet/#mods)) : ajoutez un mod depuis un dossier ou un ZIP de ce Mac, activez-le ou désactivez-le et réglez l'ordre. Un mod qui change aussi le code du jeu, avec un dossier `exefs`, ne marche pas encore sur le Mac : Cartouche le dit et le laisse de côté. Les mods du Mac restent sur ce Mac.
+
 ## Système
 
 **Système**, dans le dock de la console, ouvre la page Système de l'iPhone avec les sections propres à ce Mac :

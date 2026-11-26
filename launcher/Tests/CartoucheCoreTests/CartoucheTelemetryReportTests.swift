@@ -75,6 +75,7 @@ final class CartoucheTelemetryReportTests: XCTestCase {
         measures.audioUnderrunsPerMinute = 0.2
         measures.display = .init(tv: false, foldSplit: true)
         measures.dlc = true
+        measures.mods = 2
         measures.end = .init(kind: "crash", signal: 6, pc: "__pthread_kill+0x8", lr: "pthread_kill+0x10c", cause: "gpuLost")
         let process = CartoucheGameProcess(limitMiB: 6143, peakMiB: 4813, lastAvailableMiB: 1402, quit: false, screens: [
             .init(minute: 0, width: 874, height: 402, footprintMiB: 1830),

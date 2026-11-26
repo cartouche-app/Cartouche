@@ -59,6 +59,7 @@
       },
       "memoryLimitMiB": 6143,
       "minutes": 35.2,
+      "mods": 2,
       "nxnative": "6c3aeb3d70a1",
       "nxnativeChanged": false,
       "otherAudio": true,
