@@ -12,7 +12,7 @@ from cartouche_builder import api, batch, config as configs, ipa, macapps, toolc
 from cartouche_builder import status as statuses
 from cartouche_builder.paths import Paths
 
-from support import HOLLOW, MKW, ODYSSEY, ZELDA, Home, commit, make_dump, make_engine_remote, make_xci, make_zip_dump, write_keys
+from support import FAKE_BUILD, HOLLOW, MKW, ODYSSEY, POKOPIA, ZELDA, Home, commit, make_dump, make_engine_remote, make_nup, make_romfs_image, make_xci, make_zip_dump, write_keys
 
 NAMES = {MKW: "Mario Kart World", ODYSSEY: "Super Mario Odyssey", HOLLOW: "Hollow Knight"}
 PYTHON = Path(sys.executable)
@@ -403,6 +403,65 @@ class Batches(BatchHome):
         with self.assertRaises(batch.Blocked):
             self.run_due()
 
+
+
+class DlcImagesBesideANup(BatchHome):
+    """A NUP without DLC of its own, and the images of its DLC in an aoc
+    folder beside it: nxnative builds them into its IPA and its Mac app with
+    --aoc-dir (PR #2905, 21 November 2026), from a folder of links to them
+    alone, outside the build folder."""
+
+    def setUp(self):
+        super().setUp()
+        commit(self.remote, "Pokopia's profile", {f"dm/games/{POKOPIA}/game.tsv": f"# Pokopia\ntitle_id\t{POKOPIA}\nname\tPokopia\n"})
+        game = self.sources / "Pokopia"
+        make_nup(game / f"Pokopia [{POKOPIA}].nup", [(POKOPIA, 0)])
+        self.images = [make_romfs_image(game / "aoc" / "1.IMG"), make_romfs_image(game / "aoc" / "7.img", b"marker")]
+        (game / "aoc" / "notes.txt").write_text("from my console")
+
+    def takes_aoc_dir(self):
+        script = FAKE_BUILD.replace('ap.add_argument("--keep-extracted"', 'ap.add_argument("--aoc-dir")\nap.add_argument("--keep-extracted"', 1)
+        commit(self.remote, "packing/nup: accept explicit DLC image directories (PR #2905)", {"scripts/build_ipa_from_nsp.py": script})
+
+    def test_built_in_with_aoc_dir(self):
+        self.takes_aoc_dir()
+        plan, summary = self.run_due(only={POKOPIA})
+        self.assertEqual((summary.failed, summary.mac_failed), ([], []))
+        ctx = batch.context()
+        links = ctx.workspace.root / ".cartouche-builder" / "aoc" / POKOPIA
+        for name in ("args.json", "mac_args.json"):
+            args = json.loads((ctx.workspace.build_folder(POKOPIA) / name).read_text())
+            self.assertEqual(args[0], str(self.sources / "Pokopia" / f"Pokopia [{POKOPIA}].nup"), name)
+            self.assertEqual(args[args.index("--aoc-dir") + 1], str(links), name)
+        # Each image by its number as nxnative names it, and nothing else of
+        # the player's folder; the images stay where they are.
+        self.assertEqual(sorted((p.name, p.resolve()) for p in links.iterdir()), [("1.img", self.images[0].resolve()), ("7.img", self.images[1].resolve())])
+        self.assertFalse(links.is_relative_to(ctx.workspace.build_folder(POKOPIA)))
+        self.assertIn(("message", POKOPIA, "With 2 DLC from its aoc folder."), self.events)
+        # A new DLC image builds the game again.
+        plan, _ = self.run_due(only={POKOPIA})
+        self.assertNotIn(POKOPIA, [e.title_id for e in plan.to_build])
+        make_romfs_image(self.sources / "Pokopia" / "aoc" / "2.img")
+        plan, summary = self.run_due(only={POKOPIA})
+        self.assertIn(POKOPIA, [e.title_id for e in plan.to_build])
+        self.assertEqual(summary.failed, [])
+        self.assertEqual(sorted(p.name for p in links.iterdir()), ["1.img", "2.img", "7.img"])
+
+    def test_an_nxnative_without_aoc_dir_builds_without_them(self):
+        plan, summary = self.run_due(only={POKOPIA})
+        self.assertEqual((summary.failed, summary.mac_failed), ([], []))
+        ctx = batch.context()
+        for name in ("args.json", "mac_args.json"):
+            self.assertNotIn("--aoc-dir", json.loads((ctx.workspace.build_folder(POKOPIA) / name).read_text()), name)
+        self.assertIn(("message", POKOPIA, "This nxnative does not take DLC images beside a .nup yet: built without them."), self.events)
+
+    def test_other_games_are_built_as_before(self):
+        self.takes_aoc_dir()
+        plan, summary = self.run_due(only={MKW, ODYSSEY})
+        self.assertEqual(summary.failed, [])
+        ctx = batch.context()
+        for title_id in (MKW, ODYSSEY):
+            self.assertNotIn("--aoc-dir", json.loads((ctx.workspace.build_folder(title_id) / "args.json").read_text()), title_id)
 
 
 class MacApps(BatchHome):

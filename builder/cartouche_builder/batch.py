@@ -561,6 +561,9 @@ class Runner:
             else:
                 source = game.folder
             work = writing = workspace.build_folder(title_id)
+            # A NUP's DLC images, from the aoc folder beside it, for
+            # nxnative's --aoc-dir: their links, outside the build folder.
+            aoc = workspace.link_aoc(title_id, game.aoc) if game.kind == "nup" and game.aoc else None
             if ctx.shelf is not None:
                 self._fetch(ctx.shelf, work, workspace.used(work), title_id, stop)
             workspace.use(work)
@@ -596,7 +599,7 @@ class Runner:
                     keep_extracted = (ctx.config.keep_extracted or entry.mac) if ctx.engine.supports("--keep-extracted") else None
                     archive[:] = [self._gpus(ctx, title_id, identity, log_path), pipelines.Watch()]
                     args = builds.command(self.python, ctx.engine.build_script, source, work, out, keys, ctx.config.game_language, keep_extracted,
-                                          gpus=archive[0].option)
+                                          aoc=self._aoc(title_id, aoc), gpus=archive[0].option)
                     return builds.run(
                         args,
                         ctx.engine.root,
@@ -682,7 +685,7 @@ class Runner:
             if entry.mac:
                 # Its Mac app, from the same files and commit as its IPA: a
                 # failure of its own, which leaves the IPA as it is.
-                self._mac_app(entry, source, work, keys, log_path, stop, print_, identity)
+                self._mac_app(entry, source, work, keys, log_path, stop, print_, identity, aoc)
         except BaseException as error:
             # What kept the game from building: its IPA's, or its Mac app's
             # when the batch builds it alone (its sources unpacked, no room).
@@ -802,7 +805,21 @@ class Runner:
 
     # ---- The game's Mac app (macapps.py) -----------------------------------
 
-    def _mac_app(self, entry: Entry, source: Path, work: Path, keys: Path | None, log_path: Path, stop: "_Stop", print_: str, identity: str) -> None:
+    def _aoc(self, title_id: str, aoc: Path | None) -> Path | None:
+        """AOC, the folder of a NUP's DLC images, when this checkout of
+        nxnative takes it (--aoc-dir, from 21 November 2026), with a word
+        of it either way; asked of the checkout as it is now, as the commit
+        it builds from may have moved (fallback.py)."""
+        if aoc is None:
+            return None
+        if not self.ctx.engine.supports("--aoc-dir"):
+            self.on_event("message", title_id, t("batch.aoc_unsupported"))
+            return None
+        self.on_event("message", title_id, t("batch.aoc", count=sum(1 for _ in aoc.iterdir())))
+        return aoc
+
+    def _mac_app(self, entry: Entry, source: Path, work: Path, keys: Path | None, log_path: Path, stop: "_Stop", print_: str, identity: str,
+                 aoc: Path | None = None) -> None:
         """Builds the game's app for this Mac (nxnative's --platform mac-app),
         from the same files and the same nxnative commit as its IPA, and keeps
         it in the games folder, beside the IPA: as it is, or in one file on a
@@ -833,7 +850,8 @@ class Runner:
             # The app's files are clones of the extracted ones: nxnative keeps
             # them whatever it is asked.
             keep_extracted = True if ctx.engine.supports("--keep-extracted") else None
-            args = builds.command(self.python, ctx.engine.build_script, source, work, out, keys, ctx.config.game_language, keep_extracted, platform="mac-app")
+            args = builds.command(self.python, ctx.engine.build_script, source, work, out, keys, ctx.config.game_language, keep_extracted, platform="mac-app",
+                                  aoc=self._aoc(title_id, aoc))
 
             def nxnative() -> builds.Result:
                 return builds.run(

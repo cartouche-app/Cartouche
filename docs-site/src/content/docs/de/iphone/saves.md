@@ -26,6 +26,12 @@ Ein Spielstandordner, der nicht antwortet, etwa ein NAS, während du unterwegs b
 - **Jetzt mit** deinem Ordner **synchronisieren**, wenn das Spiel nicht läuft.
 - **Kopie zurückspielen:** Wähle eine der Kopien des Spiels, die neueste zuerst. Cartouche sendet vorher die aktuellen Spielstände in deinen Ordner, damit du zu ihnen zurückkehren kannst.
 
+## Zurück zum Start einer Sitzung
+
+Bei jedem Start behält ein Spiel auf deinem iPhone eine Kopie der Spielstände, mit denen es beginnt, bis zu zehn, mit oder ohne Spielstandordner. Ist ein Mod oder eine Sitzung schiefgegangen, öffne **Kopie zurückspielen** auf der Infoseite des Spiels: Unter **Auf diesem iPhone** bringen dich die Kopien mit **Beim Start einer Sitzung** dorthin zurück.
+
+Cartouche behält die Spielstände, die sie ersetzen, zuerst auf deinem iPhone, unter **Bevor eine Kopie zurückgespielt wurde**, und sendet sie mit einem Spielstandordner dorthin, danach die zurückgespielte Kopie als neueste.
+
 ## Ein Spielstand von deiner Konsole
 
 Dein Spiel geht hier weiter, dort, wo du es auf deiner Konsole gelassen hast:

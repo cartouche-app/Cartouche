@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-Pas de Mac ? Depuis un ordinateur, envoyez votre propre copie d'un jeu sur le [site de Cartouche Cloud](https://build.cartouche.cloud/). Il la construit avec nxnative sur un Mac dans le cloud, pour vous seul, puis efface votre copie. Cartouche, lié à votre compte, suit la construction et installe le jeu sur votre iPhone.
+Pas de Mac ? Depuis un ordinateur, envoyez votre propre copie d'un jeu sur le [site de Cartouche Cloud](https://build.cartouche.cloud/). Il la construit sur un Mac dans le cloud, pour vous seul, avec nxnative, ou avec nxnative-nobc pour un iPhone 11 à 15, puis efface votre copie. Cartouche, lié à votre compte, suit la construction et installe le jeu sur votre iPhone.
 
 Cartouche Cloud ne fournit aucun jeu : il ne construit que la copie que vous lui envoyez.
 
@@ -14,7 +14,7 @@ Cartouche Cloud ne fournit aucun jeu : il ne construit que la copie que vous lui
 ## Construire un jeu
 
 1. Sur un ordinateur, ouvrez le [site de Cartouche Cloud](https://build.cartouche.cloud/), créez votre compte, et achetez-y des crédits.
-2. Envoyez votre propre copie du jeu : le paquet de votre console (`.nsp`, `.xci`, `.nsz` ou `.xcz`, avec ses mises à jour et DLC, et les clés de votre console, `prod.keys`), un `.nup`, ou un `.zip` d'un dump.
+2. Envoyez votre propre copie du jeu : le paquet de votre console (`.nsp`, `.xci`, `.nsz` ou `.xcz`, avec ses mises à jour et DLC, et les clés de votre console, `prod.keys`), un `.nup`, ou un `.zip` d'un dump. Dites ensuite pour quel iPhone il est : un iPhone 15 Pro ou plus récent, ou un iPhone 11 à 15, pour lequel il est construit avec [nxnative-nobc](/fr/start/requirements/#iphone-11-à-15).
 3. Liez Cartouche à votre compte, une fois ([Lier votre iPhone](/fr/cloud/iphone/#lier-votre-iphone)).
 4. Cartouche suit la construction, étape par étape, et un e-mail vous dit quand elle est finie. **Installer** met alors le jeu sur votre iPhone, comme vos autres jeux.
 

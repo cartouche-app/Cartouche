@@ -435,6 +435,15 @@ enum CartoucheText {
     /// Beside reasonGPU on an iPhone whose GPU reads no BC: the Mac's
     /// builds of nxnative-nobc, a separate fork (cartouche_builder/build_for.py).
     static var installGPUBuilder: String { s("work.install.gpu.builder", "Cartouche on your Mac builds them for this iPhone from nxnative-nobc, a separate fork of nxnative that converts those textures, once the two are paired.") }
+    /// After installGPUBuilder: Cartouche Cloud builds from that fork too a
+    /// game sent for an iPhone 11 to 15, as its page asks which iPhone a
+    /// game is for since 26 November 2026. Until then it built every game
+    /// from nxnative, and only the Mac was said here.
+    static var installGPUCloud: String { s("work.install.gpu.cloud", "With no Mac, Cartouche Cloud builds them from it too, for a game you send for an iPhone 11 to 15.") }
+    /// What an iPhone whose GPU reads no BC is told, on the question an
+    /// install asks first and under This iPhone on the System page: why
+    /// nxnative's games stop there, and where they are built for it.
+    static var installGPUAdvice: String { reasonGPU + " " + installGPUBuilder + " " + installGPUCloud }
     /// Where an app that is not an nxnative game is once installed: on the
     /// System page, as the console shows games only (docs/decisions/154.md).
     /// Up to 0.15.1, "in Apps", LiveContainer's tab, which Cartouche hides.
@@ -916,6 +925,15 @@ enum CartoucheText {
     static var savesCopyFailed: String { s("saves.failed.copy", "The saves were not synced") }
     static var savesListFailed: String { s("saves.failed.list", "The copies of the saves were not read") }
     static var savesPutBackFailed: String { s("saves.failed.putBack", "The copy was not put back") }
+    /// The copies of a game's saves on this iPhone, which nxnative makes as
+    /// each session starts, beside those of the saves folder.
+    static var savesFolderCopies: String { s("saves.copies.folder", "In your saves folder") }
+    static var savesHereHeader: String { s("saves.here.header", "On this iPhone") }
+    static var savesHereStart: String { s("saves.here.start", "At the start of a game") }
+    static var savesHereBeforePutBack: String { s("saves.here.beforePutBack", "Before a copy was put back") }
+    static var savesHereFooter: String { s("saves.here.footer", "Each time the game starts, it keeps on this iPhone a copy of the saves it starts from, up to ten: if a mod or a game went wrong, put back the copy from its start. The saves a copy put back replaces are kept here too.") }
+    static var savesHereMessage: String { s("saves.here.message", "It replaces the game’s saves on this iPhone. Cartouche keeps them here first, so you can come back to them.") }
+    static var savesHereMessageFolder: String { s("saves.here.message.folder", "It replaces the game’s saves on this iPhone. Cartouche keeps them here and sends them to your saves folder first, so you can come back to them; the copy put back then goes there as the newest.") }
     static func savesWaiting(_ count: Int) -> String {
         count == 1 ? s("saves.waiting.one", "One game’s saves are waiting: Cartouche copies them as soon as the server answers.")
             : f("saves.waiting.many", "%lld games’ saves are waiting: Cartouche copies them as soon as the server answers.", count)

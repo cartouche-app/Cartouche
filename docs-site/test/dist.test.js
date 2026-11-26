@@ -225,3 +225,28 @@ test('every screen gets its frame, whatever its language', () => {
   }
   assert.ok(seen > 100, `only ${seen} screens found`);
 });
+
+test('search engines read every page, list it in each language and show the site’s picture', () => {
+  // robots.txt lets them read every page and names the sitemap Astro writes,
+  // which lists each page with its three other languages (decision 175).
+  const robots = readFileSync(join(dist, 'robots.txt'), 'utf8')
+    .split('\n')
+    .filter((line) => line && !line.startsWith('#'));
+  assert.deepEqual(robots, ['User-agent: *', 'Allow: /', `Sitemap: ${SITE}/sitemap-index.xml`]);
+  assert.ok(existsSync(join(dist, 'sitemap-index.xml')));
+  const sitemap = readFileSync(join(dist, 'sitemap-0.xml'), 'utf8');
+  for (const page of pages.filter((p) => p.name !== '404.html')) {
+    const path = page.name.replace(/index\.html$/, '');
+    assert.ok(sitemap.includes(`<loc>${SITE}/${path}</loc>`), `the sitemap lacks /${path}`);
+    // Its address, and what a shared link shows: the site's own picture,
+    // never loaded by the page.
+    assert.match(page.html, new RegExp(`<link rel="canonical" href="${SITE}/${path}"`));
+    assert.match(page.html, /<meta property="og:image" content="https:\/\/cartouche\.cloud\/social\.png"/);
+    for (const locale of LOCALES) assert.match(page.html, new RegExp(`<link rel="alternate" hreflang="${locale}" href="`), `${page.name} has no ${locale} page`);
+  }
+  // The first page says what players search for, in each language.
+  for (const name of ['index.html', 'fr/index.html', 'es/index.html', 'de/index.html']) {
+    const description = readFileSync(join(dist, name), 'utf8').match(/<meta name="description" content="([^"]*)"/)[1];
+    for (const word of ['Cartouche', 'Switch', 'nxnative', 'iPhone', 'iPad', 'Mac']) assert.ok(description.includes(word), `${name}: ${description}`);
+  }
+});

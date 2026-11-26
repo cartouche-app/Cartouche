@@ -37,7 +37,7 @@ Under each error, Cartouche says why and what to do, and **Copy the report** giv
 
 **The game was built without its game files.** Put its `romfs.img`, as nxnative wrote it, beside its IPA in your games folder, then install the game from there.
 
-**The game closes as it starts, on an iPhone 15 or earlier.** nxnative needs a graphics chip that reads BC textures. Cartouche for Mac builds your games from nxnative-nobc for such an iPhone once they are paired: see [Build for each of your iPhones](/mac/builder/#build-for-each-of-your-iphones).
+**The game closes as it starts, on an iPhone 15 or earlier.** nxnative needs a graphics chip that reads BC textures. Cartouche for Mac builds your games from nxnative-nobc for such an iPhone once they are paired: see [Build for each of your iPhones](/mac/builder/#build-for-each-of-your-iphones). On Cartouche Cloud, send the game again for an iPhone 11 to 15 ([Build a game](/cloud/#build-a-game)).
 
 **iOS closed the game.** Near its memory limit behind the console, the game then starts in Cartouche's place, with all of Cartouche's memory. The game's sheet says whether it fits your iPhone. Otherwise, your progress is kept up to its last save.
 

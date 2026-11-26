@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-No Mac? From a computer, send your own copy of a game on [Cartouche Cloud's site](https://build.cartouche.cloud/). It builds it with nxnative on a Mac in the cloud, for you alone, then deletes your copy. Cartouche, linked to your account, follows the build and installs the game on your iPhone.
+No Mac? From a computer, send your own copy of a game on [Cartouche Cloud's site](https://build.cartouche.cloud/). It builds it on a Mac in the cloud, for you alone, with nxnative, or with nxnative-nobc for an iPhone 11 to 15, then deletes your copy. Cartouche, linked to your account, follows the build and installs the game on your iPhone.
 
 Cartouche Cloud provides no game: it builds only the copy you send it.
 
@@ -14,7 +14,7 @@ Cartouche Cloud provides no game: it builds only the copy you send it.
 ## Build a game
 
 1. On a computer, open [Cartouche Cloud's site](https://build.cartouche.cloud/), make your account, and buy credits there.
-2. Send your own copy of the game: your console's package (`.nsp`, `.xci`, `.nsz` or `.xcz`, with its updates and DLC, and your console's keys, `prod.keys`), a `.nup`, or a `.zip` of a dump.
+2. Send your own copy of the game: your console's package (`.nsp`, `.xci`, `.nsz` or `.xcz`, with its updates and DLC, and your console's keys, `prod.keys`), a `.nup`, or a `.zip` of a dump. Then say which iPhone it is for: an iPhone 15 Pro or later, or an iPhone 11 to 15, for which it is built from [nxnative-nobc](/start/requirements/#iphone-11-to-15).
 3. Link Cartouche to your account, once ([Link your iPhone](/cloud/iphone/#link-your-iphone)).
 4. Cartouche follows the build, step by step, and an email tells you when it is done. Then **Install** puts the game on your iPhone, like your other games.
 

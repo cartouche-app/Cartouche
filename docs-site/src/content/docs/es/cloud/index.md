@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-¿No tienes Mac? Desde un ordenador, envía tu propia copia de un juego en el [sitio de Cartouche Cloud](https://build.cartouche.cloud/). La compila con nxnative en un Mac en la nube, solo para ti, y luego borra tu copia. Cartouche, vinculado a tu cuenta, sigue la compilación e instala el juego en tu iPhone.
+¿No tienes Mac? Desde un ordenador, envía tu propia copia de un juego en el [sitio de Cartouche Cloud](https://build.cartouche.cloud/). La compila en un Mac en la nube, solo para ti, con nxnative, o con nxnative-nobc para un iPhone 11 a 15, y luego borra tu copia. Cartouche, vinculado a tu cuenta, sigue la compilación e instala el juego en tu iPhone.
 
 Cartouche Cloud no proporciona ningún juego: solo compila la copia que le envías.
 
@@ -14,7 +14,7 @@ Cartouche Cloud no proporciona ningún juego: solo compila la copia que le enví
 ## Compilar un juego
 
 1. En un ordenador, abre el [sitio de Cartouche Cloud](https://build.cartouche.cloud/), crea tu cuenta y compra créditos allí.
-2. Envía tu propia copia del juego: el paquete de tu consola (`.nsp`, `.xci`, `.nsz` o `.xcz`, con sus actualizaciones y DLC, y las claves de tu consola, `prod.keys`), un `.nup`, o un `.zip` de un dump.
+2. Envía tu propia copia del juego: el paquete de tu consola (`.nsp`, `.xci`, `.nsz` o `.xcz`, con sus actualizaciones y DLC, y las claves de tu consola, `prod.keys`), un `.nup`, o un `.zip` de un dump. Luego di para qué iPhone es: un iPhone 15 Pro o posterior, o un iPhone 11 a 15, para el que se compila con [nxnative-nobc](/es/start/requirements/#iphone-11-a-15).
 3. Vincula Cartouche a tu cuenta, una vez ([Vincular tu iPhone](/es/cloud/iphone/#vincular-tu-iphone)).
 4. Cartouche sigue la compilación, paso a paso, y un correo te avisa cuando termina. Luego **Instalar** pone el juego en tu iPhone, como tus otros juegos.
 

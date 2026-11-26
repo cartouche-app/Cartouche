@@ -4,7 +4,9 @@ nxnative's build script takes one game at a time:
 
 - its packages (``.nsp``, ``.xci``, ``.nsz``, ``.xcz``: the base game, its update
   and DLC), which need the player's ``prod.keys``;
-- a Switch 2 game's ``.nup`` container;
+- a Switch 2 game's ``.nup`` container, and, for one that holds no DLC of
+  its own, the images of its DLC in an ``aoc`` folder beside it, as nxnative
+  names them (``1.img``, ``2.img``…: its --aoc-dir);
 - a dump folder, as ``scripts/pack_dump.py`` lays it out (``base/exefs``,
   ``base/romfs``, ``updates/<version>/``, ``dlc/``, or ``exefs/`` and ``romfs/``);
 - or a ``.zip`` holding such a dump, which the builder unpacks first.
@@ -35,7 +37,7 @@ import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 
-from . import identify, titles
+from . import identify, romfs, titles
 from .i18n import t
 
 PACKAGE_SUFFIXES = identify.PACKAGE_SUFFIXES
@@ -48,6 +50,13 @@ MAX_DEPTH = 4
 # game's packages (its extraction looks like a dump), the builder's own, and
 # what the Finder leaves in an archive.
 NOT_GAMES = re.compile(r"(?i).*_(?:build|dump)|__MACOSX")
+# The folder beside a NUP that holds the images of its DLC, as nxnative names
+# DLC in a build folder and in an app, and the name of each image: the DLC's
+# number, 1 to 2000 (its title ID less its game's and 0x1000), as nxnative's
+# --aoc-dir takes them (scripts/build_ipa_from_nsp.py, stage_external_dlc).
+AOC_FOLDER = "aoc"
+AOC_IMAGE = re.compile(r"(?i)([1-9][0-9]{0,3})\.img")
+AOC_MAX = 2000
 
 
 @dataclass
@@ -66,6 +75,8 @@ class Game:
     # folders: it is built from a folder of links to them (batch.py).
     shared: bool = False
     base: bool = True  # holds the base game, not only an update or DLC
+    # A NUP's DLC images, from the aoc folder beside it, by their number.
+    aoc: list[Path] = field(default_factory=list)
 
     @property
     def needs_keys(self) -> bool:
@@ -96,7 +107,7 @@ class Game:
 
     def _files(self) -> list[Path]:
         if self.kind != "dump":
-            return sorted(self.inputs)
+            return sorted(self.inputs) + self.aoc
         return sorted(p for p in self.folder.rglob("*") if p.is_file() and not p.name.startswith("._"))
 
 
@@ -196,10 +207,17 @@ class _Look:
         packages = [p for p in files if p.suffix.lower() in PACKAGE_SUFFIXES]
         nups = [p for p in files if p.suffix.lower() == NUP_SUFFIX]
         top = folder == self.sources
+        # A folder of DLC images: a NUP's when it is the one game beside it.
+        aoc = next((f for f in folders if f.name.casefold() == AOC_FOLDER and _images_in(f)), None)
+        if aoc is not None:
+            folders = [f for f in folders if f != aoc]
+            if len(nups) != 1 or packages:
+                self.issues.append(t("library.aoc_alone", name=self.shown(aoc)))
+                aoc = None
         if packages:
             self._packages(folder, packages, top)
         for nup in nups:
-            self._nup(folder, nup, alone=not top and not packages and len(nups) == 1)
+            self._nup(folder, nup, alone=not top and not packages and len(nups) == 1, aoc=aoc)
         if not packages and not nups and is_dump(folder):
             self._dump(folder)
             return  # a dump's own folders are no games
@@ -274,7 +292,7 @@ class _Look:
                 shared=top or len(files) < len(packages), base=_holds_base(raw),
             ))
 
-    def _nup(self, folder: Path, nup: Path, alone: bool) -> None:
+    def _nup(self, folder: Path, nup: Path, alone: bool, aoc: Path | None = None) -> None:
         title_id = self._name_id([folder.name, nup.name] if alone else [nup.name])
         if title_id is None:
             read = self._file_ids(nup)
@@ -286,7 +304,34 @@ class _Look:
         except OSError as error:
             self.issues.append(t("library.unreadable", name=self.shown(nup), error=error))
             return
-        self.games.append(Game(title_id, folder, "nup", [nup], size, titles.label(folder.name if alone else nup.name)))
+        images = self._aoc(aoc, nup) if aoc is not None else []
+        size += sum(_size_of(p) for p in images)
+        self.games.append(Game(title_id, folder, "nup", [nup], size, titles.label(folder.name if alone else nup.name), aoc=images))
+
+    def _aoc(self, folder: Path, nup: Path) -> list[Path]:
+        """The DLC images of FOLDER that nxnative takes beside NUP, by their
+        number: none when the NUP holds DLC of its own, which nxnative builds
+        instead (it refuses --aoc-dir then). What is left out is said."""
+        try:
+            own = identify.nup_lists_dlc(nup)
+        except (OSError, identify.Unreadable):
+            own = False  # nxnative says what it cannot read
+        if own:
+            self.issues.append(t("library.aoc_in_nup", name=self.shown(folder), nup=self.shown(nup)))
+            return []
+        taken: dict[int, Path] = {}
+        for image in _images_in(folder):
+            match = AOC_IMAGE.fullmatch(image.name)
+            number = int(match.group(1)) if match else 0
+            if not 0 < number <= AOC_MAX:
+                self.issues.append(t("library.aoc_name", name=self.shown(image)))
+            elif number in taken:
+                self.issues.append(t("library.aoc_twice", name=self.shown(image), other=self.shown(taken[number])))
+            elif not romfs.is_image(image):
+                self.issues.append(t("library.aoc_not_image", name=self.shown(image)))
+            else:
+                taken[number] = image
+        return [taken[number] for number in sorted(taken)]
 
     def _dump(self, folder: Path) -> None:
         title_id = dump_title_id(folder)
@@ -322,6 +367,31 @@ class _Look:
 
 def _size(paths: list[Path]) -> int:
     return sum(p.stat().st_size for p in paths)
+
+
+def _size_of(path: Path) -> int:
+    try:
+        return path.stat().st_size
+    except OSError:
+        return 0
+
+
+def _images_in(folder: Path) -> list[Path]:
+    """The .img files of FOLDER, in any letter case, as nxnative lists them:
+    not the hidden ones (the AppleDouble "._" file a non-Apple drive keeps
+    beside each), by name."""
+    try:
+        entries = sorted(folder.iterdir(), key=lambda p: (p.name.casefold(), p.name))
+    except OSError:
+        return []
+    found = []
+    for entry in entries:
+        try:
+            if entry.suffix.lower() == ".img" and not entry.name.startswith(".") and entry.is_file():
+                found.append(entry)
+        except OSError:
+            continue
+    return found
 
 
 def _holds_base(ids: list[str]) -> bool:

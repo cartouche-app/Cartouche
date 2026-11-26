@@ -3,21 +3,29 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Cartouche for iPhone, iPad and Mac</title>
+<title data-fr="Cartouche : jeux Switch sur iPhone, iPad et Mac avec nxnative" data-en="Cartouche: Switch games on iPhone, iPad and Mac with nxnative" data-es="Cartouche: juegos de Switch en iPhone, iPad y Mac con nxnative" data-de="Cartouche: Switch-Spiele auf iPhone, iPad und Mac mit nxnative">Cartouche: Switch games on iPhone, iPad and Mac with nxnative</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Cartouche turns an iPhone or an iPad into a console for the games nxnative runs natively, from your own copies, and plays them on your Mac with the same saves. Free software, no developer account needed." data-en="Cartouche turns an iPhone or an iPad into a console for the games nxnative runs natively, from your own copies, and plays them on your Mac with the same saves. Free software, no developer account needed." data-fr="Cartouche transforme un iPhone ou un iPad en console pour les jeux que nxnative fait tourner nativement, à partir de vos propres copies, et les fait tourner sur votre Mac avec les mêmes sauvegardes. Logiciel libre, sans compte développeur." data-es="Cartouche convierte un iPhone o un iPad en una consola para los juegos que nxnative ejecuta de forma nativa, a partir de tus propias copias, y los juega en tu Mac con las mismas partidas guardadas. Software libre, sin cuenta de desarrollador." data-de="Cartouche macht ein iPhone oder iPad zur Konsole für die Spiele, die nxnative nativ ausführt, aus deinen eigenen Kopien, und spielt sie auf deinem Mac mit denselben Spielständen. Freie Software, kein Entwicklerkonto nötig.">
+<meta name="description" content="Cartouche turns an iPhone or an iPad into a console for the Switch games nxnative runs natively, from your own copies, and plays them on your Mac with the same saves. Free software, no developer account needed." data-fr="Cartouche transforme un iPhone ou un iPad en console pour les jeux Switch que nxnative fait tourner nativement, à partir de vos propres copies, et les fait tourner sur votre Mac avec les mêmes sauvegardes. Logiciel libre, sans compte développeur." data-en="Cartouche turns an iPhone or an iPad into a console for the Switch games nxnative runs natively, from your own copies, and plays them on your Mac with the same saves. Free software, no developer account needed." data-es="Cartouche convierte un iPhone o un iPad en una consola para los juegos de Switch que nxnative ejecuta de forma nativa, a partir de tus propias copias, y los juega en tu Mac con las mismas partidas guardadas. Software libre, sin cuenta de desarrollador." data-de="Cartouche macht ein iPhone oder iPad zur Konsole für die Switch-Spiele, die nxnative nativ ausführt, aus deinen eigenen Kopien, und spielt sie auf deinem Mac mit denselben Spielständen. Freie Software, kein Entwicklerkonto nötig.">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#090A11">
 <meta name="referrer" content="no-referrer">
 <link rel="canonical" href="https://cartouche.cloud/">
+<!-- The page in each of its languages, each at its own address, which the
+     publication writes from this one (tools/languages.py): English at the
+     root, French, Spanish and German in their folders. -->
+<link rel="alternate" hreflang="en" href="https://cartouche.cloud/">
+<link rel="alternate" hreflang="fr" href="https://cartouche.cloud/fr/">
+<link rel="alternate" hreflang="es" href="https://cartouche.cloud/es/">
+<link rel="alternate" hreflang="de" href="https://cartouche.cloud/de/">
+<link rel="alternate" hreflang="x-default" href="https://cartouche.cloud/">
 <!-- What a link to the site shows where it is shared (Discord, Reddit,
      Messages…): social.png, drawn from tools/social.html, with no image of
      a game. -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Cartouche">
 <meta property="og:url" content="https://cartouche.cloud/">
-<meta property="og:title" content="Cartouche for iPhone, iPad and Mac">
-<meta property="og:description" content="Your games, on iPhone, iPad and Mac: Cartouche turns an iPhone or an iPad into a console for the games nxnative runs natively, from your own copies.">
+<meta property="og:title" content="Cartouche: Switch games on iPhone, iPad and Mac with nxnative" data-fr="Cartouche : jeux Switch sur iPhone, iPad et Mac avec nxnative" data-en="Cartouche: Switch games on iPhone, iPad and Mac with nxnative" data-es="Cartouche: juegos de Switch en iPhone, iPad y Mac con nxnative" data-de="Cartouche: Switch-Spiele auf iPhone, iPad und Mac mit nxnative">
+<meta property="og:description" content="Your games, on iPhone, iPad and Mac: Cartouche turns an iPhone or an iPad into a console for the Switch games nxnative runs natively, from your own copies." data-fr="Vos jeux, sur iPhone, iPad et Mac : Cartouche transforme un iPhone ou un iPad en console pour les jeux Switch que nxnative fait tourner nativement, à partir de vos propres copies." data-en="Your games, on iPhone, iPad and Mac: Cartouche turns an iPhone or an iPad into a console for the Switch games nxnative runs natively, from your own copies." data-es="Tus juegos, en iPhone, iPad y Mac: Cartouche convierte un iPhone o un iPad en una consola para los juegos de Switch que nxnative ejecuta de forma nativa, a partir de tus propias copias." data-de="Deine Spiele, auf iPhone, iPad und Mac: Cartouche macht ein iPhone oder iPad zur Konsole für die Switch-Spiele, die nxnative nativ ausführt, aus deinen eigenen Kopien.">
 <meta property="og:image" content="https://cartouche.cloud/social.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -27,21 +35,65 @@
 <meta property="og:locale:alternate" content="es_ES">
 <meta property="og:locale:alternate" content="de_DE">
 <meta name="twitter:card" content="summary_large_image">
+<!-- What search engines read of Cartouche: the site, and the app it
+     presents, free, in the four languages, with the project's own addresses
+     only. Each page in a language gives its own description and language
+     (tools/languages.py). -->
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@graph": [
+        {
+            "@type": "WebSite",
+            "@id": "https://cartouche.cloud/#website",
+            "url": "https://cartouche.cloud/",
+            "name": "Cartouche",
+            "inLanguage": "en"
+        },
+        {
+            "@type": "SoftwareApplication",
+            "@id": "https://cartouche.cloud/#app",
+            "name": "Cartouche",
+            "url": "https://cartouche.cloud/",
+            "description": "Cartouche turns an iPhone or an iPad into a console for the Switch games nxnative runs natively, from your own copies, and plays them on your Mac with the same saves. Free software, no developer account needed.",
+            "applicationCategory": "GameApplication",
+            "operatingSystem": "iOS, iPadOS, macOS",
+            "image": "https://cartouche.cloud/social.png",
+            "isAccessibleForFree": true,
+            "license": "https://github.com/cartouche-app/Cartouche/blob/main/LICENSE",
+            "downloadUrl": "https://cartouche.cloud/download/",
+            "softwareHelp": {
+                "@type": "CreativeWork",
+                "url": "https://docs.cartouche.cloud/"
+            },
+            "sameAs": ["https://github.com/cartouche-app/Cartouche"],
+            "inLanguage": ["en", "fr", "es", "de"]
+        }
+    ]
+}
+</script>
 <!-- The games' covers, from IGDB as in the app. -->
 <link rel="preconnect" href="https://images.igdb.com">
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <script>
-    // The page's language before it is drawn: the visitor's choice, else the browser's.
+    // The page's language before it is drawn: the visitor's choice, else the
+    // browser's. The site publishes the page once in each language, each at
+    // its own address (tools/languages.py), which says its language in
+    // data-page-lang: that page shows its own, and the English one, at the
+    // root, sends a visitor who reads French, Spanish or German on to theirs,
+    // at the same place.
     (function () {
-        var lang;
+        var root = document.documentElement, page = root.getAttribute("data-page-lang"), lang;
         try { lang = localStorage.getItem("cartouche.site.lang"); } catch (e) {}
         if (["fr", "en", "es", "de"].indexOf(lang) < 0) {
             var wanted = ((navigator.languages && navigator.languages[0]) || navigator.language || "en").toLowerCase().slice(0, 2);
             lang = ["fr", "es", "de"].indexOf(wanted) >= 0 ? wanted : "en";
         }
-        document.documentElement.setAttribute("data-lang", lang);
-        document.documentElement.lang = lang;
+        if (page === "en" && lang !== "en") location.replace("/" + lang + "/" + location.search + location.hash);
+        if (page) lang = page;
+        root.setAttribute("data-lang", lang);
+        root.lang = lang;
     })();
 </script>
 <style>
@@ -1472,10 +1524,10 @@
                         <h1><span lang="fr">Vos jeux,<br> sur iPhone, iPad et Mac.</span><span lang="en">Your games,<br> on iPhone, iPad and Mac.</span><span lang="es">Tus juegos,<br> en iPhone, iPad y Mac.</span><span lang="de">Deine Spiele,<br> auf iPhone, iPad und Mac.</span></h1>
                     </div>
                     <div>
-                        <p class="lede" lang="fr">Cartouche installe, lance et garde les jeux que <a href="https://github.com/seedds/nxnative">nxnative</a> fait tourner nativement sur iPhone et iPad, à partir de vos propres copies. <a href="#builder">Cartouche pour Mac</a> les construit et les fait tourner sur le Mac aussi ; sans Mac, <a href="#cloud">Cartouche Cloud</a> les construit pour vous.</p>
-                        <p class="lede" lang="en">Cartouche installs, starts and keeps the games <a href="https://github.com/seedds/nxnative">nxnative</a> runs natively on iPhone and iPad, from your own copies. <a href="#builder">Cartouche for Mac</a> builds them and plays them on the Mac too; with no Mac, <a href="#cloud">Cartouche Cloud</a> builds them for you.</p>
-                        <p class="lede" lang="es">Cartouche instala, abre y guarda los juegos que <a href="https://github.com/seedds/nxnative">nxnative</a> ejecuta de forma nativa en iPhone y iPad, a partir de tus propias copias. <a href="#builder">Cartouche para Mac</a> los compila y los juega también en el Mac; sin Mac, <a href="#cloud">Cartouche Cloud</a> los compila por ti.</p>
-                        <p class="lede" lang="de">Cartouche installiert, startet und verwaltet die Spiele, die <a href="https://github.com/seedds/nxnative">nxnative</a> nativ auf iPhone und iPad ausführt, aus deinen eigenen Kopien. <a href="#builder">Cartouche für Mac</a> erstellt sie und spielt sie auch auf dem Mac; ohne Mac erstellt <a href="#cloud">Cartouche Cloud</a> sie für dich.</p>
+                        <p class="lede" lang="fr">Cartouche installe, lance et garde les jeux Switch que <a href="https://github.com/seedds/nxnative">nxnative</a> fait tourner nativement sur iPhone et iPad, à partir de vos propres copies. <a href="#builder">Cartouche pour Mac</a> les construit et les fait tourner sur le Mac aussi ; sans Mac, <a href="#cloud">Cartouche Cloud</a> les construit pour vous.</p>
+                        <p class="lede" lang="en">Cartouche installs, starts and keeps the Switch games <a href="https://github.com/seedds/nxnative">nxnative</a> runs natively on iPhone and iPad, from your own copies. <a href="#builder">Cartouche for Mac</a> builds them and plays them on the Mac too; with no Mac, <a href="#cloud">Cartouche Cloud</a> builds them for you.</p>
+                        <p class="lede" lang="es">Cartouche instala, abre y guarda los juegos de Switch que <a href="https://github.com/seedds/nxnative">nxnative</a> ejecuta de forma nativa en iPhone y iPad, a partir de tus propias copias. <a href="#builder">Cartouche para Mac</a> los compila y los juega también en el Mac; sin Mac, <a href="#cloud">Cartouche Cloud</a> los compila por ti.</p>
+                        <p class="lede" lang="de">Cartouche installiert, startet und verwaltet die Switch-Spiele, die <a href="https://github.com/seedds/nxnative">nxnative</a> nativ auf iPhone und iPad ausführt, aus deinen eigenen Kopien. <a href="#builder">Cartouche für Mac</a> erstellt sie und spielt sie auch auf dem Mac; ohne Mac erstellt <a href="#cloud">Cartouche Cloud</a> sie für dich.</p>
                         <div class="actions">
                             <a class="btn btn--primary" href="#install"><i class="glyph" aria-hidden="true">A</i><span lang="fr">Installer Cartouche</span><span lang="en">Install Cartouche</span><span lang="es">Instalar Cartouche</span><span lang="de">Cartouche installieren</span></a>
                             <a class="btn btn--glass" lang="fr" href="https://docs.cartouche.cloud/fr/"><i class="glyph" aria-hidden="true">X</i>Documentation</a><a class="btn btn--glass" lang="en" href="https://docs.cartouche.cloud/"><i class="glyph" aria-hidden="true">X</i>Documentation</a><a class="btn btn--glass" lang="es" href="https://docs.cartouche.cloud/es/"><i class="glyph" aria-hidden="true">X</i>Documentación</a><a class="btn btn--glass" lang="de" href="https://docs.cartouche.cloud/de/"><i class="glyph" aria-hidden="true">X</i>Dokumentation</a>
@@ -1759,7 +1811,7 @@
                     <h3><span lang="fr">Ce qu’il faut</span><span lang="en">What you need</span><span lang="es">Lo que necesitas</span><span lang="de">Was du brauchst</span></h3>
                     <dl>
                         <dt>iPhone</dt>
-                        <dd><span lang="fr">iOS 26 ou ultérieur, sur un iPhone 15 Pro ou plus récent, ou un iPhone 11 à 15 avec les jeux que <a href="#builder">Cartouche pour Mac</a> construit avec <a href="https://github.com/mianmuhammadse/nxnative-nobc">nxnative-nobc</a>, une fourche distincte de nxnative par mianmuhammadse.</span><span lang="en">iOS 26 or later, on an iPhone 15 Pro or newer, or an iPhone 11 to 15 with the games <a href="#builder">Cartouche for Mac</a> builds from <a href="https://github.com/mianmuhammadse/nxnative-nobc">nxnative-nobc</a>, a separate fork of nxnative by mianmuhammadse.</span><span lang="es">iOS 26 o posterior, en un iPhone 15 Pro o posterior, o un iPhone 11 a 15 con los juegos que <a href="#builder">Cartouche para Mac</a> compila con <a href="https://github.com/mianmuhammadse/nxnative-nobc">nxnative-nobc</a>, una bifurcación distinta de nxnative de mianmuhammadse.</span><span lang="de">iOS 26 oder neuer, auf einem iPhone 15 Pro oder neuer, oder einem iPhone 11 bis 15 mit den Spielen, die <a href="#builder">Cartouche für Mac</a> für sie mit <a href="https://github.com/mianmuhammadse/nxnative-nobc">nxnative-nobc</a>, einem separaten Fork von nxnative von mianmuhammadse, erstellt.</span></dd>
+                        <dd><span lang="fr">iOS 26 ou ultérieur, sur un iPhone 15 Pro ou plus récent, ou un iPhone 11 à 15 avec les jeux que <a href="#builder">Cartouche pour Mac</a> et <a href="#cloud">Cartouche Cloud</a> construisent avec <a href="https://github.com/mianmuhammadse/nxnative-nobc">nxnative-nobc</a>, une fourche distincte de nxnative par mianmuhammadse.</span><span lang="en">iOS 26 or later, on an iPhone 15 Pro or newer, or an iPhone 11 to 15 with the games <a href="#builder">Cartouche for Mac</a> and <a href="#cloud">Cartouche Cloud</a> build from <a href="https://github.com/mianmuhammadse/nxnative-nobc">nxnative-nobc</a>, a separate fork of nxnative by mianmuhammadse.</span><span lang="es">iOS 26 o posterior, en un iPhone 15 Pro o posterior, o un iPhone 11 a 15 con los juegos que <a href="#builder">Cartouche para Mac</a> y <a href="#cloud">Cartouche Cloud</a> compilan con <a href="https://github.com/mianmuhammadse/nxnative-nobc">nxnative-nobc</a>, una bifurcación distinta de nxnative de mianmuhammadse.</span><span lang="de">iOS 26 oder neuer, auf einem iPhone 15 Pro oder neuer, oder einem iPhone 11 bis 15 mit den Spielen, die <a href="#builder">Cartouche für Mac</a> und <a href="#cloud">Cartouche Cloud</a> für sie mit <a href="https://github.com/mianmuhammadse/nxnative-nobc">nxnative-nobc</a>, einem separaten Fork von nxnative von mianmuhammadse, erstellen.</span></dd>
                         <dt>iPad</dt>
                         <dd><span lang="fr">iPadOS 26 ou ultérieur, sur un iPad à puce M1 ou plus récente.</span><span lang="en">iPadOS 26 or later, on an iPad with an M1 chip or newer.</span><span lang="es">iPadOS 26 o posterior, en un iPad con chip M1 o posterior.</span><span lang="de">iPadOS 26 oder neuer, auf einem iPad mit M1-Chip oder neuer.</span></dd>
                         <dt>Mac</dt>
@@ -1806,6 +1858,10 @@
                 <h2><span lang="fr">Ce qu’on nous demande.</span><span lang="en">What people ask.</span><span lang="es">Lo que se pregunta.</span><span lang="de">Was gefragt wird.</span></h2>
                 <div class="panel qa">
                     <details>
+                        <summary><span lang="fr">Cartouche est-il un émulateur ?</span><span lang="en">Is Cartouche an emulator?</span><span lang="es">¿Cartouche es un emulador?</span><span lang="de">Ist Cartouche ein Emulator?</span></summary>
+                        <p><span lang="fr">Non. nxnative fait tourner les jeux Switch nativement sur l’iPhone, l’iPad et le Mac, chacun construit à partir de votre propre copie en une app à part entière. Cartouche est le lanceur autour : il les installe avec un compte Apple gratuit, les lance depuis sa console, garde leurs sauvegardes, et se signe, se renouvelle et se met à jour tout seul.</span><span lang="en">No. nxnative runs Switch games natively on the iPhone, the iPad and the Mac, each built from your own copy into an app of its own. Cartouche is the launcher around them: it installs them with a free Apple account, starts them from its console, keeps their saves, and signs, renews and updates itself.</span><span lang="es">No. nxnative ejecuta los juegos de Switch de forma nativa en el iPhone, el iPad y el Mac, cada uno compilado a partir de tu propia copia en una app propia. Cartouche es el lanzador que los rodea: los instala con una cuenta de Apple gratuita, los abre desde su consola, guarda sus partidas, y se firma, se renueva y se actualiza solo.</span><span lang="de">Nein. nxnative führt Switch-Spiele nativ auf iPhone, iPad und Mac aus, jedes aus deiner eigenen Kopie zu einer eigenen App erstellt. Cartouche ist der Launcher drumherum: Es installiert sie mit einem kostenlosen Apple Account, startet sie aus seiner Konsole, behält ihre Spielstände und signiert, erneuert und aktualisiert sich selbst.</span></p>
+                    </details>
+                    <details>
                         <summary><span lang="fr">Cartouche est-il gratuit ?</span><span lang="en">Is Cartouche free?</span><span lang="es">¿Cartouche es gratis?</span><span lang="de">Ist Cartouche kostenlos?</span></summary>
                         <p><span lang="fr">Oui. C’est un logiciel libre sous licence AGPL-3.0, et il marche avec un compte Apple gratuit. Seul <a href="#cloud">Cartouche Cloud</a>, qui construit vos jeux si vous n’avez pas de Mac, est payant, à la construction réussie.</span><span lang="en">Yes. It is free software under the AGPL-3.0, and it works with a free Apple account. Only <a href="#cloud">Cartouche Cloud</a>, which builds your games if you have no Mac, is paid, per build that succeeds.</span><span lang="es">Sí. Es software libre bajo la AGPL-3.0, y funciona con una cuenta de Apple gratuita. Solo <a href="#cloud">Cartouche Cloud</a>, que compila tus juegos si no tienes Mac, es de pago, por cada compilación que sale bien.</span><span lang="de">Ja. Es ist freie Software unter der AGPL-3.0 und funktioniert mit einem kostenlosen Apple Account. Nur <a href="#cloud">Cartouche Cloud</a>, das deine Spiele erstellt, wenn du keinen Mac hast, ist kostenpflichtig, pro erfolgreichem Build.</span></p>
                     </details>
@@ -1845,7 +1901,7 @@
                 <a class="wordmark" href="#top" aria-label="Cartouche"><svg aria-hidden="true"><use href="#i-cartridge"/></svg><b>Cartouche</b></a>
                 <nav data-label-fr="Liens" data-label-en="Links" data-label-es="Enlaces" data-label-de="Links" aria-label="Links">
                     <a lang="fr" href="https://docs.cartouche.cloud/fr/">Documentation</a><a lang="en" href="https://docs.cartouche.cloud/">Documentation</a><a lang="es" href="https://docs.cartouche.cloud/es/">Documentación</a><a lang="de" href="https://docs.cartouche.cloud/de/">Dokumentation</a>
-                    <a href="download/"><span lang="fr">Téléchargements</span><span lang="en">Downloads</span><span lang="es">Descargas</span><span lang="de">Downloads</span></a>
+                    <a href="/download/"><span lang="fr">Téléchargements</span><span lang="en">Downloads</span><span lang="es">Descargas</span><span lang="de">Downloads</span></a>
                     <a href="https://github.com/cartouche-app/Cartouche">GitHub</a>
                     <a href="https://discord.gg/wG3DZjdAeF">Discord</a>
                     <a href="https://github.com/cartouche-app/Cartouche/blob/main/LEGAL.md"><span lang="fr">Mentions légales</span><span lang="en">Legal</span><span lang="es">Aviso legal</span><span lang="de">Rechtliches</span></a>
@@ -2445,21 +2501,29 @@
     }
 
     // ---------- Language ----------
-    var TITLES = { fr: "Cartouche pour iPhone, iPad et Mac", en: "Cartouche for iPhone, iPad and Mac", es: "Cartouche para iPhone, iPad y Mac", de: "Cartouche für iPhone, iPad und Mac" };
+    // The title and the description, in the four languages on this page and
+    // in its own on each page the site publishes in one.
     function applyLang(lang) {
         root.setAttribute("data-lang", lang);
         root.lang = lang;
-        document.title = TITLES[lang];
+        var title = $("title");
+        if (title.hasAttribute("data-" + lang)) document.title = title.getAttribute("data-" + lang);
         var meta = $('meta[name="description"]');
-        if (meta) meta.setAttribute("content", meta.getAttribute("data-" + lang));
+        if (meta && meta.hasAttribute("data-" + lang)) meta.setAttribute("content", meta.getAttribute("data-" + lang));
         $$("[data-set-lang]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-set-lang") === lang)); });
         $$("[data-label-fr]").forEach(function (el) { el.setAttribute("aria-label", el.getAttribute("data-label-" + lang)); });
         updatePauseToggle();
     }
     $$("[data-set-lang]").forEach(function (b) {
         b.addEventListener("click", function () {
-            var lang = b.getAttribute("data-set-lang");
+            var lang = b.getAttribute("data-set-lang"), page = root.getAttribute("data-page-lang");
             try { localStorage.setItem("cartouche.site.lang", lang); } catch (e) {}
+            // A page the site publishes in one language holds that one's
+            // texts only: the page in the other, at the same place.
+            if (page) {
+                if (lang !== page) location.href = "/" + (lang === "en" ? "" : lang + "/") + location.hash;
+                return;
+            }
             applyLang(lang);
         });
     });

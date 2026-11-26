@@ -711,7 +711,7 @@ struct CartoucheSystemView: View {
         } footer: {
             // nxnative refuses this GPU for every game.
             if !CartoucheDevice.supportsBCTextureCompression {
-                Text(CartoucheText.reasonGPU + " " + CartoucheText.installGPUBuilder)
+                Text(CartoucheText.installGPUAdvice)
             }
         }
     }
