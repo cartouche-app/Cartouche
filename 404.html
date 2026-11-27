@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en" data-lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Page not found · Cartouche</title>
+<meta name="description" content="This page of Cartouche's site does not exist." data-en="This page of Cartouche's site does not exist." data-fr="Cette page du site de Cartouche n’existe pas." data-es="Esta página del sitio de Cartouche no existe." data-de="Diese Seite der Website von Cartouche gibt es nicht.">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#090A11">
+<meta name="referrer" content="no-referrer">
+<!-- GitHub Pages serves this page for any address the site does not have,
+     however deep: its links start from the site's root. -->
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<script>
+    // The page's language before it is drawn: the visitor's choice on the
+    // site, else the browser's.
+    (function () {
+        var lang;
+        try { lang = localStorage.getItem("cartouche.site.lang"); } catch (e) {}
+        if (["fr", "en", "es", "de"].indexOf(lang) < 0) {
+            var wanted = ((navigator.languages && navigator.languages[0]) || navigator.language || "en").toLowerCase().slice(0, 2);
+            lang = ["fr", "es", "de"].indexOf(wanted) >= 0 ? wanted : "en";
+        }
+        document.documentElement.setAttribute("data-lang", lang);
+        document.documentElement.lang = lang;
+    })();
+</script>
+<style>
+    /* The site's look (index.html), for an address the site does not have. */
+    :root {
+        color-scheme: dark;
+        --stage: #090A11;
+        --ink: #F6F6FA;
+        --ink-2: rgba(246, 246, 250, .7);
+        --ink-3: rgba(246, 246, 250, .56);
+        --line: rgba(255, 255, 255, .1);
+        --indigo: #4F46E5;
+        --pink: #EC4899;
+        --display: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        --text: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; background: var(--stage); }
+    body {
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        min-height: 100vh;
+        min-height: 100dvh;
+        background:
+            radial-gradient(70% 46% at 8% 0%, rgba(79, 70, 229, .34), transparent 72%),
+            radial-gradient(60% 40% at 96% 12%, rgba(236, 72, 153, .2), transparent 74%),
+            var(--stage);
+        background-repeat: no-repeat;
+        color: var(--ink);
+        font-family: var(--text);
+        font-size: 17px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+    html:not([data-lang="fr"]) [lang="fr"], html:not([data-lang="en"]) [lang="en"], html:not([data-lang="es"]) [lang="es"], html:not([data-lang="de"]) [lang="de"] { display: none !important; }
+    svg { display: block; max-width: 100%; }
+    a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .2em; }
+    button { font: inherit; color: inherit; }
+    :focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+    p { margin: 0; }
+    h1 { margin: 0; font-family: var(--display); text-wrap: balance; }
+    .wrap {
+        width: 100%;
+        max-width: 1080px;
+        margin-inline: auto;
+        padding-left: max(16px, env(safe-area-inset-left, 0px));
+        padding-right: max(16px, env(safe-area-inset-right, 0px));
+    }
+    @media (min-width: 760px) {
+        .wrap {
+            padding-left: max(40px, env(safe-area-inset-left, 0px));
+            padding-right: max(40px, env(safe-area-inset-right, 0px));
+        }
+    }
+
+    .top { padding-block: max(12px, env(safe-area-inset-top, 0px)) 12px; }
+    .top__bar {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-height: 58px;
+        padding: 0 9px 0 18px;
+        border-radius: 999px;
+        background: rgba(16, 17, 27, .64);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .13), 0 14px 34px -16px rgba(0, 0, 0, .8);
+    }
+    .wordmark { display: inline-flex; align-items: center; gap: 9px; margin-right: auto; text-decoration: none; }
+    .wordmark svg { width: 18px; height: 24px; }
+    .wordmark b {
+        font: 800 1.38rem/1 var(--display);
+        letter-spacing: -.01em;
+        background: linear-gradient(90deg, #7A73FF, var(--pink));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+    .lang { display: inline-flex; padding: 3px; border-radius: 999px; background: rgba(255, 255, 255, .07); box-shadow: inset 0 0 0 1px var(--line); }
+    .lang button {
+        border: 0;
+        background: none;
+        padding: 7px 10px;
+        border-radius: 999px;
+        font: 700 .78rem/1 var(--display);
+        letter-spacing: .08em;
+        color: var(--ink-3);
+        cursor: pointer;
+    }
+    .lang button[aria-pressed="true"] { background: rgba(255, 255, 255, .16); color: var(--ink); }
+
+    main { flex: 1; padding-block: clamp(56px, 12vw, 140px) clamp(64px, 10vw, 120px); }
+    .label {
+        margin: 0 0 16px;
+        font: 800 .78rem/1.2 var(--display);
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        color: var(--ink-3);
+    }
+    h1 { font-weight: 800; font-size: clamp(2.3rem, 1.3rem + 3.6vw, 4rem); line-height: 1; letter-spacing: -.025em; }
+    .lede { margin-top: 22px; max-width: 34em; color: var(--ink-2); font-size: 1.08rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 52px;
+        padding: 0 22px 0 16px;
+        border-radius: 999px;
+        color: #fff;
+        font-weight: 600;
+        font-size: 1.04rem;
+        text-decoration: none;
+        transition: transform .18s ease, background-color .18s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(1px); }
+    .btn svg { width: 20px; height: 20px; flex: none; }
+    .btn--primary {
+        background: linear-gradient(180deg, #6159F2, var(--indigo));
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 12px 30px -12px rgba(79, 70, 229, .9);
+    }
+    .btn--glass { background: rgba(255, 255, 255, .09); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16); }
+    .btn--glass:hover { background: rgba(255, 255, 255, .13); }
+
+    .foot { padding-block: 32px calc(36px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); }
+    .foot nav { display: flex; flex-wrap: wrap; gap: 8px 22px; }
+    .foot nav a { color: var(--ink-2); text-decoration: none; }
+    .foot nav a:hover { color: var(--ink); text-decoration: underline; }
+    .foot p { margin-top: 16px; max-width: 62em; color: var(--ink-3); font-size: .88rem; }
+    @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+        <linearGradient id="g-brand" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4F46E5"/><stop offset="1" stop-color="#EC4899"/></linearGradient>
+        <symbol id="i-cartridge" viewBox="0 0 18 24"><rect x=".35" y=".6" width="17.3" height="22.8" rx="1.9" fill="url(#g-brand)"/><rect x="5.15" y="3.2" width="7.7" height="1.2" rx=".6" fill="#fff" fill-opacity=".55"/><rect x="5.15" y="5.85" width="7.7" height="1.2" rx=".6" fill="#fff" fill-opacity=".55"/></symbol>
+        <symbol id="i-house" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3.2 2.8 11a1 1 0 0 0 1.3 1.5l.9-.8V19a1.5 1.5 0 0 0 1.5 1.5H10v-5.2h4v5.2h3.5A1.5 1.5 0 0 0 19 19v-7.3l.9.8a1 1 0 0 0 1.3-1.5z"/></symbol>
+        <symbol id="i-download" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v8.5M8.3 12.5 12 16.2l3.7-3.7"/></g></symbol>
+    </defs>
+</svg>
+
+<header class="top wrap">
+    <div class="top__bar">
+        <a class="wordmark" href="/" aria-label="Cartouche"><svg aria-hidden="true"><use href="#i-cartridge"/></svg><b>Cartouche</b></a>
+        <div class="lang" role="group" data-label-fr="Langue" data-label-en="Language" data-label-es="Idioma" data-label-de="Sprache" aria-label="Language">
+            <button type="button" data-set-lang="fr" aria-pressed="false">FR</button>
+            <button type="button" data-set-lang="en" aria-pressed="true">EN</button>
+            <button type="button" data-set-lang="es" aria-pressed="false">ES</button>
+            <button type="button" data-set-lang="de" aria-pressed="false">DE</button>
+        </div>
+    </div>
+</header>
+
+<main class="wrap">
+    <p class="label"><span lang="fr">Erreur 404</span><span lang="en">Error 404</span><span lang="es">Error 404</span><span lang="de">Fehler 404</span></p>
+    <h1><span lang="fr">Cette page n’existe pas.</span><span lang="en">This page does not exist.</span><span lang="es">Esta página no existe.</span><span lang="de">Diese Seite gibt es nicht.</span></h1>
+    <p class="lede"><span lang="fr">Le lien est peut-être ancien, ou mal recopié. Tout Cartouche tient sur sa page d’accueil, et ses fichiers sur la page des téléchargements.</span><span lang="en">The link may be old, or mistyped. All of Cartouche is on its home page, and its files on the downloads page.</span><span lang="es">Puede que el enlace sea antiguo o esté mal escrito. Todo Cartouche está en su página principal, y sus archivos en la página de descargas.</span><span lang="de">Der Link ist vielleicht alt oder vertippt. Alles über Cartouche steht auf seiner Startseite, seine Dateien auf der Download-Seite.</span></p>
+    <div class="actions">
+        <a class="btn btn--primary" href="/"><svg aria-hidden="true"><use href="#i-house"/></svg><span lang="fr">Retour à Cartouche</span><span lang="en">Back to Cartouche</span><span lang="es">Volver a Cartouche</span><span lang="de">Zurück zu Cartouche</span></a>
+        <a class="btn btn--glass" href="/download/"><svg aria-hidden="true"><use href="#i-download"/></svg><span lang="fr">Téléchargements</span><span lang="en">Downloads</span><span lang="es">Descargas</span><span lang="de">Downloads</span></a>
+    </div>
+</main>
+
+<footer class="foot">
+    <div class="wrap">
+        <nav data-label-fr="Liens" data-label-en="Links" data-label-es="Enlaces" data-label-de="Links" aria-label="Links">
+            <a href="/"><span lang="fr">Le site de Cartouche</span><span lang="en">Cartouche’s site</span><span lang="es">El sitio de Cartouche</span><span lang="de">Die Website von Cartouche</span></a>
+            <a lang="fr" href="https://docs.cartouche.cloud/fr/">Documentation</a><a lang="en" href="https://docs.cartouche.cloud/">Documentation</a><a lang="es" href="https://docs.cartouche.cloud/es/">Documentación</a><a lang="de" href="https://docs.cartouche.cloud/de/">Dokumentation</a>
+            <a href="https://github.com/cartouche-app/Cartouche">GitHub</a>
+            <a href="https://discord.gg/wG3DZjdAeF">Discord</a>
+            <a href="https://github.com/cartouche-app/Cartouche/blob/main/LEGAL.md"><span lang="fr">Mentions légales</span><span lang="en">Legal</span><span lang="es">Aviso legal</span><span lang="de">Rechtliches</span></a>
+            <a href="https://github.com/cartouche-app/Cartouche/blob/main/docs/privacy.md"><span lang="fr">Confidentialité</span><span lang="en">Privacy</span><span lang="es">Privacidad</span><span lang="de">Datenschutz</span></a>
+        </nav>
+        <p><span lang="fr">Cartouche est un logiciel libre sous licence AGPL-3.0. Il n’est affilié ni à Nintendo, ni à Apple, ni au projet nxnative.</span><span lang="en">Cartouche is free software under the AGPL-3.0. It is affiliated with neither Nintendo, nor Apple, nor the nxnative project.</span><span lang="es">Cartouche es software libre bajo la AGPL-3.0. No está afiliado ni a Nintendo, ni a Apple, ni al proyecto nxnative.</span><span lang="de">Cartouche ist freie Software unter der AGPL-3.0. Es ist weder mit Nintendo noch mit Apple noch mit dem Projekt nxnative verbunden.</span></p>
+    </div>
+</footer>
+
+<script>
+(function () {
+    "use strict";
+    var root = document.documentElement;
+
+    // ---------- Language, as on the site ----------
+    var TITLES = { fr: "Page introuvable · Cartouche", en: "Page not found · Cartouche", es: "Página no encontrada · Cartouche", de: "Seite nicht gefunden · Cartouche" };
+    function applyLang(lang) {
+        root.setAttribute("data-lang", lang);
+        root.lang = lang;
+        document.title = TITLES[lang];
+        var meta = document.querySelector('meta[name="description"]');
+        if (meta) meta.setAttribute("content", meta.getAttribute("data-" + lang));
+        document.querySelectorAll("[data-set-lang]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-set-lang") === lang)); });
+        document.querySelectorAll("[data-label-fr]").forEach(function (el) { el.setAttribute("aria-label", el.getAttribute("data-label-" + lang)); });
+    }
+    document.querySelectorAll("[data-set-lang]").forEach(function (b) {
+        b.addEventListener("click", function () {
+            var lang = b.getAttribute("data-set-lang");
+            try { localStorage.setItem("cartouche.site.lang", lang); } catch (e) {}
+            applyLang(lang);
+        });
+    });
+    applyLang(["fr", "es", "de"].indexOf(root.getAttribute("data-lang")) >= 0 ? root.getAttribute("data-lang") : "en");
+})();
+</script>
+</body>
+</html>
