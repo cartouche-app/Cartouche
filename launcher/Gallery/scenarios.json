@@ -995,7 +995,7 @@
     },
     {
       "name": "iphone-sheet-cloud-gpu-no-bc-converted",
-      "comment": "The same sheet, the game built by Cartouche Cloud from nxnative-nobc, for an iPhone 11 to 15, as the platform says it: the BC line green, as for a game on the Mac built so, and Install asks nothing first (26 November: Sparking Zero on an iPhone 13).",
+      "comment": "The same sheet, the game built by Cartouche Cloud from nxnative-nobc, for an iPhone 11 to 15, as the platform says it: no warning that nxnative refuses the GPU, and Install asks nothing first (26 November: Sparking Zero on an iPhone 13).",
       "screen": "sheet",
       "sheet": "01003FC01670C000",
       "work": "cloud-gpu-no-bc-converted",
