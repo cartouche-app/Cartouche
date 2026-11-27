@@ -1,8 +1,10 @@
 import shutil
+import subprocess
 import threading
 import unittest
 import zipfile
 from datetime import datetime
+from pathlib import Path
 from unittest import mock
 
 from cartouche_builder import ipa
@@ -130,6 +132,31 @@ class Folder(Home):
             ipa.deliver(source, games, "Game.ipa", stop=stop, progress=lambda done, total: steps.append((done, total)))
         self.assertEqual((games / "Game.ipa").read_bytes(), b"new" * 1000)
         self.assertEqual(steps, [(3000, 3000)])
+
+    def test_a_clone_cut_short_leaves_nothing_to_the_copy(self):
+        # cp -c ran past its 600 seconds, or failed, with half of the IPA
+        # written: the copy that follows writes it whole. Up to Builder
+        # 0.8.2, that half stayed, and the copy, which opens its file only
+        # if it is not there, stopped the build with FileExistsError.
+        games = self.tmp / "games"
+        games.mkdir()
+        (games / "Game.ipa").write_bytes(b"old")
+        source = self.tmp / "new.ipa"
+        source.write_bytes(b"new" * 1000)
+        for ending in ("timeout", "error", "failed"):
+            def cp(command, **options):
+                Path(command[-1]).write_bytes(source.read_bytes()[:1000])
+                if ending == "timeout":
+                    raise subprocess.TimeoutExpired(command, options["timeout"])
+                if ending == "error":
+                    raise OSError(5, "Input/output error")
+                return subprocess.CompletedProcess(command, 1)
+
+            with mock.patch.object(ipa.sys, "platform", "darwin"), mock.patch.object(ipa.subprocess, "run", side_effect=cp):
+                target = ipa.deliver(source, games, "Game.ipa")
+            self.assertEqual(target.read_bytes(), b"new" * 1000, ending)
+            self.assertEqual(sorted(p.name for p in games.iterdir()), ["Game.ipa"], ending)
+            (games / "Game.ipa").write_bytes(b"old")
 
 
 if __name__ == "__main__":
