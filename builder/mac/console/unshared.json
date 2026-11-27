@@ -85,7 +85,7 @@
     },
     "CartoucheImportPicker.swift": {
       "kind": "mac",
-      "why": "The Files picker an IPA is imported with: on the Mac, Import opens the Builder, which adds games.",
+      "why": "The Files picker an IPA or a signing certificate is imported with: on the Mac, Import opens the Builder, which adds games, and nxnative's build signs them.",
       "mac": "CartoucheConsole/Mac/ConsoleView.swift"
     },
     "CartoucheImportedSigning.swift": {
