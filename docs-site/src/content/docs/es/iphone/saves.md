@@ -5,7 +5,7 @@ sidebar:
   order: 6
 ---
 
-Con una carpeta de partidas guardadas elegida en **Sistema › Almacenamiento**, Cartouche mantiene al día con ella las partidas de cada juego, una carpeta por juego. Tus partidas te siguen de un iPhone o iPad a otro, y a tu Mac, a través de tu Mac o tu NAS.
+Con una carpeta de partidas guardadas elegida en **Sistema › Almacenamiento**, Cartouche mantiene al día con ella las partidas de cada juego, una carpeta por juego. Tus partidas te siguen de un iPhone o iPad a otro, y a tu Mac, a través de tu Mac o tu NAS. Sin ella, cuando termina tu primera partida, el inicio te propone elegir una; su × quita la propuesta para siempre.
 
 ![Las partidas guardadas de un juego en su ficha](../../../../assets/screens/es-iphone-sheet-saves.webp)
 

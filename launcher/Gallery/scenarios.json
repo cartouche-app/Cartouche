@@ -3436,6 +3436,27 @@
       "work": "tailscale-turned-off"
     },
     {
+      "name": "iphone-home-saves-offer",
+      "comment": "The home once the first game is over, the saves on this iPhone alone: it offers a saves folder, which opens Storage, until the player chooses one or takes it off (decision 178).",
+      "screen": "games",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "saves-offer"
+    },
+    {
       "name": "iphone-telemetry",
       "screen": "telemetry",
       "owned": [
@@ -3760,6 +3781,27 @@
         20,
         0
       ]
+    },
+    {
+      "name": "duo-unfolded-home-saves-offer",
+      "comment": "The same on the iPhone Duo unfolded (decision 178).",
+      "screen": "games",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true,
+      "width": 626,
+      "height": 890,
+      "insets": [
+        32,
+        0,
+        20,
+        0
+      ],
+      "work": "saves-offer"
     },
     {
       "name": "duo-unfolded-landscape-home",

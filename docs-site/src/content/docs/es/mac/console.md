@@ -27,6 +27,8 @@ El Mac mantiene al día las partidas de los juegos jugados en él con tu carpeta
 
 La copia en este Mac de un juego que guarda tu NAS queda fuera de Time Machine: vuelve desde el NAS. Las partidas guardadas del juego siguen entrando.
 
+Sin una carpeta de partidas guardadas elegida por ti, Cartouche Builder guarda las partidas en su propia carpeta, solo en este Mac: cuando termina tu primera partida, el inicio de la consola te propone elegir una, en iCloud Drive o tu NAS, y su × quita la propuesta para siempre.
+
 ## Mods
 
 La ficha de un juego también tiene **Mods** en el Mac, como en el iPhone ([La ficha de un juego](/es/iphone/game-sheet/#mods)): añade un mod desde una carpeta o un ZIP de este Mac, actívalo o desactívalo y fija el orden. Un mod que también cambia el código del juego, con una carpeta `exefs`, aún no funciona en el Mac: Cartouche lo dice y lo deja fuera. Los mods del Mac se quedan en este Mac.

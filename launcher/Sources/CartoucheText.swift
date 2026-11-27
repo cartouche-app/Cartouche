@@ -249,6 +249,11 @@ enum CartoucheText {
     /// Once the first game is installed, under Renew every night.
     static var setupBannerNightlyDetail: String { s("setup.banner.nightly.detail", "So that Cartouche renews itself, even if you leave it closed for a week.") }
     static var setupBannerNightlyHide: String { s("setup.banner.nightly.hide", "Hide this reminder") }
+    /// The home's offer of a saves folder, once the first game is over with
+    /// the saves on this device alone (CartoucheSavesOffer, decision 178).
+    static var savesOfferTitle: String { s("home.savesOffer.title", "Keep your saves safe") }
+    static var savesOfferDetail: String { s("home.savesOffer.detail", "Choose a folder on iCloud Drive, your Mac or a NAS, so that a reinstall loses nothing.") }
+    static var savesOfferHide: String { s("home.savesOffer.hide", "Hide this suggestion") }
     static var setupBannerSignInDetail: String { s("setup.banner.renewal.signIn", "Sign in with your Apple ID") }
     static var setupBannerCertificate: String { s("setup.banner.certificate", "The certificate no longer works") }
     static var setupBannerCertificateDetail: String { s("setup.banner.certificate.detail", "Sign in again to play") }

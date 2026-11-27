@@ -31,7 +31,15 @@
 //  on its cartridge, Resume as its main action and Quit beside it; the
 //  focus goes to it each time the console comes back over it.
 //
+//  Over the shelf, one banner at most: the guide's card until the first
+//  game is installed; the setup's while Cartouche is not set up; once the
+//  first game is over, back on the console, the offer of a saves folder
+//  while the saves are on this device alone (CartoucheSavesOffer, decision
+//  178); then the automation of every night (decision 159). The last two
+//  have a × that takes them off the home for good.
+//
 
+import Combine
 import SwiftUI
 
 @available(iOS 17.0, *)
@@ -53,6 +61,8 @@ struct CartoucheHomeView: View {
     let onSetup: () -> Void
     /// Opens the first game's guide (CartoucheGuideView).
     let onGuide: () -> Void
+    /// Opens the Storage page, from the offer of a saves folder.
+    let onSavesFolder: () -> Void
     let onTab: (LCTabIdentifier) -> Void
     /// Where a game's sheet grows out of its cartridge.
     let zoom: Namespace.ID?
@@ -76,6 +86,7 @@ struct CartoucheHomeView: View {
          onInstallCloud: @escaping (CartoucheCloudBuilt) -> Void = { _ in },
          onUninstall: @escaping (LCAppModel) -> Void, onSheet: @escaping (CartoucheEntry) -> Void,
          onLibrary: @escaping () -> Void, onSetup: @escaping () -> Void, onGuide: @escaping () -> Void = {},
+         onSavesFolder: @escaping () -> Void = {},
          onTab: @escaping (LCTabIdentifier) -> Void, zoom: Namespace.ID? = nil,
          showsHero: Bool = true, focusing: String? = nil, onFocus: @escaping (Item) -> Void = { _ in }) {
         self.entries = entries
@@ -90,6 +101,7 @@ struct CartoucheHomeView: View {
         self.onLibrary = onLibrary
         self.onSetup = onSetup
         self.onGuide = onGuide
+        self.onSavesFolder = onSavesFolder
         self.onTab = onTab
         self.zoom = zoom
         self.showsHero = showsHero
@@ -99,6 +111,7 @@ struct CartoucheHomeView: View {
 
     @ObservedObject private var setup = CartoucheSetup.shared
     @ObservedObject private var guide = CartoucheGuide.shared
+    @ObservedObject private var savesOffer = CartoucheSavesOffer.shared
     @ObservedObject private var gamepad = CartoucheGamepad.shared
     @ObservedObject private var actions = CartoucheGameActions.shared
     @ObservedObject private var reach = CartoucheStorageReach.shared
@@ -176,14 +189,19 @@ struct CartoucheHomeView: View {
             // the setup banner's place, whose steps it begins with.
             let guideProgress = guide.progress(entries)
             let showsGuide = guide.showsCard(guideProgress)
-            let metrics = Metrics(size: proxy.size, hasBanner: showsGuide || setup.showsBanner, hasHero: showsHero,
-                                  measuredBanner: bannerHeight)
+            // The saves' offer before the automation of every night, never
+            // before a setup Cartouche needs to play.
+            let showsSavesOffer = !showsGuide && savesOffer.shows && !setup.bannerGoesFirst
+            let metrics = Metrics(size: proxy.size, hasBanner: showsGuide || showsSavesOffer || setup.showsBanner,
+                                  hasHero: showsHero, measuredBanner: bannerHeight)
             ScrollView(.vertical) {
                 VStack(alignment: .leading, spacing: metrics.spacing) {
                     topBar(metrics)
                     Group {
                         if showsGuide {
                             CartoucheGuideCard(progress: guideProgress, action: onGuide)
+                        } else if showsSavesOffer {
+                            CartoucheHomeSavesBanner(action: onSavesFolder)
                         } else if setup.showsBanner {
                             CartoucheHomeSetupBanner(action: onSetup)
                         }
@@ -1114,6 +1132,204 @@ struct CartoucheHomeSetupBanner: View {
                            startPoint: .topLeading, endPoint: .bottomTrailing),
             in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
+}
+
+/// The offer of a saves folder over the home, once the first game is over
+/// with the saves on this device alone (CartoucheSavesOffer): a tap opens
+/// the Storage page, where the player chooses one, and its × takes it off
+/// the home for good, as the automation's banner has.
+@available(iOS 17.0, *)
+struct CartoucheHomeSavesBanner: View {
+    let action: () -> Void
+    @ObservedObject private var offer = CartoucheSavesOffer.shared
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Button {
+                offer.open()
+                action()
+            } label: {
+                HStack(spacing: 14) {
+                    Image(systemName: "externaldrive.badge.icloud")
+                        .font(.title3.weight(.semibold))
+                        .frame(width: 42, height: 42)
+                        .background(Color.white.opacity(0.2), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(CartoucheText.savesOfferTitle)
+                            .font(.headline)
+                        Text(CartoucheText.savesOfferDetail)
+                            .font(.subheadline)
+                            .opacity(0.85)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            Button {
+                withAnimation(.easeInOut(duration: 0.25)) { offer.hide() }
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.subheadline.weight(.bold))
+                    .frame(width: 30, height: 30)
+                    .background(Color.white.opacity(0.2), in: Circle())
+                    // As tall as the icon, so that the banner keeps its height.
+                    .frame(width: 42, height: 42)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(CartoucheText.savesOfferHide)
+        }
+        .foregroundStyle(Color.white)
+        .padding(14)
+        .background(
+            LinearGradient(colors: [CartoucheTheme.indigo, CartoucheTheme.pink.opacity(0.85)],
+                           startPoint: .topLeading, endPoint: .bottomTrailing),
+            in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .onAppear { offer.noteShown() }
+    }
+}
+
+/// The offer of a saves folder over the home (decision 178), on the iPhone
+/// and on the Mac's console: once the player's first game is over, back on
+/// the console, while the games' saves are on this device alone and the
+/// player never chose where they go (CartoucheSavesOfferRule). The banner
+/// goes once a saves folder is chosen, and for good once its × is tapped.
+/// The game measurements hear when it first showed, each tap, and the kind
+/// of storage the player chose after it showed (CartoucheOffer).
+@MainActor
+final class CartoucheSavesOffer: ObservableObject {
+    static let shared = CartoucheSavesOffer()
+
+    /// Whether the home shows it now.
+    @Published private(set) var shows = false
+
+    /// The player took it off the home.
+    private static let hiddenKey = "Cartouche.savesOffer.hidden"
+    /// When it first showed, which the measurements heard.
+    private static let shownKey = "Cartouche.savesOffer.shown"
+    /// A saves folder was chosen once it had shown, which they heard too.
+    private static let takenKey = "Cartouche.savesOffer.taken"
+
+    private var isHidden: Bool
+    private var wasShown: Bool
+    private var wasTaken: Bool
+    private var sources: [AnyCancellable] = []
+    #if CARTOUCHE_GALLERY || os(macOS)
+    /// For a gallery, whether it shows, kept in memory, never told: nil
+    /// otherwise.
+    private var galleryShows: Bool?
+    #endif
+
+    private init() {
+        let defaults = UserDefaults.standard
+        isHidden = defaults.bool(forKey: Self.hiddenKey)
+        wasShown = defaults.object(forKey: Self.shownKey) != nil
+        wasTaken = defaults.bool(forKey: Self.takenKey)
+        // What it follows, read once each change is made: a published
+        // value tells before it changes.
+        let changes: [AnyPublisher<Void, Never>] = [
+            CartoucheGameStats.shared.$record.map { _ in () }.eraseToAnyPublisher(),
+            CartoucheGameActions.shared.$running.map { _ in () }.eraseToAnyPublisher(),
+            CartoucheStorageSettings.shared.objectWillChange.map { _ in () }.eraseToAnyPublisher(),
+            CartoucheSaveBackups.shared.objectWillChange.map { _ in () }.eraseToAnyPublisher(),
+        ]
+        sources = changes.map { change in
+            change.receive(on: DispatchQueue.main).sink { [weak self] in self?.read() }
+        }
+        read()
+    }
+
+    /// Whether the saves are on this device alone, the player never having
+    /// chosen where they go: on the iPhone, no saves folder, none ever
+    /// chosen nor stopped; on the Mac, the Builder keeping them in the
+    /// folder it took by itself, in its own on this Mac's disk.
+    private var needsFolder: Bool {
+        #if os(macOS)
+        return CartoucheSaveBackups.shared.keepsOnThisMacAlone
+        #else
+        let settings = CartoucheStorageSettings.shared
+        #if CARTOUCHE_GALLERY
+        // The gallery's settings are in memory, its earlier choices not.
+        if galleryShows != nil { return settings.location(.saves) == nil }
+        #endif
+        return CartoucheSavesOfferRule.needsFolder(hasFolder: settings.location(.saves) != nil,
+                                                   choseOnce: settings.chosen[.saves] != nil)
+        #endif
+    }
+
+    /// Reads again whether it shows, and tells the measurements when it
+    /// first does, and what the player chose after it.
+    func read() {
+        let needsFolder = self.needsFolder
+        var shows = CartoucheSavesOfferRule.shows(played: CartoucheGameStats.shared.record.seconds,
+                                                  playing: CartoucheGameActions.shared.running != nil,
+                                                  needsFolder: needsFolder, hidden: isHidden)
+        #if CARTOUCHE_GALLERY || os(macOS)
+        if let galleryShows {
+            shows = shows && galleryShows
+            if shows != self.shows { self.shows = shows }
+            return
+        }
+        #endif
+        if shows != self.shows { self.shows = shows }
+        if wasShown, !wasTaken, !needsFolder, let place = CartoucheStorageSettings.shared.location(.saves) {
+            wasTaken = true
+            UserDefaults.standard.set(true, forKey: Self.takenKey)
+            tell(CartoucheOffer.takenEvent, CartoucheOffer.savesBanner.takenFields(kind: place.server.kind.rawValue))
+        }
+    }
+
+    /// Its banner came on screen: the measurements hear it the first time.
+    func noteShown() {
+        #if CARTOUCHE_GALLERY || os(macOS)
+        if galleryShows != nil { return }
+        #endif
+        guard !wasShown else { return }
+        wasShown = true
+        UserDefaults.standard.set(Date(), forKey: Self.shownKey)
+        CartoucheReports.note("Saves folder offered on the home, the saves on this device alone")
+        tell(CartoucheOffer.shownEvent, CartoucheOffer.savesBanner.fields(at: .home))
+    }
+
+    /// The player tapped it: the Storage page opens.
+    func open() {
+        CartoucheReports.note("Saves folder offered on the home: the player opens Storage")
+        CartoucheOffer.savesBanner.tapped(at: .home)
+    }
+
+    /// The player tapped its ×: it goes, for good.
+    func hide() {
+        CartoucheReports.note("Saves folder offered on the home: the player took it off")
+        CartoucheOffer.savesHidden.tapped(at: .home)
+        isHidden = true
+        #if CARTOUCHE_GALLERY || os(macOS)
+        if galleryShows != nil {
+            read()
+            return
+        }
+        #endif
+        UserDefaults.standard.set(true, forKey: Self.hiddenKey)
+        read()
+    }
+
+    private func tell(_ event: String, _ fields: [String: CartoucheTelemetryValue]) {
+        if #available(iOS 17.0, *) {
+            CartoucheTelemetry.shared.event(event, fields: fields)
+        }
+    }
+
+    #if CARTOUCHE_GALLERY || os(macOS)
+    /// The offer as a gallery shows it (launcher/Gallery, the Builder's):
+    /// when SHOWS, as Cartouche shows it; never otherwise; from then on in
+    /// memory, the player's choices neither read nor kept, nothing told.
+    func showForGallery(shows: Bool) {
+        galleryShows = shows
+        isHidden = false
+        read()
+    }
+    #endif
 }
 
 extension CartoucheOffer {

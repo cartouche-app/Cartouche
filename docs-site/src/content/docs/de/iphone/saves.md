@@ -5,7 +5,7 @@ sidebar:
   order: 6
 ---
 
-Mit einem unter **System › Speicher** gewählten Spielstandordner hält Cartouche die Spielstände jedes Spiels mit ihm synchron, einen Ordner pro Spiel. Deine Spielstände folgen dir von einem iPhone oder iPad zum nächsten und zu deinem Mac, über deinen Mac oder dein NAS.
+Mit einem unter **System › Speicher** gewählten Spielstandordner hält Cartouche die Spielstände jedes Spiels mit ihm synchron, einen Ordner pro Spiel. Deine Spielstände folgen dir von einem iPhone oder iPad zum nächsten und zu deinem Mac, über deinen Mac oder dein NAS. Ohne ihn schlägt dir die Startseite nach deinem ersten Spiel vor, einen zu wählen; sein × entfernt den Vorschlag für immer.
 
 ![Die Spielstände eines Spiels auf seiner Infoseite](../../../../assets/screens/de-iphone-sheet-saves.webp)
 

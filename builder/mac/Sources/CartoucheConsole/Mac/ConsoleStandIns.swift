@@ -181,6 +181,8 @@ final class CartoucheSetup: ObservableObject {
     var canPlay: Bool { true }
     var needsSetup: Bool { false }
     var showsBanner: Bool { false }
+    /// Nothing to set up goes before the offer of a saves folder.
+    var bannerGoesFirst: Bool { false }
     var bannerHides: Bool { false }
     var bannerIcon: String { "checkmark.circle.fill" }
     var bannerTitle: String { "" }

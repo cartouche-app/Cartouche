@@ -7918,6 +7918,93 @@
         }
       }
     },
+    "home.savesOffer.detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wähle einen Ordner in iCloud Drive, auf deinem Mac oder einem NAS, damit bei einer Neuinstallation nichts verloren geht."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a folder on iCloud Drive, your Mac or a NAS, so that a reinstall loses nothing."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige una carpeta en iCloud Drive, tu Mac o un NAS para no perder nada al reinstalar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisissez un dossier sur iCloud Drive, votre Mac ou un NAS, pour ne rien perdre en réinstallant."
+          }
+        }
+      }
+    },
+    "home.savesOffer.hide" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diesen Vorschlag ausblenden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide this suggestion"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ocultar esta sugerencia"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Masquer cette proposition"
+          }
+        }
+      }
+    },
+    "home.savesOffer.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sichere deine Spielstände"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep your saves safe"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pon a salvo tus partidas guardadas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettez vos sauvegardes à l’abri"
+          }
+        }
+      }
+    },
     "library.filter.all" : {
       "extractionState" : "manual",
       "localizations" : {

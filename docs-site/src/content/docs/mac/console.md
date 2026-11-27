@@ -27,6 +27,8 @@ The Mac keeps the saves of the games played there in step with your saves folder
 
 This Mac's copy of a game your NAS keeps stays out of Time Machine: it comes again from the NAS. The game's saves still go in.
 
+Without a saves folder of your choice, Cartouche Builder keeps the saves in its own folder, on this Mac alone: once your first game is over, the console's home offers to choose one, on iCloud Drive or your NAS, and its × takes the offer away for good.
+
 ## Mods
 
 A game's sheet has **Mods** on the Mac too, as on the iPhone ([A game's sheet](/iphone/game-sheet/#mods)): add a mod from a folder or a ZIP on this Mac, turn it on or off and set the order. A mod that changes the game's code too, with an `exefs` folder, does not work on the Mac yet: Cartouche says so and leaves it out. The Mac's mods stay on this Mac.

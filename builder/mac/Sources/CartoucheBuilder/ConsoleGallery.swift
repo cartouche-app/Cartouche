@@ -172,13 +172,16 @@ enum ConsoleGallery {
     /// leave the home's out of the cover store's memory, and the next
     /// language's home showed Cartouche's own drawings, or its covers half
     /// faded in, as its first page did (English, 25 November).
-    static func prepare(language: String, newer: Bool = false, firstGame: Bool = false) {
+    /// With SAVESOFFER, the saves are in the builder's own folder, on this
+    /// Mac alone, and the home offers a saves folder (decision 178), which
+    /// no other page shows.
+    static func prepare(language: String, newer: Bool = false, firstGame: Bool = false, savesOffer: Bool = false) {
         let covers = makeGames() ?? loadCovers()
         let deadline = Date().addingTimeInterval(60)
         while !covers.loaded && Date() < deadline {
             RunLoop.main.run(until: Date().addingTimeInterval(0.05))
         }
-        show(language: language, newer: newer, firstGame: firstGame)
+        show(language: language, newer: newer, firstGame: firstGame, savesOffer: savesOffer)
     }
 
     /// As prepare(language:newer:), from a task of the main actor: the
@@ -193,25 +196,34 @@ enum ConsoleGallery {
                 try? await Task.sleep(for: .milliseconds(50))
             }
         }
-        show(language: language, newer: newer, firstGame: false)
+        show(language: language, newer: newer, firstGame: false, savesOffer: false)
     }
 
     /// The games and the NAS's in the console, speaking LANGUAGE, the
     /// newest copy of the sheet's game's saves waiting for its update when
     /// NEWER; the guide to a first game for a player who has played none of
-    /// them yet when FIRSTGAME, its card on the home, and done otherwise.
-    private static func show(language: String, newer: Bool, firstGame: Bool) {
+    /// them yet when FIRSTGAME, its card on the home, and done otherwise;
+    /// the saves in the builder's own folder when SAVESOFFER, and the
+    /// home's offer of a saves folder.
+    private static func show(language: String, newer: Bool, firstGame: Bool, savesOffer: Bool) {
         let console = CartoucheMacConsole.shared
         let nas = named(language, "the NAS", "le NAS", "el NAS", "dem NAS")
         console.show(games: apps, kept: kept, keptIn: nas)
         let saves = newer ? CartoucheMacGameSaves(lastSync: copies[0].date, newer: "1.2.0", game: "1.0.0")
                           : CartoucheMacGameSaves(lastSync: copies[0].date, fetched: copies[1].date)
-        console.showSaves(folder: CartoucheMacSavesFolder(name: nas, path: "/Volumes/Partage/Cartouche/Saves"),
+        // The saves on the NAS, or, for the offer of a saves folder, in the
+        // folder the builder took by itself (BuilderHome.saves).
+        let savesPath = savesOffer ? "/Users/joueur/Library/Application Support/Cartouche Builder/Saves"
+                                   : "/Volumes/Partage/Cartouche/Saves"
+        let savesName = savesOffer ? named(language, "the saves folder", "le dossier des sauvegardes",
+                                           "la carpeta de partidas guardadas", "der Spielstandordner") : nas
+        console.showSaves(folder: CartoucheMacSavesFolder(name: savesName, path: savesPath, isBuilders: savesOffer),
                           games: [sheetGame: saves])
+        console.showSavesOfferForGallery(savesOffer)
         // The Storage page: the NAS's folders under This Mac, and made-up
         // connections, kept in memory only.
         console.showFolders(games: URL(fileURLWithPath: "/Volumes/Jeux", isDirectory: true),
-                            saves: URL(fileURLWithPath: "/Volumes/Partage/Cartouche/Saves", isDirectory: true))
+                            saves: URL(fileURLWithPath: savesPath, isDirectory: true))
         console.showStorageForGallery(language: language)
         // The games folder chosen on the iPhone, on the NAS: Mario Kart
         // World's Mac app going there, Animal Crossing's, another Mac's,

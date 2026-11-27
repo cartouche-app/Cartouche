@@ -122,6 +122,13 @@ struct CartouchePlayTimeRecord: Codable, Equatable {
         return true
     }
 
+    /// How long the player played every game on this device, together:
+    /// once past a minute, their first game is behind them, and the home
+    /// offers a saves folder (CartoucheSavesOfferRule).
+    var seconds: Double {
+        games.values.reduce(0) { total, game in game.folders.values.reduce(total) { $0 + $1.seconds } }
+    }
+
     /// The game's time on this iPhone, every data folder's together: by its
     /// bundle ID, else by its title ID.
     func total(bundleId: String?, titleId: String? = nil) -> CartouchePlayTime? {

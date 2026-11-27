@@ -10,7 +10,9 @@
 //  without an error, with Sign in to Google again in place of Try again;
 //  the player's Mac, paired, as the games folder; and Add your Mac, with
 //  the Macs nearby, the digits to check on both screens, and iOS refusing
-//  the local network; and how to name the games, from the page. The
+//  the local network; how to name the games, from the page; and the home's
+//  offer of a saves folder once the first game is over, which opens the
+//  page (decision 178). The
 //  gallery stands in for the servers, Google and the Macs
 //  (GalleryApp.swift): nothing here reaches a real one, but the NAS's Try
 //  again, which knocks on its address, as the app does, and finds no one.
@@ -22,6 +24,12 @@ import XCTest
 extension Words {
     static let namingOpen = "How to name your games"        // naming.open
     static let namingTitle = "Naming your games"            // naming.title
+}
+
+/// The words of the home's offer of a saves folder (CartoucheText.swift).
+extension Words {
+    static let savesOfferTitle = "Keep your saves safe"     // home.savesOffer.title
+    static let hideSavesOffer = "Hide this suggestion"      // home.savesOffer.hide
 }
 
 final class StorageUITests: ConsoleTestCase {
@@ -230,6 +238,32 @@ final class StorageUITests: ConsoleTestCase {
     }
 
     // MARK: Steps
+
+    /// Once the first game is over, the saves on this iPhone alone, the
+    /// home offers a saves folder: a tap opens the Storage page over the
+    /// console, where the player chooses one as from System; Done brings the
+    /// console back, the offer still there while no folder is chosen; its ×
+    /// takes it off the home for good. Up to 0.16.2, nothing offered one:
+    /// 57 of the 135 copies that had a game on November 26 had no saves
+    /// folder.
+    @MainActor
+    func testTheHomeOffersASavesFolderOnceTheFirstGameIsOver() {
+        let app = openConsole(Launch(work: "saves-offer"))
+        let banner = element(in: app.buttons, beginningWith: Words.savesOfferTitle)
+        expect(banner.waitForExistence(timeout: 15), "The home does not offer a saves folder", in: app)
+        tap(banner, "the offer of a saves folder, on the home", in: app)
+        let bar = app.navigationBars[Words.storage]
+        expect(bar.waitForExistence(timeout: 15), "The offer of a saves folder did not open the Storage page", in: app)
+        expect(element(beginningWith: Words.addFirst, in: app).waitForExistence(timeout: 10),
+               "The Storage page from the offer does not say to add a place first", in: app)
+        tap(bar.buttons[Words.done], "Done of the Storage page", in: app)
+        expect(waitUntil(10) { isOnConsole(app) }, "Done did not bring the console back", in: app)
+        expect(banner.waitForExistence(timeout: 10), "The offer went with no saves folder chosen", in: app)
+
+        tap(app.buttons[Words.hideSavesOffer], "the × of the offer of a saves folder", in: app)
+        expect(waitForGone(banner), "The offer of a saves folder stayed on the home once taken off", in: app)
+        expectMainThreadAnswered(app)
+    }
 
     /// System, then Storage.
     @MainActor

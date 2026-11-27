@@ -24,6 +24,12 @@
       "es": "Añade tus juegos en el Builder: compila cada uno para este Mac a partir de tu propia copia.",
       "fr": "Ajoutez vos jeux dans le Builder : il construit chacun pour ce Mac à partir de votre propre copie."
     },
+    "home.savesOffer.detail": {
+      "de": "Sie liegen nur auf diesem Mac: Wähle einen Ordner in iCloud Drive oder auf einem NAS, um woanders eine Kopie zu behalten.",
+      "en": "They are on this Mac alone: choose a folder on iCloud Drive or a NAS to keep a copy elsewhere.",
+      "es": "Solo están en este Mac: elige una carpeta en iCloud Drive o un NAS para guardar una copia en otro sitio.",
+      "fr": "Elles ne sont que sur ce Mac : choisissez un dossier sur iCloud Drive ou un NAS pour en garder une copie ailleurs."
+    },
     "mods.delete.message": {
       "de": "Seine Dateien werden von diesem Mac gelöscht.",
       "en": "Its files are deleted from this Mac.",

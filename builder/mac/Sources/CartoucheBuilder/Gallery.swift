@@ -53,13 +53,16 @@ enum Gallery {
         // that one opens, with the player's connections, its Game
         // measurements page and its Report a problem page; the guide to a
         // first game on this Mac, and its card on the home, for a player
-        // who has built games and played none yet.
+        // who has built games and played none yet; the home's offer of a
+        // saves folder once the first game is over, the saves in the
+        // builder's own folder, on this Mac alone (decision 178).
         case console, consoleLibrary = "console-library", consoleSettings = "console-settings", consoleInfo = "console-info"
         case consoleSheet = "console-sheet", consoleSheetNewer = "console-sheet-newer"
         case consoleSaves = "console-saves", consoleSwitchSave = "console-switch-save", consoleGameLog = "console-game-log"
         case consoleMods = "console-mods"
         case consoleSystem = "console-system", consoleStorage = "console-storage", consoleMeasures = "console-measures"
         case consoleReport = "console-report", consoleGuide = "console-guide", consoleFirstGame = "console-first-game"
+        case consoleSavesOffer = "console-saves-offer"
         // What the window's height leaves out: the settings' Builds tab, and
         // the storage page down to the games on this Mac, in a window as
         // tall as it. The Builds tab again, an iPhone 15 paired in place of
@@ -117,7 +120,7 @@ enum Gallery {
         var isConsole: Bool {
             [.console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet, .consoleSheetNewer, .consoleSaves,
              .consoleSwitchSave, .consoleGameLog, .consoleMods, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport,
-             .consoleGuide, .consoleFirstGame].contains(self)
+             .consoleGuide, .consoleFirstGame, .consoleSavesOffer].contains(self)
         }
 
         /// Whether the page is a game's whole sheet, in a window as tall.
@@ -192,7 +195,7 @@ enum Gallery {
 
         var inEnglish: Bool {
             [.library, .game, .gameQueue, .setup, .menubar, .assistantWelcome, .assistantGames, .console, .consoleStorage,
-             .activitySplit, .gameSplit].contains(self)
+             .consoleSavesOffer, .activitySplit, .gameSplit].contains(self)
         }
 
         /// The window as the app opens it: the settings as the Settings
@@ -298,9 +301,10 @@ enum Gallery {
             controller = settings(model, open: page == .settings ? .general : .builds)
         case .console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet, .consoleSheetNewer, .consoleSaves, .consoleSwitchSave,
              .consoleGameLog, .consoleMods, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport, .consoleGuide,
-             .consoleFirstGame:
+             .consoleFirstGame, .consoleSavesOffer:
             ConsoleGallery.prepare(language: L10n.code, newer: page == .consoleSheetNewer,
-                                   firstGame: page == .consoleGuide || page == .consoleFirstGame)
+                                   firstGame: page == .consoleGuide || page == .consoleFirstGame,
+                                   savesOffer: page == .consoleSavesOffer)
             model.show(.console)
             let sheet = page.isWholeSheet || page.savesPage != nil
             controller = hosted(MainView(showingLibrary: page == .consoleLibrary, showingSettings: page == .consoleSettings,

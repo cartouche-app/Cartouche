@@ -5,7 +5,7 @@ sidebar:
   order: 6
 ---
 
-Avec un dossier des sauvegardes choisi dans **Système › Stockage**, Cartouche garde les sauvegardes de chaque jeu à jour avec lui, un dossier par jeu. Vos sauvegardes vous suivent d'un iPhone ou d'un iPad à l'autre, et jusqu'à votre Mac, par votre Mac ou votre NAS.
+Avec un dossier des sauvegardes choisi dans **Système › Stockage**, Cartouche garde les sauvegardes de chaque jeu à jour avec lui, un dossier par jeu. Vos sauvegardes vous suivent d'un iPhone ou d'un iPad à l'autre, et jusqu'à votre Mac, par votre Mac ou votre NAS. Sans lui, une fois votre première partie finie, l'accueil vous propose d'en choisir un ; son × retire la proposition pour de bon.
 
 ![Les sauvegardes d'un jeu sur sa fiche](../../../../assets/screens/fr-iphone-sheet-saves.webp)
 
