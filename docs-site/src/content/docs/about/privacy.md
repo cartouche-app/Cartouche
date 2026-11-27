@@ -7,7 +7,7 @@ sidebar:
 
 ## Your games, saves and accounts
 
-Cartouche sends your games and saves nowhere but the storage you set up yourself, with your own account. Passwords stay in your iPhone's keychain, and go to your paired Mac alone, encrypted. Your Apple account goes only to Apple, to sign Cartouche and your games. To renew Cartouche from your Mac, Cartouche for Mac sends your password to Apple alone, and keeps only the session Apple gives in return, readable by your Mac account only, never the password. Cartouche downloads no game but those Cartouche Cloud built for the account you linked it to.
+Cartouche sends your games and saves nowhere but the storage you set up yourself, with your own account. Passwords stay in your iPhone's keychain, and go to your paired Mac alone, encrypted. Your Apple account goes only to Apple, to sign Cartouche and your games. To renew Cartouche from your Mac, Cartouche for Mac sends your password to Apple alone, and keeps only the session Apple gives in return, readable by your Mac account only, never the password. When it installs Cartouche again over itself, it downloads Cartouche from its releases on GitHub alone. Cartouche downloads no game but those Cartouche Cloud built for the account you linked it to.
 
 ## Game measurements
 

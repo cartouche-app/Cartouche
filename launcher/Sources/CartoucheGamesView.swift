@@ -212,8 +212,10 @@ struct CartoucheGamesView: View {
                         }
                     }
             }
+            // B closes the Files picker over the setup's Import signing
+            // certificate, not the setup.
             .onReceive(CartoucheGamepad.shared.inputs) { input in
-                if input == .b { showingSetup = false }
+                if input == .b && !importPicker.isShowing { showingSetup = false }
             }
         }
         // The guide's steps act on the console: it closes for a game to

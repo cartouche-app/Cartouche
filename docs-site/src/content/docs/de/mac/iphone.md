@@ -41,7 +41,13 @@ Cartouche öffnet sich auf deinem iPhone jeweils sieben Tage lang und muss dann 
 
 Von da an sieht der Mac alle halbe Stunde nach den iPhones, die er erreicht, solange er geöffnet ist, sein Fenster oder seine Menüleiste, und erneuert Cartouche in seinen letzten zwei Tagen oder sobald es abgelaufen ist. **Erneuern** tut es sofort. Eine Erneuerung installiert nichts neu: Cartouche behält seine Spiele, seine Spielstände und seinen erweiterten Speicher und zeigt sein neues Datum beim nächsten Start.
 
-Dein Passwort geht nur an Apple, einmal: Der Mac behält nur die Sitzung, die Apple dafür gibt, und fragt dich daher nie nach dem Passwort, wenn er sich öffnet, baut oder spielt. Sobald Apple diese Sitzung beendet (eine Anmeldung anderswo, ein neues Passwort oder die Tage, die Apple ihr gibt) und eine Erneuerung fällig ist, sagt eine Mitteilung, höchstens eine am Tag, dass du dich auf der Seite **iPhone** erneut anmelden sollst. Ein mit einem anderen Apple Account installiertes Cartouche lässt der Mac in Ruhe; und ein Cartouche, dessen Zertifikat nicht mehr in deinem Account ist, öffnet sich erst wieder mit einer Installation durch den Cartouche Installer.
+Dein Passwort geht nur an Apple, einmal: Der Mac behält nur die Sitzung, die Apple dafür gibt, und fragt dich daher nie nach dem Passwort, wenn er sich öffnet, baut oder spielt. Sobald Apple diese Sitzung beendet (eine Anmeldung anderswo, ein neues Passwort oder die Tage, die Apple ihr gibt) und eine Erneuerung fällig ist, sagt eine Mitteilung, höchstens eine am Tag, dass du dich auf der Seite **iPhone** erneut anmelden sollst. Ein mit einem anderen Apple Account installiertes Cartouche lässt der Mac in Ruhe.
+
+### Wenn sein Zertifikat weg ist
+
+Ein Cartouche, dessen Zertifikat nicht mehr in deinem Account ist, widerrufen von einem anderen Computer oder einer anderen App mit demselben Apple Account, öffnet sich erst wieder mit einer Installation darüber. Der Mac macht sie, wie der Cartouche Installer Cartouche aktualisiert: die neueste Version, aus den Versionen von Cartouche auf GitHub, signiert mit deinem Apple Account und einem Zertifikat dieses Mac, *Cartouche for Mac*. Cartouche behält seine Spiele, seine Spielstände und seinen erweiterten Speicher. Der Mac macht sie von selbst, sobald Cartouche abgelaufen ist, damit dann kein Spiel läuft; vorher sagt es eine Mitteilung einmal, und **Neu installieren** auf der Seite **iPhone** macht sie sofort. Das dauert ein, zwei Minuten, und die Seite zeigt, wie weit sie ist.
+
+Der Mac widerruft nie ein Zertifikat. Hat dein Account schon so viele, wie Apple erlaubt, installiert er nichts und sagt es: Widerrufe eines, das du nicht mehr nutzt, auf der Seite **Zertifikate** des Cartouche Installer, und der Mac versucht es erneut.
 
 ## Die Builds des Mac vom iPhone aus steuern
 

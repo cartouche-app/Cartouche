@@ -3,15 +3,16 @@
 //  Cartouche
 //
 //  What Cartouche can tell of the Files picker a game is imported with
-//  (CartoucheImportPicker). The picker runs in a process of iOS's, inside
-//  Cartouche's window, so Cartouche sees only how long it took to come on
-//  screen, how and when it closed, and whether Cartouche itself kept
-//  answering meanwhile: every touch on the picker goes through Cartouche's
-//  main thread first. Each picker gives a line of the journal and an
-//  `import.picker` event of the game measurements (telemetry/README.md).
-//  The measures are written down while the picker is open, so that one
-//  still open when Cartouche ended, as when the player, finding it frozen,
-//  quits Cartouche from the App Switcher, is told at the next start.
+//  (CartoucheImportPicker), and a signing certificate or its profile. The
+//  picker runs in a process of iOS's, inside Cartouche's window, so
+//  Cartouche sees only how long it took to come on screen, how and when it
+//  closed, and whether Cartouche itself kept answering meanwhile: every
+//  touch on the picker goes through Cartouche's main thread first. Each
+//  picker gives a line of the journal and an `import.picker` event of the
+//  game measurements (telemetry/README.md). The measures are written down
+//  while the picker is open, so that one still open when Cartouche ended,
+//  as when the player, finding it frozen, quits Cartouche from the App
+//  Switcher, is told at the next start.
 //
 
 import Foundation
@@ -35,7 +36,8 @@ struct CartouchePickerMeasures: Codable, Equatable {
     /// A wait of Cartouche's main thread the player sees: half a second.
     static let stall: TimeInterval = 0.5
 
-    /// Where the player asked for it: "home", "sheet", "guide".
+    /// Where the player asked for it: "home", "sheet", "guide"; on Import
+    /// signing certificate, "certificate" or "profile", for that file.
     let place: String
     let opened: Date
     /// Whether a game controller was connected as it opened.
@@ -118,12 +120,15 @@ struct CartouchePickerMeasures: Codable, Equatable {
         return line
     }
 
-    /// "the home", "a game's sheet", "the guide".
+    /// "the home", "a game's sheet", "the guide"; on Import signing
+    /// certificate, "the certificate's import", "the profile's import".
     static func placeName(_ place: String) -> String {
         switch place {
         case "home": return "the home"
         case "sheet": return "a game's sheet"
         case "guide": return "the guide"
+        case "certificate": return "the certificate's import"
+        case "profile": return "the profile's import"
         default: return place
         }
     }

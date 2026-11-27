@@ -16,6 +16,12 @@
 //  message, which can name the account or the iPhone: that goes to a log
 //  in the helper's folder, readable by the player's account only.
 //
+//  A copy whose certificate is gone gets the newest Cartouche installed
+//  over it, for the same team, as the Cartouche Installer updates it, with
+//  its games and saves: by this Mac once it has expired, and when the
+//  player asks (Reinstall) before. A notification says once that it is
+//  needed, and another when this Mac did it by itself.
+//
 
 import BuilderKit
 import CartoucheCore
@@ -44,6 +50,8 @@ final class RenewalController: ObservableObject {
     @Published private(set) var lookFailure: SignerFailure?
     /// The copies being renewed now (key(_:_:)).
     @Published private(set) var working: Set<String> = []
+    /// Where each install over a copy is, while it goes.
+    @Published private(set) var installing: [String: SignerProgress] = [:]
     /// What came of the last try for each copy.
     @Published private(set) var attempts: [String: SignerAttempt] = [:]
     /// The step of the sign-in, while the page shows it.
@@ -87,6 +95,10 @@ final class RenewalController: ObservableObject {
 
     func isWorking(_ iphone: SignerIphone, _ copy: SignerCartouche) -> Bool {
         working.contains(Self.key(iphone.udid, copy.bundleId))
+    }
+
+    func progress(_ iphone: SignerIphone, _ copy: SignerCartouche) -> SignerProgress? {
+        installing[Self.key(iphone.udid, copy.bundleId)]
     }
 
     func plan(_ iphone: SignerIphone, _ copy: SignerCartouche, now: Date = Date()) -> SignerPlan {
@@ -133,6 +145,7 @@ final class RenewalController: ObservableObject {
             for copy in iphone.cartouche {
                 switch plan(iphone, copy) {
                 case .renew: await renew(iphone, copy, asked: false)
+                case .reinstall: await reinstall(iphone, copy, asked: false)
                 case .askPassword: askPassword(for: copy)
                 case .needsInstall: tellInstall(iphone, copy)
                 case .wait, .otherTeam: break
@@ -162,6 +175,41 @@ final class RenewalController: ObservableObject {
             note(failure)
         }
         // Until when it opens now, as the iPhone says.
+        if let found = try? await signer.devices() { iphones = found }
+    }
+
+    /// Installs the newest Cartouche over COPY on IPHONE, its certificate
+    /// gone: by this Mac once it expired, or whenever the player ASKED.
+    func reinstall(_ iphone: SignerIphone, _ copy: SignerCartouche, asked: Bool) async {
+        guard let signer else { return }
+        let key = Self.key(iphone.udid, copy.bundleId)
+        guard !working.contains(key) else { return }
+        working.insert(key)
+        installing[key] = SignerProgress(step: "download", fraction: 0)
+        defer {
+            working.remove(key)
+            installing[key] = nil
+        }
+        do {
+            let done = try await signer.reinstall(udid: iphone.udid) { [weak self] step in
+                Task { @MainActor in
+                    guard let self, self.working.contains(key) else { return }
+                    self.installing[key] = step
+                }
+            }
+            keep(SignerAttempt(at: Date(), kind: nil, expires: done.expires, install: true), for: key)
+            model?.telemetry.event("builder.reinstalled", fields: SignerMeasures.reinstalled(done, asked: asked))
+            if !asked, let model {
+                let notice = SignerWords.reinstalledNotice(version: done.version)
+                model.notify(title: notice.title, body: notice.body, section: .iphone, sound: false)
+            }
+        } catch {
+            let failure = error as? SignerFailure ?? SignerFailure(kind: "internal", stage: "session", message: "\(error)")
+            keep(SignerAttempt(at: Date(), kind: failure.kind, expires: copy.expires, install: true), for: key)
+            model?.telemetry.event("builder.renewFailed", fields: SignerMeasures.failed(failure, copy: copy, asked: asked, install: true))
+            note(failure)
+        }
+        // Until when it opens now, and its version, as the iPhone says.
         if let found = try? await signer.devices() { iphones = found }
     }
 
@@ -275,13 +323,16 @@ final class RenewalController: ObservableObject {
 
     // MARK: The gallery
 
-    /// Shows a sample session, iPhones and what came of their tries.
+    /// Shows a sample session, iPhones, what came of their tries, and the
+    /// installs going on.
     func preview(session: SignerSession?, iphones: [SignerIphone], attempts: [String: SignerAttempt] = [:],
-                 signIn: RenewalSignIn? = nil, failure: String? = nil) {
+                 installing: [String: SignerProgress] = [:], signIn: RenewalSignIn? = nil, failure: String? = nil) {
         guard sample else { return }
         self.session = session
         self.iphones = iphones
         self.attempts = attempts
+        self.installing = installing
+        working = Set(installing.keys)
         step = signIn
         signInFailure = failure
         looked = Date()

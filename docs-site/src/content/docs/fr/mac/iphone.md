@@ -41,7 +41,13 @@ Cartouche s'ouvre sept jours d'affilée sur votre iPhone, puis doit être renouv
 
 Dès lors, le Mac regarde toutes les demi-heures les iPhone qu'il atteint tant qu'il est ouvert, sa fenêtre ou sa barre des menus, et renouvelle Cartouche dans ses deux derniers jours, ou une fois expiré. **Renouveler** le fait tout de suite. Un renouvellement ne réinstalle rien : Cartouche garde ses jeux, ses sauvegardes et sa mémoire augmentée, et montre sa nouvelle date à son lancement suivant.
 
-Votre mot de passe va à Apple seul, une fois : le Mac ne garde que la session qu'Apple donne en retour, et ne vous demande donc jamais votre mot de passe quand il s'ouvre, construit ou joue. Une fois qu'Apple a fermé cette session (une connexion ailleurs, un nouveau mot de passe, ou les jours qu'Apple lui donne) et qu'un renouvellement est dû, une notification, une par jour au plus, dit de se reconnecter dans la page **iPhone**. Le Mac ne touche pas à un Cartouche installé avec un autre compte Apple ; et un Cartouche dont le certificat a disparu de votre compte ne se rouvre qu'avec une installation par l'Installeur Cartouche.
+Votre mot de passe va à Apple seul, une fois : le Mac ne garde que la session qu'Apple donne en retour, et ne vous demande donc jamais votre mot de passe quand il s'ouvre, construit ou joue. Une fois qu'Apple a fermé cette session (une connexion ailleurs, un nouveau mot de passe, ou les jours qu'Apple lui donne) et qu'un renouvellement est dû, une notification, une par jour au plus, dit de se reconnecter dans la page **iPhone**. Le Mac ne touche pas à un Cartouche installé avec un autre compte Apple.
+
+### Quand son certificat a disparu
+
+Un Cartouche dont le certificat n'est plus sur votre compte, révoqué par un autre ordinateur ou une autre app avec le même compte Apple, ne se rouvre qu'avec une installation par-dessus. Le Mac la fait comme l'Installeur Cartouche met Cartouche à jour : la dernière version, depuis les versions de Cartouche sur GitHub, signée avec votre compte Apple et un certificat de ce Mac, *Cartouche for Mac*. Cartouche garde ses jeux, ses sauvegardes et sa mémoire augmentée. Le Mac la fait de lui-même une fois Cartouche expiré, pour qu'aucun jeu ne soit en cours ; avant, une notification le dit une fois, et **Réinstaller**, dans la page **iPhone**, la fait tout de suite. Cela prend une minute ou deux, et la page montre où elle en est.
+
+Le Mac ne révoque jamais de certificat. Si votre compte en a déjà autant qu'Apple le permet, il n'installe rien et le dit : révoquez-en un qui ne sert plus dans la page **Certificats** de l'Installeur Cartouche, et le Mac réessaie.
 
 ## Piloter les constructions du Mac depuis l'iPhone
 

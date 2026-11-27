@@ -5,7 +5,9 @@
 //  cartouche-signer, the helper the app carries in Contents/Helpers, which
 //  renews Cartouche on the player's iPhone with a new provisioning profile,
 //  as SideStore does on the iPhone, without installing it again
-//  (builder/mac/signer, decision 165). One command a run: its lines of JSON
+//  (builder/mac/signer, decision 165); or, its certificate gone, installs
+//  the newest Cartouche over it for the same team, which keeps its games
+//  and saves (reinstall). One command a run: its lines of JSON
 //  on its output, its answer or its failure last. The app keeps no password:
 //  at a sign-in it hands the password to the helper's input, which sends it
 //  to Apple alone; the helper keeps the session Apple gives, in the
@@ -15,7 +17,7 @@
 import Foundation
 
 /// What stopped the helper: its kind, which says what to do, and where
-/// ("session", "apple" or "iphone"). The message may name the account or
+/// ("session", "apple", "download" or "iphone"). The message may name the account or
 /// the iPhone: it goes to the log and a report the player copies, never in
 /// the measurements.
 public struct SignerFailure: Error, Decodable, Equatable, Sendable {
@@ -135,6 +137,77 @@ public struct SignerRenewal: Decodable, Equatable, Sendable {
     }
 }
 
+/// What an install over Cartouche did (reinstall): the newest version,
+/// signed for the same team, over the same identifier.
+public struct SignerReinstall: Decodable, Equatable, Sendable {
+    public var reinstalled: Bool
+    public var bundleId: String
+    /// The version installed now, and the copy's before.
+    public var version: String
+    public var previousVersion: String?
+    public var before: Date?
+    public var expires: Date?
+    public var due: String
+    public var from: Date?
+    public var refreshedSession: Bool
+    public var link: String
+    public var seconds: Double
+
+    public init(reinstalled: Bool, bundleId: String, version: String, previousVersion: String? = nil, before: Date? = nil, expires: Date? = nil,
+                due: String, from: Date? = nil, refreshedSession: Bool = false, link: String, seconds: Double) {
+        self.reinstalled = reinstalled
+        self.bundleId = bundleId
+        self.version = version
+        self.previousVersion = previousVersion
+        self.before = before
+        self.expires = expires
+        self.due = due
+        self.from = from
+        self.refreshedSession = refreshedSession
+        self.link = link
+        self.seconds = seconds
+    }
+
+    /// Whether a newer version came with it.
+    public var updated: Bool { previousVersion != version }
+}
+
+/// Where an install over Cartouche is: "download", "sign" or "install",
+/// and the fraction of that step done, from 0 to 1.
+public struct SignerProgress: Equatable, Sendable {
+    public var step: String
+    public var fraction: Double
+
+    public init(step: String, fraction: Double) {
+        self.step = step
+        self.fraction = min(max(fraction, 0), 1)
+    }
+
+    /// The steps in their order, and the share of the whole each takes:
+    /// the download of about 30 MB and the install, by the cable or on the
+    /// Wi-Fi, take the longest.
+    static let steps: [(name: String, share: Double)] = [("download", 0.4), ("sign", 0.2), ("install", 0.4)]
+
+    /// How much of the whole install is done, from 0 to 1.
+    public var overall: Double {
+        var done = 0.0
+        for (name, share) in SignerProgress.steps {
+            if name == step { return done + share * fraction }
+            done += share
+        }
+        return 0
+    }
+
+    /// The helper's progress line, {"event": "progress", "step", "fraction"};
+    /// nil for any other.
+    static func read(_ line: String) -> SignerProgress? {
+        struct Event: Decodable { var event: String?; var step: String?; var fraction: Double? }
+        guard let event = try? JSONDecoder().decode(Event.self, from: Data(line.utf8)), event.event == "progress",
+              let step = event.step, let fraction = event.fraction else { return nil }
+        return SignerProgress(step: step, fraction: fraction)
+    }
+}
+
 /// Apple asks for a code: on a trusted device, or by text message.
 public struct SignerCodeRequest: Decodable, Equatable, Sendable {
     public struct Number: Decodable, Equatable, Sendable {
@@ -194,6 +267,9 @@ public final class Signer: Sendable {
     /// How long a command may take: a renewal, a few requests to Apple and
     /// to the iPhone.
     static let timeout: TimeInterval = 180
+    /// How long an install over Cartouche may take: its download, about
+    /// 30 MB, its signature, and its install, on the Wi-Fi too.
+    static let installTimeout: TimeInterval = 20 * 60
 
     public init(helper: URL, folder: URL) {
         self.helper = helper
@@ -236,11 +312,22 @@ public final class Signer: Sendable {
         try await command(["renew", "--udid", udid] + (onlyIfDue ? ["--if-due"] : []))
     }
 
-    /// Runs one command, and decodes its answer.
-    func command<T: Decodable>(_ arguments: [String]) async throws -> T {
-        let result = try await Run.program(helper.path, baseArguments + arguments, timeout: Signer.timeout)
+    /// Installs the newest Cartouche over the copy of the session's team on
+    /// the iPhone UDID, as the Cartouche Installer updates it: for a copy
+    /// whose certificate is gone. PROGRESS gets each step as it goes.
+    public func reinstall(udid: String, progress: @escaping @Sendable (SignerProgress) -> Void) async throws -> SignerReinstall {
+        try await command(["reinstall", "--udid", udid], timeout: Signer.installTimeout) { line in
+            if let step = SignerProgress.read(line) { progress(step) }
+        }
+    }
+
+    /// Runs one command, and decodes its answer; LINE gets each of its
+    /// lines as it comes.
+    func command<T: Decodable>(_ arguments: [String], timeout: TimeInterval = Signer.timeout,
+                               line: (@Sendable (String) -> Void)? = nil) async throws -> T {
+        let result = try await Run.program(helper.path, baseArguments + arguments, timeout: timeout, output: line.map(Run.Lines.init))
         if result.timedOut {
-            throw SignerFailure(kind: "internal", stage: "session", message: "The signer took more than \(Int(Signer.timeout)) s")
+            throw SignerFailure(kind: "internal", stage: "session", message: "The signer took more than \(Int(timeout)) s")
         }
         return try Signer.answer(result.output, tail: result.tail())
     }

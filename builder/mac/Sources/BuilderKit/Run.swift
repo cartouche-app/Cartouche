@@ -80,11 +80,22 @@ public enum Run {
         return nil
     }
 
-    /// Runs EXECUTABLE with ARGUMENTS and waits for it; LINE gets each line
-    /// of its error output as it comes. It is stopped after TIMEOUT, or when
-    /// the task is cancelled.
+    /// What gets each line of a program's output as it comes. A type of its
+    /// own, not a closure, so that a trailing closure stays the error
+    /// output's LINE.
+    public struct Lines: Sendable {
+        let each: @Sendable (String) -> Void
+
+        public init(_ each: @escaping @Sendable (String) -> Void) {
+            self.each = each
+        }
+    }
+
+    /// Runs EXECUTABLE with ARGUMENTS and waits for it; OUTPUT gets each line
+    /// of its output as it comes, LINE each of its error output. It is
+    /// stopped after TIMEOUT, or when the task is cancelled.
     public static func program(_ executable: String, _ arguments: [String] = [], environment: [String: String]? = nil,
-                               directory: URL? = nil, timeout: TimeInterval? = nil,
+                               directory: URL? = nil, timeout: TimeInterval? = nil, output: Lines? = nil,
                                line: (@Sendable (String) -> Void)? = nil) async throws -> RunResult {
         let collected = Collected()
         return try await withTaskCancellationHandler {
@@ -100,7 +111,18 @@ public enum Run {
                 let group = DispatchGroup()
                 group.enter()
                 DispatchQueue.global(qos: .utility).async {
-                    drain(child.output) { collected.appendOutput($0) }
+                    var pending = Data()
+                    drain(child.output) { chunk in
+                        collected.appendOutput(chunk)
+                        guard let output else { return }
+                        pending.append(chunk)
+                        while let end = pending.firstIndex(of: 10) {
+                            let text = String(decoding: pending[pending.startIndex..<end], as: UTF8.self)
+                            pending.removeSubrange(pending.startIndex...end)
+                            if !text.isEmpty { output.each(text) }
+                        }
+                    }
+                    if let output, !pending.isEmpty { output.each(String(decoding: pending, as: UTF8.self)) }
                     group.leave()
                 }
                 group.enter()

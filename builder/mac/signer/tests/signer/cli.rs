@@ -12,6 +12,10 @@ use serde_json::{Value, json};
 use crate::harness::*;
 
 fn signer(h: &Harness, args: &[&str]) -> Command {
+    // The authority the fake GitHub's certificates come from, for the
+    // signer to trust it alone.
+    let ca = h.dir.path().join("github-ca.der");
+    std::fs::write(&ca, h.github.ca_der()).expect("GitHub's authority");
     let mut command = Command::new(env!("CARGO_BIN_EXE_cartouche-signer"));
     command
         .arg("--folder")
@@ -21,6 +25,8 @@ fn signer(h: &Harness, args: &[&str]) -> Command {
         .args(args)
         .env("USBMUXD_SOCKET_ADDRESS", h.usbmuxd.addr().to_string())
         .env("CARTOUCHE_SIGNER_TEST_APPLE_PROXY", h.apple.proxy_url())
+        .env("CARTOUCHE_SIGNER_TEST_GITHUB_PROXY", h.github.proxy_url())
+        .env("CARTOUCHE_SIGNER_TEST_GITHUB_CA", &ca)
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
     command
@@ -133,6 +139,42 @@ async fn renews_and_answers_as_the_app_reads_it() {
     // What the app shows of the session: never its tokens.
     let text = session.to_string();
     assert!(!text.contains("token") && !text.contains("idms") && !text.contains("adsid"), "{text}");
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn installs_over_cartouche_with_its_progress_as_the_app_reads_it() {
+    let h = Harness::new().await;
+    h.sign_in().await;
+    h.install_cartouche().await;
+    h.apple.with_account(EMAIL, |a| a.team.certificates.clear());
+    h.publish_cartouche("0.17.1");
+    let udid = h.udid();
+    let (lines, status) = run(&h, &["reinstall", "--udid", &udid]).await;
+    assert_eq!(status, 0, "{lines:#?}\n{}", h.report());
+    let result = &lines.last().unwrap()["result"];
+    assert_eq!(result["reinstalled"], true);
+    assert_eq!(result["version"], "0.17.1");
+    assert_eq!(result["previousVersion"], "0.16.2");
+    assert_eq!(result["bundleId"], h.bundle_id().as_str());
+    assert!(result["expires"].is_string(), "{result}");
+    assert_eq!(h.cartouche_version().as_deref(), Some("0.17.1"));
+    // Each step as it goes, a hundredth at most each time.
+    let progress: Vec<&Value> = lines.iter().filter(|l| l["event"] == "progress").collect();
+    for step in ["download", "sign", "install"] {
+        let fractions: Vec<f64> =
+            progress.iter().filter(|l| l["step"] == step).map(|l| l["fraction"].as_f64().unwrap()).collect();
+        assert!(!fractions.is_empty(), "no {step} in {progress:#?}");
+        assert!(fractions.windows(2).all(|w| w[0] < w[1]), "{step}: {fractions:?}");
+        assert!(fractions.len() <= 101, "{step}: {} lines", fractions.len());
+    }
+
+    // Without a certificate left, it says so and installs nothing.
+    h.apple.with_account(EMAIL, |a| a.team.certificates.clear());
+    h.apple.add_foreign_certificate(EMAIL, "AltServer");
+    h.apple.add_foreign_certificate(EMAIL, "iPad");
+    let (lines, status) = run(&h, &["reinstall", "--udid", &udid]).await;
+    assert_eq!(status, 1);
+    assert_eq!(lines.last().unwrap()["error"]["kind"], "no-certificate-left", "{lines:#?}");
 }
 
 #[tokio::test(flavor = "multi_thread")]

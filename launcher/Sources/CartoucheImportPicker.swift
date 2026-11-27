@@ -3,11 +3,17 @@
 //  Cartouche
 //
 //  The Files picker a game's IPA is imported with, from the home, a game's
-//  sheet or the guide: one picker, which UIKit shows over whatever is on
-//  screen, as LiveContainer's own app shows its pickers (betterFileImporter
-//  in ViewExtensions.swift), rather than a SwiftUI file importer on each
-//  screen, each shown from a state of its own. It opens the IPA where it
-//  is, as the importers did: a game's IPA is too large to copy first.
+//  sheet or the guide, and the certificate (.p12) and the profile
+//  (.mobileprovision) on Import signing certificate: one picker, which UIKit
+//  shows over whatever is on screen, as LiveContainer's own app shows its
+//  pickers (betterFileImporter in ViewExtensions.swift), rather than a
+//  SwiftUI file importer on each screen, each shown from a state of its
+//  own. It opens the IPA where it is, as the importers did: a game's IPA is
+//  too large to copy first. A signing file, a few kilobytes, it copies into
+//  Cartouche, so that one in iCloud Drive or another app's place comes
+//  down first. The certificate's import showed SwiftUI's file importer up
+//  to 0.16.2, in which a .p12 tapped on an iPhone of iOS 27.3 never came
+//  back (issue #353).
 //
 //  The picker runs in a process of iOS's, inside Cartouche's window. When it
 //  leaves the screen without a word to Cartouche, or never comes, as when
@@ -32,9 +38,29 @@ import UniformTypeIdentifiers
 @available(iOS 17.0, *)
 @MainActor
 final class CartoucheImportPicker: ObservableObject {
-    /// Where the player asked for the picker.
+    /// Where the player asked for the picker, and for what: an IPA from
+    /// the home, a game's sheet or the guide; on Import signing
+    /// certificate, its certificate, or its profile, which Cartouche
+    /// installed from a computer asks for too.
     enum Place: String {
-        case home, sheet, guide
+        case home, sheet, guide, certificate, profile
+
+        /// The files the picker takes. Any file for a signing file, as the
+        /// import took before: one of the wrong kind says why
+        /// (CartoucheSigningCheck), where a file greyed out in the picker
+        /// would say nothing.
+        var types: [UTType] {
+            switch self {
+            case .home, .sheet, .guide: return [.ipa]
+            case .certificate: return [UTType(filenameExtension: "p12") ?? .data, .data]
+            case .profile: return [UTType(filenameExtension: "mobileprovision") ?? .data, .data]
+            }
+        }
+
+        /// Whether the picker hands over a copy of the file, in Cartouche's
+        /// temporary folder, which the import removes once read: a signing
+        /// file, never an IPA.
+        var copies: Bool { self == .certificate || self == .profile }
     }
 
     static let shared = CartoucheImportPicker()
@@ -60,14 +86,15 @@ final class CartoucheImportPicker: ObservableObject {
     private static let showingWait: TimeInterval = 5
 
     /// Shows the picker over what is on screen, from PLACE: ONPICK installs
-    /// the IPA picked, once the picker has gone. A picker already open
-    /// stays; one that went without a word gives way to a new one.
+    /// the IPA picked, or reads the signing file, once the picker has gone.
+    /// A picker already open stays; one that went without a word gives way
+    /// to a new one.
     func pick(from place: Place, _ onPick: @escaping (URL) -> Void) {
         if let open = self.picker {
             guard !Self.isOnScreen(open) else { return }
             close(.lost)
         }
-        let picker = UIDocumentPickerViewController(forOpeningContentTypes: [.ipa], asCopy: false)
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: place.types, asCopy: place.copies)
         picker.delegate = calls
         picker.allowsMultipleSelection = false
         picker.shouldShowFileExtensions = true

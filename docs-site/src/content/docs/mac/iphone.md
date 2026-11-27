@@ -41,7 +41,13 @@ Cartouche opens for seven days at a time on your iPhone, then needs renewing. Ca
 
 From then on, the Mac looks at the iPhones it reaches every half hour while it is open, its window or its menu bar, and renews Cartouche in its last two days, or once it has expired. **Renew** does it at once. A renewal installs nothing again: Cartouche keeps its games, its saves and its increased memory, and shows its new date at its next start.
 
-Your password goes to Apple alone, once: the Mac keeps only the session Apple gives in return, so it never asks for your password when it opens, builds or plays. Once Apple ends that session (a sign-in elsewhere, a new password, or the days Apple gives it) and a renewal is due, a notification, one a day at most, says to sign in again on the **iPhone** page. The Mac leaves alone a Cartouche installed with another Apple Account; and a Cartouche whose certificate is gone from your account opens again only with an install from the Cartouche Installer.
+Your password goes to Apple alone, once: the Mac keeps only the session Apple gives in return, so it never asks for your password when it opens, builds or plays. Once Apple ends that session (a sign-in elsewhere, a new password, or the days Apple gives it) and a renewal is due, a notification, one a day at most, says to sign in again on the **iPhone** page. The Mac leaves alone a Cartouche installed with another Apple Account.
+
+### When its certificate is gone
+
+A Cartouche whose certificate is no longer on your account, revoked by another computer or app with the same Apple Account, opens again only with an install over it. The Mac does it as the Cartouche Installer updates Cartouche: the newest version, from Cartouche's releases on GitHub, signed with your Apple Account and a certificate of this Mac's, *Cartouche for Mac*. Cartouche keeps its games, its saves and its increased memory. The Mac does it by itself once Cartouche has expired, so that no game is playing then; before, a notification says so once, and **Reinstall**, on the **iPhone** page, does it at once. It takes a minute or two, and the page shows how far it is.
+
+The Mac never revokes a certificate. If your account already has as many as Apple allows, it installs nothing and says so: revoke one you no longer use in the Cartouche Installer's **Certificates** page, and the Mac tries again.
 
 ## Drive the Mac's builds from the iPhone
 
