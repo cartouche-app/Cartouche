@@ -70,6 +70,7 @@ on:
       - "launcher/Sources/CartoucheGameWorkView.swift"
       - "launcher/Sources/CartoucheGamepad.swift"
       - "launcher/Sources/CartoucheGuideCard.swift"
+      - "launcher/Sources/CartoucheHomeFilter.swift"
       - "launcher/Sources/CartoucheHomeView.swift"
       - "launcher/Sources/CartoucheLibraryView.swift"
       - "launcher/Sources/CartoucheMeasuredNote.swift"

@@ -11,7 +11,7 @@ Cartouche opens on its console: your games, large, on one shelf, with their offi
 
 ## The home
 
-- **My library:** your games, installed or in your games folder, then **Import** and **All games**.
+- **My library:** your games, installed or in your games folder, then **Import** and **All games**. When some are installed and others are not, the menu beside its title shows them all, only those **Installed**, or only those **Not installed**, still on your Mac, in your games folder or in Cartouche Cloud. Cartouche keeps your choice; <kbd>L</kbd> and <kbd>R</kbd> change it with a controller.
 - **The game in focus:** its name, platform, genre and status on this iPhone, the time you played it and the space it takes. **Play** starts it, **Details** opens its [sheet](/iphone/game-sheet/). When your games folder holds a newer build, **Update** installs it, saves kept.
 - **The dock:** **All games**, **Import** and **System**. It sits at the bottom when the iPhone is upright, and in the top bar when it is sideways.
 - **The top bar:** a controller when one is connected, and, in the last three days of Cartouche's signature, the days left.

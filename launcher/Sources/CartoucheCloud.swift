@@ -224,10 +224,14 @@ struct CartoucheCloudGame: Codable, Hashable, Identifiable {
     var phaseLeft: Int? = nil
     var reportedAt: Date? = nil
     var phases: [String: Int]? = nil
-    /// Built: its IPA's size, its name, and when.
+    /// Built: its IPA's size, its name, and when; and the nxnative it was
+    /// built from, nxnative or nxnative-nobc, for an iPhone 11 to 15
+    /// (CartoucheBCConversion.conversion(ofCloudEngine:)): nil from a
+    /// platform that does not say it yet.
     var bytes: UInt64? = nil
     var file: String? = nil
     var builtAt: Date? = nil
+    var engine: String? = nil
     /// Failed: why (cause.* of the site), what is left to its player
     /// ("again", "mended", "held", "over"), and until when it may be built
     /// again from the site.
@@ -236,7 +240,7 @@ struct CartoucheCloudGame: Codable, Hashable, Identifiable {
     var until: Date? = nil
 
     enum CodingKeys: String, CodingKey {
-        case id, title, name, state, price, stage, usual, behind, place, step, bytes, file, cause, left, until, phase, phases
+        case id, title, name, state, price, stage, usual, behind, place, step, bytes, file, cause, left, until, phase, phases, engine
         case expiresAt = "expires_at"
         case launchedAt = "launched_at"
         case phasedAt = "phased_at"

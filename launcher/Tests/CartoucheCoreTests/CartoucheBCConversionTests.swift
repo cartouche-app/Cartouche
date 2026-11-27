@@ -293,6 +293,20 @@ final class CartoucheBCConversionTests: XCTestCase {
         XCTAssertFalse(CartoucheBCConversion.covers(graphics: "NVN", by: []))
     }
 
+    func testAGameCartoucheCloudBuiltFromNxnativeNobcConverts() {
+        // Sent for an iPhone 11 to 15, as Sparking Zero was for an iPhone 13
+        // (26 November): the platform says which nxnative built it
+        // (GET /api/app/games, engine).
+        XCTAssertEqual(CartoucheBCConversion.conversion(ofCloudEngine: "nxnative-nobc"), [.nvn, .vulkan])
+        XCTAssertTrue(CartoucheBCConversion.covers(graphics: "NVN",
+                                                   by: CartoucheBCConversion.conversion(ofCloudEngine: "nxnative-nobc")))
+        // Sent for an iPhone 15 Pro or later, by a platform that does not say
+        // yet, or from an engine it does not name: nothing converted.
+        for engine in ["nxnative", nil, "", "nxnative-nobc ", "NXNATIVE-NOBC"] {
+            XCTAssertEqual(CartoucheBCConversion.conversion(ofCloudEngine: engine), [], String(describing: engine))
+        }
+    }
+
     // MARK: The sheet's words
 
     /// What a converted game's sheet says on its BC line, in

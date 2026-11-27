@@ -306,15 +306,23 @@ def _check(stop) -> None:
 
 
 def _clone(source: Path, target: Path) -> bool:
+    """Makes TARGET an APFS clone of SOURCE on the same Mac volume. False
+    when it cannot, TARGET then gone: a cp that failed, or that ran past its
+    600 seconds and was killed, may leave half of it, which the copy that
+    follows (_copy, "xb") refused with FileExistsError at the IPA's step
+    (seen on 14 and 27 November)."""
     if sys.platform != "darwin":
         return False
     try:
         if os.stat(source).st_dev != os.stat(target.parent).st_dev:
             return False
+    except OSError:
+        return False
+    try:
         done = subprocess.run(["cp", "-c", str(source), str(target)], capture_output=True, timeout=600)
     except (OSError, subprocess.SubprocessError):
-        return False
-    if done.returncode != 0:
+        done = None
+    if done is None or done.returncode != 0:
         try:
             target.unlink()
         except OSError:
