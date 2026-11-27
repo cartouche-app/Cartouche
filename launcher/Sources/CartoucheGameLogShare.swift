@@ -29,8 +29,9 @@ import Foundation
 /// key; the nickname a player may give the game (DM_NICK); and the memory
 /// a crash, or a thread's state, writes out word by word (nxnative's
 /// crash.c and hle_thread.c), which may hold whatever the game had in
-/// memory. What tells where a game crashed stays: the crash line, the
-/// registers, the backtraces and the module offsets.
+/// memory; and the names of the player's mods, in the paths of their
+/// folders (CartoucheMods). What tells where a game crashed stays: the
+/// crash line, the registers, the backtraces and the module offsets.
 struct CartoucheLogCleaning: Sendable {
     /// The player's own names and the shapes of a report.
     var redaction: CartoucheRedaction
@@ -44,6 +45,7 @@ struct CartoucheLogCleaning: Sendable {
     static let id = "<id>"
     static let key = "<key>"
     static let memory = "<memory>"
+    static let mod = "<mod>"
 
     /// The longest line kept, in UTF-8 bytes: past it, a line loses its
     /// end, so that no line takes the expressions long.
@@ -62,6 +64,8 @@ struct CartoucheLogCleaning: Sendable {
             var line = Self.shortened(line)
             // Word by word first, before anything else changes the words.
             line = Self.withoutMemory(line)
+            // A mod's folder is named after it, in any path.
+            line = Self.replace(Self.modFolder, in: line, with: Self.mod)
             // The folders of apps, then any other path whole, before what
             // is in it, such as an e-mail address, goes and splits it.
             line = Self.replace(CartoucheRedaction.appContainer, in: line, with: CartoucheRedaction.container)
@@ -88,6 +92,9 @@ struct CartoucheLogCleaning: Sendable {
     private static let otherPath = regex(
         #"(?<![A-Za-z0-9_.~/>\-])/(?:private|var|Users|Volumes|home|mnt|tmp)(?:/[^\n"“”«»<>]*?)?"#
             + #"(?=: |, |; | \(|\)|\]|["“”«»<>]|['’](?=[\s:,;.)\]]|\z)|\s*\z)"#)
+    /// The folder of one of the player's mods, which bears its name, in the
+    /// game's mods folder: "…/Documents/mods/HD Textures/romfs".
+    private static let modFolder = regex(#"(?<=/mods/)[^/\n]+(?=/)"#)
     /// What names the device's folders and installs, such as a game's data
     /// folder in LiveContainer: "5A3C1B2D-…".
     private static let uuid = regex(

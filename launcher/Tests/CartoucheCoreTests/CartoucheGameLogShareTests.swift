@@ -85,6 +85,18 @@ final class CartoucheGameLogShareTests: XCTestCase {
         XCTAssertEqual(cleaning.clean("boot: env DM_NICK=Lou"), "boot: env DM_NICK=<name>")
     }
 
+    /// A mod's folder bears the name the player's file gave it; the line
+    /// still says how many mods the game took, and where.
+    func testTheModsNamesGo() {
+        let documents = "\(container)/Documents/Data/Application/\(dataFolder)/Documents"
+        XCTAssertEqual(
+            cleaning.clean("boot: env DM_ROMFS_OVERLAY=\(documents)/mods/Lou's HD Pack (v2)/romfs:\(documents)/mods/Musique/RomFS (env.txt)"),
+            "boot: env DM_ROMFS_OVERLAY=<container>/Documents/Data/Application/<id>/Documents/mods/<mod>/romfs:"
+                + "<container>/Documents/Data/Application/<id>/Documents/mods/<mod>/RomFS (env.txt)")
+        XCTAssertEqual(cleaning.clean("[RED] exl: \(documents)/mods/Compass/exefs/subsdk9 left out: mod code plugins are not supported on iOS (signed code pages)"),
+                       "[RED] exl: <container>/Documents/Data/Application/<id>/Documents/mods/<mod>/exefs/subsdk9 left out: mod code plugins are not supported on iOS (signed code pages)")
+    }
+
     func testThePlayersOwnNamesAndAnyAddressGo() {
         let player = CartoucheLogCleaning(redaction: CartoucheRedaction(servers: ["nas.local"], names: ["NAS d'Élodie"],
                                                                         accounts: ["player@icloud.com"]))

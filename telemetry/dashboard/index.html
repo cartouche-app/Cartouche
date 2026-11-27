@@ -470,8 +470,9 @@
         "prebuild.built", "prebuild.archived", "cpu.watts", "cpu.percent", "cpu.performanceCoresPercent", "gpuBusyMsPerSecond", "thermal.nominal", "thermal.fair", "thermal.serious",
         "thermal.critical", "thermal.seriousAfterMinutes", "lowPowerMinutes", "memory.peakMiB", "memory.exactPeak",
         "memory.gpuPeakMiB", "memory.lowestHeadroomMiB", "guestFile", "upscaler.kind", "upscaler.gpuMs",
-        "audioUnderrunsPerMinute", "display.tv", "display.foldSplit", "dlc", "otherAudio", "end.kind", "end.signal", "end.pc",
-        "end.lr", "end.cause", "process.limitMiB", "process.peakMiB", "process.lastAvailableMiB", "process.quit", "process.screens",
+        "audioUnderrunsPerMinute", "display.tv", "display.foldSplit", "dlc", "otherAudio", "mods", "end.kind", "end.signal",
+        "end.pc", "end.lr", "end.cause", "process.limitMiB", "process.peakMiB", "process.lastAvailableMiB", "process.quit",
+        "process.screens",
     ];
 
     const num = (value) => (typeof value === "number" && Number.isFinite(value) ? value : null);
@@ -932,6 +933,9 @@
             tv: share(sessions, (session) => session["display.tv"]),
             fold: share(sessions.filter((session) => (num(session.reader) ?? 1) >= FOLD_READER), (session) => session["display.foldSplit"]),
             dlc: share(sessions, (session) => session.dlc),
+            // The sessions whose game took mods (CartoucheMods.swift):
+            // their number only.
+            mods: share(sessions, (session) => (num(session.mods) ?? 0) > 0),
             gameVersions: countBy(sessions, (session) => (session.gameVersion ? (gameOf(catalog, session.game).name ?? session.game) + " " + session.gameVersion : null)).slice(0, 8),
         };
 
@@ -1977,6 +1981,7 @@
                         "display.tv": rand() < 0.04,
                         "display.foldSplit": phone.device === "iPhone19,2" && rand() < 0.7,
                         dlc: profile.id === titles[2] && rand() < 0.6,
+                        mods: rand() < 0.06 ? Math.ceil(between(0, 3)) : null,
                     };
                     if (end) {
                         item["end.kind"] = end.kind;
@@ -3197,6 +3202,7 @@
                     ["Sur une télé", shareText(f.tv)],
                     ["Autour du pli d'un Duo", shareText(f.fold)],
                     ["Avec contenu additionnel", shareText(f.dlc)],
+                    ["Avec des mods", shareText(f.mods)],
                     ["Build nxnative modifié", shareText(f.changed)],
                     ["GPU sans BC : textures converties", shareText(f.bcConverted)],
                     ["Converties : parties avec une image", shareText(f.bcConvertedPlayed)],

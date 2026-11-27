@@ -184,6 +184,9 @@ struct CartoucheGameMeasures: Codable, Equatable {
     var audioUnderrunsPerMinute: Double?
     var display: Display?
     var dlc: Bool?
+    /// How many mods the game took (DM_ROMFS_OVERLAY, CartoucheMods): none
+    /// without one.
+    var mods: Int?
     var end: End?
 }
 
@@ -297,6 +300,7 @@ struct CartoucheGameLogReader {
     /// line each (readLayout).
     private var layout: Layout?
     private var dlc = false
+    private var mods: Int?
     private var thermalStart: Int?
     private var thermalChanges: [(seconds: Double, state: Int)] = []
     private var lowPowerStart: Bool?
@@ -383,6 +387,9 @@ struct CartoucheGameLogReader {
             readGuestFile(line)
         } else if line.contains("boot: DLC from ") {
             dlc = true
+        } else if line.contains(" env " + CartoucheModsLine.key + "=") {
+            // The mods the game took, as nxnative read them in its env.txt.
+            mods = CartoucheModsLine.count(inLogLine: line)
         } else if line.contains("[RED] boot: ") {
             bootProblem = true
         }
@@ -712,6 +719,7 @@ struct CartoucheGameLogReader {
             measures.display = CartoucheGameMeasures.Display(tv: tv, foldSplit: foldSplit)
         }
         measures.dlc = dlc
+        measures.mods = mods
         // The limit as the game last had it: the one Cartouche read later
         // may be another.
         measures.end = end(limitMiB: lastLimit ?? limitMiB)

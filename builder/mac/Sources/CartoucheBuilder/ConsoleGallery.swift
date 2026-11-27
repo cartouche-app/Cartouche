@@ -61,8 +61,9 @@ enum ConsoleGallery {
     ]
 
     /// The settings nxnative lists for a game built for the Mac
-    /// (dm/games/settings.tsv, its rows for the Mac; the app's
-    /// Contents/Resources/dm/launcher.json), with a game's defaults.
+    /// (dm/games/settings.tsv, its rows for the Mac at its commit 2f959ede
+    /// of 27 November 2026; the app's Contents/Resources/dm/launcher.json),
+    /// with a game's defaults.
     static func settings(of titleID: String) -> String {
         """
         {"schema": 1, "game": "\(titleID)", "settings": [
@@ -72,11 +73,17 @@ enum ConsoleGallery {
            "level": "basic", "options": [["1", "Docked"], ["0", "Handheld"]]},
           {"env": "DM_PRESENT_UPSCALE", "kind": "choice", "section": "Game", "label": "Upscaling",
            "note": "Uses more GPU time and can increase heat.", "default": "off", "options": [["off", "Standard"], ["metalfx", "MetalFX"]]},
+          {"env": "DM_NVN_ANISO", "kind": "choice", "section": "Game", "label": "Texture filtering",
+           "note": "Sharper ground and walls seen at an angle. 16x costs little on a Mac.", "default": "0",
+           "options": [["0", "Game default"], ["2", "2x"], ["4", "4x"], ["8", "8x"], ["16", "16x"]]},
           {"env": "DM_LANG", "kind": "choice", "section": "Game", "label": "Game language", "note": "", "default": "en-US", "level": "basic",
            "options": [["en-US", "American English"], ["en-GB", "British English"], ["ja", "Japanese"], ["fr", "French"], ["de", "German"],
                        ["es-419", "Latin American Spanish"], ["es", "Spanish"], ["it", "Italian"], ["nl", "Dutch"], ["fr-CA", "Canadian French"]]},
           {"env": "DM_FULLSCREEN", "kind": "choice", "section": "Game", "label": "Display mode", "note": "", "default": "0",
            "level": "basic", "options": [["0", "Window"], ["1", "Fullscreen"]]},
+          {"env": "DM_PICTURE_FIT", "kind": "choice", "section": "Game", "label": "Picture",
+           "note": "Fill crops the game's 16:9 picture to cover the screen. Health bars, subtitles or maps near the edges can be cut off. A full-screen picture without cropping needs a patch for each game.",
+           "default": "fit", "options": [["fit", "Fit"], ["fill", "Fill"]]},
           {"env": "DM_RUMBLE", "kind": "toggle", "section": "Controls", "label": "Game rumble", "note": "", "default": "1",
            "level": "basic", "on": "1", "off": "0"},
           {"env": "DM_RUMBLE_GAIN", "kind": "range", "section": "Controls", "label": "Rumble strength", "note": "", "default": "1.0",
@@ -88,6 +95,14 @@ enum ConsoleGallery {
           {"env": "DM_SW2", "kind": "toggle", "section": "Controls", "label": "Switch 2 controllers",
            "note": "Plays Joy-Con 2 and Pro Controller 2 over Bluetooth: hold Sync on one during the game to pair it. macOS asks once for Bluetooth access.",
            "default": "0", "on": "1", "off": "0"},
+          {"env": "DM_MIC", "kind": "toggle", "section": "Controls", "label": "Microphone",
+           "note": "Lets the game hear your microphone. macOS asks for access when you launch with this enabled.",
+           "default": "0", "level": "basic", "on": "1", "off": "0"},
+          {"env": "DM_MIC_GAIN", "kind": "range", "section": "Controls", "label": "Microphone gain", "note": "", "default": "1",
+           "needs": "DM_MIC=1", "min": 1.0, "max": 8.0, "step": 0.5},
+          {"env": "DM_SCREEN_ASPECT", "kind": "choice", "section": "Game", "label": "Picture shape",
+           "note": "Taller shapes render more pixels and can increase GPU time and heat.", "default": "0",
+           "options": [["1.6", "MacBook (16:10)"], ["1.43", "iPhone Duo screen (1.43:1)"], ["0", "16:9 (Switch)"]]},
           {"env": "DM_PRESENT_SNAP", "kind": "toggle", "section": "Performance", "label": "Frame buffering",
            "note": "Up to one frame more display latency.", "default": "0", "on": "1", "off": "0"},
           {"env": "DM_PSO_MTL4", "kind": "toggle", "section": "Performance", "label": "Metal 4 pipelines",
@@ -298,6 +313,8 @@ enum ConsoleGallery {
         let saves = console.dataFolder.appendingPathComponent(sheetGame + "/save", isDirectory: true)
         try? FileManager.default.createDirectory(at: saves, withIntermediateDirectories: true)
         try? Data(repeating: 0x2A, count: 4_096).write(to: saves.appendingPathComponent("save.dat"))
+        // Its mods, two on, for its sheet's row and its page.
+        writeMods(in: console.dataFolder.appendingPathComponent(sheetGame, isDirectory: true))
         writeStartCopies(in: console.dataFolder.appendingPathComponent(sheetGame, isDirectory: true))
         console.onSaveCopies = { _ in copies }
         console.showForGallery(playTimes: playTimes, sizes: sizes)
@@ -309,6 +326,36 @@ enum ConsoleGallery {
             covers.loaded = true
         }
         return covers
+    }
+
+    /// The mods of the sheet's game in DOCUMENTS, its folder, made up as
+    /// Cartouche keeps them (CartoucheMods): two on, in their order, one
+    /// off, and one copied in by hand without the romfs folder a mod's
+    /// files go in, which shows what stops it.
+    private static func writeMods(in documents: URL) {
+        let folder = CartoucheMods.folder(in: documents)
+        let made: [(folder: String, on: Bool, files: [String])] = [
+            ("Brighter colours", true, ["romfs/Shader/colour.bin"]),
+            ("Retro soundtrack", true, ["romfs/Sound/Resource/Stream/track1.bfstm", "romfs/Sound/Resource/Stream/track2.bfstm"]),
+            ("Bigger text", false, ["romfs/UI/font.bfttf"]),
+            ("Old textures", false, ["Texture/kart.bntx"]),
+        ]
+        var mods: [CartoucheMod] = []
+        for (index, mod) in made.enumerated() {
+            let root = folder.appendingPathComponent(mod.folder, isDirectory: true)
+            for file in mod.files {
+                let url = root.appendingPathComponent(file)
+                try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try? Data(repeating: 0x2A, count: 1_536_000 * (index + 1)).write(to: url)
+            }
+            // The one copied in by hand is not in the list.
+            if mod.files.allSatisfy({ $0.hasPrefix("romfs/") }) {
+                mods.append(CartoucheMod(folder: mod.folder, name: mod.folder, isOn: mod.on, files: mod.files.count,
+                                         size: UInt64(1_536_000 * (index + 1) * mod.files.count),
+                                         added: Date().addingTimeInterval(-Double(index + 1) * 86_400)))
+            }
+        }
+        try? CartoucheMods.save(mods, in: documents)
     }
 
     /// The logs of the sheet's game's last two sessions in FOLDER, made up

@@ -29,6 +29,7 @@ En un iPhone cuyo chip gráfico no lee texturas BC (iPhone 15 y anteriores), la 
 
 - **[Ajustes del juego](/es/iphone/game-settings/):** fotogramas por segundo, escala de renderizado, portátil o en la base, idioma del juego, y más.
 - **[Partidas guardadas](/es/iphone/saves/):** dónde se guardan, restaurar una copia anterior o traer una partida de tu consola.
+- **[Mods](#mods):** archivos que cambian las texturas, los textos, la música o los niveles del juego, activados en el orden que elijas.
 - **Editar la información del juego:** da a tu juego un nombre, una plataforma, un género, una descripción y una portada propios, desde Fotos o Archivos. Se quedan en este iPhone. **Volver a la información de Cartouche** los deshace. Un juego fuera de la lista de nxnative, compilado con una bifurcación por ejemplo, encuentra su portada y su género en IGDB por su nombre.
 - **Siri y pantalla de inicio:** qué decirle a Siri, *«Juega a Stardew Valley en Cartouche»*, y cómo dar al juego su propio icono en la pantalla de inicio con la acción de Atajos **Jugar a un juego**.
 - **Compartir el registro:** el registro del juego, para quien te ayuda, por Mensajes, Mail o AirDrop, o **Enviar a Cartouche**, que primero quita tus rutas, direcciones y nombres. Ves lo que se envía antes de que se envíe.
@@ -44,6 +45,18 @@ En un iPhone cuyo chip gráfico no lee texturas BC (iPhone 15 y anteriores), la 
 ![El registro de un juego, listo para compartir](../../../../assets/screens/es-iphone-gamelog.webp)
 
 </div>
+
+## Mods
+
+Un mod cambia las texturas, los textos, la música o los niveles de un juego: el juego lee sus archivos en lugar de los suyos. **Mods**, en la ficha, dice cuántos están activados. **Añadir un mod** toma uno de Archivos, como carpeta o como ZIP, tal como circulan los mods: Cartouche guarda su carpeta `romfs`, esté donde esté dentro. Si lo que eliges contiene varios mods, llegan todos, desactivados.
+
+- Activa o desactiva cada mod. Cuando dos cambian el mismo archivo, gana el de más arriba: **Subir** y **Bajar** fijan el orden. Puede haber hasta 16 activados a la vez.
+- Los cambios se aplican la próxima vez que inicies el juego. Sal antes del juego si está en pausa detrás de la consola.
+- Un mod añadido con otra versión del juego lo indica: un mod hecho para una versión puede no funcionar con otra.
+- Un mod que también cambia el código del juego, con una carpeta `exefs`, no puede funcionar en un iPhone o un iPad: iOS solo ejecuta el código firmado con el juego. Cartouche lo dice y lo deja fuera.
+- Los mods se quedan en este iPhone: no van a tu carpeta de partidas guardadas. **Eliminar** quita un mod y sus archivos.
+
+Cartouche no descarga ningún mod: traes los tuyos.
 
 ## Juegos fuera de la lista de nxnative
 

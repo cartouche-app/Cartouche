@@ -644,10 +644,13 @@ final class CartoucheGameActions: ObservableObject {
             }
             let remote = try await CartoucheStorage.connect(current)
             if let mac = remote as? CartoucheMacRemote {
-                // How the connection reaches the Mac on its side, its Wi-Fi's
-                // band: the install's screen says it.
+                // How this connection reaches the Mac, the cable or not, and
+                // on the Mac's side, its Wi-Fi's band: the install's screen
+                // says it, as the game comes through this connection, whatever
+                // another sign-in to the Mac goes through meanwhile.
+                let link = mac.link
                 let network = await mac.network()
-                await MainActor.run { CartoucheMacStorage.note(network, of: server.id) }
+                await MainActor.run { CartoucheMacStorage.note(link, network: network, of: server.id) }
             }
             do {
                 let opened = try await remote.open(path)
@@ -1500,7 +1503,8 @@ final class CartoucheGameActions: ObservableObject {
             "dataFolder": container.folderName, "started": started, "behind": true,
         ])
         do {
-            try await CartoucheGameHost.shared.start(app, bundle: bundle, dataFolder: container.folderName)
+            try await CartoucheGameHost.shared.start(app, bundle: bundle, dataFolder: container.folderName,
+                                                     rotation: Self.rotation(of: app, container: container))
         } catch {
             running = nil
             NSLog("[Cartouche] %@ did not start behind the console, it starts in Cartouche's place: %@",
@@ -1740,7 +1744,8 @@ final class CartoucheGameActions: ObservableObject {
     }
 
     /// nxnative's switch for its settings screen, in the data folder the
-    /// game starts with, and the game's language.
+    /// game starts with, the mods the player turned on in its sheet, and
+    /// the game's language.
     private static func prepareStart(of app: LCAppModel, showingSettings: Bool) throws {
         let container = dataFolder(of: app)
         // Only an nxnative game reads it.
@@ -1748,6 +1753,15 @@ final class CartoucheGameActions: ObservableObject {
               FileManager.default.fileExists(atPath: (bundle as NSString).appendingPathComponent("dm")),
               let container else { return }
         try CartoucheStartSwitch.write(showingSettings: showingSettings, home: container.containerURL)
+        // In their order, by the paths the game sees, its home as
+        // LiveContainer sets it: Cartouche's folders may have moved since
+        // the last start, as after Cartouche was installed again.
+        let taken = try CartoucheMods.prepareStart(
+            documents: container.containerURL.appendingPathComponent("Documents", isDirectory: true),
+            gameDocuments: guestHome(of: container).appendingPathComponent("Documents", isDirectory: true))
+        if taken > 0 {
+            CartoucheReports.note(app.displayName + ": starts with " + String(taken) + (taken == 1 ? " mod" : " mods"))
+        }
         chooseLanguage(of: app, bundle: URL(fileURLWithPath: bundle, isDirectory: true), container: container)
         keepOtherAudio(of: app, container: container)
     }
@@ -1793,6 +1807,22 @@ final class CartoucheGameActions: ObservableObject {
             source = "the iPhone's"
         }
         CartoucheReports.note(app.displayName + ": starts in " + language + ", " + source)
+    }
+
+    /// nxnative's Rotation the game starts with behind the console, where
+    /// Cartouche turns its screen (CartoucheGameRotation.starting): its env
+    /// files', else the player's choice in its preferences, else its
+    /// settings list's default; nil for a game built before nxnative had
+    /// it.
+    private static func rotation(of app: LCAppModel, container: LCContainer) -> CartoucheGameRotation? {
+        guard let path = app.appInfo.bundlePath() else { return nil }
+        let bundle = URL(fileURLWithPath: path, isDirectory: true)
+        guard let rows = CartoucheGameSetting.rows(inBundle: bundle) else { return nil }
+        let chosen = app.appInfo.bundleIdentifier()
+            .flatMap { CartoucheGamePreferences(domain: $0, home: guestHome(of: container)) }?
+            .string(forKey: CartoucheGameRotation.savedKey)
+        return CartoucheGameRotation.starting(rows: rows, fixed: CartoucheGameSetting.fixedValues(home: container.containerURL, bundle: bundle),
+                                              chosen: chosen)
     }
 
     /// The data folder runApp starts the game with, made as runApp makes it
@@ -2017,9 +2047,9 @@ final class CartoucheGameActions: ObservableObject {
         notice = CartoucheGameNotice(title: title, message: message, report: report, signAgain: signAgain)
     }
 
-    /// How Cartouche last reached SERVER, a Mac, for the measurements; for
-    /// a NAS whose game the Mac passes on now, relayLink; nil for another
-    /// server.
+    /// How the install's connection to SERVER, a Mac, reaches it, for the
+    /// screen and the measurements (CartoucheMacStorage.links); for a NAS
+    /// whose game the Mac passes on now, relayLink; nil for another server.
     private static func link(to server: CartoucheStorageServer) -> String? {
         guard server.kind == .mac else { return CartoucheMacStorage.relays[server.id] != nil ? relayLink : nil }
         return CartoucheMacStorage.links[server.id]?.rawValue

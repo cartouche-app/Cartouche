@@ -219,9 +219,13 @@ enum CartoucheMacStorage {
     /// first connection after, in seconds: Tailscale gives a device the same
     /// ones for good.
     static let tailnetAskSpacing: TimeInterval = 3_600
-    /// How Cartouche last reached each Mac, by its server's ID, for the
-    /// measurements: a game installed from it says so (game.installed's
-    /// link). Never an address.
+    /// How the connection an install made last reached each Mac, by its
+    /// server's ID, on the iPhone's side: through the cable, the tailnet or
+    /// the network. The install's screen says so, and a game installed from
+    /// it (game.installed's link). The install's own connection alone sets
+    /// it (note): another sign-in to the Mac meanwhile, through the cable
+    /// plugged in since, says nothing of the way the game still comes.
+    /// Never an address.
     @MainActor static private(set) var links: [UUID: CartoucheMacLink] = [:]
     /// How the connection an install made last reached each Mac, on the
     /// Mac's side, as Cartouche on the Mac told (CartoucheMacNetwork): the
@@ -229,8 +233,10 @@ enum CartoucheMacStorage {
     /// None from a Cartouche for Mac older than this.
     @MainActor static private(set) var networks: [UUID: CartoucheMacNetwork] = [:]
 
-    /// What the Mac of SERVER told of its side of the connection, NETWORK.
-    @MainActor static func note(_ network: CartoucheMacNetwork?, of server: UUID) {
+    /// How the install's connection to the Mac of SERVER went, LINK, and
+    /// what the Mac told of its side of it, NETWORK.
+    @MainActor static func note(_ link: CartoucheMacLink, network: CartoucheMacNetwork?, of server: UUID) {
+        links[server] = link
         networks[server] = network
     }
 
@@ -381,17 +387,17 @@ enum CartoucheMacStorage {
         return true
     }
 
-    /// CLIENT as SERVER's remote, keeping where it reached the Mac for the
-    /// next time, and the Mac's addresses in the tailnet, as its Cartouche
-    /// Builder tells them now and then.
+    /// CLIENT as SERVER's remote, with the way it reached the Mac, keeping
+    /// where it reached it for the next time, and the Mac's addresses in the
+    /// tailnet, as its Cartouche Builder tells them now and then.
     private static func remember(_ client: CartoucheBridgeClient, server: CartoucheStorageServer,
                                  settings: CartoucheStorageSettings, cable: Bool = false) async -> CartoucheRemote {
         // An older Cartouche Builder says nothing of them.
         let told = asksTailnet(of: server.id, at: Date()) ? (try? await client.info())?.tailscale : nil
         let known = CartoucheMacAddresses(host: server.host, port: server.port, tailnet: server.tailnet ?? [])
         let now = known.reached(usable(client.address), port: client.port, told: told)
+        // This connection's own: the install that made it says so (links).
         let link = CartoucheMacLink.of(cable: cable, address: client.address, tailnet: now.tailnet)
-        await MainActor.run { links[server.id] = link }
         if now != known {
             await MainActor.run {
                 // As the player has it now, unless they removed it meanwhile.
@@ -402,7 +408,7 @@ enum CartoucheMacStorage {
                 settings.save(moved, secret: nil)
             }
         }
-        return CartoucheMacRemote(client, mac: server.name)
+        return CartoucheMacRemote(client, mac: server.name, link: link)
     }
 
     /// ADDRESS, unless it is an IPv6 address of the link only, which
@@ -724,10 +730,14 @@ final class CartoucheMacRemote: CartoucheRemote {
     let client: CartoucheBridgeClient
     /// The Mac's name in Cartouche, for what it answers.
     private let mac: String
+    /// How this connection reaches the Mac, on the iPhone's side: through
+    /// the cable, the tailnet or the network, for good. Never an address.
+    let link: CartoucheMacLink
 
-    init(_ client: CartoucheBridgeClient, mac: String) {
+    init(_ client: CartoucheBridgeClient, mac: String, link: CartoucheMacLink) {
         self.client = client
         self.mac = mac
+        self.link = link
     }
 
     /// The Mac says folder by folder where Cartouche may write (canWrite).

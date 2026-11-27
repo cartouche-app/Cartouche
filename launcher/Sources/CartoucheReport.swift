@@ -92,6 +92,8 @@ struct CartoucheReport: Codable, Equatable, Sendable {
         case storage
         /// Keeping copies of the saves, or putting one back.
         case saves
+        /// Adding a game's mods, or changing them.
+        case mods
         /// A game's saves on the player's storage.
         case cloud
         /// Erasing Cartouche, from System › Reset Cartouche.

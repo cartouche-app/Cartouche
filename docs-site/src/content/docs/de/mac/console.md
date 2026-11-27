@@ -23,9 +23,13 @@ Die Infoseite sagt auch, wie lange du das Spiel auf diesem Mac gespielt hast und
 
 ## Deine Spielstände auf dem Mac
 
-Der Mac hält die Spielstände der dort gespielten Spiele mit deinem Spielstandordner synchron, wie das iPhone: Die neueste Kopie kommt, bevor ein Spiel startet, und die Spielstände des Mac gehen ein paar Sekunden nach dem Speichern des Spiels. Wenn sich beide Seiten geändert haben, gewinnen die zuletzt geschriebenen Spielstände, und die anderen werden als Kopie behalten. Die Infoseite zeigt sie, mit **Jetzt mit … synchronisieren** und **Kopie zurückspielen**, und holt einen Spielstand von deiner Konsole wie auf dem iPhone. **Kopie zurückspielen** zeigt unter **Auf diesem Mac** auch die Kopien, die jedes Spiel bei seinem Start von seinen Spielständen macht, um zum Start einer Sitzung zurückzukehren ([Deine Spielstände](/de/iphone/saves/)).
+Der Mac hält die Spielstände der dort gespielten Spiele mit deinem Spielstandordner synchron, wie das iPhone: Die neueste Kopie kommt, bevor ein Spiel startet, und die Spielstände des Mac gehen ein paar Sekunden nach dem Speichern des Spiels. Wenn sich beide Seiten geändert haben, gewinnen die zuletzt geschriebenen Spielstände, und die anderen werden als Kopie behalten. Alle Profile des Spiels gehen mit, jedes mit dem Platz, den das Spiel ihm gemacht hat, und die Shader, die es vorbereitet hat, kommen wieder, wie auf dem iPhone. Die Infoseite zeigt sie, mit **Jetzt mit … synchronisieren** und **Kopie zurückspielen**, und holt einen Spielstand von deiner Konsole wie auf dem iPhone. **Kopie zurückspielen** zeigt unter **Auf diesem Mac** auch die Kopien, die jedes Spiel bei seinem Start von seinen Spielständen macht, um zum Start einer Sitzung zurückzukehren ([Deine Spielstände](/de/iphone/saves/)).
 
 Die Kopie eines Spiels auf diesem Mac, das dein NAS aufbewahrt, bleibt aus Time Machine heraus: Sie kommt wieder vom NAS. Die Spielstände des Spiels kommen weiterhin hinein.
+
+## Mods
+
+Die Infoseite eines Spiels hat **Mods** auch auf dem Mac, wie auf dem iPhone ([Die Infoseite eines Spiels](/de/iphone/game-sheet/#mods)): Füge einen Mod aus einem Ordner oder einem ZIP auf diesem Mac hinzu, schalte ihn ein oder aus und lege die Reihenfolge fest. Ein Mod, der auch den Code des Spiels ändert, mit einem `exefs`-Ordner, funktioniert auf dem Mac noch nicht: Cartouche sagt es und lässt ihn weg. Die Mods des Mac bleiben auf diesem Mac.
 
 ## System
 

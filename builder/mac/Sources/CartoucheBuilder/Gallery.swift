@@ -48,7 +48,8 @@ enum Gallery {
         // window as tall as it, again with the newest copy of its saves
         // waiting for the game's update, a newer version having written it,
         // with the copies of its saves and its Switch saves, the pages its
-        // saves open, and its log; its System page, and the Storage page
+        // saves open, its log, and its mods, one of them made for an older
+        // version of the game; its System page, and the Storage page
         // that one opens, with the player's connections, its Game
         // measurements page and its Report a problem page; the guide to a
         // first game on this Mac, and its card on the home, for a player
@@ -56,6 +57,7 @@ enum Gallery {
         case console, consoleLibrary = "console-library", consoleSettings = "console-settings", consoleInfo = "console-info"
         case consoleSheet = "console-sheet", consoleSheetNewer = "console-sheet-newer"
         case consoleSaves = "console-saves", consoleSwitchSave = "console-switch-save", consoleGameLog = "console-game-log"
+        case consoleMods = "console-mods"
         case consoleSystem = "console-system", consoleStorage = "console-storage", consoleMeasures = "console-measures"
         case consoleReport = "console-report", consoleGuide = "console-guide", consoleFirstGame = "console-first-game"
         // What the window's height leaves out: the settings' Builds tab, and
@@ -110,7 +112,7 @@ enum Gallery {
         /// Whether the page is the console's, which is always dark.
         var isConsole: Bool {
             [.console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet, .consoleSheetNewer, .consoleSaves,
-             .consoleSwitchSave, .consoleGameLog, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport,
+             .consoleSwitchSave, .consoleGameLog, .consoleMods, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport,
              .consoleGuide, .consoleFirstGame].contains(self)
         }
 
@@ -130,6 +132,7 @@ enum Gallery {
             case .consoleSaves: return .copies
             case .consoleSwitchSave: return .switchSaves
             case .consoleGameLog: return .log
+            case .consoleMods: return .mods
             default: return nil
             }
         }
@@ -290,7 +293,8 @@ enum Gallery {
         case .settings, .settingsBuilds, .settingsBuildsNoBC:
             controller = settings(model, open: page == .settings ? .general : .builds)
         case .console, .consoleLibrary, .consoleSettings, .consoleInfo, .consoleSheet, .consoleSheetNewer, .consoleSaves, .consoleSwitchSave,
-             .consoleGameLog, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport, .consoleGuide, .consoleFirstGame:
+             .consoleGameLog, .consoleMods, .consoleSystem, .consoleStorage, .consoleMeasures, .consoleReport, .consoleGuide,
+             .consoleFirstGame:
             ConsoleGallery.prepare(language: L10n.code, newer: page == .consoleSheetNewer,
                                    firstGame: page == .consoleGuide || page == .consoleFirstGame)
             model.show(.console)

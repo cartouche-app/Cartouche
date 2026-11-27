@@ -35,6 +35,9 @@ struct HarnessGame {
     /// way since nxnative's e2fadf2 (4 November 2026), with a layout for an
     /// upright screen; none before, as here unless set.
     var orientationsOnIPad: [String]?
+    /// Built since nxnative's 388befdf (23 November 2026): its settings
+    /// list has Rotation (DM_ROTATION), which locks it sideways or upright.
+    var hasRotation = false
     /// The SDK nxnative built it with: iOS 26.0.
     var sdk: UInt32 = 0x001A_0000
     var encrypted = false
@@ -90,6 +93,14 @@ struct HarnessGame {
         return game
     }
 
+    /// The same game as nxnative builds it since 23 November 2026, with its
+    /// Rotation.
+    static func withRotation(_ index: Int = 0) -> HarnessGame {
+        var game = laidOutUpright(index)
+        game.hasRotation = true
+        return game
+    }
+
     /// The game's Info.plist, with the keys nxnative's build_ipa.sh gives it.
     var infoPlist: [String: Any] {
         var info: [String: Any] = [
@@ -121,7 +132,7 @@ struct HarnessGame {
 
     /// dm/launcher.json: nxnative's settings screen, its language first.
     var launcherJSON: Data {
-        let settings: [[String: Any]] = [
+        var settings: [[String: Any]] = [
             [
                 "env": "DM_LANG", "kind": "choice", "label": "Language", "note": "The game's language.",
                 "default": languages.first ?? language, "section": "Game",
@@ -136,6 +147,12 @@ struct HarnessGame {
                 "env": "DM_VSYNC", "kind": "toggle", "label": "VSync", "note": "", "default": "1", "section": "Graphics",
             ],
         ]
+        if hasRotation {
+            settings.append([
+                "env": "DM_ROTATION", "kind": "choice", "label": "Rotation", "note": "", "default": "auto", "section": "Game",
+                "options": [["auto", "Automatic"], ["landscape", "Landscape"], ["portrait", "Portrait"]],
+            ])
+        }
         return (try? JSONSerialization.data(withJSONObject: ["settings": settings], options: [.sortedKeys])) ?? Data()
     }
 

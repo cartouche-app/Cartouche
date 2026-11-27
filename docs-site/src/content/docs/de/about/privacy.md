@@ -13,7 +13,7 @@ Cartouche sendet deine Spiele und Spielstände nirgendwohin außer in den Speich
 
 Nach jedem Spiel sendet Cartouche, was nxnative während des Spiels gemessen hat, damit Spiele auf iPhone, iPad und Mac besser laufen:
 
-- **Für jede Spielsitzung:** Bildrate, Frame- und Grafikzeiten, Ruckler, Shader-Vorbereitung, Arbeitsspeicher, Wärme und Energie, und wie die Sitzung endete.
+- **Für jede Spielsitzung:** Bildrate, Frame- und Grafikzeiten, Ruckler, Shader-Vorbereitung, Arbeitsspeicher, Wärme und Energie, wie viele Mods eingeschaltet waren, und wie die Sitzung endete.
 - **Über dein Gerät:** sein Modell, seine iOS-Version, Sprache und Speichergrenze, die Version von Cartouche und eine Zufallsnummer dieser Kopie von Cartouche.
 - **Die eigenen Ereignisse von Cartouche:** Starts, Installationen, Updates, Erneuerungen und Anmeldungen, als Zählungen und Ergebnisse.
 

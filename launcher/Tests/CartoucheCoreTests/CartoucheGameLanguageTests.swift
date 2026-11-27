@@ -64,10 +64,26 @@ final class CartoucheGameLanguageTests: XCTestCase {
         XCTAssertEqual(Language.codes(for: "nl-BE"), ["nl"])
         XCTAssertEqual(Language.codes(for: "it-IT"), ["it"])
         XCTAssertEqual(Language.codes(for: "ru-RU"), ["ru"])
-        // No Switch game is in Polish, Arabic or Swedish.
-        XCTAssertEqual(Language.codes(for: "pl-PL"), [])
+        // No Switch game is in Arabic or Swedish.
         XCTAssertEqual(Language.codes(for: "ar"), [])
         XCTAssertEqual(Language.codes(for: "sv-SE"), [])
+    }
+
+    /// Up to 0.16.2, an iPhone in Polish or Thai started a game that has
+    /// its language, as nxnative reads it since 19 November 2026, in the
+    /// game's own.
+    func testPolishAndThaiReachTheGame() {
+        XCTAssertEqual(Language.codes(for: "pl-PL"), ["pl"])
+        XCTAssertEqual(Language.codes(for: "pl"), ["pl"])
+        XCTAssertEqual(Language.codes(for: "th-TH"), ["th"])
+        XCTAssertEqual(Language.codes(for: "th"), ["th"])
+        let wonder = european + ["pl", "th"]
+        XCTAssertEqual(Language.best(for: ["pl-PL", "en-PL"], among: wonder), "pl")
+        XCTAssertEqual(Language.best(for: ["th-TH", "en-TH"], among: wonder), "th")
+        XCTAssertEqual(Language.following(["pl-PL"], offered: wonder, gameDefault: "en-US"),
+                       Record(saved: "pl", source: .iPhone, iPhone: "pl"))
+        // A game without them: the iPhone's next language it has.
+        XCTAssertEqual(Language.best(for: ["pl-PL", "de-DE"], among: european), "de")
     }
 
     func testEnglishAndSpanishGoByTheAmericas() {

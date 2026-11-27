@@ -223,7 +223,7 @@ const session = object(
     prepare: object({ seconds: number(0, 1e6), lines: integer(0, 1e9) }, ["seconds", "lines"]),
     // The pipeline archive made on the Mac by GPU, as the game found it at
     // its start, and the pipeline bases the device built itself
-    // (launcher/Sources/CartoucheGameLog.swift, from reader 6, decision 174).
+    // (launcher/Sources/CartoucheGameLog.swift, from reader 7, decision 174).
     pipelineArchive: oneOf("opened", "otherGPU", "otherSystem", "unreadable"),
     prebuild: object(
       { seconds: number(0, 1e6), built: integer(0, 1e9), archived: integer(0, 1e9) },
@@ -245,6 +245,9 @@ const session = object(
     // On the iPhone, whether the game let other apps' sound play on, as the
     // player chose (launcher/Sources/CartoucheOtherAudio.swift).
     otherAudio: flag,
+    // How many mods the game took (launcher/Sources/CartoucheMods.swift),
+    // never their names.
+    mods: integer(1, 64),
     end: object(
       {
         kind: oneOf("crash", "boot-failed", "memory-likely", "quit", "unknown"),

@@ -24,6 +24,30 @@
       "es": "Añade tus juegos en el Builder: compila cada uno para este Mac a partir de tu propia copia.",
       "fr": "Ajoutez vos jeux dans le Builder : il construit chacun pour ce Mac à partir de votre propre copie."
     },
+    "mods.delete.message": {
+      "de": "Seine Dateien werden von diesem Mac gelöscht.",
+      "en": "Its files are deleted from this Mac.",
+      "es": "Sus archivos se eliminan de este Mac.",
+      "fr": "Ses fichiers sont supprimés de ce Mac."
+    },
+    "mods.intro": {
+      "de": "Ein Mod ändert Texturen, Texte, Musik oder Level des Spiels: Das Spiel liest seine Dateien statt der eigenen. Füge einen von diesem Mac hinzu, als Ordner oder als ZIP.",
+      "en": "A mod changes the game’s textures, texts, music or levels: the game reads its files in place of its own. Add one from this Mac, as its folder or its ZIP.",
+      "es": "Un mod cambia las texturas, los textos, la música o los niveles del juego: el juego lee sus archivos en lugar de los suyos. Añade uno desde este Mac, como carpeta o como ZIP.",
+      "fr": "Un mod change les textures, les textes, la musique ou les niveaux du jeu : le jeu lit ses fichiers à la place des siens. Ajoutez-en un depuis ce Mac, en dossier ou en ZIP."
+    },
+    "mods.problem.code": {
+      "de": "Er ändert auch den Code des Spiels, in seinem exefs-Ordner: Cartouche kann einen solchen Mod noch nicht für einen Mac vorbereiten. Vorerst funktionieren nur Mods, die die Dateien des Spiels ändern.",
+      "en": "It changes the game’s code too, in its exefs folder: Cartouche cannot prepare such a mod for a Mac yet. For now, only mods that change the game’s files work.",
+      "es": "También cambia el código del juego, en su carpeta exefs: Cartouche aún no puede preparar un mod así para un Mac. Por ahora, solo funcionan los mods que cambian los archivos del juego.",
+      "fr": "Il change aussi le code du jeu, dans son dossier exefs : Cartouche ne sait pas encore préparer un tel mod pour un Mac. Pour l’instant, seuls les mods qui changent les fichiers du jeu marchent."
+    },
+    "mods.problem.noRoom": {
+      "de": "Auf diesem Mac ist nicht genug Platz: Er braucht %1$@, frei sind %2$@.",
+      "en": "This Mac does not have room for it: it needs %1$@, and %2$@ is free.",
+      "es": "No hay espacio suficiente en este Mac: necesita %1$@ y quedan %2$@.",
+      "fr": "Il n’y a pas assez de place sur ce Mac : il faut %1$@, et il reste %2$@."
+    },
     "reason.doesNotRun": {
       "de": "Die Tester konnten es auf diesem Mac-Modell nicht starten.",
       "en": "Testers could not run it on this Mac model.",

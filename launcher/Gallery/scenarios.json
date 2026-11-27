@@ -1013,6 +1013,27 @@
       ]
     },
     {
+      "name": "iphone-game-settings-whole",
+      "comment": "A game's whole Game section, down to Rotation and Picture shape, nxnative's newest rows (decision 173).",
+      "screen": "settings",
+      "sheet": "0400C3F00006E000",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 1366,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-game-settings-spanish",
       "comment": "A game's settings in Spanish (decision 152).",
       "language": "es",
@@ -1208,6 +1229,50 @@
       "screen": "switch-save",
       "sheet": "01006BB00C6F0000",
       "work": "saves",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-sheet-mods",
+      "comment": "The sheet of the player's game brought down to its saves and, under them, its mods: two on.",
+      "screen": "sheet-saves",
+      "sheet": "0400C3F00006E000",
+      "work": "mods",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-mods",
+      "comment": "A game's mods, from its sheet: two on, in their order, one off added with an older version of the game, one copied in by hand without a romfs folder, and a ZIP of a mod that changes the game's code too, picked and refused with why.",
+      "screen": "mods",
+      "sheet": "0400C3F00006E000",
+      "work": "mods",
       "owned": [
         "0400C3F00006E000",
         "040074A01BF12000",

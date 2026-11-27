@@ -997,6 +997,10 @@ enum CartoucheText {
         case "Display mode": return s("setting.displayMode", "Display mode")
         case "Press a button to join": return s("setting.pressToJoin", "Press a button to join")
         case "Switch 2 controllers": return s("setting.switch2", "Switch 2 controllers")
+        case "Rotation": return s("setting.rotation", "Rotation")
+        case "Texture filtering": return s("setting.textureFiltering", "Texture filtering")
+        case "Microphone": return s("setting.microphone", "Microphone")
+        case "Microphone gain": return s("setting.microphoneGain", "Microphone gain")
 
         case "Docked": return modeName("docked")
         case "Handheld": return modeName("handheld")
@@ -1008,6 +1012,12 @@ enum CartoucheText {
         case "Match screen": return s("setting.option.matchScreen", "Match screen")
         case "Window": return s("setting.option.window", "Window")
         case "Fullscreen": return s("setting.option.fullscreen", "Fullscreen")
+        case "Automatic": return s("setting.option.automatic", "Automatic")
+        case "Landscape": return s("setting.option.landscape", "Landscape")
+        case "Portrait": return s("setting.option.portrait", "Portrait")
+        case "Game default": return s("setting.option.gameDefault", "Game default")
+        case "MacBook (16:10)": return s("setting.option.macBook", "MacBook (16:10)")
+        case "16:9 (Switch)": return s("setting.option.switchShape", "16:9 (Switch)")
 
         case "Adjusts resolution between 70% and 100% under load. Turn off to keep full resolution for the selected console mode.":
             let low = percent(0.7), high = percent(1)
@@ -1022,6 +1032,12 @@ enum CartoucheText {
             return s("setting.note.picture", "Fill crops the game’s 16:9 picture to cover the screen. Health bars, subtitles or maps near the edges can be cut off. A full-screen picture without cropping needs a patch for each game.")
         case "Renders about a quarter more pixels: a little slower and warmer.":
             return s("setting.note.pictureShape", "Renders about a quarter more pixels: a little slower and warmer.")
+        case "Taller shapes render more pixels and can increase GPU time and heat.":
+            return s("setting.note.pictureShapeTaller", "Taller shapes render more pixels and can increase GPU time and heat.")
+        case "Sharper ground and walls seen at an angle. 16x costs little on a Mac.":
+            return s("setting.note.textureFiltering", "Sharper ground and walls seen at an angle. 16x costs little on a Mac.")
+        case "Lets the game hear your microphone. macOS asks for access when you launch with this enabled.":
+            return s("setting.note.microphone", "Lets the game hear your microphone. macOS asks for access when you launch with this enabled.")
         case "Up to one frame more display latency.":
             return s("setting.note.frameBuffering", "Up to one frame more display latency.")
         case "Keeps a pipeline archive; uses more memory.":
