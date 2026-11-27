@@ -30,10 +30,12 @@ import Foundation
     static let shared = CartoucheUpdates()
     var phase: Int? = nil
 }
+// CartoucheTelemetryReport.swift's, which signing.imported's fields are
+// (CartoucheSigningMeasure, in CartoucheSigningCheck.swift).
+enum CartoucheTelemetryValue { case text(String), number(Double), flag(Bool) }
 @available(iOS 17.0, *) @MainActor final class CartoucheTelemetry {
     static let shared = CartoucheTelemetry()
-    enum Field { case text(String) }
-    func event(_ name: String, fields: [String: Field]) {}
+    func event(_ name: String, game: String? = nil, fields: [String: CartoucheTelemetryValue] = [:]) {}
 }
 enum LCUtils {
     static var appGroupUserDefault: UserDefaults { .standard }
