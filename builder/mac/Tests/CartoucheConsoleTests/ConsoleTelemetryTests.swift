@@ -61,7 +61,7 @@ final class ConsoleTelemetryTests: XCTestCase {
     private var keptMemory = false
     /// What the app was given to send, and the number of its last report.
     private var reports: [CartoucheMacReport] = []
-    private var seq = 31
+    private var seq = 33
     private var switched: [Bool] = []
     private let titleID = "0100152000022000"
     private let started = Date(timeIntervalSince1970: 1_794_000_000)
@@ -214,7 +214,7 @@ final class ConsoleTelemetryTests: XCTestCase {
         let next = try object(reports[1])
         XCTAssertNotEqual(next["session"] as? String, session)
         XCTAssertEqual(next["minutes"] as? Double, 10)
-        XCTAssertEqual(next["seq"] as? Int, 33)
+        XCTAssertEqual(next["seq"] as? Int, 35)
     }
 
     /// A game playing still writes its log: the run before is read, its

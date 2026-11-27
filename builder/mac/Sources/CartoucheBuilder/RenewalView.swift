@@ -7,7 +7,8 @@
 //  the password and Apple's code, which the page sends on and forgets;
 //  each iPhone this Mac reaches, until when Cartouche opens there, when
 //  this Mac renews it or why it did not, in the player's words
-//  (SignerWords), and Renew, for whenever the player wants it.
+//  (SignerWords), and Renew, for whenever the player wants it; Reinstall,
+//  for a copy whose certificate is gone, and how far its install is.
 //
 
 import BuilderKit
@@ -185,17 +186,26 @@ struct RenewalSection: View {
         var title = [iphone.name ?? "iPhone", SignerWords.link(iphone.link)]
         var lines: [SignerLine] = []
         var plan: SignerPlan?
+        var progress: SignerProgress?
+        var installs = false
         if let failure = iphone.error {
             lines = [SignerLine(SignerWords.failure(kind: failure.kind), warning: true)]
         } else if let copy = row.copy {
             if let version = copy.version { title.append("Cartouche " + version) }
             plan = renewals.plan(iphone, copy)
-            lines = SignerWords.lines(for: copy, plan: plan!, last: renewals.last(iphone, copy),
-                                      working: renewals.isWorking(iphone, copy), signedIn: renewals.signedIn)
+            let last = renewals.last(iphone, copy)
+            progress = renewals.progress(iphone, copy)
+            lines = SignerWords.lines(for: copy, plan: plan!, last: last, working: renewals.isWorking(iphone, copy), progress: progress,
+                                      signedIn: renewals.signedIn)
+            // Only an install over it helps: its certificate is gone, or
+            // the last install over it failed.
+            let failedInstall = last.map { $0.failed && $0.wasInstall && $0.expires == copy.expires } ?? false
+            installs = plan == .needsInstall || plan == .reinstall || failedInstall
         } else {
             lines = [SignerLine(SignerWords.failure(kind: "no-cartouche"))]
         }
-        let renewable = renewals.signedIn && !renewals.sessionEnded && plan.map { $0 != .otherTeam && $0 != .needsInstall } == true
+        let ready = renewals.signedIn && !renewals.sessionEnded
+        let renewable = ready && !installs && plan.map { $0 != .otherTeam } == true
         return HStack(alignment: .top, spacing: 14) {
             Image(systemName: "iphone")
                 .font(.title3)
@@ -212,11 +222,23 @@ struct RenewalSection: View {
                         .foregroundStyle(line.warning ? Color.orange : Color.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+                if let progress {
+                    ProgressView(value: progress.overall)
+                        .progressViewStyle(.linear)
+                        .frame(maxWidth: 260)
+                        .padding(.top, 2)
+                }
             }
             Spacer(minLength: 12)
             if renewable, let copy = row.copy {
                 Button(tr("Renew", "Renouveler", "Renovar", "Erneuern")) {
                     Task { await renewals.renew(iphone, copy, asked: true) }
+                }
+                .controlSize(.small)
+                .disabled(renewals.isWorking(iphone, copy))
+            } else if ready, installs, let copy = row.copy {
+                Button(tr("Reinstall", "Réinstaller", "Reinstalar", "Neu installieren")) {
+                    Task { await renewals.reinstall(iphone, copy, asked: true) }
                 }
                 .controlSize(.small)
                 .disabled(renewals.isWorking(iphone, copy))

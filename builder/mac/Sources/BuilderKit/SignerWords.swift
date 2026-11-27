@@ -4,8 +4,8 @@
 //
 //  What the iPhone page says of the renewal of Cartouche from this Mac
 //  (decision 165): the Apple account it renews with, until when Cartouche
-//  opens on each iPhone, when this Mac renews it, and why it did not, in
-//  the player's words. The helper's message, which may name the account or
+//  opens on each iPhone, when this Mac renews it or installs it again over
+//  itself, and why it did not, in the player's words. The helper's message, which may name the account or
 //  the iPhone, is never shown in place of them: it goes to the log.
 //
 
@@ -59,10 +59,10 @@ public enum SignerWords {
     }
 
     /// Until when COPY opens, what this Mac does about it (PLAN), and what
-    /// came of its last try (LAST); WORKING while it renews it; this Mac
-    /// SIGNEDIN to Apple, or not yet.
-    public static func lines(for copy: SignerCartouche, plan: SignerPlan, last: SignerAttempt?, working: Bool, signedIn: Bool = true,
-                             now: Date = Date()) -> [SignerLine] {
+    /// came of its last try (LAST); WORKING while it renews it, or installs
+    /// it again at PROGRESS; this Mac SIGNEDIN to Apple, or not yet.
+    public static func lines(for copy: SignerCartouche, plan: SignerPlan, last: SignerAttempt?, working: Bool, progress: SignerProgress? = nil,
+                             signedIn: Bool = true, now: Date = Date()) -> [SignerLine] {
         var lines: [SignerLine] = []
         if let expires = copy.expires {
             lines.append(expires > now
@@ -73,8 +73,16 @@ public enum SignerWords {
                              warning: true))
         }
         if let last, !last.failed, last.expires == copy.expires {
-            lines.append(SignerLine(tr("Renewed by this Mac \(Format.relative(last.at, now: now))", "Renouvelé par ce Mac \(Format.relative(last.at, now: now))",
-                                       "Renovado por este Mac \(Format.relative(last.at, now: now))", "Von diesem Mac \(Format.relative(last.at, now: now)) erneuert")))
+            let when = Format.relative(last.at, now: now)
+            lines.append(last.wasInstall
+                ? SignerLine(tr("Installed again by this Mac \(when)", "Réinstallé par ce Mac \(when)", "Reinstalado por este Mac \(when)",
+                                "Von diesem Mac \(when) neu installiert"))
+                : SignerLine(tr("Renewed by this Mac \(when)", "Renouvelé par ce Mac \(when)", "Renovado por este Mac \(when)",
+                                "Von diesem Mac \(when) erneuert")))
+        }
+        if let progress {
+            lines.append(SignerLine(installing(progress)))
+            return lines
         }
         if working {
             lines.append(SignerLine(tr("Renewing…", "Renouvellement…", "Renovando…", "Wird erneuert …")))
@@ -102,7 +110,14 @@ public enum SignerWords {
                                        "Inicia sesión en Apple arriba para que este Mac lo renueve.", "Melde dich oben bei Apple an, damit dieser Mac es erneuert."),
                                     warning: true))
         case .needsInstall:
-            lines.append(SignerLine(failure(kind: "certificate-gone"), warning: true))
+            if let last, let kind = last.kind, last.wasInstall, last.expires == copy.expires {
+                lines.append(SignerLine(failure(kind: kind), warning: true))
+            }
+            lines.append(SignerLine(needsInstall, warning: true))
+        case .reinstall:
+            lines.append(SignerLine(tr("This Mac installs it again now, with its games and saves", "Ce Mac le réinstalle maintenant, avec ses jeux et ses sauvegardes",
+                                       "Este Mac lo reinstala ahora, con sus juegos y partidas guardadas",
+                                       "Dieser Mac installiert es jetzt neu, mit seinen Spielen und Spielständen")))
         case .otherTeam:
             lines.append(SignerLine(failure(kind: "other-team")))
         }
@@ -148,13 +163,23 @@ public enum SignerWords {
             return tr("Installed with another Apple Account: this Mac leaves it alone.", "Installé avec un autre compte Apple : ce Mac n’y touche pas.",
                       "Instalado con otra cuenta de Apple: este Mac no lo toca.", "Mit einem anderen Apple Account installiert: Dieser Mac lässt es in Ruhe.")
         case "certificate-gone":
-            return tr("Its certificate is no longer on your Apple Account: only an install with the Cartouche Installer opens it again.",
-                      "Son certificat n’est plus sur votre compte Apple : seule une installation avec l’Installeur Cartouche le rouvre.",
-                      "Su certificado ya no está en tu cuenta de Apple: solo una instalación con el Instalador de Cartouche lo vuelve a abrir.",
-                      "Sein Zertifikat ist nicht mehr in deinem Apple Account: Nur eine Installation mit dem Cartouche Installer öffnet es wieder.")
+            return tr("Its certificate is no longer on your Apple Account: only an install over it opens it again.",
+                      "Son certificat n’est plus sur votre compte Apple : seule une installation par-dessus le rouvre.",
+                      "Su certificado ya no está en tu cuenta de Apple: solo una instalación encima lo vuelve a abrir.",
+                      "Sein Zertifikat ist nicht mehr in deinem Apple Account: Nur eine Installation darüber öffnet es wieder.")
         case "no-app-ids":
             return tr("Your account used its 10 App IDs of the week: this Mac tries again later.", "Votre compte a pris ses 10 identifiants d’app de la semaine : ce Mac réessaie plus tard.",
                       "Tu cuenta usó sus 10 ID de app de la semana: este Mac lo intenta más tarde.", "Dein Konto hat seine 10 App-IDs der Woche verbraucht: Dieser Mac versucht es später.")
+        case "no-certificate-left":
+            return tr("Your Apple Account has as many certificates as Apple allows: revoke one you no longer use in the Cartouche Installer’s Certificates page.",
+                      "Votre compte Apple a autant de certificats qu’Apple le permet : révoquez-en un qui ne sert plus dans la page Certificats de l’Installeur Cartouche.",
+                      "Tu cuenta de Apple tiene tantos certificados como Apple permite: revoca uno que ya no uses en la página Certificados del Instalador de Cartouche.",
+                      "Dein Apple Account hat so viele Zertifikate, wie Apple erlaubt: Widerrufe eines, das du nicht mehr nutzt, auf der Seite Zertifikate des Cartouche Installer.")
+        case "download":
+            return tr("The download of Cartouche from GitHub did not go through: check the Internet connection.",
+                      "Le téléchargement de Cartouche depuis GitHub n’a pas abouti : vérifiez la connexion à Internet.",
+                      "La descarga de Cartouche desde GitHub no se completó: comprueba la conexión a Internet.",
+                      "Der Download von Cartouche von GitHub ist nicht durchgegangen: Prüfe die Internetverbindung.")
         case "profile-refused":
             return tr("The iPhone refused the new profile.", "L’iPhone a refusé le nouveau profil.", "El iPhone rechazó el nuevo perfil.", "Das iPhone hat das neue Profil abgelehnt.")
         case "iphone":
@@ -162,6 +187,32 @@ public enum SignerWords {
         default:
             return tr("The renewal stopped (\(kind)).", "Le renouvellement s’est arrêté (\(kind)).", "La renovación se detuvo (\(kind)).", "Die Erneuerung wurde angehalten (\(kind)).")
         }
+    }
+
+    /// A copy whose certificate is gone: what Reinstall does, and when this
+    /// Mac does it by itself.
+    public static var needsInstall: String {
+        tr("Reinstall puts the newest Cartouche over it, with its games and saves. This Mac does it by itself once it expires.",
+           "Réinstaller met le dernier Cartouche par-dessus, avec ses jeux et ses sauvegardes. Ce Mac le fait de lui-même une fois qu’il a expiré.",
+           "Reinstalar pone el Cartouche más reciente encima, con sus juegos y partidas guardadas. Este Mac lo hace solo una vez que caduca.",
+           "Neu installieren legt das neueste Cartouche darüber, mit seinen Spielen und Spielständen. Dieser Mac macht es von selbst, sobald es abgelaufen ist.")
+    }
+
+    /// Where an install over Cartouche is: its step, and how much of it is
+    /// done.
+    public static func installing(_ progress: SignerProgress) -> String {
+        let percent = Int((progress.fraction * 100).rounded(.down))
+        // Its steps, never a kind of failure (builder/tests/test_signer.py).
+        if progress.step == "download" {
+            return tr("Installing again: downloading Cartouche, \(percent)%", "Réinstallation : téléchargement de Cartouche, \(percent) %",
+                      "Reinstalando: descargando Cartouche, \(percent) %", "Neuinstallation: Cartouche wird geladen, \(percent) %")
+        }
+        if progress.step == "sign" {
+            return tr("Installing again: signing with your Apple Account", "Réinstallation : signature avec votre compte Apple",
+                      "Reinstalando: firmando con tu cuenta de Apple", "Neuinstallation: Signieren mit deinem Apple Account")
+        }
+        return tr("Installing again: installing on the iPhone, \(percent)%", "Réinstallation : installation sur l’iPhone, \(percent) %",
+                  "Reinstalando: instalando en el iPhone, \(percent) %", "Neuinstallation: Installation auf dem iPhone, \(percent) %")
     }
 
     /// When this Mac reaches no iPhone.
@@ -174,10 +225,10 @@ public enum SignerWords {
 
     /// Under the section: what a renewal does, and does not.
     public static var footnote: String {
-        tr("A renewal installs nothing again: Cartouche keeps its games, its saves and its increased memory.",
-           "Un renouvellement ne réinstalle rien : Cartouche garde ses jeux, ses sauvegardes et sa mémoire augmentée.",
-           "Una renovación no reinstala nada: Cartouche conserva sus juegos, sus partidas guardadas y su memoria ampliada.",
-           "Eine Erneuerung installiert nichts neu: Cartouche behält seine Spiele, seine Spielstände und seinen erweiterten Speicher.")
+        tr("A renewal installs nothing again: Cartouche keeps its games, its saves and its increased memory. An install over it, when its certificate is gone, keeps them too, and never revokes a certificate.",
+           "Un renouvellement ne réinstalle rien : Cartouche garde ses jeux, ses sauvegardes et sa mémoire augmentée. Une installation par-dessus, quand son certificat n’est plus là, les garde aussi, et ne révoque jamais de certificat.",
+           "Una renovación no reinstala nada: Cartouche conserva sus juegos, sus partidas guardadas y su memoria ampliada. Una instalación encima, cuando su certificado ya no está, también los conserva, y nunca revoca un certificado.",
+           "Eine Erneuerung installiert nichts neu: Cartouche behält seine Spiele, seine Spielstände und seinen erweiterten Speicher. Eine Installation darüber, wenn sein Zertifikat weg ist, behält sie auch und widerruft nie ein Zertifikat.")
     }
 
     /// The notification that says a renewal waits for the password, Apple
@@ -195,8 +246,22 @@ public enum SignerWords {
 
     /// The notification that says only an install opens Cartouche again.
     public static var installNotice: (title: String, body: String) {
-        (tr("This Mac can no longer renew Cartouche", "Ce Mac ne peut plus renouveler Cartouche", "Este Mac ya no puede renovar Cartouche", "Dieser Mac kann Cartouche nicht mehr erneuern"),
-         failure(kind: "certificate-gone"))
+        (tr("Cartouche needs to be installed again", "Cartouche est à réinstaller", "Hay que reinstalar Cartouche", "Cartouche muss neu installiert werden"),
+         tr("Its certificate is no longer on your Apple Account. Reinstall, on the iPhone page, keeps its games and saves; this Mac does it by itself once it expires.",
+            "Son certificat n’est plus sur votre compte Apple. Réinstaller, dans la page iPhone, garde ses jeux et ses sauvegardes ; ce Mac le fait de lui-même une fois qu’il a expiré.",
+            "Su certificado ya no está en tu cuenta de Apple. Reinstalar, en la página iPhone, conserva sus juegos y partidas guardadas; este Mac lo hace solo una vez que caduca.",
+            "Sein Zertifikat ist nicht mehr in deinem Apple Account. Neu installieren auf der iPhone-Seite behält seine Spiele und Spielstände; dieser Mac macht es von selbst, sobald es abgelaufen ist."))
+    }
+
+    /// The notification that says this Mac installed Cartouche VERSION
+    /// again by itself, and that it opens again.
+    public static func reinstalledNotice(version: String) -> (title: String, body: String) {
+        (tr("Cartouche opens again on your iPhone", "Cartouche s’ouvre de nouveau sur votre iPhone", "Cartouche vuelve a abrirse en tu iPhone",
+            "Cartouche öffnet sich wieder auf deinem iPhone"),
+         tr("This Mac installed Cartouche \(version) over it: its games and saves are kept.",
+            "Ce Mac a installé Cartouche \(version) par-dessus : ses jeux et ses sauvegardes sont gardés.",
+            "Este Mac instaló Cartouche \(version) encima: se conservan sus juegos y partidas guardadas.",
+            "Dieser Mac hat Cartouche \(version) darüber installiert: Seine Spiele und Spielstände bleiben erhalten."))
     }
 
     /// Where Apple sent the code, or will.

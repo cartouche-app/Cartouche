@@ -1,6 +1,7 @@
 //! The signer as Cartouche for Mac runs it, with the Cartouche Installer's
 //! fakes all around (installer/src-tauri/tests/README.md): an iPhone behind
-//! usbmuxd, Apple and an anisette server. Cartouche is put on the iPhone as
+//! usbmuxd, Apple, an anisette server and GitHub, with Cartouche's source
+//! and releases. Cartouche is put on the iPhone as
 //! the Installer puts it, with isideload, so that the signer finds it as it
 //! is on a player's iPhone.
 
@@ -11,7 +12,7 @@ use std::{
 };
 
 pub use cartouche_installer_fakes::{
-    AccountConfig, FakeAnisette, FakeApple, FakeIphone, FakeUsbmuxd, IphoneConfig,
+    AccountConfig, FakeAnisette, FakeApple, FakeGithub, FakeIphone, FakeUsbmuxd, IphoneConfig,
     ipa::CartoucheIpa,
     iphone::{HeldProfile, misagent},
 };
@@ -54,6 +55,7 @@ pub struct Harness {
     pub iphone: FakeIphone,
     pub apple: FakeApple,
     pub anisette: FakeAnisette,
+    pub github: FakeGithub,
     pub account: AccountConfig,
     pub team_id: String,
     pub env: Environment,
@@ -73,17 +75,25 @@ impl Harness {
         let usbmuxd = FakeUsbmuxd::start().await.expect("fake usbmuxd");
         let apple = FakeApple::start().await;
         let anisette = FakeAnisette::start().await;
+        let github = FakeGithub::start().await;
         let iphone = FakeIphone::new(iphone);
         usbmuxd.plug(&iphone);
         let team_id = apple.add_account(account.clone());
         let dir = tempfile::tempdir().expect("test folder");
+        // GitHub through the fake, with the tests' authority only: nothing
+        // leaves the computer.
+        cartouche_signer::init();
+        let http = reqwest::Client::builder()
+            .proxy(reqwest::Proxy::all(github.proxy_url()).expect("proxy"))
+            .tls_certs_only([reqwest::Certificate::from_der(&github.ca_der()).expect("certificate")]);
         let env = Environment {
             usbmuxd: UsbmuxdAddr::TcpSocket(usbmuxd.addr()),
             apple_proxy: Some(apple.proxy_url()),
             anisette_url: anisette.url(),
+            http: cartouche_signer::http_client(http).expect("HTTP client"),
             folder: dir.path().join("Signer"),
         };
-        Harness { usbmuxd, iphone, apple, anisette, account, team_id, env, dir }
+        Harness { usbmuxd, iphone, apple, anisette, github, account, team_id, env, dir }
     }
 
     pub fn udid(&self) -> String {
@@ -145,6 +155,18 @@ impl Harness {
         assert!(self.iphone.app(&self.bundle_id()).is_some(), "Cartouche is not on the iPhone");
     }
 
+    /// Publishes Cartouche VERSION on GitHub, as the release workflow does:
+    /// its IPA in the releases, and in the source.
+    pub fn publish_cartouche(&self, version: &str) {
+        self.github.publish(version, CartoucheIpa::new(version).build());
+    }
+
+    /// The version of Cartouche the iPhone lists.
+    pub fn cartouche_version(&self) -> Option<String> {
+        let app = self.iphone.app(&self.bundle_id())?;
+        app.info.get("CFBundleShortVersionString")?.as_string().map(str::to_string)
+    }
+
     /// Until when Cartouche opens on the iPhone, as iOS takes it.
     pub fn runs_until(&self) -> Option<SystemTime> {
         self.iphone.runs_until(&self.bundle_id())
@@ -202,10 +224,11 @@ impl Harness {
     /// What the fakes did, for a failure's message.
     pub fn report(&self) -> String {
         format!(
-            "iPhone: {:#?}\nApple: {:#?}\nanisette: {:#?}",
+            "iPhone: {:#?}\nApple: {:#?}\nanisette: {:#?}\nGitHub: {:#?}",
             self.iphone.log(),
             self.apple.log(),
-            self.anisette.state().log
+            self.anisette.state().log,
+            self.github.state().requests
         )
     }
 }

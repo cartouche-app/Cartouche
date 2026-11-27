@@ -92,6 +92,16 @@ final class TelemetryTests: XCTestCase {
                                                 copy: SignerCartouche(bundleId: bundleId, expires: now.addingTimeInterval(-3_600), due: "expired"),
                                                 asked: true, now: now)
         let signedIn = SignerMeasures.signIn(result: "wrong-code", seconds: 41.6)
+        // Cartouche installed again over itself, its certificate gone, and
+        // an install the account's certificates stopped.
+        let reinstalled = SignerMeasures.reinstalled(SignerReinstall(reinstalled: true, bundleId: bundleId, version: "0.16.3", previousVersion: "0.16.2",
+                                                                     before: now.addingTimeInterval(-3_600), expires: now.addingTimeInterval(7 * 86_400 - 60),
+                                                                     due: "expired", link: "network", seconds: 48.26),
+                                                     asked: false, now: now)
+        let reinstallFailed = SignerMeasures.failed(SignerFailure(kind: "no-certificate-left", stage: "apple", code: 7460,
+                                                                  message: "Maximum number of certificates reached"),
+                                                    copy: SignerCartouche(bundleId: bundleId, expires: now.addingTimeInterval(36 * 3_600), due: "now"),
+                                                    asked: true, install: true, now: now)
         let events: [(name: String, game: String?, fields: [String: TelemetryValue])] = [
             ("builder.opened", nil, opened),
             ("builder.setup", nil, setup),
@@ -124,6 +134,8 @@ final class TelemetryTests: XCTestCase {
             ("builder.renewed", nil, renewed),
             ("builder.renewFailed", nil, renewFailed),
             ("builder.appleSignIn", nil, signedIn),
+            ("builder.reinstalled", nil, reinstalled),
+            ("builder.renewFailed", nil, reinstallFailed),
         ]
         var made: [TelemetryEvent] = []
         for (index, event) in events.enumerated() {

@@ -5,8 +5,9 @@
 //  When the app renews Cartouche from this Mac, and what it says when it
 //  cannot (SignerPlan.swift, decision 165): never before Cartouche's last
 //  two days, again six hours after a failure and an hour after an iPhone
-//  away, the password asked only once Apple ended the session, and what a
-//  renewal measures.
+//  away, the password asked only once Apple ended the session, an install
+//  over Cartouche once its certificate is gone, and what a renewal
+//  measures.
 //
 
 import Foundation
@@ -70,6 +71,79 @@ final class SignerPlanTests: XCTestCase {
         XCTAssertEqual(SignerPlan.next(for: copy(due: "now"), signedIn: true, last: other, now: now), .otherTeam)
     }
 
+    /// Its certificate gone, the newest Cartouche goes over it once it has
+    /// expired, when none of its games can be playing; before, Reinstall
+    /// waits for the player, even before its last two days.
+    func testAnExpiredCopyWhoseCertificateIsGoneIsInstalledAgainOverItself() {
+        let ended = now.addingTimeInterval(-3_600)
+        let gone = SignerAttempt(at: now.addingTimeInterval(-7_200), kind: "certificate-gone", expires: ended)
+        XCTAssertEqual(SignerPlan.next(for: copy(due: "expired", expires: ended), signedIn: true, last: gone, now: now), .reinstall)
+        // Expired by the clock, before the iPhone was read again.
+        let soon = SignerAttempt(at: now.addingTimeInterval(-7_200), kind: "certificate-gone", expires: expires)
+        XCTAssertEqual(SignerPlan.next(for: copy(due: "now"), signedIn: true, last: soon, now: expires.addingTimeInterval(60)), .reinstall)
+        let from = now.addingTimeInterval(3 * 86_400)
+        let early = SignerAttempt(at: now.addingTimeInterval(-60), kind: "certificate-gone", expires: from.addingTimeInterval(2 * 86_400))
+        XCTAssertEqual(SignerPlan.next(for: copy(due: "not-yet", expires: from.addingTimeInterval(2 * 86_400), from: from),
+                                       signedIn: true, last: early, now: now), .needsInstall)
+        // Signed out: nothing is installed, the page says why.
+        XCTAssertEqual(SignerPlan.next(for: copy(due: "expired", expires: ended), signedIn: false, last: gone, now: now), .needsInstall)
+    }
+
+    func testAFailedInstallIsTriedAgainSixHoursLaterOnceExpired() {
+        let ended = now.addingTimeInterval(-3_600)
+        let download = SignerAttempt(at: now.addingTimeInterval(-3_600), kind: "download", expires: ended, install: true)
+        XCTAssertEqual(SignerPlan.next(for: copy(due: "expired", expires: ended), signedIn: true, last: download, now: now),
+                       .wait(until: download.at.addingTimeInterval(6 * 3_600)))
+        XCTAssertEqual(SignerPlan.next(for: copy(due: "expired", expires: ended), signedIn: true, last: download,
+                                       now: download.at.addingTimeInterval(6 * 3_600)), .reinstall)
+        let full = SignerAttempt(at: now.addingTimeInterval(-3_600), kind: "no-certificate-left", expires: ended, install: true)
+        XCTAssertEqual(SignerPlan.next(for: copy(due: "expired", expires: ended), signedIn: true, last: full, now: now),
+                       .wait(until: full.at.addingTimeInterval(6 * 3_600)))
+        let away = SignerAttempt(at: now.addingTimeInterval(-1_800), kind: "no-iphone", expires: ended, install: true)
+        XCTAssertEqual(SignerPlan.next(for: copy(due: "expired", expires: ended), signedIn: true, last: away, now: now),
+                       .wait(until: away.at.addingTimeInterval(3_600)))
+        // Asked before it expired: the player tries again when they like.
+        let asked = SignerAttempt(at: now.addingTimeInterval(-60), kind: "download", expires: expires, install: true)
+        XCTAssertEqual(SignerPlan.next(for: copy(due: "now"), signedIn: true, last: asked, now: now), .needsInstall)
+        // Apple ended the session on the way: the password first.
+        let session = SignerAttempt(at: now.addingTimeInterval(-600), kind: "session-ended", expires: ended, install: true)
+        XCTAssertEqual(SignerPlan.next(for: copy(due: "expired", expires: ended), signedIn: true, since: now.addingTimeInterval(-86_400),
+                                       last: session, now: now), .askPassword)
+        // Another Apple Account's, as the install found: left alone.
+        let other = SignerAttempt(at: now.addingTimeInterval(-60), kind: "other-team", expires: ended, install: true)
+        XCTAssertEqual(SignerPlan.next(for: copy(due: "expired", expires: ended), signedIn: true, last: other, now: now), .otherTeam)
+        // Installed: a renewal again for the copy it made.
+        let installed = SignerAttempt(at: now.addingTimeInterval(-60), kind: nil, expires: now.addingTimeInterval(7 * 86_400), install: true)
+        XCTAssertEqual(SignerPlan.next(for: copy(due: "not-yet", expires: now.addingTimeInterval(7 * 86_400), from: now.addingTimeInterval(5 * 86_400)),
+                                       signedIn: true, last: installed, now: now), .wait(until: now.addingTimeInterval(5 * 86_400)))
+    }
+
+    /// The tries kept before installs over Cartouche read as renewals, and
+    /// a renewal is kept as before.
+    func testTheTriesKeptBeforeReadTheSame() throws {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let old = try decoder.decode(SignerAttempt.self, from: Data(#"{"at":"2026-11-30T10:00:00Z","kind":"certificate-gone","expires":"2026-12-01T22:00:00Z"}"#.utf8))
+        XCTAssertFalse(old.wasInstall)
+        XCTAssertEqual(old.kind, "certificate-gone")
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let renewal = try XCTUnwrap(String(data: encoder.encode(SignerAttempt(at: now, kind: nil, expires: expires)), encoding: .utf8))
+        XCTAssertFalse(renewal.contains("install"), renewal)
+        let install = SignerAttempt(at: now, kind: "download", expires: expires, install: true)
+        XCTAssertEqual(try decoder.decode(SignerAttempt.self, from: encoder.encode(install)), install)
+    }
+
+    func testAnInstallSaysHowFarItIs() {
+        XCTAssertEqual(SignerProgress(step: "download", fraction: 0.5).overall, 0.2, accuracy: 0.001)
+        XCTAssertEqual(SignerProgress(step: "sign", fraction: 0.5).overall, 0.5, accuracy: 0.001)
+        XCTAssertEqual(SignerProgress(step: "install", fraction: 1).overall, 1, accuracy: 0.001)
+        XCTAssertEqual(SignerProgress(step: "install", fraction: 7).fraction, 1)
+        XCTAssertEqual(SignerProgress.read(#"{"event":"progress","step":"sign","fraction":0.25}"#), SignerProgress(step: "sign", fraction: 0.25))
+        XCTAssertNil(SignerProgress.read(#"{"event":"code","bySms":false}"#))
+        XCTAssertNil(SignerProgress.read(#"{"result":{"reinstalled":true}}"#))
+    }
+
     /// Renewed or installed again elsewhere, Cartouche opens until another
     /// date: the failure was for the copy before.
     func testAFailureHoldsOnlyForTheCopyItWasTriedFor() {
@@ -122,6 +196,21 @@ final class SignerPlanTests: XCTestCase {
         ])
     }
 
+    func testAnInstallOverCartoucheMeasuresNeitherTheAccountNorItsVersions() {
+        let reinstall = SignerReinstall(reinstalled: true, bundleId: "io.github.clabeuhtegrite.cartouche.ABCDE12345", version: "0.16.3",
+                                        previousVersion: "0.16.2", before: now.addingTimeInterval(-3_600),
+                                        expires: now.addingTimeInterval(7 * 86_400 - 60), due: "expired", link: "network", seconds: 48.26)
+        let fields = SignerMeasures.reinstalled(reinstall, asked: false, now: now)
+        XCTAssertEqual(fields, [
+            "asked": .flag(false), "daysGiven": .count(6), "daysLeft": .count(-1), "due": .text("expired"), "link": .text("network"),
+            "refreshedSession": .flag(false), "seconds": .number(48.3), "updated": .flag(true),
+        ])
+        XCTAssertFalse(fields.values.contains(.text("0.16.3")))
+        let failure = SignerFailure(kind: "no-certificate-left", stage: "apple", code: 7460, message: "Maximum number of certificates reached")
+        XCTAssertEqual(SignerMeasures.failed(failure, copy: copy(due: "now"), asked: true, install: true, now: now)["how"], .text("install"))
+        XCTAssertNil(SignerMeasures.failed(failure, copy: copy(due: "now"), asked: true, now: now)["how"])
+    }
+
     func testAFailureMeasuresItsKindAndCodeAndNeverItsMessage() {
         let failure = SignerFailure(kind: "session-ended", stage: "session", code: -22406, message: "camille@example.com: Your session has expired.")
         let fields = SignerMeasures.failed(failure, copy: copy(due: "expired", expires: now.addingTimeInterval(-3_600)), asked: true, now: now)
@@ -160,6 +249,29 @@ final class SignerPlanTests: XCTestCase {
         XCTAssertTrue(SignerWords.lines(for: notYet, plan: .wait(until: from), last: renewed, working: false, now: now)[1].text.hasPrefix("Renouvelé par ce Mac "))
     }
 
+    func testThePageSaysWhatAnInstallOverCartoucheDoes() {
+        L10n.use("fr")
+        defer { L10n.use("") }
+        let needs = SignerWords.lines(for: copy(due: "now"), plan: .needsInstall, last: nil, working: false, now: now)
+        XCTAssertEqual(needs.map(\.warning), [false, true])
+        XCTAssertEqual(needs[1].text, "Réinstaller met le dernier Cartouche par-dessus, avec ses jeux et ses sauvegardes. Ce Mac le fait de lui-même une fois qu’il a expiré.")
+        // The install the player asked found the account full.
+        let full = SignerAttempt(at: now.addingTimeInterval(-600), kind: "no-certificate-left", expires: expires, install: true)
+        let after = SignerWords.lines(for: copy(due: "now"), plan: .needsInstall, last: full, working: false, now: now)
+        XCTAssertEqual(after.count, 3)
+        XCTAssertTrue(after[1].text.contains("page Certificats de l’Installeur Cartouche"), after[1].text)
+        let ended = now.addingTimeInterval(-3_600)
+        let going = SignerWords.lines(for: copy(due: "expired", expires: ended), plan: .reinstall, last: nil, working: true,
+                                      progress: SignerProgress(step: "download", fraction: 0.426), now: now)
+        XCTAssertEqual(going.last, SignerLine("Réinstallation : téléchargement de Cartouche, 42 %"))
+        XCTAssertEqual(SignerWords.lines(for: copy(due: "expired", expires: ended), plan: .reinstall, last: nil, working: false, now: now).last?.text,
+                       "Ce Mac le réinstalle maintenant, avec ses jeux et ses sauvegardes")
+        let installed = SignerAttempt(at: now.addingTimeInterval(-120), kind: nil, expires: expires, install: true)
+        XCTAssertTrue(SignerWords.lines(for: copy(due: "now"), plan: .renew, last: installed, working: false, now: now)[1].text.hasPrefix("Réinstallé par ce Mac "))
+        XCTAssertEqual(SignerWords.installNotice.title, "Cartouche est à réinstaller")
+        XCTAssertTrue(SignerWords.reinstalledNotice(version: "0.16.3").body.contains("Cartouche 0.16.3 par-dessus"))
+    }
+
     func testTheAccountSaysThePasswordIsNotKept() {
         L10n.use("fr")
         defer { L10n.use("") }
@@ -182,7 +294,7 @@ final class SignerPlanTests: XCTestCase {
     func testEveryKindOfFailureHasItsWordsInEachLanguage() {
         let kinds = ["no-session", "session-ended", "wrong-password", "wrong-code", "cancelled", "account-refused", "too-many-requests",
                      "anisette", "apple", "network", "no-iphone", "iphone-refused", "no-cartouche", "other-team", "certificate-gone",
-                     "no-app-ids", "profile-refused", "iphone"]
+                     "no-app-ids", "no-certificate-left", "download", "profile-refused", "iphone"]
         defer { L10n.use("") }
         for language in L10n.languages {
             L10n.use(language)

@@ -7,6 +7,7 @@
 //!     cartouche-signer [--folder DIR] [--anisette URL] sign-in --email EMAIL   (input: {"password": …}, then codes)
 //!     cartouche-signer [--folder DIR] sign-out
 //!     cartouche-signer [--folder DIR] [--anisette URL] renew --udid UDID [--if-due]
+//!     cartouche-signer [--folder DIR] [--anisette URL] reinstall --udid UDID   (events: progress)
 //!     cartouche-signer version
 
 use std::{path::PathBuf, process::ExitCode, sync::Arc, time::Duration};
@@ -14,6 +15,7 @@ use std::{path::PathBuf, process::ExitCode, sync::Arc, time::Duration};
 use cartouche_signer::{
     Environment, Failure, Kind, Result, Stage, iphone,
     protocol::{self, event},
+    reinstall,
     renew::{self, Options},
     session::{self, CodeAsker},
 };
@@ -79,6 +81,19 @@ fn environment(args: &Args) -> Result<Environment> {
     if let Some(proxy) = std::env::var("CARTOUCHE_SIGNER_TEST_APPLE_PROXY").ok().filter(|p| !p.is_empty()) {
         env.apple_proxy = Some(proxy);
     }
+    // And its fake GitHub, with its own authority alone.
+    #[cfg(debug_assertions)]
+    if let (Some(proxy), Some(ca)) = (
+        std::env::var("CARTOUCHE_SIGNER_TEST_GITHUB_PROXY").ok().filter(|p| !p.is_empty()),
+        std::env::var_os("CARTOUCHE_SIGNER_TEST_GITHUB_CA"),
+    ) {
+        let test = |e: String| cartouche_signer::internal(format!("the tests' GitHub: {e}"));
+        let ca = std::fs::read(&ca).map_err(|e| test(e.to_string()))?;
+        let builder = reqwest::Client::builder()
+            .proxy(reqwest::Proxy::all(proxy).map_err(|e| test(e.to_string()))?)
+            .tls_certs_only([reqwest::Certificate::from_der(&ca).map_err(|e| test(e.to_string()))?]);
+        env.http = cartouche_signer::http_client(builder)?;
+    }
     Ok(env)
 }
 
@@ -129,6 +144,22 @@ fn code_asker(input: Input) -> CodeAsker {
     })
 }
 
+/// Says where an install is, each step's fraction in hundredths, for the
+/// page to show: once a hundredth, not each chunk.
+fn progress() -> impl Fn(&str, f64) + Send + Sync {
+    let last = std::sync::Mutex::new((String::new(), -1i64));
+    move |step: &str, fraction: f64| {
+        let hundredths = (fraction.clamp(0.0, 1.0) * 100.0).floor() as i64;
+        let mut said = last.lock().unwrap_or_else(|e| e.into_inner());
+        // Forward only: a step never seems to go back.
+        if said.0 == step && hundredths <= said.1 {
+            return;
+        }
+        *said = (step.to_string(), hundredths);
+        event("progress", json!({ "step": step, "fraction": hundredths as f64 / 100.0 }));
+    }
+}
+
 fn value(answer: Result<impl serde::Serialize>) -> Result<Value> {
     answer.and_then(|v| serde_json::to_value(v).map_err(|e| usage(e.to_string())))
 }
@@ -137,7 +168,7 @@ async fn run(args: Args) -> Result<Value> {
     let command = args
         .command
         .clone()
-        .ok_or_else(|| usage("No command: devices, session, sign-in, sign-out, renew or version"))?;
+        .ok_or_else(|| usage("No command: devices, session, sign-in, sign-out, renew, reinstall or version"))?;
     if command == "version" {
         return Ok(json!({ "version": env!("CARGO_PKG_VERSION") }));
     }
@@ -166,6 +197,10 @@ async fn run(args: Args) -> Result<Value> {
             let udid = args.udid.clone().ok_or_else(|| usage("renew takes --udid"))?;
             let options = Options { only_if_due: args.if_due, ..Options::default() };
             value(renew::renew(&env, &udid, options).await)
+        }
+        "reinstall" => {
+            let udid = args.udid.clone().ok_or_else(|| usage("reinstall takes --udid"))?;
+            value(reinstall::reinstall(&env, &udid, &progress()).await)
         }
         other => Err(usage(format!("Unknown command {other}"))),
     }
