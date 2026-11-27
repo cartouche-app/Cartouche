@@ -263,8 +263,9 @@ final class CartoucheGameActions: ObservableObject {
     nonisolated private static func bcConversion(ofIPA url: URL) async -> (apis: CartoucheBCConversion.APIs?, titleId: String?) {
         guard let source = try? CartoucheFileSource(url), let entries = try? await CartoucheZip.entries(of: source),
               let plist = try? await CartoucheStoredGames.infoPlist(of: source, entries: entries) else { return (nil, nil) }
-        let titleId = CartoucheGameBuild.titleId(in: plist.info)
-            ?? (plist.info["CFBundleIdentifier"] as? String).flatMap(CartoucheStoredGame.titleId(inBundleId:))
+        // As the games folder's scan reads it (CartoucheStoredGames).
+        let titleId = (plist.info["CFBundleIdentifier"] as? String).flatMap(CartoucheStoredGame.titleId(inBundleId:))
+            ?? CartoucheNxnativeApp.titleId(in: plist.info)
         let apis = try? await CartoucheBCConversion.conversion(
             ofIPA: source, entries: entries, executable: plist.info["CFBundleExecutable"] as? String ?? "",
             in: FileManager.default.temporaryDirectory)
