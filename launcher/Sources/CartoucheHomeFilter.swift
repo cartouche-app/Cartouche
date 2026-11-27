@@ -90,6 +90,34 @@ struct CartoucheHomeShelfGame: Hashable, Sendable {
     var isRunning = false
 }
 
+/// The filter the shelf shows and the games it keeps there, one value so
+/// that they change together: a filter chosen apart from what it keeps
+/// would show, for an instant, the old filter with what the new one keeps,
+/// and keep all of it.
+struct CartoucheHomeShelfChoice: Equatable, Sendable {
+    var filter: CartoucheHomeFilter
+    /// The games the shelf showed since the player chose the filter or the
+    /// home opened, by key: one installed or uninstalled meanwhile stays.
+    var kept: Set<String> = []
+
+    /// FILTER chosen among GAMES: the shelf keeps the games it shows from
+    /// now on, and nothing more; all keeps nothing.
+    mutating func choose(_ filter: CartoucheHomeFilter, among games: [CartoucheHomeShelfGame]) {
+        self.filter = filter
+        kept = filter == .all ? [] : Set(CartoucheHomeShelf.shown(games, filter: filter, kept: []).map { games[$0].key })
+    }
+
+    /// The shelf now shows SHOWN, by key: kept there while a filter leaves
+    /// games out (OFFERSFILTER); nothing kept otherwise.
+    mutating func shelfShows(_ shown: [String], offersFilter: Bool) {
+        if offersFilter && filter != .all {
+            kept.formUnion(shown)
+        } else {
+            kept = []
+        }
+    }
+}
+
 enum CartoucheHomeShelf {
     /// Whether the home offers the filter: the player has games installed
     /// and games not installed.

@@ -80,6 +80,37 @@ final class CartoucheHomeFilterTests: XCTestCase {
         XCTAssertEqual(CartoucheHomeShelf.shown(games, filter: .installed, kept: []), [1, 3])
     }
 
+    /// Installed, then Not installed: the shelf shows the games not
+    /// installed alone, nothing of what Installed kept, as the filter and
+    /// what it keeps change together; All keeps nothing.
+    func testChoosingAFilterKeepsWhatItShowsAndNothingMore() {
+        var choice = CartoucheHomeShelfChoice(filter: .all)
+        choice.choose(.installed, among: shelf)
+        XCTAssertEqual(choice.filter, .installed)
+        XCTAssertEqual(choice.kept, ["040074A01BF12000", "01006BB00C6F0000"])
+        choice.shelfShows(["040074A01BF12000", "01006BB00C6F0000"], offersFilter: true)
+        choice.choose(.notInstalled, among: shelf)
+        XCTAssertEqual(choice.filter, .notInstalled)
+        XCTAssertEqual(choice.kept, ["01003FC01670C000", "0400C3F00006E000"])
+        XCTAssertEqual(CartoucheHomeShelf.shown(shelf, filter: choice.filter, kept: choice.kept), [0, 2])
+        choice.choose(.all, among: shelf)
+        XCTAssertEqual(choice, CartoucheHomeShelfChoice(filter: .all))
+    }
+
+    /// What the shelf shows under a filter stays there; under All, or once
+    /// the player's games are of one kind, nothing is kept.
+    func testTheShelfKeepsWhatItShowsUnderAFilter() {
+        var choice = CartoucheHomeShelfChoice(filter: .notInstalled)
+        choice.shelfShows(["01003FC01670C000"], offersFilter: true)
+        choice.shelfShows(["01003FC01670C000", "0400C3F00006E000"], offersFilter: true)
+        XCTAssertEqual(choice.kept, ["01003FC01670C000", "0400C3F00006E000"])
+        choice.shelfShows(["040074A01BF12000", "01006BB00C6F0000"], offersFilter: false)
+        XCTAssertEqual(choice.kept, [])
+        choice = CartoucheHomeShelfChoice(filter: .all, kept: ["040074A01BF12000"])
+        choice.shelfShows(["01003FC01670C000", "040074A01BF12000"], offersFilter: true)
+        XCTAssertEqual(choice.kept, [])
+    }
+
     // MARK: The focus
 
     func testTheFocusStaysOnItsGameAsTheShelfChanges() {

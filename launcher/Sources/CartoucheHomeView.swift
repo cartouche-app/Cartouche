@@ -122,11 +122,9 @@ struct CartoucheHomeView: View {
     /// setup banner, as last laid out: its detail can take one line or two,
     /// as the guide's does on an iPhone upright (Metrics).
     @State private var bannerHeight: CGFloat?
-    /// Which of the player's games the shelf shows, as they chose last.
-    @State private var filter = CartoucheHomeFilter.saved()
-    /// The games the shelf showed since the player chose the filter or the
-    /// home opened, by key: one installed or uninstalled meanwhile stays.
-    @State private var kept: Set<String> = []
+    /// Which of the player's games the shelf shows, as they chose last, and
+    /// the games it keeps there, changed together.
+    @State private var choice = CartoucheHomeShelfChoice(filter: CartoucheHomeFilter.saved())
 
     enum Item: Hashable {
         case game(CartoucheEntry)
@@ -170,8 +168,11 @@ struct CartoucheHomeView: View {
 
     /// The player's games the shelf shows.
     private var shelfGames: [CartoucheEntry] {
-        CartoucheHomeShelf.shown(filterGames, filter: filter, kept: kept).map { entries.owned[$0] }
+        CartoucheHomeShelf.shown(filterGames, filter: filter, kept: choice.kept).map { entries.owned[$0] }
     }
+
+    /// The filter the player chose.
+    private var filter: CartoucheHomeFilter { choice.filter }
 
     /// Whether the home offers the filter: the player has games installed
     /// and games not installed.
@@ -264,11 +265,9 @@ struct CartoucheHomeView: View {
         // filter again; the focus stays on its game, or on its cover after
         // the games, as the shelf changes.
         .onChange(of: shelfGames.map(Self.shelfKey), initial: true) { before, after in
-            if offersFilter && filter != .all {
-                kept.formUnion(after)
-            } else if !kept.isEmpty {
-                kept = []
-            }
+            var next = choice
+            next.shelfShows(after, offersFilter: offersFilter)
+            if next != choice { choice = next }
             guard before != after else { return }
             columns[Self.shelfRow] = CartoucheHomeShelf.column(columns[Self.shelfRow], from: before, to: after)
         }
@@ -557,10 +556,11 @@ struct CartoucheHomeView: View {
     private func choose(_ new: CartoucheHomeFilter, byController: Bool) {
         guard new != filter else { return }
         new.save()
-        // What it shows from now on, which stays there.
-        let games = filterGames
-        kept = new == .all ? [] : Set(CartoucheHomeShelf.shown(games, filter: new, kept: []).map { games[$0].key })
-        withAnimation(.easeInOut(duration: 0.2)) { filter = new }
+        // What it shows from now on, which stays there, in the same change
+        // as the filter.
+        var chosen = choice
+        chosen.choose(new, among: filterGames)
+        withAnimation(.easeInOut(duration: 0.2)) { choice = chosen }
         CartoucheTelemetry.shared.event(CartoucheHomeFilter.event, fields: new.fields(byController: byController))
     }
 
