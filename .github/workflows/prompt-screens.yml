@@ -1,0 +1,79 @@
+name: Prompt screens
+
+# Screenshots of nxnative's own prompt that waits for more players and of
+# its gear menu over a game on the iPhone, without Cartouche's texts and
+# with them (.github/prompt-screens), for the review of pull request #367
+# alone: committed beside the app that takes them, on the branch, and all of
+# it removed before the pull request merges.
+
+on:
+  push:
+    branches: [claude/project-thread-vyqxzb]
+    paths:
+      - ".github/prompt-screens/project.yml"
+      - ".github/prompt-screens/shots.sh"
+      - ".github/prompt-screens/Sources/**"
+      - ".github/workflows/prompt-screens.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prompt-screens-${{ github.ref_name }}
+  cancel-in-progress: true
+
+env:
+  XCODE_VERSION: "27.2"
+
+jobs:
+  shots:
+    name: Screenshots
+    runs-on: xcode-27
+    timeout-minutes: 30
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s "/Applications/Xcode_${XCODE_VERSION}.app"
+          xcodebuild -version
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Take the screenshots
+        run: .github/prompt-screens/shots.sh build/prompt-screens/shots
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: ${{ !cancelled() }}
+        with:
+          name: prompt-screens
+          path: build/prompt-screens/shots
+          retention-days: 7
+          if-no-files-found: warn
+
+  keep:
+    name: Commit the screenshots on the branch
+    needs: shots
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # the screenshots, on this branch
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BRANCH: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: prompt-screens
+          path: .github/prompt-screens/shots
+      - name: Commit them
+        run: |
+          git add .github/prompt-screens/shots
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -q -m "Prompt screens of $GITHUB_SHA, for the review alone"
+          gh auth setup-git
+          git push -q "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" "HEAD:refs/heads/$BRANCH"
