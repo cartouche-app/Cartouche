@@ -1744,8 +1744,9 @@ final class CartoucheGameActions: ObservableObject {
     }
 
     /// nxnative's switch for its settings screen, in the data folder the
-    /// game starts with, the mods the player turned on in its sheet, and
-    /// the game's language.
+    /// game starts with, the mods the player turned on in its sheet, the
+    /// game's language, other apps' sound and nxnative's texts in
+    /// Cartouche's language.
     private static func prepareStart(of app: LCAppModel, showingSettings: Bool) throws {
         let container = dataFolder(of: app)
         // Only an nxnative game reads it.
@@ -1764,6 +1765,26 @@ final class CartoucheGameActions: ObservableObject {
         }
         chooseLanguage(of: app, bundle: URL(fileURLWithPath: bundle, isDirectory: true), container: container)
         keepOtherAudio(of: app, container: container)
+        giveTexts(of: app, container: container)
+    }
+
+    /// nxnative's prompt that waits for more players and its menu over the
+    /// game, in the language Cartouche speaks, the Mac's words
+    /// (CartoucheGameTexts): Cartouche's code in the game's process puts
+    /// them in its environment, from its data folder. A file that cannot be
+    /// written leaves them in nxnative's English: the game starts all the
+    /// same.
+    private static func giveTexts(of app: LCAppModel, container: LCContainer) {
+        let language = CartoucheGameTexts.language(of: CartoucheText.bundle.preferredLocalizations.first)
+        do {
+            let given = try CartoucheGameTexts.write(game: app.displayName, language: language, home: container.containerURL)
+            if !given.isEmpty {
+                CartoucheReports.note(app.displayName + ": nxnative's texts in " + language + " (" + given.joined(separator: ", ") + ")")
+            }
+        } catch {
+            CartoucheReports.note(app.displayName + ": nxnative's texts left in English, their file could not be written: "
+                + error.localizedDescription)
+        }
     }
 
     /// Whether the game lets other apps' sound play on, as the player

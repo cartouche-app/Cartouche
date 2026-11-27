@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-**Game settings**, on a game's sheet, holds the settings **Play** starts the game with: the ones nxnative's own screen shows before a game, on a page of Cartouche's, in your language. The game's in-game menu changes the same ones.
+**Game settings**, on a game's sheet, holds the settings **Play** starts the game with: the ones nxnative's own screen shows before a game, on a page of Cartouche's, in your language. The game's in-game menu changes the same ones. With Cartouche in French, Spanish or German, that menu's own words and the screen that waits for more controllers are in that language too; the settings in that menu keep nxnative's English names.
 
 <div class="screens">
 

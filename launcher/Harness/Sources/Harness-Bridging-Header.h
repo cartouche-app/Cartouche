@@ -12,7 +12,8 @@
 //  game's process asks for the keyboard, which brings it the controllers
 //  (launcher/LiveProcessSupport/CartoucheGuestControllers.h); and how it
 //  mixes its sound with other apps' (launcher/Guest/
-//  CartoucheOtherAudioSession.h).
+//  CartoucheOtherAudioSession.h), and puts nxnative's texts in its
+//  environment (launcher/Guest/CartoucheGameTextsEnvironment.h).
 //
 
 #import <Foundation/Foundation.h>
@@ -20,6 +21,7 @@
 #import "unarchive.h"
 #import "../../LiveProcessSupport/CartoucheGuestControllers.h"
 #import "../../Guest/CartoucheOtherAudioSession.h"
+#import "../../Guest/CartoucheGameTextsEnvironment.h"
 
 @interface NSUserDefaults (HarnessPrivate)
 - (instancetype)_initWithSuiteName:(NSString *)suiteName container:(NSURL *)container;

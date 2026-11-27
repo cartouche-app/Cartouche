@@ -5,8 +5,8 @@
 //  Play, in Cartouche's place, as LiveContainer's Run does
 //  (CartoucheGameActions.play, LCAppModel.runApp): the game's data folder
 //  on its first start, nxnative's switch for its settings screen, the
-//  game's language, the signature, and what the player reads when the game
-//  cannot start. LiveContainer then quits Cartouche for the game: the
+//  game's language, nxnative's texts in Cartouche's language, the
+//  signature, and what the player reads when the game cannot start. LiveContainer then quits Cartouche for the game: the
 //  harness records what it would open (HarnessLC.launches).
 //
 
@@ -131,6 +131,50 @@ final class PlayTests: HarnessCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: file.path))
         XCTAssertFalse(HarnessOtherAudio.isKept(home: folder))
         XCTAssertEqual(HarnessLC.launches.count, 3)
+    }
+
+    /// nxnative's prompt that waits for more players and its gear menu over
+    /// the game, in the language Cartouche speaks, the Mac's words: Play
+    /// writes them in the game's data folder, and Cartouche's code in the
+    /// game's process puts them in its environment, but those its env.txt
+    /// or its start set (launcher/Guest/CartoucheGameTextsEnvironment.m).
+    /// Up to 0.16.2, both were in English whatever Cartouche spoke.
+    func testPlayGivesTheGameNxnativesTextsInCartouchesLanguage() async throws {
+        let app = try await installed(.plain())
+        try await play(app)
+        let folder = try dataFolder(of: app)
+        XCTAssertEqual(CartoucheGameTexts.file, HarnessGameTexts.file, "the file the game's process reads")
+        XCTAssertEqual(HarnessGameTexts.variables, CartoucheGameTexts.variables(on: .iPhone), "and the variables it may set")
+        let language = CartoucheGameTexts.language(of: CartoucheText.bundle.preferredLocalizations.first)
+        let given = CartoucheGameTexts.environment(game: app.displayName, language: language, on: .iPhone)
+        XCTAssertFalse(given.isEmpty)
+        XCTAssertEqual(CartoucheGameTexts.written(home: folder), given)
+
+        // In the game's process.
+        let variables = CartoucheGameTexts.variables(on: .iPhone)
+        func value(_ variable: String) -> String? { getenv(variable).map { String(cString: $0) } }
+        variables.forEach { unsetenv($0) }
+        defer { variables.forEach { unsetenv($0) } }
+        // A text the game's env.txt sets stays its own.
+        setenv(CartoucheGameTexts.playersVariable, "Players wanted", 1)
+        XCTAssertEqual(HarnessGameTexts.apply(home: folder), [CartoucheGameTexts.menuVariable])
+        XCTAssertEqual(value(CartoucheGameTexts.playersVariable), "Players wanted")
+        XCTAssertEqual(value(CartoucheGameTexts.menuVariable), given[CartoucheGameTexts.menuVariable])
+
+        // Cartouche in French: both in French at the game's next start.
+        variables.forEach { unsetenv($0) }
+        try CartoucheGameTexts.write(game: app.displayName, language: "fr", home: folder)
+        XCTAssertEqual(HarnessGameTexts.apply(home: folder), variables)
+        XCTAssertEqual(value(CartoucheGameTexts.playersVariable)?.components(separatedBy: "\n"),
+                       ["{min} joueurs attendus", "Appuyez sur un bouton de chaque manette pour la faire rejoindre.",
+                        "Joueurs : {joined} sur {min}", "Terminé", "Annuler"])
+        XCTAssertEqual(value(CartoucheGameTexts.menuVariable)?.components(separatedBy: "\n").count, 4)
+
+        // No file, nothing set: nxnative's English.
+        variables.forEach { unsetenv($0) }
+        try FileManager.default.removeItem(at: folder.appendingPathComponent(CartoucheGameTexts.file))
+        XCTAssertEqual(HarnessGameTexts.apply(home: folder), [])
+        XCTAssertNil(value(CartoucheGameTexts.playersVariable))
     }
 
     func testAGameInClassicModeStartsAsLiveContainerRunsIt() async throws {

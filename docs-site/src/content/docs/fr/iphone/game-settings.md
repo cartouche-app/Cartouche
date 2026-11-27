@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-**Réglages du jeu**, sur la fiche d'un jeu, réunit les réglages avec lesquels **Jouer** lance le jeu : ceux que l'écran de nxnative montre avant un jeu, sur une page de Cartouche, dans votre langue. Le menu du jeu, en jeu, change les mêmes.
+**Réglages du jeu**, sur la fiche d'un jeu, réunit les réglages avec lesquels **Jouer** lance le jeu : ceux que l'écran de nxnative montre avant un jeu, sur une page de Cartouche, dans votre langue. Le menu du jeu, en jeu, change les mêmes. Quand Cartouche est en français, en espagnol ou en allemand, les mots de ce menu et l'écran qui attend d'autres manettes sont aussi dans cette langue ; les réglages de ce menu gardent les noms anglais de nxnative.
 
 <div class="screens">
 
