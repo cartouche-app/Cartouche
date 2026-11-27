@@ -334,4 +334,35 @@ final class ConsoleSavesTests: XCTestCase {
         XCTAssertEqual(steps, [])
         XCTAssertEqual(try String(contentsOf: documents.appendingPathComponent("save/slot0.bin"), encoding: .utf8), "at the start")
     }
+
+    /// The saves in the folder the Builder took by itself, in its own on
+    /// this Mac's disk, are on this Mac alone: the home offers a saves
+    /// folder once a game was played (decision 178). A folder the player
+    /// chose, the NAS's or an iPhone's on a connection, or none, the
+    /// Builder keeping no saves, never.
+    func testTheSavesInTheBuildersOwnFolderAreOnThisMacAlone() {
+        let console = CartoucheMacConsole.shared
+        let backups = CartoucheSaveBackups.shared
+        let own = "/Users/joueur/Library/Application Support/Cartouche Builder/Saves"
+        console.showSaves(folder: CartoucheMacSavesFolder(name: "the saves folder", path: own, isBuilders: true), games: [:])
+        XCTAssertTrue(backups.keepsOnThisMacAlone)
+        console.showSaves(folder: folder, games: [:])
+        XCTAssertFalse(backups.keepsOnThisMacAlone)
+        console.showSaves(folder: CartoucheMacSavesFolder(name: "the NAS", path: "Cartouche/Saves", connection: UUID(),
+                                                          isBuilders: true), games: [:])
+        XCTAssertFalse(backups.keepsOnThisMacAlone, "an iPhone's folder on a connection is never the Builder's own")
+        console.showSaves(folder: nil, games: [:])
+        XCTAssertFalse(backups.keepsOnThisMacAlone)
+
+        // Once a minute was played, the home offers a saves folder while
+        // they are in the Builder's own, and no longer once they are not.
+        console.showForGallery(playTimes: [titleID: CartouchePlayTime(seconds: 120, sessions: 1)], sizes: [:])
+        console.showSaves(folder: CartoucheMacSavesFolder(name: "the saves folder", path: own, isBuilders: true), games: [:])
+        console.showSavesOfferForGallery(true)
+        XCTAssertTrue(CartoucheSavesOffer.shared.shows)
+        console.showSaves(folder: folder, games: [:])
+        console.showSavesOfferForGallery(true)
+        XCTAssertFalse(CartoucheSavesOffer.shared.shows)
+        console.showSavesOfferForGallery(false)
+    }
 }

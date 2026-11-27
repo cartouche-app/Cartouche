@@ -462,6 +462,7 @@ enum ConsoleLink {
         let console = CartoucheMacConsole.shared
         // The gallery's console shows saves of its own, and keeps none.
         guard !model.sample else { return }
+        ownSaves = model.home.saves
         let games = model.macGames
         console.onSyncSaves = { [weak games] titleID in
             guard let games else { return }
@@ -506,6 +507,9 @@ enum ConsoleLink {
 
     private static var savesWatch: AnyCancellable?
     private static weak var savesOf: MacGames?
+    /// The folder the builder keeps the saves in when the player chose
+    /// none, in its own (BuilderHome.saves).
+    private static var ownSaves: URL?
 
     /// The saves of the games played on this Mac, as their sheets show
     /// them, and the saves folder, named in the app's language.
@@ -522,9 +526,12 @@ enum ConsoleLink {
                                                    ?? tr("the saves folder", "le dossier des sauvegardes", "la carpeta de partidas guardadas", "der Spielstandordner"),
                                                path: folder.path, isAway: away, connection: connection)
             }
+            // The builder's own, which it took by itself: the saves are on
+            // this Mac alone, and the console's home offers a saves folder.
+            let builders = ownSaves.map { $0.standardizedFileURL.path == URL(fileURLWithPath: folder.path).standardizedFileURL.path } ?? false
             return CartoucheMacSavesFolder(name: folder.path.hasPrefix("/Volumes/") ? tr("the NAS", "le NAS", "el NAS", "das NAS")
                                                : tr("the saves folder", "le dossier des sauvegardes", "la carpeta de partidas guardadas", "der Spielstandordner"),
-                                           path: folder.path, isAway: away)
+                                           path: folder.path, isAway: away, isBuilders: builders)
         }
         var saves: [String: CartoucheMacGameSaves] = [:]
         for titleID in Set(games.last.keys).union(games.checked.keys).union(games.cloud.keys) {

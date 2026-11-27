@@ -73,12 +73,18 @@ public struct CartoucheMacSavesFolder: Equatable, Sendable {
     /// The connection it is on, the iPhone's saves folder: nil for a folder
     /// of this Mac's.
     public var connection: UUID?
+    /// Whether it is the folder the Builder took by itself, in its own on
+    /// this Mac's disk, the player having chosen none: the saves are on
+    /// this Mac alone, and the home offers a saves folder once a game was
+    /// played (CartoucheSavesOffer, decision 178).
+    public var isBuilders: Bool
 
-    public init(name: String, path: String, isAway: Bool = false, connection: UUID? = nil) {
+    public init(name: String, path: String, isAway: Bool = false, connection: UUID? = nil, isBuilders: Bool = false) {
         self.name = name
         self.path = path
         self.isAway = isAway
         self.connection = connection
+        self.isBuilders = isBuilders && connection == nil
     }
 }
 
@@ -201,6 +207,9 @@ final class CartoucheSaveBackups: ObservableObject {
     @Published private(set) var waiting: Set<String> = []
     /// The games whose saves nxnative's own cloud saves keep.
     @Published private(set) var inCloud: Set<String> = []
+    /// Whether the saves are on this Mac alone, in the folder the Builder
+    /// took by itself, the player having chosen none (isBuilders).
+    @Published private(set) var keepsOnThisMacAlone = false
     /// What went wrong with each game's last sync, and the report on it.
     @Published private(set) var problems: [String: CartoucheReport] = [:]
     private var failures: [String: String] = [:]
@@ -239,6 +248,8 @@ final class CartoucheSaveBackups: ObservableObject {
 
     func show(folder: CartoucheMacSavesFolder?, games: [String: CartoucheMacGameSaves]) {
         settings.showMacSaves(name: folder?.name, path: folder?.path ?? "", connection: folder?.connection)
+        let alone = folder?.isBuilders ?? false
+        if alone != keepsOnThisMacAlone { keepsOnThisMacAlone = alone }
         if let folder, let server = settings.location(.saves)?.server {
             if folder.isAway {
                 CartoucheStorageReach.shared.noteOffline(server)

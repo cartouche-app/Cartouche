@@ -27,6 +27,8 @@ Der Mac hält die Spielstände der dort gespielten Spiele mit deinem Spielstando
 
 Die Kopie eines Spiels auf diesem Mac, das dein NAS aufbewahrt, bleibt aus Time Machine heraus: Sie kommt wieder vom NAS. Die Spielstände des Spiels kommen weiterhin hinein.
 
+Ohne einen von dir gewählten Spielstandordner bewahrt Cartouche Builder die Spielstände in seinem eigenen Ordner auf, nur auf diesem Mac: Nach deinem ersten Spiel schlägt dir die Startseite der Konsole vor, einen zu wählen, in iCloud Drive oder auf deinem NAS, und sein × entfernt den Vorschlag für immer.
+
 ## Mods
 
 Die Infoseite eines Spiels hat **Mods** auch auf dem Mac, wie auf dem iPhone ([Die Infoseite eines Spiels](/de/iphone/game-sheet/#mods)): Füge einen Mod aus einem Ordner oder einem ZIP auf diesem Mac hinzu, schalte ihn ein oder aus und lege die Reihenfolge fest. Ein Mod, der auch den Code des Spiels ändert, mit einem `exefs`-Ordner, funktioniert auf dem Mac noch nicht: Cartouche sagt es und lässt ihn weg. Die Mods des Mac bleiben auf diesem Mac.

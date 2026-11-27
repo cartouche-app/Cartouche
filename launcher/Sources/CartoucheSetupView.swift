@@ -501,6 +501,11 @@ extension CartoucheSetup {
     /// Limit, or the automation of every night.
     var showsBanner: Bool { needsSetup || memoryLeft || nightlyLeft }
 
+    /// Whether the setup's banner goes before the offer of a saves folder
+    /// (CartoucheSavesOffer): what Cartouche needs to play, or to play its
+    /// games whole, not the automation of every night, which waits for it.
+    var bannerGoesFirst: Bool { needsSetup || memoryLeft }
+
     /// Whether the banner has a × that takes it off the home: the
     /// automation's alone, since Cartouche plays without it.
     var bannerHides: Bool { nightlyLeft }

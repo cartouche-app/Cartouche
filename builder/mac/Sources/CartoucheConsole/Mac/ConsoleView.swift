@@ -142,6 +142,14 @@ public final class CartoucheMacConsole: ObservableObject {
         CartoucheGuide.shared.showForGallery(played: played)
     }
 
+    /// The home's offer of a saves folder as the app's gallery shows it
+    /// (CartoucheSavesOffer): SHOWS, the saves in the Builder's own folder
+    /// on this Mac alone and a game played, as the console offers it; never
+    /// otherwise. Nothing of the player's is read or kept from then on.
+    public func showSavesOfferForGallery(_ shows: Bool) {
+        CartoucheSavesOffer.shared.showForGallery(shows: shows)
+    }
+
     /// Keeps the console's journal and the last reports of what went wrong
     /// in FOLDER from now on, in Cartouche Builder's folder: once, as the
     /// app starts. Until then, as in the gallery, they are in memory alone.
@@ -242,6 +250,13 @@ public final class CartoucheMacConsole: ObservableObject {
             if actions.running != nil {
                 pause.gameEnded(quit: actions.quitAsked)
                 actions.running = nil
+                // Its play time, which the Builder wrote as it ended: the
+                // home offers a saves folder once the first game is over.
+                let apps = self.apps
+                Task {
+                    try? await Task.sleep(for: .seconds(1))
+                    CartoucheGameStats.shared.refresh(apps)
+                }
             }
             CartoucheGamepad.shared.gameInFront = false
             return
@@ -466,6 +481,10 @@ public struct CartoucheMacConsoleView: View {
                 onLibrary: { path.append(.library) },
                 onSetup: {},
                 onGuide: { path.append(.guide) },
+                // The offer of a saves folder: the Storage page, where This
+                // Mac's is changed in the Builder, or one is chosen on a
+                // connection.
+                onSavesFolder: { path = [.system, .storage] },
                 onTab: { tab in
                     if tab == .system, path.last != .system { path.append(.system) }
                 },

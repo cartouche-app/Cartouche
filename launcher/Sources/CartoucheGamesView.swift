@@ -99,6 +99,9 @@ struct CartoucheGamesView: View {
     @State private var memory = CartoucheMemoryReading.now()
     @State private var showingSetup = false
     @State private var showingGuide = false
+    /// The Storage page over the console, from the home's offer of a saves
+    /// folder (CartoucheSavesOffer).
+    @State private var showingStorage = false
     /// The game whose uninstall the player is asked about, from the home or
     /// from the sheet, over the console or beside it.
     @State private var uninstalling: LCAppModel?
@@ -141,7 +144,7 @@ struct CartoucheGamesView: View {
     /// Nothing over the console, but maybe a game's settings page open
     /// beside it.
     private var nothingOverConsole: Bool {
-        sheetID == nil && !showingSetup && !showingGuide && !importPicker.isShowing && uninstalling == nil
+        sheetID == nil && !showingSetup && !showingGuide && !showingStorage && !importPicker.isShowing && uninstalling == nil
             && editingInfo == nil && actions.work == nil && actions.notice == nil && !showsWhatsNew && !showsUpdate
             && actions.switching == nil && actions.quitQuestion == nil && actions.installQuestion == nil
     }
@@ -156,7 +159,7 @@ struct CartoucheGamesView: View {
         updates.isShowing && !whatsNew.isShowing && onlyConsole
     }
     private var onlyConsole: Bool {
-        onGames && sheetID == nil && !showingSetup && !showingGuide && !importPicker.isShowing
+        onGames && sheetID == nil && !showingSetup && !showingGuide && !showingStorage && !importPicker.isShowing
             && uninstalling == nil && editingInfo == nil && actions.work == nil && actions.notice == nil
             && actions.running == nil && actions.switching == nil && actions.quitQuestion == nil
             && actions.installQuestion == nil
@@ -216,6 +219,22 @@ struct CartoucheGamesView: View {
             // certificate, not the setup.
             .onReceive(CartoucheGamepad.shared.inputs) { input in
                 if input == .b && !importPicker.isShowing { showingSetup = false }
+            }
+        }
+        // The Storage page, from the home's offer of a saves folder, where
+        // the player chooses one as from System › Storage.
+        .sheet(isPresented: $showingStorage) {
+            NavigationStack {
+                CartoucheStorageView()
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            doneButton { showingStorage = false }
+                        }
+                    }
+            }
+            .preferredColorScheme(.dark)
+            .onReceive(CartoucheGamepad.shared.inputs) { input in
+                if input == .b { showingStorage = false }
             }
         }
         // The guide's steps act on the console: it closes for a game to
@@ -398,9 +417,10 @@ struct CartoucheGamesView: View {
         .onChange(of: setup.openedPairingFile) { _, opened in
             guard opened else { return }
             setup.openedPairingFile = false
-            let guideWasOpen = showingGuide
+            let sheetWasOpen = showingGuide || showingStorage
             showingGuide = false
-            DispatchQueue.main.asyncAfter(deadline: .now() + (guideWasOpen ? 0.6 : 0)) { showingSetup = true }
+            showingStorage = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + (sheetWasOpen ? 0.6 : 0)) { showingSetup = true }
         }
         // The System page asked for the guide: it opens over the console once
         // the page has gone.
@@ -408,15 +428,19 @@ struct CartoucheGamesView: View {
             guard requested else { return }
             guide.noteOpenRequestTaken()
             sheetID = nil
+            showingStorage = false
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { showingGuide = true }
         }
         // Apple asks for a code while Cartouche signs in again by itself, for
         // a new certificate: the setup opens on the sign-in, unless the
-        // guide, which shows the sign-in too, is open.
+        // guide, which shows the sign-in too, is open; the saves' storage
+        // goes first.
         .onChange(of: account.needsCode) { _, needsCode in
             guard needsCode, account.isAutomatic, !showingSetup, !showingGuide else { return }
+            let storageWasOpen = showingStorage
             sheetID = nil
-            showingSetup = true
+            showingStorage = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + (storageWasOpen ? 0.6 : 0)) { showingSetup = true }
         }
         .onAppear {
             memory = CartoucheMemoryReading.now()
@@ -483,6 +507,7 @@ struct CartoucheGamesView: View {
                 onLibrary: { path.append(.library) },
                 onSetup: { showingSetup = true },
                 onGuide: { showingGuide = true },
+                onSavesFolder: { showingStorage = true },
                 onTab: { sharedModel.selectedTab = $0 },
                 // One cartridge per game to grow from: the library's, once
                 // it is over the home.
@@ -732,7 +757,7 @@ struct CartoucheGamesView: View {
 
     /// The game Siri or a shortcut asked for (CartoucheShortcuts.swift):
     /// what is over the console goes, the System page, a game's sheet with
-    /// what is over it, the setup, the guide, a question about uninstalling
+    /// what is over it, the setup, the guide, the saves' storage, a question about uninstalling
     /// or quitting a game, or the last failure's alert, and the game starts
     /// as Play starts it, once they have gone; another game on screen goes
     /// behind the console, which asks whether to quit it. The Files picker,
@@ -750,6 +775,7 @@ struct CartoucheGamesView: View {
         sheetID = nil
         showingSetup = false
         showingGuide = false
+        showingStorage = false
         editingInfo = nil
         uninstalling = nil
         uninstallingInSheet = nil

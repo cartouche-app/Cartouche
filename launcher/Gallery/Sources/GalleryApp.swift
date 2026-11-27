@@ -350,6 +350,10 @@
 //                                        version 1.2.0 of the game having
 //                                        written it, and this iPhone's being
 //                                        1.0.0
+//        saves-offer                     no saves folder once the first game
+//                                        is over: the home offers one
+//                                        (decision 178), the only work it
+//                                        shows with
 //        session-expired                 a sign-in whose session Apple says
 //                                        has expired, before any code,
 //                                        LocalDevVPN connected
@@ -746,6 +750,12 @@ struct GalleryScenario {
             // The automation of every night as the work has it, never as a
             // scenario before this one left it.
             CartoucheNightly.shared.showForGallery(work)
+            // The offer of a saves folder, on its own work only, so that the
+            // home of every other scenario stays as it was.
+            if work == "saves-offer" {
+                CartoucheStorageSettings.shared.showForGallery([], games: [], saves: nil)
+            }
+            CartoucheSavesOffer.shared.showForGallery(shows: work == "saves-offer")
             CartoucheSetup.shared.refresh()
             if let trial = signingTrial {
                 // The import the setup refused, as the player tried it.

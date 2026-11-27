@@ -5,7 +5,9 @@
 //  The buttons of the way to a first game the player tapped, and the
 //  question to warn before Cartouche expires: their `offer.tapped` and
 //  `alerts.asked` events, which the server takes, and which the telemetry's
-//  README tells, each offer and each place.
+//  README tells, each offer and each place. The home's offer of a saves
+//  folder once the first game ended (decision 178): when it shows, and its
+//  `offer.shown` and `offer.taken` events.
 //
 
 import Foundation
@@ -44,6 +46,66 @@ final class CartoucheOffersTests: XCTestCase {
         }
     }
 
+    /// Once the first game is over, back on the console, with the saves on
+    /// this device alone: never before a minute of play, nor while a game
+    /// plays, nor once the player took it off. Up to 0.16.2, nothing
+    /// offered a saves folder: 57 of the 135 copies that had a game on
+    /// November 26 had none.
+    func testTheSavesFolderIsOfferedOnceTheFirstGameIsOver() {
+        XCTAssertTrue(CartoucheSavesOfferRule.shows(played: 60, playing: false, needsFolder: true, hidden: false))
+        XCTAssertTrue(CartoucheSavesOfferRule.shows(played: 45_240, playing: false, needsFolder: true, hidden: false))
+        // A game that stopped as it started, or none played yet.
+        XCTAssertFalse(CartoucheSavesOfferRule.shows(played: 0, playing: false, needsFolder: true, hidden: false))
+        XCTAssertFalse(CartoucheSavesOfferRule.shows(played: 59, playing: false, needsFolder: true, hidden: false))
+        // The first game still plays, paused behind the console.
+        XCTAssertFalse(CartoucheSavesOfferRule.shows(played: 2_820, playing: true, needsFolder: true, hidden: false))
+        // A saves folder already, or the offer taken off for good.
+        XCTAssertFalse(CartoucheSavesOfferRule.shows(played: 2_820, playing: false, needsFolder: false, hidden: false))
+        XCTAssertFalse(CartoucheSavesOfferRule.shows(played: 2_820, playing: false, needsFolder: true, hidden: true))
+    }
+
+    /// On the iPhone, the saves need a folder while they have none and the
+    /// player never chose one: a folder chosen, then stopped, was the
+    /// player's own choice, and the offer stays away.
+    func testTheIPhonesSavesNeedAFolderTheyNeverHad() {
+        XCTAssertTrue(CartoucheSavesOfferRule.needsFolder(hasFolder: false, choseOnce: false))
+        XCTAssertFalse(CartoucheSavesOfferRule.needsFolder(hasFolder: true, choseOnce: false))
+        XCTAssertFalse(CartoucheSavesOfferRule.needsFolder(hasFolder: true, choseOnce: true))
+        XCTAssertFalse(CartoucheSavesOfferRule.needsFolder(hasFolder: false, choseOnce: true))
+    }
+
+    /// The play time that makes the first game over: every game's, every
+    /// data folder's, together.
+    func testThePlayTimeOfEveryGameAddsUp() {
+        var record = CartouchePlayTimeRecord()
+        XCTAssertEqual(record.seconds, 0)
+        record.note(CartouchePlayTime(seconds: 40, sessions: 1), bundleId: "org.nxnative.0400c3f00006e000",
+                    titleId: "0400C3F00006E000", folder: "A")
+        XCTAssertFalse(CartoucheSavesOfferRule.shows(played: record.seconds, playing: false, needsFolder: true, hidden: false))
+        record.note(CartouchePlayTime(seconds: 15, sessions: 1), bundleId: "org.nxnative.0400c3f00006e000",
+                    titleId: "0400C3F00006E000", folder: "B")
+        record.note(CartouchePlayTime(seconds: 5, sessions: 1), bundleId: "org.nxnative.040074a01bf12000",
+                    titleId: "040074A01BF12000", folder: "A")
+        XCTAssertEqual(record.seconds, 60)
+        XCTAssertTrue(CartoucheSavesOfferRule.shows(played: record.seconds, playing: false, needsFolder: true, hidden: false))
+    }
+
+    /// The banner says it showed, once, and the kind of storage the player
+    /// then chose, never its name nor its address.
+    func testTheSavesOfferSaysItShowedAndWhatThePlayerChose() {
+        XCTAssertEqual(CartoucheOffer.savesBanner.fields(at: .home), ["offer": .text("savesBanner"), "place": .text("home")])
+        XCTAssertEqual(CartoucheOffer.savesHidden.fields(at: .home), ["offer": .text("savesHidden"), "place": .text("home")])
+        for kind in ["smb", "folder", "s3", "ftp", "sftp", "mac", "drive"] {
+            let fields = CartoucheOffer.savesBanner.takenFields(kind: kind)
+            XCTAssertEqual(fields, ["offer": .text("savesBanner"), "kind": .text(kind)])
+            assertWords(fields)
+            XCTAssertEqual(report(CartoucheOffer.takenEvent, fields)?.fields, fields)
+        }
+        let shown = CartoucheOffer.savesBanner.fields(at: .home)
+        XCTAssertEqual(report(CartoucheOffer.shownEvent, shown)?.name, "offer.shown")
+        XCTAssertEqual(report(CartoucheOffer.takenEvent, shown)?.name, "offer.taken")
+    }
+
     func testTheQuestionToWarnSaysWhereAndWhatThePlayerAnswered() {
         XCTAssertEqual(CartoucheAlertsAsk.firstGame.fields(granted: true), ["place": .text("firstGame"), "granted": .flag(true)])
         XCTAssertEqual(CartoucheAlertsAsk.system.fields(granted: false), ["place": .text("system"), "granted": .flag(false)])
@@ -67,6 +129,12 @@ final class CartoucheOffersTests: XCTestCase {
         let offers = try row(CartoucheOffer.event)
         for name in CartoucheOffer.allCases.map(\.rawValue) + CartoucheOffer.Place.allCases.map(\.rawValue) {
             XCTAssertTrue(offers.contains("`\(name)`"), "offer.tapped's row should tell \(name)")
+        }
+        let shown = try row(CartoucheOffer.shownEvent)
+        XCTAssertTrue(shown.contains("`savesBanner`") && shown.contains("`home`"), "offer.shown's row should tell savesBanner at home")
+        let taken = try row(CartoucheOffer.takenEvent)
+        for name in ["savesBanner", "kind", "smb", "folder", "s3", "ftp", "sftp", "mac", "drive"] {
+            XCTAssertTrue(taken.contains("`\(name)`"), "offer.taken's row should tell \(name)")
         }
         let alerts = try row(CartoucheAlertsAsk.event)
         for name in CartoucheAlertsAsk.allCases.map(\.rawValue) + ["place", "granted"] {

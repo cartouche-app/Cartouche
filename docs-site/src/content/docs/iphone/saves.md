@@ -5,7 +5,7 @@ sidebar:
   order: 6
 ---
 
-With a saves folder chosen in **System › Storage**, Cartouche keeps each game's saves in step with it, a folder per game. Your saves follow you from one iPhone or iPad to the next, and to your Mac, through your Mac or your NAS.
+With a saves folder chosen in **System › Storage**, Cartouche keeps each game's saves in step with it, a folder per game. Your saves follow you from one iPhone or iPad to the next, and to your Mac, through your Mac or your NAS. Without one, once your first game is over, the home offers to choose one; its × takes the offer away for good.
 
 ![A game's saves on its sheet](../../../assets/screens/iphone-sheet-saves.webp)
 

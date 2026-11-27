@@ -27,6 +27,8 @@ Le Mac garde les sauvegardes des jeux qui y sont joués à jour avec votre dossi
 
 La copie, sur ce Mac, d'un jeu que garde votre NAS reste hors de Time Machine : elle revient depuis le NAS. Les sauvegardes du jeu, elles, y vont.
 
+Sans dossier des sauvegardes de votre choix, Cartouche Builder garde les sauvegardes dans son propre dossier, sur ce Mac seulement : une fois votre première partie finie, l'accueil de la console vous propose d'en choisir un, sur iCloud Drive ou votre NAS, et son × retire la proposition pour de bon.
+
 ## Mods
 
 La fiche d'un jeu a aussi **Mods** sur le Mac, comme sur l'iPhone ([La fiche d'un jeu](/fr/iphone/game-sheet/#mods)) : ajoutez un mod depuis un dossier ou un ZIP de ce Mac, activez-le ou désactivez-le et réglez l'ordre. Un mod qui change aussi le code du jeu, avec un dossier `exefs`, ne marche pas encore sur le Mac : Cartouche le dit et le laisse de côté. Les mods du Mac restent sur ce Mac.
