@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-**Spieleinstellungen** auf der Infoseite eines Spiels enthält die Einstellungen, mit denen **Spielen** das Spiel startet: die, die der eigene Bildschirm von nxnative vor einem Spiel zeigt, auf einer Seite von Cartouche, in deiner Sprache. Das Menü im Spiel ändert dieselben.
+**Spieleinstellungen** auf der Infoseite eines Spiels enthält die Einstellungen, mit denen **Spielen** das Spiel startet: die, die der eigene Bildschirm von nxnative vor einem Spiel zeigt, auf einer Seite von Cartouche, in deiner Sprache. Das Menü im Spiel ändert dieselben. Ist Cartouche auf Deutsch, Französisch oder Spanisch, sind die Wörter dieses Menüs und der Bildschirm, der auf weitere Controller wartet, ebenfalls in dieser Sprache; die Einstellungen in diesem Menü behalten die englischen Namen von nxnative.
 
 <div class="screens">
 

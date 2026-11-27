@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-**Ajustes del juego**, en la ficha de un juego, guarda los ajustes con los que **Jugar** abre el juego: los que muestra la propia pantalla de nxnative antes de un juego, en una página de Cartouche, en tu idioma. El menú del juego cambia los mismos.
+**Ajustes del juego**, en la ficha de un juego, guarda los ajustes con los que **Jugar** abre el juego: los que muestra la propia pantalla de nxnative antes de un juego, en una página de Cartouche, en tu idioma. El menú del juego cambia los mismos. Con Cartouche en español, francés o alemán, las palabras de ese menú y la pantalla que espera más mandos también están en ese idioma; los ajustes de ese menú conservan los nombres en inglés de nxnative.
 
 <div class="screens">
 
