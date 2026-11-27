@@ -15,7 +15,7 @@ sidebar:
 
 - **Game settings** opens the game's settings on its sheet, as on the iPhone, with the Mac's own: display mode, Fullscreen or a window, and controllers.
 - The game speaks your Mac's language when it has it, until you choose one.
-- A game your NAS keeps that is not on this Mac yet shows too: **Install from the NAS** installs it, then **Play** starts it.
+- A game your NAS keeps that is not on this Mac yet shows too: **Install from the NAS** installs it, then **Play** starts it. The menu beside **My library** shows them all, only those **Installed** on this Mac, or only those **Not installed**, as on the iPhone.
 - **Remove from this Mac** puts its app in the Trash; the game stays in your games folder.
 - When the last controller disconnects during a game, the game pauses 3 seconds later and Cartouche comes back in front, saying so. A controller connected again brings the game back; so do **Resume**, and the game brought to the front from the Dock. **System › While a game runs** turns it off.
 

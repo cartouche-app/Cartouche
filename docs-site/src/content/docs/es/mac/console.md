@@ -15,7 +15,7 @@ sidebar:
 
 - **Ajustes del juego** abre los ajustes del juego en su ficha, como en el iPhone, con los propios del Mac: modo de pantalla, pantalla completa o ventana, y mandos.
 - El juego habla el idioma de tu Mac cuando lo tiene, hasta que elijas uno.
-- Un juego que guarda tu NAS y que aún no está en este Mac también aparece: **Instalar desde el NAS** lo instala, y luego **Jugar** lo abre.
+- Un juego que guarda tu NAS y que aún no está en este Mac también aparece: **Instalar desde el NAS** lo instala, y luego **Jugar** lo abre. El menú junto a **Mi biblioteca** los muestra todos, solo los **Instalados** en este Mac, o solo los que están **Sin instalar**, como en el iPhone.
 - **Quitar de este Mac** manda su app a la Papelera; el juego se queda en tu carpeta de juegos.
 - Cuando el último mando se desconecta durante una partida, el juego se pone en pausa 3 segundos después y Cartouche vuelve delante, que lo dice. Un mando conectado de nuevo reanuda el juego, como **Reanudar**, o el juego traído delante desde el Dock. **Sistema › Mientras funciona un juego** lo desactiva.
 

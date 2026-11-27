@@ -15,7 +15,7 @@ sidebar:
 
 - **Réglages du jeu** ouvre les réglages du jeu sur sa fiche, comme sur l'iPhone, avec ceux du Mac : mode d'affichage, **Plein écran** ou **Fenêtre**, et manettes.
 - Le jeu parle la langue de votre Mac quand il l'a, jusqu'à ce que vous en choisissiez une.
-- Un jeu que garde votre NAS et qui n'est pas encore sur ce Mac apparaît aussi : **Installer depuis le NAS** l'installe, puis **Jouer** le lance.
+- Un jeu que garde votre NAS et qui n'est pas encore sur ce Mac apparaît aussi : **Installer depuis le NAS** l'installe, puis **Jouer** le lance. Le menu à côté de **Ma bibliothèque** les montre tous, seulement les **Installés** sur ce Mac, ou seulement ceux **À installer**, comme sur l'iPhone.
 - **Retirer de ce Mac** met son app à la corbeille ; le jeu reste dans votre dossier des jeux.
 - Quand la dernière manette se déconnecte en pleine partie, le jeu se met en pause 3 secondes plus tard et Cartouche revient au premier plan, en le disant. Une manette reconnectée relance le jeu, comme **Reprendre**, ou le jeu ramené au premier plan depuis le Dock. **Système › Pendant une partie** le désactive.
 

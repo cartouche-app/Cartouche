@@ -526,6 +526,73 @@
       "work": "cloud-games"
     },
     {
+      "name": "iphone-home-installed",
+      "comment": "The home of a player with games installed and a game Cartouche Cloud built, the shelf filtered to the games installed, a controller connected: its shoulder buttons around the filter (CartoucheHomeFilter).",
+      "screen": "games",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": true,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-games",
+      "category": "installed"
+    },
+    {
+      "name": "iphone-home-not-installed",
+      "comment": "The same home filtered to the games not installed: the game Cartouche Cloud built, with Install from Cartouche Cloud.",
+      "screen": "games",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 874,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ],
+      "work": "cloud-games",
+      "category": "notInstalled"
+    },
+    {
+      "name": "iphone-home-landscape-not-installed",
+      "comment": "The same, the iPhone sideways: the filter at the end of the shelf's column, beside the game in focus.",
+      "screen": "games",
+      "owned": [
+        "0400C3F00006E000",
+        "040074A01BF12000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 874,
+      "height": 402,
+      "insets": [
+        0,
+        62,
+        21,
+        62
+      ],
+      "widthClass": "compact",
+      "work": "cloud-games",
+      "category": "notInstalled"
+    },
+    {
       "name": "iphone-sheet-cloud",
       "comment": "That game's sheet: Install from Cartouche Cloud, its size, and when Cartouche Cloud deletes it.",
       "screen": "sheet",
@@ -955,6 +1022,50 @@
       "screen": "sheet",
       "sheet": "01007EF00011E000",
       "work": "mac-gpu-no-bc-converted",
+      "category": "requirements",
+      "owned": [
+        "0400C3F00006E000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 1366,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-sheet-cloud-gpu-no-bc",
+      "comment": "13 Sentinels' sheet on an iPhone whose GPU reads no BC-compressed texture, an A16's, the game built by Cartouche Cloud from nxnative, not installed: not supported.",
+      "screen": "sheet",
+      "sheet": "01003FC01670C000",
+      "work": "cloud-gpu-no-bc",
+      "category": "requirements",
+      "owned": [
+        "0400C3F00006E000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 1366,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-sheet-cloud-gpu-no-bc-converted",
+      "comment": "The same sheet, the game built by Cartouche Cloud from nxnative-nobc, for an iPhone 11 to 15, as the platform says it: no warning that nxnative refuses the GPU, and Install asks nothing first (26 November: Sparking Zero on an iPhone 13).",
+      "screen": "sheet",
+      "sheet": "01003FC01670C000",
+      "work": "cloud-gpu-no-bc-converted",
       "category": "requirements",
       "owned": [
         "0400C3F00006E000",

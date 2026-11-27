@@ -15,7 +15,7 @@ sidebar:
 
 - **Einstellungen des Spiels** öffnet die Einstellungen des Spiels auf seiner Infoseite, wie auf dem iPhone, mit den eigenen des Mac: Anzeigemodus, Vollbild oder Fenster, und Controller.
 - Das Spiel spricht die Sprache deines Mac, wenn es sie hat, bis du eine wählst.
-- Ein Spiel, das dein NAS aufbewahrt und das noch nicht auf diesem Mac ist, erscheint auch: **Vom NAS installieren** installiert es, dann startet **Spielen** es.
+- Ein Spiel, das dein NAS aufbewahrt und das noch nicht auf diesem Mac ist, erscheint auch: **Vom NAS installieren** installiert es, dann startet **Spielen** es. Das Menü neben **Meine Bibliothek** wählt **Alle**, **Installiert** (auf diesem Mac) oder **Nicht installiert**, wie auf dem iPhone.
 - **Von diesem Mac entfernen** legt seine App in den Papierkorb; das Spiel bleibt in deinem Spieleordner.
 - Wird der letzte Controller während eines Spiels getrennt, pausiert das Spiel 3 Sekunden später und Cartouche kommt wieder nach vorn und sagt es. Ein wieder verbundener Controller setzt das Spiel fort, wie **Fortsetzen** oder das Spiel, das du über das Dock nach vorn holst. **System › Während ein Spiel läuft** schaltet es aus.
 

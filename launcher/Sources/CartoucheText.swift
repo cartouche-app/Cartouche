@@ -74,6 +74,11 @@ enum CartoucheText {
     static var hintFilter: String { s("hint.filter", "Filter") }
     static var hintBack: String { s("hint.back", "Back") }
     static var filterAll: String { s("library.filter.all", "All") }
+    /// The home's filter (CartoucheHomeFilter): the games installed here,
+    /// and those whose IPA waits on the Mac, in a games folder or in
+    /// Cartouche Cloud.
+    static var homeFilterInstalled: String { s("home.filter.installed", "Installed") }
+    static var homeFilterNotInstalled: String { s("home.filter.notInstalled", "Not installed") }
     static var searchPrompt: String { s("library.search", "Name or title ID") }
 
     // MARK: Where a game plays
