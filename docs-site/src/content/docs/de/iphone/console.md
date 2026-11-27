@@ -11,7 +11,7 @@ Cartouche öffnet sich mit seiner Konsole: deine Spiele, groß, in einem einzige
 
 ## Der Home-Bildschirm
 
-- **Meine Bibliothek:** deine Spiele, installiert oder in deinem Spieleordner, dann **Importieren** und **Alle Spiele**.
+- **Meine Bibliothek:** deine Spiele, installiert oder in deinem Spieleordner, dann **Importieren** und **Alle Spiele**. Sind manche installiert und andere nicht, wählt das Menü neben ihrem Titel **Alle**, **Installiert** oder **Nicht installiert**: die Spiele, die noch auf deinem Mac, in deinem Spieleordner oder in Cartouche Cloud liegen. Cartouche merkt sich deine Wahl; mit einem Controller ändern <kbd>L</kbd> und <kbd>R</kbd> sie.
 - **Das Spiel im Fokus:** sein Name, seine Plattform, sein Genre und sein Status auf diesem iPhone, deine Spielzeit und der Platz, den es belegt. **Spielen** startet es, **Details** öffnet seine [Infoseite](/de/iphone/game-sheet/). Liegt in deinem Spieleordner ein neuerer Build, installiert **Aktualisieren** ihn, die Spielstände bleiben.
 - **Das Dock:** **Alle Spiele**, **Importieren** und **System**. Es sitzt unten, wenn das iPhone hochkant ist, und in der oberen Leiste, wenn es quer ist.
 - **Die obere Leiste:** ein Controller, wenn einer verbunden ist, und in den letzten drei Tagen der Signatur von Cartouche die verbleibenden Tage.

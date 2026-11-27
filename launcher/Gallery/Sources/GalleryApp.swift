@@ -444,11 +444,17 @@
 //        dumps                           on how to name the games (screen
 //                                        storage-names), the page down to
 //                                        Cartouche Builder's dumps folder
+//        installed                       on the home, the shelf filtered to
+//                                        the games installed, with games not
+//                                        installed besides, as with work
+//                                        cloud-games (CartoucheHomeFilter)
 //        manage                          on the sheet, the sheet opened on
 //                                        the game's management
 //        otherApps                       on the System page, the page
 //                                        scrolled down to Other installed
 //                                        apps (work other-apps)
+//        notInstalled                    on the home, the same, filtered to
+//                                        the games not installed
 //        nightly                         on the Mac's builds (screen
 //                                        mac-builds), down to the nightly
 //                                        build; on the System page, the
@@ -663,6 +669,10 @@ struct GalleryScenario {
         }
         GalleryState.signInUnfinished = work == "sign-in-unfinished"
         GalleryState.sheetSection = screen == "sheet" ? category : nil
+        // The home's filter as the scenario chooses it, never as an earlier
+        // scenario or test left it in the gallery's preferences.
+        let homeFilter = (screen == "games" ? category.flatMap(CartoucheHomeFilter.init(rawValue:)) : nil) ?? .all
+        homeFilter.save()
         GalleryState.vpnConnected = work.map {
             Self.deviceChecks[$0] != nil || ["sidestore-quit", "no-app-group", "sign-in-no-liveprocess"].contains($0)
                 || GalleryAppleAnswer(rawValue: $0) != nil

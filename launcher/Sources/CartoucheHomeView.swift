@@ -27,6 +27,12 @@
 //  (CartoucheGamesView), the home leaves out the game in focus, which the
 //  sheet describes in full, and its shelf takes the room.
 //
+//  While the player has games installed and games not installed, whose
+//  IPA is on their Mac, in a games folder or in Cartouche Cloud, a menu
+//  beside the shelf's title shows them all, those installed or those not
+//  installed, and the controller's shoulder buttons go from one to the
+//  next (CartoucheHomeFilter.swift).
+//
 //  A game paused behind the console (CartoucheGameHost) has a pause badge
 //  on its cartridge, Resume as its main action and Quit beside it; the
 //  focus goes to it each time the console comes back over it.
@@ -116,6 +122,9 @@ struct CartoucheHomeView: View {
     /// setup banner, as last laid out: its detail can take one line or two,
     /// as the guide's does on an iPhone upright (Metrics).
     @State private var bannerHeight: CGFloat?
+    /// Which of the player's games the shelf shows, as they chose last, and
+    /// the games it keeps there, changed together.
+    @State private var choice = CartoucheHomeShelfChoice(filter: CartoucheHomeFilter.saved())
 
     enum Item: Hashable {
         case game(CartoucheEntry)
@@ -141,11 +150,39 @@ struct CartoucheHomeView: View {
     private static let shelfRow = 0
     private static let dockRow = 1
 
-    /// The player's games, installed or in their games folder, then the
-    /// covers that import one and open every game. The games nxnative plays
-    /// on the iPhone are in All games, under their filter.
+    /// The player's games, installed or in their games folder, those the
+    /// filter shows, then the covers that import one and open every game.
+    /// The games nxnative plays on the iPhone are in All games, under their
+    /// filter.
     private var libraryShelf: [Item] {
-        entries.owned.map(Item.game) + [.importGame, .allGames]
+        shelfGames.map(Item.game) + [.importGame, .allGames]
+    }
+
+    /// The player's games as the filter reads them.
+    private var filterGames: [CartoucheHomeShelfGame] {
+        entries.owned.map { entry in
+            CartoucheHomeShelfGame(key: Self.shelfKey(entry), isInstalled: entry.isInstalled,
+                                   isRunning: actions.isRunning(entry.app))
+        }
+    }
+
+    /// The player's games the shelf shows.
+    private var shelfGames: [CartoucheEntry] {
+        CartoucheHomeShelf.shown(filterGames, filter: filter, kept: choice.kept).map { entries.owned[$0] }
+    }
+
+    /// The filter the player chose.
+    private var filter: CartoucheHomeFilter { choice.filter }
+
+    /// Whether the home offers the filter: the player has games installed
+    /// and games not installed.
+    private var offersFilter: Bool { CartoucheHomeShelf.offersFilter(filterGames) }
+
+    /// What tells a game apart on the shelf, the same once it is installed
+    /// or uninstalled, as its entry's ID is not: its title ID, else its
+    /// bundle ID.
+    static func shelfKey(_ entry: CartoucheEntry) -> String {
+        entry.titleId ?? entry.app?.appInfo.bundleIdentifier() ?? entry.stored?.bundleId ?? entry.id
     }
 
     private var rows: [[Item]] {
@@ -177,7 +214,7 @@ struct CartoucheHomeView: View {
             let guideProgress = guide.progress(entries)
             let showsGuide = guide.showsCard(guideProgress)
             let metrics = Metrics(size: proxy.size, hasBanner: showsGuide || setup.showsBanner, hasHero: showsHero,
-                                  measuredBanner: bannerHeight)
+                                  measuredBanner: bannerHeight, hasFilter: offersFilter)
             ScrollView(.vertical) {
                 VStack(alignment: .leading, spacing: metrics.spacing) {
                     topBar(metrics)
@@ -219,9 +256,20 @@ struct CartoucheHomeView: View {
         .background(CartoucheStage(key: heroKey, art: heroBackdrop))
         // The game it opens on, the shelf scrolled to it.
         .onAppear {
-            if let focusing, let column = entries.owned.firstIndex(where: { $0.id == focusing }) {
+            if let focusing, let column = shelfGames.firstIndex(where: { $0.id == focusing }) {
                 focus(row: Self.shelfRow, column: column)
             }
+        }
+        // The games the shelf shows while the filter leaves some out stay
+        // there, installed or uninstalled, until the player chooses a
+        // filter again; the focus stays on its game, or on its cover after
+        // the games, as the shelf changes.
+        .onChange(of: shelfGames.map(Self.shelfKey), initial: true) { before, after in
+            var next = choice
+            next.shelfShows(after, offersFilter: offersFilter)
+            if next != choice { choice = next }
+            guard before != after else { return }
+            columns[Self.shelfRow] = CartoucheHomeShelf.column(columns[Self.shelfRow], from: before, to: after)
         }
         .onChange(of: hero) { _, hero in
             if let hero { onFocus(hero) }
@@ -396,11 +444,18 @@ struct CartoucheHomeView: View {
         let index = Self.shelfRow
         let items = rows[index]
         return VStack(alignment: .leading, spacing: 10) {
-            Text(title.uppercased())
-                .font(.caption.weight(.heavy))
-                .tracking(1.4)
-                .foregroundStyle(CartoucheTheme.secondaryText)
-                .accessibilityAddTraits(.isHeader)
+            HStack(spacing: 8) {
+                Text(title.uppercased())
+                    .font(.caption.weight(.heavy))
+                    .tracking(1.4)
+                    .foregroundStyle(CartoucheTheme.secondaryText)
+                    .lineLimit(1)
+                    .accessibilityAddTraits(.isHeader)
+                if offersFilter {
+                    Spacer(minLength: 8)
+                    filterMenu
+                }
+            }
             ScrollViewReader { reader in
                 ScrollView(.horizontal) {
                     LazyHStack(alignment: .top, spacing: max(10, width * 0.12)) {
@@ -433,6 +488,80 @@ struct CartoucheHomeView: View {
             }
             .padding(.horizontal, -width * 0.06)
         }
+    }
+
+    /// The filter: the one chosen, in the brand's colours when it leaves
+    /// games out, with the controller's shoulder buttons around it while one
+    /// is connected; a tap opens the menu of the three.
+    private var filterMenu: some View {
+        Menu {
+            Picker(CartoucheText.hintFilter, selection: Binding(get: { filter }, set: { choose($0, byController: false) })) {
+                ForEach(CartoucheHomeFilter.allCases, id: \.self) { item in
+                    Label(Self.title(item), systemImage: Self.symbol(item))
+                        .tag(item)
+                }
+            }
+            .pickerStyle(.inline)
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: gamepad.isConnected ? gamepad.symbol(for: .previous) : "line.3.horizontal.decrease")
+                Text(Self.title(filter))
+                    .lineLimit(1)
+                if gamepad.isConnected {
+                    Image(systemName: gamepad.symbol(for: .next))
+                } else {
+                    Image(systemName: "chevron.down")
+                        .font(.caption2.weight(.bold))
+                }
+            }
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(filter == .all ? CartoucheTheme.secondaryText : Color.white)
+            .padding(.horizontal, 10)
+            .frame(height: Metrics.filterHeight)
+            .background {
+                if filter != .all {
+                    Capsule().fill(CartoucheTheme.brand)
+                }
+            }
+            .cartoucheGlass(in: Capsule(), interactive: true)
+            .contentShape(Capsule())
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .accessibilityLabel(Text(CartoucheText.hintFilter))
+        .accessibilityValue(Text(Self.title(filter)))
+    }
+
+    static func title(_ filter: CartoucheHomeFilter) -> String {
+        switch filter {
+        case .all: return CartoucheText.filterAll
+        case .installed: return CartoucheText.homeFilterInstalled
+        case .notInstalled: return CartoucheText.homeFilterNotInstalled
+        }
+    }
+
+    static func symbol(_ filter: CartoucheHomeFilter) -> String {
+        switch filter {
+        case .all: return "square.stack.fill"
+        case .installed: return "checkmark.circle.fill"
+        case .notInstalled: return "arrow.down.circle"
+        }
+    }
+
+    /// The player chose FILTER, from the menu or with the controller's
+    /// shoulder buttons: kept, and the shelf shows its games from now on,
+    /// the focus staying on its game where it is still there.
+    private func choose(_ new: CartoucheHomeFilter, byController: Bool) {
+        guard new != filter else { return }
+        new.save()
+        // What it shows from now on, which stays there, in the same change
+        // as the filter.
+        var chosen = choice
+        chosen.choose(new, among: filterGames)
+        withAnimation(.easeInOut(duration: 0.2)) { choice = chosen }
+        CartoucheTelemetry.shared.event(CartoucheHomeFilter.event, fields: new.fields(byController: byController))
     }
 
     @ViewBuilder
@@ -845,7 +974,7 @@ struct CartoucheHomeView: View {
         case .b:
             if row == Self.dockRow { focus(row: Self.shelfRow, column: columns[Self.shelfRow]) }
         case .previous, .next:
-            break
+            if offersFilter { choose(filter.moved(forward: input == .next), byController: true) }
         }
     }
 
@@ -861,11 +990,16 @@ struct CartoucheHomeView: View {
         /// The banner's height as the home laid it out; bannerHeight until
         /// it has.
         var measuredBanner: CGFloat? = nil
+        /// The filter beside the shelf's title, taller than the title.
+        var hasFilter = false
 
         static let topBarHeight: CGFloat = 44
         static let bannerHeight: CGFloat = 72
         /// The shelf's title and the space under it.
         static let shelfTitleHeight: CGFloat = 26
+        /// The filter beside it, and what it adds to the title's height.
+        static let filterHeight: CGFloat = 28
+        static let filterExtraHeight: CGFloat = 12
         /// The dock's bar (dockLabel, 50, and 5 around it) and the space
         /// around it at the bottom of the screen.
         static let dockHeight: CGFloat = 60
@@ -924,6 +1058,7 @@ struct CartoucheHomeView: View {
         private var shelfSpace: CGFloat {
             // The shelf under the top bar.
             var fixed = 2 * verticalPadding + Self.topBarHeight + spacing + Self.shelfTitleHeight
+            if hasFilter { fixed += Self.filterExtraHeight }
             if hasBanner { fixed += (measuredBanner ?? Self.bannerHeight) + spacing }
             if !isWide {
                 // The game in focus under the shelf, the dock under them.
