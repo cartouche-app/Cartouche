@@ -972,6 +972,50 @@
       ]
     },
     {
+      "name": "iphone-sheet-cloud-gpu-no-bc",
+      "comment": "13 Sentinels' sheet on an iPhone whose GPU reads no BC-compressed texture, an A16's, the game built by Cartouche Cloud from nxnative, not installed: not supported.",
+      "screen": "sheet",
+      "sheet": "01003FC01670C000",
+      "work": "cloud-gpu-no-bc",
+      "category": "requirements",
+      "owned": [
+        "0400C3F00006E000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 1366,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
+      "name": "iphone-sheet-cloud-gpu-no-bc-converted",
+      "comment": "The same sheet, the game built by Cartouche Cloud from nxnative-nobc, for an iPhone 11 to 15, as the platform says it: the BC line green, as for a game on the Mac built so, and Install asks nothing first (26 November: Sparking Zero on an iPhone 13).",
+      "screen": "sheet",
+      "sheet": "01003FC01670C000",
+      "work": "cloud-gpu-no-bc-converted",
+      "category": "requirements",
+      "owned": [
+        "0400C3F00006E000",
+        "01006BB00C6F0000"
+      ],
+      "setup": true,
+      "controller": false,
+      "width": 402,
+      "height": 1366,
+      "insets": [
+        62,
+        0,
+        34,
+        0
+      ]
+    },
+    {
       "name": "iphone-game-info",
       "screen": "gameinfo",
       "sheet": "0100C0FFEE0A0000",

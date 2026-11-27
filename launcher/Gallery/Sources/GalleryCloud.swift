@@ -29,7 +29,9 @@ enum GalleryCloud {
     /// says, its files ready in 5 minutes 30; Animal Crossing waiting for it,
     /// one build at a time for an account; and Balatro, which nxnative did
     /// not manage to build, to start again on the site within two days.
-    static func account(now: Date = Date()) -> CartoucheCloudAccount {
+    /// 13 Sentinels built from ENGINE: nxnative, unless the work says
+    /// nxnative-nobc, for an iPhone 11 to 15 (cloud-gpu-no-bc-converted).
+    static func account(now: Date = Date(), engine: String = "nxnative") -> CartoucheCloudAccount {
         let hour: TimeInterval = 3_600
         let games = [
             CartoucheCloudGame(id: "a3f1c9e27b4d4e18a6c05d9f3e7b2c41", title: "0400486024dec000",
@@ -44,7 +46,8 @@ enum GalleryCloud {
             CartoucheCloudGame(id: "5d2a7f9c1e3b4a6d8c0e2f4a6b8d0c1e", title: "01003fc01670c000",
                                name: "13 Sentinels: Aegis Rim", state: .built, price: 250,
                                expiresAt: now.addingTimeInterval(45 * hour), bytes: 6_812_495_872,
-                               file: "13 Sentinels Aegis Rim [01003FC01670C000].ipa", builtAt: now.addingTimeInterval(-3 * hour)),
+                               file: "13 Sentinels Aegis Rim [01003FC01670C000].ipa", builtAt: now.addingTimeInterval(-3 * hour),
+                               engine: engine),
             CartoucheCloudGame(id: "9b4e2c7a0d1f4b8e93a6c5d2e1f0a7b4", title: "0400c3f00006e000",
                                name: "Mario Kart World", state: .built, price: 250,
                                expiresAt: now.addingTimeInterval(20 * hour), bytes: 24_418_369_536,
@@ -60,8 +63,10 @@ enum GalleryCloud {
     }
 
     /// What WORK shows of Cartouche Cloud, or the page of SCREEN cloud: the
-    /// account's games (cloud-games), one of them being installed from it
-    /// (cloud-installing), the code of the account's page linking this
+    /// account's games (cloud-games), on an iPhone whose GPU reads no
+    /// BC-compressed texture (cloud-gpu-no-bc), 13 Sentinels built from
+    /// nxnative-nobc there (cloud-gpu-no-bc-converted), one of them being
+    /// installed from it (cloud-installing), the code of the account's page linking this
     /// iPhone (cloud-linking) or refused (cloud-refused); what the service
     /// tells an iPhone not linked yet, on the page, or wherever the page
     /// opens from (cloud-service), as from the guide.
@@ -69,8 +74,10 @@ enum GalleryCloud {
     static func show(screen: String, work: String?) {
         let link = CartoucheCloudLink.shared
         switch work {
-        case "cloud-games", "cloud-installing":
+        case "cloud-games", "cloud-installing", "cloud-gpu-no-bc":
             link.showForGallery(linked: true, service: service, account: account())
+        case "cloud-gpu-no-bc-converted":
+            link.showForGallery(linked: true, service: service, account: account(engine: "nxnative-nobc"))
         case "cloud-linking":
             link.showForGallery(linked: false, service: service, account: nil, pendingCode: code, busy: .linking)
         case "cloud-refused":

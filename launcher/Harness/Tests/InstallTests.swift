@@ -153,6 +153,9 @@ final class InstallTests: HarnessCase {
         let game = HarnessGame.plain()
         let ipa = try HarnessIPA.game(game)
         actions.install(ipa)
+        // Its build is read first: nxnative's own, which converts nothing.
+        XCTAssertEqual(actions.work?.stage, "checking")
+        try await waitUntil("its build is read") { actions.installQuestion != nil }
         XCTAssertNil(actions.work, "nothing starts before the player answers")
         let question = try XCTUnwrap(actions.installQuestion)
         XCTAssertEqual(question.source, .file(ipa))
@@ -171,6 +174,7 @@ final class InstallTests: HarnessCase {
         HarnessLC.readsBCTextures = false
         let ipa = try HarnessIPA.game(.plain())
         actions.install(ipa)
+        try await waitUntil("its build is read") { actions.installQuestion != nil }
         let question = try XCTUnwrap(actions.installQuestion)
         actions.dropInstall(question)
         XCTAssertNil(actions.installQuestion)
@@ -190,11 +194,13 @@ final class InstallTests: HarnessCase {
         let opened = inbox.appendingPathComponent("\(first.name).ipa")
         try FileManager.default.moveItem(at: try HarnessIPA.game(first), to: opened)
         XCTAssertTrue(CartouchePairing.openedFile(opened))
+        try await waitUntil("its build is read") { actions.installQuestion != nil }
         XCTAssertEqual(actions.installQuestion?.source, .file(opened))
 
         let second = HarnessGame.plain(1)
         let picked = try HarnessIPA.game(second)
         actions.install(picked)
+        try await waitUntil("its build is read") { actions.installQuestion?.source == .file(picked) }
         let question = try XCTUnwrap(actions.installQuestion)
         XCTAssertEqual(question.source, .file(picked), "one question at a time: the newest")
         XCTAssertFalse(FileManager.default.fileExists(atPath: opened.path), "the copy iOS made goes, as after Cancel")
@@ -203,6 +209,22 @@ final class InstallTests: HarnessCase {
         try await waitUntil("the install is over") { actions.work == nil }
         XCTAssertNotNil(app(second.bundleIdentifier))
         XCTAssertNil(app(first.bundleIdentifier))
+    }
+
+    /// An IPA built by a fork of nxnative that converts the textures, as
+    /// Cartouche Cloud builds one from nxnative-nobc for an iPhone 11 to 15
+    /// (decision 176): its build read, it installs without the question.
+    func testOnAGPUNxnativeRefusesAFileWhoseBuildConvertsInstallsWithoutAsking() async throws {
+        HarnessLC.readsBCTextures = false
+        var game = HarnessGame.plain(HarnessCatalog.drawnWithNVN[0])
+        game.convertsBC = true
+        let ipa = try HarnessIPA.game(game)
+        actions.install(ipa)
+        XCTAssertEqual(actions.work?.stage, "checking")
+        try await waitUntil("the install is over") { actions.work == nil && app(game.bundleIdentifier) != nil }
+        XCTAssertNil(actions.installQuestion)
+        XCTAssertNil(actions.notice)
+        XCTAssertEqual(HarnessLC.signed.count, 1)
     }
 
     func testOnAGPUThatReadsBCTexturesNothingIsAsked() async throws {

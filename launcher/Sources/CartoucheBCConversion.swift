@@ -26,7 +26,10 @@
 //
 //  A game not installed is read where its IPA sits, on the Mac, a NAS or a
 //  Drive (conversion(ofIPA:)): its executable's entry alone, unpacked to a
-//  file, then read as an installed one's (CartoucheStoredGames).
+//  file, then read as an installed one's (CartoucheStoredGames). So is an
+//  IPA on this iPhone before its install (CartoucheGameActions). A game
+//  Cartouche Cloud built, read nowhere before its install, converts what
+//  the nxnative the platform built it from does (conversion(ofCloudEngine:)).
 //
 //  Platform-independent: tested on its own by launcher/Package.swift.
 //
@@ -55,6 +58,20 @@ enum CartoucheBCConversion {
     /// (main.m) and at its first image (nvn_mtl.m): a build that still says
     /// either stops on such a GPU, whatever else it carries.
     static let refusals = ["cannot read BC-compressed textures", "has no BC texture formats"]
+
+    /// The nxnative Cartouche Cloud builds a game sent for an iPhone 11 to
+    /// 15 from, as the platform names it (CartoucheCloudGame.engine).
+    static let cloudEngine = "nxnative-nobc"
+
+    /// The APIs whose BC textures a game Cartouche Cloud built converts, by
+    /// the nxnative the platform says it built it from, ENGINE: NVN's and
+    /// Vulkan's from nxnative-nobc, whose every commit the platform builds
+    /// from came after its Vulkan layer's (22 November); none from
+    /// nxnative, from a platform that does not say, or from an engine it
+    /// does not name.
+    static func conversion(ofCloudEngine engine: String?) -> APIs {
+        engine == cloudEngine ? [.nvn, .vulkan] : []
+    }
 
     /// The APIs whose BC textures the executable at URL converts. Mapped,
     /// not read: a game's executable can be hundreds of megabytes, of which

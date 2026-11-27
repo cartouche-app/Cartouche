@@ -208,6 +208,18 @@ final class StorageTests: HarnessCase {
         // Read once: the next scan keeps what was read.
         await stored.reload()
         XCTAssertEqual(stored.games.first { $0.titleId == converted.titleId }?.convertedBC, .nvn)
+
+        // Its install asks nothing first (decision 176); nxnative's own
+        // build still asks.
+        actions.install(stored: try XCTUnwrap(stored.games.first { $0.titleId == converted.titleId }))
+        XCTAssertNil(actions.installQuestion)
+        XCTAssertEqual(actions.work?.kind, .installing)
+        try await waitUntil("the install is over") { actions.work == nil }
+        XCTAssertNil(actions.notice)
+        XCTAssertNotNil(app(converted.bundleIdentifier))
+        actions.install(stored: try XCTUnwrap(stored.games.first { $0.titleId == upstream.titleId }))
+        XCTAssertEqual(actions.installQuestion?.source, .stored(try XCTUnwrap(stored.games.first { $0.titleId == upstream.titleId })))
+        XCTAssertNil(actions.work)
     }
 
     /// On a GPU that reads BC textures, nothing more is read of the IPAs.

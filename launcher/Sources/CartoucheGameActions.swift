@@ -224,17 +224,51 @@ final class CartoucheGameActions: ObservableObject {
     /// refuses a GPU that cannot read BC-compressed textures, the A16's and
     /// older, for every game, which stops before its first image
     /// (dm/ios/Sources/main.m), so on such a GPU the console asks first,
-    /// unless the player ANSWERED Install anyway. A question it takes the
-    /// place of goes unanswered, as Cancel leaves it
+    /// unless the player ANSWERED Install anyway, or the game's build
+    /// converts those textures for every API it draws with: CONVERTED, the
+    /// APIs whose textures it converts as Cartouche read them before the
+    /// install, nil when it could not, of the game TITLEID (covers). A
+    /// question it takes the place of goes unanswered, as Cancel leaves it
     /// (CartoucheInstallQuestions).
-    private func startsNow(_ question: CartoucheInstallQuestion, answered: Bool) -> Bool {
-        let (starts, dropped) = installQuestions.install(
-            question, readsBCTextures: CartoucheDevice.supportsBCTextureCompression, answered: answered)
+    private func startsNow(_ question: CartoucheInstallQuestion, converted: CartoucheBCConversion.APIs?,
+                           titleId: String?, answered: Bool) -> Bool {
+        let reads = CartoucheDevice.supportsBCTextureCompression
+        let converts = !reads && Self.covers(converted, titleId: titleId)
+        let (starts, dropped) = installQuestions.install(question, readsBCTextures: reads, convertsBCTextures: converts,
+                                                         answered: answered)
         if let dropped { dropInstall(dropped) }
         if !starts {
             CartoucheReports.note(question.name + ": asked before its install, this iPhone's GPU cannot read BC-compressed textures")
+        } else if converts && !answered {
+            CartoucheReports.note(question.name + ": installs without asking, its build converts BC-compressed textures for this iPhone's GPU")
         }
         return starts
+    }
+
+    /// Whether a build that converts the BC-compressed textures of the APIs
+    /// CONVERTED, of the game TITLEID, draws on a GPU that reads none: every
+    /// API the game draws with, as nxnative's list says it, is among them
+    /// (CartoucheBCConversion.covers). Never a build Cartouche did not read.
+    private static func covers(_ converted: CartoucheBCConversion.APIs?, titleId: String?) -> Bool {
+        guard let converted else { return false }
+        let graphics = titleId.flatMap { CartoucheCatalog.shared.game(titleId: $0) }?.graphics
+        return CartoucheBCConversion.covers(graphics: graphics, by: converted)
+    }
+
+    /// The APIs whose BC-compressed textures the build of the IPA at URL, on
+    /// this iPhone, converts, and its game's title ID: its executable read in
+    /// place, as a game's in the games folder is
+    /// (CartoucheStoredGames.readConversions), off the main thread. Nil
+    /// APIs when the file is no IPA Cartouche can read.
+    nonisolated private static func bcConversion(ofIPA url: URL) async -> (apis: CartoucheBCConversion.APIs?, titleId: String?) {
+        guard let source = try? CartoucheFileSource(url), let entries = try? await CartoucheZip.entries(of: source),
+              let plist = try? await CartoucheStoredGames.infoPlist(of: source, entries: entries) else { return (nil, nil) }
+        let titleId = CartoucheGameBuild.titleId(in: plist.info)
+            ?? (plist.info["CFBundleIdentifier"] as? String).flatMap(CartoucheStoredGame.titleId(inBundleId:))
+        let apis = try? await CartoucheBCConversion.conversion(
+            ofIPA: source, entries: entries, executable: plist.info["CFBundleExecutable"] as? String ?? "",
+            in: FileManager.default.temporaryDirectory)
+        return (apis, titleId)
     }
 
     /// The player's answer: the game installs all the same.
@@ -265,9 +299,33 @@ final class CartoucheGameActions: ObservableObject {
     /// Installs the IPA the player picked or opened Cartouche with, read in
     /// place: a game's IPA is too large to copy first, so the access the
     /// picker granted stays open until the end. ASKED: the player said to
-    /// install it on an iPhone whose GPU nxnative refuses.
+    /// install it on an iPhone whose GPU nxnative refuses. On such a GPU, its
+    /// build is read first, as the install's first check: one that converts
+    /// the BC-compressed textures installs without asking, as a game Cartouche
+    /// Cloud built from nxnative-nobc, which a player with an iPhone 13
+    /// downloaded from the site, was asked of (26 November).
     func install(_ url: URL, asked: Bool = false) {
-        guard work == nil, startsNow(CartoucheInstallQuestion(source: .file(url)), answered: asked) else { return }
+        guard work == nil else { return }
+        guard asked || CartoucheDevice.supportsBCTextureCompression else {
+            work = CartoucheGameWork(kind: .installing, name: url.deletingPathExtension().lastPathComponent,
+                                     step: CartoucheText.installChecking, fraction: nil, stage: "checking")
+            Task {
+                let accessing = url.startAccessingSecurityScopedResource()
+                let read = await Self.bcConversion(ofIPA: url)
+                if accessing { url.stopAccessingSecurityScopedResource() }
+                work = nil
+                install(url, converted: read.apis, titleId: read.titleId, asked: false)
+            }
+            return
+        }
+        install(url, converted: nil, titleId: nil, asked: asked)
+    }
+
+    /// Installs the IPA at URL, whose build converts the BC-compressed
+    /// textures of CONVERTED, of the game TITLEID, as read before (startsNow).
+    private func install(_ url: URL, converted: CartoucheBCConversion.APIs?, titleId: String?, asked: Bool) {
+        guard work == nil, startsNow(CartoucheInstallQuestion(source: .file(url)), converted: converted, titleId: titleId,
+                                     answered: asked) else { return }
         installing = ("file", nil)
         facts = [.init("IPA", url.lastPathComponent), .init("From", "a file on this iPhone")]
         let model = DataManager.shared.model
@@ -376,7 +434,8 @@ final class CartoucheGameActions: ObservableObject {
     func install(stored offered: CartoucheStoredGame, asked: Bool = false) {
         let storedGames = CartoucheStoredGames.shared
         guard work == nil, let first = storedGames.server(of: offered),
-              startsNow(CartoucheInstallQuestion(source: .stored(offered)), answered: asked) else { return }
+              startsNow(CartoucheInstallQuestion(source: .stored(offered)), converted: offered.convertedBC,
+                        titleId: offered.titleId, answered: asked) else { return }
         // The copies to try, the one offered first, each with its server.
         let copies: [(game: CartoucheStoredGame, server: CartoucheStorageServer)] = storedGames.copies(of: offered)
             .compactMap { copy in storedGames.server(of: copy).map { (copy, $0) } }
@@ -542,7 +601,10 @@ final class CartoucheGameActions: ObservableObject {
     /// installed copy of the game holds: Cartouche Cloud builds none apart.
     /// ASKED, as above.
     func install(cloud game: CartoucheCloudBuilt, asked: Bool = false) {
-        guard work == nil, startsNow(CartoucheInstallQuestion(source: .cloud(game)), answered: asked) else { return }
+        guard work == nil,
+              startsNow(CartoucheInstallQuestion(source: .cloud(game)),
+                        converted: CartoucheBCConversion.conversion(ofCloudEngine: game.engine), titleId: game.titleId,
+                        answered: asked) else { return }
         installing = ("cloud", nil)
         facts = [.init("IPA", game.file), .init("IPA size", CartoucheReport.bytes(Int64(clamping: game.bytes))),
                  .init("From", "Cartouche Cloud")]

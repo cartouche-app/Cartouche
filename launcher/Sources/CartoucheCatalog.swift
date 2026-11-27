@@ -118,6 +118,9 @@ struct CartoucheCloudBuilt: Hashable {
     let file: String
     let builtAt: Date?
     let expiresAt: Date
+    /// The nxnative it was built from, as the platform says it
+    /// (CartoucheCloudGame.engine).
+    var engine: String? = nil
 }
 
 /// A game in the catalogue: a supported game, the player's copy of one, or
@@ -198,9 +201,11 @@ struct CartoucheEntry: Identifiable, Hashable {
     /// iPhone's GPU, which reads none: its build converts them for every
     /// API the game draws with, NVN or Vulkan (CartoucheBCConversion.covers).
     /// The installed game's, else the copy on the Mac or in a games folder,
-    /// read where it sits (CartoucheStoredGames.readConversions). False
-    /// where the GPU reads them, where it does not matter and nothing is
-    /// read, and for a copy whose build Cartouche has not read yet.
+    /// read where it sits (CartoucheStoredGames.readConversions), else the
+    /// one Cartouche Cloud built, by the nxnative the platform built it from
+    /// (CartoucheBCConversion.conversion(ofCloudEngine:)). False where the
+    /// GPU reads them, where it does not matter and nothing is read, and for
+    /// a copy whose build Cartouche has not read yet.
     var convertsBCTextures: Bool {
         guard !CartoucheDevice.supportsBCTextureCompression else { return false }
         let converted: CartoucheBCConversion.APIs
@@ -208,6 +213,8 @@ struct CartoucheEntry: Identifiable, Hashable {
             converted = CartoucheInstalledBuilds.bcConversion(of: app)
         } else if let read = stored?.convertedBC {
             converted = read
+        } else if let cloud {
+            converted = CartoucheBCConversion.conversion(ofCloudEngine: cloud.engine)
         } else {
             return false
         }

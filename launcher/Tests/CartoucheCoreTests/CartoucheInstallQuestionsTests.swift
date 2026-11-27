@@ -28,6 +28,21 @@ final class CartoucheInstallQuestionsTests: XCTestCase {
         XCTAssertEqual(questions.asked, "Silksong.ipa")
     }
 
+    func testABuildThatConvertsTheTexturesInstallsWithoutTheQuestion() {
+        // Sparking Zero, which Cartouche Cloud built from nxnative-nobc for an
+        // iPhone 13 (26 November): its build draws there, nothing to ask.
+        let (starts, dropped) = questions.install("Sparking Zero.ipa", readsBCTextures: false,
+                                                  convertsBCTextures: true, answered: false)
+        XCTAssertTrue(starts)
+        XCTAssertNil(dropped)
+        XCTAssertNil(questions.asked)
+        // Nor does it take the place of a question on screen.
+        _ = questions.install("Silksong.ipa", readsBCTextures: false, convertsBCTextures: false, answered: false)
+        XCTAssertNil(questions.install("Sparking Zero.ipa", readsBCTextures: false,
+                                       convertsBCTextures: true, answered: false).dropped)
+        XCTAssertEqual(questions.asked, "Silksong.ipa")
+    }
+
     func testInstallAnywayStartsItAndCancelLeavesNothing() {
         _ = questions.install("Silksong.ipa", readsBCTextures: false, answered: false)
         // Install anyway: the question goes, and the install starts.

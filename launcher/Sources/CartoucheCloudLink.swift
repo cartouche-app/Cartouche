@@ -365,6 +365,6 @@ extension CartoucheCloudBuilt {
     init(_ game: CartoucheCloudGame) {
         self.init(id: game.id, titleId: game.titleId, name: game.name, bytes: game.bytes ?? 0,
                   file: game.file ?? CartoucheStoredGame.fileName(game: game.name, titleId: game.titleId),
-                  builtAt: game.builtAt, expiresAt: game.expiresAt)
+                  builtAt: game.builtAt, expiresAt: game.expiresAt, engine: game.engine)
     }
 }
