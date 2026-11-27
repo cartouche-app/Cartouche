@@ -113,3 +113,21 @@ extension CartoucheSigningTrouble {
         return .unreadableKey
     }
 }
+
+/// What signing.imported tells of an import (telemetry/README.md): VIA,
+/// `installer` or `setup`; OUTCOME, `imported` or why not; and STATUS, the
+/// number iOS answered when it did not open the .p12 (SecPKCS12Import's
+/// OSStatus, such as -26275), which tells apart the causes ofKey says in
+/// one word: the tour of 27 November saw 8 imports on 3 new copies in iOS
+/// 27.0 refused as unreadableKey, none of them through, without it. A
+/// number alone: never the certificate, its password, its team or its
+/// profile.
+enum CartoucheSigningMeasure {
+    static let event = "signing.imported"
+
+    static func fields(via: String, outcome: String, status: Int32?) -> [String: CartoucheTelemetryValue] {
+        var fields: [String: CartoucheTelemetryValue] = ["via": .text(via), "outcome": .text(outcome)]
+        if let status, status != 0 { fields["status"] = .number(Double(status)) }
+        return fields
+    }
+}

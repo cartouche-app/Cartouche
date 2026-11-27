@@ -197,7 +197,7 @@
     },
     "CartoucheSigningCheck.swift": {
       "kind": "iphone",
-      "why": "Why a certificate imported for the iPhone's games does not go in: the file, its password and its key, then the profile of a Cartouche signed with the player's own certificate. A Mac game is signed by nxnative's build."
+      "why": "Why a certificate imported for the iPhone's games does not go in: the file, its password and its key, then the profile of a Cartouche signed with the player's own certificate, and what signing.imported tells of it. A Mac game is signed by nxnative's build."
     },
     "CartoucheSigningMaterial.swift": {
       "kind": "iphone",
