@@ -53,6 +53,9 @@ targets:
       # player keeps it: the tests run it with the Simulator's
       # AVAudioSession (Tests/OtherAudioTests.swift).
       - path: ../Guest/CartoucheOtherAudioSession.m
+      # How the game's process puts nxnative's texts in Cartouche's language
+      # in its environment (Tests/PlayTests.swift).
+      - path: ../Guest/CartoucheGameTextsEnvironment.m
       - path: Build/LiveContainer/LiveContainerSwiftUI/Models/LCAppModel.swift
       - path: Build/LiveContainer/LiveContainerSwiftUI/Models/LCContainer.swift
       - path: Build/LiveContainer/LiveContainerSwiftUI/Utilities

@@ -10,6 +10,7 @@
 //  cloud saves, which the builder leaves a game's saves to.
 //
 
+import CartoucheCore
 import Foundation
 import XCTest
 @testable import BuilderKit
@@ -170,6 +171,22 @@ final class MacPlayTests: XCTestCase {
         let documents = root.appendingPathComponent("nxnative/0100152000022000", isDirectory: true)
         XCTAssertEqual(MacPlayEnvironment.make(app: app, keepsSaves: true, language: "en", documents: documents)["DM_SAVE"],
                        documents.appendingPathComponent("save").path)
+    }
+
+    /// The iPhone's prompt that waits for more players says the Mac's words,
+    /// from one table in CartoucheCore (docs/decisions/179.md); the gear
+    /// menu is the iPhone's alone, the quit prompt the Mac's.
+    func testTheIPhoneSaysTheMacsWords() throws {
+        let app = MacGameApp(url: URL(fileURLWithPath: "/Applications/MK8.app"), titleID: "0100152000022000", name: "Mario Kart 8 Deluxe")
+        for language in ["fr", "es", "de"] {
+            let mac = MacPlayEnvironment.make(app: app, keepsSaves: true, language: language)
+            let iPhone = CartoucheGameTexts.environment(game: app.name, language: language, on: .iPhone)
+            XCTAssertEqual(try XCTUnwrap(mac["DM_CTRL_PROMPT_TEXT"]), iPhone["DM_CTRL_PROMPT_TEXT"], language)
+            XCTAssertNil(mac["DM_GAME_MENU_TEXT"], language)
+            XCTAssertNil(iPhone["DM_HOME_QUIT_TEXT"], language)
+            XCTAssertEqual(MacPlayEnvironment.texts(game: app.name, language: language),
+                           CartoucheGameTexts.environment(game: app.name, language: language, on: .mac), language)
+        }
     }
 
     /// Ad's choice (15 November): a game started from Cartouche fills the

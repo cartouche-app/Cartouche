@@ -1,0 +1,1 @@
+../../../../../launcher/Sources/CartoucheGameTexts.swift

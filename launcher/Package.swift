@@ -56,6 +56,7 @@ let package = Package(
                 "CartoucheGameRoom.swift",
                 "CartoucheGameSettingList.swift",
                 "CartoucheGameSigning.swift",
+                "CartoucheGameTexts.swift",
                 "CartoucheHomeFilter.swift",
                 "CartoucheInstallQuestions.swift",
                 "CartoucheMeasuredNote.swift",

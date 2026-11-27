@@ -66,6 +66,7 @@ on:
       - "launcher/Sources/CartoucheGameSheetView.swift"
       - "launcher/Sources/CartoucheGameStats.swift"
       - "launcher/Sources/CartoucheGameSummaryView.swift"
+      - "launcher/Sources/CartoucheGameTexts.swift"
       - "launcher/Sources/CartoucheGameWorkView.swift"
       - "launcher/Sources/CartoucheGamepad.swift"
       - "launcher/Sources/CartoucheGuideCard.swift"
