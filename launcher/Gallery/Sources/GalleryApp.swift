@@ -194,6 +194,13 @@
 //        mac-gpu-no-bc-converted         the same, built by a fork that
 //                                        converts those textures, which
 //                                        Cartouche read where the IPA sits
+//        cloud-gpu-no-bc                 the same iPhone, linked to
+//                                        Cartouche Cloud, the sheet's game
+//                                        built there from nxnative, not
+//                                        installed (GalleryCloud)
+//        cloud-gpu-no-bc-converted       the same, built from
+//                                        nxnative-nobc, as the platform
+//                                        says it
 //        iml-left-out                    signed by a signing app on the
 //                                        iPhone (-GallerySigning iphone),
 //                                        without Increased Memory Limit,

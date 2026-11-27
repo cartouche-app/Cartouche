@@ -19,9 +19,11 @@ enum GalleryBCConversion {
     /// Whether WORK is an A16's: also mac-gpu-no-bc and
     /// mac-gpu-no-bc-converted, the sheet's game on the paired Mac, not
     /// installed, built by nxnative or by a fork that converts the textures
-    /// (storedConversion).
+    /// (storedConversion), and cloud-gpu-no-bc and cloud-gpu-no-bc-converted,
+    /// the sheet's game built by Cartouche Cloud from either (GalleryCloud).
     static func isWithoutBC(_ work: String?) -> Bool {
-        ["gpu-no-bc", "gpu-no-bc-converted", "gpu-no-bc-converted-vulkan", "mac-gpu-no-bc", "mac-gpu-no-bc-converted"]
+        ["gpu-no-bc", "gpu-no-bc-converted", "gpu-no-bc-converted-vulkan", "mac-gpu-no-bc", "mac-gpu-no-bc-converted",
+         "cloud-gpu-no-bc", "cloud-gpu-no-bc-converted"]
             .contains(work ?? "")
     }
 

@@ -131,6 +131,10 @@ final class CartoucheCloudTests: XCTestCase {
         XCTAssertEqual(built.bytes, UInt64(CartoucheCloudStandIn.ipa.count))
         XCTAssertEqual(built.file, "Mario Kart 8 Deluxe [0100152000022000].ipa")
         XCTAssertEqual(built.builtAt, CartoucheCloudStandIn.moment("2026-11-17T12:32:00Z"))
+        // Built from nxnative-nobc, for an iPhone 11 to 15: the console
+        // installs it on such an iPhone without asking first.
+        XCTAssertEqual(built.engine, "nxnative-nobc")
+        XCTAssertNil(queued.engine)
         XCTAssertEqual(built.titleId, "0100152000022000")
         XCTAssertEqual([failed.cause, failed.left], ["build", "held"])
         XCTAssertNil(failed.until)
@@ -597,7 +601,8 @@ final class CartoucheCloudStandIn: URLProtocol {
                  "phase_done": 0.42, "phase_left": 1500, "reported_at": "2026-11-17T12:03:00Z", "phases": ["files": 60]],
                 ["id": builtGame, "title": "0100152000022000", "name": "Mario Kart 8 Deluxe", "state": "built",
                  "price": 250, "expires_at": expires, "bytes": ipa.count,
-                 "file": "Mario Kart 8 Deluxe [0100152000022000].ipa", "built_at": "2026-11-17T12:32:00Z"],
+                 "file": "Mario Kart 8 Deluxe [0100152000022000].ipa", "built_at": "2026-11-17T12:32:00Z",
+                 "engine": "nxnative-nobc"],
                 ["id": "a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3a3", "title": "01006F8002326000", "name": "Animal Crossing",
                  "state": "failed", "price": 250, "expires_at": expires, "cause": "build", "left": "held",
                  "until": NSNull()],

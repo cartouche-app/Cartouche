@@ -7,7 +7,12 @@
 //  refuses that GPU for every game, and players with an iPhone 13 Pro or an
 //  iPhone 15 installed games that closed at once, before their first image
 //  (docs/decisions.md, 67). A game an older nxnative built may still run,
-//  so the player decides: Install anyway, or Cancel. One question is on
+//  so the player decides: Install anyway, or Cancel. A build that converts
+//  those textures for every API its game draws with, as nxnative-nobc's do
+//  (CartoucheBCConversion), asks nothing: it draws on such a GPU, and the
+//  question told a player with an iPhone 13 that the game Cartouche Cloud
+//  had built for it from nxnative-nobc could not run there (26 November).
+//  One question is on
 //  screen at a time: an install asked for meanwhile, as from another app,
 //  takes its place, and the one it replaces goes unanswered, as Cancel
 //  leaves it. CartoucheGameActions asks them, and the console shows them
@@ -23,12 +28,14 @@ struct CartoucheInstallQuestions<Install: Equatable> {
     private(set) var asked: Install?
 
     /// What an install of INSTALL does now: it starts on a GPU that reads
-    /// BC-compressed textures, READSBCTEXTURES, or once the player said to
-    /// install it all the same, ANSWERED; otherwise it asks first, in place
-    /// of the question on screen, which goes unanswered: DROPPED.
-    mutating func install(_ install: Install, readsBCTextures: Bool,
+    /// BC-compressed textures, READSBCTEXTURES, for a build that converts
+    /// them for every API its game draws with, CONVERTSBCTEXTURES, or once
+    /// the player said to install it all the same, ANSWERED; otherwise it
+    /// asks first, in place of the question on screen, which goes
+    /// unanswered: DROPPED.
+    mutating func install(_ install: Install, readsBCTextures: Bool, convertsBCTextures: Bool = false,
                           answered: Bool) -> (starts: Bool, dropped: Install?) {
-        if readsBCTextures || answered {
+        if readsBCTextures || convertsBCTextures || answered {
             if asked == install { asked = nil }
             return (true, nil)
         }
