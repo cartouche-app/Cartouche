@@ -25,8 +25,17 @@ public struct PairedDevice: Codable, Identifiable, Equatable, Sendable {
     /// nxnative-nobc, a separate fork (cartouche_builder/build_for.py).
     public var model: String?
     public var readsBC: Bool?
+    /// Its GPU's architecture as Metal names it ("applegpu_g18p") and the
+    /// major version of its iOS, as Cartouche tells them too: the engine
+    /// makes a game's pipeline archive for that GPU, when the game's profile
+    /// asks for one and the iOS is the one the archive is made for
+    /// (cartouche_builder/pipelines.py, decision 174). Nil from an older
+    /// Cartouche.
+    public var gpu: String?
+    public var iOS: Int?
 
-    public init(id: String, name: String, key: Data, paired: Date = Date(), seen: Date? = nil, model: String? = nil, readsBC: Bool? = nil) {
+    public init(id: String, name: String, key: Data, paired: Date = Date(), seen: Date? = nil, model: String? = nil, readsBC: Bool? = nil,
+                gpu: String? = nil, iOS: Int? = nil) {
         self.id = id
         self.name = name
         self.key = key
@@ -34,6 +43,8 @@ public struct PairedDevice: Codable, Identifiable, Equatable, Sendable {
         self.seen = seen
         self.model = model
         self.readsBC = readsBC
+        self.gpu = gpu
+        self.iOS = iOS
     }
 }
 
@@ -86,16 +97,23 @@ public final class BridgeDevices: @unchecked Sendable {
     }
 
     /// Keeps what the paired device ID tells of itself: whether it changed.
+    /// A GPU Metal would not name so, or an iOS out of range, is not kept:
+    /// what an iPhone tells is checked here again.
     @discardableResult
     public func describe(_ id: String, as device: CartoucheBridgeDevice) -> Bool {
+        let gpu = device.gpu.flatMap { CartoucheBridgeDevice.isGPUArchitecture($0) ? $0 : nil }
+        let iOS = device.iOS.flatMap { (1...999).contains($0) ? $0 : nil }
         lock.lock()
         guard let index = file.devices.firstIndex(where: { $0.id == id }),
-              file.devices[index].model != device.model || file.devices[index].readsBC != device.readsBC else {
+              file.devices[index].model != device.model || file.devices[index].readsBC != device.readsBC
+                || file.devices[index].gpu != gpu || file.devices[index].iOS != iOS else {
             lock.unlock()
             return false
         }
         file.devices[index].model = device.model
         file.devices[index].readsBC = device.readsBC
+        file.devices[index].gpu = gpu
+        file.devices[index].iOS = iOS
         lock.unlock()
         save()
         return true

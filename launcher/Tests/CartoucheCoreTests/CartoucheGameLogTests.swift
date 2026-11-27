@@ -355,6 +355,43 @@ final class CartoucheGameLogTests: XCTestCase {
         XCTAssertEqual(measures(goingOn).end, CartoucheGameMeasures.End(kind: "unknown"))
     }
 
+    /// The pipeline archive nxnative made on the Mac, as the game found it
+    /// at its start (pso_bundle_open in nvn_mtl.m, at nxnative 2f959ede):
+    /// one for another GPU is what decision 174 counts, and the bases the
+    /// device then built itself, how long it waited. Never the path, nor
+    /// the GPUs the archive has.
+    func testThePipelineArchiveTheGameFoundAndTheBasesTheDeviceBuilt() throws {
+        let otherGPU = measures("""
+        [dm] [nvn-mtl] archive admission: 1 files, 622.8 MiB; free address space 61000.0 MiB, largest gap 60000.0 MiB, runtime reserve 2048.0 MiB: Metal 4
+        [dm] [nvn-mtl] pipeline archive bundled with the app: none for this GPU (applegpu_g19p; /private/var/containers/Bundle/Application/5A3C/ZeldaBreathOfTheWild.app/pso has applegpu_g18p.mtl4a): the bases are built on the device
+        [dm] [nvn-mtl] pipeline prebuild: 15767 shader pairs of /var/mobile/Containers/Data/Application/0F1E/Documents/shader_pairs.tsv, 6 workers (prepare step, before the first frame)
+        [dm] [nvn-mtl] pipeline prebuild: 8000 of 15767 pairs, 8000 built, 0 already archived, 0 left to the draws, 0 failed, 201 s
+        [dm] [nvn-mtl] pipeline prebuild done: 15767 pairs, 15700 bases built, 0 already archived, 67 left to the draws, 0 failed, 412.3 s; 3 times a pair was put back while another capture had one of its shader functions (fn_claim)
+        [dm] [nvn-mtl] pipeline archive bundled with the app: /private/var/containers/Bundle/Application/5A3C/ZeldaBreathOfTheWild.app/pso/applegpu_g18p.mtl4a, 622.8 MB, opened in 555.0 ms
+        """)
+        XCTAssertEqual(otherGPU.pipelineArchive, "otherGPU", "the first line of a start says it")
+        XCTAssertEqual(otherGPU.prebuild, CartoucheGameMeasures.Prebuild(seconds: 412.3, built: 15700, archived: 0))
+        let json = String(decoding: try JSONEncoder().encode(otherGPU), as: UTF8.self)
+        XCTAssertFalse(json.contains("g18p") || json.contains("g19p") || json.contains("/var/"), "no GPU, no path")
+
+        let opened = measures("""
+        [dm] [nvn-mtl] pipeline archive bundled with the app: /private/var/containers/Bundle/Application/5A3C/Zelda, Breath.app/pso/applegpu_g18p.mtl4a, 622.8 MB, opened in 555.0 ms
+        [dm] [nvn-mtl] pipeline prebuild done: 15767 pairs, 0 bases built, 15767 already archived, 0 left to the draws, 0 failed, 0.4 s; 0 times a pair was put back while another capture had one of its shader functions (fn_claim)
+        """)
+        XCTAssertEqual(opened.pipelineArchive, "opened")
+        XCTAssertEqual(opened.prebuild, CartoucheGameMeasures.Prebuild(seconds: 0.4, built: 0, archived: 15767))
+        XCTAssertEqual(measures("[dm] [nvn-mtl] pipeline archive bundled with the app: this system cannot open /private/var/containers/Bundle/Application/5A3C/Z.app/pso/applegpu_g18p.mtl4a (applegpu_g18p found in archive is not compatible with current OS; made for another system version, or an OS update changed the GPU compiler): the bases are built on the device").pipelineArchive,
+                       "otherSystem")
+        XCTAssertEqual(measures("[dm] [nvn-mtl] [RED] pipeline archive bundled with the app: /private/var/containers/Bundle/Application/5A3C/Z.app/pso/applegpu_g18p.mtl4a is not a pipeline archive: the bases are built on the device").pipelineArchive,
+                       "unreadable")
+        // The prewarm lists' archive is another one; a game built without
+        // an archive says nothing of it.
+        let none = measures("[dm] [nvn-mtl] prewarm archive bundled with the app: 2 of 2 files, 2 with an index of 300 bases, 40.0 MB, opened in 3.0 ms")
+        XCTAssertNil(none.pipelineArchive)
+        XCTAssertNil(none.prebuild)
+        XCTAssertGreaterThanOrEqual(CartoucheGameLogReader.version, 7, "before 7, the archive was absent whatever the game found")
+    }
+
     /// Lines it does not know, and numbers it cannot read, leave the
     /// measures out rather than wrong.
     func testUnknownLinesAndBadNumbersAreLeftOut() {

@@ -107,6 +107,37 @@ final class BuildForTests: XCTestCase {
         XCTAssertEqual(BridgeDevices(url: url).all[0].model, "iPhone15,4")
         XCTAssertEqual(BuildFor.choice(BuilderConfig(), devices: BridgeDevices(url: url).all),
                        BuildFor.Choice(kind: .noBC, model: "iPhone15,4", device: "iPhone de Lou"))
+        XCTAssertNil(kept["gpu"], "an older Cartouche tells no GPU")
+        XCTAssertNil(kept["iOS"])
+    }
+
+    /// Its GPU and its iOS, for which the engine makes a game's pipeline
+    /// archive (cartouche_builder/pipelines.py, decision 174): kept in
+    /// bridge.json as the engine reads them, and only as Metal names a GPU.
+    func testAPairedIPhoneKeepsItsGPUAndItsIOSForThePipelineArchive() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("targets-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let url = folder.appendingPathComponent("bridge.json")
+        let devices = BridgeDevices(url: url)
+        devices.add(id: "phone", name: "iPhone de Lou", key: Data([1, 2, 3]))
+        XCTAssertTrue(devices.describe("phone", as: CartoucheBridgeDevice(model: "iPhone19,4", readsBC: true)))
+        XCTAssertTrue(devices.describe("phone", as: CartoucheBridgeDevice(model: "iPhone19,4", readsBC: true, gpu: "applegpu_g19p", iOS: 27)),
+                      "the GPU told after the model is news")
+        XCTAssertFalse(devices.describe("phone", as: CartoucheBridgeDevice(model: "iPhone19,4", readsBC: true, gpu: "applegpu_g19p", iOS: 27)))
+        let file = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+        let kept = try XCTUnwrap((file["devices"] as? [[String: Any]])?.first)
+        XCTAssertEqual(kept["gpu"] as? String, "applegpu_g19p")
+        XCTAssertEqual(kept["iOS"] as? Int, 27)
+        XCTAssertEqual(BridgeDevices(url: url).all[0].gpu, "applegpu_g19p")
+        XCTAssertEqual(BridgeDevices(url: url).all[0].iOS, 27)
+
+        // Told otherwise than Metal names a GPU, as a message decoded on
+        // the Mac may be: not kept.
+        let odd = try JSONDecoder().decode(CartoucheBridgeDevice.self,
+                                           from: Data(#"{"model":"iPhone19,4","readsBC":true,"gpu":"g19p --platform mac","iOS":-1}"#.utf8))
+        XCTAssertTrue(devices.describe("phone", as: odd))
+        XCTAssertNil(devices.all[0].gpu)
+        XCTAssertNil(devices.all[0].iOS)
     }
 
     func testAnOlderBridgeFileStillReads() throws {

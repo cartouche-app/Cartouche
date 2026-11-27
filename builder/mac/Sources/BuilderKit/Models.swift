@@ -649,6 +649,12 @@ public struct GameProgress: Codable, Equatable {
     public var commit: String?
     public var fallback: Bool?
     public var split: Bool?
+    /// The GPUs its pipeline archive is made for ("g18p"), the profile's
+    /// default first, and how many of them the paired iPhones added
+    /// (cartouche_builder/pipelines.py, decision 174); nil for a game whose
+    /// profile asks for none, and from an older engine.
+    public var gpus: [String]?
+    public var gpusAdded: Int?
     /// Why it was not built, as a name (cartouche_builder/causes.py:
     /// "app_build", "no_space", "damaged"...), nxnative's exit code, and for
     /// an error of the engine's own, its exception, where and errno.
@@ -681,7 +687,8 @@ public struct GameProgress: Codable, Equatable {
 
     enum CodingKeys: String, CodingKey {
         case name, reasons, detail, state, stage, step, k, n, frac, overall, eta, note, message, started, ended, error, log, ipa, duration
-        case commit, fallback, split, cause, exit, failure, room, makes, platform, mac
+        case commit, fallback, split, gpus, cause, exit, failure, room, makes, platform, mac
+        case gpusAdded = "gpus_added"
         case titleID = "title_id"
         case macOnly = "mac_only"
         case macApp = "mac_app"

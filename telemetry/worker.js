@@ -221,6 +221,14 @@ const session = object(
     ),
     shaderStallMsPerMinute: number(0, 1e7),
     prepare: object({ seconds: number(0, 1e6), lines: integer(0, 1e9) }, ["seconds", "lines"]),
+    // The pipeline archive made on the Mac by GPU, as the game found it at
+    // its start, and the pipeline bases the device built itself
+    // (launcher/Sources/CartoucheGameLog.swift, from reader 7, decision 174).
+    pipelineArchive: oneOf("opened", "otherGPU", "otherSystem", "unreadable"),
+    prebuild: object(
+      { seconds: number(0, 1e6), built: integer(0, 1e9), archived: integer(0, 1e9) },
+      ["seconds", "built", "archived"],
+    ),
     cpu: object({ watts: number(0, 100), percent: number(0, 1e4), performanceCoresPercent: number(0, 100) }),
     gpuBusyMsPerSecond: number(0, 1000),
     thermal: object(

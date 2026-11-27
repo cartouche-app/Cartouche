@@ -64,6 +64,12 @@
       "nxnativeChanged": false,
       "otherAudio": true,
       "overTargetPercent": 2.4,
+      "pipelineArchive": "otherGPU",
+      "prebuild": {
+        "archived": 0,
+        "built": 15700,
+        "seconds": 412.3
+      },
       "prepare": {
         "lines": 13394,
         "seconds": 21.43
@@ -88,7 +94,7 @@
           }
         ]
       },
-      "reader": 6,
+      "reader": 7,
       "schema": 1,
       "seq": 7,
       "session": "b8e1d0c4-7a2f-4e19-8c3d-2f6a9b0e1d7c",

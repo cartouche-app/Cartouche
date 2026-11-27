@@ -63,6 +63,8 @@
       "deviceLanguage": "fr",
       "fields": {
         "fallback": true,
+        "gpus": 2,
+        "gpusAdded": 1,
         "ipaMB": 1830,
         "nxnative": "6c3aeb3d70a1",
         "reasons": "named,shared",
@@ -762,11 +764,17 @@
       "nxnative": "6c3aeb3d70a1",
       "nxnativeChanged": false,
       "overTargetPercent": 0.83,
+      "pipelineArchive": "opened",
+      "prebuild": {
+        "archived": 4210,
+        "built": 0,
+        "seconds": 0.2
+      },
       "prepare": {
         "lines": 4210,
         "seconds": 6.2
       },
-      "reader": 6,
+      "reader": 7,
       "schema": 1,
       "seq": 34,
       "session": "c4d1b8e0-7a2f-4e19-8c3d-2f6a9b0e1d7c",

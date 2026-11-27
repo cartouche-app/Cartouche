@@ -28,8 +28,9 @@ final class TelemetryTests: XCTestCase {
             "ready": .flag(true), "remote": .flag(true), "schedule": .flag(true), "xcode": .text("27.2"),
         ]
         let setup: [String: TelemetryValue] = ["item": .text("metal"), "result": .text("ready"), "seconds": .number(312)]
-        let built: [String: TelemetryValue] = ["fallback": .flag(true), "ipaMB": .number(1830), "nxnative": .text(head),
-                                               "reasons": .text("named,shared"), "seconds": .number(5412), "source": .text("packages")]
+        let built: [String: TelemetryValue] = ["fallback": .flag(true), "gpus": .count(2), "gpusAdded": .count(1), "ipaMB": .number(1830),
+                                               "nxnative": .text(head), "reasons": .text("named,shared"), "seconds": .number(5412),
+                                               "source": .text("packages")]
         let failed: [String: TelemetryValue] = ["cause": .text("app_build"), "exit": .count(1), "nxnative": .text(head), "reasons": .text("profile"),
                                                 "seconds": .number(1260), "source": .text("dump"), "stage": .text("app build")]
         let batch: [String: TelemetryValue] = ["built": .count(1), "failed": .count(1), "fallback": .flag(true), "games": .count(3), "jobs": .count(1),
@@ -298,6 +299,44 @@ final class TelemetryTests: XCTestCase {
         XCTAssertNil(events[3].fields["split"])
         for (index, event) in events.enumerated() {
             XCTAssertNotNil(TelemetryEvent(id: "6a1d9e3c-0000-4000-8000-00000000030\(index)", seq: index + 1, context: context,
+                                           name: event.name, game: event.game, fields: event.fields), event.name)
+        }
+    }
+
+    /// A game whose pipeline archive is made for its profile's GPU and for
+    /// a paired iPhone's (decision 174): its events say how many GPUs, and
+    /// how many the iPhones added, never which; a game whose profile asks
+    /// for no archive says nothing of it.
+    func testAGameWhosePipelineArchiveIsMadeForThePairedIPhones() throws {
+        let json = #"""
+            {"state": "done", "scheduled": false, "head": "7f2a1b3c4d5e6f70",
+             "started": "2026-11-26T20:00:00+00:00", "ended": "2026-11-26T21:00:00+00:00",
+             "games": [
+               {"title_id": "01007EF00011E000", "name": "Zelda", "state": "built", "reasons": ["engine"], "duration": 3600.2,
+                "commit": "7f2a1b3c4d5e", "gpus": ["g18p", "g17p"], "gpus_added": 1},
+               {"title_id": "0100000000010000", "name": "Super Mario Odyssey", "state": "built", "reasons": ["shared"], "duration": 1200,
+                "commit": "7f2a1b3c4d5e", "gpus": [], "gpus_added": 0},
+               {"title_id": "0100152000022000", "name": "Mario Kart World", "state": "failed", "reasons": ["engine"], "duration": 800, "stage": "app build",
+                "commit": "7f2a1b3c4d5e", "cause": "app_build", "exit": 1, "gpus": ["g18p"], "gpus_added": 0}]}
+            """#
+        let status = try JSONDecoder().decode(BatchStatus.self, from: Data(json.utf8))
+        XCTAssertEqual(status.games[0].gpus, ["g18p", "g17p"])
+        XCTAssertEqual(status.games[0].gpusAdded, 1)
+        let events = BuilderTelemetry.batchEvents(status, library: nil, jobs: 1)
+        XCTAssertEqual(events.map(\.name), ["builder.built", "builder.built", "builder.failed", "builder.batch"])
+        XCTAssertEqual(events[0].fields, ["gpus": .count(2), "gpusAdded": .count(1), "nxnative": .text("7f2a1b3c4d5e"), "reasons": .text("engine"),
+                                          "seconds": .number(3600)])
+        XCTAssertEqual(events[1].fields, ["nxnative": .text("7f2a1b3c4d5e"), "reasons": .text("shared"), "seconds": .number(1200)])
+        XCTAssertEqual(events[2].fields["gpus"], .count(1))
+        XCTAssertEqual(events[2].fields["gpusAdded"], .count(0))
+        XCTAssertNil(events[3].fields["gpus"])
+        for event in events {
+            for value in event.fields.values {
+                if case .text(let text) = value { XCTAssertFalse(text.contains("g18p") || text.contains("g17p"), event.name) }
+            }
+        }
+        for (index, event) in events.enumerated() {
+            XCTAssertNotNil(TelemetryEvent(id: "6a1d9e3c-0000-4000-8000-00000000040\(index)", seq: index + 1, context: context,
                                            name: event.name, game: event.game, fields: event.fields), event.name)
         }
     }

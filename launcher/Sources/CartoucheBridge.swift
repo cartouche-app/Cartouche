@@ -404,16 +404,33 @@ public struct CartoucheBridgeRequest: Codable, Equatable {
 }
 
 /// What the iPhone tells its paired Mac of itself, with each info request:
-/// its model ("iPhone15,4"), the identifier its measures carry too, and
-/// whether its GPU reads BC-compressed textures. Never its name, which the
-/// pairing gave, nor anything else.
+/// its model ("iPhone15,4"), the identifier its measures carry too,
+/// whether its GPU reads BC-compressed textures, its GPU's architecture as
+/// Metal names it ("applegpu_g18p") and the major version of its iOS. Never
+/// its name, which the pairing gave, nor anything else.
 public struct CartoucheBridgeDevice: Codable, Equatable, Sendable {
     public var model: String
     public var readsBC: Bool
+    /// What Cartouche Builder makes a game's pipeline archive for, when the
+    /// game's profile asks for one (decision 174): nxnative builds it on the
+    /// Mac for each GPU named, and an iOS opens only one made for its own
+    /// major version. Nil from an older Cartouche, and when Metal does not
+    /// say.
+    public var gpu: String?
+    public var iOS: Int?
 
-    public init(model: String, readsBC: Bool) {
+    public init(model: String, readsBC: Bool, gpu: String? = nil, iOS: Int? = nil) {
         self.model = model
         self.readsBC = readsBC
+        self.gpu = gpu.flatMap { Self.isGPUArchitecture($0) ? $0 : nil }
+        self.iOS = iOS.flatMap { (1...999).contains($0) ? $0 : nil }
+    }
+
+    /// Whether NAME is a GPU architecture as Metal names it
+    /// (MTLDevice.architecture): "applegpu_g18p", or "g18p", as nxnative
+    /// takes it (--gpu). Anything else, Cartouche never sends.
+    public static func isGPUArchitecture(_ name: String) -> Bool {
+        name.count <= 32 && name.range(of: #"\A(applegpu_)?g[0-9]{1,3}[a-z]{0,3}\z"#, options: .regularExpression) != nil
     }
 }
 

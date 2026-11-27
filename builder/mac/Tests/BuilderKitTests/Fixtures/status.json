@@ -17,6 +17,8 @@
         "failure": {},
         "fallback": false,
         "split": false,
+        "gpus": [],
+        "gpus_added": 0,
         "frac": 1.0,
         "ipa": "",
         "k": 1,

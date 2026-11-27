@@ -23,4 +23,6 @@ enum CartoucheReports {
 enum CartoucheDevice {
     static let modelIdentifier = "iPhone18,1"
     static let supportsBCTextureCompression = true
+    static let gpuArchitecture: String? = "applegpu_g18p"
+    static let iOSMajorVersion = 27
 }

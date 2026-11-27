@@ -68,6 +68,10 @@ class Game:
     commit: str = ""  # the nxnative commit it was built (or tried) from, 12 digits
     fallback: bool = False  # from an older commit, the newest not building
     split: bool = False  # from the commit before nxnative's splitter changed, for this game alone (fallback.py)
+    # The GPUs its IPA's pipeline archive is made for, and how many of them
+    # the paired iPhones added to its profile's (pipelines.py).
+    gpus: list[str] = field(default_factory=list)
+    gpus_added: int = 0
     cause: str = ""  # why it was not built (causes.py)
     exit: int | None = None  # nxnative's exit code, when it ran
     failure: dict = field(default_factory=dict)  # the exception, where and errno (failure.py)
@@ -212,6 +216,10 @@ class Status:
                 game.commit, game.fallback = str(value.get("commit") or ""), bool(value.get("fallback"))
                 game.split = bool(value.get("split"))
                 self.write()
+            elif kind == "gpus":
+                game.gpus = [str(name) for name in value.get("gpus") or []]
+                game.gpus_added = int(value.get("added") or 0)
+                self.write()
             elif kind == "cause":
                 game.cause = str(value.get("cause") or "")
                 game.exit = value.get("exit")
@@ -351,6 +359,8 @@ def _game_json(game: Game) -> dict:
         "commit": game.commit,
         "fallback": game.fallback,
         "split": game.split,
+        "gpus": game.gpus,
+        "gpus_added": game.gpus_added,
         "cause": game.cause,
         "exit": game.exit,
         "failure": game.failure,

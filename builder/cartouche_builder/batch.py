@@ -41,7 +41,7 @@ from pathlib import Path
 from . import build as builds
 from . import config as configs
 from . import ipa as ipas
-from . import causes, disks, failure, fallback, library, macapps, notify, report, schedule, shares, build_for, toolchain
+from . import causes, disks, failure, fallback, library, macapps, notify, pipelines, report, schedule, shares, build_for, toolchain
 from . import shelf as shelves
 from . import storage
 from . import queue as queues
@@ -582,6 +582,12 @@ class Runner:
                     out.unlink(missing_ok=True)
                     out.with_name(out.name + ".idx").unlink(missing_ok=True)
                 before = _identity(out)
+                # The GPUs of its pipeline archive, and what nxnative said of it.
+                archive = [pipelines.Choice(), pipelines.Watch()]
+
+                def heard(message: str) -> None:
+                    archive[1].read(message)
+                    self.on_event("message", title_id, message)
 
                 def nxnative() -> builds.Result:
                     # Without the extracted files the build folder keeps what is
@@ -591,15 +597,16 @@ class Runner:
                     # A game also built for this Mac keeps them: its app, built
                     # next, is made of them (macapps.py).
                     keep_extracted = (ctx.config.keep_extracted or entry.mac) if ctx.engine.supports("--keep-extracted") else None
+                    archive[:] = [self._gpus(ctx, title_id, identity, log_path), pipelines.Watch()]
                     args = builds.command(self.python, ctx.engine.build_script, source, work, out, keys, ctx.config.game_language, keep_extracted,
-                                          aoc=self._aoc(title_id, aoc))
+                                          aoc=self._aoc(title_id, aoc), gpus=archive[0].option)
                     return builds.run(
                         args,
                         ctx.engine.root,
                         toolchain.environment(ctx.paths),
                         log_path,
                         on_progress=lambda progress: self.on_event("progress", title_id, progress),
-                        on_message=lambda message: self.on_event("message", title_id, message),
+                        on_message=heard,
                         stop=stop,
                         on_game=lambda event: keep_icon(ctx.paths, title_id, event.get("icon")),
                     )
@@ -624,6 +631,13 @@ class Runner:
                     # Its shaders split otherwise than its profile says: from
                     # the commit before nxnative's splitter changed, alone.
                     result, commit, split = self._split_walk(entry, commit, nxnative, result, print_, identity, stop)
+                refused = archive[1].refused(archive[0]) if result.ok and not stop.is_set() else []
+                if refused:
+                    # metal-tt does not know a paired iPhone's GPU, and the
+                    # app has no archive at all: built again without it, as
+                    # the next builds are until Apple's tools change.
+                    pipelines.refuse(ctx.paths, identity, refused)
+                    result = nxnative()
                 if not result.ok:
                     if result.stopped:
                         raise _Stopped(result.error)
@@ -657,6 +671,7 @@ class Runner:
                     duration=result.duration,
                     dirty=info.dirty,
                     engine=ctx.source_key,
+                    gpus=[] if archive[1].archive_failed else list(archive[0].gpus),
                 )
                 ctx.store.built(title_id, build)
                 if split is not None:
@@ -1073,6 +1088,31 @@ class Runner:
         if base and (base == older or ctx.engine.is_ancestor(older, base)):
             return base
         return None
+
+    def _gpus(self, ctx: Context, title_id: str, identity: str, log_path: Path) -> pipelines.Choice:
+        """The GPUs of TITLE_ID's pipeline archive, as the checkout asks for
+        one now: its profile's, and those of the paired iPhones, when its
+        script takes --gpu (pipelines.py). Said in the game's log when an
+        iPhone adds one, or would, never by the iPhone's name."""
+        default = pipelines.profile_default(ctx.engine.root, title_id)
+        if default and ctx.engine.supports("--gpu"):
+            sdk = toolchain.ios_sdk(toolchain.environment(ctx.paths))
+            choice = pipelines.choose(default, build_for.paired(ctx.paths), sdk, pipelines.refused(ctx.paths, identity))
+        else:
+            choice = pipelines.Choice(gpus=default)
+        self.on_event("gpus", title_id, {"gpus": choice.gpus, "added": len(choice.added)})
+        if choice.added or choice.left_out:
+            why = {"ios": "on another major version of iOS than the archive's", "refused": "metal-tt of this Xcode does not know it",
+                   "most": f"{pipelines.MOST} GPUs already"}
+            line = f"# pipeline archive for {', '.join(choice.gpus)}: {', '.join(choice.added) or 'no GPU'} for the paired iPhones"
+            line += "".join(f"; {name} left out, {why[reason]}" for name, reason in choice.left_out)
+            try:
+                log_path.parent.mkdir(parents=True, exist_ok=True)
+                with open(log_path, "a", encoding="utf-8") as log:
+                    log.write(line + "\n")
+            except OSError:
+                pass
+        return choice
 
     def _split_walk(self, entry: Entry, at: str, nxnative, failed: builds.Result, print_: str, identity: str, stop: "_Stop",
                     mac: bool = False) -> tuple[builds.Result, str, _Trial | None]:

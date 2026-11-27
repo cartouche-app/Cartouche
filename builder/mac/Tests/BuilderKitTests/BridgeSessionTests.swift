@@ -71,6 +71,11 @@ final class BridgeSessionTests: XCTestCase {
         XCTAssertNil(info.error)
         XCTAssertEqual(server.devices.all.map(\.model), ["iPhone15,4"])
         XCTAssertEqual(server.devices.all.map(\.readsBC), [false])
+        XCTAssertEqual(server.devices.all.map(\.gpu), [nil], "an older Cartouche tells no GPU")
+        let (withGPU, _) = ask(CartoucheBridgeRequest(.info, device: CartoucheBridgeDevice(model: "iPhone15,4", readsBC: false, gpu: "applegpu_g15p", iOS: 27)))
+        XCTAssertNil(withGPU.error)
+        XCTAssertEqual(server.devices.all.map(\.gpu), ["applegpu_g15p"])
+        XCTAssertEqual(server.devices.all.map(\.iOS), [27])
         // Another session's peer, not paired, changes nothing.
         let (stranger, _) = Session(server: server, peer: "stranger").handle(CartoucheBridgeRequest(.info, device: CartoucheBridgeDevice(model: "iPhone18,1", readsBC: true)),
                                                                              body: Data())

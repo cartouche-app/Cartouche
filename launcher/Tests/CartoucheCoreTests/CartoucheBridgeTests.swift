@@ -369,14 +369,33 @@ final class CartoucheBridgeTests: XCTestCase {
 
     func testInfoTellsTheMacThisIPhonesModelAndNothingElse() throws {
         // Cartouche Builder builds the games of an iPhone whose GPU reads no
-        // BC from nxnative-nobc, a separate fork (cartouche_builder/build_for.py).
-        let asked = CartoucheBridgeRequest(.info, device: CartoucheBridgeDevice(model: "iPhone15,4", readsBC: false))
+        // BC from nxnative-nobc, a separate fork (cartouche_builder/build_for.py),
+        // and makes a game's pipeline archive for its GPU and its iOS
+        // (cartouche_builder/pipelines.py, decision 174).
+        let asked = CartoucheBridgeRequest(.info, device: CartoucheBridgeDevice(model: "iPhone15,4", readsBC: false, gpu: "applegpu_g15p", iOS: 27))
         let data = try CartoucheBridgeMessage.encode(asked, body: Data())
         let (request, _) = try CartoucheBridgeMessage.decode(CartoucheBridgeRequest.self, from: data)
-        XCTAssertEqual(request.device, CartoucheBridgeDevice(model: "iPhone15,4", readsBC: false))
+        XCTAssertEqual(request.device, CartoucheBridgeDevice(model: "iPhone15,4", readsBC: false, gpu: "applegpu_g15p", iOS: 27))
         let told = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(asked)) as? [String: Any])
         let device = try XCTUnwrap(told["device"] as? [String: Any])
-        XCTAssertEqual(Set(device.keys), ["model", "readsBC"])
+        XCTAssertEqual(Set(device.keys), ["model", "readsBC", "gpu", "iOS"])
+        XCTAssertEqual(device["gpu"] as? String, "applegpu_g15p")
+        XCTAssertEqual(device["iOS"] as? Int, 27)
+        // A name Metal does not give is not sent; an older Cartouche sent
+        // neither, which a Mac reads as before.
+        let odd = CartoucheBridgeDevice(model: "iPhone18,1", readsBC: true, gpu: "Apple A19 Pro GPU", iOS: 0)
+        XCTAssertNil(odd.gpu)
+        XCTAssertNil(odd.iOS)
+        let older = try JSONDecoder().decode(CartoucheBridgeDevice.self, from: Data(#"{"model":"iPhone15,4","readsBC":false}"#.utf8))
+        XCTAssertEqual(older, CartoucheBridgeDevice(model: "iPhone15,4", readsBC: false))
+        let olderJSON = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(older)) as? [String: Any])
+        XCTAssertEqual(Set(olderJSON.keys), ["model", "readsBC"])
+        for name in ["applegpu_g18p", "g19p", "applegpu_g14s", "applegpu_g17g"] {
+            XCTAssertTrue(CartoucheBridgeDevice.isGPUArchitecture(name), name)
+        }
+        for name in ["", "applegpu_", "Apple M2 Max", "applegpu_g18p,g19p", "none", "../g18p", "applegpu_g18p\n"] {
+            XCTAssertFalse(CartoucheBridgeDevice.isGPUArchitecture(name), name)
+        }
         // Without it, as on the Mac or from an older Cartouche, nothing.
         let plain = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(CartoucheBridgeRequest(.info))) as? [String: Any])
         XCTAssertNil(plain["device"])
