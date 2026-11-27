@@ -70,4 +70,30 @@ final class CartoucheSigningCheckTests: XCTestCase {
         }
         XCTAssertEqual(Set(all.map(\.rawValue)).count, all.count)
     }
+
+    func testSigningImportedSaysTheNumberIOSAnswered() throws {
+        // The tour of 27 November: 8 imports refused as unreadableKey on 3
+        // new copies in iOS 27.0, without what iOS answered. Up to 0.16.2,
+        // signing.imported sent only `via` and `outcome`.
+        XCTAssertEqual(CartoucheSigningMeasure.fields(via: "setup", outcome: "unreadableKey", status: -26275),
+                       ["via": .text("setup"), "outcome": .text("unreadableKey"), "status": .number(-26275)])
+        XCTAssertEqual(CartoucheSigningMeasure.fields(via: "setup", outcome: "wrongPassword", status: -25293)["status"], .number(-25293))
+        // iOS opened it (0), or the import never asked it: no number.
+        XCTAssertEqual(CartoucheSigningMeasure.fields(via: "setup", outcome: "noPrivateKey", status: 0),
+                       ["via": .text("setup"), "outcome": .text("noPrivateKey")])
+        XCTAssertEqual(CartoucheSigningMeasure.fields(via: "installer", outcome: "imported", status: nil),
+                       ["via": .text("installer"), "outcome": .text("imported")])
+        // The server takes it, and telemetry/README.md tells it.
+        let context = CartoucheTelemetryContext(install: "8c1f6c2e-7a2f-4e19-8c3d-2f6a9b0e1d7c", cartouche: "0.16.2",
+                                                device: "iPhone18,2", ios: "27.0", language: "en")
+        let fields = CartoucheSigningMeasure.fields(via: "setup", outcome: "unreadableKey", status: -26275)
+        let report = CartoucheEventReport(id: "3d9b2f5e-0000-4000-8000-000000000001", seq: 1, context: context,
+                                          name: CartoucheSigningMeasure.event, fields: fields)
+        XCTAssertEqual(report?.fields, fields)
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .appendingPathComponent("../../../telemetry/README.md").standardizedFileURL
+        let readme = try String(contentsOf: url, encoding: .utf8)
+        let row = try XCTUnwrap(readme.components(separatedBy: "\n").first { $0.hasPrefix("| `\(CartoucheSigningMeasure.event)` |") })
+        XCTAssertTrue(row.contains("`status`"), "signing.imported's row should tell status")
+    }
 }

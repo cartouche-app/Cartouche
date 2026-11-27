@@ -87,7 +87,7 @@ enum CartoucheImportedSigning {
         }
         let (status, identities) = openPKCS12(material)
         if let trouble = CartoucheSigningTrouble.ofKey(status: status, identities: identities.count, password: material.password) {
-            throw ImportError(trouble, onIPhone: onIPhone)
+            throw ImportError(trouble, onIPhone: onIPhone, status: status)
         }
         var certificate: SecCertificate?
         guard SecIdentityCopyCertificate(identities[0], &certificate) == errSecSuccess, let certificate else {
@@ -154,6 +154,9 @@ enum CartoucheImportedSigning {
         /// What went wrong, as a name for the telemetry: never the
         /// certificate, its password, its team or its profile.
         var kind = "other"
+        /// What iOS answered the .p12 when it did not open it
+        /// (SecPKCS12Import), a number alone, for the telemetry.
+        var status: OSStatus?
         var errorDescription: String? { message }
     }
 
@@ -165,7 +168,8 @@ enum CartoucheImportedSigning {
         // The telemetry, as the console, needs iOS 17.
         guard #available(iOS 17.0, *) else { return }
         let outcome = error.map { ($0 as? ImportError)?.kind ?? "other" } ?? "imported"
-        CartoucheTelemetry.shared.event("signing.imported", fields: ["via": .text(via), "outcome": .text(outcome)])
+        CartoucheTelemetry.shared.event(CartoucheSigningMeasure.event,
+                                        fields: CartoucheSigningMeasure.fields(via: via, outcome: outcome, status: (error as? ImportError)?.status))
     }
 }
 
@@ -173,9 +177,10 @@ extension CartoucheImportedSigning.ImportError {
     /// TROUBLE, in the setup's words (CartoucheSigningCheck.swift): signed
     /// on the iPhone (ON IPHONE), the player chose no profile, and signs
     /// Cartouche again in their signing app; installed from a computer, they
-    /// chose the profile with the certificate.
-    init(_ trouble: CartoucheSigningTrouble, onIPhone: Bool) {
-        self.init(message: Self.words(for: trouble, onIPhone: onIPhone), kind: trouble.rawValue)
+    /// chose the profile with the certificate. STATUS, what iOS answered
+    /// the .p12, for the key's.
+    init(_ trouble: CartoucheSigningTrouble, onIPhone: Bool, status: OSStatus? = nil) {
+        self.init(message: Self.words(for: trouble, onIPhone: onIPhone), kind: trouble.rawValue, status: status)
     }
 
     static func words(for trouble: CartoucheSigningTrouble, onIPhone: Bool) -> String {
