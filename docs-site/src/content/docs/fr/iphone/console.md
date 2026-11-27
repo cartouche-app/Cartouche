@@ -11,7 +11,7 @@ Cartouche s'ouvre sur sa console : vos jeux, en grand, sur une seule étagère, 
 
 ## L'accueil
 
-- **Ma bibliothèque :** vos jeux, installés ou dans votre dossier de jeux, puis **Importer** et **Tous les jeux**.
+- **Ma bibliothèque :** vos jeux, installés ou dans votre dossier de jeux, puis **Importer** et **Tous les jeux**. Quand certains sont installés et d'autres non, le menu à côté de son titre les montre tous, seulement les **Installés**, ou seulement ceux **À installer**, encore sur votre Mac, dans votre dossier de jeux ou dans Cartouche Cloud. Cartouche garde votre choix ; <kbd>L</kbd> et <kbd>R</kbd> le changent avec une manette.
 - **Le jeu en focus :** son nom, sa plateforme, son genre et son statut sur cet iPhone, votre temps de jeu et la place qu'il prend. **Jouer** le lance, **Fiche** ouvre sa [fiche](/fr/iphone/game-sheet/). Quand votre dossier de jeux contient une construction plus récente, **Mettre à jour** l'installe, sauvegardes gardées.
 - **Le dock :** **Tous les jeux**, **Importer** et **Système**. Il est en bas quand l'iPhone est debout, et dans la barre du haut quand il est couché.
 - **La barre du haut :** une manette quand elle est connectée et, dans les trois derniers jours de la signature de Cartouche, les jours qui restent.
